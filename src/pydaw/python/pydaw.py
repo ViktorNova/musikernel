@@ -32,10 +32,6 @@ from libpydaw.translate import _
 
 IS_PLAYING = False
 
-class pydaw_track_type_enum:
-    midi = 0
-    bus = 1
-    audio = 2
 
 def pydaw_get_current_region_length():
     if CURRENT_REGION is None:
@@ -109,11 +105,9 @@ def pydaw_set_tooltips_enabled(a_enabled):
     global TOOLTIPS_ENABLED
     TOOLTIPS_ENABLED = a_enabled
 
-    f_list = [SONG_EDITOR, AUDIO_SEQ_WIDGET,
-              PIANO_ROLL_EDITOR, MAIN_WINDOW,
-              WAVE_EDITOR, AUDIO_EDITOR_WIDGET,
-              AUDIO_SEQ, TRANSPORT] + \
-              list(REGION_EDITORS) + list(AUTOMATION_EDITORS)
+    f_list = [SONG_EDITOR, AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR, MAIN_WINDOW,
+              WAVE_EDITOR, AUDIO_EDITOR_WIDGET, AUDIO_SEQ, TRANSPORT,
+              REGION_INST_EDITOR] + list(AUTOMATION_EDITORS)
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
 
@@ -648,11 +642,11 @@ class region_settings:
 
 
     def unsolo_all(self):
-        for f_track in REGION_INST_EDITOR.tracks + REGION_AUDIO_EDITOR.tracks:
+        for f_track in REGION_INST_EDITOR.tracks:
             f_track.solo_checkbox.setChecked(False)
 
     def unmute_all(self):
-        for f_track in REGION_INST_EDITOR.tracks + REGION_AUDIO_EDITOR.tracks:
+        for f_track in REGION_INST_EDITOR.tracks:
             f_track.mute_checkbox.setChecked(False)
 
 
@@ -764,9 +758,8 @@ class region_settings:
 
     def open_region(self, a_file_name):
         self.enabled = False
-        for f_editor in REGION_EDITORS:
-            f_editor.enabled = False
-            f_editor.table_widget.setUpdatesEnabled(True)
+        REGION_INST_EDITOR.enabled = False
+        REGION_INST_EDITOR.table_widget.setUpdatesEnabled(True)
         self.clear_items()
         self.region_name_lineedit.setText(a_file_name)
         global CURRENT_REGION_NAME
@@ -775,45 +768,31 @@ class region_settings:
         CURRENT_REGION = PROJECT.get_region_by_name(
             a_file_name)
         if CURRENT_REGION.region_length_bars > 0:
-            for f_editor in REGION_EDITORS:
-                f_editor.set_region_length(
-                    CURRENT_REGION.region_length_bars)
+            REGION_INST_EDITOR.set_region_length(
+                CURRENT_REGION.region_length_bars)
             self.length_alternate_spinbox.setValue(
                 CURRENT_REGION.region_length_bars)
             TRANSPORT.bar_spinbox.setRange(
                 1, (CURRENT_REGION.region_length_bars))
             self.length_alternate_radiobutton.setChecked(True)
         else:
-            for f_editor in REGION_EDITORS:
-                f_editor.set_region_length()
+            REGION_INST_EDITOR.set_region_length()
             self.length_alternate_spinbox.setValue(8)
             TRANSPORT.bar_spinbox.setRange(1, 8)
             self.length_default_radiobutton.setChecked(True)
         self.enabled = True
-        for f_editor in REGION_EDITORS:
-            f_editor.enabled = True
+        REGION_INST_EDITOR.enabled = True
         f_items_dict = PROJECT.get_items_dict()
         for f_item in CURRENT_REGION.items:
             if f_item.bar_num < CURRENT_REGION.region_length_bars or \
             (CURRENT_REGION.region_length_bars == 0 and
             f_item.bar_num < 8):
                 f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
-                if f_item.track_num < pydaw_midi_track_count:
-                    REGION_INST_EDITOR.add_qtablewidgetitem(
-                        f_item_name, f_item.track_num,
-                        f_item.bar_num, a_is_offset=True)
-                elif f_item.track_num < (pydaw_midi_track_count +
-                pydaw_bus_count):
-                    REGION_BUS_EDITOR.add_qtablewidgetitem(
-                        f_item_name, f_item.track_num,
-                        f_item.bar_num, a_is_offset=True)
-                else:
-                    REGION_AUDIO_EDITOR.add_qtablewidgetitem(
-                        f_item_name, f_item.track_num,
-                        f_item.bar_num, a_is_offset=True)
-        for f_editor in REGION_EDITORS:
-            f_editor.table_widget.setUpdatesEnabled(True)
-            f_editor.table_widget.update()
+                REGION_INST_EDITOR.add_qtablewidgetitem(
+                    f_item_name, f_item.track_num,
+                    f_item.bar_num, a_is_offset=True)
+        REGION_INST_EDITOR.table_widget.setUpdatesEnabled(True)
+        REGION_INST_EDITOR.table_widget.update()
         global_open_audio_items()
         global_update_hidden_rows()
         TRANSPORT.set_time(
@@ -823,8 +802,7 @@ class region_settings:
         self.region_name_lineedit.setText("")
         self.length_alternate_spinbox.setValue(8)
         self.length_default_radiobutton.setChecked(True)
-        for f_editor in REGION_EDITORS:
-            f_editor.clear_items()
+        REGION_INST_EDITOR.clear_items()
         AUDIO_SEQ.clear_drawn_items()
         global CURRENT_REGION
         CURRENT_REGION = None
@@ -833,8 +811,7 @@ class region_settings:
         self.region_name_lineedit.setText("")
         global CURRENT_REGION
         CURRENT_REGION = None
-        for f_editor in REGION_EDITORS:
-            f_editor.clear_new()
+        REGION_INST_EDITOR.clear_new()
 
     def on_play(self):
         self.length_default_radiobutton.setEnabled(False)
@@ -879,40 +856,18 @@ class region_list_editor:
 
     def open_tracks(self):
         self.reset_tracks()
-        if self.track_type == pydaw_track_type_enum.midi:
-            f_tracks = PROJECT.get_tracks()
-            for key, f_track in f_tracks.tracks.items():
-                self.tracks[key].open_track(f_track)
-        elif self.track_type == pydaw_track_type_enum.bus:
-            f_tracks = PROJECT.get_bus_tracks()
-            for key, f_track in f_tracks.busses.items():
-                self.tracks[key].open_track(f_track)
-        elif self.track_type == pydaw_track_type_enum.audio:
-            f_tracks = PROJECT.get_audio_tracks()
-            for key, f_track in f_tracks.tracks.items():
-                self.tracks[key].open_track(f_track)
+        f_tracks = PROJECT.get_tracks()
+        for key, f_track in f_tracks.tracks.items():
+            self.tracks[key].open_track(f_track)
 
     def reset_tracks(self):
         self.tracks = []
         for i in range(0, self.track_count):
-            if self.track_type == pydaw_track_type_enum.midi:
-                track = seq_track(
-                    a_track_num=i, a_track_text=_("track{}").format(i + 1))
-            elif self.track_type == pydaw_track_type_enum.bus:
-                if i == 0:
-                    track = seq_track(
-                        a_track_num=i, a_track_text=_("Master"),
-                        a_instrument=False)
-                else:
-                    track = seq_track(
-                        a_track_num=i, a_track_text=_("Bus{}").format(i),
-                        a_instrument=False)
-            elif self.track_type == pydaw_track_type_enum.audio:
-                track = audio_track(
-                    a_track_num=i, a_track_text=_("track{}").format(i + 1))
+            track = seq_track(
+                a_track_num=i, a_track_text=_("track{}").format(i + 1))
             self.tracks.append(track)
             self.table_widget.setCellWidget(i, 0, track.group_box)
-        self.table_widget.setColumnWidth(0, 410)
+        self.table_widget.setColumnWidth(0, 360)
         self.set_region_length()
 
     def set_region_length(self, a_length=8):
@@ -947,18 +902,9 @@ class region_list_editor:
         self.enabled = False
 
     def get_tracks(self):
-        if self.track_type == 0:
-            f_result = pydaw_tracks()
-            for f_i in range(0, self.track_count):
-                f_result.add_track(f_i, self.tracks[f_i].get_track())
-        elif self.track_type == 1:
-            f_result = pydaw_busses()
-            for f_i in range(0, self.track_count):
-                f_result.add_bus(f_i, self.tracks[f_i].get_track())
-        elif self.track_type == 2:
-            f_result = pydaw_audio_tracks()
-            for f_i in range(0, self.track_count):
-                f_result.add_track(f_i, self.tracks[f_i].get_track())
+        f_result = pydaw_tracks()
+        for f_i in range(0, self.track_count):
+            f_result.add_track(f_i, self.tracks[f_i].get_track())
         return f_result
 
     def warn_no_region_selected(self):
@@ -1218,19 +1164,12 @@ class region_list_editor:
         if a_val > 0:
             TRANSPORT.set_bar_value(a_val - 1)
 
-    def __init__(self, a_track_type):
+    def __init__(self):
         #Prevents user from editing a region before one has been selected
         self.enabled = False
-        self.track_type = a_track_type
-        if a_track_type == pydaw_track_type_enum.midi:
-            self.track_count = pydaw_midi_track_count
-            self.track_offset = 0
-        elif a_track_type == pydaw_track_type_enum.bus:
-            self.track_count = pydaw_bus_count
-            self.track_offset = pydaw_midi_track_count
-        elif a_track_type == pydaw_track_type_enum.audio:
-            self.track_count = pydaw_audio_track_count
-            self.track_offset = pydaw_midi_track_count + pydaw_bus_count
+
+        self.track_count = TRACK_COUNT_ALL
+        self.track_offset = 0
 
         self.table_widget = QtGui.QTableWidget()
         self.table_widget.setAlternatingRowColors(True)
@@ -1344,11 +1283,10 @@ class region_list_editor:
         self.unlink_action.triggered.connect(self.on_unlink_item)
         self.table_widget.addAction(self.unlink_action)
 
-        if a_track_type == pydaw_track_type_enum.midi:
-            self.transpose_action = QtGui.QAction(
-                _("Transpose..."), self.table_widget)
-            self.transpose_action.triggered.connect(self.transpose_dialog)
-            self.table_widget.addAction(self.transpose_action)
+        self.transpose_action = QtGui.QAction(
+            _("Transpose..."), self.table_widget)
+        self.transpose_action.triggered.connect(self.transpose_dialog)
+        self.table_widget.addAction(self.transpose_action)
 
         self.last_item_copied = None
         self.reset_tracks()
@@ -1485,15 +1423,12 @@ class region_list_editor:
         self.tracks[a_index].record_radiobutton.setChecked(True)
         f_current = CC_EDITOR_WIDGET.plugin_combobox.currentIndex()
         f_end = CC_EDITOR_WIDGET.plugin_combobox.count() - 1
-        if self.track_type == pydaw_track_type_enum.midi:
-            f_track_index = \
-                self.tracks[a_index].instrument_combobox.currentIndex()
-            if f_track_index > 0:
-                if f_current < f_end:
-                    CC_EDITOR_WIDGET.plugin_combobox.setCurrentIndex(
-                        global_plugin_indexes[f_track_index])
-        else:
-            CC_EDITOR_WIDGET.plugin_combobox.setCurrentIndex(f_end)
+        f_track_index = self.tracks[a_index].instrument_combobox.currentIndex()
+        if f_track_index > 0:
+            if f_current < f_end:
+                CC_EDITOR_WIDGET.plugin_combobox.setCurrentIndex(
+                    global_plugin_indexes[f_track_index])
+
 
     def on_rename_items(self):
         f_result = []
@@ -1797,8 +1732,7 @@ def global_tablewidget_to_region():
     CURRENT_REGION.items = []
     f_uid_dict = PROJECT.get_items_dict()
     f_result = []
-    for f_editor in REGION_EDITORS:
-        f_result += f_editor.tablewidget_to_list()
+    f_result += REGION_INST_EDITOR.tablewidget_to_list()
     for f_tuple in f_result:
         CURRENT_REGION.add_item_ref_by_name(
             f_tuple[0], f_tuple[1], f_tuple[2], f_uid_dict)
@@ -1821,8 +1755,6 @@ def global_update_audio_track_comboboxes(a_index=None, a_value=None):
 
     SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES = False
 
-global_bus_track_names = [
-    _('Master'), _('Bus1'), _('Bus2'), _('Bus3'), _('Bus4')]
 
 #TODO:  Clean these up...
 BEATS_PER_MINUTE = 128.0
@@ -4779,150 +4711,7 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
 
 def global_save_all_region_tracks():
     PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-    PROJECT.save_audio_tracks(REGION_AUDIO_EDITOR.get_tracks())
-    PROJECT.save_busses(REGION_BUS_EDITOR.get_tracks())
 
-class audio_track:
-    def on_solo(self, value):
-        if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_solo(
-                self.track_number, self.solo_checkbox.isChecked(), 2)
-        f_tracks = PROJECT.get_audio_tracks()
-        f_tracks.tracks[
-            self.track_number].solo = self.solo_checkbox.isChecked()
-        PROJECT.save_audio_tracks(f_tracks)
-        PROJECT.commit(
-            _("Set audio track {} soloed to {}").format(self.track_number,
-            self.solo_checkbox.isChecked()))
-
-    def on_mute(self, value):
-        if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_mute(
-                self.track_number, self.mute_checkbox.isChecked(), 2)
-        f_tracks = PROJECT.get_audio_tracks()
-        f_tracks.tracks[
-            self.track_number].mute = self.mute_checkbox.isChecked()
-        PROJECT.save_audio_tracks(f_tracks)
-        PROJECT.commit(
-            _("Set audio track {} muted to {}").format(self.track_number,
-            self.mute_checkbox.isChecked()))
-
-    def on_rec(self, value):
-        if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_track_rec(
-                2, self.track_number, self.record_radiobutton.isChecked())
-
-    def on_name_changed(self):
-        self.track_name_lineedit.setText(
-            pydaw_remove_bad_chars(self.track_name_lineedit.text()))
-        PROJECT.this_pydaw_osc.pydaw_save_track_name(
-            self.track_number, self.track_name_lineedit.text(), 2)
-        f_tracks = PROJECT.get_audio_tracks()
-        f_tracks.tracks[self.track_number].name = str(
-            self.track_name_lineedit.text())
-        PROJECT.save_audio_tracks(f_tracks)
-        global_update_audio_track_comboboxes(
-            self.track_number, self.track_name_lineedit.text())
-        PROJECT.commit(
-            _("Set audio track {} name to {}").format(self.track_number,
-            self.track_name_lineedit.text()))
-        global_fx_set_window_title(
-            2, self.track_number,
-            _("Audio Track: {}").format(self.track_name_lineedit.text()))
-
-    def on_show_fx(self):
-        global_open_fx_ui(self.track_number, pydaw_folder_audiofx, 2,
-        _("Audio Track: {}").format(self.track_name_lineedit.text()))
-
-    def on_bus_changed(self, a_value=0):
-        PROJECT.this_pydaw_osc.pydaw_set_bus(
-            self.track_number, self.bus_combobox.currentIndex(), 2)
-        f_tracks = PROJECT.get_audio_tracks()
-        f_tracks.tracks[
-            self.track_number].bus_num = self.bus_combobox.currentIndex()
-        PROJECT.save_audio_tracks(f_tracks)
-        PROJECT.commit(
-            _("Set audio track {} bus to {}").format(self.track_number,
-            self.track_name_lineedit.text()))
-
-    def wheel_event(self, a_event=None):
-        pass
-
-    def context_menu_event(self, a_event=None):
-        pass
-
-    def __init__(self, a_track_num, a_track_text=_("track")):
-        self.suppress_osc = True
-        self.track_number = a_track_num
-        self.group_box = QtGui.QWidget()
-        self.group_box.contextMenuEvent = self.context_menu_event
-        self.group_box.setObjectName("track_panel")
-        self.group_box.setMinimumWidth(330)
-        self.main_hlayout = QtGui.QHBoxLayout()
-        self.main_hlayout.setContentsMargins(2, 2, 2, 2)
-        self.main_vlayout = QtGui.QVBoxLayout()
-        self.main_hlayout.addLayout(self.main_vlayout)
-        self.peak_meter = pydaw_widgets.peak_meter()
-        self.main_hlayout.addWidget(self.peak_meter.widget)
-        self.group_box.setLayout(self.main_hlayout)
-        self.hlayout2 = QtGui.QHBoxLayout()
-        self.main_vlayout.addLayout(self.hlayout2)
-        self.hlayout3 = QtGui.QHBoxLayout()
-        self.main_vlayout.addLayout(self.hlayout3)
-        self.track_name_lineedit = QtGui.QLineEdit()
-        self.track_name_lineedit.setText(a_track_text)
-        self.track_name_lineedit.setMaxLength(24)
-        self.track_name_lineedit.setMaximumWidth(90)
-        self.track_name_lineedit.setMinimumWidth(90)
-        self.track_name_lineedit.editingFinished.connect(self.on_name_changed)
-        self.hlayout3.addWidget(self.track_name_lineedit)
-        self.hlayout3.addItem(
-            QtGui.QSpacerItem(
-            10, 10, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
-        self.fx_button = QtGui.QPushButton("FX")
-        self.fx_button.pressed.connect(self.on_show_fx)
-        self.fx_button.setObjectName("fxbutton")
-        self.fx_button.setFixedWidth(24)
-        self.bus_combobox = QtGui.QComboBox()
-        self.bus_combobox.wheelEvent = self.wheel_event
-        self.bus_combobox.addItems(['M', '1', '2', '3', '4'])
-        self.bus_combobox.setMinimumWidth(54)
-        self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
-        self.hlayout3.addWidget(QtGui.QLabel(_("Bus:")))
-        self.hlayout3.addWidget(self.bus_combobox)
-        self.hlayout3.addWidget(self.fx_button)
-        self.solo_checkbox = QtGui.QCheckBox()
-        self.solo_checkbox.stateChanged.connect(self.on_solo)
-        self.solo_checkbox.setObjectName("solo_checkbox")
-        self.hlayout3.addWidget(self.solo_checkbox)
-        self.mute_checkbox = QtGui.QCheckBox()
-        self.mute_checkbox.stateChanged.connect(self.on_mute)
-        self.mute_checkbox.setObjectName("mute_checkbox")
-        self.hlayout3.addWidget(self.mute_checkbox)
-        self.hlayout3.addWidget(self.fx_button)
-        self.record_radiobutton = QtGui.QRadioButton()
-        REC_BUTTON_GROUP.addButton(self.record_radiobutton)
-        self.record_radiobutton.toggled.connect(self.on_rec)
-        self.record_radiobutton.setObjectName("rec_arm_radiobutton")
-        self.hlayout3.addWidget(self.record_radiobutton)
-        self.suppress_osc = False
-
-    def open_track(self, a_track, a_notify_osc=False):
-        if not a_notify_osc:
-            self.suppress_osc = True
-        self.track_name_lineedit.setText(a_track.name)
-        global_update_audio_track_comboboxes(
-            self.track_number, a_track.name)
-        self.solo_checkbox.setChecked(a_track.solo)
-        self.mute_checkbox.setChecked(a_track.mute)
-        self.bus_combobox.setCurrentIndex(a_track.bus_num)
-        self.suppress_osc = False
-
-    def get_track(self):
-        return pydaw_audio_track(
-            self.solo_checkbox.isChecked(), self.mute_checkbox.isChecked(),
-            str(self.track_name_lineedit.text()),
-            self.bus_combobox.currentIndex(), self.track_number)
 
 def global_set_piano_roll_zoom():
     global PIANO_ROLL_GRID_WIDTH
@@ -6620,8 +6409,7 @@ class automation_viewer(QtGui.QGraphicsView):
             f_cc_val = int(127.0 - (((f_pos_y - AUTOMATION_MIN_HEIGHT) /
                 self.viewer_height) * 127.0))
             f_cc_val = pydaw_clip_value(f_cc_val, 0, 127)
-            ITEM_EDITOR.add_cc(pydaw_cc(f_cc_start, self.plugin_index,
-                                             self.cc_num, f_cc_val))
+            ITEM_EDITOR.add_cc(pydaw_cc(f_cc_start, self.cc_num, f_cc_val))
         else:
             f_cc_val = 1.0 - (((f_pos_y - AUTOMATION_MIN_HEIGHT) /
                 self.viewer_height) * 2.0)
@@ -7708,17 +7496,8 @@ LAST_REC_ARMED_TRACK = None
 def global_set_record_armed_track():
     if LAST_REC_ARMED_TRACK is None:
         return
-    elif LAST_REC_ARMED_TRACK < pydaw_midi_track_count:
-        REGION_INST_EDITOR.tracks[
-            LAST_REC_ARMED_TRACK].record_radiobutton.setChecked(True)
-    elif LAST_REC_ARMED_TRACK < \
-    pydaw_midi_track_count + pydaw_bus_count:
-        REGION_BUS_EDITOR.tracks[LAST_REC_ARMED_TRACK -
-            pydaw_midi_track_count].record_radiobutton.setChecked(True)
-    else:
-        REGION_AUDIO_EDITOR.tracks[
-            LAST_REC_ARMED_TRACK - pydaw_midi_track_count -
-            pydaw_bus_count].record_radiobutton.setChecked(True)
+    REGION_INST_EDITOR.tracks[
+        LAST_REC_ARMED_TRACK].record_radiobutton.setChecked(True)
 
 
 class seq_track:
@@ -7741,7 +7520,7 @@ class seq_track:
     def on_rec(self, value):
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_track_rec(
-                self.track_type, self.track_number,
+                self.track_number,
                 self.record_radiobutton.isChecked())
             global LAST_REC_ARMED_TRACK
             LAST_REC_ARMED_TRACK = self.track_number
@@ -7808,13 +7587,7 @@ class seq_track:
     def context_menu_event(self, a_event=None):
         pass
 
-    def __init__(self, a_track_num, a_track_text=_("track"),
-                 a_instrument=True):
-        self.is_instrument = a_instrument
-        if a_instrument:
-            self.track_type = 0
-        else:
-            self.track_type = 1
+    def __init__(self, a_track_num, a_track_text=_("track")):
         self.suppress_osc = True
         self.track_number = a_track_num
         self.group_box = QtGui.QWidget()
@@ -7901,15 +7674,13 @@ class seq_track:
         self.suppress_osc = False
 
     def get_track(self):
-        if self.is_instrument:
-            return pydaw_track(
-                self.solo_checkbox.isChecked(),
-                self.mute_checkbox.isChecked(),
-                str(self.track_name_lineedit.text()),
-                self.instrument_combobox.currentIndex(),
-                self.bus_combobox.currentIndex(), self.track_number)
-        else:
-            return pydaw_bus(self.track_number)
+        return pydaw_track(
+            self.solo_checkbox.isChecked(),
+            self.mute_checkbox.isChecked(),
+            str(self.track_name_lineedit.text()),
+            self.instrument_combobox.currentIndex(),
+            self.bus_combobox.currentIndex(), self.track_number)
+
 
 MREC_EVENTS = []
 
@@ -7949,9 +7720,8 @@ class transport_widget:
                 if self.follow_checkbox.isChecked():
                     AUDIO_SEQ.set_playback_pos(f_bar)
                     f_bar += 1
-                    for f_editor in REGION_EDITORS:
-                        f_editor.table_widget.selectColumn(f_bar)
-                        #f_editor.open_tracks()
+                    REGION_INST_EDITOR.table_widget.selectColumn(f_bar)
+                    #REGION_INST_EDITOR.open_tracks()
                     if f_region != self.last_region_num:
                         self.last_region_num = f_region
                         f_item = SONG_EDITOR.table_widget.item(0, f_region)
@@ -7968,8 +7738,7 @@ class transport_widget:
                             REGION_SETTINGS.clear_items()
                             AUDIO_SEQ.update_zoom()
                             AUDIO_SEQ.clear_drawn_items()
-                            for f_region_editor in REGION_EDITORS:
-                                f_region_editor.set_region_length()
+                            REGION_INST_EDITOR.set_region_length()
 
     def init_playback_cursor(self, a_start=True):
         if not self.follow_checkbox.isChecked() or \
@@ -7984,20 +7753,12 @@ class transport_widget:
                 REGION_SETTINGS.open_region(f_region_name)
         else:
             REGION_INST_EDITOR.clear_items()
-            REGION_AUDIO_EDITOR.clear_items()
-            REGION_BUS_EDITOR.clear_items()
             AUDIO_SEQ.clear_drawn_items()
         if a_start:
             REGION_INST_EDITOR.table_widget.selectColumn(
                 self.get_bar_value() + 1)
-            REGION_AUDIO_EDITOR.table_widget.selectColumn(
-                self.get_bar_value() + 1)
-            REGION_BUS_EDITOR.table_widget.selectColumn(
-                self.get_bar_value() + 1)
         else:
             REGION_INST_EDITOR.table_widget.clearSelection()
-            REGION_AUDIO_EDITOR.table_widget.clearSelection()
-            REGION_BUS_EDITOR.table_widget.clearSelection()
         SONG_EDITOR.table_widget.selectColumn(self.get_region_value())
 
     def on_spacebar(self):
@@ -8226,20 +7987,12 @@ class transport_widget:
                 REGION_SETTINGS.open_region(f_item.text())
             else:
                 REGION_INST_EDITOR.clear_items()
-                REGION_AUDIO_EDITOR.clear_items()
-                REGION_BUS_EDITOR.clear_items()
             SONG_EDITOR.table_widget.selectColumn(self.get_region_value())
             REGION_INST_EDITOR.table_widget.selectColumn(self.get_bar_value())
-            REGION_AUDIO_EDITOR.table_widget.selectColumn(
-                self.get_bar_value())
-            REGION_BUS_EDITOR.table_widget.selectColumn(
-                self.get_bar_value())
             if self.is_playing or self.is_recording:
                 self.trigger_audio_playback()
         else:
             REGION_INST_EDITOR.table_widget.clearSelection()
-            REGION_AUDIO_EDITOR.table_widget.clearSelection()
-            REGION_BUS_EDITOR.table_widget.clearSelection()
             if self.is_playing or self.is_recording:
                 AUDIO_SEQ.stop_playback(0)
             else:
@@ -9473,13 +9226,9 @@ class pydaw_main_window(QtGui.QMainWindow):
 
         self.song_region_splitter.addWidget(self.regions_tab_widget)
         self.regions_tab_widget.addTab(
-            REGION_INST_EDITOR.table_widget, _("Instruments"))
+            REGION_INST_EDITOR.table_widget, _("MIDI"))
         self.regions_tab_widget.addTab(
-            REGION_BUS_EDITOR.table_widget, _("Busses"))
-        self.regions_tab_widget.addTab(
-            REGION_AUDIO_EDITOR.table_widget, _("Audio Tracks"))
-        self.regions_tab_widget.addTab(
-            AUDIO_SEQ_WIDGET.hsplitter, _("Audio Seq"))
+            AUDIO_SEQ_WIDGET.hsplitter, _("Audio"))
 
         self.first_audio_tab_click = True
         self.regions_tab_widget.currentChanged.connect(
@@ -9661,9 +9410,7 @@ class pydaw_main_window(QtGui.QMainWindow):
             event.accept()
 
 def global_update_peak_meters(a_val):
-    ALL_PEAK_METERS = [x.peak_meter for x in
-        REGION_INST_EDITOR.tracks + REGION_BUS_EDITOR.tracks +
-        REGION_AUDIO_EDITOR.tracks]
+    ALL_PEAK_METERS = [x.peak_meter for x in REGION_INST_EDITOR.tracks]
     ALL_PEAK_METERS.append(WAVE_EDITOR.peak_meter)
 
     for f_val in a_val.split("|"):
@@ -10606,8 +10353,7 @@ def global_ui_refresh_callback(a_restore_all=False):
     """ Use this to re-open all existing items/regions/song in
         their editors when the files have been changed externally
     """
-    for f_editor in REGION_EDITORS:
-        f_editor.open_tracks()
+    REGION_INST_EDITOR.open_tracks()
     f_regions_dict = PROJECT.get_regions_dict()
     global CURRENT_REGION
     if CURRENT_REGION is not None and \
@@ -10643,8 +10389,7 @@ def global_open_project(a_project_file, a_wait=True):
     PROJECT.open_project(a_project_file, False)
     WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
     SONG_EDITOR.open_song()
-    for f_editor in REGION_EDITORS:
-        f_editor.open_tracks()
+    REGION_INST_EDITOR.open_tracks()
     TRANSPORT.open_transport()
     pydaw_util.set_file_setting("last-project", a_project_file)
     global_update_audio_track_comboboxes()
@@ -10699,15 +10444,14 @@ TIMESTRETCH_MODES = [_("None"), _("Pitch(affecting time)"),
 CRISPNESS_SETTINGS = [_("0 (smeared)"), _("1 (piano)"), "2", "3",
                       "4", "5 (normal)", _("6 (sharp, drums)")]
 
-AUDIO_TRACK_NAMES = ["track{}".format(x + 1) for x in
-    range(pydaw_audio_track_count)]
+AUDIO_TRACK_NAMES = ["track{}".format(x + 1) for x in range(TRACK_COUNT_ALL)]
 
 SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES = False
 AUDIO_TRACK_COMBOBOXES = []
 
-APP.setWindowIcon(QtGui.QIcon("{}/share/pixmaps/{}.png".format(
-                  pydaw_util.global_pydaw_install_prefix,
-                  global_pydaw_version_string)))
+APP.setWindowIcon(
+    QtGui.QIcon("{}/share/pixmaps/{}.png".format(
+    pydaw_util.global_pydaw_install_prefix, global_pydaw_version_string)))
 
 PB_EDITOR = automation_viewer(a_is_cc=False)
 CC_EDITOR = automation_viewer()
@@ -10724,10 +10468,7 @@ if not os.access(global_pydaw_home, os.W_OK):
 
 SONG_EDITOR = song_editor()
 REGION_SETTINGS = region_settings()
-REGION_INST_EDITOR = region_list_editor(pydaw_track_type_enum.midi)
-REGION_BUS_EDITOR = region_list_editor(pydaw_track_type_enum.bus)
-REGION_AUDIO_EDITOR = region_list_editor(pydaw_track_type_enum.audio)
-REGION_EDITORS = (REGION_INST_EDITOR, REGION_BUS_EDITOR, REGION_AUDIO_EDITOR)
+REGION_INST_EDITOR = region_list_editor()
 
 AUDIO_EDITOR_WIDGET = audio_item_editor_widget()
 PIANO_ROLL_EDITOR = piano_roll_editor()

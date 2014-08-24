@@ -40,12 +40,6 @@ GNU General Public License for more details.
 #define STATUS_PROCESSING 1
 #define STATUS_PROCESSED 2
 
-#define TRACK_TYPE_INST 0
-#define TRACK_TYPE_BUS 1
-#define TRACK_TYPE_AUDIO 2
-#define TRACK_TYPE_AUDIO_IN 3
-#define TRACK_TYPE_WAVE 4
-
 #define MAX_INST_COUNT 5
 #define MAX_FX_COUNT 10
 
@@ -58,8 +52,7 @@ GNU General Public License for more details.
 #define PYDAW_AUDIO_TRACK_COUNT 8
 #define PYDAW_MIDI_TRACK_COUNT 20
 #define PYDAW_WE_TRACK_COUNT 1
-#define PYDAW_TRACK_COUNT_ALL (PYDAW_BUS_TRACK_COUNT + PYDAW_AUDIO_TRACK_COUNT \
-                               + PYDAW_MIDI_TRACK_COUNT + PYDAW_WE_TRACK_COUNT)
+#define PYDAW_TRACK_COUNT_ALL 34
 
 #define PYDAW_MAX_EVENT_BUFFER_SIZE 512  //This could probably be made smaller
 #define PYDAW_MAX_REGION_SIZE 256
@@ -106,36 +99,6 @@ GNU General Public License for more details.
 #define RT_SCHED SCHED_FIFO
 
 #endif
-
-/* Interim until PyDAWv5 */
-int i_get_global_track_num(int a_track_type, int a_track_num)
-{
-    if(a_track_type == TRACK_TYPE_INST)
-    {
-        assert(a_track_num < PYDAW_MIDI_TRACK_COUNT);
-        return a_track_num;
-    }
-    else if(a_track_type == TRACK_TYPE_BUS)
-    {
-        assert(a_track_num < PYDAW_BUS_TRACK_COUNT);
-        return a_track_num + PYDAW_MIDI_TRACK_COUNT;
-    }
-    else if(a_track_type == TRACK_TYPE_AUDIO)
-    {
-        assert(a_track_num < PYDAW_AUDIO_TRACK_COUNT);
-        return a_track_num + PYDAW_MIDI_TRACK_COUNT + PYDAW_BUS_TRACK_COUNT;
-    }
-    else if(a_track_type == TRACK_TYPE_WAVE)
-    {
-        assert(a_track_num < PYDAW_WE_TRACK_COUNT);
-        return PYDAW_MIDI_TRACK_COUNT + PYDAW_BUS_TRACK_COUNT +
-            PYDAW_AUDIO_TRACK_COUNT;
-    }
-    else
-    {
-        assert(0);
-    }
-}
 
 #ifdef	__cplusplus
 extern "C" {
@@ -201,8 +164,6 @@ typedef struct
 {
     int solo;
     int mute;
-    //-1 == bus track, 0 == off, 1 == Euphoria, 2 == Ray-V, 3 == Way-V
-    int plugin_index;
     int bus_num;
     t_pydaw_seq_event * event_buffer;
     int period_event_index;
@@ -210,11 +171,7 @@ typedef struct
     t_pydaw_plugin * effects[MAX_FX_COUNT];
     int instrument_count;
     int effect_count;
-    /*Track number for the pool of tracks it is in,
-      for example: 0-15 for midi tracks*/
     int track_num;
-    int global_track_num;
-    int track_type;
     //Only for busses, the count of plugins writing to the buffer
     int bus_count;
     /*This is reset to bus_count each cycle and the
@@ -255,7 +212,6 @@ typedef struct
     int overdub_mode;  //0 == Off, 1 == On
     //char * project_name;
     char * project_folder;
-    char * instruments_folder;
     char * item_folder;
     char * region_folder;
     char * region_audio_folder;
@@ -264,8 +220,8 @@ typedef struct
     char * samples_folder;
     char * samplegraph_folder;
     char * wav_pool_file;
-    char * busfx_folder;
-    char * audiofx_folder;
+    char * plugins_folder;
+
     //only refers to the fractional position within the current bar.
     float playback_cursor;
     /*the increment per-period to iterate through 1 bar,
@@ -376,11 +332,11 @@ typedef struct
 }t_pydaw_thread_args;
 
 void g_pysong_get(t_pydaw_data*, int);
-t_pytrack * g_pytrack_get(int, int, float);
+t_pytrack * g_pytrack_get(int, float);
 t_pyregion * g_pyregion_get(t_pydaw_data* a_pydaw, const int);
 void g_pyitem_get(t_pydaw_data*, int);
 
-t_pydaw_seq_event * g_pycc_get(int, int, float, float);
+t_pydaw_seq_event * g_pycc_get(int, float, float);
 t_pydaw_seq_event * g_pypitchbend_get(float a_start, float a_value);
 t_pydaw_seq_event * g_pynote_get(int a_note, int a_vel, float a_start,
                                  float a_length);
@@ -401,8 +357,7 @@ void v_save_pysong_to_disk(t_pydaw_data * self);
 void v_save_pyitem_to_disk(t_pydaw_data * self, int a_index);
 void v_save_pyregion_to_disk(t_pydaw_data * self, int a_region_num);
 void v_pydaw_open_plugin(t_pydaw_data * self, t_pytrack * a_track,
-                         int a_is_fx);
-
+                         int a_is_fx, int a_uid);
 inline void v_pydaw_update_ports(t_pydaw_plugin * a_plugin);
 void * v_pydaw_worker_thread(void*);
 void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
@@ -841,37 +796,11 @@ void v_paif_set_control(t_pydaw_data * self, int a_region_uid,
 
 void v_pydaw_init_busses(t_pydaw_data * self)
 {
-    int f_i = 0;
-    int f_global_track_num;
-
-
-    while(f_i < PYDAW_BUS_TRACK_COUNT)
-    {
-        f_global_track_num = i_get_global_track_num(1, f_i);
-        v_set_plugin_index(self,
-            self->track_pool_all[f_global_track_num], -1, 0);
-        f_i++;
-    }
-
-    f_i = 0;
-
-    while(f_i < PYDAW_AUDIO_TRACK_COUNT)
-    {
-        f_global_track_num = i_get_global_track_num(2, f_i);
-        v_set_plugin_index(self,
-            self->track_pool_all[f_global_track_num], -1, 0);
-        f_i++;
-    }
-
-    f_i = 0;
-
-    while(f_i < PYDAW_WE_TRACK_COUNT)
-    {
-        f_global_track_num = i_get_global_track_num(4, f_i);
-        v_set_plugin_index(self,
-            self->track_pool_all[f_global_track_num], -1, 0);
-        f_i++;
-    }
+    //master bus
+    v_set_plugin_index(self, self->track_pool_all[0], -1, 0);
+    //wave editor
+    v_set_plugin_index(self,
+        self->track_pool_all[PYDAW_TRACK_COUNT_ALL], -1, 0);
 }
 /* Create a clock_t with clock() when beginning some work,
  * and use this function to print the completion time*/
@@ -1334,71 +1263,39 @@ inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
     int f_i = 0;
     int f_global_track_num;
 
-    while(f_i < PYDAW_BUS_TRACK_COUNT)
+    while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        f_global_track_num = i_get_global_track_num(1, f_i);
-        self->track_pool_all[f_global_track_num]->bus_count = 0;
+        self->track_pool_all[f_i]->bus_count = 0;
         f_i++;
     }
 
     f_i = 0;
 
-    while(f_i < PYDAW_MIDI_TRACK_COUNT)
+    while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        if((self->track_pool_all[f_i]->plugin_index) > 0)
-        {
-            f_global_track_num = i_get_global_track_num(1,
-                self->track_pool_all[f_i]->bus_num);
-            self->track_pool_all[f_global_track_num]->bus_count += 1;
-        }
-        f_i++;
-    }
-
-    f_i = 0;
-
-    while(f_i < PYDAW_AUDIO_TRACK_COUNT)
-    {
-        int f_audio_track_num = i_get_global_track_num(2, f_i);
-        f_global_track_num = i_get_global_track_num(1,
-            self->track_pool_all[f_audio_track_num]->bus_num);
+        f_global_track_num = self->track_pool_all[f_i]->bus_num;
         self->track_pool_all[f_global_track_num]->bus_count += 1;
         f_i++;
     }
 
-    f_i = 1;
-
-    while(f_i < PYDAW_BUS_TRACK_COUNT)
-    {
-        f_global_track_num = i_get_global_track_num(1, f_i);
-        if(self->track_pool_all[f_global_track_num]->bus_count > 0)
-        {
-            self->track_pool_all[
-                PYDAW_MIDI_TRACK_COUNT]->bus_count += 1;
-        }
-        f_i++;
-    }
-
     f_i = 0;
 
-    while(f_i < PYDAW_BUS_TRACK_COUNT)
+    while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        f_global_track_num = i_get_global_track_num(1, f_i);
-        self->track_pool_all[f_global_track_num]->bus_counter =
-            (self->track_pool_all[f_global_track_num]->bus_count);
+        self->track_pool_all[f_i]->bus_counter =
+            self->track_pool_all[f_i]->bus_count;
         f_i++;
     }
-
 }
 
 inline void v_pydaw_sum_track_outputs(t_pydaw_data * self,
         t_pytrack * a_track, int bus_num)
 {
-    int f_global_track_num = i_get_global_track_num(1, bus_num);
-    t_pytrack * f_bus = self->track_pool_all[f_global_track_num];
+    t_pytrack * f_bus = self->track_pool_all[bus_num];
     float ** f_buff = f_bus->buffers;
     float ** f_track_buff = a_track->buffers;
 
-    if((a_track->track_type == TRACK_TYPE_BUS)
+    if((a_track->bus_count)
         ||
         ((!a_track->mute) && (!self->is_soloed))
         ||
@@ -1605,17 +1502,6 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
 {
     t_pytrack * f_track = self->track_pool_all[a_global_track_num];
 
-    //TODO:  Remove at PyDAWv5
-    if(f_track->track_type == TRACK_TYPE_INST &&
-       f_track->plugin_index == 0)
-    {
-        int f_bus_index =
-            i_get_global_track_num(TRACK_TYPE_BUS, f_track->bus_num);
-        t_pytrack * f_bus = self->track_pool_all[f_bus_index];
-        f_bus->bus_counter -= 1;
-        return;
-    }
-
     if(self->playback_mode > 0)
     {
         v_pydaw_process_midi(self, a_global_track_num, self->sample_count);
@@ -1678,35 +1564,18 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
 
 void v_sort_tracks(t_pydaw_data * self)
 {
-    int f_i = 0;
+    //TODO:  Fix this, it won't really work and might cause lockups
+    int f_i = 1;
     int f_track = 0;
-    int f_global_track;
 
-    while(f_i < PYDAW_MIDI_TRACK_COUNT)
+    while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        f_global_track = i_get_global_track_num(TRACK_TYPE_INST, f_i);
-        self->track_pool_sorted[f_track] = self->track_pool_all[f_global_track];
+        self->track_pool_sorted[f_track] = self->track_pool_all[f_i];
         f_track++;
         f_i++;
     }
 
-    f_i = 0;
-    while(f_i < PYDAW_AUDIO_TRACK_COUNT)
-    {
-        f_global_track = i_get_global_track_num(TRACK_TYPE_AUDIO, f_i);
-        self->track_pool_sorted[f_track] = self->track_pool_all[f_global_track];
-        f_track++;
-        f_i++;
-    }
-
-    f_i = 1;
-    while(f_i < PYDAW_BUS_TRACK_COUNT)
-    {
-        f_global_track = i_get_global_track_num(TRACK_TYPE_BUS, f_i);
-        self->track_pool_sorted[f_track] = self->track_pool_all[f_global_track];
-        f_track++;
-        f_i++;
-    }
+    self->track_pool_sorted[f_track] = self->track_pool_all[0];
 
     self->track_pool_sorted_count = f_track;
 }
@@ -1741,7 +1610,7 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
 
         pthread_spin_unlock(&f_track->lock);
 
-        v_pydaw_process_track(self, f_track->global_track_num);
+        v_pydaw_process_track(self, f_track->track_num);
 
         //pthread_spin_lock(&f_track->lock);
 
@@ -1995,9 +1864,7 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
                         if (controller > 0)
                         {
                             int controlIn;
-                            if(f_track->instruments[0] &&
-                               f_track->plugin_index ==
-                               f_event->plugin_index)
+                            if(f_track->instrument_count)
                             {
                                 t_pydaw_seq_event * f_buff_ev =
                                     &f_track->event_buffer[
@@ -2027,9 +1894,6 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
 
                                     f_buff_ev->tick = f_note_sample_offset;
 
-                                    f_buff_ev->plugin_index =
-                                        f_event->plugin_index;
-
                                     v_pydaw_set_control_from_cc(
                                         f_track->instruments[0], controlIn,
                                         f_buff_ev, self, 1, f_i);
@@ -2037,7 +1901,7 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
                                     f_track->period_event_index += 1;
                                 }
                             }
-                            else if(f_event->plugin_index == -1)
+                            else if(0) // f_event->plugin_index == -1) TODO
                             {
                                 controlIn = controller;
                                 if (controlIn >= 0)
@@ -2067,8 +1931,6 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
                                     f_buff_ev->port = f_event->port;
 
                                     f_buff_ev->tick = f_note_sample_offset;
-
-                                    f_buff_ev->plugin_index = -1;
 
                                     v_pydaw_set_control_from_cc(
                                         f_track->effects[0], controlIn,
@@ -2149,30 +2011,24 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
 inline void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
 {
     t_pytrack * f_track = self->track_pool_all[f_i];
-    if((f_track->plugin_index) != 0)
+
+    int f_i2 = 0;
+
+    while(f_i2 < PYDAW_MIDI_NOTE_COUNT)
     {
-        int f_i2 = 0;
-
-        while(f_i2 < PYDAW_MIDI_NOTE_COUNT)
+        if((f_track->note_offs[f_i2]) >= (self->current_sample) &&
+           (f_track->note_offs[f_i2]) < self->f_next_current_sample)
         {
-            if((f_track->note_offs[f_i2]) >=
-                (self->current_sample) &&
-               (f_track->note_offs[f_i2]) <
-                self->f_next_current_sample)
-            {
-                t_pydaw_seq_event * f_event =
-                    &f_track->event_buffer[f_track->period_event_index];
-                v_pydaw_ev_clear(f_event);
+            t_pydaw_seq_event * f_event =
+                &f_track->event_buffer[f_track->period_event_index];
+            v_pydaw_ev_clear(f_event);
 
-                v_pydaw_ev_set_noteoff(f_event, 0, f_i2, 0);
-                f_event->tick =
-                    (f_track->note_offs[f_i2]) - (self->current_sample);
-
-                f_track->period_event_index += 1;
-                f_track->note_offs[f_i2] = -1;
-            }
-            f_i2++;
+            v_pydaw_ev_set_noteoff(f_event, 0, f_i2, 0);
+            f_event->tick = (f_track->note_offs[f_i2]) - (self->current_sample);
+            f_track->period_event_index += 1;
+            f_track->note_offs[f_i2] = -1;
         }
+        f_i2++;
     }
 }
 
@@ -2181,8 +2037,7 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
 {
     assert(event_count < 200);
 
-    if((self->record_armed_track) &&
-            ((self->record_armed_track->plugin_index) != 0))
+    if(self->record_armed_track)
     {
         t_pytrack * f_track = self->record_armed_track;
         int f_i2 = 0;
@@ -2303,9 +2158,8 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
                     if(!self->cc_map[controller]->effects_only)
                     {
                         int f_port = -9999;
-                        int f_index = f_track->plugin_index;
 
-                        if(f_index == 1)  //Euphoria
+                        /*if(f_index == 1)  //Euphoria
                         {
                             f_port = self->cc_map[
                                     controller]->euphoria_port;
@@ -2319,7 +2173,9 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
                         {
                             f_port = self->cc_map[
                                 controller]->wayv_port;
-                        }
+                        }*/
+
+                        assert(0);  //TODO:  Fix this
 
                         controlIn = f_port;
 
@@ -2338,9 +2194,6 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
                                     self->
                                         record_armed_track_index_all);
 
-                            f_event->plugin_index =
-                                f_track->plugin_index;
-
                             f_track->period_event_index += 1;
 
                             if(self->playback_mode ==
@@ -2354,10 +2207,9 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
 
                                 sprintf(
                                     f_osc_msg,
-                                    "cc|%i|%i|%f|%i|%i|%f",
+                                    "cc|%i|%i|%f|%i|%f",
                                     self->current_region,
                                     self->current_bar, f_beat,
-                                    f_track->plugin_index,
                                     controlIn, events[f_i2].value);
                                 v_queue_osc_message("mrec",
                                     f_osc_msg);
@@ -2555,7 +2407,7 @@ inline void v_pydaw_finish_time_params(t_pydaw_data * self,
 inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
         int sample_count, PYFX_Data *output0, PYFX_Data *output1)
 {
-    int f_global_track_num = i_get_global_track_num(4, 0);
+    int f_global_track_num = PYDAW_TRACK_COUNT_ALL - 1
     t_pytrack * f_track = self->track_pool_all[f_global_track_num];
     int f_i = 0;
 
@@ -3287,16 +3139,11 @@ t_pydaw_seq_event * g_pynote_get(int a_note, int a_vel,
     return f_result;
 }
 
-/* t_pydaw_seq_event * g_pycc_get(int a_plugin_index, int a_cc_num,
- * float a_cc_val, float a_start)
- */
-t_pydaw_seq_event * g_pycc_get(int a_plugin_index, int a_cc_num,
-        float a_cc_val, float a_start)
+t_pydaw_seq_event * g_pycc_get(int a_cc_num, float a_cc_val, float a_start)
 {
     t_pydaw_seq_event * f_result =
         (t_pydaw_seq_event*)malloc(sizeof(t_pydaw_seq_event));
     f_result->type = PYDAW_EVENT_CONTROLLER;
-    f_result->plugin_index = a_plugin_index;
     f_result->port = a_cc_num;
     f_result->value = a_cc_val;
     f_result->start = a_start;
@@ -3577,15 +3424,12 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
         }
         else if(!strcmp(f_type, "c")) //cc
         {
-            char * f_cc_plugin_index =
-                c_iterate_2d_char_array(f_current_string);
             //this is really port number, will refactor later...
             char * f_cc_num = c_iterate_2d_char_array(f_current_string);
             char * f_cc_val = c_iterate_2d_char_array(f_current_string);
 
             f_result->events[(f_result->event_count)] = g_pycc_get(
-                    atoi(f_cc_plugin_index), atoi(f_cc_num), atof(f_cc_val),
-                    atof(f_start));
+                    atoi(f_cc_num), atof(f_cc_val), atof(f_start));
             f_result->event_count = (f_result->event_count) + 1;
 
             free(f_cc_num);
@@ -3630,14 +3474,13 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
     }
 }
 
-t_pytrack * g_pytrack_get(int a_track_num, int a_track_type, float a_sr)
+t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
 {
     int f_i = 0;
 
     t_pytrack * f_result = (t_pytrack*)malloc(sizeof(t_pytrack));
 
     f_result->track_num = a_track_num;
-    f_result->track_type = a_track_type;
     f_result->channels = 2;
 
     pthread_spin_init(&f_result->lock, 0);
@@ -3653,12 +3496,8 @@ t_pytrack * g_pytrack_get(int a_track_num, int a_track_type, float a_sr)
 
     v_pydaw_zero_buffer(f_result->buffers, FRAMES_PER_BUFFER);
 
-    f_result->global_track_num =
-        i_get_global_track_num(a_track_type, a_track_num);
-
     f_result->mute = 0;
     f_result->solo = 0;
-    f_result->plugin_index = 0;
     f_result->event_buffer = (t_pydaw_seq_event*)malloc(
             sizeof(t_pydaw_seq_event) * PYDAW_MAX_EVENT_BUFFER_SIZE);
     f_result->bus_num = 0;
@@ -3742,13 +3581,11 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
     f_result->overdub_mode = 0;
     f_result->loop_mode = 0;
     f_result->item_folder = (char*)malloc(sizeof(char) * 1024);
-    f_result->instruments_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->project_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->region_folder = (char*)malloc(sizeof(char) * 1024);
-    f_result->busfx_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->audio_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->audio_tmp_folder = (char*)malloc(sizeof(char) * 1024);
-    f_result->audiofx_folder = (char*)malloc(sizeof(char) * 1024);
+    f_result->plugins_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->samples_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->wav_pool_file = (char*)malloc(sizeof(char) * 1024);
     f_result->region_audio_folder = (char*)malloc(sizeof(char) * 1024);
@@ -3823,36 +3660,9 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
 
     f_i = 0;
 
-    while(f_i < PYDAW_MIDI_TRACK_COUNT)
+    while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        f_result->track_pool_all[f_track_total] = g_pytrack_get(f_i, 0, a_sr);
-        f_i++;
-        f_track_total++;
-    }
-
-    f_i = 0;
-
-    while(f_i < PYDAW_BUS_TRACK_COUNT)
-    {
-        f_result->track_pool_all[f_track_total] = g_pytrack_get(f_i, 1, a_sr);
-        f_i++;
-        f_track_total++;
-    }
-
-    f_i = 0;
-
-    while(f_i < PYDAW_AUDIO_TRACK_COUNT)
-    {
-        f_result->track_pool_all[f_track_total] = g_pytrack_get(f_i, 2, a_sr);
-        f_i++;
-        f_track_total++;
-    }
-
-    f_i = 0;
-
-    while(f_i < PYDAW_WE_TRACK_COUNT)
-    {
-        f_result->track_pool_all[f_track_total] = g_pytrack_get(f_i, 4, a_sr);
+        f_result->track_pool_all[f_track_total] = g_pytrack_get(f_i, a_sr);
         f_i++;
         f_track_total++;
     }
@@ -3895,49 +3705,21 @@ void v_pydaw_activate_osc_thread(t_pydaw_data * self,
 
 void v_pydaw_open_track(t_pydaw_data * self, t_pytrack * a_track)
 {
-    //Don't open the instrument plugin if it's a bus track
-    if((a_track->plugin_index) != -1)
-    {
-        v_pydaw_open_plugin(self, a_track, 0);
-    }
-
-    v_pydaw_open_plugin(self, a_track, 1);
-
+    assert(0);
+    // TODO:  Loop through a map of what the track should have
+    //v_pydaw_open_plugin(self, a_track, 1);
 }
 
 void v_pydaw_open_plugin(t_pydaw_data * self, t_pytrack * a_track,
-        int a_is_fx)
+        int a_is_fx, int a_uid)
 {
     char f_file_name[1024];
+    sprintf(f_file_name, "%s%i.mkp", self->plugins_folder, a_track->track_num);
 
-    if(a_is_fx)
+    if(i_pydaw_file_exists(f_file_name))
     {
-        switch(a_track->track_type)
-        {
-            case TRACK_TYPE_INST:
-                sprintf(f_file_name, "%s%i.pyfx",
-                        self->instruments_folder, a_track->track_num);
-                break;
-            case TRACK_TYPE_BUS:
-                sprintf(f_file_name, "%s%i.pyfx", self->busfx_folder,
-                        a_track->track_num);
-                break;
-            case TRACK_TYPE_AUDIO:
-                sprintf(f_file_name, "%s%i.pyfx", self->audiofx_folder,
-                        a_track->track_num);
-                break;
-        }
-    }
-    else
-    {
-        sprintf(f_file_name, "%s%i.pyinst", self->instruments_folder,
-                a_track->track_num);
-    }
-
-    if(a_track->track_type != TRACK_TYPE_WAVE &&
-        i_pydaw_file_exists(f_file_name))
-    {
-        printf("v_pydaw_open_track:  Track exists %s , loading\n", f_file_name);
+        printf("v_pydaw_open_plugin:  plugin exists %s , loading\n",
+            f_file_name);
 
         t_pydaw_plugin * f_instance;
 
@@ -3991,8 +3773,7 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
             int f_track_index = atoi(f_track_index_str);
             free(f_track_index_str);
-            assert(f_track_index >= 0 && f_track_index <
-                    PYDAW_MIDI_TRACK_COUNT);
+            assert(f_track_index >= 0 && f_track_index < PYDAW_TRACK_COUNT_ALL);
 
             int f_solo = atoi(f_solo_str);
             free(f_solo_str);
@@ -4013,21 +3794,7 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
             free(f_bus_num_str);
             assert(f_bus_num >= 0 && f_bus_num < PYDAW_BUS_TRACK_COUNT);
 
-            if(self->track_pool_all[f_track_index]->plugin_index != -1)
-            {
-                //Must set it to zero to prevent the state file from
-                //being deleted
-                self->track_pool_all[f_track_index]->plugin_index = 0;
-                v_set_plugin_index(self,
-                    self->track_pool_all[f_track_index], f_plugin_index, 0);
-            }
-            else
-            {
-                //This is called by v_set_plugin_index, so it only needs
-                //to be called here
-                v_pydaw_open_track(self,
-                    self->track_pool_all[f_track_index]);
-            }
+            v_pydaw_open_track(self, self->track_pool_all[f_track_index]);
 
             self->track_pool_all[f_track_index]->solo = f_solo;
             self->track_pool_all[f_track_index]->mute = f_mute;
@@ -4040,154 +3807,11 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
     {
         int f_i = 0;
 
-        while(f_i < PYDAW_MIDI_TRACK_COUNT)
+        while(f_i < PYDAW_TRACK_COUNT_ALL)
         {
-            //Must set it to zero to prevent the state file from being deleted
-            self->track_pool_all[f_i]->plugin_index = 0;
-
-            v_set_plugin_index(self, self->track_pool_all[f_i], 0, 0);
-
             self->track_pool_all[f_i]->solo = 0;
             self->track_pool_all[f_i]->mute = 0;
             v_pydaw_open_track(self, self->track_pool_all[f_i]);
-
-            f_i++;
-        }
-    }
-
-    sprintf(f_file_name, "%s/projects/edmnext/default.pybus",
-        self->project_folder);
-
-    if(i_pydaw_file_exists(f_file_name))
-    {
-        printf("v_pydaw_open_tracks:  File exists %s , loading\n", f_file_name);
-
-        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(f_file_name,
-                PYDAW_LARGE_STRING);
-
-        while(1)
-        {
-            char * f_track_index_str = c_iterate_2d_char_array(f_2d_array);
-
-            if(f_2d_array->eof)
-            {
-                free(f_track_index_str);
-                break;
-            }
-
-            char * f_track_pos = c_iterate_2d_char_array(f_2d_array);  //ignored
-            free(f_track_pos);
-
-            int f_track_index = atoi(f_track_index_str);
-            free(f_track_index_str);
-            assert(f_track_index >= 0 && f_track_index < PYDAW_BUS_TRACK_COUNT);
-
-            f_track_index = i_get_global_track_num(1, f_track_index);
-
-            v_pydaw_open_track(self,
-                    self->track_pool_all[f_track_index]);
-        }
-
-        g_free_2d_char_array(f_2d_array);
-    }
-    else   //ensure everything is closed...
-    {
-        int f_i = 0;
-        int f_global_track_num;
-
-        while(f_i < PYDAW_BUS_TRACK_COUNT)
-        {
-            f_global_track_num = i_get_global_track_num(1, f_i);
-            //Must set it to zero to prevent the state file from being deleted
-            self->track_pool_all[f_global_track_num]->plugin_index = 0;
-
-            v_set_plugin_index(self,
-                self->track_pool_all[f_global_track_num], 0, 0);
-
-            self->track_pool_all[f_global_track_num]->solo = 0;
-            self->track_pool_all[f_global_track_num]->mute = 0;
-            v_pydaw_open_track(self,
-                self->track_pool_all[f_global_track_num]);
-
-            f_i++;
-        }
-    }
-
-    sprintf(f_file_name, "%s/projects/edmnext/default.pyaudio",
-        self->project_folder);
-
-    if(i_pydaw_file_exists(f_file_name))
-    {
-        printf("v_pydaw_open_tracks:  File exists %s , loading\n", f_file_name);
-
-        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(f_file_name,
-                PYDAW_LARGE_STRING);
-
-        while(1)
-        {
-            char * f_track_index_str = c_iterate_2d_char_array(f_2d_array);
-
-            if(f_2d_array->eof)
-            {
-                free(f_track_index_str);
-                break;
-            }
-
-            char * f_solo_str = c_iterate_2d_char_array(f_2d_array);
-            char * f_mute_str = c_iterate_2d_char_array(f_2d_array);
-            char * f_name_str = c_iterate_2d_char_array(f_2d_array);
-            char * f_bus_num_str = c_iterate_2d_char_array(f_2d_array);
-            char * f_track_pos = c_iterate_2d_char_array(f_2d_array);  //ignored
-            free(f_track_pos);
-
-            int f_track_index = atoi(f_track_index_str);
-            free(f_track_index_str);
-            assert(f_track_index >= 0 &&
-                    f_track_index < PYDAW_AUDIO_TRACK_COUNT);
-
-            f_track_index = i_get_global_track_num(2, f_track_index);
-
-            int f_solo = atoi(f_solo_str);
-            free(f_solo_str);
-            assert(f_solo == 0 || f_solo == 1);
-
-            int f_mute = atoi(f_mute_str);
-            free(f_mute_str);
-            assert(f_mute == 0 || f_mute == 1);
-
-            free(f_name_str);
-
-            int f_bus_num = atoi(f_bus_num_str);
-            free(f_bus_num_str);
-            assert(f_bus_num >= 0 && f_bus_num < PYDAW_BUS_TRACK_COUNT);
-
-            self->track_pool_all[f_track_index]->solo = f_solo;
-            self->track_pool_all[f_track_index]->mute = f_mute;
-            self->track_pool_all[f_track_index]->bus_num = f_bus_num;
-
-            v_pydaw_open_track(self,
-                    self->track_pool_all[f_track_index]);
-        }
-
-        g_free_2d_char_array(f_2d_array);
-    }
-    else   //ensure everything is closed...
-    {
-        int f_i = 0;
-        int f_global_track_num;
-
-        while(f_i < PYDAW_AUDIO_TRACK_COUNT)
-        {
-            f_global_track_num = i_get_global_track_num(2, f_i);
-            //Must set it to zero to prevent the state file from being deleted
-            //self->audio_track_pool[f_i]->plugin_index = 0;
-            v_set_plugin_index(self,
-                    self->track_pool_all[f_global_track_num], 0, 0);
-            self->track_pool_all[f_global_track_num]->solo = 0;
-            self->track_pool_all[f_global_track_num]->mute = 0;
-            v_pydaw_open_track(self,
-                    self->track_pool_all[f_global_track_num]);
-
             f_i++;
         }
     }
@@ -4205,15 +3829,11 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
         self->project_folder);
     sprintf(self->region_audio_folder, "%s/projects/edmnext/regions_audio/",
         self->project_folder);
-    sprintf(self->instruments_folder, "%s/projects/edmnext/instruments/",
-        self->project_folder);
     sprintf(self->audio_folder, "%s/audio/files",
         self->project_folder);
     sprintf(self->audio_tmp_folder, "%s/audio/files/tmp/",
         self->project_folder);
-    sprintf(self->audiofx_folder, "%s/projects/edmnext/audiofx/",
-        self->project_folder);
-    sprintf(self->busfx_folder, "%s/projects/edmnext/busfx/",
+    sprintf(self->plugins_folder, "%s/projects/plugins/",
         self->project_folder);
     sprintf(self->samples_folder, "%s/audio/samples",
         self->project_folder);  //No trailing slash on this one
@@ -4247,8 +3867,6 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
     stat((self->item_folder), &f_item_stat);
     struct stat f_reg_stat;
     stat((self->region_folder), &f_reg_stat);
-    struct stat f_inst_stat;
-    stat((self->instruments_folder), &f_inst_stat);
     struct stat f_song_file_stat;
     stat(f_song_file, &f_song_file_stat);
 
@@ -4288,8 +3906,9 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
         v_set_tempo(self, 128.0f);
     }
 
-    if(S_ISDIR(f_proj_stat.st_mode) && S_ISDIR(f_item_stat.st_mode) &&
-        S_ISDIR(f_reg_stat.st_mode) && S_ISDIR(f_inst_stat.st_mode) &&
+    if(S_ISDIR(f_proj_stat.st_mode) &&
+        S_ISDIR(f_item_stat.st_mode) &&
+        S_ISDIR(f_reg_stat.st_mode) &&
         S_ISREG(f_song_file_stat.st_mode))
     {
         t_dir_list * f_item_dir_list =
@@ -4483,9 +4102,7 @@ t_pydaw_audio_items * v_audio_items_load_all(t_pydaw_data * self,
                 break;
             }
 
-            // TODO:  Remove at PyDAWv5
-            int f_global_index = i_get_global_track_num(
-                TRACK_TYPE_AUDIO, f_new->audio_track_output);
+            int f_global_index = f_new->audio_track_output;
 
             f_result->indexes[f_global_index][
                 f_result->index_counts[f_global_index]] = f_new->index;
@@ -4552,164 +4169,6 @@ void v_set_tempo(t_pydaw_data * self, float a_tempo)
             (60.0f/(a_tempo * 0.25f)) );
     self->samples_per_beat = (self->sample_rate) /
             (a_tempo/60.0f);
-}
-
-void v_set_plugin_index(t_pydaw_data * self, t_pytrack * a_track,
-        int a_index, int a_lock)
-{
-    t_pydaw_plugin * f_result;
-    t_pydaw_plugin * f_result_fx;
-
-    char f_file_name[1024];
-    sprintf(f_file_name, "%s%i.pyinst", self->instruments_folder,
-            a_track->track_num);
-
-    char f_file_name_fx[1024];
-    sprintf(f_file_name_fx, "%s%i.pyfx", self->instruments_folder,
-            a_track->track_num);
-
-    if(a_index == -1)  //bus track
-    {
-        f_result_fx = g_pydaw_plugin_get((int)(self->sample_rate), -1,
-                g_pydaw_wavpool_item_get, a_track->global_track_num,
-                v_queue_osc_message);
-
-        t_pydaw_plugin * f_fx = a_track->effects[0];
-
-        if(a_lock)
-        {
-            pthread_spin_lock(&self->main_lock);
-        }
-
-        f_result_fx->descriptor->connect_buffer(
-            f_result_fx->PYFX_handle, 0, a_track->buffers[0]);
-        f_result_fx->descriptor->connect_buffer(
-            f_result_fx->PYFX_handle, 1, a_track->buffers[1]);
-
-        a_track->instruments[0] = 0;
-        a_track->effects[0] = f_result_fx;
-        a_track->instrument_count = 0;
-        a_track->effect_count = 1;
-        a_track->plugin_index = a_index;
-        a_track->period_event_index = 0;
-        //Opens the .inst file if exists
-        v_pydaw_open_track(self, a_track);
-
-        if(a_lock)
-        {
-            pthread_spin_unlock(&self->main_lock);
-        }
-
-        if(f_fx)
-        {
-            v_free_pydaw_plugin(f_fx);
-        }
-    }
-    else if(a_index == 0)  //empty
-    {
-        t_pydaw_plugin * f_inst = a_track->instruments[0];
-        t_pydaw_plugin * f_fx = a_track->effects[0];
-
-        if(i_pydaw_file_exists(f_file_name))
-        {
-            remove(f_file_name);
-        }
-        if(i_pydaw_file_exists(f_file_name_fx))
-        {
-            remove(f_file_name_fx);
-        }
-
-        if(a_lock)
-        {
-            pthread_spin_lock(&self->main_lock);
-        }
-
-        a_track->instruments[0] = NULL;
-        a_track->effects[0] = NULL;
-        a_track->instrument_count = 0;
-        a_track->effect_count = 0;
-        a_track->plugin_index = a_index;
-        a_track->period_event_index = 0;
-
-        if(a_lock)
-        {
-            pthread_spin_unlock(&self->main_lock);
-        }
-
-        if(f_inst)
-        {
-            v_free_pydaw_plugin(f_inst);
-        }
-
-        if(f_fx)
-        {
-            v_free_pydaw_plugin(f_fx);
-        }
-    }
-    else
-    {
-        f_result = g_pydaw_plugin_get((int)(self->sample_rate), a_index,
-                g_pydaw_wavpool_item_get, a_track->global_track_num,
-                v_queue_osc_message);
-
-        f_result_fx = g_pydaw_plugin_get((int)(self->sample_rate), -1,
-                g_pydaw_wavpool_item_get, a_track->global_track_num,
-                v_queue_osc_message);
-
-        /* If switching from a different plugin(but not from no plugin),
-         * delete the preset file */
-        if(((a_track->plugin_index) != 0) && i_pydaw_file_exists(f_file_name))
-        {
-            remove(f_file_name);
-        }
-        if(((a_track->plugin_index) != 0) &&
-                i_pydaw_file_exists(f_file_name_fx))
-        {
-            remove(f_file_name_fx);
-        }
-
-        t_pydaw_plugin * f_inst = a_track->instruments[0];
-        t_pydaw_plugin * f_fx = a_track->effects[0];
-
-        if(a_lock)
-        {
-            pthread_spin_lock(&self->main_lock);
-        }
-
-        f_result->descriptor->connect_buffer(
-            f_result->PYFX_handle, 0, a_track->buffers[0]);
-        f_result->descriptor->connect_buffer(
-            f_result->PYFX_handle, 1, a_track->buffers[1]);
-
-        f_result_fx->descriptor->connect_buffer(
-            f_result_fx->PYFX_handle, 0, a_track->buffers[0]);
-        f_result_fx->descriptor->connect_buffer(
-            f_result_fx->PYFX_handle, 1, a_track->buffers[1]);
-
-        a_track->instruments[0] = f_result;
-        a_track->effects[0] = f_result_fx;
-        a_track->instrument_count = 1;
-        a_track->effect_count = 1;
-        a_track->plugin_index = a_index;
-        a_track->period_event_index = 0;
-        //Opens the .inst file if exists
-        v_pydaw_open_track(self, a_track);
-
-        if(a_lock)
-        {
-            pthread_spin_unlock(&self->main_lock);
-        }
-
-        if(f_inst)
-        {
-            v_free_pydaw_plugin(f_inst);
-        }
-
-        if(f_fx)
-        {
-            v_free_pydaw_plugin(f_fx);
-        }
-    }
 }
 
 void v_pydaw_update_audio_inputs(t_pydaw_data * self)

@@ -31,24 +31,8 @@ import scipy.signal
 from PyQt4 import QtGui, QtCore
 from libpydaw import pydaw_history
 
-pydaw_bus_count = 5
-pydaw_audio_track_count = 8
-pydaw_audio_input_count = 5
-pydaw_midi_track_count = 20
+TRACK_COUNT_ALL = 33
 
-def track_all_to_type_and_index(a_index):
-    """ Convert global track number to track type + track number  """
-    f_index = int(a_index)
-    if f_index >= (pydaw_midi_track_count + pydaw_bus_count +
-    pydaw_audio_track_count):
-        return 4, f_index - (pydaw_midi_track_count + pydaw_bus_count +
-            pydaw_audio_track_count)
-    elif f_index >= pydaw_midi_track_count + pydaw_bus_count:
-        return 2, f_index - pydaw_midi_track_count - pydaw_bus_count
-    elif f_index >= pydaw_midi_track_count:
-        return 1, f_index - pydaw_midi_track_count
-    else:
-        return 0, f_index
 
 def proj_file_str(a_val):
     f_val = a_val
@@ -78,9 +62,6 @@ pydaw_file_pyitems = "projects/edmnext/default.pyitems"
 pydaw_file_pysong = "projects/edmnext/default.pysong"
 pydaw_file_pytransport = "projects/edmnext/default.pytransport"
 pydaw_file_pytracks = "projects/edmnext/default.pytracks"
-pydaw_file_pyaudio = "projects/edmnext/default.pyaudio"
-pydaw_file_pyaudioitem = "projects/edmnext/default.pyaudioitem"
-pydaw_file_pybus = "projects/edmnext/default.pybus"
 pydaw_file_pyinput = "projects/edmnext/default.pyinput"
 pydaw_file_pywavs = "audio/default.pywavs"
 pydaw_file_pystretch = "audio/default.pystretch"
@@ -298,20 +279,11 @@ class pydaw_project:
         self.create_file("", pydaw_file_pysong, pydaw_terminating_char)
         self.create_file("", pydaw_file_pytransport, str(pydaw_transport()))
         f_midi_tracks_instance = pydaw_tracks()
-        for i in range(pydaw_midi_track_count):
+        for i in range(TRACK_COUNT_ALL):
             f_midi_tracks_instance.add_track(i, pydaw_track(
                 a_name="track{}".format(i + 1), a_track_pos=i))
         self.create_file("", pydaw_file_pytracks, str(f_midi_tracks_instance))
-        f_pyaudio_instance = pydaw_audio_tracks()
-        for i in range(pydaw_audio_track_count):
-            f_pyaudio_instance.add_track(
-                i, pydaw_audio_track(a_name="track{}".format(i + 1),
-                                     a_track_pos=i))
-        self.create_file("", pydaw_file_pyaudio, str(f_pyaudio_instance))
-        f_pybus_instance = pydaw_busses()
-        for i in range(pydaw_bus_count):
-            f_pybus_instance.add_bus(i, pydaw_bus(a_track_pos=i))
-        self.create_file("", pydaw_file_pybus, str(f_pybus_instance))
+
         self.open_stretch_dicts()
         self.commit("Created project")
         if a_notify_osc:
@@ -875,32 +847,6 @@ class pydaw_project:
     def get_tracks(self):
         return pydaw_tracks.from_str(self.get_tracks_string())
 
-    def get_bus_tracks_string(self):
-        try:
-            f_file = open(
-                "{}/{}".format(self.project_folder, pydaw_file_pybus))
-        except:
-            return pydaw_terminating_char
-        f_result = f_file.read()
-        f_file.close()
-        return f_result
-
-    def get_bus_tracks(self):
-        return pydaw_busses.from_str(self.get_bus_tracks_string())
-
-    def get_audio_tracks_string(self):
-        try:
-            f_file = open(
-                "{}/{}".format(self.project_folder, pydaw_file_pyaudio))
-        except:
-            return pydaw_terminating_char
-        f_result = f_file.read()
-        f_file.close()
-        return f_result
-
-    def get_audio_tracks(self):
-        return pydaw_audio_tracks.from_str(self.get_audio_tracks_string())
-
     def get_audio_region_string(self, a_region_uid):
         f_file = open(
             "{}/{}".format(self.regions_audio_folder, a_region_uid), "r")
@@ -1183,16 +1129,6 @@ class pydaw_project:
     def save_tracks(self, a_tracks):
         if not self.suppress_updates:
             self.save_file("", pydaw_file_pytracks, str(a_tracks))
-            #Is there a need for a configure message here?
-
-    def save_busses(self, a_tracks):
-        if not self.suppress_updates:
-            self.save_file("", pydaw_file_pybus, str(a_tracks))
-            #Is there a need for a configure message here?
-
-    def save_audio_tracks(self, a_tracks):
-        if not self.suppress_updates:
-            self.save_file("", pydaw_file_pyaudio, str(a_tracks))
             #Is there a need for a configure message here?
 
     def save_audio_inputs(self, a_tracks):
@@ -2098,9 +2034,8 @@ class pydaw_cc(pydaw_abstract_midi_event):
         return ((self.start == other.start) and
         (self.cc_num == other.cc_num) and (self.cc_val == other.cc_val))
 
-    def __init__(self, a_start, a_plugin_index, a_port_num, a_cc_val):
+    def __init__(self, a_start, a_port_num, a_cc_val):
         self.start = float(a_start)
-        self.plugin_index = int(a_plugin_index)
         #This is really port_num, I'll rename later...
         self.cc_num = int(a_port_num)
         self.cc_val = float(a_cc_val)
@@ -2198,80 +2133,6 @@ class pydaw_track(pydaw_abstract_track):
         return "{}\n".format("|".join(map(proj_file_str,
             (bool_to_int(self.solo), bool_to_int(self.mute),
             self.name, self.inst, self.bus_num, self.track_pos))))
-
-class pydaw_busses:
-    def add_bus(self, a_index, a_bus):
-        self.busses[int(a_index)] = a_bus
-
-    def add_bus_from_str(self, a_str):
-        f_arr = a_str.split("|")
-        self.add_bus(f_arr[0], pydaw_bus(*f_arr[1:]))
-
-    def __init__(self):
-        self.busses = {}
-
-    def __str__(self):
-        f_result = ""
-        for k, f_bus in list(self.busses.items()):
-            f_result += "{}|{}".format(k, f_bus)
-        f_result += pydaw_terminating_char
-        return f_result
-
-    @staticmethod
-    def from_str(a_str):
-        f_result = pydaw_busses()
-        f_lines = a_str.split("\n")
-        for f_line in f_lines:
-            if f_line == pydaw_terminating_char:
-                return f_result
-            f_result.add_bus_from_str(f_line)
-        return f_result
-
-class pydaw_bus(pydaw_abstract_track):
-    def __init__(self, a_track_pos=-1):
-        self.set_track_pos(a_track_pos)
-
-    def __str__(self):
-        return "{}\n".format(self.track_pos)
-
-class pydaw_audio_tracks:
-    def add_track(self, a_index, a_track):
-        self.tracks[int(a_index)] = a_track
-
-    def __init__(self):
-        self.tracks = {}
-
-    def __str__(self):
-        f_result = ""
-        for k, v in list(self.tracks.items()):
-            f_result += "{}|{}".format(k, v)
-        f_result += pydaw_terminating_char
-        return f_result
-
-    @staticmethod
-    def from_str(a_str):
-        f_result = pydaw_audio_tracks()
-        f_arr = a_str.split("\n")
-        for f_line in f_arr:
-            if not f_line == pydaw_terminating_char:
-                f_line_arr = f_line.split("|")
-                f_result.add_track(
-                    f_line_arr[0], pydaw_audio_track(*f_line_arr[1:]))
-        return f_result
-
-class pydaw_audio_track(pydaw_abstract_track):
-    def __init__(self, a_solo=False, a_mute=False, a_name="track",
-                 a_bus_num=0, a_track_pos=-1):
-        self.name = str(a_name)
-        self.solo = int_to_bool(a_solo)
-        self.mute = int_to_bool(a_mute)
-        self.bus_num = int(a_bus_num)
-        self.set_track_pos(a_track_pos)
-
-    def __str__(self):
-        return "{}\n".format("|".join(map(proj_file_str,
-            (bool_to_int(self.solo), bool_to_int(self.mute),
-             self.name, self.bus_num, self.track_pos))))
 
 class pydaw_audio_region:
     def __init__(self):

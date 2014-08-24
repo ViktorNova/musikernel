@@ -59,7 +59,6 @@ typedef struct
         float value;
         float start;
         float length;
-        int plugin_index;
         int port;
 } t_pydaw_seq_event;
 
