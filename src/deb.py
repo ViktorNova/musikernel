@@ -142,7 +142,7 @@ Please enter a build suffix, or hit 'enter' to leave blank: """).strip()
 f_package_name = "{}-{}-{}{}.deb".format(
     f_short_name, f_version, f_arch, f_build_suffix)
 
-os.system('rm -f "{}"/../pydaw-build/pydaw*.deb'.format(f_base_dir))
+os.system('rm -f "{}"/../pydaw-build/musikernel*.deb'.format(f_base_dir))
 
 if os.geteuid() == 0:
     f_eng_bin = '"{}"/../pydaw-build/debian/usr/bin/{}-engine'.format(
