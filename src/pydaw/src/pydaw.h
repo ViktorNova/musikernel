@@ -265,8 +265,6 @@ typedef struct
     char * audio_tmp_folder;
     char * samples_folder;
     char * samplegraph_folder;
-    char * recorded_items_file;
-    char * recorded_regions_file;
     char * wav_pool_file;
     char * busfx_folder;
     char * audiofx_folder;
@@ -3358,7 +3356,8 @@ void g_pysong_get(t_pydaw_data* self, int a_lock)
     }
 
     char f_full_path[2048];
-    sprintf(f_full_path, "%sdefault.pysong", self->project_folder);
+    sprintf(f_full_path, "%s/projects/edmnext/default.pysong",
+        self->project_folder);
 
     if(i_pydaw_file_exists(f_full_path))
     {
@@ -3779,8 +3778,6 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
     f_result->audio_tmp_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->audiofx_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->samples_folder = (char*)malloc(sizeof(char) * 1024);
-    f_result->recorded_items_file = (char*)malloc(sizeof(char) * 1024);
-    f_result->recorded_regions_file = (char*)malloc(sizeof(char) * 1024);
     f_result->wav_pool_file = (char*)malloc(sizeof(char) * 1024);
     f_result->region_audio_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->per_audio_item_fx_folder = (char*)malloc(sizeof(char) * 1024);
@@ -3989,7 +3986,8 @@ void v_pydaw_open_plugin(t_pydaw_data * self, t_pytrack * a_track,
 void v_pydaw_open_tracks(t_pydaw_data * self)
 {
     char f_file_name[1024];
-    sprintf(f_file_name, "%sdefault.pytracks", self->project_folder);
+    sprintf(f_file_name, "%s/projects/edmnext/default.pytracks",
+        self->project_folder);
 
     self->record_armed_track = 0;
     self->record_armed_track_index_all = -1;
@@ -4094,7 +4092,8 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
         }
     }
 
-    sprintf(f_file_name, "%sdefault.pybus", self->project_folder);
+    sprintf(f_file_name, "%s/projects/edmnext/default.pybus",
+        self->project_folder);
 
     if(i_pydaw_file_exists(f_file_name))
     {
@@ -4162,7 +4161,8 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
         }
     }
 
-    sprintf(f_file_name, "%sdefault.pyaudio", self->project_folder);
+    sprintf(f_file_name, "%s/projects/edmnext/default.pyaudio",
+        self->project_folder);
 
     if(i_pydaw_file_exists(f_file_name))
     {
@@ -4255,35 +4255,31 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
 {
     clock_t f_start = clock();
 
-    sprintf(self->project_folder, "%s/", a_project_folder);
-    sprintf(self->item_folder, "%sitems/",
-            self->project_folder);
-    sprintf(self->region_folder, "%sregions/",
-            self->project_folder);
-    sprintf(self->region_audio_folder, "%sregions_audio/",
-            self->project_folder);
-    sprintf(self->instruments_folder, "%sinstruments/",
-            self->project_folder);
-    sprintf(self->audio_folder, "%saudio/",
-            self->project_folder);
-    sprintf(self->audio_tmp_folder, "%saudio/tmp/",
-            self->project_folder);
-    sprintf(self->audiofx_folder, "%saudiofx/",
-            self->project_folder);
-    sprintf(self->busfx_folder, "%sbusfx/",
-            self->project_folder);
-    sprintf(self->samples_folder, "%ssamples",
-            self->project_folder);  //No trailing slash on this one
+    sprintf(self->project_folder, "%s", a_project_folder);
+    sprintf(self->item_folder, "%s/projects/edmnext/items/",
+        self->project_folder);
+    sprintf(self->region_folder, "%s/projects/edmnext/regions/",
+        self->project_folder);
+    sprintf(self->region_audio_folder, "%s/projects/edmnext/regions_audio/",
+        self->project_folder);
+    sprintf(self->instruments_folder, "%s/projects/edmnext/instruments/",
+        self->project_folder);
+    sprintf(self->audio_folder, "%s/audio/files",
+        self->project_folder);
+    sprintf(self->audio_tmp_folder, "%s/audio/files/tmp/",
+        self->project_folder);
+    sprintf(self->audiofx_folder, "%s/projects/edmnext/audiofx/",
+        self->project_folder);
+    sprintf(self->busfx_folder, "%s/projects/edmnext/busfx/",
+        self->project_folder);
+    sprintf(self->samples_folder, "%s/audio/samples",
+        self->project_folder);  //No trailing slash on this one
     sprintf(self->wav_pool->samples_folder, "%s",
-            self->samples_folder);
-    sprintf(self->recorded_items_file, "%srecorded_items",
-            self->project_folder);
-    sprintf(self->recorded_regions_file, "%srecorded_regions",
-            self->project_folder);
-    sprintf(self->wav_pool_file, "%sdefault.pywavs",
-            self->project_folder);
-    sprintf(self->per_audio_item_fx_folder, "%saudio_per_item_fx/",
-            self->project_folder);
+        self->samples_folder);
+    sprintf(self->wav_pool_file, "%s/audio/default.pywavs",
+        self->project_folder);
+    sprintf(self->per_audio_item_fx_folder,
+        "%s/projects/edmnext/audio_per_item_fx/", self->project_folder);
 
     int f_i = 0;
 
@@ -4298,8 +4294,9 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
 
     self->item_count = 0;
 
-    char f_song_file[512];
-    sprintf(f_song_file, "%sdefault.pysong", self->project_folder);
+    char f_song_file[1024];
+    sprintf(f_song_file,
+        "%s/projects/edmnext/default.pysong", self->project_folder);
 
     struct stat f_proj_stat;
     stat((self->project_folder), &f_proj_stat);
@@ -4325,7 +4322,7 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
 
     //TODO:  This should be moved to a separate function
     char f_transport_file[1024];
-    sprintf(f_transport_file, "%sdefault.pytransport",
+    sprintf(f_transport_file, "%s/projects/edmnext/default.pytransport",
             self->project_folder);
 
     if(i_pydaw_file_exists(f_transport_file))
@@ -4782,7 +4779,8 @@ void v_set_plugin_index(t_pydaw_data * self, t_pytrack * a_track,
 void v_pydaw_update_audio_inputs(t_pydaw_data * self)
 {
     char f_inputs_file[1024];
-    sprintf(f_inputs_file, "%sdefault.pyinput", self->project_folder);
+    sprintf(f_inputs_file, "%s/projects/edmnext/default.pyinput",
+        self->project_folder);
 
     if(i_pydaw_file_exists(f_inputs_file))
     {

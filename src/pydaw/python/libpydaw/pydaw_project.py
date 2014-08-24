@@ -59,38 +59,37 @@ def proj_file_str(a_val):
 MAX_AUDIO_ITEM_COUNT = 256
 MAX_REGION_LENGTH = 256 #bars
 
-pydaw_folder_audio = "audio"
-pydaw_folder_audiofx = "audiofx"
-pydaw_folder_audio_per_item_fx = "audio_per_item_fx"
-pydaw_folder_busfx = "busfx"
-pydaw_folder_instruments = "instruments"
-pydaw_folder_items = "items"
-pydaw_folder_regions = "regions"
-pydaw_folder_regions_audio = "regions_audio"
-pydaw_folder_samplegraph = "samplegraph"
-pydaw_folder_samples = "samples"
-pydaw_folder_timestretch = "timestretch"
-pydaw_folder_glued = "glued"
+pydaw_folder_audio = "audio/files"
+pydaw_folder_audiofx = "projects/edmnext/audiofx"
+pydaw_folder_audio_per_item_fx = "projects/edmnext/audio_per_item_fx"
+pydaw_folder_busfx = "projects/edmnext/busfx"
+pydaw_folder_instruments = "projects/edmnext/instruments"
+pydaw_folder_items = "projects/edmnext/items"
+pydaw_folder_regions = "projects/edmnext/regions"
+pydaw_folder_regions_audio = "projects/edmnext/regions_audio"
+pydaw_folder_samplegraph = "audio/samplegraph"
+pydaw_folder_samples = "audio/samples"
+pydaw_folder_timestretch = "audio/timestretch"
+pydaw_folder_glued = "audio/glued"
 pydaw_folder_user = "user"
-pydaw_folder_sendfx = "sendfx"
 
-pydaw_file_pyregions = "default.pyregions"
-pydaw_file_pyitems = "default.pyitems"
-pydaw_file_pysong = "default.pysong"
-pydaw_file_pytransport = "default.pytransport"
-pydaw_file_pytracks = "default.pytracks"
-pydaw_file_pyaudio = "default.pyaudio"
-pydaw_file_pyaudioitem = "default.pyaudioitem"
-pydaw_file_pybus = "default.pybus"
-pydaw_file_pyinput = "default.pyinput"
-pydaw_file_pywavs = "default.pywavs"
-pydaw_file_pystretch = "default.pystretch"
-pydaw_file_pystretch_map = "map.pystretch"
-pydaw_file_notes = "notes.txt"
-pydaw_file_wave_editor_bookmarks = "wave_editor_bookmarks.txt"
+pydaw_file_pyregions = "projects/edmnext/default.pyregions"
+pydaw_file_pyitems = "projects/edmnext/default.pyitems"
+pydaw_file_pysong = "projects/edmnext/default.pysong"
+pydaw_file_pytransport = "projects/edmnext/default.pytransport"
+pydaw_file_pytracks = "projects/edmnext/default.pytracks"
+pydaw_file_pyaudio = "projects/edmnext/default.pyaudio"
+pydaw_file_pyaudioitem = "projects/edmnext/default.pyaudioitem"
+pydaw_file_pybus = "projects/edmnext/default.pybus"
+pydaw_file_pyinput = "projects/edmnext/default.pyinput"
+pydaw_file_pywavs = "audio/default.pywavs"
+pydaw_file_pystretch = "audio/default.pystretch"
+pydaw_file_pystretch_map = "audio/map.pystretch"
+pydaw_file_notes = "projects/edmnext/notes.txt"
+pydaw_file_wave_editor_bookmarks = "projects/edmnext/wave_editor_bookmarks.txt"
 
 #Anything smaller gets deleted when doing a transform
-pydaw_min_note_length = 4.0/129.0
+pydaw_min_note_length = 4.0 / 129.0
 
 pydaw_terminating_char = "\\"
 
@@ -215,7 +214,8 @@ class pydaw_project:
             self.project_folder, pydaw_folder_items)
         self.audio_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_audio)
-        self.audio_tmp_folder = "{}/audio/tmp".format(self.project_folder)
+        self.audio_tmp_folder = "{}/{}/tmp".format(
+            self.project_folder, pydaw_folder_audio)
         self.samples_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_samples)
         self.audiofx_folder = "{}/{}".format(
@@ -232,13 +232,13 @@ class pydaw_project:
             self.project_folder, pydaw_folder_glued)
         self.user_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_user)
-        self.sendfx_folder = "{}/{}".format(
-            self.project_folder, pydaw_folder_sendfx)
         #files
-        self.pyregions_file = "{}/default.pyregions".format(
-            self.project_folder)
-        self.pyitems_file = "{}/default.pyitems".format(self.project_folder)
-        self.pywavs_file = "{}/default.pywavs".format(self.project_folder)
+        self.pyregions_file = "{}/{}".format(
+            self.project_folder, pydaw_file_pyregions)
+        self.pyitems_file = "{}/{}".format(
+            self.project_folder, pydaw_file_pyitems)
+        self.pywavs_file = "{}/{}".format(
+            self.project_folder, pydaw_file_pywavs)
         self.pystretch_file = "{}/{}".format(
             self.project_folder, pydaw_file_pystretch)
         self.pystretch_map_file = "{}/{}".format(
@@ -273,7 +273,7 @@ class pydaw_project:
             self.audio_per_item_fx_folder, self.busfx_folder,
             self.samplegraph_folder, self.audio_tmp_folder,
             self.regions_audio_folder, self.timestretch_folder,
-            self.glued_folder, self.user_folder, self.sendfx_folder]
+            self.glued_folder, self.user_folder]
 
         for project_dir in project_folders:
             print(project_dir)
@@ -435,7 +435,7 @@ class pydaw_project:
     def get_song_string(self):
         try:
             f_file = open(
-                "{}/default.pysong".format(self.project_folder), "r")
+                "{}/{}".format(self.project_folder, pydaw_file_pysong))
         except:
             return pydaw_terminating_char
         f_result = f_file.read()
@@ -865,7 +865,7 @@ class pydaw_project:
     def get_tracks_string(self):
         try:
             f_file = open(
-                "{}/default.pytracks".format(self.project_folder), "r")
+                "{}/{}".format(self.project_folder, pydaw_file_pytracks))
         except:
             return pydaw_terminating_char
         f_result = f_file.read()
@@ -877,7 +877,8 @@ class pydaw_project:
 
     def get_bus_tracks_string(self):
         try:
-            f_file = open("{}/default.pybus".format(self.project_folder), "r")
+            f_file = open(
+                "{}/{}".format(self.project_folder, pydaw_file_pybus))
         except:
             return pydaw_terminating_char
         f_result = f_file.read()
@@ -890,7 +891,7 @@ class pydaw_project:
     def get_audio_tracks_string(self):
         try:
             f_file = open(
-                "{}/default.pyaudio".format(self.project_folder), "r")
+                "{}/{}".format(self.project_folder, pydaw_file_pyaudio))
         except:
             return pydaw_terminating_char
         f_result = f_file.read()
@@ -1071,7 +1072,7 @@ class pydaw_project:
     def get_transport(self):
         try:
             f_file = open(
-                "{}/default.pytransport".format(self.project_folder), "r")
+                "{}/{}".format(self.project_folder, pydaw_file_pytransport))
         except:
             return pydaw_transport()  #defaults
         f_str = f_file.read()
