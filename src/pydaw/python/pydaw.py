@@ -7529,7 +7529,6 @@ class plugin_settings:
         self.track_num = a_track_num
         f_offset = 0 if self.type == self.instrument else 10
         self.index = a_index
-        self.identifier = "i" if self.type == self.instrument else "e"
         self.plugin_combobox = QtGui.QComboBox()
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
@@ -7547,16 +7546,22 @@ class plugin_settings:
         self.ui_button.setFixedWidth(24)
         a_layout.addWidget(self.ui_button, a_index + 1, f_offset + 1)
 
+    @staticmethod
+    def from_value(a_val, a_track_num, a_layout):
+        f_result = plugin_settings(
+            a_val.index, a_track_num, a_layout, a_val.type)
+        f_result.plugin_combobox.setCurrentIndex(a_val.plugin_index)
+        return f_result
+
+    def get_value(self):
+        return pydaw_track_plugin(
+            self.type, self.index, self.plugin_combobox.currentIndex())
+
     def on_plugin_change(self, a_val):
         raise NotImplementedError()
 
     def wheel_event(self, a_event=None):
         pass
-
-    def get_value(self):
-        return "|".join(str(x) for x in
-            (self.identifier, self.index, self.track_num,
-             self.plugin_combobox.currentIndex()))
 
     def on_show_ui(self):
         f_index = self.instrument_combobox.currentIndex()
@@ -7565,7 +7570,7 @@ class plugin_settings:
         self.record_radiobutton.setChecked(True)
         global_open_inst_ui(
             self.track_number, f_index,
-            _("MIDI Track: {}").format(self.track_name_lineedit.text()))
+            _("Track: {}").format(self.track_name_lineedit.text()))
 
     def on_instrument_change(self, selected_instrument):
         if not self.suppress_osc:
@@ -7623,7 +7628,7 @@ class track_send:
                 self.bus_combobox.currentIndex()))
 
     def get_vol(self):
-        return round(self.vol_slider.value( * 0.1, 1))
+        return round(self.vol_slider.value * 0.1, 1)
 
     def set_vol(self, a_val):
         self.vol_slider.setValue(int(a_val * 10.0))
@@ -7639,10 +7644,15 @@ class track_send:
         pass
 
     def get_value(self):
-        return "|".join(str(x) for x in
-            ("s", self.index, self.track_num,
-             self.bus_combobox.currentIndex(),
-             round(self.vol_slider.value(), 1)))
+        return pydaw_track_send(
+            self.index, self.bus_combobox.currentIndex(),
+            round(self.vol_slider.value()))
+
+    @staticmethod
+    def from_value(a_val, a_track_num, a_layout):
+        f_result = track_send(a_val.index, a_track_num, a_layout)
+        f_result.set_vol(a_val.vol)
+        f_result.bus_combobox.setCurrentIndex(a_val.output)
 
 class seq_track:
     def on_solo(self, value):

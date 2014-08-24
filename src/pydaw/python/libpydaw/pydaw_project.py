@@ -281,7 +281,8 @@ class pydaw_project:
         f_midi_tracks_instance = pydaw_tracks()
         for i in range(TRACK_COUNT_ALL):
             f_midi_tracks_instance.add_track(i, pydaw_track(
-                a_name="track{}".format(i + 1), a_track_pos=i))
+                a_name="track{}".format(i + 1), a_track_pos=i,
+                a_track_uid=-1))
         self.create_file("", pydaw_file_pytracks, str(f_midi_tracks_instance))
 
         self.open_stretch_dicts()
@@ -2111,26 +2112,64 @@ class pydaw_tracks:
                 f_result.add_track(f_line_arr[0], pydaw_track(*f_line_arr[1:]))
         return f_result
 
-class pydaw_abstract_track:
-    def set_track_pos(self, a_track_pos):
-        self.track_pos = int(a_track_pos)
-        assert(self.track_pos >= 0)
-
-
-class pydaw_track(pydaw_abstract_track):
-    def __init__(self, a_solo=False, a_mute=False, a_name="track",
-                 a_inst=0, a_bus_num=0, a_track_pos=-1):
+class pydaw_track:
+    def __init__(self, a_track_uid, a_solo=False, a_mute=False,
+                 a_name="track", a_track_pos=-1):
+        self.track_uid = int(a_track_uid)
         self.name = str(a_name)
         self.solo = int_to_bool(a_solo)
         self.mute = int_to_bool(a_mute)
-        self.inst = int(a_inst)
-        self.bus_num = int(a_bus_num)
         self.set_track_pos(a_track_pos)
+
+    # TODO:  WTH does this do???  Was this supposed to be "show at pos?"
+    def set_track_pos(self, a_track_pos):
+        self.track_pos = int(a_track_pos)
+        assert(self.track_pos >= 0)
 
     def __str__(self):
         return "{}\n".format("|".join(map(proj_file_str,
             (bool_to_int(self.solo), bool_to_int(self.mute),
             self.name, self.inst, self.bus_num, self.track_pos))))
+
+class pydaw_track_plugin:
+    def __init__(self, a_type, a_index, a_plugin_index, a_plugin_uid):
+        self.type = int(a_type)
+        self.index = int(a_index)
+        self.plugin_index = int(a_plugin_index)
+        self.plugin_uid = int(a_plugin_uid)
+        self.mute = 0
+        self.solo = 0
+        self.power = 0
+        self.channels = 2
+        # TODO^^^^:  configurable
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("p", self.type, self.index, self.plugin_index,
+             self.plugin_uid, self.mute, self.solo, self.power))
+
+# This is the initial implementation, this should be one per channel to
+# one destination channel
+# EDIT:  Or that may not be efficient...
+class pydaw_track_send:
+    def __init__(self, a_index, a_output, a_vol):
+        self.index = int(a_index)
+        self.output = int(a_output)
+        self.vol = float(a_vol)
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("s", self.index, self.output, self.vol))
+
+class pydaw_track_routing:
+    def __init__(self):
+        self.instruments = []
+        self.effects = []
+        self.sends = []
+
+    def __str__(self):
+        return "{}\\".format("\n".join(str(x) for x in
+            self.instruments + self.effects + self.sends))
 
 class pydaw_audio_region:
     def __init__(self):
