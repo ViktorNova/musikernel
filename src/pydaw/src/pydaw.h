@@ -199,8 +199,6 @@ typedef struct
 
 typedef struct
 {
-    float volume;
-    float volume_linear;
     int solo;
     int mute;
     //-1 == bus track, 0 == off, 1 == Euphoria, 2 == Ray-V, 3 == Way-V
@@ -405,8 +403,6 @@ void v_save_pyregion_to_disk(t_pydaw_data * self, int a_region_num);
 void v_pydaw_open_plugin(t_pydaw_data * self, t_pytrack * a_track,
                          int a_is_fx);
 
-void v_pydaw_set_track_volume(t_pydaw_data * self,
-                              t_pytrack * a_track, float a_vol);
 inline void v_pydaw_update_ports(t_pydaw_plugin * a_plugin);
 void * v_pydaw_worker_thread(void*);
 void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
@@ -1394,26 +1390,6 @@ inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
 
 }
 
-inline void v_pydaw_run_pre_effect_vol(t_pydaw_data * self,
-        t_pytrack * a_track)
-{
-    if(a_track->volume == 0.0f)
-    {
-        return;
-    }
-
-    int f_i = 0;
-    float ** f_buff = a_track->buffers;
-
-    while(f_i < (self->sample_count))
-    {
-        f_buff[0][f_i] = f_buff[0][f_i] * (a_track->volume_linear);
-        f_buff[1][f_i] = f_buff[1][f_i] * (a_track->volume_linear);
-        f_i++;
-    }
-}
-
-
 inline void v_pydaw_sum_track_outputs(t_pydaw_data * self,
         t_pytrack * a_track, int bus_num)
 {
@@ -1682,7 +1658,6 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
             f_track->event_buffer, f_track->period_event_index);
         f_i++;
     }
-    v_pydaw_run_pre_effect_vol(self, f_track);
 
     f_i = 0;
 
@@ -2789,7 +2764,6 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
     }
     f_i = 0;
 
-    v_pydaw_run_pre_effect_vol(self, f_master_track);
     float ** f_master_buff = f_master_track->buffers;
 
     while(f_i < sample_count)
@@ -3684,8 +3658,6 @@ t_pytrack * g_pytrack_get(int a_track_num, int a_track_type, float a_sr)
 
     f_result->mute = 0;
     f_result->solo = 0;
-    f_result->volume = 0.0f;
-    f_result->volume_linear = 1.0f;
     f_result->plugin_index = 0;
     f_result->event_buffer = (t_pydaw_seq_event*)malloc(
             sizeof(t_pydaw_seq_event) * PYDAW_MAX_EVENT_BUFFER_SIZE);
@@ -4011,7 +3983,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
             char * f_solo_str = c_iterate_2d_char_array(f_2d_array);
             char * f_mute_str = c_iterate_2d_char_array(f_2d_array);
-            char * f_vol_str = c_iterate_2d_char_array(f_2d_array);
             char * f_name_str = c_iterate_2d_char_array(f_2d_array);
             char * f_plugin_index_str = c_iterate_2d_char_array(f_2d_array);
             char * f_bus_num_str = c_iterate_2d_char_array(f_2d_array);
@@ -4030,10 +4001,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
             int f_mute = atoi(f_mute_str);
             free(f_mute_str);
             assert(f_mute == 0 || f_mute == 1);
-
-            int f_vol = atoi(f_vol_str);
-            free(f_vol_str);
-            assert(f_vol < 24 && f_vol > -150);
 
             free(f_name_str);
 
@@ -4064,8 +4031,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
             self->track_pool_all[f_track_index]->solo = f_solo;
             self->track_pool_all[f_track_index]->mute = f_mute;
-            v_pydaw_set_track_volume(self,
-                    self->track_pool_all[f_track_index], f_vol);
             self->track_pool_all[f_track_index]->bus_num = f_bus_num;
         }
 
@@ -4084,8 +4049,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
             self->track_pool_all[f_i]->solo = 0;
             self->track_pool_all[f_i]->mute = 0;
-            v_pydaw_set_track_volume(self,
-                    self->track_pool_all[f_i], 0.0f);
             v_pydaw_open_track(self, self->track_pool_all[f_i]);
 
             f_i++;
@@ -4112,7 +4075,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
                 break;
             }
 
-            char * f_vol_str = c_iterate_2d_char_array(f_2d_array);
             char * f_track_pos = c_iterate_2d_char_array(f_2d_array);  //ignored
             free(f_track_pos);
 
@@ -4121,13 +4083,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
             assert(f_track_index >= 0 && f_track_index < PYDAW_BUS_TRACK_COUNT);
 
             f_track_index = i_get_global_track_num(1, f_track_index);
-
-            int f_vol = atoi(f_vol_str);
-            free(f_vol_str);
-            assert(f_vol < 24 && f_vol > -150);
-
-            v_pydaw_set_track_volume(self,
-                    self->track_pool_all[f_track_index], f_vol);
 
             v_pydaw_open_track(self,
                     self->track_pool_all[f_track_index]);
@@ -4151,9 +4106,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
             self->track_pool_all[f_global_track_num]->solo = 0;
             self->track_pool_all[f_global_track_num]->mute = 0;
-            v_pydaw_set_track_volume(
-                self, self->track_pool_all[f_global_track_num],
-                0.0f);
             v_pydaw_open_track(self,
                 self->track_pool_all[f_global_track_num]);
 
@@ -4183,7 +4135,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
             char * f_solo_str = c_iterate_2d_char_array(f_2d_array);
             char * f_mute_str = c_iterate_2d_char_array(f_2d_array);
-            char * f_vol_str = c_iterate_2d_char_array(f_2d_array);
             char * f_name_str = c_iterate_2d_char_array(f_2d_array);
             char * f_bus_num_str = c_iterate_2d_char_array(f_2d_array);
             char * f_track_pos = c_iterate_2d_char_array(f_2d_array);  //ignored
@@ -4204,10 +4155,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
             free(f_mute_str);
             assert(f_mute == 0 || f_mute == 1);
 
-            int f_vol = atoi(f_vol_str);
-            free(f_vol_str);
-            assert(f_vol < 24 && f_vol > -150);
-
             free(f_name_str);
 
             int f_bus_num = atoi(f_bus_num_str);
@@ -4216,8 +4163,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
             self->track_pool_all[f_track_index]->solo = f_solo;
             self->track_pool_all[f_track_index]->mute = f_mute;
-            v_pydaw_set_track_volume(self,
-                    self->track_pool_all[f_track_index], f_vol);
             self->track_pool_all[f_track_index]->bus_num = f_bus_num;
 
             v_pydaw_open_track(self,
@@ -4240,8 +4185,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
                     self->track_pool_all[f_global_track_num], 0, 0);
             self->track_pool_all[f_global_track_num]->solo = 0;
             self->track_pool_all[f_global_track_num]->mute = 0;
-            v_pydaw_set_track_volume(self,
-                    self->track_pool_all[f_global_track_num], 0.0f);
             v_pydaw_open_track(self,
                     self->track_pool_all[f_global_track_num]);
 
@@ -4609,13 +4552,6 @@ void v_set_tempo(t_pydaw_data * self, float a_tempo)
             (60.0f/(a_tempo * 0.25f)) );
     self->samples_per_beat = (self->sample_rate) /
             (a_tempo/60.0f);
-}
-
-void v_pydaw_set_track_volume(t_pydaw_data * self,
-        t_pytrack * a_track, float a_vol)
-{
-    a_track->volume = a_vol;
-    a_track->volume_linear = f_db_to_linear_fast(a_vol, self->amp_ptr);
 }
 
 void v_set_plugin_index(t_pydaw_data * self, t_pytrack * a_track,

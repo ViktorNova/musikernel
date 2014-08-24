@@ -4783,20 +4783,6 @@ def global_save_all_region_tracks():
     PROJECT.save_busses(REGION_BUS_EDITOR.get_tracks())
 
 class audio_track:
-    def on_vol_change(self, value):
-        self.volume_label.setText("{} dB".format(value))
-        if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_vol(
-                self.track_number, self.volume_slider.value(), 2)
-
-    def on_vol_released(self):
-        f_tracks = PROJECT.get_audio_tracks()
-        f_tracks.tracks[self.track_number].vol = self.volume_slider.value()
-        PROJECT.save_audio_tracks(f_tracks)
-        PROJECT.commit(
-            _("Set audio track {} to {}").format(self.track_number,
-            self.volume_slider.value()))
-
     def on_solo(self, value):
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_solo(
@@ -4881,20 +4867,6 @@ class audio_track:
         self.group_box.setLayout(self.main_hlayout)
         self.hlayout2 = QtGui.QHBoxLayout()
         self.main_vlayout.addLayout(self.hlayout2)
-        self.volume_slider = QtGui.QSlider()
-        self.volume_slider.setRange(-50, 12)
-        self.volume_slider.setValue(0)
-        self.volume_slider.setOrientation(QtCore.Qt.Horizontal)
-        self.volume_slider.valueChanged.connect(self.on_vol_change)
-        self.volume_slider.sliderReleased.connect(self.on_vol_released)
-        self.hlayout2.addWidget(self.volume_slider)
-        self.volume_label = QtGui.QLabel()
-        self.volume_label.setAlignment(
-            QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        self.volume_label.setMargin(3)
-        self.volume_label.setMinimumWidth(54)
-        self.volume_label.setText("0 dB")
-        self.hlayout2.addWidget(self.volume_label)
         self.hlayout3 = QtGui.QHBoxLayout()
         self.main_vlayout.addLayout(self.hlayout3)
         self.track_name_lineedit = QtGui.QLineEdit()
@@ -4949,7 +4921,7 @@ class audio_track:
     def get_track(self):
         return pydaw_audio_track(
             self.solo_checkbox.isChecked(), self.mute_checkbox.isChecked(),
-            self.volume_slider.value(), str(self.track_name_lineedit.text()),
+            str(self.track_name_lineedit.text()),
             self.bus_combobox.currentIndex(), self.track_number)
 
 def global_set_piano_roll_zoom():
@@ -7750,33 +7722,6 @@ def global_set_record_armed_track():
 
 
 class seq_track:
-    def on_vol_change(self, value):
-        self.volume_label.setText("{} dB".format(value))
-        if not self.suppress_osc:
-            if self.is_instrument:
-                PROJECT.this_pydaw_osc.pydaw_set_vol(
-                    self.track_number, self.volume_slider.value(), 0)
-            else:
-                PROJECT.this_pydaw_osc.pydaw_set_vol(
-                    self.track_number, self.volume_slider.value(), 1)
-
-    def on_vol_released(self):
-        if self.is_instrument:
-            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-            PROJECT.commit(
-                _("Set volume for MIDI track "
-                "{} to {}").format(self.track_number,
-                self.volume_slider.value()))
-        else:
-            f_tracks = PROJECT.get_bus_tracks()
-            f_tracks.busses[self.track_number].vol = self.volume_slider.value()
-            PROJECT.save_busses(f_tracks)
-            PROJECT.commit(_("Set volume for bus track {} to {}").format(
-                self.track_number, self.volume_slider.value()))
-
-    def on_pan_change(self, value):
-        PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-
     def on_solo(self, value):
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_solo(
@@ -7884,20 +7829,6 @@ class seq_track:
         self.group_box.setLayout(self.main_hlayout)
         self.hlayout2 = QtGui.QHBoxLayout()
         self.main_vlayout.addLayout(self.hlayout2)
-        self.volume_slider = QtGui.QSlider()
-        self.volume_slider.setRange(-50, 12)
-        self.volume_slider.setValue(0)
-        self.volume_slider.setOrientation(QtCore.Qt.Horizontal)
-        self.volume_slider.valueChanged.connect(self.on_vol_change)
-        self.volume_slider.sliderReleased.connect(self.on_vol_released)
-        self.hlayout2.addWidget(self.volume_slider)
-        self.volume_label = QtGui.QLabel()
-        self.volume_label.setAlignment(
-            QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        self.volume_label.setMargin(3)
-        self.volume_label.setMinimumWidth(54)
-        self.volume_label.setText("0 dB")
-        self.hlayout2.addWidget(self.volume_label)
         self.hlayout3 = QtGui.QHBoxLayout()
         self.main_vlayout.addLayout(self.hlayout3)
         self.track_name_lineedit = QtGui.QLineEdit()
@@ -7973,14 +7904,13 @@ class seq_track:
     def get_track(self):
         if self.is_instrument:
             return pydaw_track(
-                self.solo_checkbox.isChecked(), self.mute_checkbox.isChecked(),
-                self.volume_slider.value(),
+                self.solo_checkbox.isChecked(),
+                self.mute_checkbox.isChecked(),
                 str(self.track_name_lineedit.text()),
                 self.instrument_combobox.currentIndex(),
                 self.bus_combobox.currentIndex(), self.track_number)
         else:
             return pydaw_bus(
-                self.volume_slider.value(),
                 self.record_radiobutton.isChecked(), self.track_number)
 
 MREC_EVENTS = []

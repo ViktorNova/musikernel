@@ -77,7 +77,6 @@ GNU General Public License for more details.
 #define PYDAW_CONFIGURE_KEY_STOP "stop"
 #define PYDAW_CONFIGURE_KEY_LOOP "loop"
 #define PYDAW_CONFIGURE_KEY_TEMPO "tempo"
-#define PYDAW_CONFIGURE_KEY_VOL "vol"
 #define PYDAW_CONFIGURE_KEY_SOLO "solo"
 #define PYDAW_CONFIGURE_KEY_MUTE "mute"
 #define PYDAW_CONFIGURE_KEY_CHANGE_INSTRUMENT "ci"
@@ -1361,24 +1360,6 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         f_instance->descriptor->configure(f_instance->PYFX_handle,
             f_key, f_message, &a_pydaw_data->main_lock);
 
-        g_free_1d_char_array(f_val_arr);
-    }
-    else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_VOL)) //Set track volume
-    {
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 3,
-                PYDAW_TINY_STRING);
-        int f_track_num = atoi(f_val_arr->array[0]);
-        float f_track_vol = atof(f_val_arr->array[1]);
-        int f_track_type = atoi(f_val_arr->array[2]);
-
-        f_track_num = i_get_global_track_num(f_track_type, f_track_num);
-
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-
-        v_pydaw_set_track_volume(a_pydaw_data,
-            a_pydaw_data->track_pool_all[f_track_num], f_track_vol);
-
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_PER_AUDIO_ITEM_FX))

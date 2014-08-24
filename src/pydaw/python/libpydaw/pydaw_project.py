@@ -2183,24 +2183,20 @@ class pydaw_abstract_track:
         self.track_pos = int(a_track_pos)
         assert(self.track_pos >= 0)
 
-    def set_vol(self, a_vol):
-        self.vol = int(a_vol)
-
 
 class pydaw_track(pydaw_abstract_track):
-    def __init__(self, a_solo=False, a_mute=False, a_vol=0, a_name="track",
+    def __init__(self, a_solo=False, a_mute=False, a_name="track",
                  a_inst=0, a_bus_num=0, a_track_pos=-1):
         self.name = str(a_name)
         self.solo = int_to_bool(a_solo)
         self.mute = int_to_bool(a_mute)
-        self.set_vol(a_vol)
         self.inst = int(a_inst)
         self.bus_num = int(a_bus_num)
         self.set_track_pos(a_track_pos)
 
     def __str__(self):
         return "{}\n".format("|".join(map(proj_file_str,
-            (bool_to_int(self.solo), bool_to_int(self.mute), self.vol,
+            (bool_to_int(self.solo), bool_to_int(self.mute),
             self.name, self.inst, self.bus_num, self.track_pos))))
 
 class pydaw_busses:
@@ -2237,7 +2233,7 @@ class pydaw_bus(pydaw_abstract_track):
         self.set_track_pos(a_track_pos)
 
     def __str__(self):
-        return "{}|{}\n".format(self.vol, self.track_pos)
+        return "{}\n".format(self.track_pos)
 
 class pydaw_audio_tracks:
     def add_track(self, a_index, a_track):
@@ -2270,13 +2266,12 @@ class pydaw_audio_track(pydaw_abstract_track):
         self.name = str(a_name)
         self.solo = int_to_bool(a_solo)
         self.mute = int_to_bool(a_mute)
-        self.set_vol(a_vol)
         self.bus_num = int(a_bus_num)
         self.set_track_pos(a_track_pos)
 
     def __str__(self):
         return "{}\n".format("|".join(map(proj_file_str,
-            (bool_to_int(self.solo), bool_to_int(self.mute), self.vol,
+            (bool_to_int(self.solo), bool_to_int(self.mute),
              self.name, self.bus_num, self.track_pos))))
 
 class pydaw_audio_region:
