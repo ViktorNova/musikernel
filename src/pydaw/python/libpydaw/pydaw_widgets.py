@@ -1667,6 +1667,10 @@ class pydaw_preset_manager_widget:
         self.group_box = QtGui.QWidget()
         self.group_box.setObjectName("plugin_groupbox")
         self.layout = QtGui.QHBoxLayout(self.group_box)
+        self.layout.addWidget(QtGui.QLabel(_("Bank")))
+        self.bank_combobox = QtGui.QComboBox()
+        self.bank_combobox.setMinimumWidth(210)
+        self.layout.addWidget(self.bank_combobox)
         self.layout.addWidget(QtGui.QLabel(_("Presets")))
         self.layout.setMargin(3)
         self.program_combobox = QtGui.QComboBox()
@@ -1708,10 +1712,25 @@ class pydaw_preset_manager_widget:
 
         self.more_button.setMenu(self.more_menu)
         self.layout.addWidget(self.more_button)
-        self.presets_delimited = []
+        self.presets_delimited = {}
         self.controls = {}
+        self.load_banks()
         self.load_presets()
         self.program_combobox.currentIndexChanged.connect(self.program_changed)
+
+    def load_banks(self):
+        if not os.path.isfile(self.user_factory_presets):
+            os.system("cp -f '{}' '{}'".format(
+                self.factory_preset_path, self.user_factory_presets))
+        self.bank_combobox.clear()
+        self.bank_combobox.addItems(
+            sorted(x.rsplit(".", 1)[0]
+                for x in os.listdir(self.bank_dir) if x.endswith(".mkp")))
+
+    def bank_changed(self, a_val=None):
+        self.preset_path = "{}/{}.mkp".format(
+            self.bank_dir, self.bank_combobox.currentText())
+        self.load_presets()
 
     def load_default_preset_path(self):
         self.preset_path = self.user_factory_presets
@@ -1742,7 +1761,8 @@ class pydaw_preset_manager_widget:
 
     def on_paste(self):
         if not self.plugin_name in PLUGIN_SETTINGS_CLIPBOARD:
-            QtGui.QMessageBox.warning(self.group_box, _("Error"),
+            QtGui.QMessageBox.warning(
+                self.group_box, _("Error"),
                 _("Nothing copied to clipboard for {}").format(
                 self.plugin_name))
             return
@@ -1806,9 +1826,6 @@ class pydaw_preset_manager_widget:
             print("loading presets from file {}".format(self.preset_path))
             f_text = pydaw_util.pydaw_read_file_text(self.preset_path)
         else:
-            if not os.path.isfile(self.user_factory_presets):
-                os.system("cp -f '{}' '{}'".format(
-                    self.factory_preset_path, self.user_factory_presets))
             print("loading factory presets")
             f_text = pydaw_util.pydaw_read_file_text(
                 self.user_factory_presets)
@@ -1825,23 +1842,26 @@ class pydaw_preset_manager_widget:
             return
 
         f_line_arr = f_line_arr[1:]
-        self.presets_delimited = []
+        self.presets_delimited = {}
+        self.program_combobox.addItem("")
 
         for f_line in f_line_arr:
             f_arr = f_line.split("|")
             f_name = f_arr[0]
-            if f_name != "empty":  # legacy bank support
-                self.presets_delimited.append(f_arr)
+            if f_name and f_name != "empty":  # legacy bank support
+                self.presets_delimited[f_name] = f_arr[1:]
                 self.program_combobox.addItem(f_name)
 
     def save_presets(self):
         print("saving preset")
-        if self.program_combobox.currentIndex() == 0:
+        f_index = self.program_combobox.currentIndex()
+        f_preset_name = str(self.program_combobox.currentText())
+        if not f_index and not f_preset_name:
             QtGui.QMessageBox.warning(
                 self.group_box, _("Error"),
-                _("The first preset must be empty"))
+                _("You must name the preset"))
             return
-        f_result_values = [str(self.program_combobox.currentText())]
+        f_result_values = []
         for k in sorted(self.controls.keys()):
             f_control = self.controls[k]
             f_result_values.append(
@@ -1851,36 +1871,36 @@ class pydaw_preset_manager_widget:
                 v = self.configure_dict[k]
                 f_result_values.append(
                     "c:{}:{}".format(k, v.replace("|", ":")))
-        self.presets_delimited[
-            (self.program_combobox.currentIndex())] = f_result_values
-        f_result = "{}\n".format(self.plugin_name)
-        for f_list in self.presets_delimited:
-            f_result += "{}\n".format("|".join(f_list))
+
+        self.presets_delimited[f_preset_name] = f_result_values
+
+        f_presets = "\n".join("|".join([x] + self.presets_delimited[x])
+            for x in sorted(self.presets_delimited))
+        f_result = "{}\n{}".format(self.plugin_name, f_presets)
         pydaw_util.pydaw_write_file_text(self.preset_path, f_result)
         self.load_presets()
 
     def program_changed(self, a_val=None):
-        if str(self.program_combobox.currentText()) == "empty":
-            print("empty")
-        else:
-            f_preset = self.presets_delimited[
-                self.program_combobox.currentIndex()]
-            f_preset_dict = {}
-            f_configure_dict = {}
-            for f_i in range(1, len(f_preset)):
-                f_list = f_preset[f_i].split(":")
-                if f_list[0] == "c":
-                    f_configure_dict[f_list[1]] = "|".join(f_list[2:])
-                else:
-                    f_preset_dict[int(f_list[0])] = int(f_list[1])
+        if not a_val:
+            return
+        f_preset = self.presets_delimited[
+            str(self.program_combobox.currentText())]
+        f_preset_dict = {}
+        f_configure_dict = {}
+        for f_kvp in f_preset:
+            f_list = f_kvp.split(":")
+            if f_list[0] == "c":
+                f_configure_dict[f_list[1]] = "|".join(f_list[2:])
+            else:
+                f_preset_dict[int(f_list[0])] = int(f_list[1])
 
-            for k, v in self.controls.items():
-                if int(k) in f_preset_dict:
-                    v.set_value(f_preset_dict[k], True)
-                else:
-                    v.reset_default_value()
-            if self.reconfigure_callback is not None:
-                self.reconfigure_callback(f_configure_dict)
+        for k, v in self.controls.items():
+            if int(k) in f_preset_dict:
+                v.set_value(f_preset_dict[k], True)
+            else:
+                v.reset_default_value()
+        if self.reconfigure_callback is not None:
+            self.reconfigure_callback(f_configure_dict)
 
     def add_control(self, a_control):
         self.controls[a_control.port_num] = a_control

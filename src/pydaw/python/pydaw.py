@@ -7909,8 +7909,7 @@ class seq_track:
                 self.instrument_combobox.currentIndex(),
                 self.bus_combobox.currentIndex(), self.track_number)
         else:
-            return pydaw_bus(
-                self.record_radiobutton.isChecked(), self.track_number)
+            return pydaw_bus(self.track_number)
 
 MREC_EVENTS = []
 
@@ -10926,22 +10925,22 @@ not os.access(os.path.dirname(default_project_file), os.W_OK):
     exit(999)
 
 if os.path.exists(default_project_file):
-    try:
+    #try:   #TODO:  uncomment the try/except stuff before releasing
         global_open_project(default_project_file, a_wait=False)
-    except Exception as ex:
-        QtGui.QMessageBox.warning(
-            MAIN_WINDOW, _("Error"),
-            _("Error opening project: {}\n{}\nCreating a new "
-            "project".format(default_project_file, ex)))
-        f_old_dir = os.path.dirname(default_project_file)
-        f_new_dir = "{}-{}".format(
-            f_old_dir,
-            datetime.datetime.now().strftime("%Y%m%d%H%M"))
-        os.system("mv '{}' '{}'".format(
-            f_old_dir, f_new_dir))
-        default_project_file = "{}/default-project/default.{}".format(
-            global_pydaw_home, global_pydaw_version_string)
-        global_new_project(default_project_file, a_wait=False)
+#    except Exception as ex:
+#        QtGui.QMessageBox.warning(
+#            MAIN_WINDOW, _("Error"),
+#            _("Error opening project: {}\n{}\nCreating a new "
+#            "project".format(default_project_file, ex)))
+#        f_old_dir = os.path.dirname(default_project_file)
+#        f_new_dir = "{}-{}".format(
+#            f_old_dir,
+#            datetime.datetime.now().strftime("%Y%m%d%H%M"))
+#        os.system("mv '{}' '{}'".format(
+#            f_old_dir, f_new_dir))
+#        default_project_file = "{}/default-project/default.{}".format(
+#            global_pydaw_home, global_pydaw_version_string)
+#        global_new_project(default_project_file, a_wait=False)
 else:
     global_new_project(default_project_file, a_wait=False)
 

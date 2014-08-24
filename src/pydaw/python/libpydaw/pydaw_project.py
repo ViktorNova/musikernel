@@ -2228,8 +2228,7 @@ class pydaw_busses:
         return f_result
 
 class pydaw_bus(pydaw_abstract_track):
-    def __init__(self, a_vol=0, a_track_pos=-1):
-        self.vol = int(a_vol)
+    def __init__(self, a_track_pos=-1):
         self.set_track_pos(a_track_pos)
 
     def __str__(self):
@@ -2261,7 +2260,7 @@ class pydaw_audio_tracks:
         return f_result
 
 class pydaw_audio_track(pydaw_abstract_track):
-    def __init__(self, a_solo=False, a_mute=False, a_vol=0, a_name="track",
+    def __init__(self, a_solo=False, a_mute=False, a_name="track",
                  a_bus_num=0, a_track_pos=-1):
         self.name = str(a_name)
         self.solo = int_to_bool(a_solo)
