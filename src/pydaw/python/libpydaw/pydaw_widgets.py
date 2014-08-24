@@ -1226,7 +1226,7 @@ class pydaw_abstract_file_browser_widget():
             if not f_file.endswith(".pybm4"):
                 f_file += ".pybm4"
             os.system('cp "{}" "{}"'.format(
-                pydaw_util.global_bookmarks_file_path, f_file))
+                pydaw_util.BOOKMARKS_FILE, f_file))
 
     def on_bookmark_open(self):
         f_file = QtGui.QFileDialog.getOpenFileName(
@@ -1236,7 +1236,7 @@ class pydaw_abstract_file_browser_widget():
         if not f_file is None and not str(f_file) == "":
             f_file = str(f_file)
             os.system('cp "{}" "{}"'.format(
-                f_file, pydaw_util.global_bookmarks_file_path))
+                f_file, pydaw_util.BOOKMARKS_FILE))
             self.open_bookmarks()
 
     def on_refresh(self):

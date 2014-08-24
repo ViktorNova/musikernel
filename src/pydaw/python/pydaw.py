@@ -8679,7 +8679,7 @@ class pydaw_main_window(QtGui.QMainWindow):
                     global_close_all_plugin_windows()
                     PROJECT.save_project_as(f_new_file)
                     set_window_title()
-                    set_default_project(f_new_file)
+                    pydaw_util.set_file_setting("last-project", f_new_file)
                     break
                 else:
                     break
@@ -10658,12 +10658,6 @@ class pydaw_wave_editor_widget:
         self.file_lineedit.setText("")
 
 
-def set_default_project(a_project_path):
-    f_def_file = "{}/last-project.txt".format(global_pydaw_home)
-    f_handle = open(f_def_file, 'w')
-    f_handle.write(str(a_project_path))
-    f_handle.close()
-
 def global_close_all():
     global OPEN_ITEM_UIDS, AUDIO_ITEMS_TO_DROP
     close_pydaw_engine()
@@ -10724,7 +10718,7 @@ def global_open_project(a_project_file, a_wait=True):
     for f_editor in REGION_EDITORS:
         f_editor.open_tracks()
     TRANSPORT.open_transport()
-    set_default_project(a_project_file)
+    pydaw_util.set_file_setting("last-project", a_project_file)
     global_update_audio_track_comboboxes()
     set_window_title()
     PROJECT.suppress_updates = False
@@ -10751,7 +10745,7 @@ def global_new_project(a_project_file, a_wait=True):
     SONG_EDITOR.open_song()
     PROJECT.save_song(SONG_EDITOR.song)
     TRANSPORT.open_transport()
-    set_default_project(a_project_file)
+    pydaw_util.set_file_setting("last-project", a_project_file)
     global_update_audio_track_comboboxes()
     set_window_title()
     MAIN_WINDOW.last_offline_dir = PROJECT.user_folder
@@ -10987,15 +10981,9 @@ CC_EDITOR_WIDGET.plugin_changed()
 # ^^TODO:  Move the CC maps out of the main window class
 # and instantiate earlier
 
-f_def_file = "{}/last-project.txt".format(global_pydaw_home)
-if os.path.exists(f_def_file):
-    f_handle = open(f_def_file, 'r')
-    default_project_file = f_handle.read()
-    f_handle.close()
-    if not os.path.exists(default_project_file):
-        default_project_file = "{}/default-project/default.{}".format(
-            global_pydaw_home, global_pydaw_version_string)
-else:
+default_project_file = pydaw_util.get_file_setting("last-project", str, None)
+
+if not default_project_file or not os.path.exists(default_project_file):
     default_project_file = "{}/default-project/default.{}".format(
         global_pydaw_home, global_pydaw_version_string)
 

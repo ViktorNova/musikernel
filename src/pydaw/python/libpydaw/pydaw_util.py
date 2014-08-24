@@ -528,37 +528,15 @@ def pydaw_read_device_config():
 
 pydaw_read_device_config()
 
-#TODO:  Remediate at PyDAWv5
-
-global_bookmarks_file_path_old = "{}/file_browser_bookmarks.txt".format(
-    global_pydaw_home)
-global_bookmarks_file_path = "{}/file_browser_bookmarks_v2.txt".format(
-    global_pydaw_home)
-
-def _convert_bookmarks_to_new_format():
-    f_result = []
-    for f_line in pydaw_read_file_text(
-    global_bookmarks_file_path_old).split("\n"):
-        if f_line.strip() == "":
-            continue
-        f_result.append("{0}|||default|||{1}/{0}".format(*f_line.split("|||")))
-    pydaw_write_file_text(global_bookmarks_file_path, "\n".join(f_result))
-
-
-if os.path.isfile(global_bookmarks_file_path_old) and not \
-os.path.isfile(global_bookmarks_file_path):
-    try:
-        _convert_bookmarks_to_new_format()
-    except Exception as ex:
-        print("Error trying to convert bookmarks to "
-            "new format \n{}".format(ex))
+BOOKMARKS_FILE = "{}/file_browser_bookmarks.txt".format(
+    CONFIG_DIR)
 
 
 def global_get_file_bookmarks():
     try:
         f_result = {}
-        if os.path.isfile(global_bookmarks_file_path):
-            f_text = pydaw_read_file_text(global_bookmarks_file_path)
+        if os.path.isfile(BOOKMARKS_FILE):
+            f_text = pydaw_read_file_text(BOOKMARKS_FILE)
             f_arr = f_text.split("\n")
             for f_line in f_arr:
                 f_line_arr = f_line.split("|||", 2)
@@ -584,7 +562,7 @@ def global_write_file_bookmarks(a_dict):
         for k2 in sorted(v.keys()):
             v2 = v[k2]
             f_result.append("{}|||{}|||{}".format(k2, k, v2))
-    pydaw_write_file_text(global_bookmarks_file_path, "\n".join(f_result))
+    pydaw_write_file_text(BOOKMARKS_FILE, "\n".join(f_result))
 
 def global_add_file_bookmark(a_name, a_folder, a_category):
     f_dict = global_get_file_bookmarks()
