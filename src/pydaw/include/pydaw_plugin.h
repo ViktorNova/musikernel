@@ -86,46 +86,46 @@ typedef t_wav_pool_item * (*fp_get_wavpool_item_from_host)(int);
 
 typedef struct _PYFX_Descriptor {
 
-  unsigned long UniqueID;
+    unsigned long UniqueID;
 
-  char * Name;
+    char * Name;
 
-  char * Maker;
+    char * Maker;
 
-  int PortCount;
+    int PortCount;
 
-  PYFX_PortDescriptor * PortDescriptors;
+    PYFX_PortDescriptor * PortDescriptors;
 
-  /* This member indicates an array of range hints for each port (see
+    /* This member indicates an array of range hints for each port (see
      above). Valid indices vary from 0 to PortCount-1. */
-  PYFX_PortRangeHint * PortRangeHints;
+    PYFX_PortRangeHint * PortRangeHints;
 
-  PYFX_Handle (*instantiate)(struct _PYFX_Descriptor * Descriptor,
-          int SampleRate, fp_get_wavpool_item_from_host a_host_wavpool_func,
-          int a_track_num, fp_queue_message);
+    PYFX_Handle (*instantiate)(struct _PYFX_Descriptor * Descriptor,
+        int SampleRate, fp_get_wavpool_item_from_host a_host_wavpool_func,
+        int a_track_num, fp_queue_message);
 
-   void (*connect_port)(PYFX_Handle Instance, int Port,
-           PYFX_Data * DataLocation);
+    void (*connect_port)(PYFX_Handle Instance, int Port,
+        PYFX_Data * DataLocation);
 
-   /* Assign the audio buffer at DataLocation to index a_index
-    */
-   void (*connect_buffer)(PYFX_Handle Instance, int a_index,
-           float * DataLocation);
+    /* Assign the audio buffer at DataLocation to index a_index
+     */
+    void (*connect_buffer)(PYFX_Handle Instance, int a_index,
+            float * DataLocation);
 
-  void (*cleanup)(PYFX_Handle Instance);
+    void (*cleanup)(PYFX_Handle Instance);
 
-  /* Load the plugin state file at a_file_path
-   */
-  void (*load)(PYFX_Handle Instance, struct _PYFX_Descriptor * Descriptor,
-          char * a_file_path);
+    /* Load the plugin state file at a_file_path
+     */
+    void (*load)(PYFX_Handle Instance, struct _PYFX_Descriptor * Descriptor,
+            char * a_file_path);
 
-void (*set_port_value)(PYFX_Handle Instance, int a_port, float a_value);
+    void (*set_port_value)(PYFX_Handle Instance, int a_port, float a_value);
 
-  /* When a panic message is sent, do whatever it takes to fix any stuck
-   notes. */
-  void (*panic)(PYFX_Handle Instance);
+    /* When a panic message is sent, do whatever it takes to fix any stuck
+     notes. */
+    void (*panic)(PYFX_Handle Instance);
 
-  /**
+    /**
      * PYINST_API_Version
      *
      * This member indicates the DSSI API level used by this plugin.
