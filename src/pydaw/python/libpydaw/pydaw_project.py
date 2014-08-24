@@ -805,11 +805,10 @@ class pydaw_project:
                 else:
                     print("Error:  note event not in note tracker")
             elif f_type == "cc":
-                f_plugin_id, f_port, f_val = f_event[4:]
-                f_plugin_id = int(f_plugin_id)
+                f_port, f_val = f_event[4:]
                 f_port = int(f_port)
                 f_val = float(f_val)
-                f_cc = pydaw_cc(f_beat, f_plugin_id, f_port, f_val)
+                f_cc = pydaw_cc(f_beat, f_port, f_val)
                 self.rec_item.add_cc(f_cc)
             elif f_type == "pb":
                 f_pb = pydaw_pitchbend(f_beat, float(f_event[4]) / 8192.0)
@@ -1485,8 +1484,8 @@ class pydaw_region:
             self.bar_num = a_bar_num
             self.item_uid = a_item_uid
 
-def pydaw_smooth_automation_points(a_items_list, a_is_cc,
-                                   a_plugin_index=0, a_cc_num=-1):
+def pydaw_smooth_automation_points(
+    a_items_list, a_is_cc, a_cc_num=-1):
     if a_is_cc:
         f_this_cc_arr = []
         f_beat_offset = 0.0
@@ -1497,8 +1496,7 @@ def pydaw_smooth_automation_points(a_items_list, a_is_cc,
             for f_cc in f_item.ccs:
                 if f_cc.cc_num == f_cc_num:
                     f_new_cc = pydaw_cc(
-                        (f_cc.start + f_beat_offset), a_plugin_index,
-                        f_cc_num, f_cc.cc_val)
+                        (f_cc.start + f_beat_offset), f_cc_num, f_cc.cc_val)
                     f_new_cc.item_index = f_index
                     f_new_cc.beat_offset = f_beat_offset
                     f_this_cc_arr.append(f_new_cc)
@@ -1530,8 +1528,8 @@ def pydaw_smooth_automation_points(a_items_list, a_is_cc,
                 while f_adjusted_start >= 4.0:
                     f_index_offset += 1
                     f_adjusted_start -= 4.0
-                f_interpolated_cc = pydaw_cc(f_adjusted_start, a_plugin_index,
-                                             f_cc_num, f_new_val)
+                f_interpolated_cc = pydaw_cc(
+                    f_adjusted_start, f_cc_num, f_new_val)
                 f_new_val += f_inc
                 f_new_index = f_this_cc_arr[i].item_index + f_index_offset
                 if f_new_index >= f_result_arr_len:
@@ -2715,7 +2713,7 @@ class pydaw_sample_graph:
             f_start = f_start % 4.0
             if a_is_cc:
                 f_val = pydaw_clip_value(f_point * 127.0, 0.0, 127.0)
-                f_result.append((pydaw_cc(f_start, 0, 0, f_val), f_index))
+                f_result.append(pydaw_cc(f_start, 0, f_val), f_index)
             else:
                 f_val = pydaw_clip_value(f_point, 0.0, 1.0)
                 f_result.append((pydaw_pitchbend(f_start, f_val), f_index))
