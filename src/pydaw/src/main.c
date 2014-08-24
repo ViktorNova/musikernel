@@ -781,16 +781,8 @@ int main(int argc, char **argv)
 
     printf("using home folder: %s\n", f_home);
 
-    if(!strcmp(f_home, "/home/ubuntu") &&
-            i_pydaw_file_exists("/media/pydaw_data"))
-    {
-        sprintf(f_device_file_path,
-                "/media/pydaw_data/%s/device.txt", PYDAW_VERSION);
-    }
-    else
-    {
-        sprintf(f_device_file_path, "%s/%s/device.txt", f_home, PYDAW_VERSION);
-    }
+    sprintf(f_device_file_path, "%s/%s/config/device.txt",
+        f_home, PYDAW_VERSION);
 
     char f_show_dialog_cmd[1024];
 

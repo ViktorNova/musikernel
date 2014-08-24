@@ -423,11 +423,16 @@ global_default_project_folder = global_home
 global_pydaw_home = "{}/{}".format(
     os.path.expanduser("~"), global_pydaw_version_string)
 
+CONFIG_DIR = "{}/config".format(global_pydaw_home)
+
 if not os.path.isdir(global_pydaw_home):
     os.mkdir(global_pydaw_home)
 
+if not os.path.isdir(CONFIG_DIR):
+    os.mkdir(CONFIG_DIR)
+
 def get_file_setting(a_name, a_type, a_default):
-    f_file_name = "{}/{}.txt".format(global_pydaw_home, a_name)
+    f_file_name = "{}/{}.txt".format(CONFIG_DIR, a_name)
     if os.path.exists(f_file_name):
         try:
             with open(f_file_name) as f_file:
@@ -438,12 +443,12 @@ def get_file_setting(a_name, a_type, a_default):
     return a_default
 
 def set_file_setting(a_name, a_val):
-    f_file_name = "{}/{}.txt".format(global_pydaw_home, a_name)
+    f_file_name = "{}/{}.txt".format(CONFIG_DIR, a_name)
     with open(f_file_name, "w") as f_file:
         f_file.write(str(a_val))
 
 global_device_val_dict = {}
-global_pydaw_device_config = "{}/device.txt".format(global_pydaw_home)
+global_pydaw_device_config = "{}/device.txt".format(CONFIG_DIR)
 
 SAMPLE_RATE = None
 NYQUIST_FREQ = None
