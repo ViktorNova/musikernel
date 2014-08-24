@@ -27,7 +27,7 @@ except ImportError:
 
         try:
             global_locale, global_encoding = locale.getdefaultlocale()
-            global_language = gettext.translation("pydaw4",
+            global_language = gettext.translation("musikernel",
                 "{}/share/locale".format(global_pydaw_install_prefix),
                 [global_locale])
             global_language.install()

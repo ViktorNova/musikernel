@@ -21,8 +21,8 @@ from math import log, pow
 from multiprocessing import cpu_count
 import numpy
 
-global_pydaw_version_string = "pydaw4"
-global_pydaw_file_type_string = 'PyDAW4 Project (*.pydaw4)'
+global_pydaw_version_string = "musikernel"
+global_pydaw_file_type_string = 'MusiKernel Project (*.mk)'
 global_euphoria_file_type_string = 'PyDAW4 Euphoria Sample File (*.u4ia4)'
 global_euphoria_file_type_ext = '.u4ia4'
 

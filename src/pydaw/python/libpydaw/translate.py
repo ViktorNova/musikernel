@@ -25,7 +25,7 @@ try:
     global_locale, global_encoding = locale.getdefaultlocale()
     print("locale: {}".format(global_locale))
     print("encoding: {}".format(global_encoding))
-    global_language = gettext.translation("pydaw4",
+    global_language = gettext.translation("musikernel",
         "{}/share/locale".format(global_pydaw_install_prefix),
         [global_locale])
     print("global_language.info: {}".format(global_language.info()))
