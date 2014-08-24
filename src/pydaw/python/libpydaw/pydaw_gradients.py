@@ -13,7 +13,7 @@ GNU General Public License for more details.
 """
 
 from PyQt4 import QtGui, QtCore
-from libpydaw.pydaw_project import pydaw_midi_track_count
+from libpydaw.pydaw_project import TRACK_COUNT_ALL
 
 pydaw_track_gradients = []
 
@@ -61,7 +61,7 @@ def pydaw_set_track_gradients():
     f_rainbox_pos = 0.0
     f_rainbox_intervals = [0.0, 0.15, 0.5, 1.0]
 
-    for f_i_gradient in range(pydaw_midi_track_count):
+    for f_i_gradient in range(TRACK_COUNT_ALL):
         f_gradient = QtGui.QLinearGradient(
             QtCore.QPointF(0, 0), QtCore.QPointF(0, 100))
         for f_i2 in range(4):

@@ -7614,46 +7614,39 @@ class seq_track:
         self.fx_button.pressed.connect(self.on_show_fx)
         self.fx_button.setObjectName("fxbutton")
         self.fx_button.setFixedWidth(24)
-        if a_instrument:
-            self.instrument_combobox = QtGui.QComboBox()
-            self.instrument_combobox.wheelEvent = self.wheel_event
-            self.instrument_combobox.addItems(
-                ["None", "Euphoria", "Ray-V", "Way-V"])
-            self.instrument_combobox.currentIndexChanged.connect(
-                self.on_instrument_change)
-            self.instrument_combobox.setSizeAdjustPolicy(
-                QtGui.QComboBox.AdjustToMinimumContentsLengthWithIcon)
-            self.instrument_combobox.setSizePolicy(
-                QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-            self.hlayout3.addWidget(self.instrument_combobox)
-            self.ui_button = QtGui.QPushButton("UI")
-            self.ui_button.pressed.connect(self.on_show_ui)
-            self.ui_button.setObjectName("uibutton")
-            self.ui_button.setMinimumWidth(24)
-            self.ui_button.setMaximumWidth(24)
-            self.hlayout3.addWidget(self.ui_button)
-            self.bus_combobox = QtGui.QComboBox()
-            self.bus_combobox.wheelEvent = self.wheel_event
-            self.bus_combobox.addItems(['M', '1', '2', '3', '4'])
-            self.bus_combobox.setMinimumWidth(54)
-            self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
-            self.hlayout2.addWidget(QtGui.QLabel(_("Bus:")))
-            self.hlayout2.addWidget(self.bus_combobox)
-            self.hlayout3.addWidget(self.fx_button)
-            self.solo_checkbox = QtGui.QCheckBox()
-            self.solo_checkbox.stateChanged.connect(self.on_solo)
-            self.solo_checkbox.setObjectName("solo_checkbox")
-            self.hlayout3.addWidget(self.solo_checkbox)
-            self.mute_checkbox = QtGui.QCheckBox()
-            self.mute_checkbox.stateChanged.connect(self.on_mute)
-            self.mute_checkbox.setObjectName("mute_checkbox")
-            self.hlayout3.addWidget(self.mute_checkbox)
-        else:
-            self.track_name_lineedit.setReadOnly(True)
-            self.hlayout3.addItem(
-                QtGui.QSpacerItem(10, 10,
-                QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
-            self.hlayout3.addWidget(self.fx_button)
+        self.instrument_combobox = QtGui.QComboBox()
+        self.instrument_combobox.wheelEvent = self.wheel_event
+        self.instrument_combobox.addItems(
+            ["None", "Euphoria", "Ray-V", "Way-V"])
+        self.instrument_combobox.currentIndexChanged.connect(
+            self.on_instrument_change)
+        self.instrument_combobox.setSizeAdjustPolicy(
+            QtGui.QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.instrument_combobox.setSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.hlayout3.addWidget(self.instrument_combobox)
+        self.ui_button = QtGui.QPushButton("UI")
+        self.ui_button.pressed.connect(self.on_show_ui)
+        self.ui_button.setObjectName("uibutton")
+        self.ui_button.setMinimumWidth(24)
+        self.ui_button.setMaximumWidth(24)
+        self.hlayout3.addWidget(self.ui_button)
+        self.bus_combobox = QtGui.QComboBox()
+        self.bus_combobox.wheelEvent = self.wheel_event
+        self.bus_combobox.addItems(['M', '1', '2', '3', '4'])
+        self.bus_combobox.setMinimumWidth(54)
+        self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
+        self.hlayout2.addWidget(QtGui.QLabel(_("Bus:")))
+        self.hlayout2.addWidget(self.bus_combobox)
+        self.hlayout3.addWidget(self.fx_button)
+        self.solo_checkbox = QtGui.QCheckBox()
+        self.solo_checkbox.stateChanged.connect(self.on_solo)
+        self.solo_checkbox.setObjectName("solo_checkbox")
+        self.hlayout3.addWidget(self.solo_checkbox)
+        self.mute_checkbox = QtGui.QCheckBox()
+        self.mute_checkbox.stateChanged.connect(self.on_mute)
+        self.mute_checkbox.setObjectName("mute_checkbox")
+        self.hlayout3.addWidget(self.mute_checkbox)
         self.record_radiobutton = QtGui.QRadioButton()
         REC_BUTTON_GROUP.addButton(self.record_radiobutton)
         self.record_radiobutton.toggled.connect(self.on_rec)
@@ -7665,12 +7658,11 @@ class seq_track:
     def open_track(self, a_track, a_notify_osc=False):
         if not a_notify_osc:
             self.suppress_osc = True
-        if self.is_instrument:
-            self.track_name_lineedit.setText(a_track.name)
-            self.instrument_combobox.setCurrentIndex(a_track.inst)
-            self.solo_checkbox.setChecked(a_track.solo)
-            self.mute_checkbox.setChecked(a_track.mute)
-            self.bus_combobox.setCurrentIndex(a_track.bus_num)
+        self.track_name_lineedit.setText(a_track.name)
+        self.instrument_combobox.setCurrentIndex(a_track.inst)
+        self.solo_checkbox.setChecked(a_track.solo)
+        self.mute_checkbox.setChecked(a_track.mute)
+        self.bus_combobox.setCurrentIndex(a_track.bus_num)
         self.suppress_osc = False
 
     def get_track(self):
