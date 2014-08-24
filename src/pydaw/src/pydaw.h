@@ -349,8 +349,6 @@ void v_set_loop_mode(t_pydaw_data * self, int a_mode);
 void v_set_playback_cursor(t_pydaw_data * self, int a_region,
                            int a_bar);
 int i_pydaw_get_item_index_from_uid(t_pydaw_data *, int);
-void v_set_plugin_index(t_pydaw_data * self, t_pytrack * a_track,
-                        int a_index, int a_lock);
 void v_pydaw_assert_memory_integrity(t_pydaw_data* self);
 int i_get_song_index_from_region_uid(t_pydaw_data*, int);
 void v_save_pysong_to_disk(t_pydaw_data * self);
@@ -370,7 +368,6 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         int a_start_bar, int a_end_region, int a_end_bar, char * a_file_out,
         int a_is_audio_glue);
 void v_pydaw_print_benchmark(char * a_message, clock_t a_start);
-void v_pydaw_init_busses(t_pydaw_data * self);
 inline void v_pydaw_audio_items_run(t_pydaw_data * self,
         int a_sample_count, float* a_output0,
         float* a_output1, int a_audio_track_num, int a_is_audio_glue);
@@ -794,14 +791,6 @@ void v_paif_set_control(t_pydaw_data * self, int a_region_uid,
 
 }
 
-void v_pydaw_init_busses(t_pydaw_data * self)
-{
-    //master bus
-    v_set_plugin_index(self, self->track_pool_all[0], -1, 0);
-    //wave editor
-    v_set_plugin_index(self,
-        self->track_pool_all[PYDAW_TRACK_COUNT_ALL], -1, 0);
-}
 /* Create a clock_t with clock() when beginning some work,
  * and use this function to print the completion time*/
 void v_pydaw_print_benchmark(char * a_message, clock_t a_start)
@@ -2236,8 +2225,6 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
                                     controlIn, f_event, self, 0,
                                     self->record_armed_track_index_all);
 
-                            f_event->plugin_index = -1;
-
                             f_track->period_event_index += 1;
 
                             if(self->playback_mode ==
@@ -2407,7 +2394,7 @@ inline void v_pydaw_finish_time_params(t_pydaw_data * self,
 inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
         int sample_count, PYFX_Data *output0, PYFX_Data *output1)
 {
-    int f_global_track_num = PYDAW_TRACK_COUNT_ALL - 1
+    int f_global_track_num = PYDAW_TRACK_COUNT_ALL - 1;
     t_pytrack * f_track = self->track_pool_all[f_global_track_num];
     int f_i = 0;
 
@@ -2901,8 +2888,7 @@ inline void v_pydaw_audio_items_run(t_pydaw_data * self,
             }
 
             if(a_is_audio_glue ||
-            (i_get_global_track_num(2, f_audio_item->audio_track_output) ==
-             a_audio_track_num))
+            f_audio_item->audio_track_output == a_audio_track_num)
             {
                 if((f_audio_item->adjusted_start_beat) >=
                         f_adjusted_next_song_pos_beats)
@@ -3869,11 +3855,6 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
     stat((self->region_folder), &f_reg_stat);
     struct stat f_song_file_stat;
     stat(f_song_file, &f_song_file_stat);
-
-    if(a_first_load)
-    {
-        v_pydaw_init_busses(self);
-    }
 
     if(a_first_load && i_pydaw_file_exists(self->wav_pool_file))
     {

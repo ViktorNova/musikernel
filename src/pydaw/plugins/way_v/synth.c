@@ -1091,23 +1091,19 @@ static void v_run_wayv(PYFX_Handle instance, int sample_count,
         }
         else if (events[plugin_data->event_pos].type == PYDAW_EVENT_CONTROLLER)
         {
-            //The host already filters out messages for other instruments
-            if (events[plugin_data->event_pos].plugin_index != -1)
-            {
-                assert(events[plugin_data->event_pos].port >=
-                        WAYV_FIRST_CONTROL_PORT &&
-                        events[plugin_data->event_pos].port < WAYV_COUNT);
+            assert(events[plugin_data->event_pos].port >=
+                    WAYV_FIRST_CONTROL_PORT &&
+                    events[plugin_data->event_pos].port < WAYV_COUNT);
 
-                plugin_data->midi_event_types[plugin_data->midi_event_count] =
-                        PYDAW_EVENT_CONTROLLER;
-                plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
-                        events[plugin_data->event_pos].tick;
-                plugin_data->midi_event_ports[plugin_data->midi_event_count] =
-                        events[plugin_data->event_pos].port;
-                plugin_data->midi_event_values[plugin_data->midi_event_count] =
-                        events[plugin_data->event_pos].value;
-                plugin_data->midi_event_count++;
-            }
+            plugin_data->midi_event_types[plugin_data->midi_event_count] =
+                    PYDAW_EVENT_CONTROLLER;
+            plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
+                    events[plugin_data->event_pos].tick;
+            plugin_data->midi_event_ports[plugin_data->midi_event_count] =
+                    events[plugin_data->event_pos].port;
+            plugin_data->midi_event_values[plugin_data->midi_event_count] =
+                    events[plugin_data->event_pos].value;
+            plugin_data->midi_event_count++;
         }
         else if (events[(plugin_data->event_pos)].type == PYDAW_EVENT_PITCHBEND)
         {
