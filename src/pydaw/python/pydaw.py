@@ -867,7 +867,7 @@ class region_list_editor:
                 a_track_num=i, a_track_text=_("track{}").format(i + 1))
             self.tracks.append(track)
             self.table_widget.setCellWidget(i, 0, track.group_box)
-        self.table_widget.setColumnWidth(0, 180)
+        self.table_widget.setColumnWidth(0, 150)
         self.set_region_length()
 
     def set_region_length(self, a_length=8):
@@ -7499,6 +7499,94 @@ def global_set_record_armed_track():
     REGION_INST_EDITOR.tracks[
         LAST_REC_ARMED_TRACK].record_radiobutton.setChecked(True)
 
+class plugin_settings:
+    instrument = 0
+    effect = 1
+    def __init__(self, a_index, a_track_num, a_layout, a_type):
+        self.type = a_type
+        self.track_num = a_track_num
+        f_offset = 0 if self.type == self.instrument else 10
+        self.index = a_index
+        self.plugin_combobox = QtGui.QComboBox()
+        self.plugin_combobox.setMinimumWidth(150)
+        self.plugin_combobox.wheelEvent = self.wheel_event
+        if self.type == plugin_settings.instrument:
+            self.plugin_combobox.addItems(
+                ["None", "Euphoria", "Ray-V", "Way-V"])
+        elif self.type == plugin_settings.effect:
+            self.plugin_combobox.addItems(["None", "Modulex"])
+        self.plugin_combobox.currentIndexChanged.connect(
+            self.on_plugin_change)
+        a_layout.addWidget(self.plugin_combobox, a_index + 1, f_offset)
+        self.ui_button = QtGui.QPushButton("UI")
+        self.ui_button.pressed.connect(self.on_show_ui)
+        self.ui_button.setObjectName("uibutton")
+        self.ui_button.setFixedWidth(24)
+        a_layout.addWidget(self.ui_button, a_index + 1, f_offset + 1)
+
+    def on_plugin_change(self, a_val):
+        raise NotImplementedError()
+
+    def wheel_event(self, a_event=None):
+        pass
+
+    def on_show_ui(self):
+        f_index = self.instrument_combobox.currentIndex()
+        if f_index == 0:
+            return
+        self.record_radiobutton.setChecked(True)
+        global_open_inst_ui(
+            self.track_number, f_index,
+            _("MIDI Track: {}").format(self.track_name_lineedit.text()))
+
+    def on_instrument_change(self, selected_instrument):
+        if not self.suppress_osc:
+            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+            global_close_inst_ui(self.track_number)
+            PROJECT.delete_inst_file(self.track_number)
+            PROJECT.this_pydaw_osc.pydaw_set_instrument_index(
+                self.track_number, selected_instrument)
+            PROJECT.commit(
+                _("Set instrument for track {} to {}").format(
+                self.track_number, self.instrument_combobox.currentText()))
+
+    def on_show_fx(self):
+        assert(False)  # This needs to be completely redone
+        if not self.is_instrument or \
+        self.instrument_combobox.currentIndex() > 0:
+            if self.is_instrument:
+                if self.instrument_combobox.currentIndex() > 0:
+                    global_open_fx_ui(
+                        self.track_number, pydaw_folder_instruments, 0,
+                        _("MIDI Track: {}").format(
+                            self.track_name_lineedit.text()))
+            else:
+                global_open_fx_ui(self.track_number, pydaw_folder_busfx, 1,
+                _("Bus Track: {}").format(self.track_name_lineedit.text()))
+
+class track_send:
+    def __init__(self, a_index, a_track_num, a_layout):
+        self.track_num = a_track_num
+        self.index = a_index
+        self.bus_combobox = QtGui.QComboBox()
+        self.bus_combobox.setMinimumWidth(180)
+        self.bus_combobox.wheelEvent = self.wheel_event
+        self.bus_combobox.addItems(['None', 'Master', '1', '2', '3', '4'])
+        self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
+        a_layout.addWidget(self.bus_combobox, a_index + 1, 20)
+
+    def on_bus_changed(self, a_value=0):
+        if not self.suppress_osc:
+            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+            PROJECT.this_pydaw_osc.pydaw_set_bus(
+                self.track_number, self.bus_combobox.currentIndex(), 0)
+            PROJECT.commit(
+                _("Set bus for track {} to {}").format(self.track_number,
+                self.bus_combobox.currentIndex()))
+
+    def wheel_event(self, a_event=None):
+        pass
+
 
 class seq_track:
     def on_solo(self, value):
@@ -7506,7 +7594,7 @@ class seq_track:
             PROJECT.this_pydaw_osc.pydaw_set_solo(
                 self.track_number, self.solo_checkbox.isChecked(), 0)
             PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-            PROJECT.commit(_("Set solo for MIDI track {} to {}").format(
+            PROJECT.commit(_("Set solo for track {} to {}").format(
                 self.track_number, self.solo_checkbox.isChecked()))
 
     def on_mute(self, value):
@@ -7514,7 +7602,7 @@ class seq_track:
             PROJECT.this_pydaw_osc.pydaw_set_mute(
                 self.track_number, self.mute_checkbox.isChecked(), 0)
             PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-            PROJECT.commit(_("Set mute for MIDI track {} to {}").format(
+            PROJECT.commit(_("Set mute for track {} to {}").format(
                 self.track_number, self.mute_checkbox.isChecked()))
 
     def on_rec(self, value):
@@ -7532,58 +7620,12 @@ class seq_track:
         PROJECT.this_pydaw_osc.pydaw_save_track_name(
             self.track_number, self.track_name_lineedit.text(), 0)
         PROJECT.commit(
-            _("Set name for MIDI track {} to {}").format(self.track_number,
+            _("Set name for track {} to {}").format(self.track_number,
             self.track_name_lineedit.text()))
         global_inst_set_window_title(self.track_number,
-            _("MIDI Track: {}").format(self.track_name_lineedit.text()))
+            _("Track: {}").format(self.track_name_lineedit.text()))
         global_fx_set_window_title(0, self.track_number,
-            _("MIDI Track: {}").format(self.track_name_lineedit.text()))
-
-    def on_instrument_change(self, selected_instrument):
-        if not self.suppress_osc:
-            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-            global_close_inst_ui(self.track_number)
-            PROJECT.delete_inst_file(self.track_number)
-            PROJECT.this_pydaw_osc.pydaw_set_instrument_index(
-                self.track_number, selected_instrument)
-            PROJECT.commit(
-                _("Set instrument for MIDI track {} to {}").format(
-                self.track_number, self.instrument_combobox.currentText()))
-
-    def on_show_ui(self):
-        f_index = self.instrument_combobox.currentIndex()
-        if f_index == 0:
-            return
-        self.record_radiobutton.setChecked(True)
-        global_open_inst_ui(
-            self.track_number, f_index,
-            _("MIDI Track: {}").format(self.track_name_lineedit.text()))
-
-    def on_show_fx(self):
-        assert(False)  # This needs to be completely redone
-        if not self.is_instrument or \
-        self.instrument_combobox.currentIndex() > 0:
-            if self.is_instrument:
-                if self.instrument_combobox.currentIndex() > 0:
-                    global_open_fx_ui(
-                        self.track_number, pydaw_folder_instruments, 0,
-                        _("MIDI Track: {}").format(
-                            self.track_name_lineedit.text()))
-            else:
-                global_open_fx_ui(self.track_number, pydaw_folder_busfx, 1,
-                _("Bus Track: {}").format(self.track_name_lineedit.text()))
-
-    def on_bus_changed(self, a_value=0):
-        if not self.suppress_osc:
-            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-            PROJECT.this_pydaw_osc.pydaw_set_bus(
-                self.track_number, self.bus_combobox.currentIndex(), 0)
-            PROJECT.commit(
-                _("Set bus for MIDI track {} to {}").format(self.track_number,
-                self.bus_combobox.currentIndex()))
-
-    def wheel_event(self, a_event=None):
-        pass
+            _("Track: {}").format(self.track_name_lineedit.text()))
 
     def context_menu_event(self, a_event=None):
         pass
@@ -7609,44 +7651,39 @@ class seq_track:
         self.hlayout3 = QtGui.QHBoxLayout()
         self.main_vlayout.addLayout(self.hlayout3)
 
-        self.fx_button = QtGui.QPushButton("FX")
-        self.fx_button.pressed.connect(self.on_show_fx)
-        self.fx_button.setObjectName("fxbutton")
-        self.fx_button.setFixedWidth(24)
-        self.instrument_combobox = QtGui.QComboBox()
-        self.instrument_combobox.setMinimumWidth(150)
-        self.instrument_combobox.wheelEvent = self.wheel_event
-        self.instrument_combobox.addItems(
-            ["None", "Euphoria", "Ray-V", "Way-V"])
-        self.instrument_combobox.currentIndexChanged.connect(
-            self.on_instrument_change)
-        self.instrument_combobox.setSizeAdjustPolicy(
-            QtGui.QComboBox.AdjustToMinimumContentsLengthWithIcon)
-        self.instrument_combobox.setSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.menu_button = QtGui.QPushButton()
         self.button_menu = QtGui.QMenu()
         self.menu_button.setMenu(self.button_menu)
         self.hlayout3.addWidget(self.menu_button)
-        self.menu_widget = QtGui.QGroupBox()
-        self.menu_widget.setObjectName("plugin_groupbox")
-        self.menu_gridlayout = QtGui.QGridLayout(self.menu_widget)
+        self.menu_widget = QtGui.QWidget()
+        self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
+        self.menu_gridlayout = QtGui.QGridLayout()
+        self.menu_hlayout.addLayout(self.menu_gridlayout)
+        self.menu_gridlayout.addWidget(
+            QtGui.QLabel(_("Instruments")), 0, 0)
+        self.instruments = []
+        for f_i in range(5):
+            f_plugin = plugin_settings(
+                f_i, self.track_number, self.menu_gridlayout,
+                plugin_settings.instrument)
+            self.instruments.append(f_plugin)
+        self.menu_gridlayout.addWidget(
+            QtGui.QLabel(_("Effects")), 0, 10)
+        self.effects = []
+        for f_i in range(10):
+            f_plugin = plugin_settings(
+                f_i, self.track_number, self.menu_gridlayout,
+                plugin_settings.effect)
+            self.effects.append(f_plugin)
+        self.menu_gridlayout.addWidget(
+            QtGui.QLabel(_("Sends")), 0, 20)
+        self.sends = []
+        for f_i in range(4):
+            f_send = track_send(f_i, self.track_number, self.menu_gridlayout)
+            self.sends.append(f_send)
         self.action_widget = QtGui.QWidgetAction(self.button_menu)
         self.action_widget.setDefaultWidget(self.menu_widget)
         self.button_menu.addAction(self.action_widget)
-        self.menu_gridlayout.addWidget(self.instrument_combobox, 0, 0)
-        self.ui_button = QtGui.QPushButton("UI")
-        self.ui_button.pressed.connect(self.on_show_ui)
-        self.ui_button.setObjectName("uibutton")
-        self.ui_button.setMinimumWidth(24)
-        self.ui_button.setMaximumWidth(24)
-        self.menu_gridlayout.addWidget(self.ui_button, 0, 1)
-        self.bus_combobox = QtGui.QComboBox()
-        self.bus_combobox.wheelEvent = self.wheel_event
-        self.bus_combobox.addItems(['M', '1', '2', '3', '4'])
-        self.bus_combobox.setMinimumWidth(54)
-        self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
-        self.menu_gridlayout.addWidget(self.fx_button, 0, 2)
         self.solo_checkbox = QtGui.QCheckBox()
         self.solo_checkbox.stateChanged.connect(self.on_solo)
         self.solo_checkbox.setObjectName("solo_checkbox")
@@ -7660,8 +7697,6 @@ class seq_track:
         self.record_radiobutton.toggled.connect(self.on_rec)
         self.record_radiobutton.setObjectName("rec_arm_radiobutton")
         self.hlayout3.addWidget(self.record_radiobutton)
-        self.menu_gridlayout.addWidget(QtGui.QLabel(_("Bus:")), 0, 3)
-        self.menu_gridlayout.addWidget(self.bus_combobox, 0, 4)
 
         self.suppress_osc = False
 
@@ -7669,10 +7704,10 @@ class seq_track:
         if not a_notify_osc:
             self.suppress_osc = True
         self.track_name_lineedit.setText(a_track.name)
-        self.instrument_combobox.setCurrentIndex(a_track.inst)
+        #self.instrument_combobox.setCurrentIndex(a_track.inst)
         self.solo_checkbox.setChecked(a_track.solo)
         self.mute_checkbox.setChecked(a_track.mute)
-        self.bus_combobox.setCurrentIndex(a_track.bus_num)
+        #self.bus_combobox.setCurrentIndex(a_track.bus_num)
         self.suppress_osc = False
 
     def get_track(self):
@@ -7680,8 +7715,9 @@ class seq_track:
             self.solo_checkbox.isChecked(),
             self.mute_checkbox.isChecked(),
             str(self.track_name_lineedit.text()),
-            self.instrument_combobox.currentIndex(),
-            self.bus_combobox.currentIndex(), self.track_number)
+            0, #self.instrument_combobox.currentIndex(),
+            0, #self.bus_combobox.currentIndex(),
+            self.track_number)
 
 
 MREC_EVENTS = []
