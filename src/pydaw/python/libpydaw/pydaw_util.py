@@ -424,12 +424,12 @@ global_pydaw_home = "{}/{}".format(
     os.path.expanduser("~"), global_pydaw_version_string)
 
 CONFIG_DIR = "{}/config".format(global_pydaw_home)
+PRESET_DIR = "{}/preset".format(global_pydaw_home)
 
-if not os.path.isdir(global_pydaw_home):
-    os.mkdir(global_pydaw_home)
+for _f_dir in (global_pydaw_home, CONFIG_DIR, PRESET_DIR):
+    if not os.path.isdir(_f_dir):
+        os.makedirs(_f_dir)
 
-if not os.path.isdir(CONFIG_DIR):
-    os.mkdir(CONFIG_DIR)
 
 def get_file_setting(a_name, a_type, a_default):
     f_file_name = "{}/{}.txt".format(CONFIG_DIR, a_name)

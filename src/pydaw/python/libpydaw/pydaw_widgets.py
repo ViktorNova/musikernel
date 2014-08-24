@@ -1643,7 +1643,7 @@ class peak_meter:
             range(0, -30, -6)):
                 p.drawText(3, f_y, str(f_db))
 
-PRESET_FILE_DIALOG_STRING = 'PyDAW Presets (*.pypresets)'
+PRESET_FILE_DIALOG_STRING = 'MusiKernel Presets (*.mkp)'
 BM_FILE_DIALOG_STRING = 'PyDAW Bookmarks (*.pybm4)'
 PLUGIN_SETTINGS_CLIPBOARD = {}
 PLUGIN_CONFIGURE_CLIPBOARD = None
@@ -1654,14 +1654,16 @@ class pydaw_preset_manager_widget:
         self.plugin_name = str(a_plugin_name)
         self.configure_dict = a_configure_dict
         self.reconfigure_callback = a_reconfigure_callback
-        self.factory_preset_path = "{}/lib/{}/presets/{}.pypresets".format(
+        self.factory_preset_path = "{}/lib/{}/presets/{}.mkp".format(
             pydaw_util.global_pydaw_install_prefix,
             pydaw_util.global_pydaw_version_string, a_plugin_name)
-        self.bank_file = "{}/{}.bank".format(
-            pydaw_util.global_pydaw_home, a_plugin_name)
-
+        self.bank_dir = "{}/{}".format(pydaw_util.PRESET_DIR, a_plugin_name)
+        if not os.path.isdir(self.bank_dir):
+            os.makedirs(self.bank_dir)
+        self.user_factory_presets = "{}/factory.mkp".format(self.bank_dir)
+        self.bank_file = "{}/{}-last-bank.txt".format(
+            pydaw_util.PRESET_DIR, a_plugin_name)
         self.load_default_preset_path()
-
         self.group_box = QtGui.QWidget()
         self.group_box.setObjectName("plugin_groupbox")
         self.layout = QtGui.QHBoxLayout(self.group_box)
@@ -1708,14 +1710,11 @@ class pydaw_preset_manager_widget:
         self.layout.addWidget(self.more_button)
         self.presets_delimited = []
         self.controls = {}
-        for f_i in range(128):
-            self.program_combobox.addItem("empty")
         self.load_presets()
         self.program_combobox.currentIndexChanged.connect(self.program_changed)
 
     def load_default_preset_path(self):
-        self.preset_path = "{}/{}.pypresets".format(
-            pydaw_util.global_pydaw_home, self.plugin_name)
+        self.preset_path = self.user_factory_presets
         if os.path.isfile(self.bank_file):
             f_text = pydaw_util.pydaw_read_file_text(self.bank_file)
             if os.path.isfile(f_text):
@@ -1763,14 +1762,13 @@ class pydaw_preset_manager_widget:
             filter=PRESET_FILE_DIALOG_STRING)
         if not f_file is None and not str(f_file) == "":
             f_file = str(f_file)
-            if not f_file.endswith(".pypresets"):
-                f_file += ".pypresets"
+            if not f_file.endswith(".mkp"):
+                f_file += ".mkp"
             if a_new:
                 pydaw_util.pydaw_write_file_text(
-                    f_file, "\n".join([self.plugin_name] +
-                    ["empty" for i in range(128)]))
+                    f_file, "\n".join([self.plugin_name]))
             else:
-                os.system('cp "{}" "{}"'.format(self.preset_path, f_file))
+                os.system('cp -f "{}" "{}"'.format(self.preset_path, f_file))
             self.preset_path = f_file
             pydaw_util.pydaw_write_file_text(self.bank_file, self.preset_path)
             if a_new:
@@ -1789,13 +1787,11 @@ class pydaw_preset_manager_widget:
             self.program_combobox.setCurrentIndex(0)
             self.load_presets()
 
-
     def on_restore_bank(self):
         if os.path.isfile(self.bank_file):
-            os.system('rm "{}"'.format(self.bank_file))
-        self.preset_path = "{}/{}.pypresets".format(
-            pydaw_util.global_pydaw_home, self.plugin_name)
-        os.system('rm "{}"'.format(self.preset_path))
+            os.system("rm -f '{}'".format(self.bank_file))
+        self.preset_path = self.user_factory_presets
+        os.system("rm -f '{}'".format(self.preset_path))
         self.program_combobox.setCurrentIndex(0)
         self.load_presets()
 
@@ -1809,48 +1805,41 @@ class pydaw_preset_manager_widget:
         if os.path.isfile(self.preset_path):
             print("loading presets from file {}".format(self.preset_path))
             f_text = pydaw_util.pydaw_read_file_text(self.preset_path)
-            f_line_arr = f_text.split("\n")
-        elif os.path.isfile(self.factory_preset_path):
-            os.system('cp "{}" "{}"'.format(
-                self.factory_preset_path, self.preset_path))
-            print("loading factory presets")
-            f_text = pydaw_util.pydaw_read_file_text(self.preset_path)
-            f_line_arr = f_text.split("\n")
         else:
-            f_line_arr = []
+            if not os.path.isfile(self.user_factory_presets):
+                os.system("cp -f '{}' '{}'".format(
+                    self.factory_preset_path, self.user_factory_presets))
+            print("loading factory presets")
+            f_text = pydaw_util.pydaw_read_file_text(
+                self.user_factory_presets)
+        f_line_arr = f_text.split("\n")
 
-        if f_line_arr:
-            if f_line_arr[0].strip() != self.plugin_name:
-                QtGui.QMessageBox.warning(
-                    self.group_box, _("Error"),
-                    _("The selected preset bank is for {}, please select "
-                    "one for {}").format(
-                f_line_arr[0], self.plugin_name))
-                if os.path.isfile(self.bank_file):
-                    os.system('rm "{}"'.format(self.bank_file))
-                return
+        if f_line_arr[0].strip() != self.plugin_name:
+            QtGui.QMessageBox.warning(
+                self.group_box, _("Error"),
+                _("The selected preset bank is for {}, please select "
+                "one for {}").format(
+            f_line_arr[0], self.plugin_name))
+            if os.path.isfile(self.bank_file):
+                os.system('rm "{}"'.format(self.bank_file))
+            return
 
         f_line_arr = f_line_arr[1:]
         self.presets_delimited = []
 
-        for f_i in range(128):
-            if f_i >= len(f_line_arr):
-                self.presets_delimited.append(["empty"])
-                self.program_combobox.setItemText(f_i, "empty")
-            else:
-                self.presets_delimited.append(f_line_arr[f_i].split("|"))
-                self.program_combobox.setItemText(
-                    f_i, self.presets_delimited[f_i][0])
+        for f_line in f_line_arr:
+            f_arr = f_line.split("|")
+            f_name = f_arr[0]
+            if f_name != "empty":  # legacy bank support
+                self.presets_delimited.append(f_arr)
+                self.program_combobox.addItem(f_name)
 
     def save_presets(self):
         print("saving preset")
-        if str(self.program_combobox.currentText()) == "empty":
-            QtGui.QMessageBox.warning(self.group_box, _("Error"),
-                                      _("Preset name cannot be 'empty'"))
-            return
         if self.program_combobox.currentIndex() == 0:
-            QtGui.QMessageBox.warning(self.group_box, _("Error"),
-                                      _("The first preset must be empty"))
+            QtGui.QMessageBox.warning(
+                self.group_box, _("Error"),
+                _("The first preset must be empty"))
             return
         f_result_values = [str(self.program_combobox.currentText())]
         for k in sorted(self.controls.keys()):
@@ -1860,7 +1849,8 @@ class pydaw_preset_manager_widget:
         if self.configure_dict is not None:
             for k in self.configure_dict.keys():
                 v = self.configure_dict[k]
-                f_result_values.append("c:{}:{}".format(k, v.replace("|", ":")))
+                f_result_values.append(
+                    "c:{}:{}".format(k, v.replace("|", ":")))
         self.presets_delimited[
             (self.program_combobox.currentIndex())] = f_result_values
         f_result = "{}\n".format(self.plugin_name)
@@ -3958,6 +3948,10 @@ class pydaw_abstract_plugin_ui:
         self.configure_dict = {}
         self.save_file_on_exit = True
         self.is_quitting = False
+        self._plugin_name = None
+
+    def get_plugin_name(self):
+        return self._plugin_name
 
     def set_default_size(self):
         """ Override this for plugins that can't properly resize
@@ -4084,11 +4078,13 @@ class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
             self, a_rel_callback, a_val_callback, a_track_num, a_project,
             a_track_type, a_stylesheet, a_configure_callback)
         self.folder = a_folder
+        self._plugin_name = "MODULEX"
         self.file = "{}.pyfx".format(self.track_num)
         self.set_window_title(a_track_name)
         self.is_instrument = False
 
-        self.preset_manager = pydaw_preset_manager_widget("MODULEX")
+        self.preset_manager = pydaw_preset_manager_widget(
+            self.get_plugin_name())
         self.presets_hlayout = QtGui.QHBoxLayout()
         self.presets_hlayout.addWidget(self.preset_manager.group_box)
         self.presets_hlayout.addItem(
@@ -4370,13 +4366,15 @@ class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self, a_rel_callback, a_val_callback, a_track_num, a_project,
             a_track_type, a_stylesheet, a_configure_callback)
         self.folder = a_folder
+        self._plugin_name = "RAYV"
         self.file = "{}.pyinst".format(self.track_num)
         self.set_window_title(a_track_name)
         self.is_instrument = True
         f_osc_types = [_("Saw"), _("Square"), _("Triangle"),
                        _("Sine"), _("Off")]
         f_lfo_types = [_("Off"), _("Sine"), _("Triangle")]
-        self.preset_manager = pydaw_preset_manager_widget("RAYV")
+        self.preset_manager = pydaw_preset_manager_widget(
+            self.get_plugin_name())
         self.main_layout = QtGui.QVBoxLayout()
         self.main_layout.setMargin(3)
         self.layout.addLayout(self.main_layout)
@@ -4549,6 +4547,7 @@ class pydaw_wayv_plugin_ui(pydaw_abstract_plugin_ui):
             self, a_rel_callback, a_val_callback, a_track_num, a_project,
             a_track_type, a_stylesheet, a_configure_callback)
         self.folder = a_folder
+        self._plugin_name = "WAYV"
         self.file = "{}.pyinst".format(self.track_num)
         self.set_window_title(a_track_name)
         self.is_instrument = True
@@ -4595,7 +4594,8 @@ class pydaw_wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.osc_scrollarea.setWidgetResizable(True)
         self.oscillator_layout = QtGui.QVBoxLayout(self.osc_tab_widget)
         self.preset_manager = pydaw_preset_manager_widget(
-            "WAYV", self.configure_dict, self.reconfigure_plugin)
+            self.get_plugin_name(), self.configure_dict,
+            self.reconfigure_plugin)
         self.preset_hlayout = QtGui.QHBoxLayout()
         self.preset_hlayout.addWidget(self.preset_manager.group_box)
         self.preset_hlayout.addItem(

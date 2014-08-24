@@ -4911,8 +4911,8 @@ class audio_track:
         if not a_notify_osc:
             self.suppress_osc = True
         self.track_name_lineedit.setText(a_track.name)
-        global_update_audio_track_comboboxes(self.track_number, a_track.name)
-        self.volume_slider.setValue(a_track.vol)
+        global_update_audio_track_comboboxes(
+            self.track_number, a_track.name)
         self.solo_checkbox.setChecked(a_track.solo)
         self.mute_checkbox.setChecked(a_track.mute)
         self.bus_combobox.setCurrentIndex(a_track.bus_num)
@@ -7892,7 +7892,6 @@ class seq_track:
     def open_track(self, a_track, a_notify_osc=False):
         if not a_notify_osc:
             self.suppress_osc = True
-        self.volume_slider.setValue(a_track.vol)
         if self.is_instrument:
             self.track_name_lineedit.setText(a_track.name)
             self.instrument_combobox.setCurrentIndex(a_track.inst)
