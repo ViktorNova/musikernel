@@ -67,7 +67,7 @@ GNU General Public License for more details.
 #define PYDAW_MIDI_RECORD_BUFFER_LENGTH 600 //recording buffer for MIDI, in bars
 #define PYDAW_MAX_WORK_ITEMS_PER_THREAD 128
 
-#define PYDAW_VERSION "pydaw4"
+#define PYDAW_VERSION "musikernel"
 
 #define PYDAW_OSC_SEND_QUEUE_SIZE 256
 #define PYDAW_OSC_MAX_MESSAGE_SIZE 65536

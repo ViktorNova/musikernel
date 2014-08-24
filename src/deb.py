@@ -34,16 +34,11 @@ def pydaw_write_file_text(a_file, a_text):
     f_handle.write(str(a_text))
     f_handle.close()
 
-global_pydaw_version_string = "pydaw4"
+with open("major-version.txt") as f_file_handle:
+    global_pydaw_version_string = f_file_handle.read().strip()
 
 f_gcc = ""
 
-#This is a kludge to work around the GCC regressions in gcc-4.7 and 4.8
-if os.path.exists("/usr/bin/gcc-4.6"):
-    f_gcc = " CC=gcc-4.6 "
-else:
-    print("Did not find GCC 4.6; Early versions of GCC 4.7 and 4.8 may cause "
-          "stability issues, please consider installing GCC 4.6")
 
 if "--native" in sys.argv or \
 platform.machine().lower().startswith("arm"):
