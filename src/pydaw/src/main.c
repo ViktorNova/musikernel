@@ -1366,11 +1366,9 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
             f_instance = a_pydaw_data->track_pool_all[f_track_num]->effects[0];
         }
 
-        v_pydaw_plugin_configure_handler(f_instance, f_key, f_message,
-                &a_pydaw_data->main_lock);
-        //f_instance->pluginPortUpdated[f_control_in] = 1;
-        //pthread_spin_unlock(&a_pydaw_data->main_lock);
-        //pthread_mutex_unlock(&a_pydaw_data->track_pool[f_track_num]->mutex);
+        f_instance->descriptor->configure(f_instance->PYFX_handle,
+            f_key, f_message, &a_pydaw_data->main_lock);
+
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_VOL)) //Set track volume

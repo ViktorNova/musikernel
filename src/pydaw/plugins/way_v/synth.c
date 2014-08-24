@@ -1546,7 +1546,7 @@ float * f_char_to_wavetable(char * a_char)
     return f_result;
 }
 
-char *c_wayv_configure(PYFX_Handle instance, char *key,
+void v_wayv_configure(PYFX_Handle instance, char *key,
         char *value, pthread_spinlock_t * a_spinlock)
 {
     t_wayv *plugin_data = (t_wayv*)instance;
@@ -1573,8 +1573,6 @@ char *c_wayv_configure(PYFX_Handle instance, char *key,
     {
         printf("Way-V unhandled configure key %s\n", key);
     }
-
-    return NULL;
 }
 
 
@@ -1861,7 +1859,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     f_result->set_port_value = v_wayv_set_port_value;
 
     f_result->PYINST_API_Version = 1;
-    f_result->configure = c_wayv_configure;
+    f_result->configure = v_wayv_configure;
     f_result->run_synth = v_run_wayv;
     f_result->offline_render_prep = v_wayv_or_prep;
     f_result->on_stop = v_wayv_on_stop;

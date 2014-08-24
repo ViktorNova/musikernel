@@ -177,7 +177,7 @@ int i_wav_pool_item_load(t_wav_pool_item *a_wav_pool_item)
 
     while(f_i < f_adjusted_channel_count)
     {
-        lmalloc((void**)(&(tmpSamples[f_i])),
+        buffer_alloc((void**)&(tmpSamples[f_i]),
             f_actual_array_size * sizeof(float));
         f_i++;
     }
@@ -185,7 +185,7 @@ int i_wav_pool_item_load(t_wav_pool_item *a_wav_pool_item)
     int j;
 
     //For performing a 5ms fadeout of the sample, for preventing clicks
-    float f_fade_out_dec = (1.0f/(float)(info.samplerate))/(0.005);
+    float f_fade_out_dec = (1.0f / (float)(info.samplerate)) / (0.005);
     int f_fade_out_start = (samples + PYDAW_AUDIO_ITEM_PADDING_DIV2) -
         ((int)(0.005f * ((float)(info.samplerate))));
     float f_fade_out_envelope = 1.0f;

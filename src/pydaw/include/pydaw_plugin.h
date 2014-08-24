@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #include <pthread.h>
 #include <assert.h>
 #include "../src/pydaw_files.h"
+#include "../libmodsynth/lib/lmalloc.h"
 
 #define PYDAW_EVENT_NOTEON     0
 #define PYDAW_EVENT_NOTEOFF    1
@@ -64,7 +65,6 @@ typedef struct
 
 typedef struct
 {
-    char path[2048];
     int uid;
     float * samples[2];
     float ratio_orig;
@@ -73,6 +73,7 @@ typedef struct
     float sample_rate;
     int is_loaded;  //wav's are now loaded dynamically when they are first seen
     float host_sr;  //host sample-rate, cached here for easy access
+    char path[2048];
 }t_wav_pool_item;
 
 typedef t_wav_pool_item * (*fp_get_wavpool_item_from_host)(int);
@@ -133,10 +134,8 @@ void (*set_port_value)(PYFX_Handle Instance, int a_port, float a_value);
      */
     int PYINST_API_Version;
 
-    char *(*configure)(PYFX_Handle Instance,
-		       char *Key,
-		       char *Value,
-                       pthread_spinlock_t * a_spinlock);
+    void (*configure)(PYFX_Handle Instance, char *Key, char *Value,
+        pthread_spinlock_t * a_spinlock);
 
     void (*run_synth)(PYFX_Handle Instance, int SampleCount,
 		      t_pydaw_seq_event *Events, int EventCount);
@@ -255,11 +254,7 @@ float * g_pydaw_get_port_table(PYFX_Handle * handle,
 
     int f_i = 0;
 
-    if(posix_memalign((void**)(&pluginControlIns), 16,
-        (sizeof(float) * descriptor->PortCount)) != 0)
-    {
-        return 0;
-    }
+    lmalloc((void**)(&pluginControlIns), sizeof(float) * descriptor->PortCount);
 
     f_i = 0;
     while(f_i < descriptor->PortCount)
@@ -307,15 +302,7 @@ void pydaw_generic_file_loader(PYFX_Handle Instance,
             char * f_value =
                 c_iterate_2d_char_array_to_next_line(f_2d_array);
 
-            char * message =
-                Descriptor->configure(Instance, f_config_key, f_value, 0);
-
-            if (message)
-            {
-                //TODO:  delete this
-                free(message);
-            }
-
+            Descriptor->configure(Instance, f_config_key, f_value, 0);
         }
         else
         {

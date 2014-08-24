@@ -1440,17 +1440,19 @@ static char *c_euphoria_load_all(t_euphoria *plugin_data, char *paths,
     return NULL;
 }
 
-char *c_euphoria_configure(PYFX_Handle instance, char *key,
+void v_euphoria_configure(PYFX_Handle instance, char *key,
         char *value, pthread_spinlock_t * a_spinlock)
 {
     t_euphoria *plugin_data = (t_euphoria *)instance;
 
     if (!strcmp(key, "load"))
     {
-        return c_euphoria_load_all(plugin_data, value, a_spinlock);
+        c_euphoria_load_all(plugin_data, value, a_spinlock);
     }
-
-    return strdup("error: unrecognized configure key");
+    else
+    {
+        printf("ERROR: Euphoria unrecognized configure key %s\n", key);
+    }
 }
 
 PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
@@ -1756,7 +1758,7 @@ PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
     f_result->set_port_value = v_euphoria_set_port_value;
 
     f_result->PYINST_API_Version = 1;
-    f_result->configure = c_euphoria_configure;
+    f_result->configure = v_euphoria_configure;
     f_result->run_synth = v_run_lms_euphoria;
     f_result->offline_render_prep = NULL;
     f_result->on_stop = v_euphoria_on_stop;

@@ -37,27 +37,6 @@ typedef struct
 }t_pydaw_plugin;
 
 
-int v_pydaw_plugin_configure_handler(t_pydaw_plugin *instance,
-        char *key, char *value, pthread_spinlock_t * a_spinlock)
-{
-    char * message = 0;
-
-    if (instance->descriptor->configure)
-    {
-        message = instance->descriptor->configure(
-                instance->PYFX_handle, key, value, a_spinlock);
-        if (message)
-        {
-            printf("PyDAW: on configure '%s' '%s', "
-                    "plugin returned error '%s'\n", key, value, message);
-            free(message);
-        }
-    }
-
-    return 0;
-}
-
-
 t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
         fp_get_wavpool_item_from_host a_host_wavpool_func,
         int a_track_num, fp_queue_message a_queue_func)
