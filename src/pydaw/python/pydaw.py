@@ -7499,6 +7499,28 @@ def global_set_record_armed_track():
     REGION_INST_EDITOR.tracks[
         LAST_REC_ARMED_TRACK].record_radiobutton.setChecked(True)
 
+class midi_device:
+    def __init__(self, a_name, a_index, a_layout):
+        # TODO:  Convert to a checkbox
+        self.record_radiobutton = QtGui.QRadioButton()
+        REC_BUTTON_GROUP.addButton(self.record_radiobutton)
+        self.record_radiobutton.toggled.connect(self.on_rec)
+        self.record_radiobutton.setObjectName("rec_arm_radiobutton")
+        self.hlayout3.addWidget(self.record_radiobutton)
+
+    def on_rec(self, value):
+        assert(False)  # needs a major rework
+        if not self.suppress_osc:
+            PROJECT.this_pydaw_osc.pydaw_set_track_rec(
+                self.track_number,
+                self.record_radiobutton.isChecked())
+            global LAST_REC_ARMED_TRACK
+            LAST_REC_ARMED_TRACK = self.track_number
+
+class midi_device_dialog:
+    def __init__(self):
+        pass
+
 class plugin_settings:
     instrument = 0
     effect = 1
@@ -7507,6 +7529,7 @@ class plugin_settings:
         self.track_num = a_track_num
         f_offset = 0 if self.type == self.instrument else 10
         self.index = a_index
+        self.identifier = "i" if self.type == self.instrument else "e"
         self.plugin_combobox = QtGui.QComboBox()
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
@@ -7529,6 +7552,11 @@ class plugin_settings:
 
     def wheel_event(self, a_event=None):
         pass
+
+    def get_value(self):
+        return "|".join(str(x) for x in
+            (self.identifier, self.index, self.track_num,
+             self.plugin_combobox.currentIndex()))
 
     def on_show_ui(self):
         f_index = self.instrument_combobox.currentIndex()
@@ -7574,19 +7602,47 @@ class track_send:
         self.bus_combobox.addItems(['None', 'Master', '1', '2', '3', '4'])
         self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
         a_layout.addWidget(self.bus_combobox, a_index + 1, 20)
+        self.vol_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        a_layout.addWidget(self.vol_slider, a_index + 1, 21)
+        self.vol_slider.setMinimumWidth(300)
+        self.vol_slider.setRange(-400, 120)
+        self.vol_slider.setValue(0)
+        self.vol_slider.valueChanged.connect(self.on_vol_changed)
+        self.vol_slider.sliderReleased.connect(self.on_vol_released)
+        self.vol_label = QtGui.QLabel("0.0dB")
+        self.vol_label.setMinimumWidth(60)
+        a_layout.addWidget(self.vol_label, a_index + 1, 22)
 
     def on_bus_changed(self, a_value=0):
         if not self.suppress_osc:
             PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
             PROJECT.this_pydaw_osc.pydaw_set_bus(
-                self.track_number, self.bus_combobox.currentIndex(), 0)
+                self.track_number, self.bus_combobox.currentIndex())
             PROJECT.commit(
                 _("Set bus for track {} to {}").format(self.track_number,
                 self.bus_combobox.currentIndex()))
 
+    def get_vol(self):
+        return round(self.vol_slider.value( * 0.1, 1))
+
+    def set_vol(self, a_val):
+        self.vol_slider.setValue(int(a_val * 10.0))
+
+    def on_vol_changed(self, a_val):
+        f_val = self.get_vol()
+        self.vol_label.setText("{}dB".format(f_val))
+
+    def on_vol_released(self):
+        pass
+
     def wheel_event(self, a_event=None):
         pass
 
+    def get_value(self):
+        return "|".join(str(x) for x in
+            ("s", self.index, self.track_num,
+             self.bus_combobox.currentIndex(),
+             round(self.vol_slider.value(), 1)))
 
 class seq_track:
     def on_solo(self, value):
@@ -7605,20 +7661,12 @@ class seq_track:
             PROJECT.commit(_("Set mute for track {} to {}").format(
                 self.track_number, self.mute_checkbox.isChecked()))
 
-    def on_rec(self, value):
-        if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_track_rec(
-                self.track_number,
-                self.record_radiobutton.isChecked())
-            global LAST_REC_ARMED_TRACK
-            LAST_REC_ARMED_TRACK = self.track_number
-
     def on_name_changed(self):
         self.track_name_lineedit.setText(
             pydaw_remove_bad_chars(self.track_name_lineedit.text()))
         PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
         PROJECT.this_pydaw_osc.pydaw_save_track_name(
-            self.track_number, self.track_name_lineedit.text(), 0)
+            self.track_number, self.track_name_lineedit.text())
         PROJECT.commit(
             _("Set name for track {} to {}").format(self.track_number,
             self.track_name_lineedit.text()))
@@ -7692,12 +7740,6 @@ class seq_track:
         self.mute_checkbox.stateChanged.connect(self.on_mute)
         self.mute_checkbox.setObjectName("mute_checkbox")
         self.hlayout3.addWidget(self.mute_checkbox)
-        self.record_radiobutton = QtGui.QRadioButton()
-        REC_BUTTON_GROUP.addButton(self.record_radiobutton)
-        self.record_radiobutton.toggled.connect(self.on_rec)
-        self.record_radiobutton.setObjectName("rec_arm_radiobutton")
-        self.hlayout3.addWidget(self.record_radiobutton)
-
         self.suppress_osc = False
 
     def open_track(self, a_track, a_notify_osc=False):
