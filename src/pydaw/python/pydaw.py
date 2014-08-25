@@ -10458,7 +10458,7 @@ def global_ui_refresh_callback(a_restore_all=False):
     global_set_record_armed_track()
 
 def set_window_title():
-    MAIN_WINDOW.setWindowTitle('PyDAW4 - {}/{}.{}'.format(
+    MAIN_WINDOW.setWindowTitle('MusiKernel | EDM-Next - {}/{}.{}'.format(
         PROJECT.project_folder, PROJECT.project_file,
         global_pydaw_version_string))
 
