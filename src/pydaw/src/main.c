@@ -87,8 +87,6 @@ GNU General Public License for more details.
 #define PYDAW_CONFIGURE_KEY_PREVIEW_SAMPLE "preview"
 #define PYDAW_CONFIGURE_KEY_STOP_PREVIEW "spr"
 
-#define PYDAW_CONFIGURE_KEY_OFFLINE_RENDER "or"
-
 #define PYDAW_CONFIGURE_KEY_SET_TRACK_BUS "bs"
 #define PYDAW_CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL "ai"
 #define PYDAW_CONFIGURE_KEY_ADD_TO_WAV_POOL "wp"
@@ -117,6 +115,9 @@ GNU General Public License for more details.
 #define PYDAW_CONFIGURE_KEY_MASTER_VOL "mvol"
 #define PYDAW_CONFIGURE_KEY_KILL_ENGINE "abort"
 #define PYDAW_CONFIGURE_KEY_SET_POS "pos"
+
+#define PYDAW_CONFIGURE_KEY_PLUGIN_INDEX "pi"
+#define PYDAW_CONFIGURE_KEY_UPDATE_SEND "ts"
 
 //low-level MIDI stuff
 #define MIDI_NOTE_OFF       0x80
@@ -1288,7 +1289,7 @@ int osc_message_handler(const char *path, const char *types, lo_arg **argv,
 }
 
 
-void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
+void v_pydaw_parse_configure_message(t_pydaw_data* self,
         const char* a_key, const char* a_value)
 {
     printf("v_pydaw_parse_configure_message:  key: \"%s\", value: \"%s\"\n",
@@ -1304,16 +1305,16 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         float f_value = atof(f_val_arr->array[3]);
 
         t_pydaw_plugin * f_instance;
-        pthread_spin_lock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
 
         if(f_is_inst)
         {
             f_instance =
-                a_pydaw_data->track_pool_all[f_track_num]->instruments[0];
+                self->track_pool_all[f_track_num]->instruments[0];
         }
         else
         {
-            f_instance = a_pydaw_data->track_pool_all[f_track_num]->effects[0];
+            f_instance = self->track_pool_all[f_track_num]->effects[0];
         }
 
         if(f_instance)
@@ -1326,7 +1327,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
             printf("Error, no valid plugin instance\n%s | %s\n",
                     a_key, a_value);
         }
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_unlock(&self->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_CONFIGURE_PLUGIN))
@@ -1343,15 +1344,15 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         if(f_is_inst)
         {
             f_instance =
-                a_pydaw_data->track_pool_all[f_track_num]->instruments[0];
+                self->track_pool_all[f_track_num]->instruments[0];
         }
         else
         {
-            f_instance = a_pydaw_data->track_pool_all[f_track_num]->effects[0];
+            f_instance = self->track_pool_all[f_track_num]->effects[0];
         }
 
         f_instance->descriptor->configure(f_instance->PYFX_handle,
-            f_key, f_message, &a_pydaw_data->main_lock);
+            f_key, f_message, &self->main_lock);
 
         g_free_1d_char_array(f_val_arr);
     }
@@ -1364,7 +1365,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         int f_port_num = atoi(f_arr->array[2]);
         float f_port_val = atof(f_arr->array[3]);
 
-        v_paif_set_control(a_pydaw_data, f_region_uid, f_item_index,
+        v_paif_set_control(self, f_region_uid, f_item_index,
                 f_port_num, f_port_val);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_PLAY)) //Begin playback
@@ -1373,7 +1374,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
                 PYDAW_SMALL_STRING);
         int f_region = atoi(f_arr->array[0]);
         int f_bar = atoi(f_arr->array[1]);
-        v_set_playback_mode(a_pydaw_data, 1, f_region, f_bar, 1);
+        v_set_playback_mode(self, 1, f_region, f_bar, 1);
         g_free_1d_char_array(f_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_REC)) //Begin recording
@@ -1382,34 +1383,34 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
                 PYDAW_SMALL_STRING);
         int f_region = atoi(f_arr->array[0]);
         int f_bar = atoi(f_arr->array[1]);
-        v_set_playback_mode(a_pydaw_data, 2, f_region, f_bar, 1);
+        v_set_playback_mode(self, 2, f_region, f_bar, 1);
         g_free_1d_char_array(f_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_STOP))
     {
-        v_set_playback_mode(a_pydaw_data, 0, -1, -1, 1);
+        v_set_playback_mode(self, 0, -1, -1, 1);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SR))
     {
         //Ensure that a project isn't being loaded right now
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
+        pthread_spin_unlock(&self->main_lock);
 
         int f_uid = atoi(a_value);
-        t_pyregion * f_result = g_pyregion_get(a_pydaw_data, f_uid);
-        int f_region_index = i_get_song_index_from_region_uid(a_pydaw_data,
+        t_pyregion * f_result = g_pyregion_get(self, f_uid);
+        int f_region_index = i_get_song_index_from_region_uid(self,
                 f_uid);
 
         if(f_region_index >= 0 )
         {
             t_pyregion * f_old_region = NULL;
-            if(a_pydaw_data->pysong->regions[f_region_index])
+            if(self->pysong->regions[f_region_index])
             {
-                f_old_region = a_pydaw_data->pysong->regions[f_region_index];
+                f_old_region = self->pysong->regions[f_region_index];
             }
-            pthread_spin_lock(&a_pydaw_data->main_lock);
-            a_pydaw_data->pysong->regions[f_region_index] = f_result;
-            pthread_spin_unlock(&a_pydaw_data->main_lock);
+            pthread_spin_lock(&self->main_lock);
+            self->pysong->regions[f_region_index] = f_result;
+            pthread_spin_unlock(&self->main_lock);
             if(f_old_region)
             {
                 free(f_old_region);
@@ -1422,47 +1423,47 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SI)) //Save Item
     {
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        g_pyitem_get(a_pydaw_data, atoi(a_value));
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
+        g_pyitem_get(self, atoi(a_value));
+        pthread_spin_unlock(&self->main_lock);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SS))  //Save Song
     {
-        g_pysong_get(a_pydaw_data, 1);
+        g_pysong_get(self, 1);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL))
     {
         int f_uid = atoi(a_value);
         //t_pydaw_audio_items * f_old;
-        t_pydaw_audio_items * f_result = v_audio_items_load_all(a_pydaw_data,
+        t_pydaw_audio_items * f_result = v_audio_items_load_all(self,
                 f_uid);
-        int f_region_index = i_get_song_index_from_region_uid(a_pydaw_data,
+        int f_region_index = i_get_song_index_from_region_uid(self,
                 f_uid);
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        a_pydaw_data->pysong->audio_items[f_region_index] = f_result;
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
+        self->pysong->audio_items[f_region_index] = f_result;
+        pthread_spin_unlock(&self->main_lock);
         //v_pydaw_audio_items_free(f_old); //Method needs to be re-thought...
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_PER_AUDIO_ITEM_FX_REGION))
     {
         int f_uid = atoi(a_value);
         t_pydaw_per_audio_item_fx_region * f_result =
-                g_paif_region_open(a_pydaw_data, f_uid);
-        int f_region_index = i_get_song_index_from_region_uid(a_pydaw_data,
+                g_paif_region_open(self, f_uid);
+        int f_region_index = i_get_song_index_from_region_uid(self,
                 f_uid);
         t_pydaw_per_audio_item_fx_region * f_old =
-                a_pydaw_data->pysong->per_audio_item_fx[f_region_index];
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        a_pydaw_data->pysong->per_audio_item_fx[f_region_index] = f_result;
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+                self->pysong->per_audio_item_fx[f_region_index];
+        pthread_spin_lock(&self->main_lock);
+        self->pysong->per_audio_item_fx[f_region_index] = f_result;
+        pthread_spin_unlock(&self->main_lock);
         v_paif_region_free(f_old);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_ADD_TO_WAV_POOL))
     {
         t_key_value_pair * f_kvp = g_kvp_get(a_value);
-        printf("v_wav_pool_add_item(a_pydaw_data->wav_pool, %i, \"%s\")\n",
+        printf("v_wav_pool_add_item(self->wav_pool, %i, \"%s\")\n",
                 atoi(f_kvp->key), f_kvp->value);
-        v_wav_pool_add_item(a_pydaw_data->wav_pool, atoi(f_kvp->key),
+        v_wav_pool_add_item(self->wav_pool, atoi(f_kvp->key),
                 f_kvp->value);
         free(f_kvp);
     }
@@ -1470,23 +1471,23 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
     {
         int f_value = atoi(a_value);
 
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        v_set_loop_mode(a_pydaw_data, f_value);
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
+        v_set_loop_mode(self, f_value);
+        pthread_spin_unlock(&self->main_lock);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_OS)) //Open Song
     {
         t_key_value_pair * f_kvp = g_kvp_get(a_value);
         int f_first_open = atoi(f_kvp->key);
-        v_open_project(a_pydaw_data, f_kvp->value, f_first_open);
+        v_open_project(self, f_kvp->value, f_first_open);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_TEMPO)) //Change tempo
     {
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        v_set_tempo(a_pydaw_data, atof(a_value));
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
+        v_set_tempo(self, atof(a_value));
+        pthread_spin_unlock(&self->main_lock);
         //To reload audio items when tempo changed
-        //g_pysong_get(a_pydaw_data);
+        //g_pysong_get(self);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SOLO)) //Set track solo
     {
@@ -1496,14 +1497,14 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         int f_mode = atoi(f_val_arr->array[1]);
         assert(f_mode == 0 || f_mode == 1);
 
-        pthread_spin_lock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
 
-        a_pydaw_data->track_pool_all[f_track_num]->solo = f_mode;
-        //a_pydaw_data->track_pool_all[f_track_num]->period_event_index = 0;
+        self->track_pool_all[f_track_num]->solo = f_mode;
+        //self->track_pool_all[f_track_num]->period_event_index = 0;
 
-        v_pydaw_set_is_soloed(a_pydaw_data);
+        v_pydaw_set_is_soloed(self);
 
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_unlock(&self->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_MUTE)) //Set track mute
@@ -1513,12 +1514,12 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         int f_track_num = atoi(f_val_arr->array[0]);
         int f_mode = atoi(f_val_arr->array[1]);
         assert(f_mode == 0 || f_mode == 1);
-        pthread_spin_lock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
 
-        a_pydaw_data->track_pool_all[f_track_num]->mute = f_mode;
-        //a_pydaw_data->track_pool_all[f_track_num]->period_event_index = 0;
+        self->track_pool_all[f_track_num]->mute = f_mode;
+        //self->track_pool_all[f_track_num]->period_event_index = 0;
 
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_unlock(&self->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_REC_ARM_TRACK))
@@ -1529,56 +1530,77 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         int f_mode = atoi(f_val_arr->array[1]);
         assert(f_mode == 0 || f_mode == 1);
 
-        pthread_spin_lock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
         if(f_mode)
         {
-            a_pydaw_data->record_armed_track =
-                a_pydaw_data->track_pool_all[f_track_num];
-            a_pydaw_data->record_armed_track_index_all = f_track_num;
+            self->record_armed_track =
+                self->track_pool_all[f_track_num];
+            self->record_armed_track_index_all = f_track_num;
         }
         else
         {
-            a_pydaw_data->record_armed_track = 0;
-            a_pydaw_data->record_armed_track_index_all = -1;
+            self->record_armed_track = 0;
+            self->record_armed_track_index_all = -1;
         }
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_unlock(&self->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_UPDATE_AUDIO_INPUTS))
     {
-        v_pydaw_update_audio_inputs(a_pydaw_data);
+        v_pydaw_update_audio_inputs(self);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_CHANGE_INSTRUMENT))
     {
         //Ensure that a project isn't being loaded right now
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
+        pthread_spin_unlock(&self->main_lock);
 
         t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
                 PYDAW_TINY_STRING);
         assert(0);
         //int f_track_num = atoi(f_val_arr->array[0]);
         //int f_plugin_index = atoi(f_val_arr->array[1]);
-        //v_set_plugin_index(a_pydaw_data,
-        //    a_pydaw_data->track_pool_all[f_track_num], f_plugin_index, 1);
+        //v_set_plugin_index(self,
+        //    self->track_pool_all[f_track_num], f_plugin_index, 1);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_PREVIEW_SAMPLE))
     {
-        v_pydaw_set_preview_file(a_pydaw_data, a_value);
+        v_pydaw_set_preview_file(self, a_value);
     }
-    else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_OFFLINE_RENDER))
+    else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_PLUGIN_INDEX))
     {
         t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 7,
                 PYDAW_TINY_STRING);
-        int f_start_region = atoi(f_val_arr->array[0]);
-        int f_start_bar = atoi(f_val_arr->array[1]);
-        int f_end_region = atoi(f_val_arr->array[2]);
-        int f_end_bar = atoi(f_val_arr->array[3]);
-        char * f_file_out = f_val_arr->array[4];
+        int f_track_num = atoi(f_val_arr->array[0]);
+        int f_type = atoi(f_val_arr->array[1]);
+        int f_index = atoi(f_val_arr->array[2]);
+        int f_plugin_uid = atoi(f_val_arr->array[3]);
 
-        v_pydaw_offline_render(a_pydaw_data, f_start_region, f_start_bar,
-                f_end_region, f_end_bar, f_file_out, 0);
+        pthread_spin_lock(&self->main_lock);
+
+        v_pydaw_set_plugin_index(
+            self, f_track_num, f_type, f_index, f_plugin_uid);
+
+        pthread_spin_unlock(&self->main_lock);
+
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_UPDATE_SEND))
+    {
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 4,
+                PYDAW_TINY_STRING);
+        int f_track_num = atoi(f_val_arr->array[0]);
+        int f_index = atoi(f_val_arr->array[1]);
+        int f_output = atoi(f_val_arr->array[2]);
+        int f_vol = atof(f_val_arr->array[3]);
+
+        pthread_spin_lock(&self->main_lock);
+
+        v_pydaw_update_track_send(self, f_track_num, f_index, f_output, f_vol);
+
+        pthread_spin_unlock(&self->main_lock);
+
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SET_TRACK_BUS))
@@ -1588,54 +1610,54 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         int f_track_num = atoi(f_val_arr->array[0]);
         int f_bus_num = atoi(f_val_arr->array[1]);
 
-        pthread_spin_lock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
 
-        a_pydaw_data->track_pool_all[f_track_num]->bus_num = f_bus_num;
+        self->track_pool_all[f_track_num]->bus_num = f_bus_num;
 
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_unlock(&self->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SET_OVERDUB_MODE))
     {
         int f_bool = atoi(a_value);
         assert(f_bool == 0 || f_bool == 1);
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        a_pydaw_data->overdub_mode = f_bool;
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
+        self->overdub_mode = f_bool;
+        pthread_spin_unlock(&self->main_lock);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_LOAD_CC_MAP))
     {
-        v_pydaw_load_cc_map(a_pydaw_data, a_value);
+        v_pydaw_load_cc_map(self, a_value);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_LOAD_AB_OPEN))
     {
-        v_pydaw_set_ab_file(a_pydaw_data, a_value);
+        v_pydaw_set_ab_file(self, a_value);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_LOAD_AB_SET))
     {
         int f_mode = atoi(a_value);
-        v_pydaw_set_ab_mode(a_pydaw_data, f_mode);
+        v_pydaw_set_ab_mode(self, f_mode);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_WE_SET))
     {
-        v_pydaw_set_wave_editor_item(a_pydaw_data, a_value);
+        v_pydaw_set_wave_editor_item(self, a_value);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_PANIC))
     {
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        a_pydaw_data->is_offline_rendering = 1;
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
+        self->is_offline_rendering = 1;
+        pthread_spin_unlock(&self->main_lock);
 
-        v_pydaw_panic(a_pydaw_data);
+        v_pydaw_panic(self);
 
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        a_pydaw_data->is_offline_rendering = 0;
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
+        self->is_offline_rendering = 0;
+        pthread_spin_unlock(&self->main_lock);
 
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SET_POS))
     {
-        if(a_pydaw_data->playback_mode != 0)
+        if(self->playback_mode != 0)
         {
             return;
         }
@@ -1644,9 +1666,9 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         int f_region = atoi(f_val_arr->array[0]);
         int f_bar = atoi(f_val_arr->array[1]);
 
-        pthread_spin_lock(&a_pydaw_data->main_lock);
-        v_set_playback_cursor(a_pydaw_data, f_region, f_bar);
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
+        v_set_playback_cursor(self, f_region, f_bar);
+        pthread_spin_unlock(&self->main_lock);
 
         g_free_1d_char_array(f_val_arr);
     }
@@ -1706,7 +1728,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         int f_i = 0;
         while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
         {
-            a_pydaw_data->audio_glue_indexes[f_i] = 0;
+            self->audio_glue_indexes[f_i] = 0;
             f_i++;
         }
 
@@ -1714,11 +1736,11 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         while(f_i < f_val_arr->count)
         {
             int f_index = atoi(f_val_arr->str_arr[f_i]);
-            a_pydaw_data->audio_glue_indexes[f_index] = 1;
+            self->audio_glue_indexes[f_index] = 1;
             f_i++;
         }
 
-        v_pydaw_offline_render(a_pydaw_data, f_region_index, f_start_bar,
+        v_pydaw_offline_render(self, f_region_index, f_start_bar,
                 f_region_index, f_end_bar, f_path, 1);
 
     }
@@ -1726,16 +1748,16 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
     {
         int f_uid = atoi(a_value);
         t_wav_pool_item * f_old =
-                g_wav_pool_get_item_by_uid(a_pydaw_data->wav_pool, f_uid);
+                g_wav_pool_get_item_by_uid(self->wav_pool, f_uid);
         t_wav_pool_item * f_new =
                 g_wav_pool_item_get(f_uid, f_old->path,
-                a_pydaw_data->wav_pool->sample_rate);
+                self->wav_pool->sample_rate);
 
         float * f_old_samples[2];
         f_old_samples[0] = f_old->samples[0];
         f_old_samples[1] = f_old->samples[1];
 
-        pthread_spin_lock(&a_pydaw_data->main_lock);
+        pthread_spin_lock(&self->main_lock);
 
         f_old->channels = f_new->channels;
         f_old->length = f_new->length;
@@ -1744,7 +1766,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
         f_old->samples[0] = f_new->samples[0];
         f_old->samples[1] = f_new->samples[1];
 
-        pthread_spin_unlock(&a_pydaw_data->main_lock);
+        pthread_spin_unlock(&self->main_lock);
 
         if(f_old_samples[0])
         {
@@ -1774,15 +1796,15 @@ void v_pydaw_parse_configure_message(t_pydaw_data* a_pydaw_data,
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_WE_EXPORT))
     {
-        v_pydaw_we_export(a_pydaw_data, a_value);
+        v_pydaw_we_export(self, a_value);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_STOP_PREVIEW))
     {
-        if(a_pydaw_data->is_previewing)
+        if(self->is_previewing)
         {
-            pthread_spin_lock(&a_pydaw_data->main_lock);
-            v_adsr_release(a_pydaw_data->preview_audio_item->adsr);
-            pthread_spin_unlock(&a_pydaw_data->main_lock);
+            pthread_spin_lock(&self->main_lock);
+            v_adsr_release(self->preview_audio_item->adsr);
+            pthread_spin_unlock(&self->main_lock);
         }
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_KILL_ENGINE))

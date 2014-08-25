@@ -124,10 +124,6 @@ class pydaw_osc:
     def pydaw_set_tempo(self, a_tempo):
         self.send_configure("tempo", str(a_tempo))
 
-    def pydaw_set_vol(self, a_track_num, a_vol):
-        self.send_configure(
-            "vol", "|".join(str(x) for x in (a_track_num, a_vol)))
-
     def pydaw_set_solo(self, a_track_num, a_bool):
         self.send_configure(
             "solo", "|".join(str(x) for x in
@@ -138,8 +134,13 @@ class pydaw_osc:
             "mute", "|".join(str(x) for x in
             (a_track_num, bool_to_int(a_bool), a_track_type)))
 
-    def pydaw_show_ui(self, a_track_num):
-        self.send_configure("su", str(a_track_num))
+    def pydaw_set_plugin_index(self, a_track_num, a_type, a_index, a_uid):
+        self.send_configure(
+            "pi", "|".join(a_track_num, a_type, a_index, a_uid))
+
+    def pydaw_update_track_send(self, a_track_num, a_index, a_output, a_vol):
+        self.send_configure(
+            "ts", "|".join(a_track_num, a_index, a_output, a_vol))
 
     def pydaw_save_tracks(self):
         self.send_configure("st", "")
@@ -148,13 +149,6 @@ class pydaw_osc:
         self.send_configure(
             "tr", "|".join(str(x) for x in
             (a_track_num, bool_to_int(a_bool))))
-
-    def pydaw_show_fx(self, a_track_num):
-        self.send_configure("fx", "{}".format(a_track_num))
-
-    def pydaw_save_track_name(self, a_track_num, a_new_name):
-        self.send_configure(
-            "tn", "|".join(str(x) for x in (a_track_num, a_new_name)))
 
     def pydaw_offline_render(self, a_start_region, a_start_bar, a_end_region,
                              a_end_bar, a_file_name):
@@ -165,10 +159,6 @@ class pydaw_osc:
 
     def pydaw_we_export(self, a_file_name):
         self.send_configure("wex", "{}".format(a_file_name))
-
-    def pydaw_set_bus(self, a_track_num, a_bus_num):
-        self.send_configure(
-            "bs", "|".join(str(x) for x in (a_track_num, a_bus_num)))
 
     def pydaw_reload_audio_items(self, a_region_uid):
         self.send_configure("ai", str(a_region_uid))

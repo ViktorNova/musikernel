@@ -354,6 +354,10 @@ void v_save_pyitem_to_disk(t_pydaw_data * self, int a_index);
 void v_save_pyregion_to_disk(t_pydaw_data * self, int a_region_num);
 void v_pydaw_open_plugin(t_pydaw_data * self, t_pytrack * a_track,
                          int a_is_fx, int a_uid);
+void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
+        int a_type, int a_index, int a_plugin_uid);
+void v_pydaw_update_track_send(t_pydaw_data * self, int a_track_num,
+        int a_index, int a_output_track, float a_vol);
 inline void v_pydaw_update_ports(t_pydaw_plugin * a_plugin);
 void * v_pydaw_worker_thread(void*);
 void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
@@ -4665,6 +4669,17 @@ void v_pydaw_set_preview_file(t_pydaw_data * self, const char * a_file)
     }
 }
 
+void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
+        int a_type, int a_index, int a_plugin_uid)
+{
+    assert(0);
+}
+
+void v_pydaw_update_track_send(t_pydaw_data * self, int a_track_num,
+        int a_index, int a_output_track, float a_vol)
+{
+    assert(0);
+}
 
 #endif	/* PYDAW_H */
 
