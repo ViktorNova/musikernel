@@ -34,6 +34,9 @@ typedef struct
     PYFX_Handle PYFX_handle;
     PYFX_Descriptor_Function descfn;
     PYFX_Descriptor *descriptor;
+    int mute;
+    int solo;
+    int power;
 }t_pydaw_plugin;
 
 
@@ -68,6 +71,10 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
     f_result->PYFX_handle = f_result->descriptor->instantiate(
             f_result->descriptor, a_sample_rate,
             a_host_wavpool_func, a_track_num, a_queue_func);
+
+    f_result->solo = 0;
+    f_result->mute = 0;
+    f_result->power = 1;
 
     return f_result;
 }

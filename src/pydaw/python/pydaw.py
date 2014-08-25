@@ -7622,7 +7622,7 @@ class track_send:
 #           PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
             PROJECT.this_pydaw_osc.pydaw_update_track_send(
                 self.track_num, self.index,
-                self.bus_combobox.currentIndex(), self.get_vol())
+                self.bus_combobox.currentIndex() - 1, self.get_vol())
 #            PROJECT.commit(
 #                _("Set bus for track {} to {}").format(self.track_number,
 #                self.bus_combobox.currentIndex()))

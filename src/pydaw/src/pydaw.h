@@ -42,6 +42,7 @@ GNU General Public License for more details.
 
 #define MAX_INST_COUNT 5
 #define MAX_FX_COUNT 10
+#define MAX_ROUTING_COUNT 4
 
 #define PLUGIN_TYPE_INSTRUMENT 0
 #define PLUGIN_TYPE_EFFECT 1
@@ -167,6 +168,15 @@ typedef struct
 
 typedef struct
 {
+    int output;
+    float volume;
+    float volume_lin;
+    t_amp * amp_ptr;
+}
+t_pytrack_routing;
+
+typedef struct
+{
     int solo;
     int mute;
     int bus_num;
@@ -174,6 +184,7 @@ typedef struct
     int period_event_index;
     t_pydaw_plugin * instruments[MAX_INST_COUNT];
     t_pydaw_plugin * effects[MAX_FX_COUNT];
+    t_pytrack_routing * routings[MAX_ROUTING_COUNT];
     int track_num;
     //Only for busses, the count of plugins writing to the buffer
     int bus_count;
@@ -337,6 +348,9 @@ typedef struct
 
 void g_pysong_get(t_pydaw_data*, int);
 t_pytrack * g_pytrack_get(int, float);
+t_pytrack_routing * g_pytrack_routing_get();
+void v_pytrack_routing_set(t_pytrack_routing *, int, float);
+void v_pytrack_routing_free(t_pytrack_routing *);
 t_pyregion * g_pyregion_get(t_pydaw_data* a_pydaw, const int);
 void g_pyitem_get(t_pydaw_data*, int);
 
@@ -3541,6 +3555,14 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
 
     f_i = 0;
 
+    while(f_i < MAX_ROUTING_COUNT)
+    {
+        f_result->routings[f_i] = 0;
+        f_i++;
+    }
+
+    f_i = 0;
+
     while(f_i < PYDAW_MIDI_NOTE_COUNT)
     {
         f_result->note_offs[f_i] = -1;
@@ -4719,18 +4741,53 @@ void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
 void v_pydaw_update_track_send(t_pydaw_data * self, int a_track_num,
         int a_index, int a_output_track, float a_vol, int a_lock)
 {
+    t_pytrack * f_track = self->track_pool_all[a_track_num];
+    t_pytrack_routing * f_route = 0;
+    t_pytrack_routing * f_route_old = f_track->routings[a_index];
+
+    if(a_index >= 0)
+    {
+        f_route = g_pytrack_routing_get();
+        v_pytrack_routing_set(f_route, a_output_track, a_vol);
+    }
 
     if(a_lock)
     {
         pthread_spin_lock(&self->main_lock);
     }
 
-
+    f_track->routings[a_index] = f_route;
 
     if(a_lock)
     {
         pthread_spin_unlock(&self->main_lock);
     }
+
+    if(f_route_old)
+    {
+        v_pytrack_routing_free(f_route_old);
+    }
+}
+
+t_pytrack_routing * g_pytrack_routing_get()
+{
+    t_pytrack_routing * f_result;
+    lmalloc((void**)&f_result, sizeof(t_pytrack_routing*));
+    f_result->amp_ptr = g_amp_get();
+    return f_result;
+}
+
+void v_pytrack_routing_set(t_pytrack_routing * self, int a_output, float a_vol)
+{
+    self->output = a_output;
+    self->volume = a_vol;
+    self->volume_lin = f_db_to_linear(a_vol, self->amp_ptr);
+}
+
+void v_pytrack_routing_free(t_pytrack_routing * self)
+{
+    v_amp_free(self->amp_ptr);
+    free(self);
 }
 
 #endif	/* PYDAW_H */
