@@ -14,7 +14,6 @@ GNU General Public License for more details.
 
 import os
 import re
-import random
 import traceback
 import subprocess
 
@@ -1328,26 +1327,27 @@ class pydaw_song:
 
 class pydaw_name_uid_dict:
     def gen_file_name_uid(self):
-        f_result = random.randint(1000000, 9999999)
-        while f_result in self.name_lookup:
-            f_result = random.randint(1000000, 9999999)
-        return f_result
+        while self.high_uid in self.name_lookup:
+            self.high_uid += 1
+        return self.high_uid
 
     def __init__(self):
+        self.high_uid = 0
         self.name_lookup = {}
         self.uid_lookup = {}
 
     def add_item(self, a_uid, a_name):
-        self.name_lookup[a_uid] = str(a_name)
-        self.uid_lookup[a_name] = int(a_uid)
+        f_uid = int(a_uid)
+        self.name_lookup[f_uid] = str(a_name)
+        self.uid_lookup[a_name] = f_uid
+        if f_uid > self.high_uid:
+            self.high_uid = f_uid
 
     def add_new_item(self, a_name, a_uid=None):
         if a_name in self.uid_lookup:
             raise Exception
         if a_uid is None:
             f_uid = self.gen_file_name_uid()
-            while self.uid_exists(f_uid):
-                f_uid = self.gen_file_name_uid()
         else:
             f_uid = a_uid
         self.add_item(f_uid, a_name)
@@ -2129,7 +2129,7 @@ class pydaw_track:
     def __str__(self):
         return "{}\n".format("|".join(map(proj_file_str,
             (bool_to_int(self.solo), bool_to_int(self.mute),
-            self.name, self.inst, self.bus_num, self.track_pos))))
+            self.name, self.track_pos))))
 
 class pydaw_track_plugin:
     def __init__(self, a_type, a_index, a_plugin_index, a_plugin_uid):
