@@ -110,15 +110,14 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755, root, root) /usr/bin/{0}_render-dbg
 %attr(755, root, root) /usr/bin/{0}-engine-dbg
 %attr(755, root, root) /usr/bin/{0}-engine-no-root
-%attr(755, root, root) /usr/bin/{0}-project-recover
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/libpydaw/pydaw_paulstretch.py
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/pydaw.py
 %attr(755, root, root) /usr/lib/{0}/rubberband/bin/rubberband
 %attr(755, root, root) /usr/lib/{0}/sbsms/bin/sbsms
 
-/usr/lib/{0}/presets/MODULEX.pypresets
-/usr/lib/{0}/presets/RAYV.pypresets
-/usr/lib/{0}/presets/WAYV.pypresets
+/usr/lib/{0}/presets/MODULEX.mkp
+/usr/lib/{0}/presets/RAYV.mkp
+/usr/lib/{0}/presets/WAYV.mkp
 /usr/lib/{0}/pydaw/python/libpydaw/__init__.py
 /usr/lib/{0}/pydaw/python/libpydaw/liblo.cpython-33m.so
 /usr/lib/{0}/pydaw/python/libpydaw/libportaudio.so
@@ -168,7 +167,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/themes/default/v-fader.png
 /usr/share/applications/{0}.desktop
 /usr/share/doc/{0}/copyright
-/usr/share/doc/{0}/readme.txt
 /usr/share/pixmaps/{0}.png
 #/usr/share/locale/pt_PT/LC_MESSAGES/{0}.mo
 #/usr/share/locale/de/LC_MESSAGES/{0}.mo
