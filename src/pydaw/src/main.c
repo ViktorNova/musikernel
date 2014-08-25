@@ -87,7 +87,6 @@ GNU General Public License for more details.
 #define PYDAW_CONFIGURE_KEY_PREVIEW_SAMPLE "preview"
 #define PYDAW_CONFIGURE_KEY_STOP_PREVIEW "spr"
 
-#define PYDAW_CONFIGURE_KEY_SET_TRACK_BUS "bs"
 #define PYDAW_CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL "ai"
 #define PYDAW_CONFIGURE_KEY_ADD_TO_WAV_POOL "wp"
 
@@ -1597,20 +1596,6 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
             f_output, f_vol, 1);
 
 
-        g_free_1d_char_array(f_val_arr);
-    }
-    else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SET_TRACK_BUS))
-    {
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
-                PYDAW_TINY_STRING);
-        int f_track_num = atoi(f_val_arr->array[0]);
-        int f_bus_num = atoi(f_val_arr->array[1]);
-
-        pthread_spin_lock(&self->main_lock);
-
-        self->track_pool_all[f_track_num]->bus_num = f_bus_num;
-
-        pthread_spin_unlock(&self->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SET_OVERDUB_MODE))
