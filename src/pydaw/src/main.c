@@ -1570,19 +1570,17 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_PLUGIN_INDEX))
     {
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 7,
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 5,
                 PYDAW_TINY_STRING);
         int f_track_num = atoi(f_val_arr->array[0]);
         int f_type = atoi(f_val_arr->array[1]);
         int f_index = atoi(f_val_arr->array[2]);
-        int f_plugin_uid = atoi(f_val_arr->array[3]);
-
-        pthread_spin_lock(&self->main_lock);
+        int f_plugin_index = atoi(f_val_arr->array[3]);
+        int f_plugin_uid = atoi(f_val_arr->array[4]);
 
         v_pydaw_set_plugin_index(
-            self, f_track_num, f_type, f_index, f_plugin_uid);
-
-        pthread_spin_unlock(&self->main_lock);
+            self, f_track_num, f_type, f_index,
+            f_plugin_index, f_plugin_uid, 1);
 
         g_free_1d_char_array(f_val_arr);
     }
@@ -1595,11 +1593,9 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
         int f_output = atoi(f_val_arr->array[2]);
         int f_vol = atof(f_val_arr->array[3]);
 
-        pthread_spin_lock(&self->main_lock);
+        v_pydaw_update_track_send(self, f_track_num, f_index,
+            f_output, f_vol, 1);
 
-        v_pydaw_update_track_send(self, f_track_num, f_index, f_output, f_vol);
-
-        pthread_spin_unlock(&self->main_lock);
 
         g_free_1d_char_array(f_val_arr);
     }

@@ -938,7 +938,6 @@ class region_list_editor:
             if f_item_name != "":
                 global_open_items([f_item_name], a_reset_scrollbar=True)
                 MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
-                self.auto_arm(x)
             else:
                 self.show_cell_dialog(x, y)
 
@@ -1412,22 +1411,9 @@ class region_list_editor:
         if f_result:
             global_open_items(f_result, a_reset_scrollbar=True)
             MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
-            f_track_nums = list(f_track_nums.keys())
-            if len(f_track_nums) == 1:
-                self.auto_arm(f_track_nums[0])
         else:
             QtGui.QMessageBox.warning(
                 self.table_widget, _("Error"), _("No items selected"))
-
-    def auto_arm(self, a_index):
-        self.tracks[a_index].record_radiobutton.setChecked(True)
-        f_current = CC_EDITOR_WIDGET.plugin_combobox.currentIndex()
-        f_end = CC_EDITOR_WIDGET.plugin_combobox.count() - 1
-        f_track_index = self.tracks[a_index].instrument_combobox.currentIndex()
-        if f_track_index > 0:
-            if f_current < f_end:
-                CC_EDITOR_WIDGET.plugin_combobox.setCurrentIndex(
-                    global_plugin_indexes[f_track_index])
 
 
     def on_rename_items(self):
@@ -7525,6 +7511,7 @@ class plugin_settings:
     instrument = 0
     effect = 1
     def __init__(self, a_index, a_track_num, a_layout, a_type):
+        self.plugin_uid = -1
         self.type = a_type
         self.track_num = a_track_num
         f_offset = 0 if self.type == self.instrument else 10
@@ -7555,10 +7542,17 @@ class plugin_settings:
 
     def get_value(self):
         return pydaw_track_plugin(
-            self.type, self.index, self.plugin_combobox.currentIndex())
+            self.type, self.index, self.plugin_combobox.currentIndex(),
+            self.plugin_uid)
 
     def on_plugin_change(self, a_val):
-        raise NotImplementedError()
+        if a_val == 0:
+            self.plugin_uid = -1
+        else:
+            self.plugin_uid = PROJECT.get_next_plugin_uid()
+        PROJECT.this_pydaw_osc.pydaw_set_plugin_index(
+            self.track_num, self.type, self.index,
+            a_val, self.plugin_uid)
 
     def wheel_event(self, a_event=None):
         pass
@@ -7599,6 +7593,7 @@ class plugin_settings:
 
 class track_send:
     def __init__(self, a_index, a_track_num, a_layout):
+        self.suppress_osc = True
         self.track_num = a_track_num
         self.index = a_index
         self.bus_combobox = QtGui.QComboBox()
@@ -7617,18 +7612,23 @@ class track_send:
         self.vol_label = QtGui.QLabel("0.0dB")
         self.vol_label.setMinimumWidth(60)
         a_layout.addWidget(self.vol_label, a_index + 1, 22)
+        self.suppress_osc = False
 
     def on_bus_changed(self, a_value=0):
+        self.update_engine()
+
+    def update_engine(self):
         if not self.suppress_osc:
-            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-            PROJECT.this_pydaw_osc.pydaw_set_bus(
-                self.track_number, self.bus_combobox.currentIndex())
-            PROJECT.commit(
-                _("Set bus for track {} to {}").format(self.track_number,
-                self.bus_combobox.currentIndex()))
+#           PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+            PROJECT.this_pydaw_osc.pydaw_update_track_send(
+                self.track_num, self.index,
+                self.bus_combobox.currentIndex(), self.get_vol())
+#            PROJECT.commit(
+#                _("Set bus for track {} to {}").format(self.track_number,
+#                self.bus_combobox.currentIndex()))
 
     def get_vol(self):
-        return round(self.vol_slider.value * 0.1, 1)
+        return round(self.vol_slider.value() * 0.1, 1)
 
     def set_vol(self, a_val):
         self.vol_slider.setValue(int(a_val * 10.0))
@@ -7638,7 +7638,7 @@ class track_send:
         self.vol_label.setText("{}dB".format(f_val))
 
     def on_vol_released(self):
-        pass
+        self.update_engine()
 
     def wheel_event(self, a_event=None):
         pass
@@ -7675,8 +7675,6 @@ class seq_track:
         self.track_name_lineedit.setText(
             pydaw_remove_bad_chars(self.track_name_lineedit.text()))
         PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-        PROJECT.this_pydaw_osc.pydaw_save_track_name(
-            self.track_number, self.track_name_lineedit.text())
         PROJECT.commit(
             _("Set name for track {} to {}").format(self.track_number,
             self.track_name_lineedit.text()))
@@ -7764,12 +7762,9 @@ class seq_track:
 
     def get_track(self):
         return pydaw_track(
-            self.solo_checkbox.isChecked(),
+            self.track_number, self.solo_checkbox.isChecked(),
             self.mute_checkbox.isChecked(),
-            str(self.track_name_lineedit.text()),
-            0, #self.instrument_combobox.currentIndex(),
-            0, #self.bus_combobox.currentIndex(),
-            self.track_number)
+            self.track_number, self.track_name_lineedit.text())
 
 
 MREC_EVENTS = []

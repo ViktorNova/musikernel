@@ -30,7 +30,7 @@ import scipy.signal
 from PyQt4 import QtGui, QtCore
 from libpydaw import pydaw_history
 
-TRACK_COUNT_ALL = 33
+TRACK_COUNT_ALL = 32  # TODO:  +1 for the wave editor???
 
 
 def proj_file_str(a_val):
@@ -55,6 +55,7 @@ pydaw_folder_samples = "audio/samples"
 pydaw_folder_timestretch = "audio/timestretch"
 pydaw_folder_glued = "audio/glued"
 pydaw_folder_user = "user"
+pydaw_folder_plugins = "projects/plugins"
 
 pydaw_file_pyregions = "projects/edmnext/default.pyregions"
 pydaw_file_pyitems = "projects/edmnext/default.pyitems"
@@ -147,12 +148,12 @@ class pydaw_project:
     def get_audio_fx_files(self):
         return os.listdir(self.audiofx_folder)
 
-    def delete_inst_file(self, a_track_num):
-        for f_ext in ("pyinst", "pyfx"):
-            f_file_path = "{}/{}.{}".format(
-                self.instrument_folder, a_track_num, f_ext)
-            if os.path.isfile(f_file_path):
-                os.system("rm -f '{}'".format(f_file_path))
+    def get_next_plugin_uid(self):
+        f_list = [int(x) for x in os.listdir(self.plugin_pool_folder)]
+        if f_list:
+            return max(f_list) + 1
+        else:
+            return 0
 
     def flush_history(self):
         for f_commit in self.history_commits:
@@ -212,6 +213,8 @@ class pydaw_project:
             self.project_folder, pydaw_folder_glued)
         self.user_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_user)
+        self.plugin_pool_folder = "{}/{}".format(
+            self.project_folder, pydaw_folder_plugins)
         #files
         self.pyregions_file = "{}/{}".format(
             self.project_folder, pydaw_file_pyregions)
@@ -253,7 +256,7 @@ class pydaw_project:
             self.audio_per_item_fx_folder, self.busfx_folder,
             self.samplegraph_folder, self.audio_tmp_folder,
             self.regions_audio_folder, self.timestretch_folder,
-            self.glued_folder, self.user_folder]
+            self.glued_folder, self.user_folder, self.plugin_pool_folder]
 
         for project_dir in project_folders:
             print(project_dir)
@@ -280,8 +283,8 @@ class pydaw_project:
         f_midi_tracks_instance = pydaw_tracks()
         for i in range(TRACK_COUNT_ALL):
             f_midi_tracks_instance.add_track(i, pydaw_track(
-                a_name="track{}".format(i + 1), a_track_pos=i,
-                a_track_uid=-1))
+                a_track_uid=i, a_track_pos=i,
+                a_name="track{}".format(i + 1)))
         self.create_file("", pydaw_file_pytracks, str(f_midi_tracks_instance))
 
         self.open_stretch_dicts()
@@ -2113,8 +2116,8 @@ class pydaw_tracks:
         return f_result
 
 class pydaw_track:
-    def __init__(self, a_track_uid, a_solo=False, a_mute=False,
-                 a_name="track", a_track_pos=-1):
+    def __init__(self, a_track_uid=-1, a_solo=False, a_mute=False,
+                 a_track_pos=-1, a_name="track"):
         self.track_uid = int(a_track_uid)
         self.name = str(a_name)
         self.solo = int_to_bool(a_solo)
@@ -2128,8 +2131,8 @@ class pydaw_track:
 
     def __str__(self):
         return "{}\n".format("|".join(map(proj_file_str,
-            (bool_to_int(self.solo), bool_to_int(self.mute),
-            self.name, self.track_pos))))
+            (self.track_uid, bool_to_int(self.solo), bool_to_int(self.mute),
+            self.track_pos, self.name))))
 
 class pydaw_track_plugin:
     def __init__(self, a_type, a_index, a_plugin_index, a_plugin_uid):

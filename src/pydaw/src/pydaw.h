@@ -43,6 +43,9 @@ GNU General Public License for more details.
 #define MAX_INST_COUNT 5
 #define MAX_FX_COUNT 10
 
+#define PLUGIN_TYPE_INSTRUMENT 0
+#define PLUGIN_TYPE_EFFECT 1
+
 #define PYDAW_MAX_ITEM_COUNT 5000
 #define PYDAW_MAX_REGION_COUNT 300
 #define PYDAW_MAX_EVENTS_PER_ITEM_COUNT 1024
@@ -66,6 +69,8 @@ GNU General Public License for more details.
 #define PYDAW_OSC_MAX_MESSAGE_SIZE 65536
 
 #define FRAMES_PER_BUFFER 4096
+
+#define MAX_PLUGIN_POOL_COUNT 1000
 
 #include <string.h>
 #include <pthread.h>
@@ -321,6 +326,7 @@ typedef struct
     //Threads must hold this to write OSC messages
     pthread_spinlock_t ui_spinlock;
     int wave_editor_cursor_count;
+    t_pydaw_plugin * plugin_pool[MAX_PLUGIN_POOL_COUNT];
 }t_pydaw_data;
 
 typedef struct
@@ -352,12 +358,11 @@ int i_get_song_index_from_region_uid(t_pydaw_data*, int);
 void v_save_pysong_to_disk(t_pydaw_data * self);
 void v_save_pyitem_to_disk(t_pydaw_data * self, int a_index);
 void v_save_pyregion_to_disk(t_pydaw_data * self, int a_region_num);
-void v_pydaw_open_plugin(t_pydaw_data * self, t_pytrack * a_track,
-                         int a_is_fx, int a_uid);
 void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
-        int a_type, int a_index, int a_plugin_uid);
+        int a_type, int a_index, int a_plugin_index,
+        int a_plugin_uid, int a_lock);
 void v_pydaw_update_track_send(t_pydaw_data * self, int a_track_num,
-        int a_index, int a_output_track, float a_vol);
+        int a_index, int a_output_track, float a_vol, int a_lock);
 inline void v_pydaw_update_ports(t_pydaw_plugin * a_plugin);
 void * v_pydaw_worker_thread(void*);
 void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
@@ -3683,6 +3688,12 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
     f_result->track_pool_sorted_count = PYDAW_TRACK_COUNT_ALL - 1;
     v_sort_tracks(f_result);
 
+    f_i = 0;
+    while(f_i < MAX_PLUGIN_POOL_COUNT)
+    {
+        f_result->plugin_pool[f_i] = 0;
+    }
+
     /* Create OSC thread */
     char *tmp;
 
@@ -3715,32 +3726,6 @@ void v_pydaw_open_track(t_pydaw_data * self, t_pytrack * a_track)
     //v_pydaw_open_plugin(self, a_track, 1);
 }
 
-void v_pydaw_open_plugin(t_pydaw_data * self, t_pytrack * a_track,
-        int a_is_fx, int a_uid)
-{
-    char f_file_name[1024];
-    sprintf(f_file_name, "%s%i.mkp", self->plugins_folder, a_track->track_num);
-
-    if(i_pydaw_file_exists(f_file_name))
-    {
-        printf("v_pydaw_open_plugin:  plugin exists %s , loading\n",
-            f_file_name);
-
-        t_pydaw_plugin * f_instance;
-
-        if(a_is_fx)
-        {
-            f_instance = a_track->effects[0];
-        }
-        else
-        {
-            f_instance = a_track->instruments[0];
-        }
-
-        f_instance->descriptor->load(
-            f_instance->PYFX_handle, f_instance->descriptor, f_file_name);
-    }
-}
 
 void v_pydaw_open_tracks(t_pydaw_data * self)
 {
@@ -4669,16 +4654,83 @@ void v_pydaw_set_preview_file(t_pydaw_data * self, const char * a_file)
     }
 }
 
+
 void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
-        int a_type, int a_index, int a_plugin_uid)
+        int a_type, int a_index, int a_plugin_index,
+        int a_plugin_uid, int a_lock)
 {
-    assert(0);
+    t_pytrack * f_track = self->track_pool_all[a_track_num];
+    t_pydaw_plugin * f_plugin = 0;
+
+    if(a_plugin_index)
+    {
+        f_plugin = self->plugin_pool[a_plugin_uid];
+
+        if(!f_plugin)
+        {
+            f_plugin = g_pydaw_plugin_get((int)(self->sample_rate),
+                    a_plugin_index, g_pydaw_wavpool_item_get,
+                    f_track->track_num, v_queue_osc_message);
+            self->plugin_pool[a_plugin_uid] = f_plugin;
+
+            char f_file_name[1024];
+            sprintf(f_file_name, "%s%i", self->plugins_folder, a_plugin_uid);
+
+            printf("Attempting to open %s \n(TODO: delete this printf)\n",
+                f_file_name);
+
+            if(i_pydaw_file_exists(f_file_name))
+            {
+                printf("v_pydaw_open_plugin:  plugin exists %s , loading\n",
+                    f_file_name);
+
+                f_plugin->descriptor->load(f_plugin->PYFX_handle,
+                    f_plugin->descriptor, f_file_name);
+            }
+        }
+    }
+
+
+    if(a_lock)
+    {
+        pthread_spin_lock(&self->main_lock);
+    }
+
+    if(a_type == PLUGIN_TYPE_INSTRUMENT)
+    {
+        f_track->instruments[a_index] = f_plugin;
+    }
+    else if(a_type == PLUGIN_TYPE_EFFECT)
+    {
+        f_track->effects[a_index] = f_plugin;
+    }
+    else
+    {
+        assert(0);
+    }
+
+    if(a_lock)
+    {
+        pthread_spin_unlock(&self->main_lock);
+    }
 }
 
+
 void v_pydaw_update_track_send(t_pydaw_data * self, int a_track_num,
-        int a_index, int a_output_track, float a_vol)
+        int a_index, int a_output_track, float a_vol, int a_lock)
 {
-    assert(0);
+
+    if(a_lock)
+    {
+        pthread_spin_lock(&self->main_lock);
+    }
+
+
+
+    if(a_lock)
+    {
+        pthread_spin_unlock(&self->main_lock);
+    }
 }
 
 #endif	/* PYDAW_H */
