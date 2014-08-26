@@ -3917,7 +3917,7 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
         self->project_folder);
     sprintf(self->per_audio_item_fx_folder,
         "%s/projects/edmnext/audio_per_item_fx/", self->project_folder);
-    sprintf(self->tracks_folder, "%s/projects/tracks", self->samples_folder);
+    sprintf(self->tracks_folder, "%s/projects/tracks", self->project_folder);
 
     int f_i = 0;
 
