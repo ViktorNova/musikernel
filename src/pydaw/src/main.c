@@ -1295,26 +1295,18 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
             a_key, a_value);
     if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL))
     {
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 4,
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 3,
                 PYDAW_TINY_STRING);
-        int f_is_inst = atoi(f_val_arr->array[0]);
-        int f_track_num = atoi(f_val_arr->array[1]);
 
-        int f_port = atoi(f_val_arr->array[2]);
-        float f_value = atof(f_val_arr->array[3]);
+        int f_plugin_uid = atoi(f_val_arr->array[0]);
+
+        int f_port = atoi(f_val_arr->array[1]);
+        float f_value = atof(f_val_arr->array[2]);
 
         t_pydaw_plugin * f_instance;
         pthread_spin_lock(&self->main_lock);
 
-        if(f_is_inst)
-        {
-            f_instance =
-                self->track_pool_all[f_track_num]->instruments[0];
-        }
-        else
-        {
-            f_instance = self->track_pool_all[f_track_num]->effects[0];
-        }
+        f_instance = self->plugin_pool[f_plugin_uid];
 
         if(f_instance)
         {
@@ -1323,35 +1315,30 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
         }
         else
         {
-            printf("Error, no valid plugin instance\n%s | %s\n",
-                    a_key, a_value);
+            printf("Error, no valid plugin instance\n");
         }
         pthread_spin_unlock(&self->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_CONFIGURE_PLUGIN))
     {
-        t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 4,
+        t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 3,
                 PYDAW_LARGE_STRING);
-        int f_is_inst = atoi(f_val_arr->array[0]);
-        int f_track_num = atoi(f_val_arr->array[1]);
+        int f_plugin_uid = atoi(f_val_arr->array[1]);
         char * f_key = f_val_arr->array[2];
         char * f_message = f_val_arr->array[3];
 
-        t_pydaw_plugin * f_instance;
+        t_pydaw_plugin * f_instance = self->plugin_pool[f_plugin_uid];
 
-        if(f_is_inst)
+        if(f_instance)
         {
-            f_instance =
-                self->track_pool_all[f_track_num]->instruments[0];
+            f_instance->descriptor->configure(
+                f_instance->PYFX_handle, f_key, f_message, &self->main_lock);
         }
         else
         {
-            f_instance = self->track_pool_all[f_track_num]->effects[0];
+            printf("Error, no valid plugin instance\n");
         }
-
-        f_instance->descriptor->configure(f_instance->PYFX_handle,
-            f_key, f_message, &self->main_lock);
 
         g_free_1d_char_array(f_val_arr);
     }
