@@ -1629,8 +1629,6 @@ void v_sort_tracks(t_pydaw_data * self)
         f_i++;
     }
 
-    self->track_pool_sorted[f_track] = self->track_pool_all[0];
-    f_track++;
     self->track_pool_sorted_count = f_track;
 }
 
