@@ -267,12 +267,12 @@ class pydaw_project:
         self.create_file("", pydaw_file_pyitems, pydaw_terminating_char)
         self.create_file("", pydaw_file_pysong, pydaw_terminating_char)
         self.create_file("", pydaw_file_pytransport, str(pydaw_transport()))
-        f_midi_tracks_instance = pydaw_tracks()
+        f_tracks = pydaw_tracks()
         for i in range(TRACK_COUNT_ALL):
-            f_midi_tracks_instance.add_track(i, pydaw_track(
+            f_tracks.add_track(i, pydaw_track(
                 a_track_uid=i, a_track_pos=i,
                 a_name="Master" if i == 0 else "track{}".format(i)))
-        self.create_file("", pydaw_file_pytracks, str(f_midi_tracks_instance))
+        self.create_file("", pydaw_file_pytracks, str(f_tracks))
 
         self.open_stretch_dicts()
         self.commit("Created project")
