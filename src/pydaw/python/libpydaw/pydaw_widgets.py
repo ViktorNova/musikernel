@@ -3939,7 +3939,7 @@ class pydaw_per_audio_item_fx_widget:
 class pydaw_abstract_plugin_ui:
     def __init__(self, a_rel_callback, a_val_callback,
                  a_project, a_plugin_uid, a_stylesheet,
-                 a_configure_callback, a_can_resize=False, a_folder):
+                 a_configure_callback, a_folder, a_can_resize=False):
         self.plugin_uid = int(a_plugin_uid)
         self.folder = str(a_folder)
         self.can_resize = a_can_resize
@@ -5209,7 +5209,7 @@ class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         pydaw_abstract_plugin_ui.__init__(
             self, a_rel_callback, a_val_callback,
             a_project, a_plugin_uid, a_stylesheet,
-            a_configure_callback, a_can_resize=True, a_folder=a_folder)
+            a_configure_callback, a_folder, a_can_resize=True)
         self.set_window_title(a_track_name)
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(

@@ -239,7 +239,7 @@ class pydaw_project:
 
         project_folders = [
             self.project_folder, self.regions_folder, self.items_folder,
-            self.audio_folder, self.samples_folder, self.audiofx_folder,
+            self.audio_folder, self.samples_folder,
             self.audio_per_item_fx_folder, self.samplegraph_folder,
             self.audio_tmp_folder, self.regions_audio_folder,
             self.timestretch_folder, self.glued_folder, self.user_folder,

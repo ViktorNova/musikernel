@@ -7559,38 +7559,13 @@ class plugin_settings:
         pass
 
     def on_show_ui(self):
-        f_index = self.instrument_combobox.currentIndex()
-        if f_index == 0:
+        f_index = self.plugin_combobox.currentIndex()
+        if f_index == 0 or self.plugin_uid == -1:
             return
-        self.record_radiobutton.setChecked(True)
-        global_open_inst_ui(
-            self.track_number, f_index,
-            _("Track: {}").format(self.track_name_lineedit.text()))
+        global_open_plugin_ui(
+            self.plugin_uid, self.type, f_index, "Track:  TODO")
+            #_("Track: {}").format(self.track_name_lineedit.text()))
 
-    def on_instrument_change(self, selected_instrument):
-        if not self.suppress_osc:
-            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-            global_close_inst_ui(self.track_number)
-            PROJECT.delete_inst_file(self.track_number)
-            PROJECT.this_pydaw_osc.pydaw_set_instrument_index(
-                self.track_number, selected_instrument)
-            PROJECT.commit(
-                _("Set instrument for track {} to {}").format(
-                self.track_number, self.instrument_combobox.currentText()))
-
-    def on_show_fx(self):
-        assert(False)  # This needs to be completely redone
-        if not self.is_instrument or \
-        self.instrument_combobox.currentIndex() > 0:
-            if self.is_instrument:
-                if self.instrument_combobox.currentIndex() > 0:
-                    global_open_fx_ui(
-                        self.track_number, pydaw_folder_instruments, 0,
-                        _("MIDI Track: {}").format(
-                            self.track_name_lineedit.text()))
-            else:
-                global_open_fx_ui(self.track_number, pydaw_folder_busfx, 1,
-                _("Bus Track: {}").format(self.track_name_lineedit.text()))
 
 class track_send:
     def __init__(self, a_index, a_track_num, a_layout, a_save_callback):
@@ -7621,13 +7596,10 @@ class track_send:
 
     def update_engine(self):
         if not self.suppress_osc:
-#           PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
             PROJECT.this_pydaw_osc.pydaw_update_track_send(
                 self.track_num, self.index,
                 self.bus_combobox.currentIndex() - 1, self.get_vol())
-#            PROJECT.commit(
-#                _("Set bus for track {} to {}").format(self.track_number,
-#                self.bus_combobox.currentIndex()))
+            self.save_callback()
 
     def get_vol(self):
         return round(self.vol_slider.value() * 0.1, 1)
@@ -7755,7 +7727,7 @@ class seq_track:
         self.suppress_osc = False
 
     def save_callback(self):
-        f_result = "\n".join(x.get_value() for x in
+        f_result = "\n".join(str(x.get_value()) for x in
             self.instruments + self.effects + self.sends)
         f_result += "\\"
         PROJECT.save_track_routing(self.track_number, f_result)
@@ -7767,9 +7739,9 @@ class seq_track:
         if not a_notify_osc:
             self.suppress_osc = True
         self.track_name_lineedit.setText(a_track.name)
-        #self.instrument_combobox.setCurrentIndex(a_track.inst)
         self.solo_checkbox.setChecked(a_track.solo)
         self.mute_checkbox.setChecked(a_track.mute)
+        #self.instrument_combobox.setCurrentIndex(a_track.inst)
         #self.bus_combobox.setCurrentIndex(a_track.bus_num)
         self.suppress_osc = False
 
@@ -8273,7 +8245,7 @@ PLUGIN_UI_DICT = {}
 PLUGIN_UI_TYPES = {
     0:{
         1:pydaw_widgets.pydaw_euphoria_plugin_ui,
-        2:pydaw_widget.pydaw_rayv_plugin_ui,
+        2:pydaw_widgets.pydaw_rayv_plugin_ui,
         3:pydaw_widgets.pydaw_wayv_plugin_ui
     },
     1:{
