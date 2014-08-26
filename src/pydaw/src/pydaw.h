@@ -230,6 +230,7 @@ typedef struct
     char * samplegraph_folder;
     char * wav_pool_file;
     char * plugins_folder;
+    char * tracks_folder;
 
     //only refers to the fractional position within the current bar.
     float playback_cursor;
@@ -3650,6 +3651,7 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
     f_result->wav_pool_file = (char*)malloc(sizeof(char) * 1024);
     f_result->region_audio_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->per_audio_item_fx_folder = (char*)malloc(sizeof(char) * 1024);
+    f_result->tracks_folder = (char*)malloc(sizeof(char) * 1024);
 
     f_result->osc_cursor_message = (char*)malloc(sizeof(char) * 1024);
 
@@ -3773,8 +3775,8 @@ void v_pydaw_activate_osc_thread(t_pydaw_data * self,
 void v_pydaw_open_track(t_pydaw_data * self, int a_index)
 {
     char f_file_name[1024];
-    sprintf(f_file_name, "%s/projects/tracks/%i",
-        self->project_folder, a_index);
+    sprintf(f_file_name, "%s/%i",
+        self->tracks_folder, a_index);
 
     if(i_pydaw_file_exists(f_file_name))
     {
@@ -3936,20 +3938,18 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
         self->project_folder);
     sprintf(self->region_audio_folder, "%s/projects/edmnext/regions_audio/",
         self->project_folder);
-    sprintf(self->audio_folder, "%s/audio/files",
-        self->project_folder);
+    sprintf(self->audio_folder, "%s/audio/files", self->project_folder);
     sprintf(self->audio_tmp_folder, "%s/audio/files/tmp/",
         self->project_folder);
-    sprintf(self->plugins_folder, "%s/projects/plugins/",
-        self->project_folder);
+    sprintf(self->plugins_folder, "%s/projects/plugins/", self->project_folder);
     sprintf(self->samples_folder, "%s/audio/samples",
         self->project_folder);  //No trailing slash on this one
-    sprintf(self->wav_pool->samples_folder, "%s",
-        self->samples_folder);
+    sprintf(self->wav_pool->samples_folder, "%s", self->samples_folder);
     sprintf(self->wav_pool_file, "%s/audio/default.pywavs",
         self->project_folder);
     sprintf(self->per_audio_item_fx_folder,
         "%s/projects/edmnext/audio_per_item_fx/", self->project_folder);
+    sprintf(self->tracks_folder, "%s/projects/tracks", self->samples_folder);
 
     int f_i = 0;
 

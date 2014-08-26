@@ -220,19 +220,13 @@ class pydaw_osc:
     def pydaw_audio_per_item_fx_region(self, a_region_uid):
         self.send_configure("par", str(a_region_uid))
 
-    def pydaw_update_plugin_control(self, a_is_instrument,
-                                    a_track_num, a_port, a_val):
+    def pydaw_update_plugin_control(self, a_plugin_uid, a_port, a_val):
         self.send_configure(
-            "pc", "|".join(str(x) for x in
-            (bool_to_int(a_is_instrument), a_track_num,
-            a_port, a_val)))
+            "pc", "|".join(str(x) for x in (a_plugin_uid, a_port, a_val)))
 
-    def pydaw_configure_plugin(self, a_is_instrument,
-                               a_track_num, a_key, a_message):
+    def pydaw_configure_plugin(self, a_plugin_uid, a_key, a_message):
         self.send_configure(
-            "co", "|".join(str(x) for x in
-            (bool_to_int(a_is_instrument), a_track_num,
-             a_key, a_message)))
+            "co", "|".join(str(x) for x in (a_plugin_uid, a_key, a_message)))
 
     def pydaw_glue_audio(self, a_file_name, a_region_index, a_start_bar_index,
                          a_end_bar_index, a_item_indexes):

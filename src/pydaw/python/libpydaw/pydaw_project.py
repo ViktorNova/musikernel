@@ -43,10 +43,7 @@ MAX_AUDIO_ITEM_COUNT = 256
 MAX_REGION_LENGTH = 256 #bars
 
 pydaw_folder_audio = "audio/files"
-pydaw_folder_audiofx = "projects/edmnext/audiofx"
 pydaw_folder_audio_per_item_fx = "projects/edmnext/audio_per_item_fx"
-pydaw_folder_busfx = "projects/edmnext/busfx"
-pydaw_folder_instruments = "projects/edmnext/instruments"
 pydaw_folder_items = "projects/edmnext/items"
 pydaw_folder_regions = "projects/edmnext/regions"
 pydaw_folder_regions_audio = "projects/edmnext/regions_audio"
@@ -56,6 +53,7 @@ pydaw_folder_timestretch = "audio/timestretch"
 pydaw_folder_glued = "audio/glued"
 pydaw_folder_user = "user"
 pydaw_folder_plugins = "projects/plugins"
+pydaw_folder_tracks = "projects/tracks"
 
 pydaw_file_pyregions = "projects/edmnext/default.pyregions"
 pydaw_file_pyitems = "projects/edmnext/default.pyitems"
@@ -142,12 +140,6 @@ class pydaw_project:
                 "{}/{}".format(a_folder, f_file))
         return f_result
 
-    def get_bus_fx_files(self):
-        return os.listdir(self.busfx_folder)
-
-    def get_audio_fx_files(self):
-        return os.listdir(self.audiofx_folder)
-
     def get_next_plugin_uid(self):
         f_list = [int(x) for x in os.listdir(self.plugin_pool_folder)]
         if f_list:
@@ -185,8 +177,6 @@ class pydaw_project:
         self.project_folder = os.path.dirname(a_project_file)
         self.project_file = os.path.splitext(
             os.path.basename(a_project_file))[0]
-        self.instrument_folder = "{}/{}".format(
-            self.project_folder, pydaw_folder_instruments)
         self.regions_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_regions)
         self.regions_audio_folder = "{}/{}".format(
@@ -199,12 +189,8 @@ class pydaw_project:
             self.project_folder, pydaw_folder_audio)
         self.samples_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_samples)
-        self.audiofx_folder = "{}/{}".format(
-            self.project_folder, pydaw_folder_audiofx)
         self.audio_per_item_fx_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_audio_per_item_fx)
-        self.busfx_folder = "{}/{}".format(
-            self.project_folder, pydaw_folder_busfx)
         self.samplegraph_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_samplegraph)
         self.timestretch_folder = "{}/{}".format(
@@ -215,6 +201,8 @@ class pydaw_project:
             self.project_folder, pydaw_folder_user)
         self.plugin_pool_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_plugins)
+        self.track_pool_folder = "{}/{}".format(
+            self.project_folder, pydaw_folder_tracks)
         #files
         self.pyregions_file = "{}/{}".format(
             self.project_folder, pydaw_file_pyregions)
@@ -250,13 +238,12 @@ class pydaw_project:
         self.set_project_folders(a_project_file)
 
         project_folders = [
-            self.project_folder, self.instrument_folder,
-            self.regions_folder, self.items_folder, self.audio_folder,
-            self.samples_folder, self.audiofx_folder,
-            self.audio_per_item_fx_folder, self.busfx_folder,
-            self.samplegraph_folder, self.audio_tmp_folder,
-            self.regions_audio_folder, self.timestretch_folder,
-            self.glued_folder, self.user_folder, self.plugin_pool_folder]
+            self.project_folder, self.regions_folder, self.items_folder,
+            self.audio_folder, self.samples_folder, self.audiofx_folder,
+            self.audio_per_item_fx_folder, self.samplegraph_folder,
+            self.audio_tmp_folder, self.regions_audio_folder,
+            self.timestretch_folder, self.glued_folder, self.user_folder,
+            self.plugin_pool_folder, self.track_pool_folder]
 
         for project_dir in project_folders:
             print(project_dir)
@@ -1132,6 +1119,10 @@ class pydaw_project:
         if not self.suppress_updates:
             self.save_file("", pydaw_file_pytracks, str(a_tracks))
             #Is there a need for a configure message here?
+
+    def save_track_routing(self, a_uid, a_track):
+        if not self.suppress_updates:
+            self.save_file(pydaw_folder_tracks, str(a_uid), str(a_track))
 
     def save_audio_inputs(self, a_tracks):
         if not self.suppress_updates:

@@ -134,14 +134,12 @@ def pydaw_scale_to_rect(a_to_scale, a_scale_to):
     f_y = (a_scale_to.height() / a_to_scale.height())
     return (f_x, f_y)
 
-def global_plugin_rel_callback(a_is_instrument, a_track_type,
-                               a_track_num, a_port, a_val):
+def global_plugin_rel_callback(a_plugin_uid, a_port, a_val):
     pass
 
-def global_plugin_val_callback(a_is_instrument, a_track_type,
-                               a_track_num, a_port, a_val):
+def global_plugin_val_callback(a_plugin_uid, a_port, a_val):
     PROJECT.this_pydaw_osc.pydaw_update_plugin_control(
-        a_is_instrument, a_track_type, a_track_num, a_port, a_val)
+        a_plugin_uid, a_port, a_val)
 
 CURRENT_SONG_INDEX = None
 
@@ -7510,7 +7508,9 @@ class midi_device_dialog:
 class plugin_settings:
     instrument = 0
     effect = 1
-    def __init__(self, a_index, a_track_num, a_layout, a_type):
+    def __init__(self, a_index, a_track_num,
+                 a_layout, a_type, a_save_callback):
+        self.save_callback = a_save_callback
         self.plugin_uid = -1
         self.type = a_type
         self.track_num = a_track_num
@@ -7553,6 +7553,7 @@ class plugin_settings:
         PROJECT.this_pydaw_osc.pydaw_set_plugin_index(
             self.track_num, self.type, self.index,
             a_val, self.plugin_uid)
+        self.save_callback()
 
     def wheel_event(self, a_event=None):
         pass
@@ -7592,7 +7593,8 @@ class plugin_settings:
                 _("Bus Track: {}").format(self.track_name_lineedit.text()))
 
 class track_send:
-    def __init__(self, a_index, a_track_num, a_layout):
+    def __init__(self, a_index, a_track_num, a_layout, a_save_callback):
+        self.save_callback = a_save_callback
         self.suppress_osc = True
         self.track_num = a_track_num
         self.index = a_index
@@ -7721,7 +7723,7 @@ class seq_track:
         for f_i in range(5):
             f_plugin = plugin_settings(
                 f_i, self.track_number, self.menu_gridlayout,
-                plugin_settings.instrument)
+                plugin_settings.instrument, self.save_callback)
             self.instruments.append(f_plugin)
         self.menu_gridlayout.addWidget(
             QtGui.QLabel(_("Effects")), 0, 10)
@@ -7729,13 +7731,15 @@ class seq_track:
         for f_i in range(10):
             f_plugin = plugin_settings(
                 f_i, self.track_number, self.menu_gridlayout,
-                plugin_settings.effect)
+                plugin_settings.effect, self.save_callback)
             self.effects.append(f_plugin)
         self.menu_gridlayout.addWidget(
             QtGui.QLabel(_("Sends")), 0, 20)
         self.sends = []
         for f_i in range(4):
-            f_send = track_send(f_i, self.track_number, self.menu_gridlayout)
+            f_send = track_send(
+                f_i, self.track_number, self.menu_gridlayout,
+                self.save_callback)
             self.sends.append(f_send)
         self.action_widget = QtGui.QWidgetAction(self.button_menu)
         self.action_widget.setDefaultWidget(self.menu_widget)
@@ -7749,6 +7753,15 @@ class seq_track:
         self.mute_checkbox.setObjectName("mute_checkbox")
         self.hlayout3.addWidget(self.mute_checkbox)
         self.suppress_osc = False
+
+    def save_callback(self):
+        f_result = "\n".join(x.get_value() for x in
+            self.instruments + self.effects + self.sends)
+        f_result += "\\"
+        PROJECT.save_track_routing(self.track_number, f_result)
+        PROJECT.commit(
+            "Update track routing for '{}', {}".format(
+            self.track_name_lineedit.text(), self.track_number))
 
     def open_track(self, a_track, a_notify_osc=False):
         if not a_notify_osc:
@@ -8255,107 +8268,63 @@ class transport_widget:
             self.loop_mode_combobox.setToolTip("")
             self.group_box.setToolTip("")
 
+PLUGIN_UI_DICT = {}
 
-OPEN_FX_UI_DICTS = [{}, {}, {}, {}, {}]
-OPEN_INST_UI_DICT = {}
+PLUGIN_UI_TYPES = {
+    0:{
+        1:pydaw_widgets.pydaw_euphoria_plugin_ui,
+        2:pydaw_widget.pydaw_rayv_plugin_ui,
+        3:pydaw_widgets.pydaw_wayv_plugin_ui
+    },
+    1:{
+        1:pydaw_widgets.pydaw_modulex_plugin_ui
+    }
+}
 
-def global_open_fx_ui(a_track_num, a_folder, a_track_type, a_title):
-    global OPEN_FX_UI_DICTS
-    if not a_track_num in OPEN_FX_UI_DICTS[a_track_type]:
-        f_modulex = pydaw_widgets.pydaw_modulex_plugin_ui(
+def global_open_plugin_ui(a_plugin_uid, a_type, a_plugin_type, a_title):
+    if not a_plugin_uid in PLUGIN_UI_DICT:
+        f_plugin = FX_UI_TYPES[a_type][a_plugin_type](
             global_plugin_rel_callback, global_plugin_val_callback,
-            a_track_num, PROJECT, a_folder, a_track_type,
+            PROJECT, PROJECT.plugin_pool_folder, a_plugin_uid,
             a_title, MAIN_WINDOW.styleSheet(),
             global_configure_plugin_callback)
-
-        pydaw_center_widget_on_screen(f_modulex.widget)
-        f_modulex.show_widget()
-        OPEN_FX_UI_DICTS[a_track_type][a_track_num] = f_modulex
-    else:
-        if OPEN_FX_UI_DICTS[a_track_type][
-        a_track_num].widget.isHidden():
-            OPEN_FX_UI_DICTS[a_track_type][a_track_num].widget.show()
-        OPEN_FX_UI_DICTS[a_track_type][a_track_num].raise_widget()
-
-
-def global_open_inst_ui(a_track_num, a_plugin_type, a_title):
-    f_track_num = int(a_track_num)
-    if not f_track_num in OPEN_INST_UI_DICT:
-        if a_plugin_type == 1:
-            f_plugin = pydaw_widgets.pydaw_euphoria_plugin_ui(
-                global_plugin_rel_callback, global_plugin_val_callback,
-                f_track_num, PROJECT, pydaw_folder_instruments, 0,
-                a_title, MAIN_WINDOW.styleSheet(),
-                global_configure_plugin_callback)
-        elif a_plugin_type == 2:
-            f_plugin = pydaw_widgets.pydaw_rayv_plugin_ui(
-                global_plugin_rel_callback, global_plugin_val_callback,
-                f_track_num, PROJECT, pydaw_folder_instruments,
-                0, a_title, MAIN_WINDOW.styleSheet(),
-                global_configure_plugin_callback)
-        elif a_plugin_type == 3:
-            f_plugin = pydaw_widgets.pydaw_wayv_plugin_ui(
-                global_plugin_rel_callback, global_plugin_val_callback,
-                f_track_num, PROJECT, pydaw_folder_instruments,
-                0, a_title, MAIN_WINDOW.styleSheet(),
-                global_configure_plugin_callback)
-        else:
-            return
-
         pydaw_center_widget_on_screen(f_plugin.widget)
         f_plugin.show_widget()
-        OPEN_INST_UI_DICT[f_track_num] = f_plugin
+        PLUGIN_UI_DICT[a_plugin_uid] = f_plugin
     else:
-        if OPEN_INST_UI_DICT[f_track_num].widget.isHidden():
-            OPEN_INST_UI_DICT[f_track_num].widget.show()
-        OPEN_INST_UI_DICT[f_track_num].raise_widget()
+        if PLUGIN_UI_DICT[a_plugin_uid].widget.isHidden():
+            PLUGIN_UI_DICT[a_plugin_uid].widget.show()
+        PLUGIN_UI_DICT[a_plugin_uid].raise_widget()
 
 
-def global_close_inst_ui(a_track_num):
+def global_close_plugin_ui(a_track_num):
     f_track_num = int(a_track_num)
-    if f_track_num in OPEN_INST_UI_DICT:
-        OPEN_INST_UI_DICT[f_track_num].widget.close()
-        OPEN_INST_UI_DICT.pop(f_track_num)
-    if f_track_num in OPEN_FX_UI_DICTS[0]:
-        OPEN_FX_UI_DICTS[0][f_track_num].widget.close()
-        OPEN_FX_UI_DICTS[0].pop(f_track_num)
+    if f_track_num in PLUGIN_UI_DICT:
+        PLUGIN_UI_DICT[f_track_num].widget.close()
+        PLUGIN_UI_DICT.pop(f_track_num)
 
 
-def global_inst_set_window_title(a_track_num, a_track_name):
-    f_track_num = int(a_track_num)
-    if f_track_num in OPEN_INST_UI_DICT:
-        OPEN_INST_UI_DICT[f_track_num].set_window_title(a_track_name)
+def global_plugin_set_window_title(a_plugin_uid, a_track_name):
+    f_plugin_uid = int(a_plugin_uid)
+    if f_plugin_uid in PLUGIN_UI_DICT:
+        PLUGIN_UI_DICT[a_plugin_uid].set_window_title(a_track_name)
 
-def global_fx_set_window_title(a_track_type, a_track_num, a_track_name):
-    f_track_num = int(a_track_num)
-    f_track_type = int(a_track_type)
-    global OPEN_FX_UI_DICTS
-    if f_track_num in OPEN_FX_UI_DICTS[f_track_type]:
-        OPEN_FX_UI_DICTS[f_track_type][
-            f_track_num].set_window_title(a_track_name)
 
 def global_configure_plugin_callback(a_is_instrument, a_track_type,
                                      a_track_num, a_key, a_message):
     PROJECT.this_pydaw_osc.pydaw_configure_plugin(
-        a_is_instrument, a_track_type, a_track_num, a_key, a_message)
+        a_plugin_uid, a_key, a_message)
+
 
 def global_close_all_plugin_windows():
-    global OPEN_FX_UI_DICTS, OPEN_INST_UI_DICT
-    for f_dict in OPEN_FX_UI_DICTS:
-        for v in list(f_dict.values()):
-            v.is_quitting = True
-            v.widget.close()
-    for v in list(OPEN_INST_UI_DICT.values()):
+    global PLUGIN_UI_DICT
+    for v in list(PLUGIN_UI_DICT.values()):
         v.is_quitting = True
         v.widget.close()
-    OPEN_FX_UI_DICTS = [{}, {}, {}, {}, {}]
-    OPEN_INST_UI_DICT = {}
+    PLUGIN_UI_DICT = {}
 
 def global_save_all_plugin_state():
-    for f_dict in OPEN_FX_UI_DICTS:
-        for v in list(f_dict.values()):
-            v.save_plugin_file()
-    for v in list(OPEN_INST_UI_DICT.values()):
+    for v in list(PLUGIN_UI_DICT.values()):
         v.save_plugin_file()
 
 

@@ -17,7 +17,7 @@ import os
 import time
 import math
 from . import pydaw_util, pydaw_ports
-from libpydaw.pydaw_project import pydaw_audio_item_fx
+from libpydaw.pydaw_project import pydaw_audio_item_fx, pydaw_folder_plugins
 from libpydaw.translate import _
 from PyQt4 import QtGui, QtCore
 import numpy
@@ -3937,16 +3937,16 @@ class pydaw_per_audio_item_fx_widget:
                 f_knob.set_value(64)
 
 class pydaw_abstract_plugin_ui:
-    def __init__(self, a_rel_callback, a_val_callback, a_track_num,
-                 a_project, a_track_type, a_stylesheet,
-                 a_configure_callback, a_can_resize=False):
+    def __init__(self, a_rel_callback, a_val_callback,
+                 a_project, a_plugin_uid, a_stylesheet,
+                 a_configure_callback, a_can_resize=False, a_folder):
+        self.plugin_uid = int(a_plugin_uid)
+        self.folder = str(a_folder)
         self.can_resize = a_can_resize
-        self.track_num = int(a_track_num)
         self.pydaw_project = a_project
         self.rel_callback = a_rel_callback
         self.val_callback = a_val_callback
         self.configure_callback = a_configure_callback
-        self.track_type = int(a_track_type)
         self.widget = QtGui.QScrollArea()
         self.widget.setObjectName("plugin_ui")
         self.widget.setMinimumSize(500, 500)
@@ -4011,8 +4011,7 @@ class pydaw_abstract_plugin_ui:
 
     def open_plugin_file(self):
         if self.folder is not None:
-            f_file_path = "{}/{}/{}".format(
-                self.pydaw_project.project_folder, self.folder, self.file)
+            f_file_path = "{}/{}".format(self.folder, self.plugin_uid)
             if os.path.isfile(f_file_path):
                 f_file = pydaw_plugin_file(f_file_path)
                 for k, v in list(f_file.port_dict.items()):
@@ -4030,7 +4029,8 @@ class pydaw_abstract_plugin_ui:
         if self.folder is not None:
             f_file = pydaw_plugin_file.from_dict(
                 self.port_dict, self.configure_dict)
-            self.pydaw_project.save_file(self.folder, self.file, str(f_file))
+            self.pydaw_project.save_file(
+                pydaw_folder_plugins, self.plugin_uid, str(f_file))
             self.pydaw_project.commit(
                 _("Update controls for {}").format(self.track_name))
             self.pydaw_project.flush_history()
@@ -4046,12 +4046,10 @@ class pydaw_abstract_plugin_ui:
         #QtGui.QWidget.closeEvent(self.widget, a_event)
 
     def plugin_rel_callback(self, a_port, a_val):
-        self.rel_callback(
-            self.is_instrument, self.track_type, self.track_num, a_port, a_val)
+        self.rel_callback(self.plugin_uid, a_port, a_val)
 
     def plugin_val_callback(self, a_port, a_val):
-        self.val_callback(
-            self.is_instrument, self.track_type, self.track_num, a_port, a_val)
+        self.val_callback(self.plugin_uid, a_port, a_val)
 
     def set_control_val(self, a_port, a_val):
         f_port = int(a_port)
@@ -4091,15 +4089,13 @@ class pydaw_abstract_plugin_ui:
 
 
 class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
-    def __init__(self, a_rel_callback, a_val_callback, a_track_num, a_project,
-                 a_folder, a_track_type, a_track_name, a_stylesheet,
+    def __init__(self, a_rel_callback, a_val_callback, a_project,
+                 a_folder, a_plugin_uid, a_track_name, a_stylesheet,
                  a_configure_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_rel_callback, a_val_callback, a_track_num, a_project,
-            a_track_type, a_stylesheet, a_configure_callback)
-        self.folder = a_folder
+            self, a_rel_callback, a_val_callback, a_project,
+            a_plugin_uid, a_stylesheet, a_configure_callback, a_folder)
         self._plugin_name = "MODULEX"
-        self.file = "{}.pyfx".format(self.track_num)
         self.set_window_title(a_track_name)
         self.is_instrument = False
 
@@ -4379,15 +4375,13 @@ class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
 
 
 class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
-    def __init__(self, a_rel_callback, a_val_callback, a_track_num, a_project,
-                 a_folder, a_track_type, a_track_name,
+    def __init__(self, a_rel_callback, a_val_callback, a_project,
+                 a_folder, a_plugin_uid, a_track_name,
                  a_stylesheet, a_configure_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_rel_callback, a_val_callback, a_track_num, a_project,
-            a_track_type, a_stylesheet, a_configure_callback)
-        self.folder = a_folder
+            self, a_rel_callback, a_val_callback, a_project,
+            a_plugin_uid, a_stylesheet, a_configure_callback, a_folder)
         self._plugin_name = "RAYV"
-        self.file = "{}.pyinst".format(self.track_num)
         self.set_window_title(a_track_name)
         self.is_instrument = True
         f_osc_types = [_("Saw"), _("Square"), _("Triangle"),
@@ -4560,15 +4554,13 @@ class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
 
 
 class pydaw_wayv_plugin_ui(pydaw_abstract_plugin_ui):
-    def __init__(self, a_rel_callback, a_val_callback, a_track_num, a_project,
-                 a_folder, a_track_type, a_track_name, a_stylesheet,
+    def __init__(self, a_rel_callback, a_val_callback, a_project,
+                 a_folder, a_plugin_uid, a_track_name, a_stylesheet,
                  a_configure_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_rel_callback, a_val_callback, a_track_num, a_project,
-            a_track_type, a_stylesheet, a_configure_callback)
-        self.folder = a_folder
+            self, a_rel_callback, a_val_callback, a_project,
+            a_plugin_uid, a_stylesheet, a_configure_callback, a_folder)
         self._plugin_name = "WAYV"
-        self.file = "{}.pyinst".format(self.track_num)
         self.set_window_title(a_track_name)
         self.is_instrument = True
 
@@ -5104,7 +5096,7 @@ class pydaw_wayv_plugin_ui(pydaw_abstract_plugin_ui):
 
     def configure_plugin(self, a_key, a_message):
         self.configure_dict[a_key] = a_message
-        self.configure_callback(True, 0, self.track_num, a_key, a_message)
+        self.configure_callback(self.plugin_uid, a_key, a_message)
 
     def set_configure(self, a_key, a_message):
         self.configure_dict[a_key] = a_message
@@ -5211,15 +5203,13 @@ SMP_TB_INTERPOLATION_MODE_INDEX = 11
 EUPHORIA_INSTRUMENT_CLIPBOARD = None
 
 class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
-    def __init__(self, a_rel_callback, a_val_callback, a_track_num,
-                 a_project, a_folder, a_track_type, a_track_name,
+    def __init__(self, a_rel_callback, a_val_callback,
+                 a_project, a_folder, a_plugin_uid, a_track_name,
                  a_stylesheet, a_configure_callback):
         pydaw_abstract_plugin_ui.__init__(
             self, a_rel_callback, a_val_callback,
-            a_track_num, a_project, a_track_type,
-            a_stylesheet, a_configure_callback, a_can_resize=True)
-        self.folder = a_folder
-        self.file = "{}.pyinst".format(self.track_num)
+            a_project, a_plugin_uid, a_stylesheet,
+            a_configure_callback, a_can_resize=True, a_folder=a_folder)
         self.set_window_title(a_track_name)
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(
@@ -6252,7 +6242,7 @@ class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
     def configure_plugin(self, a_key, a_message):
         self.configure_dict[a_key] = a_message
-        self.configure_callback(True, 0, self.track_num, a_key, a_message)
+        self.configure_callback(self.plugin_uid, a_key, a_message)
 
     def set_configure(self, a_key, a_message):
         self.configure_dict[a_key] = a_message
