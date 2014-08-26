@@ -4853,7 +4853,7 @@ void v_pydaw_update_track_send(t_pydaw_data * self, int a_track_num,
 t_pytrack_routing * g_pytrack_routing_get()
 {
     t_pytrack_routing * f_result;
-    lmalloc((void**)&f_result, sizeof(t_pytrack_routing*));
+    lmalloc((void**)&f_result, sizeof(t_pytrack_routing));
     f_result->amp_ptr = g_amp_get();
     return f_result;
 }
