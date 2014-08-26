@@ -7722,10 +7722,11 @@ class seq_track:
         PROJECT.commit(
             _("Set name for track {} to {}").format(self.track_number,
             self.track_name_lineedit.text()))
-        global_inst_set_window_title(self.track_number,
-            _("Track: {}").format(self.track_name_lineedit.text()))
-        global_fx_set_window_title(0, self.track_number,
-            _("Track: {}").format(self.track_name_lineedit.text()))
+        f_routing = PROJECT.get_track_routing(self.track_number)
+        for f_plugin in f_routing.instruments + f_routing.effects:
+            global_plugin_set_window_title(
+                f_plugin.plugin_uid,
+                _("Track: {}").format(self.name_callback()))
 
     def context_menu_event(self, a_event=None):
         pass
