@@ -3714,6 +3714,14 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
         f_i++;
     }
 
+    f_i = 0;
+
+    while(f_i < PYDAW_MAX_ITEM_COUNT)
+    {
+        f_result->item_pool[f_i] = 0;
+        f_i++;
+    }
+
     f_result->track_pool_sorted_count = PYDAW_TRACK_COUNT_ALL - 1;
     v_sort_tracks(f_result);
 
