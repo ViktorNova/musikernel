@@ -271,7 +271,7 @@ class pydaw_project:
         for i in range(TRACK_COUNT_ALL):
             f_midi_tracks_instance.add_track(i, pydaw_track(
                 a_track_uid=i, a_track_pos=i,
-                a_name="track{}".format(i + 1)))
+                a_name="Master" if i == 0 else "track{}".format(i)))
         self.create_file("", pydaw_file_pytracks, str(f_midi_tracks_instance))
 
         self.open_stretch_dicts()
