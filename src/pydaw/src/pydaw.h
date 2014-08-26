@@ -252,7 +252,6 @@ typedef struct
 
     t_pyitem * item_pool[PYDAW_MAX_ITEM_COUNT];
 
-    int item_count;
     int is_soloed;
 
     t_amp * amp_ptr;
@@ -3493,18 +3492,12 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
 
     g_free_2d_char_array(f_current_string);
 
-    int f_item_index = a_uid;
+    if(self->item_pool[a_uid])
+    {
+        free(self->item_pool[a_uid]);
+    }
 
-    if(f_item_index < 0)
-    {
-        self->item_pool[(self->item_count)] = f_result;
-        self->item_count = (self->item_count) + 1;
-    }
-    else
-    {
-        free(self->item_pool[f_item_index]);
-        self->item_pool[f_item_index] = f_result;
-    }
+    self->item_pool[a_uid] = f_result;
 }
 
 t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
@@ -3635,7 +3628,6 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
 
     f_result->playback_mode = 0;
     f_result->pysong = NULL;
-    f_result->item_count = 0;
     f_result->is_soloed = 0;
     f_result->suppress_new_audio_items = 0;
 
@@ -3929,16 +3921,15 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
 
     int f_i = 0;
 
-    while(f_i < self->item_count)
+    while(f_i < PYDAW_MAX_ITEM_COUNT)
     {
         if(self->item_pool[f_i])
         {
             free(self->item_pool[f_i]);
+            self->item_pool[f_i] = 0;
         }
         f_i++;
     }
-
-    self->item_count = 0;
 
     char f_song_file[1024];
     sprintf(f_song_file,
