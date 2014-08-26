@@ -836,6 +836,14 @@ class pydaw_project:
     def get_tracks(self):
         return pydaw_tracks.from_str(self.get_tracks_string())
 
+    def get_track_routing(self, a_track_num):
+        f_path = "{}/{}".format(self.track_pool_folder, a_track_num)
+        if os.path.isfile(f_path):
+            with open(f_path) as f_handle:
+                return pydaw_track_routing.from_str(f_handle.read())
+        else:
+            return pydaw_track_routing()
+
     def get_audio_region_string(self, a_region_uid):
         f_file = open(
             "{}/{}".format(self.regions_audio_folder, a_region_uid), "r")
@@ -2126,16 +2134,15 @@ class pydaw_track:
             self.track_pos, self.name))))
 
 class pydaw_track_plugin:
-    def __init__(self, a_type, a_index, a_plugin_index, a_plugin_uid):
+    def __init__(self, a_type, a_index, a_plugin_index, a_plugin_uid,
+                 a_mute=0, a_solo=0, a_power=1):
         self.type = int(a_type)
         self.index = int(a_index)
         self.plugin_index = int(a_plugin_index)
         self.plugin_uid = int(a_plugin_uid)
-        self.mute = 0
-        self.solo = 0
-        self.power = 0
-        self.channels = 2
-        # TODO^^^^:  configurable
+        self.mute = int(a_mute)
+        self.solo = int(a_solo)
+        self.power = int(a_power)
 
     def __str__(self):
         return "|".join(str(x) for x in
@@ -2156,14 +2163,38 @@ class pydaw_track_send:
             ("s", self.index, self.output, self.vol))
 
 class pydaw_track_routing:
-    def __init__(self):
-        self.instruments = []
-        self.effects = []
-        self.sends = []
+    def __init__(self, a_instruments=[], a_effects=[], a_sends=[]):
+        self.instruments = a_instruments
+        self.effects = a_effects
+        self.sends = a_sends
 
     def __str__(self):
-        return "{}\\".format("\n".join(str(x) for x in
-            self.instruments + self.effects + self.sends))
+        return "\n".join(str(x) for x in
+            self.instruments + self.effects +
+            self.sends + [pydaw_terminating_char])
+
+    @staticmethod
+    def from_str(a_str):
+        f_result = pydaw_track_routing()
+        f_str = str(a_str)
+        for f_line in f_str.split():
+            if f_line == pydaw_terminating_char:
+                break
+            f_line_arr = f_line.split("|")
+            if f_line_arr[0] == "p":
+                if int(f_line_arr[1]) == 0:
+                    f_result.instruments.append(
+                        pydaw_track_plugin(*f_line_arr[1:]))
+                elif int(f_line_arr[1]) == 1:
+                    f_result.effects.append(
+                        pydaw_track_plugin(*f_line_arr[1:]))
+                else:
+                    assert(False)
+            elif f_line_arr[0] == "s":
+                f_result.sends.append(pydaw_track_send(*f_line_arr[1:]))
+            else:
+                assert(False)
+        return f_result
 
 class pydaw_audio_region:
     def __init__(self):

@@ -7509,8 +7509,10 @@ class plugin_settings:
     instrument = 0
     effect = 1
     def __init__(self, a_index, a_track_num,
-                 a_layout, a_type, a_save_callback):
+                 a_layout, a_type, a_save_callback, a_name_callback):
+        self.suppress_osc = False
         self.save_callback = a_save_callback
+        self.name_callback = a_name_callback
         self.plugin_uid = -1
         self.type = a_type
         self.track_num = a_track_num
@@ -7533,12 +7535,10 @@ class plugin_settings:
         self.ui_button.setFixedWidth(24)
         a_layout.addWidget(self.ui_button, a_index + 1, f_offset + 1)
 
-    @staticmethod
-    def from_value(a_val, a_track_num, a_layout):
-        f_result = plugin_settings(
-            a_val.index, a_track_num, a_layout, a_val.type)
-        f_result.plugin_combobox.setCurrentIndex(a_val.plugin_index)
-        return f_result
+    def set_value(self, a_val):
+        self.suppress_osc = True
+        self.plugin_combobox.setCurrentIndex(a_val.plugin_index)
+        self.suppress_osc = False
 
     def get_value(self):
         return pydaw_track_plugin(
@@ -7546,6 +7546,8 @@ class plugin_settings:
             self.plugin_uid)
 
     def on_plugin_change(self, a_val):
+        if self.suppress_osc:
+            return
         if a_val == 0:
             self.plugin_uid = -1
         else:
@@ -7563,8 +7565,8 @@ class plugin_settings:
         if f_index == 0 or self.plugin_uid == -1:
             return
         global_open_plugin_ui(
-            self.plugin_uid, self.type, f_index, "Track:  TODO")
-            #_("Track: {}").format(self.track_name_lineedit.text()))
+            self.plugin_uid, self.type, f_index,
+            "Track:  {}".format(self.name_callback()))
 
 
 class track_send:
@@ -7619,14 +7621,14 @@ class track_send:
 
     def get_value(self):
         return pydaw_track_send(
-            self.index, self.bus_combobox.currentIndex(),
+            self.index, self.bus_combobox.currentIndex() - 1,
             round(self.vol_slider.value()))
 
-    @staticmethod
-    def from_value(a_val, a_track_num, a_layout):
-        f_result = track_send(a_val.index, a_track_num, a_layout)
-        f_result.set_vol(a_val.vol)
-        f_result.bus_combobox.setCurrentIndex(a_val.output)
+    def set_value(self, a_val):
+        self.suppress_osc = True
+        self.set_vol(a_val.vol)
+        self.bus_combobox.setCurrentIndex(a_val.output)
+        self.suppress_osc = False
 
 class seq_track:
     def on_solo(self, value):
@@ -7695,7 +7697,8 @@ class seq_track:
         for f_i in range(5):
             f_plugin = plugin_settings(
                 f_i, self.track_number, self.menu_gridlayout,
-                plugin_settings.instrument, self.save_callback)
+                plugin_settings.instrument, self.save_callback,
+                self.name_callback)
             self.instruments.append(f_plugin)
         self.menu_gridlayout.addWidget(
             QtGui.QLabel(_("Effects")), 0, 10)
@@ -7703,16 +7706,18 @@ class seq_track:
         for f_i in range(10):
             f_plugin = plugin_settings(
                 f_i, self.track_number, self.menu_gridlayout,
-                plugin_settings.effect, self.save_callback)
+                plugin_settings.effect, self.save_callback,
+                self.name_callback)
             self.effects.append(f_plugin)
-        self.menu_gridlayout.addWidget(
-            QtGui.QLabel(_("Sends")), 0, 20)
         self.sends = []
-        for f_i in range(4):
-            f_send = track_send(
-                f_i, self.track_number, self.menu_gridlayout,
-                self.save_callback)
-            self.sends.append(f_send)
+        if self.track_number != 0:
+            self.menu_gridlayout.addWidget(
+                QtGui.QLabel(_("Sends")), 0, 20)
+            for f_i in range(4):
+                f_send = track_send(
+                    f_i, self.track_number, self.menu_gridlayout,
+                    self.save_callback)
+                self.sends.append(f_send)
         self.action_widget = QtGui.QWidgetAction(self.button_menu)
         self.action_widget.setDefaultWidget(self.menu_widget)
         self.button_menu.addAction(self.action_widget)
@@ -7727,13 +7732,17 @@ class seq_track:
         self.suppress_osc = False
 
     def save_callback(self):
-        f_result = "\n".join(str(x.get_value()) for x in
-            self.instruments + self.effects + self.sends)
-        f_result += "\\"
+        f_result = pydaw_track_routing(
+            [x.get_value() for x in self.instruments],
+            [x.get_value() for x in self.effects],
+            [x.get_value() for x in self.sends])
         PROJECT.save_track_routing(self.track_number, f_result)
         PROJECT.commit(
             "Update track routing for '{}', {}".format(
-            self.track_name_lineedit.text(), self.track_number))
+            self.name_callback(), self.track_number))
+
+    def name_callback(self):
+        return str(self.track_name_lineedit.text())
 
     def open_track(self, a_track, a_notify_osc=False):
         if not a_notify_osc:
@@ -7741,8 +7750,13 @@ class seq_track:
         self.track_name_lineedit.setText(a_track.name)
         self.solo_checkbox.setChecked(a_track.solo)
         self.mute_checkbox.setChecked(a_track.mute)
-        #self.instrument_combobox.setCurrentIndex(a_track.inst)
-        #self.bus_combobox.setCurrentIndex(a_track.bus_num)
+        f_routing = PROJECT.get_track_routing(self.track_number)
+        for f_plugin in f_routing.instruments:
+            self.instruments[f_plugin.index].set_value(f_plugin)
+        for f_plugin in f_routing.effects:
+            self.effects[f_plugin.index].set_value(f_plugin)
+        for f_send in f_routing.sends:
+            self.sends[f_send.index].set_value(f_send)
         self.suppress_osc = False
 
     def get_track(self):
@@ -8255,7 +8269,7 @@ PLUGIN_UI_TYPES = {
 
 def global_open_plugin_ui(a_plugin_uid, a_type, a_plugin_type, a_title):
     if not a_plugin_uid in PLUGIN_UI_DICT:
-        f_plugin = FX_UI_TYPES[a_type][a_plugin_type](
+        f_plugin = PLUGIN_UI_TYPES[a_type][a_plugin_type](
             global_plugin_rel_callback, global_plugin_val_callback,
             PROJECT, PROJECT.plugin_pool_folder, a_plugin_uid,
             a_title, MAIN_WINDOW.styleSheet(),
