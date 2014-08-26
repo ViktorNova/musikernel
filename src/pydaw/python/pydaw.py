@@ -7751,6 +7751,8 @@ class seq_track:
         self.solo_checkbox.setChecked(a_track.solo)
         self.mute_checkbox.setChecked(a_track.mute)
         f_routing = PROJECT.get_track_routing(self.track_number)
+        if not f_routing:
+            return
         for f_plugin in f_routing.instruments:
             self.instruments[f_plugin.index].set_value(f_plugin)
         for f_plugin in f_routing.effects:

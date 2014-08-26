@@ -842,7 +842,7 @@ class pydaw_project:
             with open(f_path) as f_handle:
                 return pydaw_track_routing.from_str(f_handle.read())
         else:
-            return pydaw_track_routing()
+            return None
 
     def get_audio_region_string(self, a_region_uid):
         f_file = open(
