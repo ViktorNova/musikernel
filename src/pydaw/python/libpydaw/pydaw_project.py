@@ -2098,9 +2098,7 @@ class pydaw_tracks:
         self.tracks = {}
 
     def __str__(self):
-        f_result = ""
-        for k, v in list(self.tracks.items()):
-            f_result += "{}|{}".format(k, v)
+        f_result = "".join(str(self.tracks[k]) for k in sorted(self.tracks))
         f_result += pydaw_terminating_char
         return f_result
 
