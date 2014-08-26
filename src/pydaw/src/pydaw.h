@@ -362,7 +362,6 @@ void v_pydaw_set_is_soloed(t_pydaw_data * self);
 void v_set_loop_mode(t_pydaw_data * self, int a_mode);
 void v_set_playback_cursor(t_pydaw_data * self, int a_region,
                            int a_bar);
-int i_pydaw_get_item_index_from_uid(t_pydaw_data *, int);
 void v_pydaw_assert_memory_integrity(t_pydaw_data* self);
 int i_get_song_index_from_region_uid(t_pydaw_data*, int);
 void v_save_pysong_to_disk(t_pydaw_data * self);
@@ -3289,25 +3288,6 @@ void g_pysong_get(t_pydaw_data* self, int a_lock)
 
 }
 
-int i_pydaw_get_item_index_from_uid(t_pydaw_data * self, int a_uid)
-{
-    int f_i = 0;
-
-    while(f_i < self->item_count)
-    {
-        // TODO:  Remove this now that recording is UI-side
-        //Accounting for recorded items that aren't named yet
-        if(self->item_pool[f_i]->uid)
-        {
-            if(a_uid == self->item_pool[f_i]->uid)
-            {
-                return f_i;
-            }
-        }
-        f_i++;
-    }
-    return -1;
-}
 
 int i_get_song_index_from_region_uid(t_pydaw_data* self, int a_uid)
 {
@@ -3420,10 +3400,8 @@ t_pyregion * g_pyregion_get(t_pydaw_data* self, int a_uid)
         char * f_item_uid = c_iterate_2d_char_array(f_current_string);
         assert(f_y < PYDAW_TRACK_COUNT_ALL);
         assert(f_x < PYDAW_MAX_REGION_SIZE);
-        f_result->item_indexes[f_y][f_x] =
-                i_pydaw_get_item_index_from_uid(self, atoi(f_item_uid));
-        assert((f_result->item_indexes[f_y][f_x]) != -1);
-        assert((f_result->item_indexes[f_y][f_x]) < self->item_count);
+        f_result->item_indexes[f_y][f_x] = atoi(f_item_uid);
+        assert(self->item_pool[f_result->item_indexes[f_y][f_x]]);
         free(f_item_uid);
 
         f_i++;
@@ -3515,7 +3493,7 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
 
     g_free_2d_char_array(f_current_string);
 
-    int f_item_index = i_pydaw_get_item_index_from_uid(self, a_uid);
+    int f_item_index = a_uid;
 
     if(f_item_index < 0)
     {
@@ -3854,8 +3832,6 @@ void v_pydaw_open_track(t_pydaw_data * self, int a_index)
         printf("%s does not exist, not loading anything for track %i\n",
             f_file_name, a_index);
     }
-
-    assert(0);
 }
 
 
