@@ -7622,7 +7622,7 @@ class track_send:
     def set_value(self, a_val):
         self.suppress_osc = True
         self.set_vol(a_val.vol)
-        self.bus_combobox.setCurrentIndex(a_val.output)
+        self.bus_combobox.setCurrentIndex(a_val.output + 1)
         self.suppress_osc = False
 
 class seq_track:
