@@ -2109,7 +2109,7 @@ class pydaw_tracks:
         for f_line in f_arr:
             if not f_line == pydaw_terminating_char:
                 f_line_arr = f_line.split("|")
-                f_result.add_track(f_line_arr[0], pydaw_track(*f_line_arr[1:]))
+                f_result.add_track(f_line_arr[0], pydaw_track(*f_line_arr))
         return f_result
 
 class pydaw_track:

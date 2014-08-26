@@ -856,7 +856,7 @@ class region_list_editor:
         self.tracks = []
         for i in range(0, self.track_count):
             track = seq_track(
-                a_track_num=i, a_track_text=_("track{}").format(i + 1))
+                a_track_num=i, a_track_text=_("track{}").format(i))
             self.tracks.append(track)
             self.table_widget.setCellWidget(i, 0, track.group_box)
         self.table_widget.setColumnWidth(0, 150)
@@ -7626,37 +7626,6 @@ class track_send:
         self.suppress_osc = False
 
 class seq_track:
-    def on_solo(self, value):
-        if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_solo(
-                self.track_number, self.solo_checkbox.isChecked(), 0)
-            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-            PROJECT.commit(_("Set solo for track {} to {}").format(
-                self.track_number, self.solo_checkbox.isChecked()))
-
-    def on_mute(self, value):
-        if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_mute(
-                self.track_number, self.mute_checkbox.isChecked(), 0)
-            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-            PROJECT.commit(_("Set mute for track {} to {}").format(
-                self.track_number, self.mute_checkbox.isChecked()))
-
-    def on_name_changed(self):
-        self.track_name_lineedit.setText(
-            pydaw_remove_bad_chars(self.track_name_lineedit.text()))
-        PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
-        PROJECT.commit(
-            _("Set name for track {} to {}").format(self.track_number,
-            self.track_name_lineedit.text()))
-        global_inst_set_window_title(self.track_number,
-            _("Track: {}").format(self.track_name_lineedit.text()))
-        global_fx_set_window_title(0, self.track_number,
-            _("Track: {}").format(self.track_name_lineedit.text()))
-
-    def context_menu_event(self, a_event=None):
-        pass
-
     def __init__(self, a_track_num, a_track_text=_("track")):
         self.suppress_osc = True
         self.track_number = a_track_num
@@ -7671,7 +7640,11 @@ class seq_track:
         self.main_hlayout.addWidget(self.peak_meter.widget)
         self.group_box.setLayout(self.main_hlayout)
         self.track_name_lineedit = QtGui.QLineEdit()
-        self.track_name_lineedit.setText(a_track_text)
+        if a_track_num == 0:
+            self.track_name_lineedit.setText("Master")
+            self.track_name_lineedit.setDisabled(True)
+        else:
+            self.track_name_lineedit.setText(a_track_text)
         self.track_name_lineedit.setMaxLength(48)
         self.track_name_lineedit.editingFinished.connect(self.on_name_changed)
         self.main_vlayout.addWidget(self.track_name_lineedit)
@@ -7725,6 +7698,37 @@ class seq_track:
         self.mute_checkbox.setObjectName("mute_checkbox")
         self.hlayout3.addWidget(self.mute_checkbox)
         self.suppress_osc = False
+
+    def on_solo(self, value):
+        if not self.suppress_osc:
+            PROJECT.this_pydaw_osc.pydaw_set_solo(
+                self.track_number, self.solo_checkbox.isChecked(), 0)
+            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+            PROJECT.commit(_("Set solo for track {} to {}").format(
+                self.track_number, self.solo_checkbox.isChecked()))
+
+    def on_mute(self, value):
+        if not self.suppress_osc:
+            PROJECT.this_pydaw_osc.pydaw_set_mute(
+                self.track_number, self.mute_checkbox.isChecked(), 0)
+            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+            PROJECT.commit(_("Set mute for track {} to {}").format(
+                self.track_number, self.mute_checkbox.isChecked()))
+
+    def on_name_changed(self):
+        self.track_name_lineedit.setText(
+            pydaw_remove_bad_chars(self.track_name_lineedit.text()))
+        PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+        PROJECT.commit(
+            _("Set name for track {} to {}").format(self.track_number,
+            self.track_name_lineedit.text()))
+        global_inst_set_window_title(self.track_number,
+            _("Track: {}").format(self.track_name_lineedit.text()))
+        global_fx_set_window_title(0, self.track_number,
+            _("Track: {}").format(self.track_name_lineedit.text()))
+
+    def context_menu_event(self, a_event=None):
+        pass
 
     def save_callback(self):
         f_result = pydaw_track_routing(
