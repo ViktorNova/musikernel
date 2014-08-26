@@ -3937,14 +3937,12 @@ class pydaw_per_audio_item_fx_widget:
                 f_knob.set_value(64)
 
 class pydaw_abstract_plugin_ui:
-    def __init__(self, a_rel_callback, a_val_callback,
-                 a_project, a_plugin_uid, a_stylesheet,
+    def __init__(self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
                  a_configure_callback, a_folder, a_can_resize=False):
         self.plugin_uid = int(a_plugin_uid)
         self.folder = str(a_folder)
         self.can_resize = a_can_resize
         self.pydaw_project = a_project
-        self.rel_callback = a_rel_callback
         self.val_callback = a_val_callback
         self.configure_callback = a_configure_callback
         self.widget = QtGui.QScrollArea()
@@ -4046,7 +4044,10 @@ class pydaw_abstract_plugin_ui:
         #QtGui.QWidget.closeEvent(self.widget, a_event)
 
     def plugin_rel_callback(self, a_port, a_val):
-        self.rel_callback(self.plugin_uid, a_port, a_val)
+        """ This can optionally be implemented, otherwise it's
+            just ignored
+        """
+        pass
 
     def plugin_val_callback(self, a_port, a_val):
         self.val_callback(self.plugin_uid, a_port, a_val)
@@ -4089,11 +4090,11 @@ class pydaw_abstract_plugin_ui:
 
 
 class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
-    def __init__(self, a_rel_callback, a_val_callback, a_project,
+    def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name, a_stylesheet,
                  a_configure_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_rel_callback, a_val_callback, a_project,
+            self, a_val_callback, a_project,
             a_plugin_uid, a_stylesheet, a_configure_callback, a_folder)
         self._plugin_name = "MODULEX"
         self.set_window_title(a_track_name)
@@ -4375,11 +4376,11 @@ class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
 
 
 class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
-    def __init__(self, a_rel_callback, a_val_callback, a_project,
+    def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name,
                  a_stylesheet, a_configure_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_rel_callback, a_val_callback, a_project,
+            self, a_val_callback, a_project,
             a_plugin_uid, a_stylesheet, a_configure_callback, a_folder)
         self._plugin_name = "RAYV"
         self.set_window_title(a_track_name)
@@ -4554,11 +4555,11 @@ class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
 
 
 class pydaw_wayv_plugin_ui(pydaw_abstract_plugin_ui):
-    def __init__(self, a_rel_callback, a_val_callback, a_project,
+    def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name, a_stylesheet,
                  a_configure_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_rel_callback, a_val_callback, a_project,
+            self, a_val_callback, a_project,
             a_plugin_uid, a_stylesheet, a_configure_callback, a_folder)
         self._plugin_name = "WAYV"
         self.set_window_title(a_track_name)
@@ -5203,11 +5204,11 @@ SMP_TB_INTERPOLATION_MODE_INDEX = 11
 EUPHORIA_INSTRUMENT_CLIPBOARD = None
 
 class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
-    def __init__(self, a_rel_callback, a_val_callback,
+    def __init__(self, a_val_callback,
                  a_project, a_folder, a_plugin_uid, a_track_name,
                  a_stylesheet, a_configure_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_rel_callback, a_val_callback,
+            self, a_val_callback,
             a_project, a_plugin_uid, a_stylesheet,
             a_configure_callback, a_folder, a_can_resize=True)
         self.set_window_title(a_track_name)
