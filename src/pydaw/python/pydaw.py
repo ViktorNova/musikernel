@@ -7538,6 +7538,7 @@ class plugin_settings:
     def set_value(self, a_val):
         self.suppress_osc = True
         self.plugin_combobox.setCurrentIndex(a_val.plugin_index)
+        self.plugin_uid = a_val.plugin_uid
         self.suppress_osc = False
 
     def get_value(self):
