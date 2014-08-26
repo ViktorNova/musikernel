@@ -1357,6 +1357,13 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         }
 
         f_bus_num = f_route->output;
+
+        if(f_bus_num < 0)
+        {
+            f_i3++;
+            continue;
+        }
+
         f_bus = self->track_pool_all[f_bus_num];
         f_buff = f_bus->buffers;
 
@@ -4756,6 +4763,10 @@ void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
                     a_plugin_index, g_pydaw_wavpool_item_get,
                     f_track->track_num, v_queue_osc_message);
             self->plugin_pool[a_plugin_uid] = f_plugin;
+            f_plugin->descriptor->connect_buffer(
+                f_plugin->PYFX_handle, 0, f_track->buffers[0]);
+            f_plugin->descriptor->connect_buffer(
+                f_plugin->PYFX_handle, 1, f_track->buffers[1]);
 
             char f_file_name[1024];
             sprintf(f_file_name, "%s%i", self->plugins_folder, a_plugin_uid);
