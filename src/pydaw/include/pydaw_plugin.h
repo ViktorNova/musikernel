@@ -101,7 +101,7 @@ typedef struct _PYFX_Descriptor {
 
     PYFX_Handle (*instantiate)(struct _PYFX_Descriptor * Descriptor,
         int SampleRate, fp_get_wavpool_item_from_host a_host_wavpool_func,
-        int a_track_num, fp_queue_message);
+        int a_plugin_uid, fp_queue_message);
 
     void (*connect_port)(PYFX_Handle Instance, int Port,
         PYFX_Data * DataLocation);

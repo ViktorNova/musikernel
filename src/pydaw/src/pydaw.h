@@ -1243,7 +1243,7 @@ inline void v_queue_osc_message(char * a_key, char * a_val)
 
 void v_pydaw_set_control_from_cc(t_pydaw_plugin *instance, int controlIn,
         t_pydaw_seq_event *event, t_pydaw_data * self,
-        int a_is_inst, int a_track_num)
+        int a_plugin_uid, int a_track_num)
 {
     t_pytrack * f_track = self->track_pool_all[a_track_num];
     float f_lb = instance->descriptor->
@@ -1256,8 +1256,8 @@ void v_pydaw_set_control_from_cc(t_pydaw_plugin *instance, int controlIn,
     event->port = controlIn;
     if(!self->is_offline_rendering)
     {
-        sprintf(f_track->osc_cursor_message, "%i|%i|%i|%f",
-                a_is_inst, a_track_num, controlIn, event->value);
+        sprintf(f_track->osc_cursor_message, "%i|%i|%f",
+                a_plugin_uid, controlIn, event->value);
         v_queue_osc_message("pc", f_track->osc_cursor_message);
     }
 }
@@ -4767,7 +4767,7 @@ void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
         {
             f_plugin = g_pydaw_plugin_get((int)(self->sample_rate),
                     a_plugin_index, a_type, g_pydaw_wavpool_item_get,
-                    f_track->track_num, v_queue_osc_message);
+                    a_plugin_uid, v_queue_osc_message);
             self->plugin_pool[a_plugin_uid] = f_plugin;
             f_plugin->descriptor->connect_buffer(
                 f_plugin->PYFX_handle, 0, f_track->buffers[0]);

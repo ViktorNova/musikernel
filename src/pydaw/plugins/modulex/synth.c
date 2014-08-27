@@ -204,18 +204,18 @@ static void v_modulex_connect_port(PYFX_Handle instance, int port,
 
 static PYFX_Handle g_modulex_instantiate(PYFX_Descriptor * descriptor,
         int s_rate, fp_get_wavpool_item_from_host a_host_wavpool_func,
-        int a_track_num, fp_queue_message a_queue_func)
+        int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_modulex *plugin_data = (t_modulex*)malloc(sizeof(t_modulex));
 
     plugin_data->fs = s_rate;
-    plugin_data->track_num = a_track_num;
+    plugin_data->plugin_uid = a_plugin_uid;
     plugin_data->queue_func = a_queue_func;
 
     plugin_data->sv_pitch_bend_value = 0.0f;
 
     plugin_data->mono_modules =
-            v_modulex_mono_init(plugin_data->fs, plugin_data->track_num);
+            v_modulex_mono_init(plugin_data->fs, plugin_data->plugin_uid);
 
     plugin_data->i_slow_index =
             MODULEX_SLOW_INDEX_ITERATIONS + MODULEX_AMORITIZER;

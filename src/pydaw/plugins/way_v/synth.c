@@ -634,7 +634,7 @@ static void v_wayv_connect_port(PYFX_Handle instance, int port,
 
 static PYFX_Handle g_wayv_instantiate(PYFX_Descriptor * descriptor,
             int s_rate, fp_get_wavpool_item_from_host a_host_wavpool_func,
-            int a_track_num, fp_queue_message a_queue_func)
+            int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_wayv *plugin_data = (t_wayv *) malloc(sizeof(t_wayv));
     plugin_data->fs = s_rate;

@@ -35,8 +35,7 @@ extern "C" {
 #endif
 
 typedef struct {
-    int track_num;
-    int is_inst;
+    int plugin_uid;
     float * buffer;
     int buf_pos;
     fftw_complex *output;
@@ -53,8 +52,8 @@ typedef struct {
 }
 #endif
 
-t_spa_spectrum_analyzer * g_spa_spectrum_analyzer_get(int a_sample_count,
-        int a_track_num, int a_is_inst)
+t_spa_spectrum_analyzer * g_spa_spectrum_analyzer_get(
+    int a_sample_count, int a_plugin_uid)
 {
     t_spa_spectrum_analyzer * f_result =
             (t_spa_spectrum_analyzer*)malloc(sizeof(t_spa_spectrum_analyzer));
@@ -62,8 +61,7 @@ t_spa_spectrum_analyzer * g_spa_spectrum_analyzer_get(int a_sample_count,
 
     lmalloc((void**)&f_result->buffer, sizeof(float) * a_sample_count);
 
-    f_result->is_inst = a_is_inst;
-    f_result->track_num = a_track_num;
+    f_result->plugin_uid = a_plugin_uid;
     f_result->buf_pos = 0;
     f_result->samples_count = a_sample_count;
     f_result->samples_count_div2 = a_sample_count / 2;
@@ -100,8 +98,8 @@ void v_spa_compute_fft(t_spa_spectrum_analyzer *a_spa)
 
     fftw_execute(a_spa->plan);
 
-    sprintf(a_spa->str_buf, "%i|%i|spectrum|%f", a_spa->is_inst,
-            a_spa->track_num, cabs(a_spa->output[0]));
+    sprintf(a_spa->str_buf, "%i|spectrum|%f",
+            a_spa->plugin_uid, cabs(a_spa->output[0]));
 
     while(f_i < a_spa->samples_count_div2)
     {

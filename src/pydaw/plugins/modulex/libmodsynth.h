@@ -72,7 +72,7 @@ typedef struct
 
 t_modulex_mono_modules * v_modulex_mono_init(float, int);
 
-t_modulex_mono_modules * v_modulex_mono_init(float a_sr, int a_track_num)
+t_modulex_mono_modules * v_modulex_mono_init(float a_sr, int a_plugin_uid)
 {
     t_modulex_mono_modules * a_mono =
             (t_modulex_mono_modules*)malloc(sizeof(t_modulex_mono_modules));
@@ -130,7 +130,7 @@ t_modulex_mono_modules * v_modulex_mono_init(float a_sr, int a_track_num)
     a_mono->vol_linear = 1.0f;
 
     a_mono->spectrum_analyzer =
-            g_spa_spectrum_analyzer_get(4096, a_track_num, 0);
+            g_spa_spectrum_analyzer_get(4096, a_plugin_uid);
 
     a_mono->gate = g_gat_get(a_sr);
     a_mono->gate_on = 0.0f;

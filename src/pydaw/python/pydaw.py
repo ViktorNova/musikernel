@@ -9365,11 +9365,8 @@ class pydaw_main_window(QtGui.QMainWindow):
                 break
             a_key, a_val = f_line.split("|", 1)
             if a_key == "pc":
-                f_is_inst, f_track_num, f_port, f_val = a_val.split("|")
-                f_track_type, f_track_num = track_all_to_type_and_index(
-                    f_track_num)
-                f_pc_dict[
-                    (f_track_type, f_is_inst, f_track_num, f_port)] = f_val
+                f_plugin_uid, f_port, f_val = a_val.split("|")
+                f_pc_dict[(f_plugin_uid, f_port)] = f_val
             elif a_key == "cur":
                 if IS_PLAYING:
                     f_region, f_bar, f_beat = a_val.split("|")
@@ -9378,8 +9375,8 @@ class pydaw_main_window(QtGui.QMainWindow):
             elif a_key == "peak":
                 global_update_peak_meters(a_val)
             elif a_key == "ui":
-                f_is_inst, f_track_num, f_name, f_val = a_val.split("|", 3)
-                f_ui_dict[(f_is_inst, f_track_num, f_name)] = f_val
+                f_plugin_uid, f_name, f_val = a_val.split("|", 2)
+                f_ui_dict[(f_plugin_uid, f_name)] = f_val
             elif a_key == "mrec":
                 MREC_EVENTS.append(a_val)
             elif a_key == "ne":
@@ -9397,28 +9394,15 @@ class pydaw_main_window(QtGui.QMainWindow):
         #This prevents multiple events from moving the same control,
         #only the last goes through
         for k, f_val in f_ui_dict.items():
-            f_is_inst, f_track_num, f_name = k
-            f_track_type, f_track_num = track_all_to_type_and_index(
-                f_track_num)
-            if int_to_bool(f_is_inst):
-                if int(f_track_num) in OPEN_INST_UI_DICT:
-                    OPEN_INST_UI_DICT[int(f_track_num)].ui_message(
-                        f_name, f_val)
-            else:
-                if int(f_track_num) in OPEN_FX_UI_DICTS[int(f_track_type)]:
-                    OPEN_FX_UI_DICTS[int(f_track_type)][
-                        int(f_track_num)].ui_message(f_name, f_val)
+            f_plugin_uid, f_name = k
+            if int(f_plugin_uid) in PLUGIN_UI_DICT:
+                PLUGIN_UI_DICT[int(f_plugin_uid)].ui_message(
+                    f_name, f_val)
         for k, f_val in f_pc_dict.items():
-            f_track_type, f_is_inst, f_track_num, f_port = k
-            if int_to_bool(f_is_inst):
-                if int(f_track_num) in OPEN_INST_UI_DICT:
-                    OPEN_INST_UI_DICT[int(f_track_num)].set_control_val(
-                        int(f_port), float(f_val))
-            else:
-                if int(f_track_num) in OPEN_FX_UI_DICTS[int(f_track_type)]:
-                    OPEN_FX_UI_DICTS[int(f_track_type)][
-                        int(f_track_num)].set_control_val(
-                            int(f_port), float(f_val))
+            f_plugin_uid, f_port = k
+            if int(f_plugin_uid) in PLUGIN_UI_DICT:
+                PLUGIN_UI_DICT[int(f_plugin_uid)].set_control_val(
+                    int(f_port), float(f_val))
 
 
     def closeEvent(self, event):

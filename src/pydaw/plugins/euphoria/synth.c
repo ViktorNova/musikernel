@@ -471,7 +471,7 @@ static void v_euphoria_set_port_value(PYFX_Handle Instance,
 static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
         int s_rate,
         fp_get_wavpool_item_from_host a_host_wavpool_func,
-        int a_track_num, fp_queue_message a_queue_func)
+        int a_plugin_uid, fp_queue_message a_queue_func)
 {
     wavpool_get_func = a_host_wavpool_func;
     t_euphoria *plugin_data;
@@ -484,7 +484,7 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
     plugin_data->voices = g_voc_get_voices(EUPHORIA_POLYPHONY,
             EUPHORIA_POLYPHONY_THRESH);
 
-    plugin_data->track_num = a_track_num;
+    plugin_data->plugin_uid = a_plugin_uid;
 
     plugin_data->i_selected_sample = 0;
     plugin_data->current_sample = 0;

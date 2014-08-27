@@ -42,7 +42,7 @@ typedef struct
 
 t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index, int a_type,
         fp_get_wavpool_item_from_host a_host_wavpool_func,
-        int a_track_num, fp_queue_message a_queue_func)
+        int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_pydaw_plugin * f_result = (t_pydaw_plugin*)malloc(sizeof(t_pydaw_plugin));
 
@@ -87,7 +87,7 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index, int a_type,
 
     f_result->PYFX_handle = f_result->descriptor->instantiate(
             f_result->descriptor, a_sample_rate,
-            a_host_wavpool_func, a_track_num, a_queue_func);
+            a_host_wavpool_func, a_plugin_uid, a_queue_func);
 
     f_result->solo = 0;
     f_result->mute = 0;
