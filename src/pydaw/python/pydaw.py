@@ -7610,6 +7610,9 @@ class track_send:
     def on_vol_changed(self, a_val):
         f_val = self.get_vol()
         self.vol_label.setText("{}dB".format(f_val))
+        if not self.suppress_osc:
+            PROJECT.this_pydaw_osc.pydaw_send_vol(
+                self.track_num, self.index, self.get_vol())
 
     def on_vol_released(self):
         self.update_engine()
@@ -7620,7 +7623,7 @@ class track_send:
     def get_value(self):
         return pydaw_track_send(
             self.index, self.bus_combobox.currentIndex() - 1,
-            round(self.vol_slider.value()))
+            round(self.get_vol()))
 
     def set_value(self, a_val):
         self.suppress_osc = True

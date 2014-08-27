@@ -117,6 +117,7 @@ GNU General Public License for more details.
 
 #define PYDAW_CONFIGURE_KEY_PLUGIN_INDEX "pi"
 #define PYDAW_CONFIGURE_KEY_UPDATE_SEND "ts"
+#define PYDAW_CONFIGURE_KEY_SEND_VOL "sv"
 
 //low-level MIDI stuff
 #define MIDI_NOTE_OFF       0x80
@@ -1581,6 +1582,19 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
 
         v_pydaw_update_track_send(self, f_track_num, f_index,
             f_output, f_vol, 1);
+
+
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SEND_VOL))
+    {
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 3,
+                PYDAW_TINY_STRING);
+        int f_track_num = atoi(f_val_arr->array[0]);
+        int f_index = atoi(f_val_arr->array[1]);
+        int f_vol = atof(f_val_arr->array[2]);
+
+        v_pydaw_update_send_vol(self, f_track_num, f_index, f_vol);
 
 
         g_free_1d_char_array(f_val_arr);

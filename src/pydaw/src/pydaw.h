@@ -371,6 +371,8 @@ void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
         int a_plugin_uid, int a_lock);
 void v_pydaw_update_track_send(t_pydaw_data * self, int a_track_num,
         int a_index, int a_output_track, float a_vol, int a_lock);
+void v_pydaw_update_send_vol(t_pydaw_data * self, int a_track_num,
+        int a_index, float a_vol);
 inline void v_pydaw_update_ports(t_pydaw_plugin * a_plugin);
 void * v_pydaw_worker_thread(void*);
 void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
@@ -4824,7 +4826,7 @@ void v_pydaw_update_track_send(t_pydaw_data * self, int a_track_num,
     t_pytrack_routing * f_route = 0;
     t_pytrack_routing * f_route_old = f_track->routings[a_index];
 
-    if(a_index >= 0)
+    if(a_output_track >= 0)
     {
         f_route = g_pytrack_routing_get();
         v_pytrack_routing_set(f_route, a_output_track, a_vol);
@@ -4846,6 +4848,27 @@ void v_pydaw_update_track_send(t_pydaw_data * self, int a_track_num,
     {
         v_pytrack_routing_free(f_route_old);
     }
+}
+
+void v_pydaw_update_send_vol(t_pydaw_data * self, int a_track_num,
+        int a_index, float a_vol)
+{
+    t_pytrack * f_track = self->track_pool_all[a_track_num];
+    t_pytrack_routing * f_route = f_track->routings[a_index];
+
+    if(!f_route)
+    {
+        return;
+    }
+
+    float f_vol_lin = f_db_to_linear(a_vol, self->amp_ptr);
+
+    pthread_spin_lock(&self->main_lock);
+
+    f_route->volume = a_vol;
+    f_route->volume_lin = f_vol_lin;
+
+    pthread_spin_unlock(&self->main_lock);
 }
 
 t_pytrack_routing * g_pytrack_routing_get()
