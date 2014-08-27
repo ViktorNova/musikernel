@@ -16,7 +16,8 @@ PLAT_FLAGS     ?= -mstackrealign -msse -msse2 -msse3 -mfpmath=sse \
 
 BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
 -floop-optimize -fsingle-precision-constant -funroll-loops -Wall \
--Isrc -Iportaudio/include -fstrength-reduce -fstrict-aliasing -finline-functions
+-Isrc -Iportaudio/include -fstrength-reduce -fstrict-aliasing \
+-finline-functions
 
 
 BUILD_CFLAGS   = $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
@@ -33,7 +34,7 @@ all:
 
 debug:
 	rm *.o || true
-	make CFLAGS+=" -O0 -gdwarf-3 " $(PYDAW_FILE)
+	make CFLAGS+=" -O0 -gdwarf-3 -fstack-protector-all " $(PYDAW_FILE)
 	mv $(PYDAW_FILE) $(PYDAW_DBG)
 
 release:
