@@ -55,6 +55,7 @@ pydaw_folder_user = "user"
 pydaw_folder_plugins = "projects/plugins"
 pydaw_folder_tracks = "projects/tracks"
 
+pydaw_file_plugin_uid = "projects/plugin_uid.txt"
 pydaw_file_pyregions = "projects/edmnext/default.pyregions"
 pydaw_file_pyitems = "projects/edmnext/default.pyitems"
 pydaw_file_pysong = "projects/edmnext/default.pysong"
@@ -141,10 +142,16 @@ class pydaw_project:
         return f_result
 
     def get_next_plugin_uid(self):
-        f_list = [int(x) for x in os.listdir(self.plugin_pool_folder)]
-        if f_list:
-            return max(f_list) + 1
+        if os.path.isfile(self.plugin_uid_file):
+            with open(self.plugin_uid_file) as f_handle:
+                f_result = int(f_handle.read())
+            f_result += 1
+            with open(self.plugin_uid_file, "w") as f_handle:
+                f_handle.write(str(f_result))
+            return f_result
         else:
+            with open(self.plugin_uid_file, "w") as f_handle:
+                f_handle.write(str(0))
             return 0
 
     def flush_history(self):
@@ -219,6 +226,8 @@ class pydaw_project:
             self.project_folder, pydaw_file_notes)
         self.pywebm_file = "{}/{}".format(
             self.project_folder, pydaw_file_wave_editor_bookmarks)
+        self.plugin_uid_file = "{}/{}".format(
+            self.project_folder, pydaw_file_plugin_uid)
 
         pydaw_clear_sample_graph_cache()
 
