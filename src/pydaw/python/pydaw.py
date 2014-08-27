@@ -847,10 +847,13 @@ class region_list_editor:
         REGION_CLIPBOARD = []
 
     def open_tracks(self):
+        global TRACK_NAMES
         self.reset_tracks()
         f_tracks = PROJECT.get_tracks()
         for key, f_track in f_tracks.tracks.items():
             self.tracks[key].open_track(f_track)
+        TRACK_NAMES = [f_tracks.tracks[k].name
+            for k in sorted(f_tracks.tracks)]
 
     def reset_tracks(self):
         self.tracks = []
@@ -1719,16 +1722,16 @@ def global_tablewidget_to_region():
     PROJECT.commit(_("Edit region"))
 
 
-def global_update_audio_track_comboboxes(a_index=None, a_value=None):
+def global_update_track_comboboxes(a_index=None, a_value=None):
     if not a_index is None and not a_value is None:
-        AUDIO_TRACK_NAMES[int(a_index)] = str(a_value)
+        TRACK_NAMES[int(a_index)] = str(a_value)
     global SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES
     SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES = True
     for f_cbox in AUDIO_TRACK_COMBOBOXES:
         f_current_index = f_cbox.currentIndex()
         f_cbox.clear()
         f_cbox.clearEditText()
-        f_cbox.addItems(AUDIO_TRACK_NAMES)
+        f_cbox.addItems(TRACK_NAMES)
         f_cbox.setCurrentIndex(f_current_index)
 
     SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES = False
@@ -2345,7 +2348,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             for x in AUDIO_SEQ.get_selected()}
 
         for f_track_name, f_index in zip(
-        AUDIO_TRACK_NAMES, range(len(AUDIO_TRACK_NAMES))):
+        TRACK_NAMES, range(len(TRACK_NAMES))):
             f_action = f_output_menu.addAction(f_track_name)
             if len(f_output_tracks) == 1 and f_index in f_output_tracks:
                 f_action.setCheckable(True)
@@ -2418,8 +2421,8 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_set_all_output_menu = f_per_file_menu.addMenu("Audio Track")
         f_set_all_output_menu.triggered.connect(
             self.set_all_output_menu_triggered)
-        for f_track_name, f_index in zip(AUDIO_TRACK_NAMES,
-                                         range(len(AUDIO_TRACK_NAMES))):
+        for f_track_name, f_index in zip(
+        TRACK_NAMES, range(len(TRACK_NAMES))):
             f_action = f_set_all_output_menu.addAction(f_track_name)
             if f_index == self.audio_item.output_track:
                 f_action.setCheckable(True)
@@ -2454,7 +2457,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             TRANSPORT.tempo_spinbox.value())
 
     def output_menu_triggered(self, a_action):
-        f_index = AUDIO_TRACK_NAMES.index(str(a_action.text()))
+        f_index = TRACK_NAMES.index(str(a_action.text()))
         f_list = [x.audio_item for x in AUDIO_SEQ.audio_items
             if x.isSelected()]
         for f_item in f_list:
@@ -2519,7 +2522,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             self.audio_item.uid, f_paif_row)
 
     def set_all_output_menu_triggered(self, a_action):
-        f_index = AUDIO_TRACK_NAMES.index(str(a_action.text()))
+        f_index = TRACK_NAMES.index(str(a_action.text()))
         PROJECT.set_output_for_all_audio_items(
             self.audio_item.uid, f_index)
         global_open_audio_items()
@@ -4298,7 +4301,7 @@ class audio_item_editor_widget:
         global AUDIO_TRACK_COMBOBOXES
         AUDIO_TRACK_COMBOBOXES.append(self.output_combobox)
         self.output_combobox.setMinimumWidth(210)
-        self.output_combobox.addItems(AUDIO_TRACK_NAMES)
+        self.output_combobox.addItems(TRACK_NAMES)
         self.output_combobox.currentIndexChanged.connect(self.output_changed)
         self.output_hlayout.addWidget(self.output_combobox)
         self.vlayout2.addLayout(self.output_hlayout)
@@ -7716,13 +7719,16 @@ class seq_track:
                 self.track_number, self.mute_checkbox.isChecked()))
 
     def on_name_changed(self):
-        self.track_name_lineedit.setText(
-            pydaw_remove_bad_chars(self.track_name_lineedit.text()))
+        f_name = pydaw_remove_bad_chars(self.track_name_lineedit.text())
+        self.track_name_lineedit.setText(f_name)
+        global_update_track_comboboxes(self.track_number, f_name)
         PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
         PROJECT.commit(
             _("Set name for track {} to {}").format(self.track_number,
             self.track_name_lineedit.text()))
         f_routing = PROJECT.get_track_routing(self.track_number)
+        if not f_routing:
+            return
         for f_plugin in f_routing.instruments + f_routing.effects:
             global_plugin_set_window_title(
                 f_plugin.plugin_uid,
@@ -10428,7 +10434,7 @@ def global_open_project(a_project_file, a_wait=True):
     REGION_INST_EDITOR.open_tracks()
     TRANSPORT.open_transport()
     pydaw_util.set_file_setting("last-project", a_project_file)
-    global_update_audio_track_comboboxes()
+    global_update_track_comboboxes()
     set_window_title()
     PROJECT.suppress_updates = False
     f_scale = PROJECT.get_midi_scale()
@@ -10455,7 +10461,7 @@ def global_new_project(a_project_file, a_wait=True):
     PROJECT.save_song(SONG_EDITOR.song)
     TRANSPORT.open_transport()
     pydaw_util.set_file_setting("last-project", a_project_file)
-    global_update_audio_track_comboboxes()
+    global_update_track_comboboxes()
     set_window_title()
     MAIN_WINDOW.last_offline_dir = PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText("")
@@ -10480,7 +10486,8 @@ TIMESTRETCH_MODES = [_("None"), _("Pitch(affecting time)"),
 CRISPNESS_SETTINGS = [_("0 (smeared)"), _("1 (piano)"), "2", "3",
                       "4", "5 (normal)", _("6 (sharp, drums)")]
 
-AUDIO_TRACK_NAMES = ["track{}".format(x + 1) for x in range(TRACK_COUNT_ALL)]
+TRACK_NAMES = ["Master" if x == 0 else "track{}".format(x)
+    for x in range(TRACK_COUNT_ALL)]
 
 SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES = False
 AUDIO_TRACK_COMBOBOXES = []
