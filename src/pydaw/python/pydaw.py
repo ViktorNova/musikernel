@@ -7576,8 +7576,8 @@ class track_send:
         self.bus_combobox = QtGui.QComboBox()
         self.bus_combobox.setMinimumWidth(180)
         self.bus_combobox.wheelEvent = self.wheel_event
-        self.bus_combobox.addItems(['None', 'Master', '1', '2', '3', '4'])
         self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
+        self.update_names()
         a_layout.addWidget(self.bus_combobox, a_index + 1, 20)
         self.vol_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         a_layout.addWidget(self.vol_slider, a_index + 1, 21)
@@ -7628,6 +7628,15 @@ class track_send:
         self.bus_combobox.setCurrentIndex(a_val.output + 1)
         self.suppress_osc = False
 
+    def update_names(self):
+        f_index = pydaw_clip_min(self.bus_combobox.currentIndex(), 0)
+        # TODO^^^^^  Why does that do that?
+        self.suppress_osc = True
+        self.bus_combobox.clear()
+        self.bus_combobox.addItems(["None"] + TRACK_NAMES)
+        self.bus_combobox.setCurrentIndex(f_index)
+        self.suppress_osc = False
+
 class seq_track:
     def __init__(self, a_track_num, a_track_text=_("track")):
         self.suppress_osc = True
@@ -7658,6 +7667,7 @@ class seq_track:
         self.button_menu = QtGui.QMenu()
         self.menu_button.setMenu(self.button_menu)
         self.hlayout3.addWidget(self.menu_button)
+        self.button_menu.aboutToShow.connect(self.menu_button_pressed)
         self.menu_widget = QtGui.QWidget()
         self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
         self.menu_gridlayout = QtGui.QGridLayout()
@@ -7701,6 +7711,10 @@ class seq_track:
         self.mute_checkbox.setObjectName("mute_checkbox")
         self.hlayout3.addWidget(self.mute_checkbox)
         self.suppress_osc = False
+
+    def menu_button_pressed(self):
+        for f_send in self.sends:
+            f_send.update_names()
 
     def on_solo(self, value):
         if not self.suppress_osc:
