@@ -148,6 +148,7 @@ class pydaw_project:
             f_result += 1
             with open(self.plugin_uid_file, "w") as f_handle:
                 f_handle.write(str(f_result))
+            assert(f_result < 100000)
             return f_result
         else:
             with open(self.plugin_uid_file, "w") as f_handle:
