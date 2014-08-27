@@ -4766,7 +4766,7 @@ void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
         if(!f_plugin)
         {
             f_plugin = g_pydaw_plugin_get((int)(self->sample_rate),
-                    a_plugin_index, g_pydaw_wavpool_item_get,
+                    a_plugin_index, a_type, g_pydaw_wavpool_item_get,
                     f_track->track_num, v_queue_osc_message);
             self->plugin_pool[a_plugin_uid] = f_plugin;
             f_plugin->descriptor->connect_buffer(
