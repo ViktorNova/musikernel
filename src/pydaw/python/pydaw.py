@@ -7597,10 +7597,8 @@ class track_send:
     def update_engine(self):
         if not self.suppress_osc:
             f_graph = PROJECT.get_routing_graph()
-            print(f_graph)
             if not self.track_num in f_graph.graph:
                 f_graph.graph[self.track_num] = {}
-            print(f_graph.graph)
             f_graph.graph[self.track_num][self.index] = self.get_value()
             PROJECT.save_routing_graph(f_graph)
 
