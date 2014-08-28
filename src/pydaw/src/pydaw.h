@@ -1358,7 +1358,7 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 
         f_route = &self->routing_graph->routes[a_track->track_num][f_i3];
 
-        if(!f_route)
+        if(!f_route->active)
         {
             f_i3++;
             continue;
