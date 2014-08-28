@@ -56,6 +56,7 @@ pydaw_folder_plugins = "projects/plugins"
 pydaw_folder_tracks = "projects/tracks"
 
 pydaw_file_plugin_uid = "projects/plugin_uid.txt"
+pydaw_file_routing_graph = "projects/edmnext/routing.txt"
 pydaw_file_pyregions = "projects/edmnext/default.pyregions"
 pydaw_file_pyitems = "projects/edmnext/default.pyitems"
 pydaw_file_pysong = "projects/edmnext/default.pysong"
@@ -229,6 +230,8 @@ class pydaw_project:
             self.project_folder, pydaw_file_wave_editor_bookmarks)
         self.plugin_uid_file = "{}/{}".format(
             self.project_folder, pydaw_file_plugin_uid)
+        self.routing_graph_file = "{}/{}".format(
+            self.project_folder, pydaw_file_routing_graph)
 
         pydaw_clear_sample_graph_cache()
 
@@ -378,6 +381,17 @@ class pydaw_project:
 
     def save_regions_dict(self, a_uid_dict):
         self.save_file("", pydaw_file_pyregions, str(a_uid_dict))
+
+    def get_routing_graph(self):
+        if os.path.isfile(self.routing_graph_file):
+            with open(self.routing_graph_file) as f_handle:
+                return pydaw_routing_graph.from_str(f_handle.read())
+        else:
+            return pydaw_routing_graph()
+
+    def save_routing_graph(self, a_graph):
+        self.save_file("", pydaw_file_routing_graph, str(a_graph))
+        self.this_pydaw_osc.pydaw_update_track_send()
 
     def get_wavs_dict(self):
         try:
@@ -846,11 +860,11 @@ class pydaw_project:
     def get_tracks(self):
         return pydaw_tracks.from_str(self.get_tracks_string())
 
-    def get_track_routing(self, a_track_num):
+    def get_track_plugins(self, a_track_num):
         f_path = "{}/{}".format(self.track_pool_folder, a_track_num)
         if os.path.isfile(f_path):
             with open(f_path) as f_handle:
-                return pydaw_track_routing.from_str(f_handle.read())
+                return pydaw_track_plugins.from_str(f_handle.read())
         else:
             return None
 
@@ -1138,7 +1152,7 @@ class pydaw_project:
             self.save_file("", pydaw_file_pytracks, str(a_tracks))
             #Is there a need for a configure message here?
 
-    def save_track_routing(self, a_uid, a_track):
+    def save_track_plugins(self, a_uid, a_track):
         if not self.suppress_updates:
             self.save_file(pydaw_folder_tracks, str(a_uid), str(a_track))
 
@@ -2162,8 +2176,8 @@ class pydaw_routing_graph:
     def __init__(self):
         self.graph = {}
 
-    def set_node(self, a_index, a_list):
-        self.graph[int(a_index)] = a_list
+    def set_node(self, a_index, a_dict):
+        self.graph[int(a_index)] = a_dict
 
     def find_all_paths(self, start, path=[]):
         path = path + [start]
@@ -2172,7 +2186,7 @@ class pydaw_routing_graph:
         if not start in self.graph:
             return []
         paths = []
-        for node in (x.output for x in self.graph[start]):
+        for node in (x.output for x in sorted(self.graph[start].values())):
             if node not in path:
                 newpaths = self.find_all_paths(node, path)
                 for newpath in newpaths:
@@ -2192,14 +2206,14 @@ class pydaw_routing_graph:
     def __str__(self):
         f_result = []
         f_sorted = self.sort_all_paths()
+        f_result.append("|".join(str(x) for x in ("c", len(f_sorted))))
         for f_index, f_i in zip(f_sorted, range(len(f_sorted))):
             f_result.append("|".join(str(x) for x in ("t", f_index, f_i)))
         for k in sorted(self.graph):
-            for v in self.graph[k]:
+            for v in sorted(self.graph[k].values()):
                 f_result.append(str(v))
         f_result.append("\\")
         return "\n".join(f_result)
-
 
     @staticmethod
     def from_str(a_str):
@@ -2213,9 +2227,12 @@ class pydaw_routing_graph:
             f_uid = int(f_line_arr[1])
             if f_line_arr[0] == "t":
                 assert(f_uid not in f_tracks)
-                f_tracks[f_uid] = []
+                f_tracks[f_uid] = {}
             elif f_line_arr[0] == "s":
-                f_tracks[f_uid].append(pydaw_track_send(*f_line_arr[1:]))
+                f_send = pydaw_track_send(*f_line_arr[1:])
+                f_tracks[f_uid][f_send.index] = f_send
+            elif f_line_arr[0] == "c":
+                pass
             else:
                 assert(False)
         for k, v in f_tracks.items():
@@ -2226,29 +2243,31 @@ class pydaw_routing_graph:
 # one destination channel
 # EDIT:  Or that may not be efficient...
 class pydaw_track_send:
-    def __init__(self, a_index, a_output, a_vol):
+    def __init__(self, a_track_num, a_index, a_output, a_vol):
+        self.track_num = int(a_track_num)
         self.index = int(a_index)
         self.output = int(a_output)
         self.vol = float(a_vol)
 
     def __str__(self):
         return "|".join(str(x) for x in
-            ("s", self.index, self.output, self.vol))
+            ("s", self.track_num, self.index, self.output, self.vol))
 
-class pydaw_track_routing:
-    def __init__(self, a_instruments=[], a_effects=[], a_sends=[]):
+    def __lt__(self, other):
+        return self.index < other.index
+
+class pydaw_track_plugins:
+    def __init__(self, a_instruments=[], a_effects=[]):
         self.instruments = a_instruments
         self.effects = a_effects
-        self.sends = a_sends
 
     def __str__(self):
         return "\n".join(str(x) for x in
-            self.instruments + self.effects +
-            self.sends + [pydaw_terminating_char])
+            self.instruments + self.effects + [pydaw_terminating_char])
 
     @staticmethod
     def from_str(a_str):
-        f_result = pydaw_track_routing()
+        f_result = pydaw_track_plugins()
         f_str = str(a_str)
         for f_line in f_str.split():
             if f_line == pydaw_terminating_char:
@@ -2263,8 +2282,6 @@ class pydaw_track_routing:
                         pydaw_track_plugin(*f_line_arr[1:]))
                 else:
                     assert(False)
-            elif f_line_arr[0] == "s":
-                f_result.sends.append(pydaw_track_send(*f_line_arr[1:]))
             else:
                 assert(False)
         return f_result

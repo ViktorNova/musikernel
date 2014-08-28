@@ -7572,7 +7572,7 @@ class track_send:
         self.save_callback = a_save_callback
         self.suppress_osc = True
         self.track_num = a_track_num
-        self.index = a_index
+        self.index = int(a_index)
         self.bus_combobox = QtGui.QComboBox()
         self.bus_combobox.setMinimumWidth(180)
         self.bus_combobox.wheelEvent = self.wheel_event
@@ -7596,10 +7596,13 @@ class track_send:
 
     def update_engine(self):
         if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_update_track_send(
-                self.track_num, self.index,
-                self.bus_combobox.currentIndex() - 1, self.get_vol())
-            self.save_callback()
+            f_graph = PROJECT.get_routing_graph()
+            print(f_graph)
+            if not self.track_num in f_graph.graph:
+                f_graph.graph[self.track_num] = {}
+            print(f_graph.graph)
+            f_graph.graph[self.track_num][self.index] = self.get_value()
+            PROJECT.save_routing_graph(f_graph)
 
     def get_vol(self):
         return round(self.vol_slider.value() * 0.1, 1)
@@ -7622,7 +7625,8 @@ class track_send:
 
     def get_value(self):
         return pydaw_track_send(
-            self.index, self.bus_combobox.currentIndex() - 1,
+            self.track_num, self.index,
+            self.bus_combobox.currentIndex() - 1,
             round(self.get_vol()))
 
     def set_value(self, a_val):
@@ -7743,10 +7747,10 @@ class seq_track:
         PROJECT.commit(
             _("Set name for track {} to {}").format(self.track_number,
             self.track_name_lineedit.text()))
-        f_routing = PROJECT.get_track_routing(self.track_number)
-        if not f_routing:
+        f_plugins = PROJECT.get_track_plugins(self.track_number)
+        if not f_plugins:
             return
-        for f_plugin in f_routing.instruments + f_routing.effects:
+        for f_plugin in f_plugins.instruments + f_plugins.effects:
             global_plugin_set_window_title(
                 f_plugin.plugin_uid,
                 _("Track: {}").format(self.name_callback()))
@@ -7755,13 +7759,12 @@ class seq_track:
         pass
 
     def save_callback(self):
-        f_result = pydaw_track_routing(
+        f_result = pydaw_track_plugins(
             [x.get_value() for x in self.instruments],
-            [x.get_value() for x in self.effects],
-            [x.get_value() for x in self.sends])
-        PROJECT.save_track_routing(self.track_number, f_result)
+            [x.get_value() for x in self.effects])
+        PROJECT.save_track_plugins(self.track_number, f_result)
         PROJECT.commit(
-            "Update track routing for '{}', {}".format(
+            "Update track plugins for '{}', {}".format(
             self.name_callback(), self.track_number))
 
     def name_callback(self):
@@ -7773,15 +7776,20 @@ class seq_track:
         self.track_name_lineedit.setText(a_track.name)
         self.solo_checkbox.setChecked(a_track.solo)
         self.mute_checkbox.setChecked(a_track.mute)
-        f_routing = PROJECT.get_track_routing(self.track_number)
-        if not f_routing:
+        f_plugins = PROJECT.get_track_plugins(self.track_number)
+        if not f_plugins:
             return
-        for f_plugin in f_routing.instruments:
+        for f_plugin in f_plugins.instruments:
             self.instruments[f_plugin.index].set_value(f_plugin)
-        for f_plugin in f_routing.effects:
+        for f_plugin in f_plugins.effects:
             self.effects[f_plugin.index].set_value(f_plugin)
-        for f_send in f_routing.sends:
-            self.sends[f_send.index].set_value(f_send)
+
+        f_graph = PROJECT.get_routing_graph()
+        if self.track_number in f_graph.graph:
+            f_sends = f_graph.graph[self.track_number]
+            for f_i, f_send in f_sends.items():
+                self.sends[f_i].set_value(f_send)
+
         self.suppress_osc = False
 
     def get_track(self):

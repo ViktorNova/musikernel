@@ -140,10 +140,8 @@ class pydaw_osc:
             "pi", "|".join(str(x) for x in
             (a_track_num, a_type, a_index, a_plugin_index, a_uid)))
 
-    def pydaw_update_track_send(self, a_track_num, a_index, a_output, a_vol):
-        self.send_configure(
-            "ts", "|".join(str(x) for x in
-            (a_track_num, a_index, a_output, a_vol)))
+    def pydaw_update_track_send(self):
+        self.send_configure("ts", "")
 
     def pydaw_send_vol(self, a_track_num, a_index, a_vol):
         self.send_configure(

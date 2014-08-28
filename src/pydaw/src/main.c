@@ -1573,18 +1573,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_UPDATE_SEND))
     {
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 4,
-                PYDAW_TINY_STRING);
-        int f_track_num = atoi(f_val_arr->array[0]);
-        int f_index = atoi(f_val_arr->array[1]);
-        int f_output = atoi(f_val_arr->array[2]);
-        int f_vol = atof(f_val_arr->array[3]);
-
-        v_pydaw_update_track_send(self, f_track_num, f_index,
-            f_output, f_vol, 1);
-
-
-        g_free_1d_char_array(f_val_arr);
+        v_pydaw_update_track_send(self, 1);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SEND_VOL))
     {
