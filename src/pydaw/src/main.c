@@ -1325,9 +1325,9 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
     {
         t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 3,
                 PYDAW_LARGE_STRING);
-        int f_plugin_uid = atoi(f_val_arr->array[1]);
-        char * f_key = f_val_arr->array[2];
-        char * f_message = f_val_arr->array[3];
+        int f_plugin_uid = atoi(f_val_arr->array[0]);
+        char * f_key = f_val_arr->array[1];
+        char * f_message = f_val_arr->array[2];
 
         t_pydaw_plugin * f_instance = self->plugin_pool[f_plugin_uid];
 
