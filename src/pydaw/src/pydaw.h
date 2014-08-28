@@ -167,9 +167,16 @@ typedef struct
     int output;
     float volume;
     float volume_lin;
-    t_amp * amp_ptr;
 }
 t_pytrack_routing;
+
+typedef struct
+{
+    t_pytrack * track_pool_sorted[PYDAW_TRACK_COUNT_ALL];
+    int track_pool_sorted_count;
+    t_pytrack_routing routes[PYDAW_TRACK_COUNT_ALL][MAX_ROUTING_COUNT];
+    t_amp * amp_ptr[PYDAW_TRACK_COUNT_ALL];
+}t_pydaw_routing_graph;
 
 typedef struct
 {
@@ -213,8 +220,7 @@ typedef struct
     int record_armed_track_index_all;  //index within track_pool_all
     //contains a reference to all track types, in order:  MIDI, Bus, Audio
     t_pytrack * track_pool_all[PYDAW_TRACK_COUNT_ALL];
-    t_pytrack * track_pool_sorted[PYDAW_TRACK_COUNT_ALL];
-    int track_pool_sorted_count;
+    t_pydaw_routing_graph * routing_graph;
     t_pyaudio_input * audio_inputs[PYDAW_AUDIO_INPUT_TRACK_COUNT];
     int playback_mode;  //0 == Stop, 1 == Play, 2 == Rec
     int loop_mode;  //0 == Off, 1 == Bar, 2 == Region
@@ -344,6 +350,7 @@ typedef struct
 void g_pysong_get(t_pydaw_data*, int);
 t_pytrack * g_pytrack_get(int, float);
 t_pytrack_routing * g_pytrack_routing_get();
+t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data *, int);
 void v_pytrack_routing_set(t_pytrack_routing *, int, float);
 void v_pytrack_routing_free(t_pytrack_routing *);
 t_pyregion * g_pyregion_get(t_pydaw_data* a_pydaw, const int);
@@ -1628,7 +1635,8 @@ void v_sort_tracks(t_pydaw_data * self)
 
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        self->track_pool_sorted[f_track] = self->track_pool_all[f_i];
+        self->routing_graph->track_pool_sorted[f_track] =
+            self->track_pool_all[f_i];
         f_track++;
         f_i++;
     }
@@ -4026,6 +4034,8 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
         g_pysong_get(self, 0);
     }
 
+    g_pydaw_routing_graph_get(self, 0);
+
     //v_pydaw_update_audio_inputs(self);
 
     v_pydaw_set_is_soloed(self);
@@ -4894,6 +4904,47 @@ void v_pytrack_routing_free(t_pytrack_routing * self)
 {
     v_amp_free(self->amp_ptr);
     free(self);
+}
+
+t_pydaw_routing_graph * g_pydaw_routing_graph_get(
+    t_pydaw_data * self, int a_lock)
+{
+    t_pydaw_routing_graph * f_result;
+    lmalloc((void**)&f_result, sizeof(t_pydaw_routing_graph));
+
+    int f_i = 0;
+    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    {
+        f_result->track_pool_sorted[f_i] = 0;
+        f_result->amp_ptr[f_i] = g_amp_get();
+        f_i++;
+    }
+
+    f_result->track_pool_sorted_count = 0;
+
+    char f_tmp[1024];
+    sprintf(f_tmp, "%s/edmnext/default.pyroute", self->project_folder);
+
+    if(i_pydaw_file_exists(f_tmp))
+    {
+        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(
+        f_tmp, PYDAW_LARGE_STRING);
+        while(1)
+        {
+            char * f_identifier_str = c_iterate_2d_char_array(f_2d_array);
+            if(f_2d_array->eof)
+            {
+                free(f_identifier_str);
+                break;
+            }
+
+            assert(0);  //TODO
+            v_set_tempo(self, f_tempo);
+        }
+        g_free_2d_char_array(f_2d_array);
+    }
+
+    return f_result;
 }
 
 #endif	/* PYDAW_H */

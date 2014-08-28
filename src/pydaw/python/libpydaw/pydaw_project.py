@@ -2157,6 +2157,71 @@ class pydaw_track_plugin:
             ("p", self.type, self.index, self.plugin_index,
              self.plugin_uid, self.mute, self.solo, self.power))
 
+
+class pydaw_routing_graph:
+    def __init__(self):
+        self.graph = {}
+
+    def set_node(self, a_index, a_list):
+        self.graph[int(a_index)] = a_list
+
+    def find_all_paths(self, start, path=[]):
+        path = path + [start]
+        if start == 0:
+            return [path]
+        if not start in self.graph:
+            return []
+        paths = []
+        for node in (x.output for x in self.graph[start]):
+            if node not in path:
+                newpaths = self.find_all_paths(node, path)
+                for newpath in newpaths:
+                    paths.append(newpath)
+        return paths
+
+    def sort_all_paths(self):
+        f_result = {}
+        for f_path in self.graph:
+            f_paths = self.find_all_paths(f_path)
+            if f_paths:
+                f_result[f_path] = max(len(x) for x in f_paths)
+            else:
+                f_result[f_path] = 0
+        return sorted(f_result, key=lambda x: f_result[x], reverse=True)
+
+    def __str__(self):
+        f_result = []
+        f_sorted = self.sort_all_paths()
+        for f_index, f_i in zip(f_sorted, range(len(f_sorted))):
+            f_result.append("|".join(str(x) for x in ("t", f_index, f_i)))
+        for k in sorted(self.graph):
+            for v in self.graph[k]:
+                f_result.append(str(v))
+        f_result.append("\\")
+        return "\n".join(f_result)
+
+
+    @staticmethod
+    def from_str(a_str):
+        f_str = str(a_str)
+        f_result = pydaw_routing_graph()
+        f_tracks = {}
+        for f_line in f_str.split("\n"):
+            if f_line == "\\":
+                break
+            f_line_arr = f_line.split("|")
+            f_uid = int(f_line_arr[1])
+            if f_line_arr[0] == "t":
+                assert(f_uid not in f_tracks)
+                f_tracks[f_uid] = []
+            elif f_line_arr[0] == "s":
+                f_tracks[f_uid].append(pydaw_track_send(*f_line_arr[1:]))
+            else:
+                assert(False)
+        for k, v in f_tracks.items():
+            f_result.set_node(k, v)
+        return f_result
+
 # This is the initial implementation, this should be one per channel to
 # one destination channel
 # EDIT:  Or that may not be efficient...
