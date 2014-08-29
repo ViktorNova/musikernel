@@ -2628,19 +2628,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
 
     v_pydaw_process((t_pydaw_thread_args*)self->main_thread_args);
 
-    f_i = 1;
-
-    while(f_i < (self->track_worker_thread_count))
-    {
-        if(self->track_thread_is_finished[f_i] == 0)
-        {
-            continue;  //spin until it is finished...
-        }
-
-        f_i++;
-    }
-
-    //Run the master channels effects
+    //prep the master channel
 
     if(self->playback_mode > 0)
     {
@@ -2656,8 +2644,28 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
     v_pydaw_process_note_offs(pydaw_data, 0);
 
     t_pytrack * f_master_track = self->track_pool_all[0];
+    float ** f_master_buff = f_master_track->buffers;
+
+    v_pydaw_audio_items_run(self, self->sample_count,
+        f_master_buff[0], f_master_buff[1], 0, 0);
 
     t_pydaw_plugin * f_plugin;
+
+    //wait for the other threads to finish
+
+    f_i = 1;
+
+    while(f_i < (self->track_worker_thread_count))
+    {
+        if(self->track_thread_is_finished[f_i] == 0)
+        {
+            continue;  //spin until it is finished...
+        }
+
+        f_i++;
+    }
+
+    //Run the master channels effects
 
     f_i = 0;
     while(f_i < MAX_FX_COUNT)
@@ -2672,10 +2680,8 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         }
         f_i++;
     }
+
     f_i = 0;
-
-    float ** f_master_buff = f_master_track->buffers;
-
     while(f_i < sample_count)
     {
         output0[f_i] = f_master_buff[0][f_i];
