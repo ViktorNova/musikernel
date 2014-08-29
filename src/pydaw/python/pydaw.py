@@ -7725,7 +7725,7 @@ class seq_track:
     def on_solo(self, value):
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_solo(
-                self.track_number, self.solo_checkbox.isChecked(), 0)
+                self.track_number, self.solo_checkbox.isChecked())
             PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
             PROJECT.commit(_("Set solo for track {} to {}").format(
                 self.track_number, self.solo_checkbox.isChecked()))
@@ -7733,7 +7733,7 @@ class seq_track:
     def on_mute(self, value):
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_mute(
-                self.track_number, self.mute_checkbox.isChecked(), 0)
+                self.track_number, self.mute_checkbox.isChecked())
             PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
             PROJECT.commit(_("Set mute for track {} to {}").format(
                 self.track_number, self.mute_checkbox.isChecked()))

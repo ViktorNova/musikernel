@@ -129,10 +129,10 @@ class pydaw_osc:
             "solo", "|".join(str(x) for x in
             (a_track_num, bool_to_int(a_bool))))
 
-    def pydaw_set_mute(self, a_track_num, a_bool, a_track_type):
+    def pydaw_set_mute(self, a_track_num, a_bool):
         self.send_configure(
             "mute", "|".join(str(x) for x in
-            (a_track_num, bool_to_int(a_bool), a_track_type)))
+            (a_track_num, bool_to_int(a_bool))))
 
     def pydaw_set_plugin_index(self, a_track_num, a_type, a_index,
                                a_plugin_index, a_uid):
