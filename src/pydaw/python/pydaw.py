@@ -7005,6 +7005,155 @@ def global_save_and_reload_items():
 
 
 class item_list_editor:
+    def __init__(self):
+        self.enabled = False
+        self.items = []
+        self.item_names = []
+        self.events_follow_default = True
+
+        self.widget = QtGui.QWidget()
+        self.master_vlayout = QtGui.QVBoxLayout()
+        self.widget.setLayout(self.master_vlayout)
+
+        self.tab_widget = QtGui.QTabWidget()
+        self.piano_roll_tab = QtGui.QGroupBox()
+        self.tab_widget.addTab(self.piano_roll_tab, _("Piano Roll"))
+        self.notes_tab = QtGui.QGroupBox()
+        self.group_box = QtGui.QGroupBox()
+        #self.tab_widget.addTab(self.group_box, _("CCs"))
+        self.pitchbend_tab = QtGui.QGroupBox()
+        self.tab_widget.addTab(self.pitchbend_tab, _("Pitchbend"))
+
+        self.main_vlayout = QtGui.QVBoxLayout()
+        self.group_box.setLayout(self.main_vlayout)
+        self.editing_hboxlayout = QtGui.QHBoxLayout()
+        self.master_vlayout.addWidget(self.tab_widget)
+
+        self.notes_groupbox = QtGui.QGroupBox(_("Notes"))
+        self.notes_vlayout = QtGui.QVBoxLayout(self.notes_groupbox)
+
+        self.editing_hboxlayout.addWidget(QtGui.QLabel(_("Viewing Item:")))
+        self.item_name_combobox = QtGui.QComboBox()
+        self.item_name_combobox.setMinimumWidth(150)
+        self.item_name_combobox.setEditable(False)
+        self.item_name_combobox.currentIndexChanged.connect(
+            self.item_index_changed)
+        self.item_index_enabled = True
+        self.editing_hboxlayout.addWidget(self.item_name_combobox)
+        self.editing_hboxlayout.addItem(
+            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+
+        self.notes_table_widget = QtGui.QTableWidget()
+        self.notes_table_widget.setVerticalScrollMode(
+            QtGui.QAbstractItemView.ScrollPerPixel)
+        self.notes_table_widget.setColumnCount(5)
+        self.notes_table_widget.setRowCount(256)
+        self.notes_table_widget.setSortingEnabled(True)
+        self.notes_table_widget.sortItems(0)
+        self.notes_table_widget.setEditTriggers(
+            QtGui.QAbstractItemView.NoEditTriggers)
+        self.notes_table_widget.setSelectionBehavior(
+            QtGui.QAbstractItemView.SelectRows)
+        self.notes_vlayout.addWidget(self.notes_table_widget)
+        self.notes_table_widget.resizeColumnsToContents()
+
+        self.notes_hlayout = QtGui.QHBoxLayout()
+        self.list_tab_vlayout = QtGui.QVBoxLayout()
+        self.notes_tab.setLayout(self.list_tab_vlayout)
+        self.list_tab_vlayout.addLayout(self.editing_hboxlayout)
+        self.list_tab_vlayout.addLayout(self.notes_hlayout)
+        self.notes_hlayout.addWidget(self.notes_groupbox)
+
+        self.piano_roll_hlayout = QtGui.QHBoxLayout(self.piano_roll_tab)
+        self.piano_roll_hlayout.setMargin(2)
+        self.piano_roll_hlayout.addWidget(PIANO_ROLL_EDITOR_WIDGET.widget)
+
+        self.ccs_groupbox = QtGui.QGroupBox(_("CCs"))
+        self.ccs_vlayout = QtGui.QVBoxLayout(self.ccs_groupbox)
+
+        self.ccs_table_widget = QtGui.QTableWidget()
+        self.ccs_table_widget.setVerticalScrollMode(
+            QtGui.QAbstractItemView.ScrollPerPixel)
+        self.ccs_table_widget.setColumnCount(4)
+        self.ccs_table_widget.setRowCount(256)
+        self.ccs_table_widget.setSortingEnabled(True)
+        self.ccs_table_widget.sortItems(0)
+        self.ccs_table_widget.setEditTriggers(
+            QtGui.QAbstractItemView.NoEditTriggers)
+        self.ccs_table_widget.setSelectionBehavior(
+            QtGui.QAbstractItemView.SelectRows)
+        self.ccs_table_widget.resizeColumnsToContents()
+        self.ccs_vlayout.addWidget(self.ccs_table_widget)
+        self.notes_hlayout.addWidget(self.ccs_groupbox)
+
+        self.main_vlayout.addWidget(CC_EDITOR_WIDGET.widget)
+
+        self.pb_hlayout = QtGui.QHBoxLayout()
+        self.pitchbend_tab.setLayout(self.pb_hlayout)
+        self.pb_groupbox = QtGui.QGroupBox(_("Pitchbend"))
+        self.pb_groupbox.setFixedWidth(240)
+        self.pb_vlayout = QtGui.QVBoxLayout(self.pb_groupbox)
+
+        self.pitchbend_table_widget = QtGui.QTableWidget()
+        self.pitchbend_table_widget.setVerticalScrollMode(
+            QtGui.QAbstractItemView.ScrollPerPixel)
+        self.pitchbend_table_widget.setColumnCount(2)
+        self.pitchbend_table_widget.setRowCount(256)
+        self.pitchbend_table_widget.setSortingEnabled(True)
+        self.pitchbend_table_widget.sortItems(0)
+        self.pitchbend_table_widget.setEditTriggers(
+            QtGui.QAbstractItemView.NoEditTriggers)
+        self.pitchbend_table_widget.setSelectionBehavior(
+            QtGui.QAbstractItemView.SelectRows)
+        self.pitchbend_table_widget.resizeColumnsToContents()
+        self.pb_vlayout.addWidget(self.pitchbend_table_widget)
+        self.notes_hlayout.addWidget(self.pb_groupbox)
+        self.pb_auto_vlayout = QtGui.QVBoxLayout()
+        self.pb_hlayout.addLayout(self.pb_auto_vlayout)
+        self.pb_viewer_widget = automation_viewer_widget(PB_EDITOR, False)
+        self.pb_auto_vlayout.addWidget(self.pb_viewer_widget.widget)
+
+        self.tab_widget.addTab(self.notes_tab, _("List Viewers"))
+
+        self.zoom_widget = QtGui.QWidget()
+        self.zoom_widget.setContentsMargins(0, 0, 0, 0)
+        self.zoom_hlayout = QtGui.QHBoxLayout(self.zoom_widget)
+        self.zoom_hlayout.setMargin(0)
+        self.zoom_hlayout.setSpacing(0)
+
+        self.zoom_hlayout.addWidget(QtGui.QLabel("V"))
+        self.vzoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.zoom_hlayout.addWidget(self.vzoom_slider)
+        self.vzoom_slider.setObjectName("zoom_slider")
+        self.vzoom_slider.setRange(9, 24)
+        self.vzoom_slider.setValue(PIANO_ROLL_NOTE_HEIGHT)
+        self.vzoom_slider.valueChanged.connect(self.set_midi_vzoom)
+        self.vzoom_slider.sliderReleased.connect(self.save_vzoom)
+
+        self.zoom_hlayout.addWidget(QtGui.QLabel("H"))
+        self.zoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.zoom_hlayout.addWidget(self.zoom_slider)
+        self.zoom_slider.setObjectName("zoom_slider")
+        self.zoom_slider.setRange(10, 100)
+        self.zoom_slider.valueChanged.connect(self.set_midi_zoom)
+        self.tab_widget.setCornerWidget(self.zoom_widget)
+        self.tab_widget.currentChanged.connect(self.tab_changed)
+
+        self.set_headers()
+        self.default_note_start = 0.0
+        self.default_note_length = 1.0
+        self.default_note_note = 0
+        self.default_note_octave = 3
+        self.default_note_velocity = 100
+        self.default_cc_num = 0
+        self.default_cc_start = 0.0
+        self.default_cc_val = 0
+        self.default_quantize = 5
+        self.default_pb_start = 0
+        self.default_pb_val = 0
+        self.default_pb_quantize = 0
+
+
     def clear_new(self):
         self.enabled = False
         self.ccs_table_widget.clearContents()
@@ -7204,7 +7353,7 @@ class item_list_editor:
         f_window.exec_()
 
     def tab_changed(self, a_val=None):
-        f_list = [PIANO_ROLL_EDITOR, CC_EDITOR, PB_EDITOR]
+        f_list = [PIANO_ROLL_EDITOR, PB_EDITOR]
         f_index = self.tab_widget.currentIndex()
         if f_index == 0:
             global_set_piano_roll_zoom()
@@ -7219,154 +7368,6 @@ class item_list_editor:
             MAIN_WINDOW, _("Error"),
            _("You must open an item first by double-clicking on one in "
            "the region editor on the 'Song/Region' tab."))
-
-    def __init__(self):
-        self.enabled = False
-        self.items = []
-        self.item_names = []
-        self.events_follow_default = True
-
-        self.widget = QtGui.QWidget()
-        self.master_vlayout = QtGui.QVBoxLayout()
-        self.widget.setLayout(self.master_vlayout)
-
-        self.tab_widget = QtGui.QTabWidget()
-        self.piano_roll_tab = QtGui.QGroupBox()
-        self.tab_widget.addTab(self.piano_roll_tab, _("Piano Roll"))
-        self.notes_tab = QtGui.QGroupBox()
-        self.group_box = QtGui.QGroupBox()
-        self.tab_widget.addTab(self.group_box, _("CCs"))
-        self.pitchbend_tab = QtGui.QGroupBox()
-        self.tab_widget.addTab(self.pitchbend_tab, _("Pitchbend"))
-
-        self.main_vlayout = QtGui.QVBoxLayout()
-        self.group_box.setLayout(self.main_vlayout)
-        self.editing_hboxlayout = QtGui.QHBoxLayout()
-        self.master_vlayout.addWidget(self.tab_widget)
-
-        self.notes_groupbox = QtGui.QGroupBox(_("Notes"))
-        self.notes_vlayout = QtGui.QVBoxLayout(self.notes_groupbox)
-
-        self.editing_hboxlayout.addWidget(QtGui.QLabel(_("Viewing Item:")))
-        self.item_name_combobox = QtGui.QComboBox()
-        self.item_name_combobox.setMinimumWidth(150)
-        self.item_name_combobox.setEditable(False)
-        self.item_name_combobox.currentIndexChanged.connect(
-            self.item_index_changed)
-        self.item_index_enabled = True
-        self.editing_hboxlayout.addWidget(self.item_name_combobox)
-        self.editing_hboxlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-
-        self.notes_table_widget = QtGui.QTableWidget()
-        self.notes_table_widget.setVerticalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
-        self.notes_table_widget.setColumnCount(5)
-        self.notes_table_widget.setRowCount(256)
-        self.notes_table_widget.setSortingEnabled(True)
-        self.notes_table_widget.sortItems(0)
-        self.notes_table_widget.setEditTriggers(
-            QtGui.QAbstractItemView.NoEditTriggers)
-        self.notes_table_widget.setSelectionBehavior(
-            QtGui.QAbstractItemView.SelectRows)
-        self.notes_vlayout.addWidget(self.notes_table_widget)
-        self.notes_table_widget.resizeColumnsToContents()
-
-        self.notes_hlayout = QtGui.QHBoxLayout()
-        self.list_tab_vlayout = QtGui.QVBoxLayout()
-        self.notes_tab.setLayout(self.list_tab_vlayout)
-        self.list_tab_vlayout.addLayout(self.editing_hboxlayout)
-        self.list_tab_vlayout.addLayout(self.notes_hlayout)
-        self.notes_hlayout.addWidget(self.notes_groupbox)
-
-        self.piano_roll_hlayout = QtGui.QHBoxLayout(self.piano_roll_tab)
-        self.piano_roll_hlayout.setMargin(2)
-        self.piano_roll_hlayout.addWidget(PIANO_ROLL_EDITOR_WIDGET.widget)
-
-        self.ccs_groupbox = QtGui.QGroupBox(_("CCs"))
-        self.ccs_vlayout = QtGui.QVBoxLayout(self.ccs_groupbox)
-
-        self.ccs_table_widget = QtGui.QTableWidget()
-        self.ccs_table_widget.setVerticalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
-        self.ccs_table_widget.setColumnCount(4)
-        self.ccs_table_widget.setRowCount(256)
-        self.ccs_table_widget.setSortingEnabled(True)
-        self.ccs_table_widget.sortItems(0)
-        self.ccs_table_widget.setEditTriggers(
-            QtGui.QAbstractItemView.NoEditTriggers)
-        self.ccs_table_widget.setSelectionBehavior(
-            QtGui.QAbstractItemView.SelectRows)
-        self.ccs_table_widget.resizeColumnsToContents()
-        self.ccs_vlayout.addWidget(self.ccs_table_widget)
-        self.notes_hlayout.addWidget(self.ccs_groupbox)
-
-        self.main_vlayout.addWidget(CC_EDITOR_WIDGET.widget)
-
-        self.pb_hlayout = QtGui.QHBoxLayout()
-        self.pitchbend_tab.setLayout(self.pb_hlayout)
-        self.pb_groupbox = QtGui.QGroupBox(_("Pitchbend"))
-        self.pb_groupbox.setFixedWidth(240)
-        self.pb_vlayout = QtGui.QVBoxLayout(self.pb_groupbox)
-
-        self.pitchbend_table_widget = QtGui.QTableWidget()
-        self.pitchbend_table_widget.setVerticalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
-        self.pitchbend_table_widget.setColumnCount(2)
-        self.pitchbend_table_widget.setRowCount(256)
-        self.pitchbend_table_widget.setSortingEnabled(True)
-        self.pitchbend_table_widget.sortItems(0)
-        self.pitchbend_table_widget.setEditTriggers(
-            QtGui.QAbstractItemView.NoEditTriggers)
-        self.pitchbend_table_widget.setSelectionBehavior(
-            QtGui.QAbstractItemView.SelectRows)
-        self.pitchbend_table_widget.resizeColumnsToContents()
-        self.pb_vlayout.addWidget(self.pitchbend_table_widget)
-        self.notes_hlayout.addWidget(self.pb_groupbox)
-        self.pb_auto_vlayout = QtGui.QVBoxLayout()
-        self.pb_hlayout.addLayout(self.pb_auto_vlayout)
-        self.pb_viewer_widget = automation_viewer_widget(PB_EDITOR, False)
-        self.pb_auto_vlayout.addWidget(self.pb_viewer_widget.widget)
-
-        self.tab_widget.addTab(self.notes_tab, _("List Viewers"))
-
-        self.zoom_widget = QtGui.QWidget()
-        self.zoom_widget.setContentsMargins(0, 0, 0, 0)
-        self.zoom_hlayout = QtGui.QHBoxLayout(self.zoom_widget)
-        self.zoom_hlayout.setMargin(0)
-        self.zoom_hlayout.setSpacing(0)
-
-        self.zoom_hlayout.addWidget(QtGui.QLabel("V"))
-        self.vzoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
-        self.zoom_hlayout.addWidget(self.vzoom_slider)
-        self.vzoom_slider.setObjectName("zoom_slider")
-        self.vzoom_slider.setRange(9, 24)
-        self.vzoom_slider.setValue(PIANO_ROLL_NOTE_HEIGHT)
-        self.vzoom_slider.valueChanged.connect(self.set_midi_vzoom)
-        self.vzoom_slider.sliderReleased.connect(self.save_vzoom)
-
-        self.zoom_hlayout.addWidget(QtGui.QLabel("H"))
-        self.zoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
-        self.zoom_hlayout.addWidget(self.zoom_slider)
-        self.zoom_slider.setObjectName("zoom_slider")
-        self.zoom_slider.setRange(10, 100)
-        self.zoom_slider.valueChanged.connect(self.set_midi_zoom)
-        self.tab_widget.setCornerWidget(self.zoom_widget)
-        self.tab_widget.currentChanged.connect(self.tab_changed)
-
-        self.set_headers()
-        self.default_note_start = 0.0
-        self.default_note_length = 1.0
-        self.default_note_note = 0
-        self.default_note_octave = 3
-        self.default_note_velocity = 100
-        self.default_cc_num = 0
-        self.default_cc_start = 0.0
-        self.default_cc_val = 0
-        self.default_quantize = 5
-        self.default_pb_start = 0
-        self.default_pb_val = 0
-        self.default_pb_quantize = 0
 
     def item_index_changed(self, a_index=None):
         if self.item_index_enabled:
