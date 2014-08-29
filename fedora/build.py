@@ -66,14 +66,15 @@ global_rpm_dir = os.path.abspath("{}/..".format(os.getcwd()))
 pydaw_rpm_file = None
 
 for f_rpm_file in os.listdir(global_rpm_dir):
-    if f_rpm_file.startswith("pydaw") and \
+    if f_rpm_file.startswith("musikernel") and \
     f_rpm_file.endswith(".rpm") and \
     pydaw_version in f_rpm_file:
         pydaw_rpm_file = f_rpm_file
 
 if pydaw_rpm_file is None:
-    print("No PyDAW .rpm files with current version {} found in {}, \n"
-    "please run the following commands before running this script:".format(pydaw_version, global_rpm_dir))
+    print("No MusiKernel .rpm files with current version {} found in {}, \n"
+        "please run the following commands before running this script:".format(
+        pydaw_version, global_rpm_dir))
     print("\n\ncd ../../..")
     print("./rpm.py")
     print("cd '{}'".format(os.getcwd()))
@@ -143,13 +144,14 @@ kickstart_file.close()
 kickstart_command = \
 """livecd-creator --verbose \
 --config=./kickstart.ks \
---fslabel=PyDAW-OS-Fedora \
+--fslabel=MusiKernel-OS-Fedora \
 --cache=cache/live """
 #--tmpdir=tmpdir """
 #--nocleanup """
 
 os.system(kickstart_command)
 
-os.system('mv PyDAW-OS-Fedora.iso PyDAW-OS-Fedora-{}-{}.iso'.format(de_label, pydaw_version))
+os.system('mv MusiKernel-OS-Fedora.iso MusiKernel-OS-Fedora-{}-{}.iso'.format(
+    de_label, pydaw_version))
 
 #os.system("setenforce 1")
