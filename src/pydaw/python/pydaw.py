@@ -1290,8 +1290,8 @@ class region_list_editor:
         if a_on:
             self.table_widget.setToolTip(
             _("This is a region editor, it consists of "
-            "items and tracks.\nA track is either a plugin instrument, "
-            "audio track or bus track.\n"
+            "items and tracks.\nA track can be any/all of: instrument, "
+            "audio, bus or send.\n"
             "An item is one bar of MIDI notes or plugin automation.  "
             "Click an empty cell to add "
             "a new item\nDouble click an item to open it in the "
@@ -2341,7 +2341,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             _("Edit Properties"))
         f_edit_properties_action.triggered.connect(self.edit_properties)
         f_properties_menu.addSeparator()
-        f_output_menu = f_properties_menu.addMenu("Audio Track")
+        f_output_menu = f_properties_menu.addMenu("Track")
         f_output_menu.triggered.connect(self.output_menu_triggered)
 
         f_output_tracks = {x.audio_item.output_track
@@ -2418,7 +2418,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_all_paif_action = f_per_file_menu.addAction(_("Per-Item FX"))
         f_all_paif_action.triggered.connect(self.set_paif_for_all_instance)
 
-        f_set_all_output_menu = f_per_file_menu.addMenu("Audio Track")
+        f_set_all_output_menu = f_per_file_menu.addMenu("Track")
         f_set_all_output_menu.triggered.connect(
             self.set_all_output_menu_triggered)
         for f_track_name, f_index in zip(
@@ -4396,7 +4396,7 @@ class audio_item_editor_widget:
                 "atmospheric sound"))
             self.output_combobox.setToolTip(
                 _("Use this combobox to select the output "
-                "audio track on the 'Audio Tracks' tab\n"
+                "track on the 'MIDI' tab\n"
                 "where you can apply effects and automation.  "
                 "Please note that if you use a "
                 "lot of audio sequencing in your projects,\n"
