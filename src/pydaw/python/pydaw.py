@@ -10205,9 +10205,9 @@ class pydaw_wave_editor_widget:
         f_open_exported.setChecked(self.open_exported)
         f_layout.addWidget(f_open_exported, 6, 1)
         f_ok_layout = QtGui.QHBoxLayout()
-        f_ok_layout.addItem(QtGui.QSpacerItem(10, 10,
-                                              QtGui.QSizePolicy.Expanding,
-                                              QtGui.QSizePolicy.Minimum))
+        f_ok_layout.addItem(
+            QtGui.QSpacerItem(10, 10,
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
         f_ok = QtGui.QPushButton(_("OK"))
         f_ok.pressed.connect(ok_handler)
         f_ok_layout.addWidget(f_ok)
