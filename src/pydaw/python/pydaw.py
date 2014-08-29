@@ -7663,13 +7663,15 @@ class seq_track:
             self.track_name_lineedit.setDisabled(True)
         else:
             self.track_name_lineedit.setText(a_track_text)
-        self.track_name_lineedit.setMaxLength(48)
-        self.track_name_lineedit.editingFinished.connect(self.on_name_changed)
+            self.track_name_lineedit.setMaxLength(48)
+            self.track_name_lineedit.editingFinished.connect(
+                self.on_name_changed)
         self.main_vlayout.addWidget(self.track_name_lineedit)
         self.hlayout3 = QtGui.QHBoxLayout()
         self.main_vlayout.addLayout(self.hlayout3)
 
         self.menu_button = QtGui.QPushButton()
+        self.menu_button.setFixedWidth(42)
         self.button_menu = QtGui.QMenu()
         self.menu_button.setMenu(self.button_menu)
         self.hlayout3.addWidget(self.menu_button)
@@ -7678,15 +7680,16 @@ class seq_track:
         self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
         self.menu_gridlayout = QtGui.QGridLayout()
         self.menu_hlayout.addLayout(self.menu_gridlayout)
-        self.menu_gridlayout.addWidget(
-            QtGui.QLabel(_("Instruments")), 0, 0)
         self.instruments = []
-        for f_i in range(5):
-            f_plugin = plugin_settings(
-                f_i, self.track_number, self.menu_gridlayout,
-                plugin_settings.instrument, self.save_callback,
-                self.name_callback)
-            self.instruments.append(f_plugin)
+        if a_track_num != 0:
+            self.menu_gridlayout.addWidget(
+                QtGui.QLabel(_("Instruments")), 0, 0)
+            for f_i in range(5):
+                f_plugin = plugin_settings(
+                    f_i, self.track_number, self.menu_gridlayout,
+                    plugin_settings.instrument, self.save_callback,
+                    self.name_callback)
+                self.instruments.append(f_plugin)
         self.menu_gridlayout.addWidget(
             QtGui.QLabel(_("Effects")), 0, 10)
         self.effects = []
@@ -7709,13 +7712,17 @@ class seq_track:
         self.action_widget.setDefaultWidget(self.menu_widget)
         self.button_menu.addAction(self.action_widget)
         self.solo_checkbox = QtGui.QCheckBox()
-        self.solo_checkbox.stateChanged.connect(self.on_solo)
-        self.solo_checkbox.setObjectName("solo_checkbox")
-        self.hlayout3.addWidget(self.solo_checkbox)
         self.mute_checkbox = QtGui.QCheckBox()
-        self.mute_checkbox.stateChanged.connect(self.on_mute)
-        self.mute_checkbox.setObjectName("mute_checkbox")
-        self.hlayout3.addWidget(self.mute_checkbox)
+        if self.track_number == 0:
+            self.hlayout3.addItem(
+                QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+        else:
+            self.solo_checkbox.stateChanged.connect(self.on_solo)
+            self.solo_checkbox.setObjectName("solo_checkbox")
+            self.hlayout3.addWidget(self.solo_checkbox)
+            self.mute_checkbox.stateChanged.connect(self.on_mute)
+            self.mute_checkbox.setObjectName("mute_checkbox")
+            self.hlayout3.addWidget(self.mute_checkbox)
         self.suppress_osc = False
 
     def menu_button_pressed(self):
@@ -7772,14 +7779,16 @@ class seq_track:
     def open_track(self, a_track, a_notify_osc=False):
         if not a_notify_osc:
             self.suppress_osc = True
-        self.track_name_lineedit.setText(a_track.name)
-        self.solo_checkbox.setChecked(a_track.solo)
-        self.mute_checkbox.setChecked(a_track.mute)
+        if self.track_number != 0:
+            self.track_name_lineedit.setText(a_track.name)
+            self.solo_checkbox.setChecked(a_track.solo)
+            self.mute_checkbox.setChecked(a_track.mute)
         f_plugins = PROJECT.get_track_plugins(self.track_number)
         if not f_plugins:
             return
-        for f_plugin in f_plugins.instruments:
-            self.instruments[f_plugin.index].set_value(f_plugin)
+        if self.track_number != 0:
+            for f_plugin in f_plugins.instruments:
+                self.instruments[f_plugin.index].set_value(f_plugin)
         for f_plugin in f_plugins.effects:
             self.effects[f_plugin.index].set_value(f_plugin)
 
