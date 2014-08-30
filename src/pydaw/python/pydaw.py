@@ -26,9 +26,10 @@ from PyQt4 import QtGui, QtCore
 from libpydaw import *
 import libpydaw.liblo as liblo
 
+
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
-
+import libpydaw.strings
 
 IS_PLAYING = False
 
@@ -1288,26 +1289,7 @@ class region_list_editor:
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.table_widget.setToolTip(
-            _("This is a region editor, it consists of "
-            "items and tracks.\nA track can be any/all of: instrument, "
-            "audio, bus or send.\n"
-            "An item is one bar of MIDI notes or plugin automation.  "
-            "Click an empty cell to add "
-            "a new item\nDouble click an item to open it in the "
-            "piano-roll-editor or select "
-            "multiple and right-click->'Edit Selected Items'\n\n"
-            "The selected items can be copied by pressing CTRL+C, "
-            "cut with CTRL+X, pasted "
-            "with CTRL+V, and deleted by pressing 'Delete'\n\n"
-            "Additional functions can be found by right-clicking on "
-            "the items, the term "
-            "'unlink' means to create a new copy of the item that\n"
-            "does not change it's parent item when edited "
-            "(by default all items are "
-            "'ghost items' that update all items with the same name)\n\n"
-            "Click 'Menu->Show Tooltips' in the transport "
-            "to disable these tooltips"))
+            self.table_widget.setToolTip(libpydaw.strings.region_list_editor)
         else:
             self.table_widget.setToolTip("")
 
@@ -2130,23 +2112,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.setToolTip(
-                _("Right click on an audio item to see the various tools "
-                "and actions available\n"
-                "\nClick and drag selected to move.\n"
-                "SHIFT+Click to split items\nCTRL+drag to copy "
-                "selected items\n"
-                "CTRL+ALT+Click and drag to adjust the volume of "
-                "selected items\n"
-                "CTRL+SHIFT+Click and drag to create a volume line "
-                "from the selected items\n"
-                "You can multi-select individual items by "
-                "SHIFT+ALT+clicking on them.\n\n"
-                "You can glue together multiple items by selecting "
-                "items and pressing CTRL+G\n"
-                ", the glued item will retain all of the fades, "
-                "stretches and per-item fx of "
-                "the original items.\n"))
+            self.setToolTip(libpydaw.strings.audio_viewer_item)
             self.start_handle.setToolTip(
                 _("Use this handle to resize the item by changing "
                 "the start point."))
@@ -4012,20 +3978,10 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.folders_widget.setToolTip(_("Use this tab to browse your "
-            "folders and files.\nDrag and drop one file at a time onto "
-            "the sequencer.\n.wav and .aiff files are the only "
-            "supported audio file format."
-            "\nClick the 'Bookmark' button to save the "
-            "current folder to your bookmarks located "
-            "on the 'Bookmarks' tab."
-            "\n\nClick 'Menu->Show Tooltips' in the transport to disable "
-            "these tooltips"))
-            self.modulex.widget.setToolTip(_("This tab allows you to set "
-            "effects per-item.\nThe tab is only enabled when you have "
-            "exactly one item selected, "
-            "the copy and paste buttons allow you to copy "
-            "settings between multipe items."))
+            self.folders_widget.setToolTip(
+                libpydaw.strings.audio_viewer_widget_folders)
+            self.modulex.widget.setToolTip(
+                libpydaw.strings.audio_viewer_widget_modulex)
         else:
             self.folders_widget.setToolTip("")
             self.modulex.widget.setToolTip("")
@@ -4375,25 +4331,7 @@ class audio_item_editor_widget:
                 _("Affects the sharpness of transients, only "
                 "for modes using Rubberband"))
             self.timestretch_mode.setToolTip(
-                _("Modes:\n\nNone:  No stretching or "
-                "pitch adjustment\n"
-                "Pitch affecting time:  Repitch the item, it will become "
-                "shorter at higher "
-                "pitches, and longer at "
-                "lower pitches\n"
-                "Time affecting pitch:  Stretch the item to the "
-                "desired length, it will have "
-                "lower pitch at longer "
-                "lengths, and higher pitch at shorter lengths\n"
-                "Rubberband:  Adjust pitch and time independently\n"
-                "Rubberband (formants): "
-                "Same as Rubberband, but preserves formants\n"
-                "SBSMS:  Adjust pitch and time independently, also "
-                "with the ability to "
-                "set start/end pitch/time differently\n"
-                "Paulstretch:  Mostly for stretching items very long, "
-                "creates a very smeared, "
-                "atmospheric sound"))
+                libpydaw.strings.timestretch_modes)
             self.output_combobox.setToolTip(
                 _("Use this combobox to select the output "
                 "track on the 'MIDI' tab\n"
@@ -8271,23 +8209,7 @@ class transport_widget:
                 "and looping a region.\nYou can toggle between "
                 "settings with CTRL+L"))
             self.group_box.setToolTip(
-                _("This is the transport, use this control to "
-                "start/stop playback or recording.\n"
-                "You can start or stop playback by pressing spacebar\n"
-                "The MIDI controller used for recording is selected in the "
-                "File->HardwareSettings menu\n"
-                "The 'Loop Mode' combobox can be used to loop a region.\n"
-                "The 'Follow' checkbox causes the UI to follow the "
-                "project's playback position\n"
-                "The 'Overdub' checkbox causes recorded MIDI notes to "
-                "be appended to existing "
-                "items, rather than placed in new items that replace "
-                "the existing items.\n"
-                "The panic button sends a note-off event on every "
-                "note to every plugin.  "
-                "Use this when you get a stuck note."
-                "\n\nClick 'Menu->Show Tooltips' in the transport to "
-                "disable these tooltips"))
+                libpydaw.strings.transport)
         else:
             self.panic_button.setToolTip("")
             self.overdub_checkbox.setToolTip("")
@@ -8879,12 +8801,7 @@ class pydaw_main_window(QtGui.QMainWindow):
         for f_app in (f_avconv, f_lame):
             if pydaw_which(f_app) is None:
                 QtGui.QMessageBox.warning(self, _("Error"),
-                _("Please ensure that avconv(or ffmpeg) and "
-                "lame are installed, can't "
-                "open mp3 converter dialog.\n"
-                "Check your normal sources for packages or visit:\n\n"
-                "http://lame.sourceforge.net/\n"
-                "http://libav.org\n\nCan't find {}").format(f_app))
+                    libpydaw.strings.avconv_error.format(f_app))
                 return
         self.audio_converter_dialog("lame", "avconv", "mp3")
 
