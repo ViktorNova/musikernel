@@ -112,7 +112,7 @@ def pydaw_set_tooltips_enabled(a_enabled):
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
 
-    pydaw_util.set_file_setting("tooltips.txt", int(a_enabled))
+    pydaw_util.set_file_setting("tooltips", int(a_enabled))
 
 
 def pydaw_current_region_is_none():
@@ -10550,7 +10550,7 @@ TRANSPORT = transport_widget()
 AUDIO_SEQ_WIDGET = audio_items_viewer_widget()
 
 
-TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips.txt", int, 1)
+TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
 
 # Must call this after instantiating the other widgets,
 # as it relies on them existing
