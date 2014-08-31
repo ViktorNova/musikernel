@@ -9212,7 +9212,7 @@ class pydaw_main_window(QtGui.QMainWindow):
         if self.osc_server is not None:
             print(self.osc_server.get_url())
             self.osc_server.add_method(
-                "pydaw/ui_configure", 's', self.configure_callback)
+                "musikernel/ui_configure", 's', self.configure_callback)
             self.osc_server.add_method(None, None, self.osc_fallback)
             self.osc_timer = QtCore.QTimer(self)
             self.osc_timer.setSingleShot(False)

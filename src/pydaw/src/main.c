@@ -1254,13 +1254,15 @@ int osc_configure_handler(d3h_instance_t *instance, lo_arg **argv)
 int osc_debug_handler(const char *path, const char *types, lo_arg **argv,
                       int argc, void *data, void *user_data)
 {
-    int i;
+    int f_i = 0;
 
     printf("got unhandled OSC message:\npath: <%s>\n", path);
-    for (i=0; i<argc; i++) {
-        printf("arg %d '%c' ", i, types[i]);
-        lo_arg_pp((lo_type)types[i], argv[i]);
+    while(f_i < argc)
+    {
+        printf("arg %d '%c' ", f_i, types[f_i]);
+        lo_arg_pp((lo_type)types[f_i], argv[f_i]);
         printf("\n");
+        f_i++;
     }
 
     return 1;
@@ -1269,23 +1271,14 @@ int osc_debug_handler(const char *path, const char *types, lo_arg **argv,
 int osc_message_handler(const char *path, const char *types, lo_arg **argv,
                         int argc, void *data, void *user_data)
 {
-    const char *method;
-    unsigned int flen = 0;
-
-    if (strncmp(path, "/dssi/", 6))
-    {
-        printf("if (strncmp(path, \"/dssi/\", 6))\n");
-        return osc_debug_handler(path, types, argv, argc, data, user_data);
-    }
-
-    method = path + 6 + flen;
-
-    if (!strcmp(method, "pydaw/configure") && argc == 2 && !strcmp(types, "ss"))
+    if(!strcmp(path, "/musikernel/configure") && !strcmp(types, "ss"))
     {
         return osc_configure_handler(this_instance, argv);
     }
-
-    return osc_debug_handler(path, types, argv, argc, data, user_data);
+    else
+    {
+        return osc_debug_handler(path, types, argv, argc, data, user_data);
+    }
 }
 
 
