@@ -1,5 +1,5 @@
 """
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,8 +49,8 @@ except ImportError:
             "be compiled against the \n"
             "same version of Python3 that your OS uses).  "
             "If you are unsure, it is probably \n"
-            "best to compile PyDAW from the source code "
-            "package yourself.\n\nCan't open PyDAW."))
+            "best to compile MusiKernel from the source code "
+            "package yourself.\n\nCan't open MusiKernel."))
         f_error_layout.addWidget(f_error_label)
         f_error_dialog.show()
         sys.exit(app.exec_())
@@ -91,7 +91,7 @@ class pydaw_osc:
                 "Would've sent configure message: key: \""
                 "{}\" value: \"{}\"".format(key, value))
 
-    #methods for sending PyDAW OSC messages
+    #methods for sending MusiKernel OSC messages
 
     def pydaw_save_song(self):
         self.send_configure("ss", "")

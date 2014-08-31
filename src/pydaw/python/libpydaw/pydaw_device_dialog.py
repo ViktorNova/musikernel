@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -220,12 +220,13 @@ class pydaw_device_dialog:
         f_window_layout.addWidget(f_thread_affinity_checkbox, 5, 1)
 
         f_governor_checkbox = QtGui.QCheckBox(
-            _("Force CPU governor to performance mode when PyDAW is running?"))
+            _("Force CPU governor to performance mode "
+                "when MusiKernel is running?"))
         f_governor_checkbox.setToolTip(
             _("This forces the CPU to use more aggressive "
-            "clockspeeds when PyDAW is "
+            "clockspeeds when MusiKernel is "
             "running, and reverts back to 'On Demand'\n"
-            "when PyDAW is closed.  Use this for best "
+            "when MusiKernel is closed.  Use this for best "
             "performance if possible.\n\n"
             "The audio engine setting must be set to "
             "'Elevated' or 'Elevated(Sandbox)', "
@@ -242,7 +243,7 @@ class pydaw_device_dialog:
             "audio engine when run "
             "from within Virtualbox or on "
             "systems with\n"
-            "certain security configurations.  Disable this if PyDAW's "
+            "certain security configurations.  Disable this if the "
             "engine crashes on startup."))
         f_window_layout.addWidget(f_governor_checkbox, 6, 1)
 
@@ -320,7 +321,7 @@ class pydaw_device_dialog:
             try:
                 #This doesn't work if the device is open already,
                 #so skip the test, and if it fails the
-                #user will be prompted again next time PyDAW starts
+                #user will be prompted again next time MusiKernel starts
                 if f_audio_engine != 7 or \
                 not self.is_running or \
                 "name" not in pydaw_util.global_device_val_dict or \
@@ -350,7 +351,7 @@ class pydaw_device_dialog:
                 if a_notify:
                     QtGui.QMessageBox.warning(f_window, _("Settings changed"),
                       _("Hardware settings have been changed, and will be "
-                      "applied next time you start PyDAW."))
+                      "applied next time you start MusiKernel."))
                 time.sleep(1.0)
                 pydaw_util.pydaw_read_device_config()
                 self.dialog_result = True

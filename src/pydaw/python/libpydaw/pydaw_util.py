@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ def pydaw_which(a_file):
 
 
 def pydaw_remove_bad_chars(a_str):
-    """ Remove any characters that have special meaning to PyDAW """
+    """ Remove any characters that have special meaning to MusiKernel """
     f_str = str(a_str)
     for f_char in pydaw_bad_chars:
         f_str = f_str.replace(f_char, "")

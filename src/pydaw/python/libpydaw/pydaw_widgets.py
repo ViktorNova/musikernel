@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -1644,7 +1644,7 @@ class peak_meter:
                 p.drawText(3, f_y, str(f_db))
 
 PRESET_FILE_DIALOG_STRING = 'MusiKernel Presets (*.mkp)'
-BM_FILE_DIALOG_STRING = 'PyDAW Bookmarks (*.pybm4)'
+BM_FILE_DIALOG_STRING = 'MusiKernel Bookmarks (*.pybm4)'
 PLUGIN_SETTINGS_CLIPBOARD = {}
 PLUGIN_CONFIGURE_CLIPBOARD = None
 
@@ -4344,7 +4344,7 @@ class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(
-            "PyDAW Modulex - {}".format(self.track_name))
+            "MusiKernel Modulex - {}".format(self.track_name))
 
     def widget_close_event(self, a_event):
         print("Disabling spectrum")
@@ -4550,7 +4550,8 @@ class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
 
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
-        self.widget.setWindowTitle("PyDAW Ray-V - {}".format(self.track_name))
+        self.widget.setWindowTitle(
+            "MusiKernel Ray-V - {}".format(self.track_name))
 
 
 
@@ -5138,7 +5139,8 @@ class pydaw_wayv_plugin_ui(pydaw_abstract_plugin_ui):
 
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
-        self.widget.setWindowTitle("PyDAW Way-V - {}".format(self.track_name))
+        self.widget.setWindowTitle(
+            "MusiKernel Way-V - {}".format(self.track_name))
 
     def set_fm_origin(self):
         self.fm_origin = []
@@ -5214,7 +5216,7 @@ class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.set_window_title(a_track_name)
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(
-            "PyDAW Euphoria - {}".format(self.track_name))
+            "MusiKernel Euphoria - {}".format(self.track_name))
         self.is_instrument = True
 
         self.selected_row_index = 0
@@ -6239,7 +6241,7 @@ class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(
-            "PyDAW Euphoria - {}".format(self.track_name))
+            "MusiKernel Euphoria - {}".format(self.track_name))
 
     def configure_plugin(self, a_key, a_message):
         self.configure_dict[a_key] = a_message

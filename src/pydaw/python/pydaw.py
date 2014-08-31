@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -8692,7 +8692,7 @@ class pydaw_main_window(QtGui.QMainWindow):
             f_file = QtGui.QFileDialog.getOpenFileName(self,
                 _("Open a theme file"), "{}/lib/{}/themes".format(
                 pydaw_util.global_pydaw_install_prefix,
-                global_pydaw_version_string), "PyDAW Style(*.pytheme)")
+                global_pydaw_version_string), "MusiKernel Style(*.pytheme)")
             if f_file is not None and str(f_file) != "":
                 f_file = str(f_file)
                 f_style = pydaw_read_file_text(f_file)
@@ -8701,7 +8701,7 @@ class pydaw_main_window(QtGui.QMainWindow):
                 pydaw_write_file_text(global_user_style_file, f_file)
                 QtGui.QMessageBox.warning(
                     MAIN_WINDOW, _("Theme Applied..."),
-                    _("Please restart PyDAW to update the UI"))
+                    _("Please restart MusiKernel to update the UI"))
         except Exception as ex:
             pydaw_print_generic_exception(ex)
 
@@ -8985,7 +8985,7 @@ class pydaw_main_window(QtGui.QMainWindow):
         if a_on:
             self.cc_map_tab.setToolTip(
             _("Use this tab to create CC maps for your "
-            "MIDI controller to PyDAW's built-in plugins\n"
+            "MIDI controller to MusiKernel's built-in plugins\n"
             "Each CC routes to a different control for each instrument, "
             "or if the CC is 'Effects Only', it routes only to Modulex"))
         else:
@@ -9238,7 +9238,7 @@ class pydaw_main_window(QtGui.QMainWindow):
                     QtGui.QMessageBox.warning(
                         self, _("Error"),
                         _("The audio engine died with error code {}, "
-                        "please try restarting PyDAW").format(exitCode))
+                        "please try restarting MusiKernel").format(exitCode))
         except Exception as ex:
             print("subprocess_monitor: {}".format(ex))
 
@@ -9336,7 +9336,7 @@ class pydaw_main_window(QtGui.QMainWindow):
                     f_quit_timer.start(1000)
                 except Exception as ex:
                     print("Exception thrown while attempting to exit, "
-                        "forcing PyDAW to exit")
+                        "forcing MusiKernel to exit")
                     print("Exception:  {}".format(ex))
                     exit(999)
         else:
@@ -10392,7 +10392,7 @@ if not os.access(global_pydaw_home, os.W_OK):
     QtGui.QMessageBox.warning(
         WAVE_EDITOR.widget, _("Error"),
         _("You do not have read+write permissions to {}, please correct "
-        "this and restart PyDAW".format(global_pydaw_home)))
+        "this and restart MusiKernel".format(global_pydaw_home)))
     exit(999)
 
 SONG_EDITOR = song_editor()
@@ -10580,7 +10580,7 @@ not os.access(os.path.dirname(default_project_file), os.W_OK):
     QtGui.QMessageBox.warning(
         WAVE_EDITOR.widget, _("Error"),
         _("You do not have read+write permissions to {}, please correct "
-        "this and restart PyDAW".format(
+        "this and restart MusiKernel".format(
         os.path.dirname(default_project_file))))
     exit(999)
 
