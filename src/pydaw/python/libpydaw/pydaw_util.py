@@ -23,7 +23,7 @@ import numpy
 
 global_pydaw_version_string = "musikernel"
 global_pydaw_file_type_string = 'MusiKernel Project (*.mk)'
-global_euphoria_file_type_string = 'PyDAW4 Euphoria Sample File (*.u4ia4)'
+global_euphoria_file_type_string = 'Euphoria Sample File (*.u4ia4)'
 global_euphoria_file_type_ext = '.u4ia4'
 
 global_pydaw_bin_path = None
@@ -424,9 +424,10 @@ global_pydaw_home = "{}/{}".format(
     os.path.expanduser("~"), global_pydaw_version_string)
 
 CONFIG_DIR = "{}/config".format(global_pydaw_home)
-PRESET_DIR = "{}/preset".format(global_pydaw_home)
+PRESET_DIR = "{}/preset".format(CONFIG_DIR)
+CC_MAP_FOLDER = "{}/cc_maps".format(CONFIG_DIR)
 
-for _f_dir in (global_pydaw_home, CONFIG_DIR, PRESET_DIR):
+for _f_dir in (global_pydaw_home, CONFIG_DIR, PRESET_DIR, CC_MAP_FOLDER):
     if not os.path.isdir(_f_dir):
         os.makedirs(_f_dir)
 

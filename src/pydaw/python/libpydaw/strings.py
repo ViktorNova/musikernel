@@ -152,3 +152,13 @@ or 'right-click->Delete Region' to delete the selected regions.
 Click on a region to edit it in the region editor below.
 
 Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+
+multiple_instances_warning = _(
+"""Detected that there are instances of the MusiKernel
+audio engine already running.
+This could mean that you already have MusiKernel running, if so you
+should click 'Cancel' and close the other instance.
+
+This could also mean that for some reason the engine didn't properly
+terminate from another session.  If so, click 'OK' to kill the
+other process(es)""")

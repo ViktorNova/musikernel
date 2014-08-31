@@ -112,12 +112,7 @@ def pydaw_set_tooltips_enabled(a_enabled):
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
 
-    if a_enabled:
-        pydaw_write_file_text(
-            "{}/tooltips.txt".format(global_pydaw_home), "True")
-    else:
-        pydaw_write_file_text(
-            "{}/tooltips.txt".format(global_pydaw_home), "False")
+    pydaw_util.set_file_setting("tooltips.txt", int(a_enabled))
 
 
 def pydaw_current_region_is_none():
@@ -9386,11 +9381,12 @@ def pydaw_load_controller_maps():
 
 def pydaw_get_cc_map(a_name):
     return pydaw_cc_map.from_str(
-        pydaw_read_file_text("{}/{}".format(CC_MAP_FOLDER, a_name)))
+        pydaw_read_file_text("{}/{}".format(
+            pydaw_util.CC_MAP_FOLDER, a_name)))
 
 def pydaw_save_cc_map(a_name, a_map):
     pydaw_write_file_text(
-        "{}/{}".format(CC_MAP_FOLDER, a_name), str(a_map))
+        "{}/{}".format(pydaw_util.CC_MAP_FOLDER, a_name), str(a_map))
 
 class pydaw_cc_map_editor:
     def add_map(self, a_item):
@@ -9602,10 +9598,10 @@ class pydaw_cc_map_editor:
         f_local_dir = global_pydaw_home
         if not os.path.isdir(f_local_dir):
             os.mkdir(f_local_dir)
-        if not os.path.isfile("{}/default".format(CC_MAP_FOLDER)):
+        if not os.path.isfile("{}/default".format(pydaw_util.CC_MAP_FOLDER)):
             pydaw_save_cc_map("default", pydaw_cc_map())
         self.current_map_name = "default"
-        self.cc_maps_list = os.listdir(CC_MAP_FOLDER)
+        self.cc_maps_list = os.listdir(pydaw_util.CC_MAP_FOLDER)
         self.cc_maps_list.sort()
         self.groupbox = QtGui.QGroupBox(_("Controllers"))
         self.groupbox.setFixedWidth(930)
@@ -10366,19 +10362,15 @@ PROJECT = pydaw_project(global_pydaw_with_audio)
 
 APP = QtGui.QApplication(sys.argv)
 
-CC_MAP_FOLDER = "{}/cc_maps".format(global_pydaw_home)
-
-if not os.path.isdir(CC_MAP_FOLDER):
-    os.makedirs(CC_MAP_FOLDER)
-
 pydaw_load_controller_maps()
 
-TIMESTRETCH_MODES = [_("None"), _("Pitch(affecting time)"),
-                     _("Time(affecting pitch)"), "Rubberband",
-                     "Rubberband(formants)", "SBSMS", "Paulstretch"]
+TIMESTRETCH_MODES = [
+    _("None"), _("Pitch(affecting time)"), _("Time(affecting pitch)"),
+    "Rubberband", "Rubberband(formants)", "SBSMS", "Paulstretch"]
 
-CRISPNESS_SETTINGS = [_("0 (smeared)"), _("1 (piano)"), "2", "3",
-                      "4", "5 (normal)", _("6 (sharp, drums)")]
+CRISPNESS_SETTINGS = [
+    _("0 (smeared)"), _("1 (piano)"), "2", "3",
+    "4", "5 (normal)", _("6 (sharp, drums)")]
 
 TRACK_NAMES = ["Master" if x == 0 else "track{}".format(x)
     for x in range(TRACK_COUNT_ALL)]
@@ -10481,16 +10473,9 @@ def kill_pydaw_engine():
 
     if len(f_result) > 0:
         f_answer = QtGui.QMessageBox.warning(
-        AUDIO_EDITOR_WIDGET.widget, _("Warning"),
-        _("Detected that there are instances of the PyDAW "
-        "audio engine already running.\n"
-        "This could mean that you already have PyDAW running, if "
-        "so you should click 'Cancel'\n"
-        "and close the other instance.\n\n"
-        "This could also mean that for some reason the engine "
-        "didn't properly terminate from "
-        "another session.  If so, click 'OK' to kill the other process(es)"),
-        buttons=QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+            AUDIO_EDITOR_WIDGET.widget, _("Warning"),
+            libpydaw.strings.multiple_instances_warning,
+            buttons=QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
         if f_answer == QtGui.QMessageBox.Cancel:
             exit(1)
         else:
@@ -10564,11 +10549,8 @@ def open_pydaw_engine(a_project_path):
 TRANSPORT = transport_widget()
 AUDIO_SEQ_WIDGET = audio_items_viewer_widget()
 
-TOOLTIPS_ENABLED_FILE = "{}/tooltips.txt".format(global_pydaw_home)
 
-if os.path.isfile(TOOLTIPS_ENABLED_FILE):
-    if pydaw_read_file_text(TOOLTIPS_ENABLED_FILE) == "True":
-        TOOLTIPS_ENABLED = True
+TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips.txt", int, 1)
 
 # Must call this after instantiating the other widgets,
 # as it relies on them existing
