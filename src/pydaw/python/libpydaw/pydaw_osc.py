@@ -247,7 +247,7 @@ class pydaw_osc:
         self.send_configure("wr", str(a_uid))
 
     def pydaw_master_vol(self, a_vol):
-        self.send_configure("mvol", str(a_vol))
+        self.send_configure("mvol", str(round(a_vol, 8)))
 
     def pydaw_kill_engine(self):
         self.send_configure("abort", "")
