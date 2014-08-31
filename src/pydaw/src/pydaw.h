@@ -948,7 +948,10 @@ void * v_pydaw_osc_send_thread(void* a_arg)
                 f_i++;
             }
 
-            lo_send(self->uiTarget, "musikernel/ui_configure", "s", f_tmp1);
+            if(!self->is_offline_rendering)
+            {
+                lo_send(self->uiTarget, "musikernel/ui_configure", "s", f_tmp1);
+            }
         }
 
         usleep(20000);
