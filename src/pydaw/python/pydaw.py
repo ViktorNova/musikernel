@@ -6390,7 +6390,7 @@ class automation_viewer(QtGui.QGraphicsView):
             self.viewer_height - AUTOMATION_POINT_RADIUS
 
     def set_cc_num(self, a_plugin_index, a_port_num):
-        self.plugin_index = global_plugin_numbers[int(a_plugin_index)]
+        self.plugin_index = PLUGIN_NUMBERS[int(a_plugin_index)]
         self.cc_num = a_port_num
         self.clear_drawn_items()
         self.draw_item()
@@ -6467,7 +6467,7 @@ class automation_viewer_widget:
     def plugin_changed(self, a_val=None):
         self.control_combobox.clear()
         self.control_combobox.addItems(
-            global_cc_names[str(self.plugin_combobox.currentText())])
+            CC_NAMES[str(self.plugin_combobox.currentText())])
         self.automation_viewer.draw_item()
 
     def control_changed(self, a_val=None):
@@ -6477,7 +6477,7 @@ class automation_viewer_widget:
     def set_cc_num(self, a_val=None):
         f_port_name = str(self.control_combobox.currentText())
         if f_port_name != "":
-            f_num = global_controller_port_name_dict[
+            f_num = CONTROLLER_PORT_NAME_DICT[
                 str(self.plugin_combobox.currentText())][f_port_name].port
             self.automation_viewer.set_cc_num(
                 self.plugin_combobox.currentIndex(), f_num)
@@ -6498,9 +6498,9 @@ class automation_viewer_widget:
         self.ccs_in_use_combobox.addItem("")
         for f_cc in a_ccs:
             f_key_split = f_cc.split("|")
-            f_plugin_name = global_plugin_names[
-                global_plugin_indexes[int(f_key_split[0])]]
-            f_map = global_controller_port_num_dict[
+            f_plugin_name = PLUGIN_NAMES[
+                PLUGIN_INDEXES[int(f_key_split[0])]]
+            f_map = CONTROLLER_PORT_NUM_DICT[
                 f_plugin_name][int(f_key_split[1])]
             self.ccs_in_use_combobox.addItem(
                 "{}|{}".format(f_plugin_name, f_map.name))
@@ -6508,12 +6508,12 @@ class automation_viewer_widget:
 
     def smooth_pressed(self):
         if self.is_cc:
-            f_map = global_controller_port_name_dict[
+            f_map = CONTROLLER_PORT_NAME_DICT[
                 str(self.plugin_combobox.currentText())]\
                 [str(self.control_combobox.currentText())]
             pydaw_smooth_automation_points(
                 ITEM_EDITOR.items, self.is_cc,
-                global_plugin_numbers[self.plugin_combobox.currentIndex()],
+                PLUGIN_NUMBERS[self.plugin_combobox.currentIndex()],
                 f_map.port)
         else:
             pydaw_smooth_automation_points(ITEM_EDITOR.items, self.is_cc)
@@ -6534,7 +6534,7 @@ class automation_viewer_widget:
             self.vlayout.addLayout(self.hlayout2)
             self.plugin_combobox = QtGui.QComboBox()
             self.plugin_combobox.setMinimumWidth(120)
-            self.plugin_combobox.addItems(global_plugin_names)
+            self.plugin_combobox.addItems(PLUGIN_NAMES)
             self.hlayout2.addWidget(QtGui.QLabel(_("Plugin")))
             self.hlayout2.addWidget(self.plugin_combobox)
             self.plugin_combobox.currentIndexChanged.connect(
@@ -7338,10 +7338,9 @@ class item_list_editor:
         self.ccs_table_widget.setSortingEnabled(False)
         f_i = 0
         for cc in self.item.ccs:
-            f_plugin_name = global_plugin_names[
-                global_plugin_indexes[int(cc.plugin_index)]]
-            f_port_name = global_controller_port_num_dict[
-                f_plugin_name][int(cc.cc_num)].name
+            f_plugin_name = PLUGIN_NAMES[PLUGIN_INDEXES[int(cc.plugin_index)]]
+            f_port_name = CONTROLLER_PORT_NUM_DICT[f_plugin_name][
+                int(cc.cc_num)].name
             self.ccs_table_widget.setItem(
                 f_i, 0, QtGui.QTableWidgetItem(str(cc.start)))
             self.ccs_table_widget.setItem(
@@ -9352,14 +9351,14 @@ def global_update_peak_meters(a_val):
         if f_index < len(ALL_PEAK_METERS):
             ALL_PEAK_METERS[f_index].set_value(f_list[1:])
 
-global_plugin_names = ["Euphoria", "Way-V", "Ray-V", "Modulex"]
-global_plugin_numbers = [1, 3, 2, -1]
-global_plugin_indexes = {1:0, 3:1, 2:2, -1:3}
-global_cc_names = {"Euphoria":[], "Way-V":[], "Ray-V":[], "Modulex":[]}
-global_controller_port_name_dict = {"Euphoria":{}, "Way-V":{},
-                                    "Ray-V":{}, "Modulex":{}}
-global_controller_port_num_dict = {"Euphoria":{}, "Way-V":{},
-                                   "Ray-V":{}, "Modulex":{}}
+PLUGIN_NAMES = ["Euphoria", "Way-V", "Ray-V", "Modulex"]
+PLUGIN_NUMBERS = [1, 3, 2, -1]
+PLUGIN_INDEXES = {1:0, 3:1, 2:2, -1:3}
+CC_NAMES = {"Euphoria":[], "Way-V":[], "Ray-V":[], "Modulex":[]}
+CONTROLLER_PORT_NAME_DICT = {
+    "Euphoria":{}, "Way-V":{}, "Ray-V":{}, "Modulex":{}}
+CONTROLLER_PORT_NUM_DICT = {
+    "Euphoria":{}, "Way-V":{}, "Ray-V":{}, "Modulex":{}}
 
 class pydaw_controller_map_item:
     def __init__(self, a_name, a_port):
@@ -9374,10 +9373,10 @@ def pydaw_load_controller_maps():
     for k, v in f_portmap_dict.items():
         for k2, v2 in v.items():
             f_map = pydaw_controller_map_item(k2, v2)
-            global_controller_port_name_dict[k][k2] = f_map
-            global_controller_port_num_dict[k][int(v2)] = f_map
-            global_cc_names[k].append(k2)
-        global_cc_names[k].sort()
+            CONTROLLER_PORT_NAME_DICT[k][k2] = f_map
+            CONTROLLER_PORT_NUM_DICT[k][int(v2)] = f_map
+            CC_NAMES[k].append(k2)
+        CC_NAMES[k].sort()
 
 def pydaw_get_cc_map(a_name):
     return pydaw_cc_map.from_str(
@@ -9489,13 +9488,13 @@ class pydaw_cc_map_editor:
             f_map.add_item(
                 self.cc_spinbox.value(),
                 pydaw_cc_map_item(f_effects_cb.isChecked(),
-                global_controller_port_name_dict[
+                CONTROLLER_PORT_NAME_DICT[
                     "Ray-V"][str(f_rayv.currentText())].port,
-                global_controller_port_name_dict[
+                CONTROLLER_PORT_NAME_DICT[
                     "Way-V"][str(f_wayv.currentText())].port,
-                global_controller_port_name_dict[
+                CONTROLLER_PORT_NAME_DICT[
                     "Euphoria"][str(f_euphoria.currentText())].port,
-                global_controller_port_name_dict[
+                CONTROLLER_PORT_NAME_DICT[
                     "Modulex"][str(f_modulex.currentText())].port))
             pydaw_save_cc_map(self.current_map_name, f_map)
             self.open_map(self.current_map_name)
@@ -9541,7 +9540,7 @@ class pydaw_cc_map_editor:
             f_effects_cb.setChecked(True)
 
         f_euphoria = QtGui.QComboBox()
-        f_list = list(global_controller_port_name_dict["Euphoria"].keys())
+        f_list = list(CONTROLLER_PORT_NAME_DICT["Euphoria"].keys())
         f_list.sort()
         f_euphoria.addItems(f_list)
         f_layout.addWidget(QtGui.QLabel("Euphoria"), 3, 0)
@@ -9552,7 +9551,7 @@ class pydaw_cc_map_editor:
 
         f_modulex = QtGui.QComboBox()
         f_modulex.setMinimumWidth(300)
-        f_list = list(global_controller_port_name_dict["Modulex"].keys())
+        f_list = list(CONTROLLER_PORT_NAME_DICT["Modulex"].keys())
         f_list.sort()
         f_modulex.addItems(f_list)
         f_layout.addWidget(QtGui.QLabel("Modulex"), 4, 0)
@@ -9562,7 +9561,7 @@ class pydaw_cc_map_editor:
                 f_modulex.findText(str(self.cc_table.item(x, 3).text())))
 
         f_rayv = QtGui.QComboBox()
-        f_list = list(global_controller_port_name_dict["Ray-V"].keys())
+        f_list = list(CONTROLLER_PORT_NAME_DICT["Ray-V"].keys())
         f_list.sort()
         f_rayv.addItems(f_list)
         f_layout.addWidget(QtGui.QLabel("Ray-V"), 5, 0)
@@ -9572,7 +9571,7 @@ class pydaw_cc_map_editor:
                 f_rayv.findText(str(self.cc_table.item(x, 4).text())))
 
         f_wayv = QtGui.QComboBox()
-        f_list = list(global_controller_port_name_dict["Way-V"].keys())
+        f_list = list(CONTROLLER_PORT_NAME_DICT["Way-V"].keys())
         f_list.sort()
         f_wayv.addItems(f_list)
         f_layout.addWidget(QtGui.QLabel("Way-V"), 6, 0)
@@ -9652,23 +9651,21 @@ class pydaw_cc_map_editor:
                 QtGui.QTableWidgetItem(str(int_to_bool(v.effects_only))))
             self.cc_table.setItem(
                 f_row_pos, 2,
-                QtGui.QTableWidgetItem(global_controller_port_num_dict[
+                QtGui.QTableWidgetItem(
+                    CONTROLLER_PORT_NUM_DICT[
                     "Euphoria"][v.euphoria_port].name))
             self.cc_table.setItem(
                 f_row_pos, 3,
                 QtGui.QTableWidgetItem(
-                global_controller_port_num_dict[
-                    "Modulex"][v.modulex_port].name))
+                CONTROLLER_PORT_NUM_DICT["Modulex"][v.modulex_port].name))
             self.cc_table.setItem(
                 f_row_pos, 4,
                 QtGui.QTableWidgetItem(
-                    global_controller_port_num_dict[
-                        "Ray-V"][v.rayv_port].name))
+                    CONTROLLER_PORT_NUM_DICT["Ray-V"][v.rayv_port].name))
             self.cc_table.setItem(
                 f_row_pos, 5,
                 QtGui.QTableWidgetItem(
-                    global_controller_port_num_dict[
-                        "Way-V"][v.wayv_port].name))
+                    CONTROLLER_PORT_NUM_DICT["Way-V"][v.wayv_port].name))
             f_row_pos += 1
         self.cc_table.setSortingEnabled(True)
         self.cc_table.resizeColumnsToContents()
