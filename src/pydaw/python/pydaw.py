@@ -385,15 +385,7 @@ class song_editor:
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.table_widget.setToolTip(
-            _("This is the song editor.  A song is a timeline "
-            "consisting of regions,\nclick here to add a region, "
-            "click and drag to move a "
-            "region, or 'right-click->Delete Region' to delete\n"
-            "the selected regions.  "
-            "Click on a region to edit it in the region editor below.\n\n"
-            "Click 'Menu->Show Tooltips' in the transport to "
-            "disable these tooltips"))
+            self.table_widget.setToolTip(libpydaw.strings.song_editor)
         else:
             self.table_widget.setToolTip("")
 
@@ -3394,13 +3386,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.setToolTip(
-            _("Drag .wav files from the file browser onto here.  "
-            "You can edit item properties with the\n"
-            "'Edit' tab to the left, or by clicking and dragging "
-            "the item handles."
-            "\n\nClick 'Menu->Show Tooltips' in the transport "
-            "to disable these tooltips"))
+            self.setToolTip(libpydaw.strings.audio_items_viewer)
         else:
             self.setToolTip("")
         for f_item in self.audio_items:
@@ -5161,28 +5147,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.setToolTip(_("Click+drag to draw notes\n"
-            "CTRL+click+drag to marquee select multiple items\n"
-            "SHIFT+click+drag to delete notes\n"
-            "CTRL+ALT+click+drag-up/down to adjust the "
-            "velocity of selected notes\n"
-            "CTRL+SHIFT+click+drag-up/down to create a velocity "
-            "curve for the selected notes\n"
-            "Press the Delete button on your keyboard to "
-            "delete selected notes\n"
-            "To edit velocity, press the menu button and select "
-            "the Velocity->Dialog... action\n"
-            "Click and drag the note end to change the length "
-            "of selected notes\n"
-            "To edit multiple items as one logical item, select "
-            "multiple items in the region "
-            "editor and right-click + 'Edit Selected Items as Group'\n"
-            "The Quantize, Transpose and Velocity actions in "
-            "the menu button open dialogs \n"
-            "to manipulate the selected notes (or all notes "
-            "if none are selected)"
-            "\n\nClick 'Menu->Show Tooltips' in the transport "
-            "to disable these tooltips"))
+            self.setToolTip(libpydaw.strings.piano_roll_editor)
         else:
             self.setToolTip("")
 
@@ -5807,8 +5772,7 @@ class piano_roll_editor_widget:
         self.controls_grid_layout = QtGui.QGridLayout()
         self.scale_key_combobox = QtGui.QComboBox()
         self.scale_key_combobox.setMinimumWidth(60)
-        self.scale_key_combobox.addItems(["C", "C#", "D", "D#", "E", "F", "F#",
-                                          "G", "G#", "A", "A#", "B"])
+        self.scale_key_combobox.addItems(PIANO_ROLL_NOTE_LABELS)
         self.scale_key_combobox.currentIndexChanged.connect(
             self.reload_handler)
         self.controls_grid_layout.addWidget(QtGui.QLabel("Key:"), 0, 3)
@@ -5986,8 +5950,8 @@ class piano_roll_editor_widget:
         self.vlayout.addWidget(PIANO_ROLL_EDITOR)
         self.snap_combobox = QtGui.QComboBox()
         self.snap_combobox.setMinimumWidth(90)
-        self.snap_combobox.addItems([_("None"), "1/4", "1/8", "1/12", "1/16",
-                                     "1/32", "1/64", "1/128"])
+        self.snap_combobox.addItems(
+            [_("None"), "1/4", "1/8", "1/12", "1/16", "1/32", "1/64", "1/128"])
         self.controls_grid_layout.addWidget(QtGui.QLabel(_("Snap:")), 0, 0)
         self.controls_grid_layout.addWidget(self.snap_combobox, 0, 1)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
@@ -6817,9 +6781,7 @@ class automation_viewer_widget:
         f_layout.addWidget(f_epb_spinbox, 20, 1)
 
         f_layout.addWidget(QtGui.QLabel(
-            _("Pitchbend values are in semitones.\n\n"
-            "Use this dialog to add points with precision,\n"
-            "or double-click on the editor to add points.")), 30, 1)
+            libpydaw.strings.pitchbend_dialog), 30, 1)
 
         f_ok = QtGui.QPushButton(_("Add"))
         f_ok.pressed.connect(ok_handler)
@@ -9009,8 +8971,8 @@ class pydaw_main_window(QtGui.QMainWindow):
 
         f_ok_layout = QtGui.QHBoxLayout()
         f_ok_layout.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding,
-                              QtGui.QSizePolicy.Minimum))
+            QtGui.QSpacerItem(
+            10, 10, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
         f_ok = QtGui.QPushButton(_("OK"))
         f_ok.setMinimumWidth(75)
         f_ok.pressed.connect(ok_handler)
@@ -10057,8 +10019,8 @@ class pydaw_wave_editor_widget:
 
         def ok_handler():
             if str(f_name.text()) == "":
-                QtGui.QMessageBox.warning(f_window, _("Error"),
-                                          _("Name cannot be empty"))
+                QtGui.QMessageBox.warning(
+                    f_window, _("Error"), _("Name cannot be empty"))
                 return
 
             if f_copy_to_clipboard_checkbox.isChecked():
@@ -10119,9 +10081,7 @@ class pydaw_wave_editor_widget:
         f_overwrite_button.pressed.connect(on_overwrite)
 
         f_layout.addWidget(QtGui.QLabel(
-        _("File is exported to 32 bit .wav at the sample rate your audio "
-        "interface is running at.\nYou can convert "
-        "the format using other programs such as Audacity")), 3, 1)
+            libpydaw.strings.export_format), 3, 1)
         f_copy_to_clipboard_checkbox = QtGui.QCheckBox(
         _("Copy export path to clipboard? (useful for right-click pasting "
         "back into the audio sequencer)"))

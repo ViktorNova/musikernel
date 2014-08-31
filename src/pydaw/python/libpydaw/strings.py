@@ -110,3 +110,45 @@ http://libav.org
 
 Can't find {}""")
 
+export_format = _(
+"""File is exported to 32 bit .wav at the sample rate your audio
+interface is running at.
+You can convert the format using the Menu->Tools dialogs""")
+
+pitchbend_dialog = _(
+"""Pitchbend values are in semitones.
+
+Use this dialog to add points with precision,or double-click on
+the editor to add points.""")
+
+piano_roll_editor = _(
+"""Click+drag to draw notes
+CTRL+click+drag to marquee select multiple items
+SHIFT+click+drag to delete notes
+CTRL+ALT+click+drag-up/down to adjust the velocity of selected notes
+CTRL+SHIFT+click+drag-up/down to create a velocity curve for the selected notes
+Press the Delete button on your keyboard to delete selected notes
+To edit velocity, press the menu button and select
+the Velocity->Dialog... action
+Click and drag the note end to change the length of selected notes
+To edit multiple items as one logical item, select multiple items in the region
+editor and right-click + 'Edit Selected Items as Group'
+The Quantize, Transpose and Velocity actions in the menu button open dialogs
+to manipulate the selected notes (or all notes if none are selected)
+
+Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+
+
+audio_items_viewer = _("""Drag .wav files from the file browser onto here.
+"You can edit item properties with the 'Edit' tab to the left,
+or by clicking and dragging the item handles.
+
+Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+
+song_editor = _(
+"""This is the song editor.  A song is a timeline consisting of regions,
+click here to add a region, click and drag to move a region,
+or 'right-click->Delete Region' to delete the selected regions.
+Click on a region to edit it in the region editor below.
+
+Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
