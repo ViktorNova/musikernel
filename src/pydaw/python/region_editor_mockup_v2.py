@@ -2,6 +2,7 @@
 
 from PyQt4 import QtGui, QtCore
 from libpydaw import pydaw_util
+from libpydaw.translate import _
 
 def global_set_region_editor_zoom():
     global REGION_EDITOR_GRID_WIDTH
@@ -9,7 +10,7 @@ def global_set_region_editor_zoom():
 
     f_width = float(REGION_EDITOR.rect().width()) - \
         float(REGION_EDITOR.verticalScrollBar().width()) - 6.0 - \
-        PIANO_KEYS_WIDTH
+        REGION_TRACK_WIDTH
     f_region_scale = f_width / (ITEM_EDITING_COUNT * 1000.0)
 
     REGION_EDITOR_GRID_WIDTH = 1000.0 * MIDI_SCALE * f_region_scale
@@ -19,8 +20,8 @@ ITEM_EDITING_COUNT = 1
 
 REGION_EDITOR_SNAP = False
 REGION_EDITOR_GRID_WIDTH = 800.0
-PIANO_KEYS_WIDTH = 180  #Width of the piano keys in px
-REGION_EDITOR_GRID_MAX_START_TIME = 999.0 + PIANO_KEYS_WIDTH
+REGION_TRACK_WIDTH = 180  #Width of the tracks in px
+REGION_EDITOR_GRID_MAX_START_TIME = 999.0 + REGION_TRACK_WIDTH
 REGION_EDITOR_NOTE_HEIGHT = pydaw_util.get_file_setting("TRACK_VZOOM", int, 80)
 REGION_EDITOR_SNAP_DIVISOR = 16.0
 REGION_EDITOR_SNAP_BEATS = 4.0 / REGION_EDITOR_SNAP_DIVISOR
@@ -265,7 +266,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             elif a_event.modifiers() == QtCore.Qt.ControlModifier:
                 self.is_copying = True
                 for f_item in REGION_EDITOR.get_selected_items():
-                    REGION_EDITOR.draw_note(
+                    REGION_EDITOR.draw_item(
                         f_item.note_item, f_item.item_index)
         if self.is_velocity_curving or self.is_velocity_dragging:
             a_event.setAccepted(True)
@@ -340,8 +341,8 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             else:
                 f_pos_x = f_item.pos().x()
                 f_pos_y = f_item.pos().y()
-                if f_pos_x < PIANO_KEYS_WIDTH:
-                    f_pos_x = PIANO_KEYS_WIDTH
+                if f_pos_x < REGION_TRACK_WIDTH:
+                    f_pos_x = REGION_TRACK_WIDTH
                 elif f_pos_x > REGION_EDITOR_GRID_MAX_START_TIME:
                     f_pos_x = REGION_EDITOR_GRID_MAX_START_TIME
                 if f_pos_y < REGION_EDITOR_HEADER_HEIGHT:
@@ -353,9 +354,9 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                     self.note_height) * self.note_height) + \
                     REGION_EDITOR_HEADER_HEIGHT
                 if REGION_EDITOR_SNAP:
-                    f_pos_x = (int((f_pos_x - PIANO_KEYS_WIDTH) /
+                    f_pos_x = (int((f_pos_x - REGION_TRACK_WIDTH) /
                     REGION_EDITOR_SNAP_VALUE) *
-                    REGION_EDITOR_SNAP_VALUE) + PIANO_KEYS_WIDTH
+                    REGION_EDITOR_SNAP_VALUE) + REGION_TRACK_WIDTH
                 f_item.setPos(f_pos_x, f_pos_y)
                 f_new_note = self.y_pos_to_note(f_pos_y)
                 f_item.update_note_text(f_new_note)
@@ -380,7 +381,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             f_pos_y = f_item.pos().y()
             if self.is_resizing:
                 f_new_note_length = ((f_pos_x + f_item.rect().width() -
-                    PIANO_KEYS_WIDTH) * f_recip *
+                    REGION_TRACK_WIDTH) * f_recip *
                     4.0) - f_item.resize_start_pos
                 if SELECTED_REGION_ITEM is not None and \
                 self.note_item != SELECTED_REGION_ITEM:
@@ -395,7 +396,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                 pass
             else:
                 f_new_note_start = (f_pos_x -
-                    PIANO_KEYS_WIDTH) * 4.0 * f_recip
+                    REGION_TRACK_WIDTH) * 4.0 * f_recip
                 f_new_note_num = self.y_pos_to_note(f_pos_y)
                 if self.is_copying:
                     f_item.item_index, f_new_note_start = \
@@ -484,7 +485,7 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         self.setScene(self.scene)
         self.first_open = True
         self.draw_header()
-        self.draw_piano()
+        self.draw_tracks()
         self.draw_grid()
 
         self.has_selected = False
@@ -499,17 +500,16 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         self.last_x_scale = 1.0
         self.scene.selectionChanged.connect(self.highlight_selected)
         self.selected_note_strings = []
-        self.tracks = None
         self.clipboard = []
 
     def update_note_height(self):
         self.note_height = REGION_EDITOR_NOTE_HEIGHT
         self.octave_height = self.notes_in_octave * self.note_height
-        self.piano_height = self.note_height * REGION_EDITOR_TRACK_COUNT
+        self.tracks_height = self.note_height * REGION_EDITOR_TRACK_COUNT
 
         global REGION_EDITOR_TOTAL_HEIGHT
         REGION_EDITOR_TOTAL_HEIGHT = \
-            self.piano_height + REGION_EDITOR_HEADER_HEIGHT
+            self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
 
     def get_selected_items(self):
         return (x for x in self.note_items if x.isSelected())
@@ -524,21 +524,6 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         self.scene.clearSelection()
         self.scene.clear()
 
-    def highlight_keys(self, a_state, a_note):
-        f_note = int(a_note)
-        f_state = int(a_state)
-        if self.tracks is not None and f_note in self.tracks:
-            if f_state == 0:
-                if self.tracks[f_note].is_black:
-                    self.tracks[f_note].setBrush(QtGui.QColor(0, 0, 0))
-                else:
-                    self.tracks[f_note].setBrush(
-                        QtGui.QColor(255, 255, 255))
-            elif f_state == 1:
-                self.tracks[f_note].setBrush(QtGui.QColor(237, 150, 150))
-            else:
-                assert(False)
-
     def set_grid_div(self, a_div):
         self.grid_div = int(a_div)
 
@@ -548,8 +533,8 @@ class REGION_EDITOR(QtGui.QGraphicsView):
 
     def set_header_and_keys(self):
         f_point = self.get_scene_pos()
-        self.piano.setPos(f_point.x(), REGION_EDITOR_HEADER_HEIGHT)
-        self.header.setPos(PIANO_KEYS_WIDTH + self.padding, f_point.y())
+        self.tracks.setPos(f_point.x(), REGION_EDITOR_HEADER_HEIGHT)
+        self.header.setPos(REGION_TRACK_WIDTH + self.padding, f_point.y())
 
     def get_scene_pos(self):
         return QtCore.QPointF(
@@ -600,7 +585,7 @@ class REGION_EDITOR(QtGui.QGraphicsView):
             self.scene.clearSelection()
             f_pos_x = a_event.scenePos().x()
             f_pos_y = a_event.scenePos().y()
-            if f_pos_x > PIANO_KEYS_WIDTH and \
+            if f_pos_x > REGION_TRACK_WIDTH and \
             f_pos_x < REGION_EDITOR_GRID_MAX_START_TIME and \
             f_pos_y > REGION_EDITOR_HEADER_HEIGHT and \
             f_pos_y < REGION_EDITOR_TOTAL_HEIGHT:
@@ -613,20 +598,20 @@ class REGION_EDITOR(QtGui.QGraphicsView):
                     REGION_EDITOR_TRACK_COUNT - ((f_pos_y -
                     REGION_EDITOR_HEADER_HEIGHT) / self.note_height)) + 1
                 if REGION_EDITOR_SNAP:
-                    f_beat = (int((f_pos_x - PIANO_KEYS_WIDTH) /
+                    f_beat = (int((f_pos_x - REGION_TRACK_WIDTH) /
                         REGION_EDITOR_SNAP_VALUE) *
                         REGION_EDITOR_SNAP_VALUE) * f_recip * 4.0
                     f_note_item = pydaw_note(
                         f_beat, LAST_NOTE_RESIZE, f_note, self.get_vel(f_beat))
                 else:
                     f_beat = (f_pos_x -
-                        PIANO_KEYS_WIDTH) * f_recip * 4.0
+                        REGION_TRACK_WIDTH) * f_recip * 4.0
                     f_note_item = pydaw_note(
                         f_beat, 0.25, f_note, self.get_vel(f_beat))
                 f_note_index = ITEM_EDITOR.add_note(f_note_item)
                 global SELECTED_REGION_ITEM
                 SELECTED_REGION_ITEM = f_note_item
-                f_drawn_note = self.draw_note(f_note_item, f_note_index)
+                f_drawn_note = self.draw_item(f_note_item, f_note_index)
                 f_drawn_note.setSelected(True)
                 f_drawn_note.resize_start_pos = \
                     f_drawn_note.note_item.start + (4.0 *
@@ -659,28 +644,26 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         self.header.hoverEnterEvent = self.hover_restore_cursor_event
         self.header.setBrush(REGION_EDITOR_HEADER_GRADIENT)
         self.scene.addItem(self.header)
-        #self.header.mapToScene(PIANO_KEYS_WIDTH + self.padding, 0.0)
+        #self.header.mapToScene(REGION_TRACK_WIDTH + self.padding, 0.0)
         self.beat_width = self.viewer_width / self.item_length
         self.value_width = self.beat_width / self.grid_div
         self.header.setZValue(1003.0)
 
-    def draw_piano(self):
-        self.tracks = {}
+    def draw_tracks(self):
         f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_NOTE_HEIGHT)
         f_brush.setColorAt(0.0, QtGui.QColor(234, 234, 234))
         f_brush.setColorAt(0.5, QtGui.QColor(159, 159, 159))
-        self.piano = QtGui.QGraphicsRectItem(
-            0, 0, PIANO_KEYS_WIDTH, self.piano_height)
-        self.scene.addItem(self.piano)
-        #self.piano.mapToScene(0.0, REGION_EDITOR_HEADER_HEIGHT)
+        self.tracks_widget = QtGui.QWidget()
+        self.tracks_widget.setGeometry(
+            QtCore.QRect(0, 0, REGION_TRACK_WIDTH, self.tracks_height))
+        self.tracks_layout = QtGui.QVBoxLayout(self.tracks_widget)
+        self.tracks = self.scene.addWidget(self.tracks_widget)
 
         for i in range(REGION_EDITOR_TRACK_COUNT):
-            f_track = piano_key_item(
-                PIANO_KEYS_WIDTH, self.note_height, self.piano)
-            self.tracks[i] = f_track
-            f_track.setPos(0, i * REGION_EDITOR_NOTE_HEIGHT)
-            f_track.setBrush(f_brush)
-        self.piano.setZValue(1000.0)
+            f_track = seq_track(i)
+            self.tracks_layout.addWidget(f_track.group_box)
+            #f_track.setBrush(f_brush)
+        self.tracks.setZValue(1000.0)
 
     def draw_grid(self):
         f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_NOTE_HEIGHT)
@@ -696,12 +679,12 @@ class REGION_EDITOR(QtGui.QGraphicsView):
             f_note_bar_y = (i *
                 REGION_EDITOR_NOTE_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
             f_note_bar.setPos(
-                PIANO_KEYS_WIDTH + self.padding, f_note_bar_y)
+                REGION_TRACK_WIDTH + self.padding, f_note_bar_y)
         f_beat_pen = QtGui.QPen()
         f_beat_pen.setWidth(2)
-        f_beat_y = self.piano_height + REGION_EDITOR_HEADER_HEIGHT
+        f_beat_y = self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
         for i in range(0, int(self.item_length)):
-            f_beat_x = (self.beat_width * i) + PIANO_KEYS_WIDTH
+            f_beat_x = (self.beat_width * i) + REGION_TRACK_WIDTH
             f_beat = self.scene.addLine(f_beat_x, 0, f_beat_x, f_beat_y)
             f_beat.setPen(f_beat_pen)
             if i < self.item_length:
@@ -720,27 +703,27 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         self.scene.clear()
         self.update_note_height()
         self.draw_header()
-        self.draw_piano()
+        self.draw_tracks()
         self.draw_grid()
         self.set_header_and_keys()
 
-    def draw_item(self):
+    def draw_region(self):
         self.has_selected = False #Reset the selected-ness state...
         self.viewer_width = REGION_EDITOR_GRID_WIDTH * ITEM_EDITING_COUNT
         self.setSceneRect(
             0.0, 0.0, self.viewer_width + REGION_EDITOR_GRID_WIDTH,
-            self.piano_height + REGION_EDITOR_HEADER_HEIGHT + 24.0)
+            self.tracks_height + REGION_EDITOR_HEADER_HEIGHT + 24.0)
         self.item_length = float(4 * ITEM_EDITING_COUNT)
         global REGION_EDITOR_GRID_MAX_START_TIME
         REGION_EDITOR_GRID_MAX_START_TIME = ((REGION_EDITOR_GRID_WIDTH - 1.0) *
-            ITEM_EDITING_COUNT) + PIANO_KEYS_WIDTH
+            ITEM_EDITING_COUNT) + REGION_TRACK_WIDTH
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
         if ITEM_EDITOR.enabled:
             f_item_count = len(ITEM_EDITOR.items)
             for f_i, f_item in zip(range(f_item_count), ITEM_EDITOR.items):
                 for f_note in f_item.notes:
-                    f_note_item = self.draw_note(f_note, f_i)
+                    f_note_item = self.draw_item(f_note, f_i)
                     f_note_item.resize_last_mouse_pos = \
                         f_note_item.scenePos().x()
                     f_note_item.resize_pos = f_note_item.scenePos()
@@ -752,7 +735,7 @@ class REGION_EDITOR(QtGui.QGraphicsView):
                 range(f_item_count), LAST_OPEN_ITEM_UIDS):
                     f_item = PROJECT.get_item_by_uid(f_uid)
                     for f_note in f_item.notes:
-                        f_note_item = self.draw_note(f_note, f_i, False)
+                        f_note_item = self.draw_item(f_note, f_i, False)
             self.scrollContentsBy(0, 0)
             for f_name, f_i in zip(
             ITEM_EDITOR.item_names, range(len(ITEM_EDITOR.item_names))):
@@ -763,10 +746,10 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         self.setUpdatesEnabled(True)
         self.update()
 
-    def draw_note(self, a_note, a_item_index, a_enabled=True):
+    def draw_item(self, a_note, a_item_index, a_enabled=True):
         """ a_note is an instance of the pydaw_note class"""
-        f_start = PIANO_KEYS_WIDTH + self.padding + self.beat_width * \
-            (a_note.start + (float(a_item_index) * 4.0))
+        f_start = REGION_TRACK_WIDTH + self.padding + \
+            self.beat_width * (a_note.start + (float(a_item_index) * 4.0))
         f_length = self.beat_width * a_note.length
         f_note = REGION_EDITOR_HEADER_HEIGHT + self.note_height * \
             (REGION_EDITOR_TRACK_COUNT - a_note.note_num)
@@ -780,14 +763,328 @@ class REGION_EDITOR(QtGui.QGraphicsView):
             return f_note_item
 
 
+class plugin_settings:
+    instrument = 0
+    effect = 1
+    def __init__(self, a_index, a_track_num,
+                 a_layout, a_type, a_save_callback, a_name_callback):
+        self.suppress_osc = False
+        self.save_callback = a_save_callback
+        self.name_callback = a_name_callback
+        self.plugin_uid = -1
+        self.type = a_type
+        self.track_num = a_track_num
+        f_offset = 0 if self.type == self.instrument else 10
+        self.index = a_index
+        self.plugin_combobox = QtGui.QComboBox()
+        self.plugin_combobox.setMinimumWidth(150)
+        self.plugin_combobox.wheelEvent = self.wheel_event
+        if self.type == plugin_settings.instrument:
+            self.plugin_combobox.addItems(
+                ["None", "Euphoria", "Ray-V", "Way-V"])
+        elif self.type == plugin_settings.effect:
+            self.plugin_combobox.addItems(["None", "Modulex"])
+        self.plugin_combobox.currentIndexChanged.connect(
+            self.on_plugin_change)
+        a_layout.addWidget(self.plugin_combobox, a_index + 1, f_offset)
+        self.ui_button = QtGui.QPushButton("UI")
+        self.ui_button.pressed.connect(self.on_show_ui)
+        self.ui_button.setObjectName("uibutton")
+        self.ui_button.setFixedWidth(24)
+        a_layout.addWidget(self.ui_button, a_index + 1, f_offset + 1)
+
+    def set_value(self, a_val):
+        self.suppress_osc = True
+        self.plugin_combobox.setCurrentIndex(a_val.plugin_index)
+        self.plugin_uid = a_val.plugin_uid
+        self.suppress_osc = False
+
+    def get_value(self):
+        return pydaw_track_plugin(
+            self.type, self.index, self.plugin_combobox.currentIndex(),
+            self.plugin_uid)
+
+    def on_plugin_change(self, a_val):
+        if self.suppress_osc:
+            return
+        if a_val == 0:
+            self.plugin_uid = -1
+        else:
+            self.plugin_uid = PROJECT.get_next_plugin_uid()
+        PROJECT.this_pydaw_osc.pydaw_set_plugin_index(
+            self.track_num, self.type, self.index,
+            a_val, self.plugin_uid)
+        self.save_callback()
+
+    def wheel_event(self, a_event=None):
+        pass
+
+    def on_show_ui(self):
+        f_index = self.plugin_combobox.currentIndex()
+        if f_index == 0 or self.plugin_uid == -1:
+            return
+        global_open_plugin_ui(
+            self.plugin_uid, self.type, f_index,
+            "Track:  {}".format(self.name_callback()))
+
+
+class track_send:
+    def __init__(self, a_index, a_track_num, a_layout, a_save_callback):
+        self.save_callback = a_save_callback
+        self.suppress_osc = True
+        self.track_num = a_track_num
+        self.index = int(a_index)
+        self.bus_combobox = QtGui.QComboBox()
+        self.bus_combobox.setMinimumWidth(180)
+        self.bus_combobox.wheelEvent = self.wheel_event
+        self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
+        self.update_names()
+        a_layout.addWidget(self.bus_combobox, a_index + 1, 20)
+        self.vol_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        a_layout.addWidget(self.vol_slider, a_index + 1, 21)
+        self.vol_slider.setMinimumWidth(300)
+        self.vol_slider.setRange(-400, 120)
+        self.vol_slider.setValue(0)
+        self.vol_slider.valueChanged.connect(self.on_vol_changed)
+        self.vol_slider.sliderReleased.connect(self.on_vol_released)
+        self.vol_label = QtGui.QLabel("0.0dB")
+        self.vol_label.setMinimumWidth(60)
+        a_layout.addWidget(self.vol_label, a_index + 1, 22)
+        self.suppress_osc = False
+
+    def on_bus_changed(self, a_value=0):
+        self.update_engine()
+
+    def update_engine(self):
+        if not self.suppress_osc:
+            f_graph = PROJECT.get_routing_graph()
+            if not self.track_num in f_graph.graph:
+                f_graph.graph[self.track_num] = {}
+            f_graph.graph[self.track_num][self.index] = self.get_value()
+            PROJECT.save_routing_graph(f_graph)
+
+    def get_vol(self):
+        return round(self.vol_slider.value() * 0.1, 1)
+
+    def set_vol(self, a_val):
+        self.vol_slider.setValue(int(a_val * 10.0))
+
+    def on_vol_changed(self, a_val):
+        f_val = self.get_vol()
+        self.vol_label.setText("{}dB".format(f_val))
+        if not self.suppress_osc:
+            PROJECT.this_pydaw_osc.pydaw_send_vol(
+                self.track_num, self.index, self.get_vol())
+
+    def on_vol_released(self):
+        self.update_engine()
+
+    def wheel_event(self, a_event=None):
+        pass
+
+    def get_value(self):
+        return pydaw_track_send(
+            self.track_num, self.index,
+            self.bus_combobox.currentIndex() - 1,
+            round(self.get_vol()))
+
+    def set_value(self, a_val):
+        self.suppress_osc = True
+        self.set_vol(a_val.vol)
+        self.bus_combobox.setCurrentIndex(a_val.output + 1)
+        self.suppress_osc = False
+
+    def update_names(self):
+        f_index = pydaw_clip_min(self.bus_combobox.currentIndex(), 0)
+        # TODO^^^^^  Why does that do that?
+        self.suppress_osc = True
+        self.bus_combobox.clear()
+        self.bus_combobox.addItems(["None"] + TRACK_NAMES)
+        self.bus_combobox.setCurrentIndex(f_index)
+        self.suppress_osc = False
+
+TRACK_COUNT_ALL = 32
+
+TRACK_NAMES = ["Master" if x == 0 else "track{}".format(x)
+    for x in range(TRACK_COUNT_ALL)]
+
+class seq_track:
+    def __init__(self, a_track_num, a_track_text=_("track")):
+        self.suppress_osc = True
+        self.track_number = a_track_num
+        self.group_box = QtGui.QWidget()
+        self.group_box.contextMenuEvent = self.context_menu_event
+        self.group_box.setObjectName("track_panel")
+        self.main_hlayout = QtGui.QHBoxLayout()
+        self.main_hlayout.setContentsMargins(2, 2, 2, 2)
+        self.main_vlayout = QtGui.QVBoxLayout()
+        self.main_hlayout.addLayout(self.main_vlayout)
+        self.peak_meter = pydaw_widgets.peak_meter()
+        self.main_hlayout.addWidget(self.peak_meter.widget)
+        self.group_box.setLayout(self.main_hlayout)
+        self.track_name_lineedit = QtGui.QLineEdit()
+        if a_track_num == 0:
+            self.track_name_lineedit.setText("Master")
+            self.track_name_lineedit.setDisabled(True)
+        else:
+            self.track_name_lineedit.setText(a_track_text)
+            self.track_name_lineedit.setMaxLength(48)
+            self.track_name_lineedit.editingFinished.connect(
+                self.on_name_changed)
+        self.main_vlayout.addWidget(self.track_name_lineedit)
+        self.hlayout3 = QtGui.QHBoxLayout()
+        self.main_vlayout.addLayout(self.hlayout3)
+
+        self.menu_button = QtGui.QPushButton()
+        self.menu_button.setFixedWidth(42)
+        self.button_menu = QtGui.QMenu()
+        self.menu_button.setMenu(self.button_menu)
+        self.hlayout3.addWidget(self.menu_button)
+        self.button_menu.aboutToShow.connect(self.menu_button_pressed)
+        self.menu_widget = QtGui.QWidget()
+        self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
+        self.menu_gridlayout = QtGui.QGridLayout()
+        self.menu_hlayout.addLayout(self.menu_gridlayout)
+        self.instruments = []
+        if a_track_num != 0:
+            self.menu_gridlayout.addWidget(
+                QtGui.QLabel(_("Instruments")), 0, 0)
+            for f_i in range(5):
+                f_plugin = plugin_settings(
+                    f_i, self.track_number, self.menu_gridlayout,
+                    plugin_settings.instrument, self.save_callback,
+                    self.name_callback)
+                self.instruments.append(f_plugin)
+        self.menu_gridlayout.addWidget(
+            QtGui.QLabel(_("Effects")), 0, 10)
+        self.effects = []
+        for f_i in range(10):
+            f_plugin = plugin_settings(
+                f_i, self.track_number, self.menu_gridlayout,
+                plugin_settings.effect, self.save_callback,
+                self.name_callback)
+            self.effects.append(f_plugin)
+        self.sends = []
+        if self.track_number != 0:
+            self.menu_gridlayout.addWidget(
+                QtGui.QLabel(_("Sends")), 0, 20)
+            for f_i in range(4):
+                f_send = track_send(
+                    f_i, self.track_number, self.menu_gridlayout,
+                    self.save_callback)
+                self.sends.append(f_send)
+        self.action_widget = QtGui.QWidgetAction(self.button_menu)
+        self.action_widget.setDefaultWidget(self.menu_widget)
+        self.button_menu.addAction(self.action_widget)
+        self.solo_checkbox = QtGui.QCheckBox()
+        self.mute_checkbox = QtGui.QCheckBox()
+        if self.track_number == 0:
+            self.hlayout3.addItem(
+                QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+        else:
+            self.solo_checkbox.stateChanged.connect(self.on_solo)
+            self.solo_checkbox.setObjectName("solo_checkbox")
+            self.hlayout3.addWidget(self.solo_checkbox)
+            self.mute_checkbox.stateChanged.connect(self.on_mute)
+            self.mute_checkbox.setObjectName("mute_checkbox")
+            self.hlayout3.addWidget(self.mute_checkbox)
+        self.suppress_osc = False
+
+    def menu_button_pressed(self):
+        for f_send in self.sends:
+            f_send.update_names()
+
+    def on_solo(self, value):
+        if not self.suppress_osc:
+            PROJECT.this_pydaw_osc.pydaw_set_solo(
+                self.track_number, self.solo_checkbox.isChecked())
+            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+            PROJECT.commit(_("Set solo for track {} to {}").format(
+                self.track_number, self.solo_checkbox.isChecked()))
+
+    def on_mute(self, value):
+        if not self.suppress_osc:
+            PROJECT.this_pydaw_osc.pydaw_set_mute(
+                self.track_number, self.mute_checkbox.isChecked())
+            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+            PROJECT.commit(_("Set mute for track {} to {}").format(
+                self.track_number, self.mute_checkbox.isChecked()))
+
+    def on_name_changed(self):
+        f_name = pydaw_remove_bad_chars(self.track_name_lineedit.text())
+        self.track_name_lineedit.setText(f_name)
+        global_update_track_comboboxes(self.track_number, f_name)
+        PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+        PROJECT.commit(
+            _("Set name for track {} to {}").format(self.track_number,
+            self.track_name_lineedit.text()))
+        f_plugins = PROJECT.get_track_plugins(self.track_number)
+        if not f_plugins:
+            return
+        for f_plugin in f_plugins.instruments + f_plugins.effects:
+            global_plugin_set_window_title(
+                f_plugin.plugin_uid,
+                _("Track: {}").format(self.name_callback()))
+
+    def context_menu_event(self, a_event=None):
+        pass
+
+    def save_callback(self):
+        f_result = pydaw_track_plugins(
+            [x.get_value() for x in self.instruments],
+            [x.get_value() for x in self.effects])
+        PROJECT.save_track_plugins(self.track_number, f_result)
+        PROJECT.commit(
+            "Update track plugins for '{}', {}".format(
+            self.name_callback(), self.track_number))
+
+    def name_callback(self):
+        return str(self.track_name_lineedit.text())
+
+    def open_track(self, a_track, a_notify_osc=False):
+        if not a_notify_osc:
+            self.suppress_osc = True
+        if self.track_number != 0:
+            self.track_name_lineedit.setText(a_track.name)
+            self.solo_checkbox.setChecked(a_track.solo)
+            self.mute_checkbox.setChecked(a_track.mute)
+        f_plugins = PROJECT.get_track_plugins(self.track_number)
+        if not f_plugins:
+            return
+        if self.track_number != 0:
+            for f_plugin in f_plugins.instruments:
+                self.instruments[f_plugin.index].set_value(f_plugin)
+        for f_plugin in f_plugins.effects:
+            self.effects[f_plugin.index].set_value(f_plugin)
+
+        f_graph = PROJECT.get_routing_graph()
+        if self.track_number in f_graph.graph:
+            f_sends = f_graph.graph[self.track_number]
+            for f_i, f_send in f_sends.items():
+                self.sends[f_i].set_value(f_send)
+
+        self.suppress_osc = False
+
+    def get_track(self):
+        return pydaw_track(
+            self.track_number, self.solo_checkbox.isChecked(),
+            self.mute_checkbox.isChecked(),
+            self.track_number, self.track_name_lineedit.text())
+
+
+
+
 import sys
-#import libpydaw.pydaw_project
-#
-#TEST_REGION = libpydaw.pydaw_project.pydaw_region()
-#TEST_REGION.
+from libpydaw import *
+
 #test = QtGui.QGraphicsProxyWidget()
 #test.setLayout()
 APP = QtGui.QApplication(sys.argv)
 REGION_EDITOR = REGION_EDITOR()
 REGION_EDITOR.show()
+
+PROJECT = pydaw_project(False)
+PROJECT.open_project(
+    "/home/userbuntu/musikernel/default-project/default.musikernel", False)
+
 APP.exec_()
