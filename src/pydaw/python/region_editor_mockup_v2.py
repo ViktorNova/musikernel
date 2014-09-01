@@ -482,7 +482,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
         self.end_octave = 8
         self.start_octave = -2
         self.notes_in_octave = 12
-        self.piano_width = 32
+        self.piano_width = PIANO_KEYS_WIDTH
         self.padding = 2
 
         self.update_note_height()
@@ -829,6 +829,9 @@ class piano_roll_editor(QtGui.QGraphicsView):
 
     def draw_piano(self):
         self.piano_keys = {}
+        f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, PIANO_ROLL_NOTE_HEIGHT)
+        f_brush.setColorAt(0.0, QtGui.QColor(234, 234, 234))
+        f_brush.setColorAt(0.5, QtGui.QColor(159, 159, 159))
         self.piano = QtGui.QGraphicsRectItem(
             0, 0, self.piano_width, self.piano_height)
         self.scene.addItem(self.piano)
@@ -839,153 +842,39 @@ class piano_roll_editor(QtGui.QGraphicsView):
                 self.piano_width, self.note_height, self.piano)
             self.piano_keys[i] = f_key
             f_key.setPos(0, i * PIANO_ROLL_NOTE_HEIGHT)
-            f_key.setBrush(QtGui.QColor(255, 255, 255))
+            f_key.setBrush(f_brush)
         self.piano.setZValue(1000.0)
 
     def draw_grid(self):
-        f_black_key_brush = QtGui.QBrush(QtGui.QColor(30, 30, 30, 90))
-        f_white_key_brush = QtGui.QBrush(QtGui.QColor(210, 210, 210, 90))
-        f_base_brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 120))
-        try:
-            f_index = PIANO_ROLL_EDITOR_WIDGET.scale_combobox.currentIndex()
-        except NameError:
-            f_index = 0
-        if self.first_open or f_index == 0: #Major
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush]
-        elif f_index == 1: #Melodic Minor
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush]
-        elif f_index == 2: #Harmonic Minor
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_black_key_brush, f_white_key_brush]
-        elif f_index == 3: #Natural Minor
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 4: #Pentatonic Major
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_black_key_brush]
-        elif f_index == 5: #Pentatonic Minor
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 6: #Dorian
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 7: #Phrygian
-            f_octave_brushes = [
-                f_base_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 8: #Lydian
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush]
-        elif f_index == 9: #Mixolydian
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 10: #Locrian
-            f_octave_brushes = [
-                f_base_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 11: #Phrygian Dominant
-            f_octave_brushes = [
-                f_base_brush, f_white_key_brush, f_black_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 12: #Double Harmonic
-            f_octave_brushes = [
-                f_base_brush, f_white_key_brush, f_black_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_black_key_brush, f_white_key_brush]
+        f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, PIANO_ROLL_NOTE_HEIGHT)
+        f_brush.setColorAt(0.0, QtGui.QColor(96, 96, 96, 60))
+        f_brush.setColorAt(0.5, QtGui.QColor(21, 21, 21, 75))
 
-        f_current_key = 0
-        if not self.first_open:
-            f_index = \
-                12 - PIANO_ROLL_EDITOR_WIDGET.scale_key_combobox.currentIndex()
-            f_octave_brushes = \
-                f_octave_brushes[f_index:] + f_octave_brushes[:f_index]
-        self.first_open = False
-        f_note_bar = QtGui.QGraphicsRectItem(0, 0, self.viewer_width,
-                                             self.note_height)
-        f_note_bar.hoverMoveEvent = self.hover_restore_cursor_event
-        f_note_bar.setBrush(f_base_brush)
-        self.scene.addItem(f_note_bar)
-        f_note_bar.setPos(
-            self.piano_width + self.padding, PIANO_ROLL_HEADER_HEIGHT)
-        for i in range(self.end_octave - self.start_octave,
-                       self.start_octave - self.start_octave, -1):
-            for j in range(self.notes_in_octave, 0, -1):
-                f_note_bar = QtGui.QGraphicsRectItem(
-                    0, 0, self.viewer_width, self.note_height)
-                f_note_bar.setZValue(60.0)
-                self.scene.addItem(f_note_bar)
-                f_note_bar.setBrush(f_octave_brushes[f_current_key])
-                f_current_key += 1
-                if f_current_key >= len(f_octave_brushes):
-                    f_current_key = 0
-                f_note_bar_y = (self.note_height * j) + (self.octave_height *
-                    (i - 1)) + PIANO_ROLL_HEADER_HEIGHT
-                f_note_bar.setPos(
-                    self.piano_width + self.padding, f_note_bar_y)
+        for i in range(PIANO_ROLL_NOTE_COUNT):
+            f_note_bar = QtGui.QGraphicsRectItem(
+                0, 0, self.viewer_width, self.note_height)
+            f_note_bar.setZValue(60.0)
+            self.scene.addItem(f_note_bar)
+            f_note_bar.setBrush(f_brush)
+            f_note_bar_y = (i *
+                PIANO_ROLL_NOTE_HEIGHT) + PIANO_ROLL_HEADER_HEIGHT
+            f_note_bar.setPos(
+                self.piano_width + self.padding, f_note_bar_y)
         f_beat_pen = QtGui.QPen()
         f_beat_pen.setWidth(2)
-        f_bar_pen = QtGui.QPen(QtGui.QColor(240, 30, 30), 12.0)
-        f_line_pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         f_beat_y = \
             self.piano_height + PIANO_ROLL_HEADER_HEIGHT + self.note_height
         for i in range(0, int(self.item_length) + 1):
             f_beat_x = (self.beat_width * i) + self.piano_width
             f_beat = self.scene.addLine(f_beat_x, 0, f_beat_x, f_beat_y)
-            f_beat_number = i % 4
-            if f_beat_number == 0 and not i == 0:
-                f_beat.setPen(f_bar_pen)
-            else:
-                f_beat.setPen(f_beat_pen)
+            f_beat.setPen(f_beat_pen)
             if i < self.item_length:
                 f_number = QtGui.QGraphicsSimpleTextItem(
-                    str(f_beat_number + 1), self.header)
+                    str(i + 1), self.header)
                 f_number.setFlag(
                     QtGui.QGraphicsItem.ItemIgnoresTransformations)
                 f_number.setPos((self.beat_width * i), 24)
                 f_number.setBrush(QtCore.Qt.white)
-                for j in range(0, self.grid_div):
-                    f_x = (self.beat_width * i) + (self.value_width *
-                        j) + self.piano_width
-                    f_line = self.scene.addLine(
-                        f_x, PIANO_ROLL_HEADER_HEIGHT, f_x, f_beat_y)
-                    if float(j) != self.grid_div * 0.5:
-                        f_line.setPen(f_line_pen)
 
     def resizeEvent(self, a_event):
         QtGui.QGraphicsView.resizeEvent(self, a_event)
