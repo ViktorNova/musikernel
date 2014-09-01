@@ -18,10 +18,10 @@ def global_set_piano_roll_zoom():
 ITEM_EDITING_COUNT = 1
 
 PIANO_ROLL_SNAP = False
-PIANO_ROLL_GRID_WIDTH = 1000.0
+PIANO_ROLL_GRID_WIDTH = 800.0
 PIANO_KEYS_WIDTH = 180  #Width of the piano keys in px
 PIANO_ROLL_GRID_MAX_START_TIME = 999.0 + PIANO_KEYS_WIDTH
-PIANO_ROLL_NOTE_HEIGHT = pydaw_util.get_file_setting("TRACK_VZOOM", int, 100)
+PIANO_ROLL_NOTE_HEIGHT = pydaw_util.get_file_setting("TRACK_VZOOM", int, 80)
 PIANO_ROLL_SNAP_DIVISOR = 16.0
 PIANO_ROLL_SNAP_BEATS = 4.0 / PIANO_ROLL_SNAP_DIVISOR
 PIANO_ROLL_SNAP_VALUE = PIANO_ROLL_GRID_WIDTH / PIANO_ROLL_SNAP_DIVISOR
@@ -476,7 +476,7 @@ class piano_key_item(QtGui.QGraphicsRectItem):
 class piano_roll_editor(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
-        self.item_length = 4.0
+        self.item_length = 8.0
         self.viewer_width = 1000
         self.grid_div = 16
 
@@ -565,8 +565,9 @@ class piano_roll_editor(QtGui.QGraphicsView):
         self.header.setPos(PIANO_KEYS_WIDTH + self.padding, f_point.y())
 
     def get_scene_pos(self):
-        return QtCore.QPointF(self.horizontalScrollBar().value(),
-                              self.verticalScrollBar().value())
+        return QtCore.QPointF(
+            self.horizontalScrollBar().value(),
+            self.verticalScrollBar().value())
 
     def highlight_selected(self):
         self.has_selected = False
@@ -586,59 +587,6 @@ class piano_roll_editor(QtGui.QGraphicsView):
     def keyPressEvent(self, a_event):
         QtGui.QGraphicsView.keyPressEvent(self, a_event)
         QtGui.QApplication.restoreOverrideCursor()
-
-    def copy_selected(self):
-        if not ITEM_EDITOR.enabled:
-            ITEM_EDITOR.show_not_enabled_warning()
-            return 0
-        self.clipboard = [(str(x.note_item), x.item_index)
-                          for x in self.note_items if x.isSelected()]
-        return len(self.clipboard)
-
-    def paste(self):
-        if not ITEM_EDITOR.enabled:
-            ITEM_EDITOR.show_not_enabled_warning()
-            return
-        if not self.clipboard:
-            QtGui.QMessageBox.warning(
-                self, _("Error"), _("Nothing copied to the clipboard"))
-            return
-        f_item_count = len(ITEM_EDITOR.items)
-        for f_item, f_index in self.clipboard:
-            if f_index < f_item_count:
-                ITEM_EDITOR.items[f_index].add_note(
-                    pydaw_note.from_str(f_item))
-        global_save_and_reload_items()
-        self.scene.clearSelection()
-        for f_item in self.note_items:
-            f_tuple = (str(f_item.note_item), f_item.item_index)
-            if f_tuple in self.clipboard:
-                f_item.setSelected(True)
-
-    def delete_selected(self, a_save_and_reload=True):
-        if not ITEM_EDITOR.enabled:
-            ITEM_EDITOR.show_not_enabled_warning()
-            return
-        self.selected_note_strings = []
-        for f_item in self.get_selected_items():
-            ITEM_EDITOR.items[f_item.item_index].remove_note(f_item.note_item)
-        if a_save_and_reload:
-            global_save_and_reload_items()
-
-    def transpose_selected(self, a_amt):
-        if not ITEM_EDITOR.enabled:
-            ITEM_EDITOR.show_not_enabled_warning()
-            return
-
-        f_list = [x for x in self.note_items if x.isSelected()]
-        if not f_list:
-            return
-        self.selected_note_strings = []
-        for f_item in f_list:
-            f_item.note_item.note_num = pydaw_clip_value(
-                f_item.note_item.note_num + a_amt, 0, 120)
-            self.selected_note_strings.append(f_item.get_selected_string())
-        global_save_and_reload_items()
 
     def focusOutEvent(self, a_event):
         QtGui.QGraphicsView.focusOutEvent(self, a_event)
@@ -764,9 +712,8 @@ class piano_roll_editor(QtGui.QGraphicsView):
                 PIANO_KEYS_WIDTH + self.padding, f_note_bar_y)
         f_beat_pen = QtGui.QPen()
         f_beat_pen.setWidth(2)
-        f_beat_y = \
-            self.piano_height + PIANO_ROLL_HEADER_HEIGHT + self.note_height
-        for i in range(0, int(self.item_length) + 1):
+        f_beat_y = self.piano_height + PIANO_ROLL_HEADER_HEIGHT
+        for i in range(0, int(self.item_length)):
             f_beat_x = (self.beat_width * i) + PIANO_KEYS_WIDTH
             f_beat = self.scene.addLine(f_beat_x, 0, f_beat_x, f_beat_y)
             f_beat.setPen(f_beat_pen)
@@ -847,6 +794,12 @@ class piano_roll_editor(QtGui.QGraphicsView):
 
 
 import sys
+#import libpydaw.pydaw_project
+#
+#TEST_REGION = libpydaw.pydaw_project.pydaw_region()
+#TEST_REGION.
+#test = QtGui.QGraphicsProxyWidget()
+#test.setLayout()
 APP = QtGui.QApplication(sys.argv)
 REGION_EDITOR = piano_roll_editor()
 REGION_EDITOR.show()
