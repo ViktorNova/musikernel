@@ -21,8 +21,8 @@ ITEM_EDITING_COUNT = 1
 REGION_EDITOR_SNAP = False
 REGION_EDITOR_GRID_WIDTH = 800.0
 REGION_TRACK_WIDTH = 180  #Width of the tracks in px
-REGION_EDITOR_GRID_MAX_START_TIME = 999.0 + REGION_TRACK_WIDTH
-REGION_EDITOR_NOTE_HEIGHT = pydaw_util.get_file_setting("TRACK_VZOOM", int, 80)
+REGION_EDITOR_MAX_START = 999.0 + REGION_TRACK_WIDTH
+REGION_EDITOR_TRACK_HEIGHT = pydaw_util.get_file_setting("TRACK_VZOOM", int, 80)
 REGION_EDITOR_SNAP_DIVISOR = 16.0
 REGION_EDITOR_SNAP_BEATS = 4.0 / REGION_EDITOR_SNAP_DIVISOR
 REGION_EDITOR_SNAP_VALUE = REGION_EDITOR_GRID_WIDTH / REGION_EDITOR_SNAP_DIVISOR
@@ -133,7 +133,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             self.setZValue(1001.0)
             self.setEnabled(False)
             self.setOpacity(0.3)
-        self.note_height = a_note_height
+        REGION_EDITOR_TRACK_HEIGHT = a_note_height
         self.current_note_text = None
         self.note_item = a_note_item
         self.setAcceptHoverEvents(True)
@@ -177,7 +177,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             f_vals.append(int(f_val))
         f_vals_m1 = pydaw_rgb_minus(f_vals, 90)
         f_vals_m2 = pydaw_rgb_minus(f_vals, 120)
-        f_gradient = QtGui.QLinearGradient(0.0, 0.0, 0.0, self.note_height)
+        f_gradient = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
         f_gradient.setColorAt(0.0, QtGui.QColor(*f_vals_m1))
         f_gradient.setColorAt(0.4, QtGui.QColor(*f_vals))
         f_gradient.setColorAt(0.6, QtGui.QColor(*f_vals))
@@ -343,15 +343,15 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                 f_pos_y = f_item.pos().y()
                 if f_pos_x < REGION_TRACK_WIDTH:
                     f_pos_x = REGION_TRACK_WIDTH
-                elif f_pos_x > REGION_EDITOR_GRID_MAX_START_TIME:
-                    f_pos_x = REGION_EDITOR_GRID_MAX_START_TIME
+                elif f_pos_x > REGION_EDITOR_MAX_START:
+                    f_pos_x = REGION_EDITOR_MAX_START
                 if f_pos_y < REGION_EDITOR_HEADER_HEIGHT:
                     f_pos_y = REGION_EDITOR_HEADER_HEIGHT
                 elif f_pos_y > REGION_EDITOR_TOTAL_HEIGHT:
                     f_pos_y = REGION_EDITOR_TOTAL_HEIGHT
                 f_pos_y = \
                     (int((f_pos_y - REGION_EDITOR_HEADER_HEIGHT) /
-                    self.note_height) * self.note_height) + \
+                    REGION_EDITOR_TRACK_HEIGHT) * REGION_EDITOR_TRACK_HEIGHT) + \
                     REGION_EDITOR_HEADER_HEIGHT
                 if REGION_EDITOR_SNAP:
                     f_pos_x = (int((f_pos_x - REGION_TRACK_WIDTH) /
@@ -364,7 +364,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
     def y_pos_to_note(self, a_y):
         return int(REGION_EDITOR_TRACK_COUNT -
             ((a_y - REGION_EDITOR_HEADER_HEIGHT) /
-            REGION_EDITOR_NOTE_HEIGHT))
+            REGION_EDITOR_TRACK_HEIGHT))
 
     def mouseReleaseEvent(self, a_event):
         if REGION_EDITOR_DELETE_MODE:
@@ -445,24 +445,8 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         QtGui.QApplication.restoreOverrideCursor()
         REGION_EDITOR.click_enabled = True
 
-class piano_key_item(QtGui.QGraphicsRectItem):
-    def __init__(self, a_piano_width, a_note_height, a_parent):
-        QtGui.QGraphicsRectItem.__init__(
-            self, 0, 0, a_piano_width, a_note_height, a_parent)
-        self.setAcceptHoverEvents(True)
-        self.hover_brush = QtGui.QColor(200, 200, 200)
 
-    def hoverEnterEvent(self, a_event):
-        QtGui.QGraphicsRectItem.hoverEnterEvent(self, a_event)
-        self.o_brush = self.brush()
-        self.setBrush(self.hover_brush)
-        QtGui.QApplication.restoreOverrideCursor()
-
-    def hoverLeaveEvent(self, a_event):
-        QtGui.QGraphicsRectItem.hoverLeaveEvent(self, a_event)
-        self.setBrush(self.o_brush)
-
-class REGION_EDITOR(QtGui.QGraphicsView):
+class region_editor(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
         self.item_length = 8.0
@@ -503,9 +487,8 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         self.clipboard = []
 
     def update_note_height(self):
-        self.note_height = REGION_EDITOR_NOTE_HEIGHT
-        self.octave_height = self.notes_in_octave * self.note_height
-        self.tracks_height = self.note_height * REGION_EDITOR_TRACK_COUNT
+        self.tracks_height = \
+            REGION_EDITOR_TRACK_HEIGHT * REGION_EDITOR_TRACK_COUNT
 
         global REGION_EDITOR_TOTAL_HEIGHT
         REGION_EDITOR_TOTAL_HEIGHT = \
@@ -513,6 +496,15 @@ class REGION_EDITOR(QtGui.QGraphicsView):
 
     def get_selected_items(self):
         return (x for x in self.note_items if x.isSelected())
+
+    def get_item_coord(self):
+        f_pos = QtGui.QCursor.pos()
+        f_pos_x = f_pos.x()
+        f_pos_y = f_pos.y()
+        if f_pos_x < REGION_TRACK_WIDTH or \
+        f_pos_y < REGION_EDITOR_HEADER_HEIGHT:
+            return None
+
 
     def set_tooltips(self, a_on):
         if a_on:
@@ -572,36 +564,30 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         self.click_enabled = True
 
     def sceneMousePressEvent(self, a_event):
-        if not ITEM_EDITOR.enabled:
-            ITEM_EDITOR.show_not_enabled_warning()
-        elif a_event.button() == QtCore.Qt.RightButton:
+        if a_event.button() == QtCore.Qt.RightButton:
             return
         elif a_event.modifiers() == QtCore.Qt.ControlModifier:
             self.hover_restore_cursor_event()
         elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
             region_editor_set_delete_mode(True)
             return
-        elif self.click_enabled and ITEM_EDITOR.enabled:
+        elif self.click_enabled:
             self.scene.clearSelection()
             f_pos_x = a_event.scenePos().x()
             f_pos_y = a_event.scenePos().y()
             if f_pos_x > REGION_TRACK_WIDTH and \
-            f_pos_x < REGION_EDITOR_GRID_MAX_START_TIME and \
+            f_pos_x < REGION_EDITOR_MAX_START and \
             f_pos_y > REGION_EDITOR_HEADER_HEIGHT and \
             f_pos_y < REGION_EDITOR_TOTAL_HEIGHT:
                 f_recip = 1.0 / REGION_EDITOR_GRID_WIDTH
-                if self.vel_rand == 1:
-                    pass
-                elif self.vel_rand == 2:
-                    pass
                 f_note = int(
                     REGION_EDITOR_TRACK_COUNT - ((f_pos_y -
-                    REGION_EDITOR_HEADER_HEIGHT) / self.note_height)) + 1
+                    REGION_EDITOR_HEADER_HEIGHT) / REGION_EDITOR_TRACK_HEIGHT)) + 1
                 if REGION_EDITOR_SNAP:
                     f_beat = (int((f_pos_x - REGION_TRACK_WIDTH) /
                         REGION_EDITOR_SNAP_VALUE) *
                         REGION_EDITOR_SNAP_VALUE) * f_recip * 4.0
-                    f_note_item = pydaw_note(
+                    f_note_item = pydaw_item(
                         f_beat, LAST_NOTE_RESIZE, f_note, self.get_vel(f_beat))
                 else:
                     f_beat = (f_pos_x -
@@ -611,18 +597,8 @@ class REGION_EDITOR(QtGui.QGraphicsView):
                 f_note_index = ITEM_EDITOR.add_note(f_note_item)
                 global SELECTED_REGION_ITEM
                 SELECTED_REGION_ITEM = f_note_item
-                f_drawn_note = self.draw_item(f_note_item, f_note_index)
-                f_drawn_note.setSelected(True)
-                f_drawn_note.resize_start_pos = \
-                    f_drawn_note.note_item.start + (4.0 *
-                    f_drawn_note.item_index)
-                f_drawn_note.resize_pos = f_drawn_note.pos()
-                f_drawn_note.resize_rect = f_drawn_note.rect()
-                f_drawn_note.is_resizing = True
-                f_cursor_pos = QtGui.QCursor.pos()
-                f_drawn_note.mouse_y_pos = f_cursor_pos.y()
-                f_drawn_note.resize_last_mouse_pos = \
-                    f_pos_x - f_drawn_note.pos().x()
+                f_drawn_item = self.draw_item(f_note_item, f_note_index)
+                f_drawn_item.setSelected(True)
 
         a_event.setAccepted(True)
         QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
@@ -650,13 +626,15 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         self.header.setZValue(1003.0)
 
     def draw_tracks(self):
-        f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_NOTE_HEIGHT)
+        f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
         f_brush.setColorAt(0.0, QtGui.QColor(234, 234, 234))
         f_brush.setColorAt(0.5, QtGui.QColor(159, 159, 159))
         self.tracks_widget = QtGui.QWidget()
-        self.tracks_widget.setGeometry(
-            QtCore.QRect(0, 0, REGION_TRACK_WIDTH, self.tracks_height))
+        self.tracks_widget.setFixedSize(
+            QtCore.QSize(REGION_TRACK_WIDTH, self.tracks_height))
+
         self.tracks_layout = QtGui.QVBoxLayout(self.tracks_widget)
+        self.tracks_layout.setContentsMargins(0, 0, 0, 0)
         self.tracks = self.scene.addWidget(self.tracks_widget)
 
         for i in range(REGION_EDITOR_TRACK_COUNT):
@@ -666,18 +644,18 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         self.tracks.setZValue(1000.0)
 
     def draw_grid(self):
-        f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_NOTE_HEIGHT)
+        f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
         f_brush.setColorAt(0.0, QtGui.QColor(96, 96, 96, 60))
         f_brush.setColorAt(0.5, QtGui.QColor(21, 21, 21, 75))
 
         for i in range(REGION_EDITOR_TRACK_COUNT):
             f_note_bar = QtGui.QGraphicsRectItem(
-                0, 0, self.viewer_width, self.note_height)
+                0, 0, self.viewer_width, REGION_EDITOR_TRACK_HEIGHT)
             f_note_bar.setZValue(60.0)
             self.scene.addItem(f_note_bar)
             f_note_bar.setBrush(f_brush)
             f_note_bar_y = (i *
-                REGION_EDITOR_NOTE_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
+                REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
             f_note_bar.setPos(
                 REGION_TRACK_WIDTH + self.padding, f_note_bar_y)
         f_beat_pen = QtGui.QPen()
@@ -714,8 +692,8 @@ class REGION_EDITOR(QtGui.QGraphicsView):
             0.0, 0.0, self.viewer_width + REGION_EDITOR_GRID_WIDTH,
             self.tracks_height + REGION_EDITOR_HEADER_HEIGHT + 24.0)
         self.item_length = float(4 * ITEM_EDITING_COUNT)
-        global REGION_EDITOR_GRID_MAX_START_TIME
-        REGION_EDITOR_GRID_MAX_START_TIME = ((REGION_EDITOR_GRID_WIDTH - 1.0) *
+        global REGION_EDITOR_MAX_START
+        REGION_EDITOR_MAX_START = ((REGION_EDITOR_GRID_WIDTH - 1.0) *
             ITEM_EDITING_COUNT) + REGION_TRACK_WIDTH
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
@@ -751,10 +729,10 @@ class REGION_EDITOR(QtGui.QGraphicsView):
         f_start = REGION_TRACK_WIDTH + self.padding + \
             self.beat_width * (a_note.start + (float(a_item_index) * 4.0))
         f_length = self.beat_width * a_note.length
-        f_note = REGION_EDITOR_HEADER_HEIGHT + self.note_height * \
+        f_note = REGION_EDITOR_HEADER_HEIGHT + REGION_EDITOR_TRACK_HEIGHT * \
             (REGION_EDITOR_TRACK_COUNT - a_note.note_num)
         f_note_item = region_editor_item(
-            f_length, self.note_height, a_note.note_num,
+            f_length, REGION_EDITOR_TRACK_HEIGHT, a_note.note_num,
             a_note, a_item_index, a_enabled)
         f_note_item.setPos(f_start, f_note)
         self.scene.addItem(f_note_item)
@@ -915,6 +893,7 @@ class seq_track:
         self.group_box = QtGui.QWidget()
         self.group_box.contextMenuEvent = self.context_menu_event
         self.group_box.setObjectName("track_panel")
+        self.group_box.setFixedHeight(REGION_EDITOR_TRACK_HEIGHT)
         self.main_hlayout = QtGui.QHBoxLayout()
         self.main_hlayout.setContentsMargins(2, 2, 2, 2)
         self.main_vlayout = QtGui.QVBoxLayout()
@@ -1080,7 +1059,7 @@ from libpydaw import *
 #test = QtGui.QGraphicsProxyWidget()
 #test.setLayout()
 APP = QtGui.QApplication(sys.argv)
-REGION_EDITOR = REGION_EDITOR()
+REGION_EDITOR = region_editor()
 REGION_EDITOR.show()
 
 PROJECT = pydaw_project(False)
