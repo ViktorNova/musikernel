@@ -22,14 +22,16 @@ REGION_EDITOR_SNAP = True
 REGION_EDITOR_GRID_WIDTH = 800.0
 REGION_TRACK_WIDTH = 180  #Width of the tracks in px
 REGION_EDITOR_MAX_START = 999.0 + REGION_TRACK_WIDTH
-REGION_EDITOR_TRACK_HEIGHT = pydaw_util.get_file_setting("TRACK_VZOOM", int, 80)
+REGION_EDITOR_TRACK_HEIGHT = pydaw_util.get_file_setting(
+    "TRACK_VZOOM", int, 80)
 REGION_EDITOR_SNAP_DIVISOR = 16.0
 REGION_EDITOR_SNAP_BEATS = 4.0 / REGION_EDITOR_SNAP_DIVISOR
-REGION_EDITOR_SNAP_VALUE = REGION_EDITOR_GRID_WIDTH / REGION_EDITOR_SNAP_DIVISOR
+REGION_EDITOR_SNAP_VALUE = \
+    REGION_EDITOR_GRID_WIDTH / REGION_EDITOR_SNAP_DIVISOR
 REGION_EDITOR_SNAP_DIVISOR_BEATS = REGION_EDITOR_SNAP_DIVISOR / 4.0
 REGION_EDITOR_TRACK_COUNT = 32
 REGION_EDITOR_HEADER_HEIGHT = 45
-#gets updated by the piano roll to it's real value:
+#gets updated by the region editor to it's real value:
 REGION_EDITOR_TOTAL_HEIGHT = 1000
 REGION_EDITOR_QUANTIZE_INDEX = 4
 
@@ -46,7 +48,6 @@ def pydaw_set_region_editor_quantize(a_index):
     global REGION_EDITOR_SNAP_DIVISOR
     global REGION_EDITOR_SNAP_DIVISOR_BEATS
     global REGION_EDITOR_SNAP_BEATS
-    global LAST_NOTE_RESIZE
     global REGION_EDITOR_QUANTIZE_INDEX
 
     REGION_EDITOR_QUANTIZE_INDEX = a_index
@@ -74,8 +75,6 @@ def pydaw_set_region_editor_quantize(a_index):
         REGION_EDITOR_SNAP_DIVISOR = 4.0
 
     REGION_EDITOR_SNAP_BEATS = 4.0 / REGION_EDITOR_SNAP_DIVISOR
-    LAST_NOTE_RESIZE = pydaw_util.pydaw_clip_min(
-        LAST_NOTE_RESIZE, REGION_EDITOR_SNAP_BEATS)
     REGION_EDITOR_SNAP_DIVISOR *= ITEM_EDITING_COUNT
     REGION_EDITOR_SNAP_VALUE = (REGION_EDITOR_GRID_WIDTH *
         ITEM_EDITING_COUNT) / REGION_EDITOR_SNAP_DIVISOR
@@ -84,14 +83,8 @@ def pydaw_set_region_editor_quantize(a_index):
 
 REGION_EDITOR_MIN_NOTE_LENGTH = REGION_EDITOR_GRID_WIDTH / 128.0
 
-PIANO_NOTE_GRADIENT_TUPLE = (
-    (255, 0, 0), (255, 123, 0), (255, 255, 0), (123, 255, 0), (0, 255, 0),
-    (0, 255, 123), (0, 255, 255), (0, 123, 255), (0, 0, 255), (0, 0, 255))
-
 REGION_EDITOR_DELETE_MODE = False
 REGION_EDITOR_DELETED_NOTES = []
-
-LAST_NOTE_RESIZE = 0.25
 
 REGION_EDITOR_HEADER_GRADIENT = QtGui.QLinearGradient(
     0.0, 0.0, 0.0, REGION_EDITOR_HEADER_HEIGHT)
@@ -180,7 +173,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             self.hide()
 
     def delete(self):
-        ITEM_EDITOR.items[self.item_index].remove_note(self.note_item)
+        XXX_ITEM_EDITOR.items[self.item_index].remove_note(self.note_item)
 
     def show_resize_cursor(self, a_event):
         f_is_at_end = self.mouse_is_at_end(a_event.pos())
@@ -380,26 +373,23 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                     f_new_note = pydaw_note(
                         f_new_note_start, f_item.note_item.length,
                         f_new_note_num, f_item.note_item.velocity)
-                    ITEM_EDITOR.items[f_item.item_index].add_note(
+                    XXX_ITEM_EDITOR.items[f_item.item_index].add_note(
                         f_new_note, False)
                     # pass a ref instead of a str in case
                     # fix_overlaps() modifies it.
                     f_item.note_item = f_new_note
                     f_new_selection.append(f_item)
                 else:
-                    ITEM_EDITOR.items[f_item.item_index].notes.remove(
+                    XXX_ITEM_EDITOR.items[f_item.item_index].notes.remove(
                         f_item.note_item)
                     f_item.item_index, f_new_note_start = \
                         pydaw_beats_to_index(f_new_note_start)
                     f_item.note_item.set_start(f_new_note_start)
                     f_item.note_item.note_num = f_new_note_num
-                    ITEM_EDITOR.items[f_item.item_index].notes.append(
+                    XXX_ITEM_EDITOR.items[f_item.item_index].notes.append(
                         f_item.note_item)
-                    ITEM_EDITOR.items[f_item.item_index].notes.sort()
-        if self.is_resizing:
-            global LAST_NOTE_RESIZE
-            LAST_NOTE_RESIZE = self.note_item.length
-        for f_item in ITEM_EDITOR.items:
+                    XXX_ITEM_EDITOR.items[f_item.item_index].notes.sort()
+        for f_item in XXX_ITEM_EDITOR.items:
             f_item.fix_overlaps()
         SELECTED_REGION_ITEM = None
         REGION_EDITOR.selected_note_strings = []
@@ -649,9 +639,9 @@ class region_editor(QtGui.QGraphicsView):
             ITEM_EDITING_COUNT) + REGION_TRACK_WIDTH
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
-        if ITEM_EDITOR.enabled:
-            f_item_count = len(ITEM_EDITOR.items)
-            for f_i, f_item in zip(range(f_item_count), ITEM_EDITOR.items):
+        if XXX_ITEM_EDITOR.enabled:
+            f_item_count = len(XXX_ITEM_EDITOR.items)
+            for f_i, f_item in zip(range(f_item_count), XXX_ITEM_EDITOR.items):
                 for f_note in f_item.notes:
                     f_note_item = self.draw_item(f_note, f_i)
                     f_note_item.resize_last_mouse_pos = \
@@ -668,7 +658,7 @@ class region_editor(QtGui.QGraphicsView):
                         f_note_item = self.draw_item(f_note, f_i, False)
             self.scrollContentsBy(0, 0)
             for f_name, f_i in zip(
-            ITEM_EDITOR.item_names, range(len(ITEM_EDITOR.item_names))):
+            XXX_ITEM_EDITOR.item_names, range(len(XXX_ITEM_EDITOR.item_names))):
                 f_text = QtGui.QGraphicsSimpleTextItem(f_name, self.header)
                 f_text.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
                 f_text.setBrush(QtCore.Qt.yellow)
