@@ -1600,9 +1600,8 @@ class region_editor(QtGui.QGraphicsView):
 
     def on_rename_items(self):
         f_result = []
-        for f_item in self.table_widget.selectedItems():
-            f_item_name = str(f_item.text())
-            if f_item_name != "" and not f_item_name in f_result:
+        for f_item_name in (x.name for x in self.get_selected_items()):
+            if not f_item_name in f_result:
                 f_result.append(f_item_name)
         if not f_result:
             return
