@@ -819,7 +819,7 @@ def global_set_region_editor_zoom():
     pydaw_set_region_editor_quantize(REGION_EDITOR_QUANTIZE_INDEX)
 
 REGION_EDITOR_SNAP = True
-REGION_EDITOR_GRID_WIDTH = 800.0
+REGION_EDITOR_GRID_WIDTH = 1000.0
 REGION_TRACK_WIDTH = 180  #Width of the tracks in px
 REGION_EDITOR_MAX_START = 999.0 + REGION_TRACK_WIDTH
 REGION_EDITOR_TRACK_HEIGHT = pydaw_util.get_file_setting(
@@ -905,10 +905,11 @@ def region_editor_set_delete_mode(a_enabled):
 
 
 class region_editor_item(QtGui.QGraphicsRectItem):
-    def __init__(self, a_track, a_bar,
-                 a_length, a_start, a_name, a_enabled=True):
+    def __init__(self, a_track, a_bar, a_name, a_enabled=True):
+        self.bar_width = (REGION_EDITOR_GRID_WIDTH /
+            pydaw_get_current_region_length())
         QtGui.QGraphicsRectItem.__init__(
-            self, 0, 0, a_length, REGION_EDITOR_TRACK_HEIGHT)
+            self, 0, 0, self.bar_width, REGION_EDITOR_TRACK_HEIGHT)
         if a_enabled:
             self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
             self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
@@ -932,6 +933,13 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.name = str(a_name)
         self.label.setPos(2.0, 2.0)
         self.set_brush()
+        self.set_pos()
+
+    def set_pos(self):
+        f_start = REGION_TRACK_WIDTH + (self.bar_width * self.bar)
+        f_track_pos = REGION_EDITOR_HEADER_HEIGHT + (self.track_num *
+            REGION_EDITOR_TRACK_HEIGHT)
+        self.setPos(f_start, f_track_pos)
 
     def set_brush(self):
         if self.isSelected():
@@ -1418,14 +1426,10 @@ class region_editor(QtGui.QGraphicsView):
             f_item.setSelected(False)
 
     def draw_item(self, a_track, a_bar, a_name, a_enabled=True):
-        f_start = REGION_TRACK_WIDTH + (self.beat_width * a_bar)
-        f_length = self.beat_width
-        f_track_pos = REGION_EDITOR_HEADER_HEIGHT + (a_track *
-            REGION_EDITOR_TRACK_HEIGHT)
+
         f_item = region_editor_item(
-            a_track, a_bar, f_length, f_start, a_name, a_enabled)
+            a_track, a_bar, a_name, a_enabled)
         self.scene.addItem(f_item)
-        f_item.setPos(f_start, f_track_pos)
         if a_enabled:
             self.note_items.append(f_item)
             return f_item
