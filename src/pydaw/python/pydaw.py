@@ -1307,7 +1307,7 @@ class region_editor(QtGui.QGraphicsView):
             self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
 
     def get_selected_items(self):
-        return (x for x in self.note_items if x.isSelected())
+        return [x for x in self.note_items if x.isSelected()]
 
     def get_item_coord(self, a_pos):
         f_pos_x = a_pos.x()
@@ -1574,31 +1574,23 @@ class region_editor(QtGui.QGraphicsView):
         self.edit_group(True)
 
     def edit_group(self, a_unique=False):
-        f_result = []
-        f_track_nums = {}
-        for i in range(self.track_count):
-            for i2 in range(1, self.region_length + 1):
-                f_item = self.table_widget.item(i, i2)
-                if not f_item is None and \
-                not str(f_item.text()) == "" \
-                and f_item.isSelected():
-                    f_result_str = str(f_item.text())
-                    f_track_nums[i] = None
-                    if f_result_str in f_result:
-                        if a_unique:
-                            continue
-                        else:
-                            QtGui.QMessageBox.warning(
-                                self.table_widget, _("Error"),
-                                _("You cannot open multiple instances of "
-                                "the same item as a group.\n"
-                                "You should unlink all duplicate instances "
-                                "of {} into their own "
-                                "individual item names before editing as "
-                                "a group.").format(f_result_str))
-                            return
-                    f_result.append(f_result_str)
-        if f_result:
+        f_result = [x.name for x in self.get_selected_items()]
+        f_result2 = []
+        for x in f_result:
+            if not x in f_result2:
+                f_result2.append(x)
+        if len(f_result2) != len(f_result):
+            QtGui.QMessageBox.warning(
+                self.table_widget, _("Error"),
+                _("You cannot open multiple instances of "
+                "the same item as a group.\n"
+                "You should unlink all duplicate instances "
+                "of {} into their own "
+                "individual item names before editing as "
+                "a group.").format(f_result_str))
+            return
+
+        if f_result2:
             global_open_items(f_result, a_reset_scrollbar=True)
             MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
         else:
