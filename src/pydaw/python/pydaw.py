@@ -882,7 +882,6 @@ def pydaw_set_region_editor_quantize(a_index):
 REGION_EDITOR_MIN_NOTE_LENGTH = REGION_EDITOR_GRID_WIDTH / 128.0
 
 REGION_EDITOR_DELETE_MODE = False
-REGION_EDITOR_DELETED_NOTES = []
 
 REGION_EDITOR_HEADER_GRADIENT = QtGui.QLinearGradient(
     0.0, 0.0, 0.0, REGION_EDITOR_HEADER_HEIGHT)
@@ -892,21 +891,18 @@ REGION_EDITOR_HEADER_GRADIENT.setColorAt(0.6, QtGui.QColor.fromRgb(43, 43, 43))
 REGION_EDITOR_HEADER_GRADIENT.setColorAt(1.0, QtGui.QColor.fromRgb(65, 65, 65))
 
 def region_editor_set_delete_mode(a_enabled):
-    global REGION_EDITOR_DELETE_MODE, REGION_EDITOR_DELETED_NOTES
+    global REGION_EDITOR_DELETE_MODE
     if a_enabled:
         REGION_EDITOR.setDragMode(QtGui.QGraphicsView.NoDrag)
-        REGION_EDITOR_DELETED_NOTES = []
         REGION_EDITOR_DELETE_MODE = True
         QtGui.QApplication.setOverrideCursor(
             QtGui.QCursor(QtCore.Qt.ForbiddenCursor))
     else:
         REGION_EDITOR.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         REGION_EDITOR_DELETE_MODE = False
-        for f_item in REGION_EDITOR_DELETED_NOTES:
-            f_item.delete()
         REGION_EDITOR.selected_note_strings = []
-        global_save_and_reload_items()
         QtGui.QApplication.restoreOverrideCursor()
+        global_tablewidget_to_region()
 
 
 class region_editor_item(QtGui.QGraphicsRectItem):
@@ -958,15 +954,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         #QtGui.QGraphicsRectItem.hoverMoveEvent(self, a_event)
         if not self.is_resizing:
             REGION_EDITOR.click_enabled = False
-
-    def delete_later(self):
-        global REGION_EDITOR_DELETED_NOTES
-        if self.isEnabled() and self not in REGION_EDITOR_DELETED_NOTES:
-            REGION_EDITOR_DELETED_NOTES.append(self)
-            self.hide()
-
-    def delete(self):
-        XXX_ITEM_EDITOR.items[self.item_index].remove_note(self.note_item)
 
     def get_selected_string(self):
         return "{}|{}".format(self.item_index, self.note_item)
@@ -1407,7 +1394,8 @@ class region_editor(QtGui.QGraphicsView):
         if REGION_EDITOR_DELETE_MODE:
             for f_item in self.items(a_event.pos()):
                 if isinstance(f_item, region_editor_item):
-                    f_item.delete_later()
+                    self.scene.removeItem(f_item)
+                    self.note_items.remove(f_item)
 
     def hover_restore_cursor_event(self, a_event=None):
         QtGui.QApplication.restoreOverrideCursor()
@@ -1872,6 +1860,11 @@ class region_editor(QtGui.QGraphicsView):
             _("You must create or select a region first by clicking "
             "in the song editor above."))
 
+    def tablewidget_to_list(self):
+        """ Convert an edited QTableWidget to a list of tuples
+            for a region ref
+        """
+        return [(x.track_num, x.bar, x.name) for x in self.note_items]
 
 ########  End nu hottness
 
@@ -1882,11 +1875,9 @@ REGION_CLIPBOARD_COL_OFFSET = 0
 REGION_CLIPBOARD = []
 
 def global_tablewidget_to_region():
-    global CURRENT_REGION
     CURRENT_REGION.items = []
     f_uid_dict = PROJECT.get_items_dict()
-    f_result = []
-    f_result += REGION_EDITOR.tablewidget_to_list()
+    f_result = REGION_EDITOR.tablewidget_to_list()
     for f_tuple in f_result:
         CURRENT_REGION.add_item_ref_by_name(
             f_tuple[0], f_tuple[1], f_tuple[2], f_uid_dict)
