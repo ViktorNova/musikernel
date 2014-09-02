@@ -910,7 +910,8 @@ def region_editor_set_delete_mode(a_enabled):
 
 
 class region_editor_item(QtGui.QGraphicsRectItem):
-    def __init__(self, a_track, a_length, a_start, a_name, a_enabled=True):
+    def __init__(self, a_track, a_bar,
+                 a_length, a_start, a_name, a_enabled=True):
         QtGui.QGraphicsRectItem.__init__(
             self, 0, 0, a_length, REGION_EDITOR_TRACK_HEIGHT)
         if a_enabled:
@@ -923,6 +924,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             self.setEnabled(False)
             self.setOpacity(0.3)
         self.track_num = int(a_track)
+        self.bar = int(a_bar)
         self.setAcceptHoverEvents(True)
         self.is_copying = False
         self.is_velocity_dragging = False
@@ -987,7 +989,10 @@ class region_editor_item(QtGui.QGraphicsRectItem):
 
 
     def mousePressEvent(self, a_event):
-        if a_event.modifiers() == QtCore.Qt.ShiftModifier:
+        if a_event.button() == QtCore.Qt.RightButton:
+            self.setSelected(True)
+            return
+        elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
             region_editor_set_delete_mode(True)
             self.delete_later()
         elif a_event.modifiers() == \
@@ -1507,7 +1512,7 @@ class region_editor(QtGui.QGraphicsView):
         f_track_pos = REGION_EDITOR_HEADER_HEIGHT + (a_track *
             REGION_EDITOR_TRACK_HEIGHT)
         f_item = region_editor_item(
-            a_track, f_length, f_start, a_name, a_enabled)
+            a_track, a_bar, f_length, f_start, a_name, a_enabled)
         self.scene.addItem(f_item)
         f_item.setPos(f_start, f_track_pos)
         if a_enabled:
@@ -1727,22 +1732,17 @@ class region_editor(QtGui.QGraphicsView):
 
     def on_auto_unlink_selected(self):
         """ Adds an automatic -N suffix """
-        for i in range(self.track_count):
-            for i2 in range(1, self.region_length + 1):
-                f_item = self.table_widget.item(i, i2)
-                if not f_item is None and \
-                not str(f_item.text()) == "" and \
-                f_item.isSelected():
-                    f_item_name = str(f_item.text())
-                    f_name_suffix = 1
-                    while PROJECT.item_exists(
-                    "{}-{}".format(f_item_name, f_name_suffix)):
-                        f_name_suffix += 1
-                    f_cell_text = "{}-{}".format(f_item_name, f_name_suffix)
-                    f_uid = PROJECT.copy_item(f_item_name, f_cell_text)
-                    self.add_qtablewidgetitem(f_cell_text, i, i2 - 1)
-                    CURRENT_REGION.add_item_ref_by_uid(
-                        i + self.track_offset, i2 - 1, f_uid)
+        for f_item in self.get_selected_items():
+            f_name_suffix = 1
+            while PROJECT.item_exists(
+            "{}-{}".format(f_item.name, f_name_suffix)):
+                f_name_suffix += 1
+            f_cell_text = "{}-{}".format(f_item.name, f_name_suffix)
+            f_uid = PROJECT.copy_item(f_item.name, f_cell_text)
+            self.draw_item(f_item.track_num, f_item.bar, f_cell_text)
+            self.scene.removeItem(f_item)
+            CURRENT_REGION.add_item_ref_by_uid(
+                f_item.track_num, f_item.bar, f_uid)
         PROJECT.save_region(
             str(REGION_SETTINGS.region_name_lineedit.text()),
             CURRENT_REGION)
