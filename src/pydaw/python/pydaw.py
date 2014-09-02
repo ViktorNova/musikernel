@@ -749,15 +749,12 @@ class region_settings:
         CURRENT_REGION = PROJECT.get_region_by_name(
             a_file_name)
         if CURRENT_REGION.region_length_bars > 0:
-#            REGION_EDITOR.set_region_length(
-#                CURRENT_REGION.region_length_bars)
             self.length_alternate_spinbox.setValue(
                 CURRENT_REGION.region_length_bars)
             TRANSPORT.bar_spinbox.setRange(
                 1, (CURRENT_REGION.region_length_bars))
             self.length_alternate_radiobutton.setChecked(True)
         else:
-#            REGION_EDITOR.set_region_length()
             self.length_alternate_spinbox.setValue(8)
             TRANSPORT.bar_spinbox.setRange(1, 8)
             self.length_default_radiobutton.setChecked(True)
@@ -1095,7 +1092,9 @@ class region_editor(QtGui.QGraphicsView):
         self.last_item_copied = None
 
         self.item_length = 8.0
-        self.viewer_width = 1000
+        self.viewer_width = 1000.0
+        self.px_per_bar = self.viewer_width / 8.0
+        self.px_per_beat = self.px_per_bar / 4.0
 
         self.padding = 2
 
@@ -1117,6 +1116,7 @@ class region_editor(QtGui.QGraphicsView):
 
         self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         self.note_items = []
+        self.playback_cursor = None
 
         self.right_click = False
         self.left_click = False
@@ -1213,6 +1213,37 @@ class region_editor(QtGui.QGraphicsView):
         self.transpose_action = self.menu.addAction(_("Transpose..."))
         self.transpose_action.triggered.connect(self.transpose_dialog)
         self.addAction(self.transpose_action)
+
+
+    def set_playback_pos(self, a_bar=None, a_beat=0.0):
+        if a_bar is None:
+            f_bar = TRANSPORT.get_bar_value()
+        else:
+            f_bar = int(a_bar)
+        f_beat = float(a_beat)
+        f_pos = (f_bar * self.px_per_bar) + (f_beat *
+            self.px_per_beat) + REGION_TRACK_WIDTH
+        self.playback_cursor.setPos(f_pos, 0.0)
+
+    def set_playback_clipboard(self):
+        self.reselect_on_stop = []
+        for f_item in self.audio_items:
+            if f_item.isSelected():
+                self.reselect_on_stop.append(str(f_item.audio_item))
+
+    def start_playback(self, a_bpm):
+        self.is_playing = True
+
+    def stop_playback(self, a_bar=None):
+        if self.is_playing:
+            self.is_playing = False
+            self.reset_selection()
+            self.set_playback_pos(a_bar)
+
+    def reset_selection(self):
+        for f_item in self.audio_items:
+            if str(f_item.audio_item) in self.reselect_on_stop:
+                f_item.setSelected(True)
 
     def show_context_menu(self):
         self.menu.exec_(QtGui.QCursor.pos())
@@ -1339,6 +1370,11 @@ class region_editor(QtGui.QGraphicsView):
         #self.header.mapToScene(REGION_TRACK_WIDTH + self.padding, 0.0)
         self.beat_width = self.viewer_width / self.item_length
         self.header.setZValue(1003.0)
+        self.playback_cursor = self.scene.addLine(
+            0.0, 0.0, 0.0,
+            REGION_EDITOR_TOTAL_HEIGHT, QtGui.QPen(QtCore.Qt.red, 2.0))
+        self.playback_cursor.setPos(REGION_TRACK_WIDTH, 0.0)
+        self.playback_cursor.setZValue(2000.0)
 
     def draw_tracks(self):
         self.tracks = {}
@@ -1362,7 +1398,8 @@ class region_editor(QtGui.QGraphicsView):
 
 
     def draw_grid(self):
-        f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
+        f_brush = QtGui.QLinearGradient(
+            0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
         f_brush.setColorAt(0.0, QtGui.QColor(96, 96, 96, 60))
         f_brush.setColorAt(0.5, QtGui.QColor(21, 21, 21, 75))
 
@@ -1425,7 +1462,6 @@ class region_editor(QtGui.QGraphicsView):
             f_item.setSelected(False)
 
     def draw_item(self, a_track, a_bar, a_name, a_enabled=True):
-
         f_item = region_editor_item(
             a_track, a_bar, a_name, a_enabled)
         self.scene.addItem(f_item)
@@ -1500,7 +1536,7 @@ class region_editor(QtGui.QGraphicsView):
                 f_result2.append(x)
         if len(f_result2) != len(f_result):
             QtGui.QMessageBox.warning(
-                self.table_widget, _("Error"),
+                self, _("Error"),
                 _("You cannot open multiple instances of "
                 "the same item as a group.\n"
                 "You should unlink all duplicate instances "
@@ -1514,7 +1550,7 @@ class region_editor(QtGui.QGraphicsView):
             MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
         else:
             QtGui.QMessageBox.warning(
-                self.table_widget, _("Error"), _("No items selected"))
+                self, _("Error"), _("No items selected"))
 
 
     def on_rename_items(self):
@@ -7867,10 +7903,8 @@ class transport_widget:
                 self.set_region_value(f_region)
                 self.set_bar_value(f_bar)
                 if self.follow_checkbox.isChecked():
-                    AUDIO_SEQ.set_playback_pos(f_bar)
-                    f_bar += 1
-                    REGION_EDITOR.table_widget.selectColumn(f_bar)
-                    #REGION_EDITOR.open_tracks()
+                    for f_editor in (AUDIO_SEQ, REGION_EDITOR):
+                        f_editor.set_playback_pos(f_bar)
                     if f_region != self.last_region_num:
                         self.last_region_num = f_region
                         f_item = SONG_EDITOR.table_widget.item(0, f_region)
@@ -7903,11 +7937,8 @@ class transport_widget:
         else:
             REGION_EDITOR.clear_items()
             AUDIO_SEQ.clear_drawn_items()
-        if a_start:
-            REGION_EDITOR.table_widget.selectColumn(
-                self.get_bar_value() + 1)
-        else:
-            REGION_EDITOR.table_widget.clearSelection()
+        if not a_start:
+            REGION_EDITOR.clearSelection()
         SONG_EDITOR.table_widget.selectColumn(self.get_region_value())
 
     def on_spacebar(self):
@@ -8115,7 +8146,8 @@ class transport_widget:
         if not self.suppress_osc and \
         not self.is_playing and \
         not self.is_recording:
-            AUDIO_SEQ.set_playback_pos(self.get_bar_value())
+            for f_editor in (AUDIO_SEQ, REGION_EDITOR):
+                f_editor.set_playback_pos(self.get_bar_value())
             PROJECT.this_pydaw_osc.pydaw_set_pos(
                 self.get_region_value(), self.get_bar_value())
         self.set_time(self.get_region_value(), self.get_bar_value(), 0.0)
@@ -8124,7 +8156,8 @@ class transport_widget:
         #self.bar_spinbox.setRange(1, pydaw_get_region_length(a_region - 1))
         self.bar_spinbox.setRange(1, pydaw_get_current_region_length())
         if not self.is_playing and not self.is_recording:
-            AUDIO_SEQ.set_playback_pos(self.get_bar_value())
+            for f_editor in (AUDIO_SEQ, REGION_EDITOR):
+                f_editor.set_playback_pos(self.get_bar_value())
             PROJECT.this_pydaw_osc.pydaw_set_pos(
                 self.get_region_value(), self.get_bar_value())
         self.set_time(self.get_region_value(), self.get_bar_value(), 0.0)
@@ -9393,7 +9426,8 @@ class pydaw_main_window(QtGui.QMainWindow):
                 if IS_PLAYING:
                     f_region, f_bar, f_beat = a_val.split("|")
                     TRANSPORT.set_pos_from_cursor(f_region, f_bar, f_beat)
-                    AUDIO_SEQ.set_playback_pos(f_bar, f_beat)
+                    for f_editor in (AUDIO_SEQ, REGION_EDITOR):
+                        f_editor.set_playback_pos(f_bar, f_beat)
             elif a_key == "peak":
                 global_update_peak_meters(a_val)
             elif a_key == "ui":
