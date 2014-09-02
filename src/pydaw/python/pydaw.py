@@ -939,6 +939,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.label = QtGui.QGraphicsSimpleTextItem(self)
         self.label.setPen(QtGui.QPen(QtCore.Qt.NoPen))
         self.label.setText(a_name)
+        self.name = str(a_name)
         self.label.setPos(2.0, 2.0)
         self.set_brush()
 
@@ -979,8 +980,11 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.showing_resize_cursor = False
 
     def mouseDoubleClickEvent(self, a_event):
+        a_event.setAccepted(True)
         QtGui.QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+        global_open_items([self.name], a_reset_scrollbar=True)
+        MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
+
 
     def mousePressEvent(self, a_event):
         if a_event.modifiers() == QtCore.Qt.ShiftModifier:
@@ -1186,6 +1190,102 @@ class region_editor_item(QtGui.QGraphicsRectItem):
 class region_editor(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
+        self.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
+
+        self.edit_group_action = QtGui.QAction(
+            _("Edit Selected Item(s)"), self)
+        self.edit_group_action.triggered.connect(self.edit_group)
+        self.edit_group_action.setShortcut(
+            QtGui.QKeySequence.fromString("CTRL+E"))
+        self.addAction(self.edit_group_action)
+
+        self.edit_unique_action = QtGui.QAction(
+            _("Edit Unique Item(s)"), self)
+        self.edit_unique_action.triggered.connect(self.edit_unique)
+        self.edit_unique_action.setShortcut(
+            QtGui.QKeySequence.fromString("ALT+E"))
+        self.addAction(self.edit_unique_action)
+
+        self.separator_action1 = QtGui.QAction("", self)
+        self.separator_action1.setSeparator(True)
+        self.addAction(self.separator_action1)
+
+        self.copy_action = QtGui.QAction(_("Copy"), self)
+        self.copy_action.triggered.connect(self.copy_selected)
+        self.copy_action.setShortcut(QtGui.QKeySequence.Copy)
+        self.addAction(self.copy_action)
+
+        self.cut_action = QtGui.QAction(_("Cut"), self)
+        self.cut_action.triggered.connect(self.cut_selected)
+        self.cut_action.setShortcut(QtGui.QKeySequence.Cut)
+        self.addAction(self.cut_action)
+
+        self.paste_action = QtGui.QAction(_("Paste"), self)
+        self.paste_action.triggered.connect(self.paste_clipboard)
+        self.paste_action.setShortcut(QtGui.QKeySequence.Paste)
+        self.addAction(self.paste_action)
+
+        self.paste_to_end_action = QtGui.QAction(
+            _("Paste to Region End"), self)
+        self.paste_to_end_action.triggered.connect(self.paste_to_region_end)
+        self.paste_to_end_action.setShortcut(
+            QtGui.QKeySequence.fromString("ALT+V"))
+        self.addAction(self.paste_to_end_action)
+
+        self.paste_to_orig_action = QtGui.QAction(
+            _("Paste to Original Pos"), self)
+        self.paste_to_orig_action.triggered.connect(self.paste_at_original_pos)
+        self.addAction(self.paste_to_orig_action)
+
+        self.clear_selection_action = QtGui.QAction(
+            _("Clear Selection"), self)
+        self.clear_selection_action.triggered.connect(
+            self.clearSelection)
+        self.clear_selection_action.setShortcut(
+            QtGui.QKeySequence.fromString("Esc"))
+        self.addAction(self.clear_selection_action)
+
+        self.delete_action = QtGui.QAction(_("Delete"), self)
+        self.delete_action.triggered.connect(self.delete_selected)
+        self.delete_action.setShortcut(QtGui.QKeySequence.Delete)
+        self.addAction(self.delete_action)
+
+        self.separator_action3 = QtGui.QAction("", self)
+        self.separator_action3.setSeparator(True)
+        self.addAction(self.separator_action3)
+
+        self.unlink_selected_action = QtGui.QAction(
+            _("Auto-Unlink Item(s)"), self)
+        self.unlink_selected_action.setShortcut(
+            QtGui.QKeySequence.fromString("CTRL+U"))
+        self.unlink_selected_action.triggered.connect(
+            self.on_auto_unlink_selected)
+        self.addAction(self.unlink_selected_action)
+
+        self.unlink_unique_action = QtGui.QAction(
+            _("Auto-Unlink Unique Item(s)"), self)
+        self.unlink_unique_action.setShortcut(
+            QtGui.QKeySequence.fromString("ALT+U"))
+        self.unlink_unique_action.triggered.connect(self.on_auto_unlink_unique)
+        self.addAction(self.unlink_unique_action)
+
+        self.rename_action = QtGui.QAction(
+            _("Rename Selected Item(s)..."), self)
+        self.rename_action.triggered.connect(self.on_rename_items)
+        self.addAction(self.rename_action)
+
+        self.unlink_action = QtGui.QAction(
+            _("Unlink Single Item..."), self)
+        self.unlink_action.triggered.connect(self.on_unlink_item)
+        self.addAction(self.unlink_action)
+
+        self.transpose_action = QtGui.QAction(
+            _("Transpose..."), self)
+        self.transpose_action.triggered.connect(self.transpose_dialog)
+        self.addAction(self.transpose_action)
+
+        self.last_item_copied = None
+
         self.item_length = 8.0
         self.viewer_width = 1000
 
@@ -1339,7 +1439,8 @@ class region_editor(QtGui.QGraphicsView):
 
     def draw_tracks(self):
         self.tracks = {}
-        f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
+        f_brush = QtGui.QLinearGradient(
+            0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
         f_brush.setColorAt(0.0, QtGui.QColor(234, 234, 234))
         f_brush.setColorAt(0.5, QtGui.QColor(159, 159, 159))
         self.tracks_widget = QtGui.QWidget()
@@ -1416,44 +1517,9 @@ class region_editor(QtGui.QGraphicsView):
         TRACK_NAMES = [f_tracks.tracks[k].name
             for k in sorted(f_tracks.tracks)]
 
-    def draw_region(self):
-        self.has_selected = False #Reset the selected-ness state...
-        self.viewer_width = REGION_EDITOR_GRID_WIDTH
-        self.setSceneRect(
-            0.0, 0.0, self.viewer_width + REGION_EDITOR_GRID_WIDTH,
-            self.tracks_height + REGION_EDITOR_HEADER_HEIGHT + 24.0)
-        self.item_length = get_current_region_length()
-        global REGION_EDITOR_MAX_START
-        REGION_EDITOR_MAX_START = (
-            REGION_EDITOR_GRID_WIDTH - 1.0) + REGION_TRACK_WIDTH
-        self.setUpdatesEnabled(False)
-        self.clear_drawn_items()
-        if XXX_ITEM_EDITOR.enabled:
-            f_item_count = len(XXX_ITEM_EDITOR.items)
-            for f_i, f_item in zip(range(f_item_count), XXX_ITEM_EDITOR.items):
-                for f_note in f_item.notes:
-                    f_note_item = self.draw_item(f_note, f_i)
-                    f_note_item.resize_last_mouse_pos = \
-                        f_note_item.scenePos().x()
-                    f_note_item.resize_pos = f_note_item.scenePos()
-                    if f_note_item.get_selected_string() in \
-                    self.selected_note_strings:
-                        f_note_item.setSelected(True)
-            if DRAW_LAST_ITEMS:
-                for f_i, f_uid in zip(
-                range(f_item_count), LAST_OPEN_ITEM_UIDS):
-                    f_item = PROJECT.get_item_by_uid(f_uid)
-                    for f_note in f_item.notes:
-                        f_note_item = self.draw_item(f_note, f_i, False)
-            self.scrollContentsBy(0, 0)
-            for f_name, f_i in zip(
-            XXX_ITEM_EDITOR.item_names, range(len(XXX_ITEM_EDITOR.item_names))):
-                f_text = QtGui.QGraphicsSimpleTextItem(f_name, self.header)
-                f_text.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
-                f_text.setBrush(QtCore.Qt.yellow)
-                f_text.setPos((f_i * REGION_EDITOR_GRID_WIDTH), 2.0)
-        self.setUpdatesEnabled(True)
-        self.update()
+    def clearSelection(self):
+        for f_item in self.note_items:
+            f_item.setSelected(False)
 
     def draw_item(self, a_track, a_bar, a_name, a_enabled=True):
         f_start = REGION_TRACK_WIDTH + (self.beat_width * a_bar)
@@ -1468,7 +1534,366 @@ class region_editor(QtGui.QGraphicsView):
             self.note_items.append(f_item)
             return f_item
 
+    def transpose_dialog(self):
+        if pydaw_current_region_is_none():
+            return
 
+        f_item_list = self.get_selected_items()
+        if len(f_item_list) == 0:
+            QtGui.QMessageBox.warning(
+                MAIN_WINDOW, _("Error"), _("No items selected"))
+            return
+
+        def transpose_ok_handler():
+            for f_item_name in f_item_list:
+                f_item = PROJECT.get_item_by_name(f_item_name)
+                f_item.transpose(
+                    f_semitone.value(), f_octave.value(),
+                    a_selected_only=False,
+                    a_duplicate=f_duplicate_notes.isChecked())
+                PROJECT.save_item(f_item_name, f_item)
+            PROJECT.commit(_("Transpose item(s)"))
+            if len(OPEN_ITEM_UIDS) > 0:
+                global_open_items()
+            f_window.close()
+
+        def transpose_cancel_handler():
+            f_window.close()
+
+        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.setWindowTitle(_("Transpose"))
+        f_layout = QtGui.QGridLayout()
+        f_window.setLayout(f_layout)
+
+        f_semitone = QtGui.QSpinBox()
+        f_semitone.setRange(-12, 12)
+        f_layout.addWidget(QtGui.QLabel(_("Semitones")), 0, 0)
+        f_layout.addWidget(f_semitone, 0, 1)
+        f_octave = QtGui.QSpinBox()
+        f_octave.setRange(-5, 5)
+        f_layout.addWidget(QtGui.QLabel(_("Octaves")), 1, 0)
+        f_layout.addWidget(f_octave, 1, 1)
+        f_duplicate_notes = QtGui.QCheckBox(_("Duplicate notes?"))
+        f_duplicate_notes.setToolTip(
+            _("Checking this box causes the transposed "
+            "notes to be added rather than moving the existing notes."))
+        f_layout.addWidget(f_duplicate_notes, 2, 1)
+        f_ok = QtGui.QPushButton(_("OK"))
+        f_ok.pressed.connect(transpose_ok_handler)
+        f_layout.addWidget(f_ok, 6, 0)
+        f_cancel = QtGui.QPushButton(_("Cancel"))
+        f_cancel.pressed.connect(transpose_cancel_handler)
+        f_layout.addWidget(f_cancel, 6, 1)
+        f_window.exec_()
+
+    def cut_selected(self):
+        self.copy_selected()
+        self.delete_selected()
+
+    def edit_unique(self):
+        self.edit_group(True)
+
+    def edit_group(self, a_unique=False):
+        f_result = []
+        f_track_nums = {}
+        for i in range(self.track_count):
+            for i2 in range(1, self.region_length + 1):
+                f_item = self.table_widget.item(i, i2)
+                if not f_item is None and \
+                not str(f_item.text()) == "" \
+                and f_item.isSelected():
+                    f_result_str = str(f_item.text())
+                    f_track_nums[i] = None
+                    if f_result_str in f_result:
+                        if a_unique:
+                            continue
+                        else:
+                            QtGui.QMessageBox.warning(
+                                self.table_widget, _("Error"),
+                                _("You cannot open multiple instances of "
+                                "the same item as a group.\n"
+                                "You should unlink all duplicate instances "
+                                "of {} into their own "
+                                "individual item names before editing as "
+                                "a group.").format(f_result_str))
+                            return
+                    f_result.append(f_result_str)
+        if f_result:
+            global_open_items(f_result, a_reset_scrollbar=True)
+            MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
+        else:
+            QtGui.QMessageBox.warning(
+                self.table_widget, _("Error"), _("No items selected"))
+
+
+    def on_rename_items(self):
+        f_result = []
+        for f_item in self.table_widget.selectedItems():
+            f_item_name = str(f_item.text())
+            if f_item_name != "" and not f_item_name in f_result:
+                f_result.append(f_item_name)
+        if not f_result:
+            return
+
+        def ok_handler():
+            f_new_name = str(f_new_lineedit.text())
+            if f_new_name == "":
+                QtGui.QMessageBox.warning(
+                    self.group_box, _("Error"), _("Name cannot be blank"))
+                return
+            global REGION_CLIPBOARD, OPEN_ITEM_NAMES, \
+                LAST_OPEN_ITEM_NAMES, LAST_OPEN_ITEM_UIDS
+            #Clear the clipboard, otherwise the names could be invalid
+            REGION_CLIPBOARD = []
+            OPEN_ITEM_NAMES = []
+            LAST_OPEN_ITEM_NAMES = []
+            LAST_OPEN_ITEM_UIDS = []
+            PROJECT.rename_items(f_result, f_new_name)
+            PROJECT.commit(_("Rename items"))
+            REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
+            global_update_items_label()
+            if DRAW_LAST_ITEMS:
+                global_open_items()
+                OPEN_ITEM_NAMES = ITEM_EDITOR.item_names[:]
+            f_window.close()
+
+        def cancel_handler():
+            f_window.close()
+
+        def on_name_changed():
+            f_new_lineedit.setText(
+                pydaw_remove_bad_chars(f_new_lineedit.text()))
+
+        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.setWindowTitle(_("Rename selected items..."))
+        f_layout = QtGui.QGridLayout()
+        f_window.setLayout(f_layout)
+        f_new_lineedit = QtGui.QLineEdit()
+        f_new_lineedit.editingFinished.connect(on_name_changed)
+        f_new_lineedit.setMaxLength(24)
+        f_layout.addWidget(QtGui.QLabel(_("New name:")), 0, 0)
+        f_layout.addWidget(f_new_lineedit, 0, 1)
+        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_layout.addWidget(f_ok_button, 5, 0)
+        f_ok_button.clicked.connect(ok_handler)
+        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_layout.addWidget(f_cancel_button, 5, 1)
+        f_cancel_button.clicked.connect(cancel_handler)
+        f_window.exec_()
+
+    def on_unlink_item(self):
+        """ Rename a single instance of an item and
+            make it into a new item
+        """
+        if not self.enabled:
+            self.warn_no_region_selected()
+            return
+
+        f_current_item = self.table_widget.currentItem()
+        x = self.table_widget.currentRow()
+        y = self.table_widget.currentColumn()
+
+        if f_current_item is None or \
+        str(f_current_item.text()) == "" or \
+        x < 0 or y < 1:
+            return
+
+        f_current_item_text = str(f_current_item.text())
+        x = self.table_widget.currentRow()
+        y = self.table_widget.currentColumn()
+
+        def note_ok_handler():
+            f_cell_text = str(f_new_lineedit.text())
+            if f_cell_text == f_current_item_text:
+                QtGui.QMessageBox.warning(
+                    self.group_box, _("Error"),
+                    _("You must choose a different name than the "
+                    "original item"))
+                return
+            if PROJECT.item_exists(f_cell_text):
+                QtGui.QMessageBox.warning(
+                    self.group_box, _("Error"),
+                    _("An item with this name already exists."))
+                return
+            f_uid = PROJECT.copy_item(
+                str(f_current_item.text()), str(f_new_lineedit.text()))
+            global_open_items([f_cell_text], a_reset_scrollbar=True)
+            self.last_item_copied = f_cell_text
+            self.add_qtablewidgetitem(f_cell_text, x, y - 1)
+            CURRENT_REGION.add_item_ref_by_uid(
+                x + self.track_offset, y - 1, f_uid)
+            PROJECT.save_region(
+                str(REGION_SETTINGS.region_name_lineedit.text()),
+                CURRENT_REGION)
+            PROJECT.commit(
+                _("Unlink item '{}' as '{}'").format(
+                f_current_item_text, f_cell_text))
+            f_window.close()
+
+        def note_cancel_handler():
+            f_window.close()
+
+        def on_name_changed():
+            f_new_lineedit.setText(
+                pydaw_remove_bad_chars(f_new_lineedit.text()))
+
+        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.setWindowTitle(_("Copy and unlink item..."))
+        f_layout = QtGui.QGridLayout()
+        f_window.setLayout(f_layout)
+        f_new_lineedit = QtGui.QLineEdit(f_current_item_text)
+        f_new_lineedit.editingFinished.connect(on_name_changed)
+        f_new_lineedit.setMaxLength(24)
+        f_layout.addWidget(QtGui.QLabel(_("New name:")), 0, 0)
+        f_layout.addWidget(f_new_lineedit, 0, 1)
+        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_layout.addWidget(f_ok_button, 5, 0)
+        f_ok_button.clicked.connect(note_ok_handler)
+        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_layout.addWidget(f_cancel_button, 5, 1)
+        f_cancel_button.clicked.connect(note_cancel_handler)
+        f_window.exec_()
+
+    def on_auto_unlink_selected(self):
+        """ Adds an automatic -N suffix """
+        for i in range(self.track_count):
+            for i2 in range(1, self.region_length + 1):
+                f_item = self.table_widget.item(i, i2)
+                if not f_item is None and \
+                not str(f_item.text()) == "" and \
+                f_item.isSelected():
+                    f_item_name = str(f_item.text())
+                    f_name_suffix = 1
+                    while PROJECT.item_exists(
+                    "{}-{}".format(f_item_name, f_name_suffix)):
+                        f_name_suffix += 1
+                    f_cell_text = "{}-{}".format(f_item_name, f_name_suffix)
+                    f_uid = PROJECT.copy_item(f_item_name, f_cell_text)
+                    self.add_qtablewidgetitem(f_cell_text, i, i2 - 1)
+                    CURRENT_REGION.add_item_ref_by_uid(
+                        i + self.track_offset, i2 - 1, f_uid)
+        PROJECT.save_region(
+            str(REGION_SETTINGS.region_name_lineedit.text()),
+            CURRENT_REGION)
+        PROJECT.commit(_("Auto-Unlink items"))
+
+    def on_auto_unlink_unique(self):
+        f_result = {}
+        for i in range(self.track_count):
+            for i2 in range(1, self.region_length + 1):
+                f_item = self.table_widget.item(i, i2)
+                if not f_item is None and \
+                not str(f_item.text()) == "" and \
+                f_item.isSelected():
+                    f_result[(i, i2)] = str(f_item.text())
+
+        old_new_map = {}
+
+        for f_item_name in set(f_result.values()):
+            f_name_suffix = 1
+            while PROJECT.item_exists(
+            "{}-{}".format(f_item_name, f_name_suffix)):
+                f_name_suffix += 1
+            f_cell_text = "{}-{}".format(f_item_name, f_name_suffix)
+            f_uid = PROJECT.copy_item(f_item_name, f_cell_text)
+            old_new_map[f_item_name] = (f_cell_text, f_uid)
+
+        for k, v in f_result.items():
+            self.add_qtablewidgetitem(old_new_map[v][0], k[0], k[1] - 1)
+            CURRENT_REGION.add_item_ref_by_uid(
+                k[0] + self.track_offset, k[1] - 1, old_new_map[v][1])
+        PROJECT.save_region(
+            str(REGION_SETTINGS.region_name_lineedit.text()),
+            CURRENT_REGION)
+        PROJECT.commit(_("Auto-Unlink unique items"))
+
+    def paste_to_region_end(self):
+        if not self.enabled:
+            self.warn_no_region_selected()
+            return
+        f_selected_cells = self.table_widget.selectedIndexes()
+        if len(f_selected_cells) == 0:
+            return
+        if len(REGION_CLIPBOARD) != 1:
+            QtGui.QMessageBox.warning(
+                MAIN_WINDOW, _("Error"), _("Paste to region end only "
+                "works when you have exactly one item copied to the "
+                "clipboard.\n"
+                "You have {} items copied.").format(len(REGION_CLIPBOARD)))
+            return
+        f_base_row = f_selected_cells[0].row()
+        f_base_column = f_selected_cells[0].column() - 1
+        f_region_length = pydaw_get_current_region_length()
+        f_item = REGION_CLIPBOARD[0]
+        for f_column in range(f_base_column, f_region_length + 1):
+            self.add_qtablewidgetitem(f_item[2], f_base_row, f_column)
+        global_tablewidget_to_region()
+
+    def paste_at_original_pos(self):
+        self.paste_clipboard(True)
+
+    def paste_clipboard(self, a_original_pos=False):
+        if not self.enabled:
+            self.warn_no_region_selected()
+            return
+        if a_original_pos:
+            f_base_row = REGION_CLIPBOARD_ROW_OFFSET
+            f_base_column = REGION_CLIPBOARD_COL_OFFSET
+        else:
+            f_selected_cells = self.table_widget.selectedIndexes()
+            if not f_selected_cells:
+                return
+            f_base_row = f_selected_cells[0].row()
+            f_base_column = f_selected_cells[0].column() - 1
+        self.table_widget.clearSelection()
+        f_region_length = pydaw_get_current_region_length()
+        for f_item in REGION_CLIPBOARD:
+            f_column = f_item[1] + f_base_column
+            if f_column >= f_region_length or f_column < 0:
+                continue
+            f_row = f_item[0] + f_base_row
+            if f_row >= self.track_count or f_row < 0:
+                continue
+            self.add_qtablewidgetitem(
+                f_item[2], f_row, f_column, a_selected=True)
+        global_tablewidget_to_region()
+        global_update_hidden_rows()
+
+
+    def delete_selected(self):
+        if not self.enabled:
+            self.warn_no_region_selected()
+            return
+        for f_item in self.table_widget.selectedIndexes():
+            f_empty = QtGui.QTableWidgetItem() #Clear the item
+            self.table_widget.setItem(f_item.row(), f_item.column(), f_empty)
+        global_tablewidget_to_region()
+        self.table_widget.clearSelection()
+
+    def copy_selected(self):
+        if not self.enabled:
+            self.warn_no_region_selected()
+            return
+        global REGION_CLIPBOARD, REGION_CLIPBOARD_ROW_OFFSET, \
+            REGION_CLIPBOARD_COL_OFFSET
+        REGION_CLIPBOARD = []  #Clear the clipboard
+        for f_item in self.table_widget.selectedIndexes():
+            f_cell = self.table_widget.item(f_item.row(), f_item.column())
+            if not f_cell is None and not str(f_cell.text()) == "":
+                REGION_CLIPBOARD.append(
+                    [int(f_item.row()), int(f_item.column()) - 1,
+                     str(f_cell.text())])
+        if len(REGION_CLIPBOARD) > 0:
+            REGION_CLIPBOARD.sort(key=operator.itemgetter(0))
+            f_row_offset = REGION_CLIPBOARD[0][0]
+            for f_item in REGION_CLIPBOARD:
+                f_item[0] -= f_row_offset
+            REGION_CLIPBOARD.sort(key=operator.itemgetter(1))
+            f_column_offset = REGION_CLIPBOARD[0][1]
+            for f_item in REGION_CLIPBOARD:
+                f_item[1] -= f_column_offset
+            REGION_CLIPBOARD_COL_OFFSET = f_column_offset
+            REGION_CLIPBOARD_ROW_OFFSET = f_row_offset
 
 
 ########  End nu hottness
