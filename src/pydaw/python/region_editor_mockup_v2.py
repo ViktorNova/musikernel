@@ -11,12 +11,10 @@ def global_set_region_editor_zoom():
     f_width = float(REGION_EDITOR.rect().width()) - \
         float(REGION_EDITOR.verticalScrollBar().width()) - 6.0 - \
         REGION_TRACK_WIDTH
-    f_region_scale = f_width / (ITEM_EDITING_COUNT * 1000.0)
+    f_region_scale = f_width / 1000.0
 
     REGION_EDITOR_GRID_WIDTH = 1000.0 * MIDI_SCALE * f_region_scale
     pydaw_set_region_editor_quantize(REGION_EDITOR_QUANTIZE_INDEX)
-
-ITEM_EDITING_COUNT = 1
 
 REGION_EDITOR_SNAP = True
 REGION_EDITOR_GRID_WIDTH = 800.0
@@ -75,11 +73,9 @@ def pydaw_set_region_editor_quantize(a_index):
         REGION_EDITOR_SNAP_DIVISOR = 4.0
 
     REGION_EDITOR_SNAP_BEATS = 4.0 / REGION_EDITOR_SNAP_DIVISOR
-    REGION_EDITOR_SNAP_DIVISOR *= ITEM_EDITING_COUNT
-    REGION_EDITOR_SNAP_VALUE = (REGION_EDITOR_GRID_WIDTH *
-        ITEM_EDITING_COUNT) / REGION_EDITOR_SNAP_DIVISOR
-    REGION_EDITOR_SNAP_DIVISOR_BEATS = \
-        REGION_EDITOR_SNAP_DIVISOR / (4.0 * ITEM_EDITING_COUNT)
+    REGION_EDITOR_SNAP_VALUE = \
+        REGION_EDITOR_GRID_WIDTH / REGION_EDITOR_SNAP_DIVISOR
+    REGION_EDITOR_SNAP_DIVISOR_BEATS = REGION_EDITOR_SNAP_DIVISOR / 4.0
 
 REGION_EDITOR_MIN_NOTE_LENGTH = REGION_EDITOR_GRID_WIDTH / 128.0
 
@@ -153,18 +149,10 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             f_index = self.track_num % len(pydaw_track_gradients)
             self.setBrush(pydaw_track_gradients[f_index])
 
-    def mouse_is_at_end(self, a_pos):
-        f_width = self.rect().width()
-        if f_width >= 30.0:
-            return a_pos.x() > (f_width - 15.0)
-        else:
-            return a_pos.x() > (f_width * 0.72)
-
     def hoverMoveEvent(self, a_event):
         #QtGui.QGraphicsRectItem.hoverMoveEvent(self, a_event)
         if not self.is_resizing:
             REGION_EDITOR.click_enabled = False
-            self.show_resize_cursor(a_event)
 
     def delete_later(self):
         global REGION_EDITOR_DELETED_NOTES
@@ -174,16 +162,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
 
     def delete(self):
         XXX_ITEM_EDITOR.items[self.item_index].remove_note(self.note_item)
-
-    def show_resize_cursor(self, a_event):
-        f_is_at_end = self.mouse_is_at_end(a_event.pos())
-        if f_is_at_end and not self.showing_resize_cursor:
-            QtGui.QApplication.setOverrideCursor(
-                QtGui.QCursor(QtCore.Qt.SizeHorCursor))
-            self.showing_resize_cursor = True
-        elif not f_is_at_end and self.showing_resize_cursor:
-            QtGui.QApplication.restoreOverrideCursor()
-            self.showing_resize_cursor = False
 
     def get_selected_string(self):
         return "{}|{}".format(self.item_index, self.note_item)
@@ -223,16 +201,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
             self.setBrush(SELECTED_ITEM_GRADIENT)
             self.o_pos = self.pos()
-            if self.mouse_is_at_end(a_event.pos()):
-                self.is_resizing = True
-                self.mouse_y_pos = QtGui.QCursor.pos().y()
-                self.resize_last_mouse_pos = a_event.pos().x()
-                for f_item in REGION_EDITOR.get_selected_items():
-                    f_item.resize_start_pos = f_item.note_item.start + (
-                        4.0 * f_item.item_index)
-                    f_item.resize_pos = f_item.pos()
-                    f_item.resize_rect = f_item.rect()
-            elif a_event.modifiers() == QtCore.Qt.ControlModifier:
+            if a_event.modifiers() == QtCore.Qt.ControlModifier:
                 self.is_copying = True
                 for f_item in REGION_EDITOR.get_selected_items():
                     REGION_EDITOR.draw_item(
@@ -629,14 +598,14 @@ class region_editor(QtGui.QGraphicsView):
 
     def draw_region(self):
         self.has_selected = False #Reset the selected-ness state...
-        self.viewer_width = REGION_EDITOR_GRID_WIDTH * ITEM_EDITING_COUNT
+        self.viewer_width = REGION_EDITOR_GRID_WIDTH
         self.setSceneRect(
             0.0, 0.0, self.viewer_width + REGION_EDITOR_GRID_WIDTH,
             self.tracks_height + REGION_EDITOR_HEADER_HEIGHT + 24.0)
-        self.item_length = float(4 * ITEM_EDITING_COUNT)
+        self.item_length = get_current_region_length()
         global REGION_EDITOR_MAX_START
-        REGION_EDITOR_MAX_START = ((REGION_EDITOR_GRID_WIDTH - 1.0) *
-            ITEM_EDITING_COUNT) + REGION_TRACK_WIDTH
+        REGION_EDITOR_MAX_START = (
+            REGION_EDITOR_GRID_WIDTH - 1.0) + REGION_TRACK_WIDTH
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
         if XXX_ITEM_EDITOR.enabled:
