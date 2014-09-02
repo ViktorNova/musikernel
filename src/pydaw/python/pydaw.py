@@ -739,8 +739,6 @@ class region_settings:
 
     def open_region(self, a_file_name):
         self.enabled = False
-        REGION_EDITOR.enabled = False
-        REGION_EDITOR.setUpdatesEnabled(True)
         self.clear_items()
         self.region_name_lineedit.setText(a_file_name)
         global CURRENT_REGION_NAME
@@ -759,17 +757,7 @@ class region_settings:
             TRANSPORT.bar_spinbox.setRange(1, 8)
             self.length_default_radiobutton.setChecked(True)
         self.enabled = True
-        REGION_EDITOR.enabled = True
-        f_items_dict = PROJECT.get_items_dict()
-        for f_item in CURRENT_REGION.items:
-            if f_item.bar_num < CURRENT_REGION.region_length_bars or \
-            (CURRENT_REGION.region_length_bars == 0 and
-            f_item.bar_num < 8):
-                f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
-                REGION_EDITOR.draw_item(
-                    f_item.track_num,f_item.bar_num, f_item_name)
-        REGION_EDITOR.setUpdatesEnabled(True)
-        REGION_EDITOR.update()
+        REGION_EDITOR.open_region()
         global_open_audio_items()
         global_update_hidden_rows()
         TRANSPORT.set_time(
@@ -1090,14 +1078,7 @@ class region_editor(QtGui.QGraphicsView):
         QtGui.QGraphicsView.__init__(self)
 
         self.last_item_copied = None
-
-        self.item_length = 8.0
-        self.viewer_width = 1000.0
-        self.px_per_bar = self.viewer_width / 8.0
-        self.px_per_beat = self.px_per_bar / 4.0
-
         self.padding = 2
-
         self.update_note_height()
 
         self.scene = QtGui.QGraphicsScene(self)
@@ -1108,9 +1089,7 @@ class region_editor(QtGui.QGraphicsView):
         self.setAlignment(QtCore.Qt.AlignLeft)
         self.setScene(self.scene)
         self.first_open = True
-        self.draw_header()
-        self.draw_tracks()
-        self.draw_grid()
+        self.clear_drawn_items()
 
         self.has_selected = False
 
@@ -1430,8 +1409,29 @@ class region_editor(QtGui.QGraphicsView):
 
     def resizeEvent(self, a_event):
         QtGui.QGraphicsView.resizeEvent(self, a_event)
+        self.clear_drawn_items()
+        self.open_region()
+
+    def open_region(self):
+        if not CURRENT_REGION:
+            return
+        f_items_dict = PROJECT.get_items_dict()
+        self.setUpdatesEnabled(False)
+        for f_item in CURRENT_REGION.items:
+            if f_item.bar_num < pydaw_get_current_region_length():
+                f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
+                self.draw_item(f_item.track_num,f_item.bar_num, f_item_name)
+        self.setUpdatesEnabled(True)
+        self.update()
 
     def clear_drawn_items(self):
+        global REGION_EDITOR_GRID_WIDTH
+        self.item_length = pydaw_get_current_region_length()
+        self.viewer_width = self.width() - REGION_TRACK_WIDTH - 50.0
+        REGION_EDITOR_GRID_WIDTH = self.viewer_width
+        self.px_per_bar = self.viewer_width / 8.0
+        self.px_per_beat = self.px_per_bar / 4.0
+
         self.note_items = []
         self.scene.clear()
         self.update_note_height()
