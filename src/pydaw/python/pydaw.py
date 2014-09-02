@@ -1053,27 +1053,14 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                 f_new_vel = int(f_new_vel)
                 f_item.note_item.velocity = f_new_vel
                 f_item.label.setText(str(f_new_vel))
-                f_item.set_brush()
-                f_item.set_vel_line()
             else:
-                f_pos_x = f_item.pos().x()
-                f_pos_y = f_item.pos().y()
-                if f_pos_x < REGION_TRACK_WIDTH:
-                    f_pos_x = REGION_TRACK_WIDTH
-                elif f_pos_x > REGION_EDITOR_MAX_START:
-                    f_pos_x = REGION_EDITOR_MAX_START
-                if f_pos_y < REGION_EDITOR_HEADER_HEIGHT:
-                    f_pos_y = REGION_EDITOR_HEADER_HEIGHT
-                elif f_pos_y > REGION_EDITOR_TOTAL_HEIGHT:
-                    f_pos_y = REGION_EDITOR_TOTAL_HEIGHT
-                f_pos_y = (int((f_pos_y - REGION_EDITOR_HEADER_HEIGHT) /
-                    REGION_EDITOR_TRACK_HEIGHT) *
-                    REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
-                if REGION_EDITOR_SNAP:
-                    f_pos_x = (int((f_pos_x - REGION_TRACK_WIDTH) /
-                    REGION_EDITOR_SNAP_VALUE) *
-                    REGION_EDITOR_SNAP_VALUE) + REGION_TRACK_WIDTH
-                f_item.setPos(f_pos_x, f_pos_y)
+                f_pos = f_item.pos()
+                f_coord = REGION_EDITOR.get_item_coord(f_pos)
+                if f_pos:
+                    f_track, f_bar = f_coord
+                    f_item.track_num = f_track
+                    f_item.bar = f_bar
+                    f_item.set_pos()
 
     def mouseReleaseEvent(self, a_event):
         if REGION_EDITOR_DELETE_MODE:
@@ -1083,15 +1070,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
         if self.is_copying:
             f_new_selection = []
-        for f_item in REGION_EDITOR.get_selected_items():
-            f_pos = f_item.pos()
-            if self.is_velocity_dragging or self.is_velocity_curving:
-                pass
-            else:
-                if self.is_copying:
-                    pass  #copying
-                else:
-                    pass # moving
         REGION_EDITOR.selected_note_strings = []
         if self.is_copying:
             for f_new_item in f_new_selection:
