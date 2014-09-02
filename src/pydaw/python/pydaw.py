@@ -1127,77 +1127,95 @@ class region_editor(QtGui.QGraphicsView):
         self.selected_note_strings = []
         self.clipboard = []
 
-    def show_context_menu(self):
-        f_menu = QtGui.QMenu()
+        self.current_coord = None
 
-        self.edit_group_action = f_menu.addAction(_("Edit Selected Item(s)"))
+        self.menu = QtGui.QMenu()
+
+        self.edit_group_action = self.menu.addAction(
+            _("Edit Selected Item(s)"))
         self.edit_group_action.triggered.connect(self.edit_group)
         self.edit_group_action.setShortcut(
             QtGui.QKeySequence.fromString("CTRL+E"))
+        self.addAction(self.edit_group_action)
 
-        self.edit_unique_action = f_menu.addAction(_("Edit Unique Item(s)"))
+        self.edit_unique_action = self.menu.addAction(_("Edit Unique Item(s)"))
         self.edit_unique_action.triggered.connect(self.edit_unique)
         self.edit_unique_action.setShortcut(
             QtGui.QKeySequence.fromString("ALT+E"))
+        self.addAction(self.edit_unique_action)
 
-        f_menu.addSeparator()
+        self.menu.addSeparator()
 
-        self.copy_action = f_menu.addAction(_("Copy"))
+        self.copy_action = self.menu.addAction(_("Copy"))
         self.copy_action.triggered.connect(self.copy_selected)
         self.copy_action.setShortcut(QtGui.QKeySequence.Copy)
+        self.addAction(self.copy_action)
 
-        self.cut_action = f_menu.addAction(_("Cut"))
+        self.cut_action = self.menu.addAction(_("Cut"))
         self.cut_action.triggered.connect(self.cut_selected)
         self.cut_action.setShortcut(QtGui.QKeySequence.Cut)
+        self.addAction(self.cut_action)
 
-        self.paste_action = f_menu.addAction(_("Paste"))
+        self.paste_action = self.menu.addAction(_("Paste"))
         self.paste_action.triggered.connect(self.paste_clipboard)
         self.paste_action.setShortcut(QtGui.QKeySequence.Paste)
+        self.addAction(self.paste_action)
 
-        self.paste_to_end_action = f_menu.addAction(_("Paste to Region End"))
+        self.paste_to_end_action = self.menu.addAction(
+            _("Paste to Region End"))
         self.paste_to_end_action.triggered.connect(self.paste_to_region_end)
         self.paste_to_end_action.setShortcut(
             QtGui.QKeySequence.fromString("ALT+V"))
+        self.addAction(self.paste_to_end_action)
 
-        self.paste_to_orig_action = f_menu.addAction(
+        self.paste_to_orig_action = self.menu.addAction(
             _("Paste to Original Pos"))
         self.paste_to_orig_action.triggered.connect(self.paste_at_original_pos)
+        self.addAction(self.paste_to_orig_action)
 
-        self.clear_selection_action = f_menu.addAction(_("Clear Selection"))
+        self.clear_selection_action = self.menu.addAction(_("Clear Selection"))
         self.clear_selection_action.triggered.connect(self.clearSelection)
         self.clear_selection_action.setShortcut(
             QtGui.QKeySequence.fromString("Esc"))
+        self.addAction(self.clear_selection_action)
 
-        self.delete_action = f_menu.addAction(_("Delete"))
+        self.delete_action = self.menu.addAction(_("Delete"))
         self.delete_action.triggered.connect(self.delete_selected)
         self.delete_action.setShortcut(QtGui.QKeySequence.Delete)
+        self.addAction(self.delete_action)
 
-        f_menu.addSeparator()
+        self.menu.addSeparator()
 
-        self.unlink_selected_action = f_menu.addAction(
+        self.unlink_selected_action = self.menu.addAction(
             _("Auto-Unlink Item(s)"))
         self.unlink_selected_action.setShortcut(
             QtGui.QKeySequence.fromString("CTRL+U"))
         self.unlink_selected_action.triggered.connect(
             self.on_auto_unlink_selected)
+        self.addAction(self.unlink_selected_action)
 
-        self.unlink_unique_action = f_menu.addAction(
+        self.unlink_unique_action = self.menu.addAction(
             _("Auto-Unlink Unique Item(s)"))
         self.unlink_unique_action.setShortcut(
             QtGui.QKeySequence.fromString("ALT+U"))
         self.unlink_unique_action.triggered.connect(self.on_auto_unlink_unique)
+        self.addAction(self.unlink_unique_action)
 
-        self.rename_action = f_menu.addAction(
+        self.rename_action = self.menu.addAction(
             _("Rename Selected Item(s)..."))
         self.rename_action.triggered.connect(self.on_rename_items)
+        self.addAction(self.rename_action)
 
-        self.unlink_action = f_menu.addAction(_("Unlink Single Item..."))
+        self.unlink_action = self.menu.addAction(_("Unlink Single Item..."))
         self.unlink_action.triggered.connect(self.on_unlink_item)
+        self.addAction(self.unlink_action)
 
-        self.transpose_action = f_menu.addAction(_("Transpose..."))
+        self.transpose_action = self.menu.addAction(_("Transpose..."))
         self.transpose_action.triggered.connect(self.transpose_dialog)
+        self.addAction(self.transpose_action)
 
-        f_menu.exec_(QtGui.QCursor.pos())
+    def show_context_menu(self):
+        self.menu.exec_(QtGui.QCursor.pos())
 
     def update_note_height(self):
         self.tracks_height = \
@@ -1279,7 +1297,9 @@ class region_editor(QtGui.QGraphicsView):
 
     def sceneMousePressEvent(self, a_event):
         if a_event.button() == QtCore.Qt.RightButton:
-            self.show_context_menu()
+            self.current_coord = self.get_item_coord(a_event.scenePos())
+            if self.current_coord:
+                self.show_context_menu()
             return
         elif a_event.modifiers() == QtCore.Qt.ControlModifier:
             self.hover_restore_cursor_event()
