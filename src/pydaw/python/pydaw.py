@@ -7921,7 +7921,6 @@ class transport_widget:
                             REGION_SETTINGS.clear_items()
                             AUDIO_SEQ.update_zoom()
                             AUDIO_SEQ.clear_drawn_items()
-                            REGION_EDITOR.set_region_length()
 
     def init_playback_cursor(self, a_start=True):
         if not self.follow_checkbox.isChecked() or \
