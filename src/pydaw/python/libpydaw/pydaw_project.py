@@ -2121,6 +2121,9 @@ class pydaw_tracks:
     def __init__(self):
         self.tracks = {}
 
+    def get_names(self):
+        return [self.tracks[k].name for k in sorted(self.tracks)]
+
     def __str__(self):
         f_result = "".join(str(self.tracks[k]) for k in sorted(self.tracks))
         f_result += pydaw_terminating_char

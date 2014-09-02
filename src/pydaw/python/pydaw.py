@@ -1372,7 +1372,7 @@ class region_editor(QtGui.QGraphicsView):
         self.tracks_proxy.setZValue(1000.0)
 
         for i in range(REGION_EDITOR_TRACK_COUNT):
-            f_track = seq_track(i)
+            f_track = seq_track(i, TRACK_NAMES[i])
             self.tracks_layout.addWidget(f_track.group_box)
 
 
@@ -7807,7 +7807,9 @@ class seq_track:
         f_name = pydaw_remove_bad_chars(self.track_name_lineedit.text())
         self.track_name_lineedit.setText(f_name)
         global_update_track_comboboxes(self.track_number, f_name)
-        PROJECT.save_tracks(REGION_EDITOR.get_tracks())
+        f_tracks = PROJECT.get_tracks()
+        f_tracks.tracks[self.track_number].name = f_name
+        PROJECT.save_tracks(f_tracks)
         PROJECT.commit(
             _("Set name for track {} to {}").format(self.track_number,
             self.track_name_lineedit.text()))
@@ -10472,13 +10474,14 @@ def set_window_title():
 #Opens or creates a new project
 def global_open_project(a_project_file, a_wait=True):
     global_close_all()
-    global PROJECT
+    global PROJECT, TRACK_NAMES
     if a_wait:
         time.sleep(3.0)
     open_pydaw_engine(a_project_file)
     PROJECT = pydaw_project(global_pydaw_with_audio)
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
+    TRACK_NAMES = PROJECT.get_tracks().get_names()
     WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
     SONG_EDITOR.open_song()
     REGION_EDITOR.clear_drawn_items()
