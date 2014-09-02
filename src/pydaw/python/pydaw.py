@@ -1001,7 +1001,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                 self.is_copying = True
                 for f_item in REGION_EDITOR.get_selected_items():
                     REGION_EDITOR.draw_item(
-                        f_item.note_item, f_item.item_index)
+                        f_item.track_num, f_item.bar, f_item.name)
         if self.is_velocity_curving or self.is_velocity_dragging:
             a_event.setAccepted(True)
             self.setSelected(True)
