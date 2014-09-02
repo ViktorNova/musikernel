@@ -840,7 +840,6 @@ SELECTED_ITEM_GRADIENT = QtGui.QLinearGradient(
 SELECTED_ITEM_GRADIENT.setColorAt(0, QtGui.QColor(180, 172, 100))
 SELECTED_ITEM_GRADIENT.setColorAt(1, QtGui.QColor(240, 240, 240))
 
-SELECTED_REGION_ITEM = None   #Used for mouse click hackery
 
 def pydaw_set_region_editor_quantize(a_index):
     global REGION_EDITOR_SNAP
@@ -925,12 +924,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.is_copying = False
         self.is_velocity_dragging = False
         self.is_velocity_curving = False
-        if SELECTED_REGION_ITEM is not None and \
-        a_note_item == SELECTED_REGION_ITEM:
-            self.is_resizing = True
-            REGION_EDITOR.click_enabled = True
-        else:
-            self.is_resizing = False
         self.showing_resize_cursor = False
         self.resize_rect = self.rect()
         self.mouse_y_pos = QtGui.QCursor.pos().y()
@@ -952,8 +945,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
 
     def hoverMoveEvent(self, a_event):
         #QtGui.QGraphicsRectItem.hoverMoveEvent(self, a_event)
-        if not self.is_resizing:
-            REGION_EDITOR.click_enabled = False
+        REGION_EDITOR.click_enabled = False  # TODO: ????
 
     def get_selected_string(self):
         return "{}|{}".format(self.item_index, self.note_item)
@@ -1026,25 +1018,8 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         else:
             QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
 
-        if self.is_resizing:
-            f_pos_x = a_event.pos().x()
-            self.resize_last_mouse_pos = a_event.pos().x()
         for f_item in REGION_EDITOR.get_selected_items():
-            if self.is_resizing:
-                if REGION_EDITOR_SNAP:
-                    f_adjusted_width = round(
-                        f_pos_x / REGION_EDITOR_SNAP_VALUE) * \
-                        REGION_EDITOR_SNAP_VALUE
-                    if f_adjusted_width == 0.0:
-                        f_adjusted_width = REGION_EDITOR_SNAP_VALUE
-                else:
-                    f_adjusted_width = pydaw_clip_min(
-                        f_pos_x, REGION_EDITOR_MIN_NOTE_LENGTH)
-                f_item.resize_rect.setWidth(f_adjusted_width)
-                f_item.setRect(f_item.resize_rect)
-                f_item.setPos(f_item.resize_pos.x(), f_item.resize_pos.y())
-                QtGui.QCursor.setPos(QtGui.QCursor.pos().x(), self.mouse_y_pos)
-            elif self.is_velocity_dragging:
+            if self.is_velocity_dragging:
                 f_new_vel = pydaw_util.pydaw_clip_value(
                     f_val + f_item.orig_value, 1, 127)
                 f_new_vel = int(f_new_vel)
@@ -1085,10 +1060,9 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                     f_pos_y = REGION_EDITOR_HEADER_HEIGHT
                 elif f_pos_y > REGION_EDITOR_TOTAL_HEIGHT:
                     f_pos_y = REGION_EDITOR_TOTAL_HEIGHT
-                f_pos_y = \
-                    (int((f_pos_y - REGION_EDITOR_HEADER_HEIGHT) /
-                    REGION_EDITOR_TRACK_HEIGHT) * REGION_EDITOR_TRACK_HEIGHT) + \
-                    REGION_EDITOR_HEADER_HEIGHT
+                f_pos_y = (int((f_pos_y - REGION_EDITOR_HEADER_HEIGHT) /
+                    REGION_EDITOR_TRACK_HEIGHT) *
+                    REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
                 if REGION_EDITOR_SNAP:
                     f_pos_x = (int((f_pos_x - REGION_TRACK_WIDTH) /
                     REGION_EDITOR_SNAP_VALUE) *
@@ -1115,20 +1089,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         for f_item in REGION_EDITOR.get_selected_items():
             f_pos_x = f_item.pos().x()
             f_pos_y = f_item.pos().y()
-            if self.is_resizing:
-                f_new_note_length = ((f_pos_x + f_item.rect().width() -
-                    REGION_TRACK_WIDTH) * f_recip *
-                    4.0) - f_item.resize_start_pos
-                if SELECTED_REGION_ITEM is not None and \
-                self.note_item != SELECTED_REGION_ITEM:
-                    f_new_note_length -= (self.item_index * 4.0)
-                if REGION_EDITOR_SNAP and \
-                f_new_note_length < REGION_EDITOR_SNAP_BEATS:
-                    f_new_note_length = REGION_EDITOR_SNAP_BEATS
-                elif f_new_note_length < pydaw_min_note_length:
-                    f_new_note_length = pydaw_min_note_length
-                f_item.note_item.set_length(f_new_note_length)
-            elif self.is_velocity_dragging or self.is_velocity_curving:
+            if self.is_velocity_dragging or self.is_velocity_curving:
                 pass
             else:
                 f_new_note_start = (f_pos_x -
@@ -1156,9 +1117,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                     XXX_ITEM_EDITOR.items[f_item.item_index].notes.append(
                         f_item.note_item)
                     XXX_ITEM_EDITOR.items[f_item.item_index].notes.sort()
-        for f_item in XXX_ITEM_EDITOR.items:
-            f_item.fix_overlaps()
-        SELECTED_REGION_ITEM = None
         REGION_EDITOR.selected_note_strings = []
         if self.is_copying:
             for f_new_item in f_new_selection:
@@ -1169,7 +1127,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                 REGION_EDITOR.selected_note_strings.append(
                     f_item.get_selected_string())
         for f_item in REGION_EDITOR.note_items:
-            f_item.is_resizing = False
             f_item.is_copying = False
             f_item.is_velocity_dragging = False
             f_item.is_velocity_curving = False
