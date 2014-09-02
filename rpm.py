@@ -218,9 +218,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/strings.py
 /usr/lib/{0}/pydaw/python/libpydaw/strings.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/strings.pyo
-/usr/lib/{0}/pydaw/python/region_editor_mockup_v2.py
-/usr/lib/{0}/pydaw/python/region_editor_mockup_v2.pyc
-/usr/lib/{0}/pydaw/python/region_editor_mockup_v2.pyo
 
 %doc
 
