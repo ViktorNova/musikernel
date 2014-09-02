@@ -924,7 +924,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.is_copying = False
         self.is_velocity_dragging = False
         self.is_velocity_curving = False
-        self.showing_resize_cursor = False
         self.resize_rect = self.rect()
         self.mouse_y_pos = QtGui.QCursor.pos().y()
         self.label = QtGui.QGraphicsSimpleTextItem(self)
@@ -948,7 +947,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         REGION_EDITOR.click_enabled = False  # TODO: ????
 
     def get_selected_string(self):
-        return "{}|{}".format(self.item_index, self.note_item)
+        return "|".join(str(x) for x in (self.track_num, self.bar, self.name))
 
     def hoverEnterEvent(self, a_event):
         QtGui.QGraphicsRectItem.hoverEnterEvent(self, a_event)
@@ -958,7 +957,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         QtGui.QGraphicsRectItem.hoverLeaveEvent(self, a_event)
         REGION_EDITOR.click_enabled = True
         QtGui.QApplication.restoreOverrideCursor()
-        self.showing_resize_cursor = False
 
     def mouseDoubleClickEvent(self, a_event):
         a_event.setAccepted(True)
@@ -1068,55 +1066,24 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                     REGION_EDITOR_SNAP_VALUE) *
                     REGION_EDITOR_SNAP_VALUE) + REGION_TRACK_WIDTH
                 f_item.setPos(f_pos_x, f_pos_y)
-                f_new_note = self.y_pos_to_note(f_pos_y)
-                f_item.update_label(f_new_note)
-
-    def y_pos_to_note(self, a_y):
-        return int(REGION_EDITOR_TRACK_COUNT -
-            ((a_y - REGION_EDITOR_HEADER_HEIGHT) /
-            REGION_EDITOR_TRACK_HEIGHT))
 
     def mouseReleaseEvent(self, a_event):
         if REGION_EDITOR_DELETE_MODE:
             region_editor_set_delete_mode(False)
             return
         a_event.setAccepted(True)
-        f_recip = 1.0 / REGION_EDITOR_GRID_WIDTH
         QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
-        global SELECTED_REGION_ITEM
         if self.is_copying:
             f_new_selection = []
         for f_item in REGION_EDITOR.get_selected_items():
-            f_pos_x = f_item.pos().x()
-            f_pos_y = f_item.pos().y()
+            f_pos = f_item.pos()
             if self.is_velocity_dragging or self.is_velocity_curving:
                 pass
             else:
-                f_new_note_start = (f_pos_x -
-                    REGION_TRACK_WIDTH) * 4.0 * f_recip
-                f_new_note_num = self.y_pos_to_note(f_pos_y)
                 if self.is_copying:
-                    f_item.item_index, f_new_note_start = \
-                        pydaw_beats_to_index(f_new_note_start)
-                    f_new_note = pydaw_note(
-                        f_new_note_start, f_item.note_item.length,
-                        f_new_note_num, f_item.note_item.velocity)
-                    XXX_ITEM_EDITOR.items[f_item.item_index].add_note(
-                        f_new_note, False)
-                    # pass a ref instead of a str in case
-                    # fix_overlaps() modifies it.
-                    f_item.note_item = f_new_note
-                    f_new_selection.append(f_item)
+                    pass  #copying
                 else:
-                    XXX_ITEM_EDITOR.items[f_item.item_index].notes.remove(
-                        f_item.note_item)
-                    f_item.item_index, f_new_note_start = \
-                        pydaw_beats_to_index(f_new_note_start)
-                    f_item.note_item.set_start(f_new_note_start)
-                    f_item.note_item.note_num = f_new_note_num
-                    XXX_ITEM_EDITOR.items[f_item.item_index].notes.append(
-                        f_item.note_item)
-                    XXX_ITEM_EDITOR.items[f_item.item_index].notes.sort()
+                    pass # moving
         REGION_EDITOR.selected_note_strings = []
         if self.is_copying:
             for f_new_item in f_new_selection:
@@ -1130,8 +1097,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             f_item.is_copying = False
             f_item.is_velocity_dragging = False
             f_item.is_velocity_curving = False
-        global_save_and_reload_items()
-        self.showing_resize_cursor = False
+        global_tablewidget_to_region()
         QtGui.QApplication.restoreOverrideCursor()
         REGION_EDITOR.click_enabled = True
 
