@@ -108,7 +108,7 @@ def pydaw_set_tooltips_enabled(a_enabled):
 
     f_list = [SONG_EDITOR, AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR, MAIN_WINDOW,
               WAVE_EDITOR, AUDIO_EDITOR_WIDGET, AUDIO_SEQ, TRANSPORT,
-              REGION_INST_EDITOR] + list(AUTOMATION_EDITORS)
+              REGION_EDITOR] + list(AUTOMATION_EDITORS)
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
 
@@ -166,7 +166,7 @@ class song_editor:
         TRANSPORT.follow_checkbox.isChecked():
             f_is_playing = True
             TRANSPORT.follow_checkbox.setChecked(False)
-            REGION_INST_EDITOR.table_widget.clearSelection()
+            REGION_EDITOR.scene.clearSelection()
             AUDIO_SEQ.stop_playback(0)
         f_cell = self.table_widget.item(x, y)
         if f_cell is None:
@@ -250,7 +250,7 @@ class song_editor:
             global CURRENT_SONG_INDEX
             CURRENT_SONG_INDEX = y
             if not f_is_playing:
-                REGION_INST_EDITOR.table_widget.clearSelection()
+                REGION_EDITOR.scene.clearSelection()
                 TRANSPORT.set_region_value(y)
                 TRANSPORT.set_bar_value(0)
 
@@ -506,17 +506,18 @@ class song_editor:
 
 
 def global_update_hidden_rows(a_val=None):
-    REGION_INST_EDITOR.table_widget.setUpdatesEnabled(False)
-    if CURRENT_REGION and REGION_SETTINGS.hide_inactive:
-        f_active = [x.track_num for x in CURRENT_REGION.items]
-        for f_i in range(REGION_INST_EDITOR.table_widget.rowCount()):
-            REGION_INST_EDITOR.table_widget.setRowHidden(
-                f_i, f_i not in f_active)
-    else:
-        for f_i in range(REGION_INST_EDITOR.table_widget.rowCount()):
-            REGION_INST_EDITOR.table_widget.setRowHidden(f_i, False)
-    REGION_INST_EDITOR.table_widget.setUpdatesEnabled(True)
-    REGION_INST_EDITOR.table_widget.update()
+    return  #TODO
+#    REGION_EDITOR.table_widget.setUpdatesEnabled(False)
+#    if CURRENT_REGION and REGION_SETTINGS.hide_inactive:
+#        f_active = [x.track_num for x in CURRENT_REGION.items]
+#        for f_i in range(REGION_EDITOR.table_widget.rowCount()):
+#            REGION_EDITOR.table_widget.setRowHidden(
+#                f_i, f_i not in f_active)
+#    else:
+#        for f_i in range(REGION_EDITOR.table_widget.rowCount()):
+#            REGION_EDITOR.table_widget.setRowHidden(f_i, False)
+#    REGION_EDITOR.table_widget.setUpdatesEnabled(True)
+#    REGION_EDITOR.table_widget.update()
 
 
 CURRENT_REGION = None
@@ -622,11 +623,11 @@ class region_settings:
 
 
     def unsolo_all(self):
-        for f_track in REGION_INST_EDITOR.tracks:
+        for f_track in REGION_EDITOR.tracks:
             f_track.solo_checkbox.setChecked(False)
 
     def unmute_all(self):
-        for f_track in REGION_INST_EDITOR.tracks:
+        for f_track in REGION_EDITOR.tracks:
             f_track.mute_checkbox.setChecked(False)
 
 
@@ -738,8 +739,8 @@ class region_settings:
 
     def open_region(self, a_file_name):
         self.enabled = False
-        REGION_INST_EDITOR.enabled = False
-        REGION_INST_EDITOR.table_widget.setUpdatesEnabled(True)
+        REGION_EDITOR.enabled = False
+        REGION_EDITOR.setUpdatesEnabled(True)
         self.clear_items()
         self.region_name_lineedit.setText(a_file_name)
         global CURRENT_REGION_NAME
@@ -748,31 +749,30 @@ class region_settings:
         CURRENT_REGION = PROJECT.get_region_by_name(
             a_file_name)
         if CURRENT_REGION.region_length_bars > 0:
-            REGION_INST_EDITOR.set_region_length(
-                CURRENT_REGION.region_length_bars)
+#            REGION_EDITOR.set_region_length(
+#                CURRENT_REGION.region_length_bars)
             self.length_alternate_spinbox.setValue(
                 CURRENT_REGION.region_length_bars)
             TRANSPORT.bar_spinbox.setRange(
                 1, (CURRENT_REGION.region_length_bars))
             self.length_alternate_radiobutton.setChecked(True)
         else:
-            REGION_INST_EDITOR.set_region_length()
+#            REGION_EDITOR.set_region_length()
             self.length_alternate_spinbox.setValue(8)
             TRANSPORT.bar_spinbox.setRange(1, 8)
             self.length_default_radiobutton.setChecked(True)
         self.enabled = True
-        REGION_INST_EDITOR.enabled = True
+        REGION_EDITOR.enabled = True
         f_items_dict = PROJECT.get_items_dict()
         for f_item in CURRENT_REGION.items:
             if f_item.bar_num < CURRENT_REGION.region_length_bars or \
             (CURRENT_REGION.region_length_bars == 0 and
             f_item.bar_num < 8):
                 f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
-                REGION_INST_EDITOR.add_qtablewidgetitem(
-                    f_item_name, f_item.track_num,
-                    f_item.bar_num, a_is_offset=True)
-        REGION_INST_EDITOR.table_widget.setUpdatesEnabled(True)
-        REGION_INST_EDITOR.table_widget.update()
+                REGION_EDITOR.draw_item(
+                    f_item.track_num,f_item.bar_num, f_item_name)
+        REGION_EDITOR.setUpdatesEnabled(True)
+        REGION_EDITOR.update()
         global_open_audio_items()
         global_update_hidden_rows()
         TRANSPORT.set_time(
@@ -782,7 +782,7 @@ class region_settings:
         self.region_name_lineedit.setText("")
         self.length_alternate_spinbox.setValue(8)
         self.length_default_radiobutton.setChecked(True)
-        REGION_INST_EDITOR.clear_items()
+        REGION_EDITOR.clear_drawn_items()
         AUDIO_SEQ.clear_drawn_items()
         global CURRENT_REGION
         CURRENT_REGION = None
@@ -791,7 +791,7 @@ class region_settings:
         self.region_name_lineedit.setText("")
         global CURRENT_REGION
         CURRENT_REGION = None
-        REGION_INST_EDITOR.clear_new()
+        REGION_EDITOR.clear_new()
 
     def on_play(self):
         self.length_default_radiobutton.setEnabled(False)
@@ -802,6 +802,677 @@ class region_settings:
         self.length_default_radiobutton.setEnabled(True)
         self.length_alternate_radiobutton.setEnabled(True)
         self.length_alternate_spinbox.setEnabled(True)
+
+########  Nu hottness
+
+
+def global_set_region_editor_zoom():
+    global REGION_EDITOR_GRID_WIDTH
+    global MIDI_SCALE
+
+    f_width = float(REGION_EDITOR.rect().width()) - \
+        float(REGION_EDITOR.verticalScrollBar().width()) - 6.0 - \
+        REGION_TRACK_WIDTH
+    f_region_scale = f_width / 1000.0
+
+    REGION_EDITOR_GRID_WIDTH = 1000.0 * MIDI_SCALE * f_region_scale
+    pydaw_set_region_editor_quantize(REGION_EDITOR_QUANTIZE_INDEX)
+
+REGION_EDITOR_SNAP = True
+REGION_EDITOR_GRID_WIDTH = 800.0
+REGION_TRACK_WIDTH = 180  #Width of the tracks in px
+REGION_EDITOR_MAX_START = 999.0 + REGION_TRACK_WIDTH
+REGION_EDITOR_TRACK_HEIGHT = pydaw_util.get_file_setting(
+    "TRACK_VZOOM", int, 80)
+REGION_EDITOR_SNAP_DIVISOR = 16.0
+REGION_EDITOR_SNAP_BEATS = 4.0 / REGION_EDITOR_SNAP_DIVISOR
+REGION_EDITOR_SNAP_VALUE = \
+    REGION_EDITOR_GRID_WIDTH / REGION_EDITOR_SNAP_DIVISOR
+REGION_EDITOR_SNAP_DIVISOR_BEATS = REGION_EDITOR_SNAP_DIVISOR / 4.0
+REGION_EDITOR_TRACK_COUNT = 32
+REGION_EDITOR_HEADER_HEIGHT = 24
+#gets updated by the region editor to it's real value:
+REGION_EDITOR_TOTAL_HEIGHT = 1000
+REGION_EDITOR_QUANTIZE_INDEX = 4
+
+SELECTED_ITEM_GRADIENT = QtGui.QLinearGradient(
+    QtCore.QPointF(0, 0), QtCore.QPointF(0, 12))
+SELECTED_ITEM_GRADIENT.setColorAt(0, QtGui.QColor(180, 172, 100))
+SELECTED_ITEM_GRADIENT.setColorAt(1, QtGui.QColor(240, 240, 240))
+
+SELECTED_REGION_ITEM = None   #Used for mouse click hackery
+
+def pydaw_set_region_editor_quantize(a_index):
+    global REGION_EDITOR_SNAP
+    global REGION_EDITOR_SNAP_VALUE
+    global REGION_EDITOR_SNAP_DIVISOR
+    global REGION_EDITOR_SNAP_DIVISOR_BEATS
+    global REGION_EDITOR_SNAP_BEATS
+    global REGION_EDITOR_QUANTIZE_INDEX
+
+    REGION_EDITOR_QUANTIZE_INDEX = a_index
+
+    if a_index == 0:
+        REGION_EDITOR_SNAP = False
+    else:
+        REGION_EDITOR_SNAP = True
+
+    if a_index == 0:
+        REGION_EDITOR_SNAP_DIVISOR = 16.0
+    elif a_index == 7:
+        REGION_EDITOR_SNAP_DIVISOR = 128.0
+    elif a_index == 6:
+        REGION_EDITOR_SNAP_DIVISOR = 64.0
+    elif a_index == 5:
+        REGION_EDITOR_SNAP_DIVISOR = 32.0
+    elif a_index == 4:
+        REGION_EDITOR_SNAP_DIVISOR = 16.0
+    elif a_index == 3:
+        REGION_EDITOR_SNAP_DIVISOR = 12.0
+    elif a_index == 2:
+        REGION_EDITOR_SNAP_DIVISOR = 8.0
+    elif a_index == 1:
+        REGION_EDITOR_SNAP_DIVISOR = 4.0
+
+    REGION_EDITOR_SNAP_BEATS = 4.0 / REGION_EDITOR_SNAP_DIVISOR
+    REGION_EDITOR_SNAP_VALUE = \
+        REGION_EDITOR_GRID_WIDTH / REGION_EDITOR_SNAP_DIVISOR
+    REGION_EDITOR_SNAP_DIVISOR_BEATS = REGION_EDITOR_SNAP_DIVISOR / 4.0
+
+REGION_EDITOR_MIN_NOTE_LENGTH = REGION_EDITOR_GRID_WIDTH / 128.0
+
+REGION_EDITOR_DELETE_MODE = False
+REGION_EDITOR_DELETED_NOTES = []
+
+REGION_EDITOR_HEADER_GRADIENT = QtGui.QLinearGradient(
+    0.0, 0.0, 0.0, REGION_EDITOR_HEADER_HEIGHT)
+REGION_EDITOR_HEADER_GRADIENT.setColorAt(0.0, QtGui.QColor.fromRgb(61, 61, 61))
+REGION_EDITOR_HEADER_GRADIENT.setColorAt(0.5, QtGui.QColor.fromRgb(50,50, 50))
+REGION_EDITOR_HEADER_GRADIENT.setColorAt(0.6, QtGui.QColor.fromRgb(43, 43, 43))
+REGION_EDITOR_HEADER_GRADIENT.setColorAt(1.0, QtGui.QColor.fromRgb(65, 65, 65))
+
+def region_editor_set_delete_mode(a_enabled):
+    global REGION_EDITOR_DELETE_MODE, REGION_EDITOR_DELETED_NOTES
+    if a_enabled:
+        REGION_EDITOR.setDragMode(QtGui.QGraphicsView.NoDrag)
+        REGION_EDITOR_DELETED_NOTES = []
+        REGION_EDITOR_DELETE_MODE = True
+        QtGui.QApplication.setOverrideCursor(
+            QtGui.QCursor(QtCore.Qt.ForbiddenCursor))
+    else:
+        REGION_EDITOR.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        REGION_EDITOR_DELETE_MODE = False
+        for f_item in REGION_EDITOR_DELETED_NOTES:
+            f_item.delete()
+        REGION_EDITOR.selected_note_strings = []
+        global_save_and_reload_items()
+        QtGui.QApplication.restoreOverrideCursor()
+
+
+class region_editor_item(QtGui.QGraphicsRectItem):
+    def __init__(self, a_track, a_length, a_start, a_name, a_enabled=True):
+        QtGui.QGraphicsRectItem.__init__(
+            self, 0, 0, a_length, REGION_EDITOR_TRACK_HEIGHT)
+        if a_enabled:
+            self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
+            self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
+            self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
+            self.setZValue(1002.0)
+        else:
+            self.setZValue(1001.0)
+            self.setEnabled(False)
+            self.setOpacity(0.3)
+        self.track_num = int(a_track)
+        self.setAcceptHoverEvents(True)
+        self.is_copying = False
+        self.is_velocity_dragging = False
+        self.is_velocity_curving = False
+        if SELECTED_REGION_ITEM is not None and \
+        a_note_item == SELECTED_REGION_ITEM:
+            self.is_resizing = True
+            REGION_EDITOR.click_enabled = True
+        else:
+            self.is_resizing = False
+        self.showing_resize_cursor = False
+        self.resize_rect = self.rect()
+        self.mouse_y_pos = QtGui.QCursor.pos().y()
+        self.label = QtGui.QGraphicsSimpleTextItem(self)
+        self.label.setPen(QtGui.QPen(QtCore.Qt.NoPen))
+        self.label.setText(a_name)
+        self.label.setPos(2.0, 2.0)
+        self.set_brush()
+
+    def set_brush(self):
+        if self.isSelected():
+            self.setBrush(pydaw_selected_gradient)
+            self.label.setBrush(QtCore.Qt.darkGray)
+        else:
+            self.label.setBrush(QtCore.Qt.white)
+            f_index = self.track_num % len(pydaw_track_gradients)
+            self.setBrush(pydaw_track_gradients[f_index])
+
+    def hoverMoveEvent(self, a_event):
+        #QtGui.QGraphicsRectItem.hoverMoveEvent(self, a_event)
+        if not self.is_resizing:
+            REGION_EDITOR.click_enabled = False
+
+    def delete_later(self):
+        global REGION_EDITOR_DELETED_NOTES
+        if self.isEnabled() and self not in REGION_EDITOR_DELETED_NOTES:
+            REGION_EDITOR_DELETED_NOTES.append(self)
+            self.hide()
+
+    def delete(self):
+        XXX_ITEM_EDITOR.items[self.item_index].remove_note(self.note_item)
+
+    def get_selected_string(self):
+        return "{}|{}".format(self.item_index, self.note_item)
+
+    def hoverEnterEvent(self, a_event):
+        QtGui.QGraphicsRectItem.hoverEnterEvent(self, a_event)
+        REGION_EDITOR.click_enabled = False
+
+    def hoverLeaveEvent(self, a_event):
+        QtGui.QGraphicsRectItem.hoverLeaveEvent(self, a_event)
+        REGION_EDITOR.click_enabled = True
+        QtGui.QApplication.restoreOverrideCursor()
+        self.showing_resize_cursor = False
+
+    def mouseDoubleClickEvent(self, a_event):
+        QtGui.QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
+        QtGui.QApplication.restoreOverrideCursor()
+
+    def mousePressEvent(self, a_event):
+        if a_event.modifiers() == QtCore.Qt.ShiftModifier:
+            region_editor_set_delete_mode(True)
+            self.delete_later()
+        elif a_event.modifiers() == \
+        QtCore.Qt.ControlModifier | QtCore.Qt.AltModifier:
+            self.is_velocity_dragging = True
+        elif a_event.modifiers() == \
+        QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier:
+            self.is_velocity_curving = True
+            f_list = [((x.item_index * 4.0) + x.note_item.start)
+                for x in REGION_EDITOR.get_selected_items()]
+            f_list.sort()
+            self.vc_start = f_list[0]
+            self.vc_mid = (self.item_index * 4.0) + self.note_item.start
+            self.vc_end = f_list[-1]
+        else:
+            a_event.setAccepted(True)
+            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
+            self.setBrush(SELECTED_ITEM_GRADIENT)
+            self.o_pos = self.pos()
+            if a_event.modifiers() == QtCore.Qt.ControlModifier:
+                self.is_copying = True
+                for f_item in REGION_EDITOR.get_selected_items():
+                    REGION_EDITOR.draw_item(
+                        f_item.note_item, f_item.item_index)
+        if self.is_velocity_curving or self.is_velocity_dragging:
+            a_event.setAccepted(True)
+            self.setSelected(True)
+            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
+            self.orig_y = a_event.pos().y()
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.BlankCursor)
+            for f_item in REGION_EDITOR.get_selected_items():
+                f_item.orig_value = f_item.note_item.velocity
+                f_item.set_brush()
+            for f_item in REGION_EDITOR.note_items:
+                f_item.label.setText(str(f_item.note_item.velocity))
+        REGION_EDITOR.click_enabled = True
+
+    def mouseMoveEvent(self, a_event):
+        if self.is_velocity_dragging or self.is_velocity_curving:
+            f_pos = a_event.pos()
+            f_y = f_pos.y()
+            f_diff_y = self.orig_y - f_y
+            f_val = (f_diff_y * 0.5)
+        else:
+            QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
+
+        if self.is_resizing:
+            f_pos_x = a_event.pos().x()
+            self.resize_last_mouse_pos = a_event.pos().x()
+        for f_item in REGION_EDITOR.get_selected_items():
+            if self.is_resizing:
+                if REGION_EDITOR_SNAP:
+                    f_adjusted_width = round(
+                        f_pos_x / REGION_EDITOR_SNAP_VALUE) * \
+                        REGION_EDITOR_SNAP_VALUE
+                    if f_adjusted_width == 0.0:
+                        f_adjusted_width = REGION_EDITOR_SNAP_VALUE
+                else:
+                    f_adjusted_width = pydaw_clip_min(
+                        f_pos_x, REGION_EDITOR_MIN_NOTE_LENGTH)
+                f_item.resize_rect.setWidth(f_adjusted_width)
+                f_item.setRect(f_item.resize_rect)
+                f_item.setPos(f_item.resize_pos.x(), f_item.resize_pos.y())
+                QtGui.QCursor.setPos(QtGui.QCursor.pos().x(), self.mouse_y_pos)
+            elif self.is_velocity_dragging:
+                f_new_vel = pydaw_util.pydaw_clip_value(
+                    f_val + f_item.orig_value, 1, 127)
+                f_new_vel = int(f_new_vel)
+                f_item.note_item.velocity = f_new_vel
+                f_item.label.setText(str(f_new_vel))
+                f_item.set_brush()
+                f_item.set_vel_line()
+            elif self.is_velocity_curving:
+                f_start = ((f_item.item_index * 4.0) + f_item.note_item.start)
+                if f_start == self.vc_mid:
+                    f_new_vel = f_val + f_item.orig_value
+                else:
+                    if f_start > self.vc_mid:
+                        f_frac = (f_start -
+                            self.vc_mid) / (self.vc_end - self.vc_mid)
+                        f_new_vel = pydaw_util.linear_interpolate(
+                            f_val, 0.3 * f_val, f_frac)
+                    else:
+                        f_frac = (f_start -
+                            self.vc_start) / (self.vc_mid - self.vc_start)
+                        f_new_vel = pydaw_util.linear_interpolate(
+                            0.3 * f_val, f_val, f_frac)
+                    f_new_vel += f_item.orig_value
+                f_new_vel = pydaw_util.pydaw_clip_value(f_new_vel, 1, 127)
+                f_new_vel = int(f_new_vel)
+                f_item.note_item.velocity = f_new_vel
+                f_item.label.setText(str(f_new_vel))
+                f_item.set_brush()
+                f_item.set_vel_line()
+            else:
+                f_pos_x = f_item.pos().x()
+                f_pos_y = f_item.pos().y()
+                if f_pos_x < REGION_TRACK_WIDTH:
+                    f_pos_x = REGION_TRACK_WIDTH
+                elif f_pos_x > REGION_EDITOR_MAX_START:
+                    f_pos_x = REGION_EDITOR_MAX_START
+                if f_pos_y < REGION_EDITOR_HEADER_HEIGHT:
+                    f_pos_y = REGION_EDITOR_HEADER_HEIGHT
+                elif f_pos_y > REGION_EDITOR_TOTAL_HEIGHT:
+                    f_pos_y = REGION_EDITOR_TOTAL_HEIGHT
+                f_pos_y = \
+                    (int((f_pos_y - REGION_EDITOR_HEADER_HEIGHT) /
+                    REGION_EDITOR_TRACK_HEIGHT) * REGION_EDITOR_TRACK_HEIGHT) + \
+                    REGION_EDITOR_HEADER_HEIGHT
+                if REGION_EDITOR_SNAP:
+                    f_pos_x = (int((f_pos_x - REGION_TRACK_WIDTH) /
+                    REGION_EDITOR_SNAP_VALUE) *
+                    REGION_EDITOR_SNAP_VALUE) + REGION_TRACK_WIDTH
+                f_item.setPos(f_pos_x, f_pos_y)
+                f_new_note = self.y_pos_to_note(f_pos_y)
+                f_item.update_label(f_new_note)
+
+    def y_pos_to_note(self, a_y):
+        return int(REGION_EDITOR_TRACK_COUNT -
+            ((a_y - REGION_EDITOR_HEADER_HEIGHT) /
+            REGION_EDITOR_TRACK_HEIGHT))
+
+    def mouseReleaseEvent(self, a_event):
+        if REGION_EDITOR_DELETE_MODE:
+            region_editor_set_delete_mode(False)
+            return
+        a_event.setAccepted(True)
+        f_recip = 1.0 / REGION_EDITOR_GRID_WIDTH
+        QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
+        global SELECTED_REGION_ITEM
+        if self.is_copying:
+            f_new_selection = []
+        for f_item in REGION_EDITOR.get_selected_items():
+            f_pos_x = f_item.pos().x()
+            f_pos_y = f_item.pos().y()
+            if self.is_resizing:
+                f_new_note_length = ((f_pos_x + f_item.rect().width() -
+                    REGION_TRACK_WIDTH) * f_recip *
+                    4.0) - f_item.resize_start_pos
+                if SELECTED_REGION_ITEM is not None and \
+                self.note_item != SELECTED_REGION_ITEM:
+                    f_new_note_length -= (self.item_index * 4.0)
+                if REGION_EDITOR_SNAP and \
+                f_new_note_length < REGION_EDITOR_SNAP_BEATS:
+                    f_new_note_length = REGION_EDITOR_SNAP_BEATS
+                elif f_new_note_length < pydaw_min_note_length:
+                    f_new_note_length = pydaw_min_note_length
+                f_item.note_item.set_length(f_new_note_length)
+            elif self.is_velocity_dragging or self.is_velocity_curving:
+                pass
+            else:
+                f_new_note_start = (f_pos_x -
+                    REGION_TRACK_WIDTH) * 4.0 * f_recip
+                f_new_note_num = self.y_pos_to_note(f_pos_y)
+                if self.is_copying:
+                    f_item.item_index, f_new_note_start = \
+                        pydaw_beats_to_index(f_new_note_start)
+                    f_new_note = pydaw_note(
+                        f_new_note_start, f_item.note_item.length,
+                        f_new_note_num, f_item.note_item.velocity)
+                    XXX_ITEM_EDITOR.items[f_item.item_index].add_note(
+                        f_new_note, False)
+                    # pass a ref instead of a str in case
+                    # fix_overlaps() modifies it.
+                    f_item.note_item = f_new_note
+                    f_new_selection.append(f_item)
+                else:
+                    XXX_ITEM_EDITOR.items[f_item.item_index].notes.remove(
+                        f_item.note_item)
+                    f_item.item_index, f_new_note_start = \
+                        pydaw_beats_to_index(f_new_note_start)
+                    f_item.note_item.set_start(f_new_note_start)
+                    f_item.note_item.note_num = f_new_note_num
+                    XXX_ITEM_EDITOR.items[f_item.item_index].notes.append(
+                        f_item.note_item)
+                    XXX_ITEM_EDITOR.items[f_item.item_index].notes.sort()
+        for f_item in XXX_ITEM_EDITOR.items:
+            f_item.fix_overlaps()
+        SELECTED_REGION_ITEM = None
+        REGION_EDITOR.selected_note_strings = []
+        if self.is_copying:
+            for f_new_item in f_new_selection:
+                REGION_EDITOR.selected_note_strings.append(
+                    f_new_item.get_selected_string())
+        else:
+            for f_item in REGION_EDITOR.get_selected_items():
+                REGION_EDITOR.selected_note_strings.append(
+                    f_item.get_selected_string())
+        for f_item in REGION_EDITOR.note_items:
+            f_item.is_resizing = False
+            f_item.is_copying = False
+            f_item.is_velocity_dragging = False
+            f_item.is_velocity_curving = False
+        global_save_and_reload_items()
+        self.showing_resize_cursor = False
+        QtGui.QApplication.restoreOverrideCursor()
+        REGION_EDITOR.click_enabled = True
+
+
+class region_editor(QtGui.QGraphicsView):
+    def __init__(self):
+        QtGui.QGraphicsView.__init__(self)
+        self.item_length = 8.0
+        self.viewer_width = 1000
+
+        self.padding = 2
+
+        self.update_note_height()
+
+        self.scene = QtGui.QGraphicsScene(self)
+        self.scene.setItemIndexMethod(QtGui.QGraphicsScene.NoIndex)
+        self.scene.setBackgroundBrush(QtGui.QColor(100, 100, 100))
+        self.scene.mousePressEvent = self.sceneMousePressEvent
+        self.scene.mouseReleaseEvent = self.sceneMouseReleaseEvent
+        self.setAlignment(QtCore.Qt.AlignLeft)
+        self.setScene(self.scene)
+        self.first_open = True
+        self.draw_header()
+        self.draw_tracks()
+        self.draw_grid()
+
+        self.has_selected = False
+
+        self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        self.note_items = []
+
+        self.right_click = False
+        self.left_click = False
+        self.click_enabled = True
+        self.last_scale = 1.0
+        self.last_x_scale = 1.0
+        self.scene.selectionChanged.connect(self.highlight_selected)
+        self.selected_note_strings = []
+        self.clipboard = []
+
+    def update_note_height(self):
+        self.tracks_height = \
+            REGION_EDITOR_TRACK_HEIGHT * REGION_EDITOR_TRACK_COUNT
+
+        global REGION_EDITOR_TOTAL_HEIGHT
+        REGION_EDITOR_TOTAL_HEIGHT = \
+            self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
+
+    def get_selected_items(self):
+        return (x for x in self.note_items if x.isSelected())
+
+    def get_item_coord(self, a_pos):
+        f_pos_x = a_pos.x()
+        f_pos_y = a_pos.y()
+        if f_pos_x > REGION_TRACK_WIDTH and \
+        f_pos_x < REGION_EDITOR_MAX_START and \
+        f_pos_y > REGION_EDITOR_HEADER_HEIGHT and \
+        f_pos_y < REGION_EDITOR_TOTAL_HEIGHT:
+            f_track = ((f_pos_y - REGION_EDITOR_HEADER_HEIGHT) / (
+                self.tracks_height)) * REGION_EDITOR_TRACK_COUNT
+            f_bar = ((f_pos_x - REGION_TRACK_WIDTH) / (
+                self.viewer_width)) * self.item_length
+            return int(f_track), int(f_bar)
+        else:
+            return None
+
+    def set_tooltips(self, a_on):
+        if a_on:
+            self.setToolTip("TODO")
+        else:
+            self.setToolTip("")
+
+    def prepare_to_quit(self):
+        self.scene.clearSelection()
+        self.scene.clear()
+
+    def scrollContentsBy(self, x, y):
+        QtGui.QGraphicsView.scrollContentsBy(self, x, y)
+        self.set_header_and_keys()
+
+    def set_header_and_keys(self):
+        f_point = self.get_scene_pos()
+        self.tracks_proxy.setPos(f_point.x(), REGION_EDITOR_HEADER_HEIGHT)
+        self.header.setPos(REGION_TRACK_WIDTH + self.padding, f_point.y())
+
+    def get_scene_pos(self):
+        return QtCore.QPointF(
+            self.horizontalScrollBar().value(),
+            self.verticalScrollBar().value())
+
+    def highlight_selected(self):
+        self.has_selected = False
+        for f_item in self.note_items:
+            if f_item.isSelected():
+                f_item.setBrush(SELECTED_ITEM_GRADIENT)
+                self.has_selected = True
+            else:
+                f_item.set_brush()
+
+    def set_selected_strings(self):
+        self.selected_note_strings = [x.get_selected_string()
+            for x in self.note_items if x.isSelected()]
+
+    def keyPressEvent(self, a_event):
+        QtGui.QGraphicsView.keyPressEvent(self, a_event)
+        QtGui.QApplication.restoreOverrideCursor()
+
+    def focusOutEvent(self, a_event):
+        QtGui.QGraphicsView.focusOutEvent(self, a_event)
+        QtGui.QApplication.restoreOverrideCursor()
+
+    def sceneMouseReleaseEvent(self, a_event):
+        if REGION_EDITOR_DELETE_MODE:
+            region_editor_set_delete_mode(False)
+        else:
+            QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
+        self.click_enabled = True
+
+    def sceneMousePressEvent(self, a_event):
+        if a_event.button() == QtCore.Qt.RightButton:
+            return
+        elif a_event.modifiers() == QtCore.Qt.ControlModifier:
+            self.hover_restore_cursor_event()
+        elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
+            region_editor_set_delete_mode(True)
+            return
+        elif self.click_enabled:
+            self.scene.clearSelection()
+            f_coord = self.get_item_coord(a_event.scenePos())
+            if f_coord:
+                f_track_num, f_bar = f_coord
+                f_drawn_item = self.draw_item(
+                    f_track_num, f_bar, PROJECT.get_next_default_item_name())
+                f_drawn_item.setSelected(True)
+        a_event.setAccepted(True)
+        QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
+        QtGui.QApplication.restoreOverrideCursor()
+
+    def mouseMoveEvent(self, a_event):
+        QtGui.QGraphicsView.mouseMoveEvent(self, a_event)
+        if REGION_EDITOR_DELETE_MODE:
+            for f_item in self.items(a_event.pos()):
+                if isinstance(f_item, region_editor_item):
+                    f_item.delete_later()
+
+    def hover_restore_cursor_event(self, a_event=None):
+        QtGui.QApplication.restoreOverrideCursor()
+
+    def draw_header(self):
+        self.header = QtGui.QGraphicsRectItem(
+            0, 0, self.viewer_width, REGION_EDITOR_HEADER_HEIGHT)
+        self.header.hoverEnterEvent = self.hover_restore_cursor_event
+        self.header.setBrush(REGION_EDITOR_HEADER_GRADIENT)
+        self.scene.addItem(self.header)
+        #self.header.mapToScene(REGION_TRACK_WIDTH + self.padding, 0.0)
+        self.beat_width = self.viewer_width / self.item_length
+        self.header.setZValue(1003.0)
+
+    def draw_tracks(self):
+        self.tracks = {}
+        f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
+        f_brush.setColorAt(0.0, QtGui.QColor(234, 234, 234))
+        f_brush.setColorAt(0.5, QtGui.QColor(159, 159, 159))
+        self.tracks_widget = QtGui.QWidget()
+        self.tracks_widget.setContentsMargins(0, 0, 0, 0)
+        self.tracks_widget.setFixedSize(
+            QtCore.QSize(REGION_TRACK_WIDTH, self.tracks_height))
+
+        self.tracks_layout = QtGui.QVBoxLayout(self.tracks_widget)
+        self.tracks_layout.setContentsMargins(0, 0, 0, 0)
+        self.tracks_proxy = self.scene.addWidget(self.tracks_widget)
+        self.tracks_proxy.setZValue(1000.0)
+
+        for i in range(REGION_EDITOR_TRACK_COUNT):
+            f_track = seq_track(i)
+            self.tracks_layout.addWidget(f_track.group_box)
+
+
+    def draw_grid(self):
+        f_brush = QtGui.QLinearGradient(0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
+        f_brush.setColorAt(0.0, QtGui.QColor(96, 96, 96, 60))
+        f_brush.setColorAt(0.5, QtGui.QColor(21, 21, 21, 75))
+
+        for i in range(REGION_EDITOR_TRACK_COUNT):
+            f_note_bar = QtGui.QGraphicsRectItem(
+                0, 0, self.viewer_width, REGION_EDITOR_TRACK_HEIGHT)
+            f_note_bar.setZValue(60.0)
+            self.scene.addItem(f_note_bar)
+            f_note_bar.setBrush(f_brush)
+            f_note_bar_y = (i *
+                REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
+            f_note_bar.setPos(
+                REGION_TRACK_WIDTH + self.padding, f_note_bar_y)
+        f_beat_pen = QtGui.QPen()
+        f_beat_pen.setWidth(2)
+        f_beat_y = self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
+        for i in range(0, int(self.item_length)):
+            f_beat_x = (self.beat_width * i) + REGION_TRACK_WIDTH
+            f_beat = self.scene.addLine(f_beat_x, 0, f_beat_x, f_beat_y)
+            f_beat.setPen(f_beat_pen)
+            if i < self.item_length:
+                f_number = QtGui.QGraphicsSimpleTextItem(
+                    str(i + 1), self.header)
+                f_number.setFlag(
+                    QtGui.QGraphicsItem.ItemIgnoresTransformations)
+                f_number.setPos((self.beat_width * i), 3)
+                f_number.setBrush(QtCore.Qt.white)
+
+    def resizeEvent(self, a_event):
+        QtGui.QGraphicsView.resizeEvent(self, a_event)
+
+    def clear_drawn_items(self):
+        self.note_items = []
+        self.scene.clear()
+        self.update_note_height()
+        self.draw_header()
+        self.draw_tracks()
+        self.draw_grid()
+        self.set_header_and_keys()
+
+    def clear_new(self):
+        """ Reset the region editor state to empty """
+        self.clear_drawn_items()
+        #self.reset_tracks()
+        self.enabled = False
+        global REGION_CLIPBOARD
+        REGION_CLIPBOARD = []
+
+    def open_tracks(self):
+        global TRACK_NAMES
+        #self.reset_tracks()
+        f_tracks = PROJECT.get_tracks()
+        for key, f_track in f_tracks.tracks.items():
+            self.tracks[key].open_track(f_track)
+        TRACK_NAMES = [f_tracks.tracks[k].name
+            for k in sorted(f_tracks.tracks)]
+
+    def draw_region(self):
+        self.has_selected = False #Reset the selected-ness state...
+        self.viewer_width = REGION_EDITOR_GRID_WIDTH
+        self.setSceneRect(
+            0.0, 0.0, self.viewer_width + REGION_EDITOR_GRID_WIDTH,
+            self.tracks_height + REGION_EDITOR_HEADER_HEIGHT + 24.0)
+        self.item_length = get_current_region_length()
+        global REGION_EDITOR_MAX_START
+        REGION_EDITOR_MAX_START = (
+            REGION_EDITOR_GRID_WIDTH - 1.0) + REGION_TRACK_WIDTH
+        self.setUpdatesEnabled(False)
+        self.clear_drawn_items()
+        if XXX_ITEM_EDITOR.enabled:
+            f_item_count = len(XXX_ITEM_EDITOR.items)
+            for f_i, f_item in zip(range(f_item_count), XXX_ITEM_EDITOR.items):
+                for f_note in f_item.notes:
+                    f_note_item = self.draw_item(f_note, f_i)
+                    f_note_item.resize_last_mouse_pos = \
+                        f_note_item.scenePos().x()
+                    f_note_item.resize_pos = f_note_item.scenePos()
+                    if f_note_item.get_selected_string() in \
+                    self.selected_note_strings:
+                        f_note_item.setSelected(True)
+            if DRAW_LAST_ITEMS:
+                for f_i, f_uid in zip(
+                range(f_item_count), LAST_OPEN_ITEM_UIDS):
+                    f_item = PROJECT.get_item_by_uid(f_uid)
+                    for f_note in f_item.notes:
+                        f_note_item = self.draw_item(f_note, f_i, False)
+            self.scrollContentsBy(0, 0)
+            for f_name, f_i in zip(
+            XXX_ITEM_EDITOR.item_names, range(len(XXX_ITEM_EDITOR.item_names))):
+                f_text = QtGui.QGraphicsSimpleTextItem(f_name, self.header)
+                f_text.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+                f_text.setBrush(QtCore.Qt.yellow)
+                f_text.setPos((f_i * REGION_EDITOR_GRID_WIDTH), 2.0)
+        self.setUpdatesEnabled(True)
+        self.update()
+
+    def draw_item(self, a_track, a_bar, a_name, a_enabled=True):
+        f_start = REGION_TRACK_WIDTH + (self.beat_width * a_bar)
+        f_length = self.beat_width
+        f_track_pos = REGION_EDITOR_HEADER_HEIGHT + (a_track *
+            REGION_EDITOR_TRACK_HEIGHT)
+        f_item = region_editor_item(
+            a_track, f_length, f_start, a_name, a_enabled)
+        self.scene.addItem(f_item)
+        f_item.setPos(f_start, f_track_pos)
+        if a_enabled:
+            self.note_items.append(f_item)
+            return f_item
+
+
+
+
+########  End nu hottness
+
 
 REGION_CLIPBOARD_ROW_OFFSET = 0
 REGION_CLIPBOARD_COL_OFFSET = 0
@@ -1682,7 +2353,7 @@ def global_tablewidget_to_region():
     CURRENT_REGION.items = []
     f_uid_dict = PROJECT.get_items_dict()
     f_result = []
-    f_result += REGION_INST_EDITOR.tablewidget_to_list()
+    f_result += REGION_EDITOR.tablewidget_to_list()
     for f_tuple in f_result:
         CURRENT_REGION.add_item_ref_by_name(
             f_tuple[0], f_tuple[1], f_tuple[2], f_uid_dict)
@@ -4610,7 +5281,7 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
 
 
 def global_save_all_region_tracks():
-    PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+    PROJECT.save_tracks(REGION_EDITOR.get_tracks())
 
 
 def global_set_piano_roll_zoom():
@@ -7372,7 +8043,7 @@ LAST_REC_ARMED_TRACK = None
 def global_set_record_armed_track():
     if LAST_REC_ARMED_TRACK is None:
         return
-    REGION_INST_EDITOR.tracks[
+    REGION_EDITOR.tracks[
         LAST_REC_ARMED_TRACK].record_radiobutton.setChecked(True)
 
 class midi_device:
@@ -7627,7 +8298,7 @@ class seq_track:
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_solo(
                 self.track_number, self.solo_checkbox.isChecked())
-            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+            PROJECT.save_tracks(REGION_EDITOR.get_tracks())
             PROJECT.commit(_("Set solo for track {} to {}").format(
                 self.track_number, self.solo_checkbox.isChecked()))
 
@@ -7635,7 +8306,7 @@ class seq_track:
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_mute(
                 self.track_number, self.mute_checkbox.isChecked())
-            PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+            PROJECT.save_tracks(REGION_EDITOR.get_tracks())
             PROJECT.commit(_("Set mute for track {} to {}").format(
                 self.track_number, self.mute_checkbox.isChecked()))
 
@@ -7643,7 +8314,7 @@ class seq_track:
         f_name = pydaw_remove_bad_chars(self.track_name_lineedit.text())
         self.track_name_lineedit.setText(f_name)
         global_update_track_comboboxes(self.track_number, f_name)
-        PROJECT.save_tracks(REGION_INST_EDITOR.get_tracks())
+        PROJECT.save_tracks(REGION_EDITOR.get_tracks())
         PROJECT.commit(
             _("Set name for track {} to {}").format(self.track_number,
             self.track_name_lineedit.text()))
@@ -7739,8 +8410,8 @@ class transport_widget:
                 if self.follow_checkbox.isChecked():
                     AUDIO_SEQ.set_playback_pos(f_bar)
                     f_bar += 1
-                    REGION_INST_EDITOR.table_widget.selectColumn(f_bar)
-                    #REGION_INST_EDITOR.open_tracks()
+                    REGION_EDITOR.table_widget.selectColumn(f_bar)
+                    #REGION_EDITOR.open_tracks()
                     if f_region != self.last_region_num:
                         self.last_region_num = f_region
                         f_item = SONG_EDITOR.table_widget.item(0, f_region)
@@ -7757,7 +8428,7 @@ class transport_widget:
                             REGION_SETTINGS.clear_items()
                             AUDIO_SEQ.update_zoom()
                             AUDIO_SEQ.clear_drawn_items()
-                            REGION_INST_EDITOR.set_region_length()
+                            REGION_EDITOR.set_region_length()
 
     def init_playback_cursor(self, a_start=True):
         if not self.follow_checkbox.isChecked() or \
@@ -7771,13 +8442,13 @@ class transport_widget:
             f_region_name != CURRENT_REGION_NAME) or CURRENT_REGION is None:
                 REGION_SETTINGS.open_region(f_region_name)
         else:
-            REGION_INST_EDITOR.clear_items()
+            REGION_EDITOR.clear_items()
             AUDIO_SEQ.clear_drawn_items()
         if a_start:
-            REGION_INST_EDITOR.table_widget.selectColumn(
+            REGION_EDITOR.table_widget.selectColumn(
                 self.get_bar_value() + 1)
         else:
-            REGION_INST_EDITOR.table_widget.clearSelection()
+            REGION_EDITOR.table_widget.clearSelection()
         SONG_EDITOR.table_widget.selectColumn(self.get_region_value())
 
     def on_spacebar(self):
@@ -8005,13 +8676,13 @@ class transport_widget:
             if not f_item is None and f_item.text() != "":
                 REGION_SETTINGS.open_region(f_item.text())
             else:
-                REGION_INST_EDITOR.clear_items()
+                REGION_EDITOR.clear_items()
             SONG_EDITOR.table_widget.selectColumn(self.get_region_value())
-            REGION_INST_EDITOR.table_widget.selectColumn(self.get_bar_value())
+            REGION_EDITOR.table_widget.selectColumn(self.get_bar_value())
             if self.is_playing or self.is_recording:
                 self.trigger_audio_playback()
         else:
-            REGION_INST_EDITOR.table_widget.clearSelection()
+            REGION_EDITOR.table_widget.clearSelection()
             if self.is_playing or self.is_recording:
                 AUDIO_SEQ.stop_playback(0)
             else:
@@ -9174,7 +9845,7 @@ class pydaw_main_window(QtGui.QMainWindow):
 
         self.song_region_splitter.addWidget(self.regions_tab_widget)
         self.regions_tab_widget.addTab(
-            REGION_INST_EDITOR.table_widget, _("MIDI"))
+            REGION_EDITOR, _("MIDI"))
         self.regions_tab_widget.addTab(
             AUDIO_SEQ_WIDGET.hsplitter, _("Audio"))
 
@@ -9342,7 +10013,7 @@ class pydaw_main_window(QtGui.QMainWindow):
             event.accept()
 
 def global_update_peak_meters(a_val):
-    ALL_PEAK_METERS = [x.peak_meter for x in REGION_INST_EDITOR.tracks]
+    ALL_PEAK_METERS = [x.peak_meter for x in REGION_EDITOR.tracks]
     ALL_PEAK_METERS.append(WAVE_EDITOR.peak_meter)
 
     for f_val in a_val.split("|"):
@@ -10282,7 +10953,7 @@ def global_ui_refresh_callback(a_restore_all=False):
     """ Use this to re-open all existing items/regions/song in
         their editors when the files have been changed externally
     """
-    REGION_INST_EDITOR.open_tracks()
+    REGION_EDITOR.open_tracks()
     f_regions_dict = PROJECT.get_regions_dict()
     global CURRENT_REGION
     if CURRENT_REGION is not None and \
@@ -10318,7 +10989,7 @@ def global_open_project(a_project_file, a_wait=True):
     PROJECT.open_project(a_project_file, False)
     WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
     SONG_EDITOR.open_song()
-    REGION_INST_EDITOR.open_tracks()
+    REGION_EDITOR.clear_drawn_items()
     TRANSPORT.open_transport()
     pydaw_util.set_file_setting("last-project", a_project_file)
     global_update_track_comboboxes()
@@ -10394,7 +11065,7 @@ if not os.access(global_pydaw_home, os.W_OK):
 
 SONG_EDITOR = song_editor()
 REGION_SETTINGS = region_settings()
-REGION_INST_EDITOR = region_list_editor()
+REGION_EDITOR = region_editor()
 
 AUDIO_EDITOR_WIDGET = audio_item_editor_widget()
 PIANO_ROLL_EDITOR = piano_roll_editor()
