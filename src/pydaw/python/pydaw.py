@@ -1311,8 +1311,9 @@ class region_editor(QtGui.QGraphicsView):
             f_coord = self.get_item_coord(a_event.scenePos())
             if f_coord:
                 f_track_num, f_bar = f_coord
-                f_drawn_item = self.draw_item(
-                    f_track_num, f_bar, PROJECT.get_next_default_item_name())
+                f_name = PROJECT.get_next_default_item_name()
+                PROJECT.create_empty_item(f_name)
+                f_drawn_item = self.draw_item(f_track_num, f_bar, f_name)
                 f_drawn_item.setSelected(True)
         a_event.setAccepted(True)
         QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
