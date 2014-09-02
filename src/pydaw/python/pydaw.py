@@ -7690,12 +7690,36 @@ class seq_track:
         self.menu_button.setMenu(self.button_menu)
         self.hlayout3.addWidget(self.menu_button)
         self.button_menu.aboutToShow.connect(self.menu_button_pressed)
+        self.menu_created = False
+        self.solo_checkbox = QtGui.QCheckBox()
+        self.mute_checkbox = QtGui.QCheckBox()
+        if self.track_number == 0:
+            self.hlayout3.addItem(
+                QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+        else:
+            self.solo_checkbox.stateChanged.connect(self.on_solo)
+            self.solo_checkbox.setObjectName("solo_checkbox")
+            self.hlayout3.addWidget(self.solo_checkbox)
+            self.mute_checkbox.stateChanged.connect(self.on_mute)
+            self.mute_checkbox.setObjectName("mute_checkbox")
+            self.hlayout3.addWidget(self.mute_checkbox)
+        self.suppress_osc = False
+
+    def menu_button_pressed(self):
+        if not self.menu_created:
+            self.create_menu()
+        for f_send in self.sends:
+            f_send.update_names()
+        self.open_plugins()
+
+    def create_menu(self):
+        self.menu_created = True
         self.menu_widget = QtGui.QWidget()
         self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
         self.menu_gridlayout = QtGui.QGridLayout()
         self.menu_hlayout.addLayout(self.menu_gridlayout)
         self.instruments = []
-        if a_track_num != 0:
+        if self.track_number != 0:
             self.menu_gridlayout.addWidget(
                 QtGui.QLabel(_("Instruments")), 0, 0)
             for f_i in range(5):
@@ -7725,23 +7749,6 @@ class seq_track:
         self.action_widget = QtGui.QWidgetAction(self.button_menu)
         self.action_widget.setDefaultWidget(self.menu_widget)
         self.button_menu.addAction(self.action_widget)
-        self.solo_checkbox = QtGui.QCheckBox()
-        self.mute_checkbox = QtGui.QCheckBox()
-        if self.track_number == 0:
-            self.hlayout3.addItem(
-                QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        else:
-            self.solo_checkbox.stateChanged.connect(self.on_solo)
-            self.solo_checkbox.setObjectName("solo_checkbox")
-            self.hlayout3.addWidget(self.solo_checkbox)
-            self.mute_checkbox.stateChanged.connect(self.on_mute)
-            self.mute_checkbox.setObjectName("mute_checkbox")
-            self.hlayout3.addWidget(self.mute_checkbox)
-        self.suppress_osc = False
-
-    def menu_button_pressed(self):
-        for f_send in self.sends:
-            f_send.update_names()
 
     def on_solo(self, value):
         if not self.suppress_osc:
@@ -7797,6 +7804,8 @@ class seq_track:
             self.track_name_lineedit.setText(a_track.name)
             self.solo_checkbox.setChecked(a_track.solo)
             self.mute_checkbox.setChecked(a_track.mute)
+
+    def open_plugins(self):
         f_plugins = PROJECT.get_track_plugins(self.track_number)
         if not f_plugins:
             return
