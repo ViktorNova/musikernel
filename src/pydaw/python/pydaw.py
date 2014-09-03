@@ -1346,7 +1346,7 @@ class region_editor(QtGui.QGraphicsView):
         f_layout.addWidget(f_copy_combobox, 1, 2)
         f_layout.addWidget(QtGui.QLabel(_("Item Count:")), 2, 1)
         f_item_count = QtGui.QSpinBox()
-        f_item_count.setRange(1, pydaw_get_current_region_length() - x + 1)
+        f_item_count.setRange(1, pydaw_get_current_region_length() - y)
         f_item_count.setToolTip(_("Only used for 'New'"))
 
         f_begin_end_layout = QtGui.QHBoxLayout()
