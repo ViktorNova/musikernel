@@ -1472,10 +1472,13 @@ class region_editor(QtGui.QGraphicsView):
         for f_item in self.region_items:
             f_item.setSelected(False)
 
-    def draw_item(self, a_track, a_bar, a_name, a_enabled=True):
+    def draw_item(self, a_track, a_bar, a_name,
+                  a_enabled=True, a_selected=False):
         f_item = region_editor_item(
             a_track, a_bar, a_name, a_enabled)
         self.scene.addItem(f_item)
+        if a_selected:
+            f_item.setSelected(True)
         if a_enabled:
             self.region_items.append(f_item)
             return f_item
@@ -1760,35 +1763,31 @@ class region_editor(QtGui.QGraphicsView):
             f_base_row = REGION_CLIPBOARD_ROW_OFFSET
             f_base_column = REGION_CLIPBOARD_COL_OFFSET
         else:
-            f_selected_cells = self.table_widget.selectedIndexes()
-            if not f_selected_cells:
+            if not self.current_coord:
                 return
-            f_base_row = f_selected_cells[0].row()
-            f_base_column = f_selected_cells[0].column() - 1
-        self.table_widget.clearSelection()
+            f_base_row, f_base_column = self.current_coord
+        self.scene.clearSelection()
         f_region_length = pydaw_get_current_region_length()
         for f_item in REGION_CLIPBOARD:
             f_column = f_item[1] + f_base_column
             if f_column >= f_region_length or f_column < 0:
                 continue
             f_row = f_item[0] + f_base_row
-            if f_row >= self.track_count or f_row < 0:
+            if f_row >= len(self.tracks) or f_row < 0:
                 continue
-            self.add_qtablewidgetitem(
-                f_item[2], f_row, f_column, a_selected=True)
+            self.draw_item(f_row, f_column, f_item[2], a_selected=True)
         global_tablewidget_to_region()
         global_update_hidden_rows()
-
 
     def delete_selected(self):
         if not self.enabled:
             self.warn_no_region_selected()
             return
-        for f_item in self.table_widget.selectedIndexes():
-            f_empty = QtGui.QTableWidgetItem() #Clear the item
-            self.table_widget.setItem(f_item.row(), f_item.column(), f_empty)
+        for f_item in self.get_selected_items():
+            self.scene.removeItem(f_item)
+            self.region_items.remove(f_item)
         global_tablewidget_to_region()
-        self.table_widget.clearSelection()
+        self.scene.clearSelection()
 
     def copy_selected(self):
         if not self.enabled:
@@ -1797,18 +1796,15 @@ class region_editor(QtGui.QGraphicsView):
         global REGION_CLIPBOARD, REGION_CLIPBOARD_ROW_OFFSET, \
             REGION_CLIPBOARD_COL_OFFSET
         REGION_CLIPBOARD = []  #Clear the clipboard
-        for f_item in self.table_widget.selectedIndexes():
-            f_cell = self.table_widget.item(f_item.row(), f_item.column())
-            if not f_cell is None and not str(f_cell.text()) == "":
-                REGION_CLIPBOARD.append(
-                    [int(f_item.row()), int(f_item.column()) - 1,
-                     str(f_cell.text())])
-        if len(REGION_CLIPBOARD) > 0:
-            REGION_CLIPBOARD.sort(key=operator.itemgetter(0))
+        for f_item in self.get_selected_items():
+            REGION_CLIPBOARD.append(
+                [f_item.track_num, f_item.bar, f_item.name])
+        if REGION_CLIPBOARD:
+            REGION_CLIPBOARD.sort(key=lambda x: x[0])
             f_row_offset = REGION_CLIPBOARD[0][0]
             for f_item in REGION_CLIPBOARD:
                 f_item[0] -= f_row_offset
-            REGION_CLIPBOARD.sort(key=operator.itemgetter(1))
+            REGION_CLIPBOARD.sort(key=lambda x: x[1])
             f_column_offset = REGION_CLIPBOARD[0][1]
             for f_item in REGION_CLIPBOARD:
                 f_item[1] -= f_column_offset
