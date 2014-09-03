@@ -905,7 +905,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.track_num = int(a_track)
         self.bar = int(a_bar)
         self.setAcceptHoverEvents(True)
-        self.is_copying = False
         self.resize_rect = self.rect()
         self.mouse_y_pos = QtGui.QCursor.pos().y()
         self.label = QtGui.QGraphicsSimpleTextItem(self)
@@ -967,8 +966,9 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             self.setBrush(SELECTED_ITEM_GRADIENT)
             self.o_pos = self.pos()
             if a_event.modifiers() == QtCore.Qt.ControlModifier:
-                self.is_copying = True
                 for f_item in REGION_EDITOR.get_selected_items():
+                    f_item.orig_track_num = f_item.track_num
+                    f_item.orig_bar = f_item.bar
                     REGION_EDITOR.draw_item(
                         f_item.track_num, f_item.bar, f_item.name)
         REGION_EDITOR.click_enabled = True
@@ -988,9 +988,10 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         if REGION_EDITOR_DELETE_MODE:
             region_editor_set_delete_mode(False)
             return
+            for f_item in REGION_EDITOR.get_selected_items():
+                REGION_EDITOR.pop_orig_item(f_item)
+                REGION_EDITOR.set_item(f_item)
         REGION_EDITOR.set_selected_strings()
-        for f_item in REGION_EDITOR.region_items:
-            f_item.is_copying = False
         global_tablewidget_to_region()
         QtGui.QApplication.restoreOverrideCursor()
         REGION_EDITOR.click_enabled = True
@@ -1017,7 +1018,7 @@ class region_editor(QtGui.QGraphicsView):
         self.has_selected = False
 
         self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
-        self.region_items = []
+        self.region_items = {}
         self.playback_cursor = None
 
         self.right_click = False
@@ -1165,7 +1166,7 @@ class region_editor(QtGui.QGraphicsView):
             self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
 
     def get_selected_items(self):
-        return [x for x in self.region_items if x.isSelected()]
+        return [x for x in self.get_all_items() if x.isSelected()]
 
     def get_item_coord(self, a_pos):
         f_pos_x = a_pos.x()
@@ -1206,13 +1207,18 @@ class region_editor(QtGui.QGraphicsView):
             self.horizontalScrollBar().value(),
             self.verticalScrollBar().value())
 
+    def get_all_items(self):
+        for k1 in sorted(self.region_items):
+            for k2 in sorted(self.region_items[k1]):
+                yield self.region_items[k1][k2]
+
     def select_all(self):
-        for f_item in self.region_items:
+        for f_item in self.get_all_items():
             f_item.setSelected(True)
 
     def highlight_selected(self):
         self.has_selected = False
-        for f_item in self.region_items:
+        for f_item in self.get_all_items():
             if f_item.isSelected():
                 f_item.setBrush(SELECTED_ITEM_GRADIENT)
                 self.has_selected = True
@@ -1221,7 +1227,7 @@ class region_editor(QtGui.QGraphicsView):
 
     def set_selected_strings(self):
         self.selected_item_strings = [x.get_selected_string()
-            for x in self.region_items if x.isSelected()]
+            for x in self.get_selected_items()]
 
     def keyPressEvent(self, a_event):
         QtGui.QGraphicsView.keyPressEvent(self, a_event)
@@ -1275,7 +1281,7 @@ class region_editor(QtGui.QGraphicsView):
             for f_item in self.items(a_event.pos()):
                 if isinstance(f_item, region_editor_item):
                     self.scene.removeItem(f_item)
-                    self.region_items.remove(f_item)
+                    self.region_items[f_item.track_num].pop(f_item.bar)
 
     def hover_restore_cursor_event(self, a_event=None):
         QtGui.QApplication.restoreOverrideCursor()
@@ -1381,7 +1387,7 @@ class region_editor(QtGui.QGraphicsView):
             self.viewer_width / float(pydaw_get_current_region_length())
         self.px_per_beat = self.px_per_bar / 4.0
 
-        self.region_items = []
+        self.region_items = {}
         self.scene.clear()
         self.update_note_height()
         self.draw_header()
@@ -1407,7 +1413,7 @@ class region_editor(QtGui.QGraphicsView):
             for k in sorted(f_tracks.tracks)]
 
     def clearSelection(self):
-        for f_item in self.region_items:
+        for f_item in self.get_all_items():
             f_item.setSelected(False)
 
     def draw_item(self, a_track, a_bar, a_name,
@@ -1418,8 +1424,23 @@ class region_editor(QtGui.QGraphicsView):
         if a_selected:
             f_item.setSelected(True)
         if a_enabled:
-            self.region_items.append(f_item)
+            self.set_item(f_item)
             return f_item
+
+    def pop_item(self, a_item):
+        self.region_items[a_item.track_num].pop(a_item.bar)
+
+    def pop_orig_item(self, a_item):
+        self.region_items[a_item.orig_track_num].pop(a_item.orig_bar)
+
+    def set_item(self, a_item):
+        if not a_item.track_num in self.region_items:
+            self.region_items[a_item.track_num] = {}
+        if a_item.bar in self.region_items[a_item.track_num]:
+            f_old = self.region_items[a_item.track_num][a_item.bar]
+            if f_old != a_item:
+                self.scene.removeItem(f_old)
+        self.region_items[a_item.track_num][a_item.bar] = a_item
 
     def transpose_dialog(self):
         if pydaw_current_region_is_none():
@@ -1723,7 +1744,7 @@ class region_editor(QtGui.QGraphicsView):
             return
         for f_item in self.get_selected_items():
             self.scene.removeItem(f_item)
-            self.region_items.remove(f_item)
+            self.pop_item(f_item)
         global_tablewidget_to_region()
         self.scene.clearSelection()
 
@@ -1759,7 +1780,7 @@ class region_editor(QtGui.QGraphicsView):
         """ Convert an edited QTableWidget to a list of tuples
             for a region ref
         """
-        return [(x.track_num, x.bar, x.name) for x in self.region_items]
+        return [(x.track_num, x.bar, x.name) for x in self.get_all_items()]
 
 ########  End nu hottness
 
