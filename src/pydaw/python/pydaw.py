@@ -1478,18 +1478,13 @@ class region_editor(QtGui.QGraphicsView):
                 self.show_context_menu()
             return
         elif a_event.modifiers() == QtCore.Qt.ControlModifier:
-            self.hover_restore_cursor_event()
+            pass
         elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
             region_editor_set_delete_mode(True)
             return
-        elif self.click_enabled:
-            self.scene.clearSelection()
-            if self.current_coord:
-                f_track_num, f_bar = self.current_coord
-                f_name = PROJECT.get_next_default_item_name()
-                PROJECT.create_empty_item(f_name)
-                f_drawn_item = self.draw_item(f_track_num, f_bar, f_name)
-                f_drawn_item.setSelected(True)
+        else:
+            if not self.current_item:
+                self.show_cell_dialog()
         a_event.setAccepted(True)
         QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
         QtGui.QApplication.restoreOverrideCursor()
