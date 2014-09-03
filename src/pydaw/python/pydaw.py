@@ -907,8 +907,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.bar = int(a_bar)
         self.setAcceptHoverEvents(True)
         self.is_copying = False
-        self.is_velocity_dragging = False
-        self.is_velocity_curving = False
         self.resize_rect = self.rect()
         self.mouse_y_pos = QtGui.QCursor.pos().y()
         self.label = QtGui.QGraphicsSimpleTextItem(self)
@@ -964,18 +962,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
             region_editor_set_delete_mode(True)
             self.delete_later()
-        elif a_event.modifiers() == \
-        QtCore.Qt.ControlModifier | QtCore.Qt.AltModifier:
-            self.is_velocity_dragging = True
-        elif a_event.modifiers() == \
-        QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier:
-            self.is_velocity_curving = True
-            f_list = [((x.item_index * 4.0) + x.note_item.start)
-                for x in REGION_EDITOR.get_selected_items()]
-            f_list.sort()
-            self.vc_start = f_list[0]
-            self.vc_mid = (self.item_index * 4.0) + self.note_item.start
-            self.vc_end = f_list[-1]
         else:
             a_event.setAccepted(True)
             QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
@@ -986,65 +972,16 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                 for f_item in REGION_EDITOR.get_selected_items():
                     REGION_EDITOR.draw_item(
                         f_item.track_num, f_item.bar, f_item.name)
-        if self.is_velocity_curving or self.is_velocity_dragging:
-            a_event.setAccepted(True)
-            self.setSelected(True)
-            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
-            self.orig_y = a_event.pos().y()
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.BlankCursor)
-            for f_item in REGION_EDITOR.get_selected_items():
-                f_item.orig_value = f_item.note_item.velocity
-                f_item.set_brush()
-            for f_item in REGION_EDITOR.region_items:
-                f_item.label.setText(str(f_item.note_item.velocity))
         REGION_EDITOR.click_enabled = True
 
     def mouseMoveEvent(self, a_event):
-        if self.is_velocity_dragging or self.is_velocity_curving:
-            f_pos = a_event.pos()
-            f_y = f_pos.y()
-            f_diff_y = self.orig_y - f_y
-            f_val = (f_diff_y * 0.5)
-        else:
-            QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
-
+        QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
         for f_item in REGION_EDITOR.get_selected_items():
-            if self.is_velocity_dragging:
-                f_new_vel = pydaw_util.pydaw_clip_value(
-                    f_val + f_item.orig_value, 1, 127)
-                f_new_vel = int(f_new_vel)
-                f_item.note_item.velocity = f_new_vel
-                f_item.label.setText(str(f_new_vel))
-                f_item.set_brush()
-                f_item.set_vel_line()
-            elif self.is_velocity_curving:
-                f_start = ((f_item.item_index * 4.0) + f_item.note_item.start)
-                if f_start == self.vc_mid:
-                    f_new_vel = f_val + f_item.orig_value
-                else:
-                    if f_start > self.vc_mid:
-                        f_frac = (f_start -
-                            self.vc_mid) / (self.vc_end - self.vc_mid)
-                        f_new_vel = pydaw_util.linear_interpolate(
-                            f_val, 0.3 * f_val, f_frac)
-                    else:
-                        f_frac = (f_start -
-                            self.vc_start) / (self.vc_mid - self.vc_start)
-                        f_new_vel = pydaw_util.linear_interpolate(
-                            0.3 * f_val, f_val, f_frac)
-                    f_new_vel += f_item.orig_value
-                f_new_vel = pydaw_util.pydaw_clip_value(f_new_vel, 1, 127)
-                f_new_vel = int(f_new_vel)
-                f_item.note_item.velocity = f_new_vel
-                f_item.label.setText(str(f_new_vel))
-            else:
-                f_pos = f_item.scenePos()
-                f_coord = REGION_EDITOR.get_item_coord(f_pos)
-                if f_coord:
-                    f_track, f_bar = f_coord
-                    f_item.track_num = f_track
-                    f_item.bar = f_bar
-                f_item.set_pos()
+            f_pos = f_item.scenePos()
+            f_coord = REGION_EDITOR.get_item_coord(f_pos)
+            if f_coord:
+                f_item.track_num, f_item.bar = f_coord
+            f_item.set_pos()
 
     def mouseReleaseEvent(self, a_event):
         if REGION_EDITOR_DELETE_MODE:
@@ -1065,8 +1002,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                     f_item.get_selected_string())
         for f_item in REGION_EDITOR.region_items:
             f_item.is_copying = False
-            f_item.is_velocity_dragging = False
-            f_item.is_velocity_curving = False
         global_tablewidget_to_region()
         QtGui.QApplication.restoreOverrideCursor()
         REGION_EDITOR.click_enabled = True
