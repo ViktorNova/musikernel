@@ -1152,6 +1152,11 @@ class region_editor(QtGui.QGraphicsView):
         self.paste_to_orig_action.triggered.connect(self.paste_at_original_pos)
         self.addAction(self.paste_to_orig_action)
 
+        self.select_all_action = QtGui.QAction(_("Select All"), self)
+        self.select_all_action.triggered.connect(self.select_all)
+        self.select_all_action.setShortcut(QtGui.QKeySequence.SelectAll)
+        self.addAction(self.select_all_action)
+
         self.clear_selection_action = self.menu.addAction(_("Clear Selection"))
         self.clear_selection_action.triggered.connect(self.clearSelection)
         self.clear_selection_action.setShortcut(
@@ -1276,6 +1281,10 @@ class region_editor(QtGui.QGraphicsView):
         return QtCore.QPointF(
             self.horizontalScrollBar().value(),
             self.verticalScrollBar().value())
+
+    def select_all(self):
+        for f_item in self.region_items:
+            f_item.setSelected(True)
 
     def highlight_selected(self):
         self.has_selected = False
