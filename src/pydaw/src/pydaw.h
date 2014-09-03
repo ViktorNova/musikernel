@@ -55,7 +55,7 @@ GNU General Public License for more details.
 #define PYDAW_TRACK_COUNT_ALL 33
 
 #define PYDAW_MAX_EVENT_BUFFER_SIZE 512  //This could probably be made smaller
-#define PYDAW_MAX_REGION_SIZE 256
+#define PYDAW_MAX_REGION_SIZE 64
 #define PYDAW_MIDI_NOTE_COUNT 128
 #define PYDAW_MIDI_RECORD_BUFFER_LENGTH 600 //recording buffer for MIDI, in bars
 #define PYDAW_MAX_WORK_ITEMS_PER_THREAD 128

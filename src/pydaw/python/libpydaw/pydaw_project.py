@@ -40,7 +40,7 @@ def proj_file_str(a_val):
     return str(f_val)
 
 MAX_AUDIO_ITEM_COUNT = 256
-MAX_REGION_LENGTH = 256 #bars
+MAX_REGION_LENGTH = 64 #bars
 
 pydaw_folder_audio = "audio/files"
 pydaw_folder_audio_per_item_fx = "projects/edmnext/audio_per_item_fx"
