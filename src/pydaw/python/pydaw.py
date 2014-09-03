@@ -996,7 +996,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             for f_item in REGION_EDITOR.get_selected_items():
                 f_item.orig_value = f_item.note_item.velocity
                 f_item.set_brush()
-            for f_item in REGION_EDITOR.note_items:
+            for f_item in REGION_EDITOR.region_items:
                 f_item.label.setText(str(f_item.note_item.velocity))
         REGION_EDITOR.click_enabled = True
 
@@ -1064,7 +1064,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             for f_item in REGION_EDITOR.get_selected_items():
                 REGION_EDITOR.selected_note_strings.append(
                     f_item.get_selected_string())
-        for f_item in REGION_EDITOR.note_items:
+        for f_item in REGION_EDITOR.region_items:
             f_item.is_copying = False
             f_item.is_velocity_dragging = False
             f_item.is_velocity_curving = False
@@ -1094,7 +1094,7 @@ class region_editor(QtGui.QGraphicsView):
         self.has_selected = False
 
         self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
-        self.note_items = []
+        self.region_items = []
         self.playback_cursor = None
 
         self.right_click = False
@@ -1107,6 +1107,7 @@ class region_editor(QtGui.QGraphicsView):
         self.clipboard = []
 
         self.current_coord = None
+        self.current_item = None
 
         self.menu = QtGui.QMenu()
 
@@ -1236,7 +1237,7 @@ class region_editor(QtGui.QGraphicsView):
             self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
 
     def get_selected_items(self):
-        return [x for x in self.note_items if x.isSelected()]
+        return [x for x in self.region_items if x.isSelected()]
 
     def get_item_coord(self, a_pos):
         f_pos_x = a_pos.x()
@@ -1279,7 +1280,7 @@ class region_editor(QtGui.QGraphicsView):
 
     def highlight_selected(self):
         self.has_selected = False
-        for f_item in self.note_items:
+        for f_item in self.region_items:
             if f_item.isSelected():
                 f_item.setBrush(SELECTED_ITEM_GRADIENT)
                 self.has_selected = True
@@ -1288,7 +1289,7 @@ class region_editor(QtGui.QGraphicsView):
 
     def set_selected_strings(self):
         self.selected_note_strings = [x.get_selected_string()
-            for x in self.note_items if x.isSelected()]
+            for x in self.region_items if x.isSelected()]
 
     def keyPressEvent(self, a_event):
         QtGui.QGraphicsView.keyPressEvent(self, a_event)
@@ -1306,8 +1307,16 @@ class region_editor(QtGui.QGraphicsView):
         self.click_enabled = True
 
     def sceneMousePressEvent(self, a_event):
+        self.current_coord = self.get_item_coord(a_event.scenePos())
+        self.current_item = None
+        for f_item in self.scene.items(a_event.scenePos()):
+                if isinstance(f_item, region_editor_item):
+                    self.current_item = f_item
+                    if not f_item.isSelected():
+                        self.scene.clearSelection()
+                    f_item.setSelected(True)
+                    break
         if a_event.button() == QtCore.Qt.RightButton:
-            self.current_coord = self.get_item_coord(a_event.scenePos())
             if self.current_coord:
                 self.show_context_menu()
             return
@@ -1318,9 +1327,8 @@ class region_editor(QtGui.QGraphicsView):
             return
         elif self.click_enabled:
             self.scene.clearSelection()
-            f_coord = self.get_item_coord(a_event.scenePos())
-            if f_coord:
-                f_track_num, f_bar = f_coord
+            if self.current_coord:
+                f_track_num, f_bar = self.current_coord
                 f_name = PROJECT.get_next_default_item_name()
                 PROJECT.create_empty_item(f_name)
                 f_drawn_item = self.draw_item(f_track_num, f_bar, f_name)
@@ -1335,7 +1343,7 @@ class region_editor(QtGui.QGraphicsView):
             for f_item in self.items(a_event.pos()):
                 if isinstance(f_item, region_editor_item):
                     self.scene.removeItem(f_item)
-                    self.note_items.remove(f_item)
+                    self.region_items.remove(f_item)
 
     def hover_restore_cursor_event(self, a_event=None):
         QtGui.QApplication.restoreOverrideCursor()
@@ -1376,7 +1384,6 @@ class region_editor(QtGui.QGraphicsView):
             self.tracks[i] = f_track
             self.tracks_layout.addWidget(f_track.group_box)
 
-
     def draw_grid(self):
         f_brush = QtGui.QLinearGradient(
             0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
@@ -1414,6 +1421,7 @@ class region_editor(QtGui.QGraphicsView):
         self.open_region()
 
     def open_region(self):
+        self.enabled = False
         if not CURRENT_REGION:
             return
         f_items_dict = PROJECT.get_items_dict()
@@ -1424,6 +1432,7 @@ class region_editor(QtGui.QGraphicsView):
                 self.draw_item(f_item.track_num,f_item.bar_num, f_item_name)
         self.setUpdatesEnabled(True)
         self.update()
+        self.enabled = True
 
     def clear_drawn_items(self):
         global REGION_EDITOR_GRID_WIDTH
@@ -1433,7 +1442,7 @@ class region_editor(QtGui.QGraphicsView):
         self.px_per_bar = self.viewer_width / 8.0
         self.px_per_beat = self.px_per_bar / 4.0
 
-        self.note_items = []
+        self.region_items = []
         self.scene.clear()
         self.update_note_height()
         self.draw_header()
@@ -1459,7 +1468,7 @@ class region_editor(QtGui.QGraphicsView):
             for k in sorted(f_tracks.tracks)]
 
     def clearSelection(self):
-        for f_item in self.note_items:
+        for f_item in self.region_items:
             f_item.setSelected(False)
 
     def draw_item(self, a_track, a_bar, a_name, a_enabled=True):
@@ -1467,14 +1476,14 @@ class region_editor(QtGui.QGraphicsView):
             a_track, a_bar, a_name, a_enabled)
         self.scene.addItem(f_item)
         if a_enabled:
-            self.note_items.append(f_item)
+            self.region_items.append(f_item)
             return f_item
 
     def transpose_dialog(self):
         if pydaw_current_region_is_none():
             return
 
-        f_item_list = self.get_selected_items()
+        f_item_list = [x.name for x in self.get_selected_items()]
         if len(f_item_list) == 0:
             QtGui.QMessageBox.warning(
                 MAIN_WINDOW, _("Error"), _("No items selected"))
@@ -1616,18 +1625,11 @@ class region_editor(QtGui.QGraphicsView):
             self.warn_no_region_selected()
             return
 
-        f_current_item = self.table_widget.currentItem()
-        x = self.table_widget.currentRow()
-        y = self.table_widget.currentColumn()
-
-        if f_current_item is None or \
-        str(f_current_item.text()) == "" or \
-        x < 0 or y < 1:
+        if not self.current_coord or not self.current_item:
             return
 
-        f_current_item_text = str(f_current_item.text())
-        x = self.table_widget.currentRow()
-        y = self.table_widget.currentColumn()
+        f_current_item_text = self.current_item.name
+        x, y = self.current_coord
 
         def note_ok_handler():
             f_cell_text = str(f_new_lineedit.text())
@@ -1643,18 +1645,17 @@ class region_editor(QtGui.QGraphicsView):
                     _("An item with this name already exists."))
                 return
             f_uid = PROJECT.copy_item(
-                str(f_current_item.text()), str(f_new_lineedit.text()))
+                f_current_item_text, str(f_new_lineedit.text()))
             global_open_items([f_cell_text], a_reset_scrollbar=True)
             self.last_item_copied = f_cell_text
-            self.add_qtablewidgetitem(f_cell_text, x, y - 1)
-            CURRENT_REGION.add_item_ref_by_uid(
-                x + self.track_offset, y - 1, f_uid)
+            CURRENT_REGION.add_item_ref_by_uid(x, y, f_uid)
             PROJECT.save_region(
                 str(REGION_SETTINGS.region_name_lineedit.text()),
                 CURRENT_REGION)
             PROJECT.commit(
                 _("Unlink item '{}' as '{}'").format(
                 f_current_item_text, f_cell_text))
+            self.open_region()
             f_window.close()
 
         def note_cancel_handler():
@@ -1733,8 +1734,7 @@ class region_editor(QtGui.QGraphicsView):
         if not self.enabled:
             self.warn_no_region_selected()
             return
-        f_selected_cells = self.table_widget.selectedIndexes()
-        if len(f_selected_cells) == 0:
+        if not self.current_coord:
             return
         if len(REGION_CLIPBOARD) != 1:
             QtGui.QMessageBox.warning(
@@ -1743,12 +1743,11 @@ class region_editor(QtGui.QGraphicsView):
                 "clipboard.\n"
                 "You have {} items copied.").format(len(REGION_CLIPBOARD)))
             return
-        f_base_row = f_selected_cells[0].row()
-        f_base_column = f_selected_cells[0].column() - 1
+        f_base_row, f_base_column = self.current_coord
         f_region_length = pydaw_get_current_region_length()
         f_item = REGION_CLIPBOARD[0]
-        for f_column in range(f_base_column, f_region_length + 1):
-            self.add_qtablewidgetitem(f_item[2], f_base_row, f_column)
+        for f_column in range(f_base_column, f_region_length):
+            self.draw_item(f_base_row, f_column, f_item[2])
         global_tablewidget_to_region()
 
     def paste_at_original_pos(self):
@@ -1827,7 +1826,7 @@ class region_editor(QtGui.QGraphicsView):
         """ Convert an edited QTableWidget to a list of tuples
             for a region ref
         """
-        return [(x.track_num, x.bar, x.name) for x in self.note_items]
+        return [(x.track_num, x.bar, x.name) for x in self.region_items]
 
 ########  End nu hottness
 
