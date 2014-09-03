@@ -1373,6 +1373,7 @@ class region_editor(QtGui.QGraphicsView):
 
         for i in range(REGION_EDITOR_TRACK_COUNT):
             f_track = seq_track(i, TRACK_NAMES[i])
+            self.tracks[i] = f_track
             self.tracks_layout.addWidget(f_track.group_box)
 
 
@@ -9507,9 +9508,9 @@ class pydaw_main_window(QtGui.QMainWindow):
             event.accept()
 
 def global_update_peak_meters(a_val):
-    ALL_PEAK_METERS = [x.peak_meter for x in REGION_EDITOR.tracks]
+    ALL_PEAK_METERS = [REGION_EDITOR.tracks[k].peak_meter
+        for k in sorted(REGION_EDITOR.tracks)]
     ALL_PEAK_METERS.append(WAVE_EDITOR.peak_meter)
-
     for f_val in a_val.split("|"):
         f_list = f_val.split(":")
         f_index = int(f_list[0])
