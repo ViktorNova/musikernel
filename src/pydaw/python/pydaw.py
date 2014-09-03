@@ -883,7 +883,7 @@ def region_editor_set_delete_mode(a_enabled):
     else:
         REGION_EDITOR.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         REGION_EDITOR_DELETE_MODE = False
-        REGION_EDITOR.selected_note_strings = []
+        REGION_EDITOR.selected_item_strings = []
         QtGui.QApplication.restoreOverrideCursor()
         global_tablewidget_to_region()
 
@@ -984,22 +984,12 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             f_item.set_pos()
 
     def mouseReleaseEvent(self, a_event):
+        a_event.setAccepted(True)
+        QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
         if REGION_EDITOR_DELETE_MODE:
             region_editor_set_delete_mode(False)
             return
-        a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
-        if self.is_copying:
-            f_new_selection = []
-        REGION_EDITOR.selected_note_strings = []
-        if self.is_copying:
-            for f_new_item in f_new_selection:
-                REGION_EDITOR.selected_note_strings.append(
-                    f_new_item.get_selected_string())
-        else:
-            for f_item in REGION_EDITOR.get_selected_items():
-                REGION_EDITOR.selected_note_strings.append(
-                    f_item.get_selected_string())
+        REGION_EDITOR.set_selected_strings()
         for f_item in REGION_EDITOR.region_items:
             f_item.is_copying = False
         global_tablewidget_to_region()
@@ -1037,7 +1027,7 @@ class region_editor(QtGui.QGraphicsView):
         self.last_scale = 1.0
         self.last_x_scale = 1.0
         self.scene.selectionChanged.connect(self.highlight_selected)
-        self.selected_note_strings = []
+        self.selected_item_strings = []
         self.clipboard = []
 
         self.current_coord = None
@@ -1231,7 +1221,7 @@ class region_editor(QtGui.QGraphicsView):
                 f_item.set_brush()
 
     def set_selected_strings(self):
-        self.selected_note_strings = [x.get_selected_string()
+        self.selected_item_strings = [x.get_selected_string()
             for x in self.region_items if x.isSelected()]
 
     def keyPressEvent(self, a_event):
@@ -1374,6 +1364,10 @@ class region_editor(QtGui.QGraphicsView):
             if f_item.bar_num < pydaw_get_current_region_length():
                 f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
                 self.draw_item(f_item.track_num,f_item.bar_num, f_item_name)
+                if "".join(str(x) for x in
+                (f_item.track_num, f_item.bar_num, f_item_name)
+                ) in self.selected_item_strings:
+                    f_item.setSelected(True)
         self.setUpdatesEnabled(True)
         self.update()
         self.enabled = True
