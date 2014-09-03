@@ -1044,7 +1044,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                     f_track, f_bar = f_coord
                     f_item.track_num = f_track
                     f_item.bar = f_bar
-                    f_item.set_pos()
+                f_item.set_pos()
 
     def mouseReleaseEvent(self, a_event):
         if REGION_EDITOR_DELETE_MODE:
@@ -1435,9 +1435,10 @@ class region_editor(QtGui.QGraphicsView):
         self.enabled = True
 
     def clear_drawn_items(self):
-        global REGION_EDITOR_GRID_WIDTH
+        global REGION_EDITOR_GRID_WIDTH, REGION_EDITOR_MAX_START
         self.item_length = pydaw_get_current_region_length()
         self.viewer_width = self.width() - REGION_TRACK_WIDTH - 50.0
+        REGION_EDITOR_MAX_START = self.width() - 51.0
         REGION_EDITOR_GRID_WIDTH = self.viewer_width
         self.px_per_bar = \
             self.viewer_width / float(pydaw_get_current_region_length())
