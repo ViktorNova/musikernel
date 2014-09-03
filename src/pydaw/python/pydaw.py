@@ -1876,14 +1876,8 @@ class region_editor(QtGui.QGraphicsView):
         PROJECT.commit(_("Auto-Unlink items"))
 
     def on_auto_unlink_unique(self):
-        f_result = {}
-        for i in range(self.track_count):
-            for i2 in range(1, self.region_length + 1):
-                f_item = self.table_widget.item(i, i2)
-                if not f_item is None and \
-                not str(f_item.text()) == "" and \
-                f_item.isSelected():
-                    f_result[(i, i2)] = str(f_item.text())
+        f_result = {(x.track_num, x.bar):x.name
+            for x in self.get_selected_items()}
 
         old_new_map = {}
 
@@ -1897,9 +1891,8 @@ class region_editor(QtGui.QGraphicsView):
             old_new_map[f_item_name] = (f_cell_text, f_uid)
 
         for k, v in f_result.items():
-            self.add_qtablewidgetitem(old_new_map[v][0], k[0], k[1] - 1)
-            CURRENT_REGION.add_item_ref_by_uid(
-                k[0] + self.track_offset, k[1] - 1, old_new_map[v][1])
+            self.draw_item(k[0], k[1], old_new_map[v][0])
+            CURRENT_REGION.add_item_ref_by_uid(k[0], k[1], old_new_map[v][1])
         PROJECT.save_region(
             str(REGION_SETTINGS.region_name_lineedit.text()),
             CURRENT_REGION)
