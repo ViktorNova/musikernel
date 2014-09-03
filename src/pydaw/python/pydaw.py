@@ -15,7 +15,6 @@ GNU General Public License for more details.
 
 import sys
 import os
-import operator
 import subprocess
 import time
 import random
