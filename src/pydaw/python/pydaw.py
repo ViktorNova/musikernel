@@ -744,8 +744,7 @@ class region_settings:
         global CURRENT_REGION_NAME
         CURRENT_REGION_NAME = str(a_file_name)
         global CURRENT_REGION
-        CURRENT_REGION = PROJECT.get_region_by_name(
-            a_file_name)
+        CURRENT_REGION = PROJECT.get_region_by_name(a_file_name)
         if CURRENT_REGION.region_length_bars > 0:
             self.length_alternate_spinbox.setValue(
                 CURRENT_REGION.region_length_bars)
@@ -1039,9 +1038,9 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                 f_item.note_item.velocity = f_new_vel
                 f_item.label.setText(str(f_new_vel))
             else:
-                f_pos = f_item.pos()
+                f_pos = f_item.scenePos()
                 f_coord = REGION_EDITOR.get_item_coord(f_pos)
-                if f_pos:
+                if f_coord:
                     f_track, f_bar = f_coord
                     f_item.track_num = f_track
                     f_item.bar = f_bar
@@ -1426,6 +1425,7 @@ class region_editor(QtGui.QGraphicsView):
             return
         f_items_dict = PROJECT.get_items_dict()
         self.setUpdatesEnabled(False)
+        self.clear_drawn_items()
         for f_item in CURRENT_REGION.items:
             if f_item.bar_num < pydaw_get_current_region_length():
                 f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
@@ -1439,7 +1439,8 @@ class region_editor(QtGui.QGraphicsView):
         self.item_length = pydaw_get_current_region_length()
         self.viewer_width = self.width() - REGION_TRACK_WIDTH - 50.0
         REGION_EDITOR_GRID_WIDTH = self.viewer_width
-        self.px_per_bar = self.viewer_width / 8.0
+        self.px_per_bar = \
+            self.viewer_width / float(pydaw_get_current_region_length())
         self.px_per_beat = self.px_per_bar / 4.0
 
         self.region_items = []
