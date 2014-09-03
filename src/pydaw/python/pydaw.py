@@ -1035,6 +1035,14 @@ class region_editor(QtGui.QGraphicsView):
 
         self.menu = QtGui.QMenu()
 
+        self.insert_action = self.menu.addAction(
+            _("Insert Item(s)"))
+        self.insert_action.triggered.connect(self.show_cell_dialog)
+        self.insert_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+E"))
+        self.addAction(self.insert_action)
+
+        self.menu.addSeparator()
+
         self.edit_group_action = self.menu.addAction(
             _("Edit Selected Item(s)"))
         self.edit_group_action.triggered.connect(self.edit_group)
@@ -1183,9 +1191,220 @@ class region_editor(QtGui.QGraphicsView):
         else:
             return None
 
+    def show_cell_dialog(self):
+        x, y = self.current_coord
+        def note_ok_handler():
+            self.scene.clearSelection()
+            global CURRENT_REGION
+            if f_new_radiobutton.isChecked() and f_item_count.value() == 1:
+                f_cell_text = str(f_new_lineedit.text())
+                if PROJECT.item_exists(f_cell_text):
+                    QtGui.QMessageBox.warning(
+                        self, _("Error"),
+                        _("An item named '{}' already exists.").format(
+                        f_cell_text))
+                    return
+                f_uid = PROJECT.create_empty_item(f_cell_text)
+                self.draw_item(y, x, f_cell_text, True)
+                CURRENT_REGION.add_item_ref_by_uid(x, y, f_uid)
+                if f_repeat_checkbox.isChecked():
+                    for i in range(y, pydaw_get_current_region_length()):
+                        self.draw_item(i, y, f_cell_text, True)
+                        CURRENT_REGION.add_item_ref_by_uid(x, i, f_uid)
+            elif f_new_radiobutton.isChecked() and f_item_count.value() > 1:
+                f_name_suffix = 1
+                f_cell_text = str(f_new_lineedit.text())
+                f_list = []
+                for i in range(f_item_count.value()):
+                    while PROJECT.item_exists(
+                        "{}-{}".format(f_cell_text, f_name_suffix)):
+                        f_name_suffix += 1
+                    f_item_name = "{}-{}".format(f_cell_text, f_name_suffix)
+                    f_uid = PROJECT.create_empty_item(f_item_name)
+                    f_list.append((f_uid, f_item_name))
+                    self.draw_item(y + i, x, f_item_name, True)
+                    CURRENT_REGION.add_item_ref_by_uid(x, y + i, f_uid)
+                if f_repeat_checkbox.isChecked():
+                    f_i = 0
+                    for i in range(i + 1, pydaw_get_current_region_length()):
+                        f_uid, f_item_name = f_list[f_i]
+                        f_i += 1
+                        if f_i >= len(f_list):
+                            f_i = 0
+                        self.draw_item(x, y + i, f_item_name, True)
+                        CURRENT_REGION.add_item_ref_by_uid(x, y + i, f_uid)
+            elif f_copy_radiobutton.isChecked():
+                f_cell_text = str(f_copy_combobox.currentText())
+                self.draw(x, y, f_cell_text, True)
+                CURRENT_REGION.add_item_ref_by_name(
+                    x + self.track_offset, y - 1, f_cell_text, f_item_dict)
+            elif f_copy_from_radiobutton.isChecked():
+                f_cell_text = str(f_new_lineedit.text())
+                f_copy_from_text = str(f_copy_combobox.currentText())
+                if PROJECT.item_exists(f_cell_text):
+                    QtGui.QMessageBox.warning(
+                        self, _("Error"),
+                        _("An item named '{}' already exists.").format(
+                        f_cell_text))
+                    return
+                f_uid = PROJECT.copy_item(
+                    f_copy_from_text, f_cell_text)
+                self.draw(x, y, f_cell_text, True)
+                CURRENT_REGION.add_item_ref_by_uid(x, y, f_uid)
+            elif f_take_radiobutton.isChecked():
+                f_cell_text = str(f_take_name_combobox.currentText())
+                f_start = f_take_dict[f_cell_text].index(
+                    str(f_take_start_combobox.currentText()))
+                f_end = f_take_dict[f_cell_text].index(
+                    str(f_take_end_combobox.currentText()))
+                if f_end > f_start:
+                    f_end += 1
+                elif f_end < f_start:
+                    f_end -= 1
+                f_step = 1 if f_start <= f_end else -1
+                f_range = f_take_dict[f_cell_text][f_start:f_end:f_step]
+                for f_suffix, f_pos in zip(
+                f_range, range(y - 1, pydaw_get_current_region_length())):
+                    f_name = "".join((f_cell_text, f_suffix))
+                    self.draw_item(f_pos, x, f_name, True)
+                    CURRENT_REGION.add_item_ref_by_name(
+                        x + self.track_offset, f_pos, f_name, f_item_dict)
+            PROJECT.save_region(
+                str(REGION_SETTINGS.region_name_lineedit.text()),
+                CURRENT_REGION)
+            PROJECT.commit(
+                _("Add reference(s) to item (group) '{}' in region "
+                "'{}'").format(f_cell_text,
+                REGION_SETTINGS.region_name_lineedit.text()))
+            self.last_item_copied = f_cell_text
+
+            f_window.close()
+
+        def paste_button_pressed():
+            self.paste_clipboard()
+            f_window.close()
+
+        def paste_to_end_button_pressed():
+            self.paste_to_region_end()
+            f_window.close()
+
+        def note_cancel_handler():
+            f_window.close()
+
+        def copy_combobox_index_changed(a_index):
+            f_copy_radiobutton.setChecked(True)
+
+        def on_name_changed():
+            f_new_lineedit.setText(
+                pydaw_remove_bad_chars(f_new_lineedit.text()))
+
+        def goto_start():
+            f_item_count.setValue(f_item_count.minimum())
+
+        def goto_end():
+            f_item_count.setValue(f_item_count.maximum())
+
+        def take_changed(a_val=None, a_check=True):
+            f_take_start_combobox.clear()
+            f_take_end_combobox.clear()
+            f_key = str(f_take_name_combobox.currentText())
+            f_take_start_combobox.addItems(f_take_dict[f_key])
+            f_take_end_combobox.addItems(f_take_dict[f_key])
+            if a_check:
+                f_take_radiobutton.setChecked(True)
+
+        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.setWindowTitle(_("Add item reference to region..."))
+        f_layout = QtGui.QGridLayout()
+        f_vlayout0 = QtGui.QVBoxLayout()
+        f_vlayout1 = QtGui.QVBoxLayout()
+        f_window.setLayout(f_layout)
+        f_new_radiobutton = QtGui.QRadioButton()
+        f_new_radiobutton.setChecked(True)
+        f_layout.addWidget(f_new_radiobutton, 0, 0)
+        f_layout.addWidget(QtGui.QLabel(_("New:")), 0, 1)
+        f_new_lineedit = QtGui.QLineEdit(
+            PROJECT.get_next_default_item_name())
+        f_new_lineedit.editingFinished.connect(on_name_changed)
+        f_new_lineedit.setMaxLength(24)
+        f_layout.addWidget(f_new_lineedit, 0, 2)
+        f_layout.addLayout(f_vlayout0, 1, 0)
+        f_copy_from_radiobutton = QtGui.QRadioButton()
+        f_vlayout0.addWidget(f_copy_from_radiobutton)
+        f_copy_radiobutton = QtGui.QRadioButton()
+        f_vlayout0.addWidget(f_copy_radiobutton)
+        f_copy_combobox = QtGui.QComboBox()
+        f_copy_combobox.addItems(PROJECT.get_item_list())
+        if not self.last_item_copied is None:
+            f_copy_combobox.setCurrentIndex(
+            f_copy_combobox.findText(self.last_item_copied))
+        f_copy_combobox.currentIndexChanged.connect(
+            copy_combobox_index_changed)
+        f_layout.addLayout(f_vlayout1, 1, 1)
+        f_vlayout1.addWidget(QtGui.QLabel(_("Copy from:")))
+        f_vlayout1.addWidget(QtGui.QLabel(_("Existing:")))
+        f_layout.addWidget(f_copy_combobox, 1, 2)
+        f_layout.addWidget(QtGui.QLabel(_("Item Count:")), 2, 1)
+        f_item_count = QtGui.QSpinBox()
+        f_item_count.setRange(1, pydaw_get_current_region_length() - x + 1)
+        f_item_count.setToolTip(_("Only used for 'New'"))
+
+        f_begin_end_layout = QtGui.QHBoxLayout()
+        f_begin_end_layout.addWidget(f_item_count)
+        f_layout.addLayout(f_begin_end_layout, 2, 2)
+        f_start_button = QtGui.QPushButton("<<")
+        f_start_button.pressed.connect(goto_start)
+        f_begin_end_layout.addWidget(f_start_button)
+        f_end_button = QtGui.QPushButton(">>")
+        f_end_button.pressed.connect(goto_end)
+        f_begin_end_layout.addWidget(f_end_button)
+
+        f_repeat_checkbox = QtGui.QCheckBox(_("Repeat to end?"))
+        f_layout.addWidget(f_repeat_checkbox, 3, 2)
+
+        if REGION_CLIPBOARD:
+            f_paste_clipboard_button = QtGui.QPushButton(_("Paste Clipboard"))
+            f_layout.addWidget(f_paste_clipboard_button, 4, 2)
+            f_paste_clipboard_button.pressed.connect(paste_button_pressed)
+
+        if len(REGION_CLIPBOARD) == 1:
+            f_paste_to_end_button = QtGui.QPushButton(_("Paste to End"))
+            f_layout.addWidget(f_paste_to_end_button, 7, 2)
+            f_paste_to_end_button.pressed.connect(paste_to_end_button_pressed)
+
+        f_item_dict = PROJECT.get_items_dict()
+        f_take_dict = f_item_dict.get_takes()
+
+        if f_take_dict:
+            f_take_radiobutton = QtGui.QRadioButton()
+            f_layout.addWidget(f_take_radiobutton, 12, 0)
+            f_layout.addWidget(QtGui.QLabel(_("Take:")), 12, 1)
+            f_take_name_combobox = QtGui.QComboBox()
+            f_layout.addWidget(f_take_name_combobox, 12, 2)
+            f_take_start_combobox = QtGui.QComboBox()
+            f_take_start_combobox.setMinimumWidth(60)
+            f_layout.addWidget(f_take_start_combobox, 12, 3)
+            f_take_end_combobox = QtGui.QComboBox()
+            f_take_end_combobox.setMinimumWidth(60)
+            f_layout.addWidget(f_take_end_combobox, 12, 4)
+            f_take_name_combobox.addItems(sorted(f_take_dict))
+            take_changed(a_check=False)
+            f_take_name_combobox.currentIndexChanged.connect(take_changed)
+
+        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_layout.addLayout(f_ok_cancel_layout, 24, 2)
+        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_cancel_layout.addWidget(f_ok_button)
+        f_ok_button.clicked.connect(note_ok_handler)
+        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_ok_cancel_layout.addWidget(f_cancel_button)
+        f_cancel_button.clicked.connect(note_cancel_handler)
+        f_window.move(QtGui.QCursor.pos())
+        f_window.exec_()
+
     def set_tooltips(self, a_on):
         if a_on:
-            self.setToolTip("TODO")
+            self.setToolTip(libpydaw.strings.region_list_editor)
         else:
             self.setToolTip("")
 
