@@ -1543,21 +1543,19 @@ class region_editor(QtGui.QGraphicsView):
         f_result = [x.name for x in self.get_selected_items()]
         f_result2 = []
         for x in f_result:
-            if not x in f_result2:
+            if x not in f_result2:
                 f_result2.append(x)
-        if len(f_result2) != len(f_result):
+        if not a_unique and len(f_result2) != len(f_result):
             QtGui.QMessageBox.warning(
                 self, _("Error"),
-                _("You cannot open multiple instances of "
-                "the same item as a group.\n"
-                "You should unlink all duplicate instances "
-                "of {} into their own "
-                "individual item names before editing as "
-                "a group.").format(f_result_str))
+                _("You cannot open multiple instances of the same "
+                "item as a group.\n"
+                "You should unlink all duplicate instances into their own "
+                "individual item names before editing as a group."))
             return
 
         if f_result2:
-            global_open_items(f_result, a_reset_scrollbar=True)
+            global_open_items(f_result2, a_reset_scrollbar=True)
             MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
         else:
             QtGui.QMessageBox.warning(
