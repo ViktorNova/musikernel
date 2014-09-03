@@ -1483,6 +1483,7 @@ class pydaw_region:
         f_result = ""
         if self.region_length_bars > 0:
             f_result += "L|{}|0\n".format(self.region_length_bars)
+        self.items.sort()
         for f_item in self.items:
             f_result += "{}|{}|{}\n".format(
                 f_item.track_num, f_item.bar_num, f_item.item_uid)
@@ -1510,6 +1511,12 @@ class pydaw_region:
             self.track_num = a_track_num
             self.bar_num = a_bar_num
             self.item_uid = a_item_uid
+
+        def __lt__(self, other):
+            if self.track_num == other.track_num:
+                return self.bar_num < other.bar_num
+            else:
+                return self.track_num < other.track_num
 
 def pydaw_smooth_automation_points(
     a_items_list, a_is_cc, a_cc_num=-1):
