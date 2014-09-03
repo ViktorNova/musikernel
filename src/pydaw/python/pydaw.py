@@ -1205,11 +1205,11 @@ class region_editor(QtGui.QGraphicsView):
                         f_cell_text))
                     return
                 f_uid = PROJECT.create_empty_item(f_cell_text)
-                self.draw_item(y, x, f_cell_text, True)
+                self.draw_item(x, y, f_cell_text, True)
                 CURRENT_REGION.add_item_ref_by_uid(x, y, f_uid)
                 if f_repeat_checkbox.isChecked():
                     for i in range(y, pydaw_get_current_region_length()):
-                        self.draw_item(i, y, f_cell_text, True)
+                        self.draw_item(x, i, f_cell_text, True)
                         CURRENT_REGION.add_item_ref_by_uid(x, i, f_uid)
             elif f_new_radiobutton.isChecked() and f_item_count.value() > 1:
                 f_name_suffix = 1
@@ -1222,7 +1222,7 @@ class region_editor(QtGui.QGraphicsView):
                     f_item_name = "{}-{}".format(f_cell_text, f_name_suffix)
                     f_uid = PROJECT.create_empty_item(f_item_name)
                     f_list.append((f_uid, f_item_name))
-                    self.draw_item(y + i, x, f_item_name, True)
+                    self.draw_item(x, y + i, f_item_name, True)
                     CURRENT_REGION.add_item_ref_by_uid(x, y + i, f_uid)
                 if f_repeat_checkbox.isChecked():
                     f_i = 0
@@ -1266,7 +1266,7 @@ class region_editor(QtGui.QGraphicsView):
                 for f_suffix, f_pos in zip(
                 f_range, range(y - 1, pydaw_get_current_region_length())):
                     f_name = "".join((f_cell_text, f_suffix))
-                    self.draw_item(f_pos, x, f_name, True)
+                    self.draw_item(x, f_pos, f_name, True)
                     CURRENT_REGION.add_item_ref_by_name(
                         x + self.track_offset, f_pos, f_name, f_item_dict)
             PROJECT.save_region(
