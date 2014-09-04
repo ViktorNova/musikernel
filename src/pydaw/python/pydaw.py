@@ -3561,6 +3561,8 @@ AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(0.5, QtGui.QColor.fromRgb(50,50, 50))
 AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(0.6, QtGui.QColor.fromRgb(43, 43, 43))
 AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(1.0, QtGui.QColor.fromRgb(65, 65, 65))
 
+DEFAULT_AUDIO_TRACK = 0
+
 class audio_items_viewer(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
@@ -3920,7 +3922,8 @@ class audio_items_viewer(QtGui.QGraphicsView):
                     f_uid = PROJECT.get_wav_uid_by_name(f_file_name_str)
                     f_item = pydaw_audio_item(
                         f_uid, a_start_bar=f_pos_bars,
-                        a_start_beat=f_beat_frac, a_lane_num=f_lane_num)
+                        a_start_beat=f_beat_frac, a_lane_num=f_lane_num,
+                        a_output_track=DEFAULT_AUDIO_TRACK)
                     f_items.add_item(f_index, f_item)
                     f_graph = PROJECT.get_sample_graph_by_uid(f_uid)
                     f_audio_item = AUDIO_SEQ.draw_item(
@@ -4235,6 +4238,16 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         self.crossfade_action.setShortcut(
             QtGui.QKeySequence.fromString("CTRL+F"))
 
+        self.default_combobox = QtGui.QComboBox()
+        self.default_combobox.setMinimumWidth(150)
+        self.default_combobox.addItems(TRACK_NAMES)
+        self.default_combobox.currentIndexChanged.connect(
+            self.default_track_changed)
+        self.controls_grid_layout.addWidget(
+            QtGui.QLabel(_(("Default:"))), 0, 20)
+        self.controls_grid_layout.addWidget(self.default_combobox, 0, 21)
+        AUDIO_TRACK_COMBOBOXES.append(self.default_combobox)
+
         self.v_zoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.v_zoom_slider.setObjectName("zoom_slider")
         self.v_zoom_slider.setRange(10, 100)
@@ -4286,6 +4299,10 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         for f_item in self.list_file.selectedItems():
             AUDIO_ITEMS_TO_DROP.append(
                 "{}/{}".format(self.last_open_dir, f_item.text()))
+
+    def default_track_changed(self, a_val):
+        global DEFAULT_AUDIO_TRACK
+        DEFAULT_AUDIO_TRACK = a_val
 
     def on_select_all(self):
         if CURRENT_REGION is None or IS_PLAYING:
