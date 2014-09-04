@@ -39,17 +39,17 @@ deps:
 	cd pydaw/portaudio && ./configure --with-jack=no --with-oss=no
 	make -C pydaw/portaudio
 	cp pydaw/portaudio/lib/.libs/libportaudio.so.2.0.0 pydaw/python/libpydaw/libportaudio.so
-	cd pydaw_sbsms && ( ./configure || ./configure --enable-sse=no ) && make
-	cd pydaw_sbsms/cli && make
-	cd pydaw_rubberband && ./configure --prefix=$(RUBBERBAND_PREFIX) && make
+	cd sbsms && ( ./configure || ./configure --enable-sse=no ) && make
+	cd sbsms/cli && make
+	cd rubberband && ./configure --prefix=$(RUBBERBAND_PREFIX) && make
 
 deps_clean:
 	make -C pydaw/midicomp clean
 	cd pydaw/pyliblo-0.9.1 && python3 setup.py clean
 	make -C pydaw/portaudio clean
-	make -C pydaw_sbsms clean
-	make -C pydaw_sbsms/cli clean
-	make -C pydaw_rubberband clean
+	make -C sbsms clean
+	make -C sbsms/cli clean
+	make -C rubberband clean
 		
 # --------------------------------------------------------------
 
@@ -58,9 +58,9 @@ install:
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/sbsms
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/rubberband
 	make -C pydaw PREFIX=$(PREFIX) DESTDIR=$(DESTDIR) install
-	make -C pydaw_sbsms/cli PREFIX=$(SBSMS_PREFIX) \
+	make -C sbsms/cli PREFIX=$(SBSMS_PREFIX) \
 	DESTDIR=$(DESTDIR) install
-	make -C pydaw_rubberband DESTDIR=$(DESTDIR) install
+	make -C rubberband DESTDIR=$(DESTDIR) install
 	make -C pydaw_render DESTDIR=$(DESTDIR) PREFIX=$(PREFIX) install
 
 # --------------------------------------------------------------
