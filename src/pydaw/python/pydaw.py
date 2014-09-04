@@ -1004,6 +1004,7 @@ class tracks_widget:
         ALL_PEAK_METERS = []
         self.tracks = {}
         self.tracks_widget = QtGui.QWidget()
+        self.tracks_widget.setObjectName("plugin_ui")
         self.tracks_widget.setContentsMargins(0, 0, 0, 0)
         self.tracks_widget.setFixedSize(
             QtCore.QSize(REGION_TRACK_WIDTH,
@@ -1011,7 +1012,7 @@ class tracks_widget:
             REGION_EDITOR_HEADER_HEIGHT))
         self.tracks_layout = QtGui.QVBoxLayout(self.tracks_widget)
         self.tracks_layout.addItem(
-            QtGui.QSpacerItem(0, REGION_EDITOR_HEADER_HEIGHT))
+            QtGui.QSpacerItem(0, REGION_EDITOR_HEADER_HEIGHT + 2.0))
         self.tracks_layout.setContentsMargins(0, 0, 0, 0)
         for i in range(REGION_EDITOR_TRACK_COUNT):
             f_track = seq_track(i, TRACK_NAMES[i])
