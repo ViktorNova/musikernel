@@ -1020,7 +1020,7 @@ class tracks_widget:
             ALL_PEAK_METERS[i] = f_track.peak_meter
             self.tracks[i] = f_track
             self.tracks_layout.addWidget(f_track.group_box)
-        ALL_PEAK_METERS.append(WAVE_EDITOR.peak_meter)
+        ALL_PEAK_METERS[REGION_EDITOR_TRACK_COUNT] = WAVE_EDITOR.peak_meter
 
 
 class region_editor(QtGui.QGraphicsView):
