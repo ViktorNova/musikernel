@@ -916,7 +916,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.set_pos()
 
     def set_pos(self):
-        f_start = REGION_TRACK_WIDTH + (self.bar_width * self.bar)
+        f_start = self.bar_width * self.bar
         f_track_pos = REGION_EDITOR_HEADER_HEIGHT + (self.track_num *
             REGION_EDITOR_TRACK_HEIGHT)
         self.setPos(f_start, f_track_pos)
@@ -997,10 +997,30 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         REGION_EDITOR.click_enabled = True
 
 
+class tracks_widget:
+    def __init__(self):
+        self.tracks = {}
+        self.tracks_widget = QtGui.QWidget()
+        self.tracks_widget.setContentsMargins(0, 0, 0, 0)
+        self.tracks_widget.setFixedSize(
+            QtCore.QSize(REGION_TRACK_WIDTH,
+            (REGION_EDITOR_TRACK_HEIGHT * REGION_EDITOR_TRACK_COUNT) +
+            REGION_EDITOR_HEADER_HEIGHT))
+        self.tracks_layout = QtGui.QVBoxLayout(self.tracks_widget)
+        self.tracks_layout.addItem(
+            QtGui.QSpacerItem(0, REGION_EDITOR_HEADER_HEIGHT))
+        self.tracks_layout.setContentsMargins(0, 0, 0, 0)
+        for i in range(REGION_EDITOR_TRACK_COUNT):
+            f_track = seq_track(i, TRACK_NAMES[i])
+            self.tracks[i] = f_track
+            self.tracks_layout.addWidget(f_track.group_box)
+
+
 class region_editor(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
 
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.last_item_copied = None
         self.padding = 2
         self.update_note_height()
@@ -1138,8 +1158,7 @@ class region_editor(QtGui.QGraphicsView):
         else:
             f_bar = int(a_bar)
         f_beat = float(a_beat)
-        f_pos = (f_bar * self.px_per_bar) + (f_beat *
-            self.px_per_beat) + REGION_TRACK_WIDTH
+        f_pos = (f_bar * self.px_per_bar) + (f_beat * self.px_per_beat)
         self.playback_cursor.setPos(f_pos, 0.0)
 
     def set_playback_clipboard(self):
@@ -1179,14 +1198,13 @@ class region_editor(QtGui.QGraphicsView):
     def get_item_coord(self, a_pos):
         f_pos_x = a_pos.x()
         f_pos_y = a_pos.y()
-        if f_pos_x > REGION_TRACK_WIDTH and \
+        if f_pos_x > 0 and \
         f_pos_x < REGION_EDITOR_MAX_START and \
         f_pos_y > REGION_EDITOR_HEADER_HEIGHT and \
         f_pos_y < REGION_EDITOR_TOTAL_HEIGHT:
             f_track = ((f_pos_y - REGION_EDITOR_HEADER_HEIGHT) / (
                 self.tracks_height)) * REGION_EDITOR_TRACK_COUNT
-            f_bar = ((f_pos_x - REGION_TRACK_WIDTH) / (
-                self.viewer_width)) * self.item_length
+            f_bar = (f_pos_x / self.viewer_width) * self.item_length
             return int(f_track), int(f_bar)
         else:
             return None
@@ -1419,8 +1437,7 @@ class region_editor(QtGui.QGraphicsView):
 
     def set_header_and_keys(self):
         f_point = self.get_scene_pos()
-        self.tracks_proxy.setPos(f_point.x(), REGION_EDITOR_HEADER_HEIGHT)
-        self.header.setPos(REGION_TRACK_WIDTH + self.padding, f_point.y())
+        self.header.setPos(self.padding, f_point.y())
 
     def get_scene_pos(self):
         return QtCore.QPointF(
@@ -1507,35 +1524,13 @@ class region_editor(QtGui.QGraphicsView):
         self.header.hoverEnterEvent = self.hover_restore_cursor_event
         self.header.setBrush(REGION_EDITOR_HEADER_GRADIENT)
         self.scene.addItem(self.header)
-        #self.header.mapToScene(REGION_TRACK_WIDTH + self.padding, 0.0)
         self.beat_width = self.viewer_width / self.item_length
         self.header.setZValue(1003.0)
         self.playback_cursor = self.scene.addLine(
             0.0, 0.0, 0.0,
             REGION_EDITOR_TOTAL_HEIGHT, QtGui.QPen(QtCore.Qt.red, 2.0))
-        self.playback_cursor.setPos(REGION_TRACK_WIDTH, 0.0)
+        self.playback_cursor.setPos(0.0, 0.0)
         self.playback_cursor.setZValue(2000.0)
-
-    def draw_tracks(self):
-        self.tracks = {}
-        f_brush = QtGui.QLinearGradient(
-            0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
-        f_brush.setColorAt(0.0, QtGui.QColor(234, 234, 234))
-        f_brush.setColorAt(0.5, QtGui.QColor(159, 159, 159))
-        self.tracks_widget = QtGui.QWidget()
-        self.tracks_widget.setContentsMargins(0, 0, 0, 0)
-        self.tracks_widget.setFixedSize(
-            QtCore.QSize(REGION_TRACK_WIDTH, self.tracks_height))
-
-        self.tracks_layout = QtGui.QVBoxLayout(self.tracks_widget)
-        self.tracks_layout.setContentsMargins(0, 0, 0, 0)
-        self.tracks_proxy = self.scene.addWidget(self.tracks_widget)
-        self.tracks_proxy.setZValue(1000.0)
-
-        for i in range(REGION_EDITOR_TRACK_COUNT):
-            f_track = seq_track(i, TRACK_NAMES[i])
-            self.tracks[i] = f_track
-            self.tracks_layout.addWidget(f_track.group_box)
 
     def draw_grid(self):
         f_brush = QtGui.QLinearGradient(
@@ -1551,13 +1546,12 @@ class region_editor(QtGui.QGraphicsView):
             f_note_bar.setBrush(f_brush)
             f_note_bar_y = (i *
                 REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
-            f_note_bar.setPos(
-                REGION_TRACK_WIDTH + self.padding, f_note_bar_y)
+            f_note_bar.setPos(self.padding, f_note_bar_y)
         f_beat_pen = QtGui.QPen()
         f_beat_pen.setWidth(2)
         f_beat_y = self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
         for i in range(0, int(self.item_length)):
-            f_beat_x = (self.beat_width * i) + REGION_TRACK_WIDTH
+            f_beat_x = (self.beat_width * i)
             f_beat = self.scene.addLine(f_beat_x, 0, f_beat_x, f_beat_y)
             f_beat.setPen(f_beat_pen)
             if i < self.item_length:
@@ -1595,7 +1589,7 @@ class region_editor(QtGui.QGraphicsView):
     def clear_drawn_items(self):
         global REGION_EDITOR_GRID_WIDTH, REGION_EDITOR_MAX_START
         self.item_length = pydaw_get_current_region_length()
-        self.viewer_width = self.width() - REGION_TRACK_WIDTH - 50.0
+        self.viewer_width = self.width() - 50.0
         REGION_EDITOR_MAX_START = self.width() - 51.0
         REGION_EDITOR_GRID_WIDTH = self.viewer_width
         self.px_per_bar = \
@@ -1606,7 +1600,6 @@ class region_editor(QtGui.QGraphicsView):
         self.scene.clear()
         self.update_note_height()
         self.draw_header()
-        self.draw_tracks()
         self.draw_grid()
         self.set_header_and_keys()
 
@@ -9499,10 +9492,19 @@ class pydaw_main_window(QtGui.QMainWindow):
         self.song_region_vlayout.addLayout(REGION_SETTINGS.hlayout0)
 
         self.song_region_splitter.addWidget(self.regions_tab_widget)
-        self.regions_tab_widget.addTab(
-            REGION_EDITOR, _("MIDI"))
-        self.regions_tab_widget.addTab(
-            AUDIO_SEQ_WIDGET.hsplitter, _("Audio"))
+        self.midi_scroll_area = QtGui.QScrollArea()
+        self.midi_scroll_area.setWidgetResizable(True)
+        self.midi_scroll_widget = QtGui.QWidget()
+        self.midi_hlayout = QtGui.QHBoxLayout(self.midi_scroll_widget)
+        self.midi_hlayout.setContentsMargins(0, 0, 0, 0)
+        self.midi_scroll_area.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOn)
+        self.midi_scroll_area.setWidget(self.midi_scroll_widget)
+        self.midi_hlayout.addWidget(TRACK_PANEL.tracks_widget)
+        self.midi_hlayout.addWidget(REGION_EDITOR)
+
+        self.regions_tab_widget.addTab(self.midi_scroll_area, _("MIDI"))
+        self.regions_tab_widget.addTab(AUDIO_SEQ_WIDGET.hsplitter, _("Audio"))
 
         self.first_audio_tab_click = True
         self.regions_tab_widget.currentChanged.connect(
@@ -9669,8 +9671,8 @@ class pydaw_main_window(QtGui.QMainWindow):
             event.accept()
 
 def global_update_peak_meters(a_val):
-    ALL_PEAK_METERS = [REGION_EDITOR.tracks[k].peak_meter
-        for k in sorted(REGION_EDITOR.tracks)]
+    ALL_PEAK_METERS = [TRACK_PANEL.tracks[k].peak_meter
+        for k in sorted(TRACK_PANEL.tracks)]
     ALL_PEAK_METERS.append(WAVE_EDITOR.peak_meter)
     for f_val in a_val.split("|"):
         f_list = f_val.split(":")
@@ -10722,6 +10724,7 @@ if not os.access(global_pydaw_home, os.W_OK):
 
 SONG_EDITOR = song_editor()
 REGION_SETTINGS = region_settings()
+TRACK_PANEL = tracks_widget()
 REGION_EDITOR = region_editor()
 
 AUDIO_EDITOR_WIDGET = audio_item_editor_widget()
