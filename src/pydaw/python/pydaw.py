@@ -1259,7 +1259,7 @@ class region_editor(QtGui.QGraphicsView):
                         CURRENT_REGION.add_item_ref_by_uid(x, y + i, f_uid)
             elif f_copy_radiobutton.isChecked():
                 f_cell_text = str(f_copy_combobox.currentText())
-                self.draw(x, y, f_cell_text, True)
+                self.draw_item(x, y, f_cell_text, True)
                 CURRENT_REGION.add_item_ref_by_name(
                     x, y, f_cell_text, f_item_dict)
             elif f_copy_from_radiobutton.isChecked():
@@ -1273,7 +1273,7 @@ class region_editor(QtGui.QGraphicsView):
                     return
                 f_uid = PROJECT.copy_item(
                     f_copy_from_text, f_cell_text)
-                self.draw(x, y, f_cell_text, True)
+                self.draw_item(x, y, f_cell_text, True)
                 CURRENT_REGION.add_item_ref_by_uid(x, y, f_uid)
             elif f_take_radiobutton.isChecked():
                 f_cell_text = str(f_take_name_combobox.currentText())
