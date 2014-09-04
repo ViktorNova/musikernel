@@ -1012,7 +1012,8 @@ class tracks_widget:
             REGION_EDITOR_HEADER_HEIGHT))
         self.tracks_layout = QtGui.QVBoxLayout(self.tracks_widget)
         self.tracks_layout.addItem(
-            QtGui.QSpacerItem(0, REGION_EDITOR_HEADER_HEIGHT + 2.0))
+            QtGui.QSpacerItem(0, REGION_EDITOR_HEADER_HEIGHT + 2.0,
+            vPolicy=QtGui.QSizePolicy.MinimumExpanding))
         self.tracks_layout.setContentsMargins(0, 0, 0, 0)
         for i in range(REGION_EDITOR_TRACK_COUNT):
             f_track = seq_track(i, TRACK_NAMES[i])
@@ -9516,6 +9517,7 @@ class pydaw_main_window(QtGui.QMainWindow):
         self.midi_scroll_area = QtGui.QScrollArea()
         self.midi_scroll_area.setWidgetResizable(True)
         self.midi_scroll_widget = QtGui.QWidget()
+        self.midi_scroll_widget.setContentsMargins(0, 0, 0, 0)
         self.midi_hlayout = QtGui.QHBoxLayout(self.midi_scroll_widget)
         self.midi_hlayout.setContentsMargins(0, 0, 0, 0)
         self.midi_scroll_area.setVerticalScrollBarPolicy(
