@@ -1196,7 +1196,8 @@ class region_editor(QtGui.QGraphicsView):
         def note_ok_handler():
             self.scene.clearSelection()
             global CURRENT_REGION
-            if f_new_radiobutton.isChecked() and f_item_count.value() == 1:
+            if f_new_radiobutton.isChecked() and \
+            f_item_count.value() == 1:
                 f_cell_text = str(f_new_lineedit.text())
                 if PROJECT.item_exists(f_cell_text):
                     QtGui.QMessageBox.warning(
@@ -1237,7 +1238,7 @@ class region_editor(QtGui.QGraphicsView):
                 f_cell_text = str(f_copy_combobox.currentText())
                 self.draw(x, y, f_cell_text, True)
                 CURRENT_REGION.add_item_ref_by_name(
-                    x + self.track_offset, y - 1, f_cell_text, f_item_dict)
+                    x, y, f_cell_text, f_item_dict)
             elif f_copy_from_radiobutton.isChecked():
                 f_cell_text = str(f_new_lineedit.text())
                 f_copy_from_text = str(f_copy_combobox.currentText())
@@ -1264,11 +1265,11 @@ class region_editor(QtGui.QGraphicsView):
                 f_step = 1 if f_start <= f_end else -1
                 f_range = f_take_dict[f_cell_text][f_start:f_end:f_step]
                 for f_suffix, f_pos in zip(
-                f_range, range(y - 1, pydaw_get_current_region_length())):
+                f_range, range(x, pydaw_get_current_region_length())):
                     f_name = "".join((f_cell_text, f_suffix))
-                    self.draw_item(x, f_pos, f_name, True)
+                    self.draw_item(f_pos, y, f_name, True)
                     CURRENT_REGION.add_item_ref_by_name(
-                        x + self.track_offset, f_pos, f_name, f_item_dict)
+                        f_pos, y, f_name, f_item_dict)
             PROJECT.save_region(
                 str(REGION_SETTINGS.region_name_lineedit.text()),
                 CURRENT_REGION)
