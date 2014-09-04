@@ -7876,6 +7876,7 @@ class seq_track:
         self.suppress_osc = True
         self.track_number = a_track_num
         self.group_box = QtGui.QWidget()
+        self.group_box.setFixedHeight(REGION_EDITOR_TRACK_HEIGHT)
         self.group_box.contextMenuEvent = self.context_menu_event
         self.group_box.setObjectName("track_panel")
         self.main_hlayout = QtGui.QHBoxLayout()
