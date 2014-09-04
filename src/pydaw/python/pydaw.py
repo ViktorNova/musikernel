@@ -1437,18 +1437,15 @@ class region_editor(QtGui.QGraphicsView):
         self.scene.clearSelection()
         self.scene.clear()
 
-    def scrollContentsBy(self, x, y):
-        QtGui.QGraphicsView.scrollContentsBy(self, x, y)
-        self.set_header_and_keys()
-
-    def set_header_and_keys(self):
-        f_point = self.get_scene_pos()
-        self.header.setPos(self.padding, f_point.y())
+    def set_header_pos(self):
+        f_y = self.get_scene_pos()
+        self.header.setPos(self.padding, f_y - 2.0)
 
     def get_scene_pos(self):
-        return QtCore.QPointF(
-            self.horizontalScrollBar().value(),
-            self.verticalScrollBar().value())
+        try:
+            return MAIN_WINDOW.midi_scroll_area.verticalScrollBar().value()
+        except:
+            return 0
 
     def get_all_items(self):
         for k1 in sorted(self.region_items):
@@ -1565,7 +1562,7 @@ class region_editor(QtGui.QGraphicsView):
                     str(i + 1), self.header)
                 f_number.setFlag(
                     QtGui.QGraphicsItem.ItemIgnoresTransformations)
-                f_number.setPos((self.beat_width * i), 3)
+                f_number.setPos((self.beat_width * i), 5)
                 f_number.setBrush(QtCore.Qt.white)
 
     def resizeEvent(self, a_event):
@@ -1607,7 +1604,7 @@ class region_editor(QtGui.QGraphicsView):
         self.update_note_height()
         self.draw_header()
         self.draw_grid()
-        self.set_header_and_keys()
+        self.set_header_pos()
 
     def clear_new(self):
         """ Reset the region editor state to empty """
@@ -9528,6 +9525,8 @@ class pydaw_main_window(QtGui.QMainWindow):
         self.midi_hlayout.addWidget(REGION_EDITOR)
 
         self.regions_tab_widget.addTab(self.midi_scroll_area, _("MIDI"))
+        self.midi_scroll_area.scrollContentsBy = self.midi_scrollContentsBy
+
         self.regions_tab_widget.addTab(AUDIO_SEQ_WIDGET.hsplitter, _("Audio"))
 
         self.first_audio_tab_click = True
@@ -9576,6 +9575,10 @@ class pydaw_main_window(QtGui.QMainWindow):
             self.subprocess_timer.start(1000)
         self.show()
         self.ignore_close_event = True
+
+    def midi_scrollContentsBy(self, x, y):
+        QtGui.QScrollArea.scrollContentsBy(self.midi_scroll_area, x, y)
+        REGION_EDITOR.set_header_pos()
 
     def set_tooltips_enabled(self):
         pydaw_set_tooltips_enabled(self.tooltips_action.isChecked())
