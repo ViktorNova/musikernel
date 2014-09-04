@@ -10667,6 +10667,8 @@ def global_open_project(a_project_file, a_wait=True):
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
     TRACK_NAMES = PROJECT.get_tracks().get_names()
+    for f_track_num, f_name in zip(sorted(TRACK_PANEL.tracks), TRACK_NAMES):
+        TRACK_PANEL.tracks[f_track_num].track_name_lineedit.setText(f_name)
     WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
     SONG_EDITOR.open_song()
     REGION_EDITOR.clear_drawn_items()
