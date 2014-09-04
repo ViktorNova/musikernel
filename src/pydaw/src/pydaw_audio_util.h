@@ -72,8 +72,6 @@ void v_pydaw_rate_envelope(char * a_file_in, char * a_file_out,
     f_sf_info.samplerate = info.samplerate;
     sf_close(file);
 
-    t_cubic_interpolater * f_cubic = g_cubic_get();
-
     float f_sample_pos = 0.0;
 
     long f_size = 0;
@@ -124,18 +122,18 @@ void v_pydaw_rate_envelope(char * a_file_in, char * a_file_out,
             {
                 f_output[f_size] =
                     f_cubic_interpolate_ptr_wrap(f_buffer0, info.frames,
-                        f_sample_pos, f_cubic);
+                        f_sample_pos);
                 f_size++;
             }
             else if(info.channels == 2)
             {
                 f_output[f_size] =
                     f_cubic_interpolate_ptr_wrap(f_buffer0, info.frames,
-                        f_sample_pos, f_cubic);
+                        f_sample_pos);
                 f_size++;
                 f_output[f_size] =
                     f_cubic_interpolate_ptr_wrap(f_buffer1, info.frames,
-                        f_sample_pos, f_cubic);
+                        f_sample_pos);
                 f_size++;
             }
 
@@ -220,8 +218,6 @@ void v_pydaw_pitch_envelope(char * a_file_in, char * a_file_out,
     f_sf_info.samplerate = info.samplerate;
     sf_close(file);
 
-    t_cubic_interpolater * f_cubic = g_cubic_get();
-
     float f_sample_pos = 0.0;
 
     long f_size = 0;
@@ -234,7 +230,6 @@ void v_pydaw_pitch_envelope(char * a_file_in, char * a_file_out,
     int f_i = 0;
 
     t_pit_ratio * f_pit_ratio = g_pit_ratio();
-    t_pit_pitch_core * f_pit_core = g_pit_get();
 
     if(info.channels == 1)
     {
@@ -276,18 +271,18 @@ void v_pydaw_pitch_envelope(char * a_file_in, char * a_file_out,
             {
                 f_output[f_size] =
                     f_cubic_interpolate_ptr_wrap(f_buffer0, info.frames,
-                        f_sample_pos, f_cubic);
+                        f_sample_pos);
                 f_size++;
             }
             else if(info.channels == 2)
             {
                 f_output[f_size] =
                     f_cubic_interpolate_ptr_wrap(f_buffer0, info.frames,
-                        f_sample_pos, f_cubic);
+                        f_sample_pos);
                 f_size++;
                 f_output[f_size] =
                     f_cubic_interpolate_ptr_wrap(f_buffer1, info.frames,
-                        f_sample_pos, f_cubic);
+                        f_sample_pos);
                 f_size++;
             }
 
@@ -295,7 +290,7 @@ void v_pydaw_pitch_envelope(char * a_file_in, char * a_file_out,
                 (f_sample_pos / ((double)(info.frames)))) + a_start_pitch;
 
             float f_inc = f_pit_midi_note_to_ratio_fast(
-                60.0f, f_rate + 60.0f, f_pit_core, f_pit_ratio);
+                60.0f, f_rate + 60.0f, f_pit_ratio);
 
             f_sample_pos += f_inc;
 
@@ -331,7 +326,7 @@ void v_pydaw_pitch_envelope(char * a_file_in, char * a_file_out,
     {
         free(tmpFrames);
     }
-    free(f_pit_core);
+
     free(f_pit_ratio);
 }
 

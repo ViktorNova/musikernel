@@ -388,8 +388,7 @@ static void v_modulex_run(PYFX_Handle instance, int sample_count,
                 float f_db = (0.283464567f *  // 1.0f / 127.0f
                     ((float)events[event_pos].velocity)) - 28.3464567f;
                 plugin_data->midi_event_values[plugin_data->midi_event_count] =
-                    f_db_to_linear_fast(f_db,
-                        plugin_data->mono_modules->amp_ptr);
+                    f_db_to_linear_fast(f_db);
 
                 plugin_data->midi_event_count++;
             }
@@ -402,8 +401,7 @@ static void v_modulex_run(PYFX_Handle instance, int sample_count,
                 float f_db = (0.283464567f *  // 1.0f / 127.0f
                     ((float)events[event_pos].velocity)) - 28.3464567f;
                 plugin_data->midi_event_values[plugin_data->midi_event_count] =
-                    f_db_to_linear_fast(f_db,
-                        plugin_data->mono_modules->amp_ptr);
+                    f_db_to_linear_fast(f_db);
 
                 plugin_data->midi_event_count++;
             }
@@ -630,8 +628,7 @@ static void v_modulex_run(PYFX_Handle instance, int sample_count,
                 (*plugin_data->reverb_time) * 0.01f,
                 f_db_to_linear_fast((
                 (plugin_data->mono_modules->reverb_smoother->last_value)
-                * 0.4f) - 40.0f,
-                plugin_data->mono_modules->amp_ptr),
+                * 0.4f) - 40.0f),
                 (*plugin_data->reverb_color) * 0.01f,
                 (*plugin_data->reverb_predelay) * 0.01f);
 
@@ -648,8 +645,7 @@ static void v_modulex_run(PYFX_Handle instance, int sample_count,
                 (*plugin_data->reverb_dry));
             f_dry_vol = f_db_to_linear_fast(
                 (plugin_data->mono_modules->reverb_dry_smoother->last_value
-                    * 0.4f) - 40.0f,
-                plugin_data->mono_modules->amp_ptr);
+                    * 0.4f) - 40.0f);
         }
 
         int f_i = 0;
@@ -687,8 +683,7 @@ static void v_modulex_run(PYFX_Handle instance, int sample_count,
 
             plugin_data->mono_modules->vol_linear =
                 f_db_to_linear_fast(
-                    (plugin_data->mono_modules->volume_smoother->last_value),
-                    plugin_data->mono_modules->amp_ptr);
+                    (plugin_data->mono_modules->volume_smoother->last_value));
 
             plugin_data->output0[f_i] *=
                     (plugin_data->mono_modules->vol_linear);

@@ -22,61 +22,32 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-typedef struct
-{
-    float result;
-    t_lin_interpolater * linear;
-}t_amp;
-
-
-inline float f_db_to_linear(float,t_amp*);
-inline float f_linear_to_db(float,t_amp*);
-inline float f_db_to_linear_fast(float,t_amp*);
-inline float f_linear_to_db_fast(float,t_amp*);
-inline float f_linear_to_db_linear(float,t_amp*);
-t_amp * g_amp_get();
+inline float f_db_to_linear(float);
+inline float f_linear_to_db(float);
+inline float f_db_to_linear_fast(float);
+inline float f_linear_to_db_fast(float);
+inline float f_linear_to_db_linear(float);
 
 #ifdef	__cplusplus
 }
 #endif
 
-t_amp * g_amp_get()
-{
-    t_amp * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_amp));
-
-    f_result->linear = g_lin_get();
-    f_result->result = 0.0f;
-
-    return f_result;
-}
-
-void v_amp_free(t_amp* a_amp)
-{
-    free(a_amp->linear);
-    a_amp->linear = 0;
-    free(a_amp);
-}
-
 /* inline float f_db_to_linear(float a_db)
  *
  * Convert decibels to linear amplitude
  */
-inline float f_db_to_linear(float a_db,t_amp *__restrict a_amp)
+inline float f_db_to_linear(float a_db)
 {
-    a_amp->result = pow ( 10.0f, (0.05f * a_db) );
-    return a_amp->result;
+    return pow(10.0f, (0.05f * a_db));
 }
 
 /* inline float f_linear_to_db(float a_linear)
  *
  * Convert linear amplitude to decibels
  */
-inline float f_linear_to_db(float a_linear,t_amp *__restrict a_amp)
+inline float f_linear_to_db(float a_linear)
 {
-    a_amp->result = 20.0f * log10 ( a_linear );
-    return a_amp->result;
+    return 20.0f * log10(a_linear);
 }
 
 
@@ -140,21 +111,21 @@ float arr_amp_db2a [arr_amp_db2a_count] __attribute__((aligned(16))) = {
  * Use the regular version if you may require more range, otherwise the values
  * will be clipped
  */
-inline float f_db_to_linear_fast(float a_db, t_amp *__restrict a_amp)
+inline float f_db_to_linear_fast(float a_db)
 {
-    a_amp->result = ((a_db + 100.0f) * 4.0f) - 1.0f;
+    float f_result = ((a_db + 100.0f) * 4.0f) - 1.0f;
 
-    if((a_amp->result) > arr_amp_db2a_count_m1_f)
+    if((f_result) > arr_amp_db2a_count_m1_f)
     {
-        a_amp->result = arr_amp_db2a_count_m1_f;
+        f_result = arr_amp_db2a_count_m1_f;
     }
 
-    if((a_amp->result) < 0.0f)
+    if((f_result) < 0.0f)
     {
-        a_amp->result = 0.0f;
+        f_result = 0.0f;
     }
 
-    return f_linear_interpolate_arr(arr_amp_db2a, (a_amp->result), a_amp->linear);
+    return f_linear_interpolate_arr(arr_amp_db2a, (f_result));
 }
 
 
@@ -205,21 +176,21 @@ float arr_amp_a2db [arr_amp_a2db_count] __attribute__((aligned(16))) = {
  * A fast, table-lookup based linear to decibels converter.
  * The range is 0 to 4, above 4 will clip at 4.
  */
-inline float f_linear_to_db_fast(float a_input, t_amp *__restrict a_amp)
+inline float f_linear_to_db_fast(float a_input)
 {
-    a_amp->result = (a_input  * 100.0f);
+    float f_result = (a_input  * 100.0f);
 
-    if((a_amp->result) >= arr_amp_a2db_count_float)
+    if((f_result) >= arr_amp_a2db_count_float)
     {
-        a_amp->result = arr_amp_a2db_count_float_m1;
+        f_result = arr_amp_a2db_count_float_m1;
     }
 
-    if((a_amp->result) < 0.0f)
+    if((f_result) < 0.0f)
     {
-        a_amp->result = 0.0f;
+        f_result = 0.0f;
     }
 
-    return f_linear_interpolate_arr(arr_amp_a2db, (a_amp->result), a_amp->linear);
+    return f_linear_interpolate_arr(arr_amp_a2db, (f_result));
 }
 
 
@@ -228,11 +199,11 @@ inline float f_linear_to_db_fast(float a_input, t_amp *__restrict a_amp)
  * This takes a 0 to 1 signal and approximates it to a useful range with a logarithmic decibel curve
  * Typical use would be on an envelope that controls the amplitude of an audio signal
  */
-inline float f_linear_to_db_linear(float a_input, t_amp *__restrict a_amp)
+inline float f_linear_to_db_linear(float a_input)
 {
-    a_amp->result = ((a_input) * 30.0f) - 30.0f;
+    float f_result = ((a_input) * 30.0f) - 30.0f;
 
-    return f_db_to_linear_fast((a_amp->result), a_amp);
+    return f_db_to_linear_fast((f_result));
 }
 
 

@@ -176,7 +176,6 @@ typedef struct
     int track_pool_sorted[PYDAW_TRACK_COUNT_ALL];
     int track_pool_sorted_count;
     t_pytrack_routing routes[PYDAW_TRACK_COUNT_ALL][MAX_ROUTING_COUNT];
-    t_amp * amp_ptr;
 }t_pydaw_routing_graph;
 
 typedef struct
@@ -260,7 +259,6 @@ typedef struct
 
     int is_soloed;
 
-    t_amp * amp_ptr;
     //For broadcasting to the threads that it's time to process the tracks
     pthread_cond_t * track_cond;
     //For preventing the main thread from continuing until the workers finish
@@ -314,7 +312,6 @@ typedef struct
     t_pydaw_audio_item * ab_audio_item;
     int ab_mode;  //0 == off, 1 == on
     int is_ab_ing;  //Set this to self->ab_mode on playback
-    t_cubic_interpolater * cubic_interpolator;
     t_wav_pool_item * preview_wav_item;
     t_pydaw_audio_item * preview_audio_item;
     float preview_start; //0.0f to 1.0f
@@ -352,7 +349,7 @@ t_pytrack * g_pytrack_get(int, float);
 t_pytrack_routing * g_pytrack_routing_get();
 t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data *);
 void v_pytrack_routing_graph_free(t_pydaw_routing_graph*);
-void v_pytrack_routing_set(t_pytrack_routing *, int, float, t_amp*);
+void v_pytrack_routing_set(t_pytrack_routing *, int, float);
 void v_pytrack_routing_free(t_pytrack_routing *);
 t_pyregion * g_pyregion_get(t_pydaw_data* a_pydaw, const int);
 void g_pyitem_get(t_pydaw_data*, int);
@@ -2481,8 +2478,7 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
                 (self->ab_wav_item->samples[0]),
                 (self->ab_audio_item->sample_read_head->
                     whole_number),
-                (self->ab_audio_item->sample_read_head->fraction),
-                (self->cubic_interpolator)) *
+                (self->ab_audio_item->sample_read_head->fraction)) *
                 (self->ab_audio_item->adsr->output) *
                 (self->ab_audio_item->vol_linear) *
                 (self->ab_audio_item->fade_vol);
@@ -2496,18 +2492,15 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
                 (self->ab_wav_item->samples[0]),
                 (self->ab_audio_item->sample_read_head->
                     whole_number),
-                (self->ab_audio_item->sample_read_head->fraction),
-                (self->cubic_interpolator)) *
+                (self->ab_audio_item->sample_read_head->fraction)) *
                 (self->ab_audio_item->adsr->output) *
                 (self->ab_audio_item->vol_linear) *
                 (self->ab_audio_item->fade_vol);
 
                 output1[f_i] = f_cubic_interpolate_ptr_ifh(
                 (self->ab_wav_item->samples[1]),
-                (self->ab_audio_item->sample_read_head->
-                    whole_number),
-                (self->ab_audio_item->sample_read_head->fraction),
-                (self->cubic_interpolator)) *
+                (self->ab_audio_item->sample_read_head->whole_number),
+                (self->ab_audio_item->sample_read_head->fraction)) *
                 (self->ab_audio_item->adsr->output) *
                 (self->ab_audio_item->vol_linear) *
                 (self->ab_audio_item->fade_vol);
@@ -2727,8 +2720,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
         int f_i = 0;
         while(f_i < sample_count)
         {
-            if((self->preview_audio_item->
-                sample_read_head->whole_number) >=
+            if((self->preview_audio_item->sample_read_head->whole_number) >=
                 (self->preview_wav_item->length))
             {
                 self->is_previewing = 0;
@@ -2741,11 +2733,8 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
                 {
                     float f_tmp_sample = f_cubic_interpolate_ptr_ifh(
                     (self->preview_wav_item->samples[0]),
-                    (self->preview_audio_item->sample_read_head->
-                        whole_number),
-                    (self->preview_audio_item->sample_read_head->
-                        fraction),
-                    (self->cubic_interpolator)) *
+                    (self->preview_audio_item->sample_read_head->whole_number),
+                    (self->preview_audio_item->sample_read_head->fraction)) *
                     (self->preview_audio_item->adsr->output) *
                     (self->preview_amp_lin); // *
                     //(self->preview_audio_item->fade_vol);
@@ -2760,8 +2749,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
                     (self->preview_audio_item->sample_read_head->
                             whole_number),
                     (self->preview_audio_item->sample_read_head->
-                            fraction),
-                    (self->cubic_interpolator)) *
+                            fraction)) *
                     (self->preview_audio_item->adsr->output) *
                     (self->preview_amp_lin); // *
                     //(self->preview_audio_item->fade_vol);
@@ -2771,8 +2759,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
                     (self->preview_audio_item->sample_read_head->
                             whole_number),
                     (self->preview_audio_item->sample_read_head->
-                            fraction),
-                    (self->cubic_interpolator)) *
+                            fraction)) *
                     (self->preview_audio_item->adsr->output) *
                     (self->preview_amp_lin); // *
                     //(self->preview_audio_item->fade_vol);
@@ -3038,9 +3025,7 @@ inline void v_pydaw_audio_items_run(t_pydaw_data * self,
                             float f_tmp_sample0 = f_cubic_interpolate_ptr_ifh(
                             (f_audio_item->wav_pool_item->samples[0]),
                             (f_audio_item->sample_read_head->whole_number),
-                            (f_audio_item->sample_read_head->fraction),
-                            (self->pysong->audio_items[
-                                f_current_region]->cubic_interpolator)) *
+                            (f_audio_item->sample_read_head->fraction)) *
                             (f_audio_item->adsr->output) *
                             (f_audio_item->vol_linear) *
                             (f_audio_item->fade_vol);
@@ -3094,9 +3079,7 @@ inline void v_pydaw_audio_items_run(t_pydaw_data * self,
                             float f_tmp_sample0 = f_cubic_interpolate_ptr_ifh(
                             f_audio_item->wav_pool_item->samples[0],
                             f_audio_item->sample_read_head->whole_number,
-                            f_audio_item->sample_read_head->fraction,
-                            self->pysong->audio_items[
-                                f_current_region]->cubic_interpolator) *
+                            f_audio_item->sample_read_head->fraction) *
                             f_audio_item->adsr->output *
                             f_audio_item->vol_linear *
                             f_audio_item->fade_vol;
@@ -3104,9 +3087,7 @@ inline void v_pydaw_audio_items_run(t_pydaw_data * self,
                             float f_tmp_sample1 = f_cubic_interpolate_ptr_ifh(
                             f_audio_item->wav_pool_item->samples[1],
                             f_audio_item->sample_read_head->whole_number,
-                            f_audio_item->sample_read_head->fraction,
-                            self->pysong->audio_items[
-                                f_current_region]->cubic_interpolator) *
+                            f_audio_item->sample_read_head->fraction) *
                             f_audio_item->adsr->output *
                             f_audio_item->vol_linear * f_audio_item->fade_vol;
 
@@ -3649,7 +3630,6 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
     f_result->ml_starting_new_bar = 0;
     f_result->ml_is_looping = 0;
 
-    f_result->amp_ptr = g_amp_get();
     f_result->is_offline_rendering = 0;
 
     f_result->default_region_length_bars = 8;
@@ -3665,7 +3645,6 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
     f_result->ab_audio_item = g_pydaw_audio_item_get(f_result->sample_rate);
     f_result->ab_mode = 0;
     f_result->is_ab_ing = 0;
-    f_result->cubic_interpolator = g_cubic_get();
     f_result->preview_wav_item = 0;
     f_result->preview_audio_item =
             g_pydaw_audio_item_get(f_result->sample_rate);
@@ -4290,7 +4269,7 @@ void v_pydaw_update_audio_inputs(t_pydaw_data * self)
 
             self->audio_inputs[f_index]->vol = f_vol;
             self->audio_inputs[f_index]->vol_linear =
-                    f_db_to_linear_fast(f_vol, self->amp_ptr);
+                f_db_to_linear_fast(f_vol);
 
             char f_tmp_file_name[128];
 
@@ -4835,7 +4814,7 @@ void v_pydaw_update_send_vol(t_pydaw_data * self, int a_track_num,
         return;
     }
 
-    float f_vol_lin = f_db_to_linear(a_vol, self->amp_ptr);
+    float f_vol_lin = f_db_to_linear(a_vol);
 
     pthread_spin_lock(&self->main_lock);
 
@@ -4852,12 +4831,11 @@ t_pytrack_routing * g_pytrack_routing_get()
     return f_result;
 }
 
-void v_pytrack_routing_set(t_pytrack_routing * self, int a_output,
-        float a_vol, t_amp * a_amp)
+void v_pytrack_routing_set(t_pytrack_routing * self, int a_output, float a_vol)
 {
     self->output = a_output;
     self->volume = a_vol;
-    self->volume_lin = f_db_to_linear(a_vol, a_amp);
+    self->volume_lin = f_db_to_linear(a_vol);
     if(a_output >= 0)
     {
         self->active = 1;
@@ -4875,7 +4853,6 @@ void v_pytrack_routing_free(t_pytrack_routing * self)
 
 void v_pytrack_routing_graph_free(t_pydaw_routing_graph * self)
 {
-    v_amp_free(self->amp_ptr);
     free(self);
 }
 
@@ -4883,8 +4860,6 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
 {
     t_pydaw_routing_graph * f_result;
     lmalloc((void**)&f_result, sizeof(t_pydaw_routing_graph));
-
-    f_result->amp_ptr = g_amp_get();
 
     int f_i = 0;
     while(f_i < PYDAW_TRACK_COUNT_ALL)
@@ -4952,7 +4927,7 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
 
                 v_pytrack_routing_set(
                     &f_result->routes[f_track_num][f_index],
-                    f_output, f_vol, f_result->amp_ptr);
+                    f_output, f_vol);
             }
             else if(f_identifier_str[0] == 'c')
             {

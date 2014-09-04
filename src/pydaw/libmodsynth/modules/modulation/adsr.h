@@ -61,7 +61,6 @@ typedef struct st_adsr
     int delay_count;
     int hold_count;
 
-    t_amp * amp_ptr;
 }t_adsr;
 
 void v_adsr_set_a_time(t_adsr*, float);
@@ -221,8 +220,7 @@ void v_adsr_set_s_value(t_adsr*__restrict a_adsr_ptr, float a_value)
  */
 void v_adsr_set_s_value_db(t_adsr*__restrict a_adsr_ptr, float a_value)
 {
-    v_adsr_set_s_value(a_adsr_ptr,
-            f_db_to_linear_fast(a_value, a_adsr_ptr->amp_ptr));
+    v_adsr_set_s_value(a_adsr_ptr, f_db_to_linear_fast(a_value));
 }
 
 /* void v_adsr_set_adsr(
@@ -307,7 +305,6 @@ t_adsr * g_adsr_get_adsr(float a_sr)
 
     f_result->sr = a_sr;
     f_result->sr_recip = 1.0f / a_sr;
-    f_result->amp_ptr = g_amp_get();
 
     f_result->output = 0.0f;
     f_result->stage = ADSR_STAGE_OFF;
@@ -421,8 +418,7 @@ void v_adsr_run_db(t_adsr *__restrict a_adsr_ptr)
                     a_adsr_ptr->output_db =
                             (a_adsr_ptr->output_db) + (a_adsr_ptr->a_inc_db);
                     a_adsr_ptr->output =
-                            f_db_to_linear_fast((a_adsr_ptr->output_db),
-                            a_adsr_ptr->amp_ptr);
+                            f_db_to_linear_fast((a_adsr_ptr->output_db));
 
                     if((a_adsr_ptr->output) >= 1.0f)
                     {
@@ -451,8 +447,7 @@ void v_adsr_run_db(t_adsr *__restrict a_adsr_ptr)
                     a_adsr_ptr->output_db =
                             (a_adsr_ptr->output_db) + (a_adsr_ptr->d_inc_db);
                     a_adsr_ptr->output =
-                            f_db_to_linear_fast((a_adsr_ptr->output_db),
-                            a_adsr_ptr->amp_ptr);
+                            f_db_to_linear_fast(a_adsr_ptr->output_db);
                 }
 
                 if((a_adsr_ptr->output) <= (a_adsr_ptr->s_value))
@@ -475,8 +470,8 @@ void v_adsr_run_db(t_adsr *__restrict a_adsr_ptr)
                     }
                     else
                     {
-                        a_adsr_ptr->output = f_db_to_linear_fast(
-                                (a_adsr_ptr->output_db), a_adsr_ptr->amp_ptr);
+                        a_adsr_ptr->output =
+                            f_db_to_linear_fast(a_adsr_ptr->output_db);
                     }
                 }
                 else
@@ -484,8 +479,7 @@ void v_adsr_run_db(t_adsr *__restrict a_adsr_ptr)
                     a_adsr_ptr->output_db = (a_adsr_ptr->output_db) +
                             (a_adsr_ptr->r_inc_db);
                     a_adsr_ptr->output =
-                            f_db_to_linear_fast((a_adsr_ptr->output_db),
-                            a_adsr_ptr->amp_ptr);
+                            f_db_to_linear_fast(a_adsr_ptr->output_db);
                 }
 
                 break;

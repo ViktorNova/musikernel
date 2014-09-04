@@ -39,7 +39,6 @@ typedef struct
     t_smoother_linear * filter_smoother;
     t_smoother_linear * pitchbend_smoother;
     t_smoother_linear * lfo_smoother;
-    t_amp * amp_ptr;
 }t_rayv_mono_modules;
 
 
@@ -82,8 +81,6 @@ typedef struct
     t_lfs_lfo * lfo1;
 
     float lfo_amp_output, lfo_pitch_output, lfo_filter_output;
-
-    t_amp * amp_ptr;
 
     /*Migrated from the now deprecate voice_data struct*/
     float   amp;
@@ -147,8 +144,6 @@ t_rayv_poly_voice * g_rayv_poly_init(float a_sr)
     f_voice->lfo_filter_output = 0.0f;
     f_voice->lfo_pitch_output = 0.0f;
 
-    f_voice->amp_ptr = g_amp_get();
-
     f_voice->amp = 1.0f;
     f_voice->note_f = 1.0f;
     f_voice->osc1_linamp = 1.0f;
@@ -196,7 +191,6 @@ t_rayv_mono_modules * v_rayv_mono_init(float a_sr)
     a_mono->filter_smoother->last_value = 100.0f;
     a_mono->pitchbend_smoother =
             g_sml_get_smoother_linear(a_sr, 1.0f, -1.0f, 0.1f);
-    a_mono->amp_ptr = g_amp_get();
     return a_mono;
 }
 

@@ -19,9 +19,9 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-#include "../../lib/interpolate-cubic.h"    
+#include "../../lib/interpolate-cubic.h"
 #include "../../lib/interpolate-linear.h"
-    
+
 typedef struct st_ramp_env
 {
     float output;  //if == 1, the ramp can be considered finished running
@@ -31,7 +31,6 @@ typedef struct st_ramp_env
     float sr;
     float sr_recip;
     float output_multiplier;
-    t_cubic_interpolater * interpolator;
     float curve;  //0.0-1.0, for the interpolator
     float last_curve;  //0.0-1.0, for the interpolator
     float curve_table[5];
@@ -54,32 +53,33 @@ inline void f_rmp_run_ramp(t_ramp_env*__restrict a_rmp_ptr)
         a_rmp_ptr->output_multiplied = 0.0f;
         return;
     }
-    
+
     if((a_rmp_ptr->output) == 1.0f)
     {
         a_rmp_ptr->output_multiplied = (a_rmp_ptr->output_multiplier);
         return;
     }
-    
+
     a_rmp_ptr->output = (a_rmp_ptr->output) + (a_rmp_ptr->ramp_inc);
-    
+
     if((a_rmp_ptr->output) >= 1.0f)
     {
         a_rmp_ptr->output = 1.0f;
         a_rmp_ptr->output_multiplied = (a_rmp_ptr->output_multiplier);
         return;
-    }        
-    
-    a_rmp_ptr->output_multiplied = (a_rmp_ptr->output) * (a_rmp_ptr->output_multiplier);
+    }
+
+    a_rmp_ptr->output_multiplied =
+        (a_rmp_ptr->output) * (a_rmp_ptr->output_multiplier);
 }
 
 
 inline void f_rmp_run_ramp_curve(t_ramp_env*__restrict a_rmp_ptr)
 {
     f_rmp_run_ramp(a_rmp_ptr);
-    
-    a_rmp_ptr->output_multiplied = 
-    f_cubic_interpolate_ptr(a_rmp_ptr->curve_table, 2.0f + a_rmp_ptr->output, a_rmp_ptr->interpolator)  
+
+    a_rmp_ptr->output_multiplied =
+    f_cubic_interpolate_ptr(a_rmp_ptr->curve_table, 2.0f + a_rmp_ptr->output)
         * (a_rmp_ptr->output_multiplier);
 }
 
@@ -87,13 +87,13 @@ inline void f_rmp_run_ramp_curve(t_ramp_env*__restrict a_rmp_ptr)
 /* void v_rmp_set_time(
  * t_ramp_env* a_rmp_ptr,
  * float a_time)  //time in seconds
- * 
+ *
  * Set envelope time without retriggering the envelope
  */
 void v_rmp_set_time(t_ramp_env*__restrict a_rmp_ptr,float a_time)
 {
     a_rmp_ptr->ramp_time = a_time;
-       
+
     if((a_rmp_ptr->ramp_time) <= .01f)
     {
         a_rmp_ptr->output = 1.0f;
@@ -111,13 +111,13 @@ void v_rmp_set_time(t_ramp_env*__restrict a_rmp_ptr,float a_time)
  * t_ramp_env* a_rmp_ptr,
  * float a_time,  //time in seconds
  * float a_curve) // 0.0 to 1.0
- * 
- * Retrigger when using with 
+ *
+ * Retrigger when using with
  */
 void v_rmp_retrigger_curve(t_ramp_env*__restrict a_rmp_ptr, float a_time, float a_multiplier, float a_curve)
 {
     v_rmp_retrigger(a_rmp_ptr, a_time, a_multiplier);
-    
+
     if(a_rmp_ptr->curve != a_curve)
     {
         a_rmp_ptr->curve_table[1] = f_linear_interpolate(0.0f, a_curve, 0.66666f);
@@ -128,8 +128,8 @@ void v_rmp_retrigger_curve(t_ramp_env*__restrict a_rmp_ptr, float a_time, float 
 
 
 /*void v_rmp_retrigger(
- * t_ramp_env* a_rmp_ptr, 
- * float a_time, 
+ * t_ramp_env* a_rmp_ptr,
+ * float a_time,
  * float a_multiplier)
  */
 void v_rmp_retrigger(t_ramp_env*__restrict a_rmp_ptr, float a_time, float a_multiplier)
@@ -137,7 +137,7 @@ void v_rmp_retrigger(t_ramp_env*__restrict a_rmp_ptr, float a_time, float a_mult
     a_rmp_ptr->output = 0.0f;
     a_rmp_ptr->ramp_time = a_time;
     a_rmp_ptr->output_multiplier = a_multiplier;
-        
+
     if((a_rmp_ptr->ramp_time) <= .05f)
     {
         a_rmp_ptr->output = 1.0f;
@@ -149,16 +149,16 @@ void v_rmp_retrigger(t_ramp_env*__restrict a_rmp_ptr, float a_time, float a_mult
         a_rmp_ptr->output = 0.0f;
         a_rmp_ptr->ramp_inc = (a_rmp_ptr->sr_recip) / (a_rmp_ptr->ramp_time);
     }
-    
+
 }
 
 /*Glide with constant time in seconds*/
 void v_rmp_retrigger_glide_t(t_ramp_env*__restrict a_rmp_ptr, float a_time, float a_current_note, float a_next_note)
-{    
+{
     a_rmp_ptr->ramp_time = a_time;
-    
+
     a_rmp_ptr->output_multiplier = a_next_note - a_current_note;
-        
+
     /*Turn off if true*/
     if((a_rmp_ptr->ramp_time) <= .05f)
     {
@@ -171,7 +171,7 @@ void v_rmp_retrigger_glide_t(t_ramp_env*__restrict a_rmp_ptr, float a_time, floa
         a_rmp_ptr->output = 0.0f;
         a_rmp_ptr->ramp_inc = (a_rmp_ptr->sr_recip) / (a_rmp_ptr->ramp_time);
     }
-        
+
 }
 
 /*Glide with constant rate in seconds-per-octave*/
@@ -180,7 +180,7 @@ void v_rmp_retrigger_glide_r(t_ramp_env*__restrict a_rmp_ptr, float a_time, floa
     a_rmp_ptr->output = 0.0f;
     a_rmp_ptr->output_multiplier = a_next_note - a_current_note;
     a_rmp_ptr->ramp_time = a_time * (a_rmp_ptr->output_multiplier) * .083333f;
-        
+
     /*Turn off if true*/
     if((a_rmp_ptr->ramp_time) <= .05f)
     {
@@ -209,15 +209,14 @@ t_ramp_env * g_rmp_get_ramp_env(float a_sr)
     f_result->ramp_inc = .01f;
     f_result->ramp_time = .05f;
     f_result->output = 0.0f;
-    f_result->interpolator = g_cubic_get();
     f_result->curve = 1342.0f;
     f_result->last_curve = 422.4f;
-    f_result->curve_table[0] = 0.0f;    
+    f_result->curve_table[0] = 0.0f;
     f_result->curve_table[1] = 0.3333f;
     f_result->curve_table[2] = 0.6666f;
     f_result->curve_table[3] = 1.0f;
     f_result->curve_table[4] = 1.0f;
-    
+
     return f_result;
 }
 

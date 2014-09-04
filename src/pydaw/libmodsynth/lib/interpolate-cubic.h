@@ -20,44 +20,12 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-typedef struct
-{
-    float a0,a1,a2,a3,mu,mu2;
-    int int_pos, int_pos_plus1, int_pos_minus1, int_pos_minus2;
-}t_cubic_interpolater;
-
-inline float f_cubic_interpolate_ptr_wrap(float*, int, float,
-        t_cubic_interpolater*);
-inline float f_cubic_interpolate_ptr(float*, float, t_cubic_interpolater*);
-
-t_cubic_interpolater * g_cubic_get();
+inline float f_cubic_interpolate_ptr_wrap(float*, int, float);
+inline float f_cubic_interpolate_ptr(float*, float);
 
 #ifdef	__cplusplus
 }
 #endif
-
-
-t_cubic_interpolater * g_cubic_get()
-{
-    t_cubic_interpolater * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_cubic_interpolater));
-
-    f_result->a0 = 0.0f;
-    f_result->a1 = 0.0f;
-    f_result->a2 = 0.0f;
-    f_result->a3 = 0.0f;
-    f_result->mu = 0.0f;
-    f_result->mu2 = 0.0f;
-
-    f_result->int_pos = 0;
-    f_result->int_pos_minus1 = 0;
-    f_result->int_pos_minus2 = 0;
-    f_result->int_pos_plus1 = 0;
-
-    return f_result;
-}
-
 
 /* inline float f_cubic_interpolate(
  * float a_a, //item 0
@@ -82,60 +50,59 @@ inline float f_cubic_interpolate(float a_a, float a_b, float a_position)
  * to (sizeof(float) * a_table_size)
  */
 inline float f_cubic_interpolate_ptr_wrap(float * a_table, int a_table_size,
-        float a_ptr, t_cubic_interpolater * a_cubic)
+        float a_ptr)
 {
-    a_cubic->int_pos = (int)a_ptr;
-    a_cubic->mu = a_ptr - ((float)a_cubic->int_pos);
-    a_cubic->mu2 = (a_cubic->mu) * (a_cubic->mu);
-    a_cubic->int_pos_plus1 = (a_cubic->int_pos) + 1;
-    a_cubic->int_pos_minus1 = (a_cubic->int_pos) - 1;
-    a_cubic->int_pos_minus2 = (a_cubic->int_pos) - 2;
+    int int_pos = (int)a_ptr;
+    float mu = a_ptr - ((float)int_pos);
+    float mu2 = mu * mu;
+    int int_pos_plus1 = int_pos + 1;
+    int int_pos_minus1 = int_pos - 1;
+    int int_pos_minus2 = int_pos - 2;
 
-    if(a_cubic->int_pos >= a_table_size)
+    if(int_pos >= a_table_size)
     {
-        a_cubic->int_pos = (a_cubic->int_pos) - a_table_size;
+        int_pos = int_pos - a_table_size;
     }
-    else if(a_cubic->int_pos < 0)
+    else if(int_pos < 0)
     {
-        a_cubic->int_pos = (a_cubic->int_pos) + a_table_size;
-    }
-
-    if(a_cubic->int_pos_plus1 >= a_table_size)
-    {
-        a_cubic->int_pos_plus1 = (a_cubic->int_pos_plus1) - a_table_size;
-    }
-    else if(a_cubic->int_pos_plus1 < 0)
-    {
-        a_cubic->int_pos_plus1 = (a_cubic->int_pos_plus1) + a_table_size;
+        int_pos = int_pos + a_table_size;
     }
 
-    if(a_cubic->int_pos_minus1 >= a_table_size)
+    if(int_pos_plus1 >= a_table_size)
     {
-        a_cubic->int_pos_minus1 = (a_cubic->int_pos_minus1) - a_table_size;
+        int_pos_plus1 = int_pos_plus1 - a_table_size;
     }
-    else if(a_cubic->int_pos_minus1 < 0)
+    else if(int_pos_plus1 < 0)
     {
-        a_cubic->int_pos_minus1 = (a_cubic->int_pos_minus1) + a_table_size;
-    }
-
-    if(a_cubic->int_pos_minus2 >= a_table_size)
-    {
-        a_cubic->int_pos_minus2 = (a_cubic->int_pos_minus2) - a_table_size;
-    }
-    else if(a_cubic->int_pos_minus2 < 0)
-    {
-        a_cubic->int_pos_minus2 = (a_cubic->int_pos_minus2) + a_table_size;
+        int_pos_plus1 = int_pos_plus1 + a_table_size;
     }
 
-    a_cubic->a0 = a_table[a_cubic->int_pos_plus1] - a_table[a_cubic->int_pos] -
-            a_table[a_cubic->int_pos_minus2] + a_table[a_cubic->int_pos_minus1];
-    a_cubic->a1 = a_table[a_cubic->int_pos_minus2] -
-            a_table[a_cubic->int_pos_minus1] - a_cubic->a0;
-    a_cubic->a2 = a_table[a_cubic->int_pos] - a_table[a_cubic->int_pos_minus2];
-    a_cubic->a3 = a_table[a_cubic->int_pos_minus1];
+    if(int_pos_minus1 >= a_table_size)
+    {
+        int_pos_minus1 = int_pos_minus1 - a_table_size;
+    }
+    else if(int_pos_minus1 < 0)
+    {
+        int_pos_minus1 = int_pos_minus1 + a_table_size;
+    }
 
-    return(a_cubic->a0 * a_cubic->mu * a_cubic->mu2 + a_cubic->a1 *
-            a_cubic->mu2 + a_cubic->a2 * a_cubic->mu + a_cubic->a3);
+    if(int_pos_minus2 >= a_table_size)
+    {
+        int_pos_minus2 = int_pos_minus2 - a_table_size;
+    }
+    else if(int_pos_minus2 < 0)
+    {
+        int_pos_minus2 = int_pos_minus2 + a_table_size;
+    }
+
+    float a0 = a_table[int_pos_plus1] - a_table[int_pos] -
+            a_table[int_pos_minus2] + a_table[int_pos_minus1];
+    float a1 = a_table[int_pos_minus2] -
+            a_table[int_pos_minus1] - a0;
+    float a2 = a_table[int_pos] - a_table[int_pos_minus2];
+    float a3 = a_table[int_pos_minus1];
+
+    return(a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
 }
 
 /* inline float f_cubic_interpolate_ptr_wrap(
@@ -149,33 +116,31 @@ inline float f_cubic_interpolate_ptr_wrap(float * a_table, int a_table_size,
  * THIS DOES NOT CHECK THAT YOU PROVIDED A VALID POSITION
  */
 
-inline float f_cubic_interpolate_ptr(float * a_table, float a_ptr,
-        t_cubic_interpolater * a_cubic)
+inline float f_cubic_interpolate_ptr(float * a_table, float a_ptr)
 {
-    a_cubic->int_pos = (int)a_ptr;
-    a_cubic->int_pos_plus1 = (a_cubic->int_pos) + 1;
-    a_cubic->int_pos_minus1 = (a_cubic->int_pos) - 1;
-    a_cubic->int_pos_minus2 = (a_cubic->int_pos) - 2;
+    int int_pos = (int)a_ptr;
+    int int_pos_plus1 = (int_pos) + 1;
+    int int_pos_minus1 = (int_pos) - 1;
+    int int_pos_minus2 = (int_pos) - 2;
 
 #ifdef PYDAW_NO_HARDWARE
     //Check this when run with no hardware, but otherwise save the CPU.
     //Anything sending a position to this should already know that the position is valid.
-    assert(a_cubic->int_pos_minus1 >= 0);
-    assert(a_cubic->int_pos_minus2 >= 0);
+    assert(int_pos_minus1 >= 0);
+    assert(int_pos_minus2 >= 0);
 #endif
 
-    a_cubic->mu = a_ptr - (a_cubic->int_pos);
+    float mu = a_ptr - (int_pos);
 
-    a_cubic->mu2 = (a_cubic->mu) * (a_cubic->mu);
-    a_cubic->a0 = a_table[a_cubic->int_pos_plus1] - a_table[a_cubic->int_pos] -
-            a_table[a_cubic->int_pos_minus2] + a_table[a_cubic->int_pos_minus1];
-    a_cubic->a1 = a_table[a_cubic->int_pos_minus2] -
-            a_table[a_cubic->int_pos_minus1] - a_cubic->a0;
-    a_cubic->a2 = a_table[a_cubic->int_pos] - a_table[a_cubic->int_pos_minus2];
-    a_cubic->a3 = a_table[a_cubic->int_pos_minus1];
+    float mu2 = (mu) * (mu);
+    float a0 = a_table[int_pos_plus1] - a_table[int_pos] -
+            a_table[int_pos_minus2] + a_table[int_pos_minus1];
+    float a1 = a_table[int_pos_minus2] -
+            a_table[int_pos_minus1] - a0;
+    float a2 = a_table[int_pos] - a_table[int_pos_minus2];
+    float a3 = a_table[int_pos_minus1];
 
-    return (a_cubic->a0 * a_cubic->mu * a_cubic->mu2 + a_cubic->a1 *
-            a_cubic->mu2 + a_cubic->a2 * a_cubic->mu + a_cubic->a3);
+    return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
 }
 
 
@@ -189,25 +154,24 @@ inline float f_cubic_interpolate_ptr(float * a_table, float a_ptr,
  * For use with the read_head type in Euphoria Sampler
  */
 inline float f_cubic_interpolate_ptr_ifh(float * a_table, int a_whole_number,
-        float a_frac, t_cubic_interpolater * a_cubic)
+        float a_frac)
 {
-    a_cubic->int_pos = a_whole_number;
-    a_cubic->int_pos_plus1 = (a_cubic->int_pos) + 1;
-    a_cubic->int_pos_minus1 = (a_cubic->int_pos) - 1;
-    a_cubic->int_pos_minus2 = (a_cubic->int_pos) - 2;
+    int int_pos = a_whole_number;
+    int int_pos_plus1 = (int_pos) + 1;
+    int int_pos_minus1 = (int_pos) - 1;
+    int int_pos_minus2 = (int_pos) - 2;
 
-    a_cubic->mu = a_frac;
+    float mu = a_frac;
 
-    a_cubic->mu2 = (a_cubic->mu) * (a_cubic->mu);
-    a_cubic->a0 = a_table[a_cubic->int_pos_plus1] - a_table[a_cubic->int_pos] -
-            a_table[a_cubic->int_pos_minus2] + a_table[a_cubic->int_pos_minus1];
-    a_cubic->a1 = a_table[a_cubic->int_pos_minus2] -
-            a_table[a_cubic->int_pos_minus1] - a_cubic->a0;
-    a_cubic->a2 = a_table[a_cubic->int_pos] - a_table[a_cubic->int_pos_minus2];
-    a_cubic->a3 = a_table[a_cubic->int_pos_minus1];
+    float mu2 = (mu) * (mu);
+    float a0 = a_table[int_pos_plus1] - a_table[int_pos] -
+            a_table[int_pos_minus2] + a_table[int_pos_minus1];
+    float a1 = a_table[int_pos_minus2] -
+            a_table[int_pos_minus1] - a0;
+    float a2 = a_table[int_pos] - a_table[int_pos_minus2];
+    float a3 = a_table[int_pos_minus1];
 
-    return (a_cubic->a0 * a_cubic->mu * a_cubic->mu2 + a_cubic->a1 *
-            a_cubic->mu2 + a_cubic->a2 * a_cubic->mu + a_cubic->a3);
+    return (a0 * mu * mu2 + a1 * mu2 + a2 * mu + a3);
 }
 
 #endif	/* INTERPOLATE_CUBIC_H */

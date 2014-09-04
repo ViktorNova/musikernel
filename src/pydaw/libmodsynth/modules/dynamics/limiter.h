@@ -39,7 +39,6 @@ typedef struct st_lim_limiter
     float autogain;
     float *buffer0, *buffer1;
     int buffer_size, buffer_index, buffer_read_index;
-    t_amp * amp_ptr;
     t_state_variable_filter * filter;
 }t_lim_limiter;
 
@@ -52,7 +51,6 @@ void v_lim_free(t_lim_limiter * a_lim)
 {
     if(a_lim)
     {
-        v_amp_free(a_lim->amp_ptr);
         free(a_lim->buffer0);
         free(a_lim->buffer1);
         free(a_lim);
@@ -64,14 +62,14 @@ void v_lim_set(t_lim_limiter*a_lim, float a_thresh, float a_ceiling,
 {
     if(a_thresh != (a_lim->last_thresh))
     {
-        a_lim->thresh = f_db_to_linear_fast((a_thresh), a_lim->amp_ptr);
+        a_lim->thresh = f_db_to_linear_fast((a_thresh));
         a_lim->autogain = (1.0f/(a_lim->thresh));
         a_lim->last_thresh = a_thresh;
     }
 
     if(a_ceiling != (a_lim->last_ceiling))
     {
-        a_lim->volume = f_db_to_linear_fast((a_ceiling), a_lim->amp_ptr);
+        a_lim->volume = f_db_to_linear_fast((a_ceiling));
         a_lim->last_ceiling = a_ceiling;
     }
 
@@ -172,13 +170,11 @@ t_lim_limiter * g_lim_get(float a_sr)
     f_result->buffer_size = (f_result->holdtime); // (int)(a_sr*0.003f);
     f_result->buffer_index = 0;
 
-    lmalloc((void**)&f_result->buffer0, sizeof(float) *
+    buffer_alloc((void**)&f_result->buffer0, sizeof(float) *
         (f_result->buffer_size));
 
-    lmalloc((void**)&f_result->buffer1, sizeof(float) *
+    buffer_alloc((void**)&f_result->buffer1, sizeof(float) *
         (f_result->buffer_size));
-
-    f_result->amp_ptr = g_amp_get();
 
     int f_i;
 

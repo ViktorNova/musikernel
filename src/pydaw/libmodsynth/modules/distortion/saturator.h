@@ -32,8 +32,6 @@ typedef struct st_sat_saturator
     float last_outgain;
     float ingain_lin;
     float outgain_lin;
-    t_lin_interpolater * lin_interpolator;
-    t_amp * amp_ptr;
 }t_sat_saturator;
 
 t_sat_saturator * g_sat_get();
@@ -43,8 +41,6 @@ void v_sat_free(t_sat_saturator*);
 
 void v_sat_free(t_sat_saturator * a_sat)
 {
-    v_amp_free(a_sat->amp_ptr);
-    free(a_sat->lin_interpolator);
     free(a_sat);
 }
 
@@ -54,7 +50,7 @@ inline void v_sat_set(t_sat_saturator* a_sat, float a_ingain, float a_amt,
     if(a_ingain != (a_sat->last_ingain))
     {
         a_sat->last_ingain = a_ingain;
-        a_sat->ingain_lin = f_db_to_linear_fast(a_ingain, a_sat->amp_ptr);
+        a_sat->ingain_lin = f_db_to_linear_fast(a_ingain);
     }
 
     if(a_amt != (a_sat->amount))
@@ -67,7 +63,7 @@ inline void v_sat_set(t_sat_saturator* a_sat, float a_ingain, float a_amt,
     if(a_outgain != (a_sat->last_outgain))
     {
         a_sat->last_outgain = a_outgain;
-        a_sat->outgain_lin = f_db_to_linear_fast(a_outgain, a_sat->amp_ptr);
+        a_sat->outgain_lin = f_db_to_linear_fast(a_outgain);
     }
 }
 
@@ -87,13 +83,11 @@ t_sat_saturator * g_sat_get()
     t_sat_saturator * f_result =
             (t_sat_saturator*)malloc(sizeof(t_sat_saturator));
 
-    f_result->lin_interpolator = g_lin_get();
     f_result->a = 0.0f;
     f_result->b = 0.0f;
     f_result->amount = 1.0f;
     f_result->output0 = 0.0f;
     f_result->output1 = 0.0f;
-    f_result->amp_ptr = g_amp_get();
     f_result->ingain_lin = 1.0f;
     f_result->outgain_lin = 1.0f;
     f_result->last_ingain = 12345.0f;

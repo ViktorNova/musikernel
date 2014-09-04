@@ -39,8 +39,6 @@ typedef struct
             coeff1_x_out_m1_1, coeff2_x_out_m2_1, iir_output1;
 
     float last_pitch;
-    t_amp * amp_ptr;
-    t_pit_pitch_core * pitch_core;
 }t_pkq_peak_eq;
 
 t_pkq_peak_eq * g_pkq_get(float);
@@ -51,8 +49,6 @@ void v_pkq_free(t_pkq_peak_eq*);
 
 void v_pkq_free(t_pkq_peak_eq * a_pkq)
 {
-    v_amp_free(a_pkq->amp_ptr);
-    v_pit_free(a_pkq->pitch_core);
     free(a_pkq);
 }
 
@@ -83,8 +79,8 @@ inline void v_pkq_calc_coeffs(t_pkq_peak_eq *__restrict a_pkq,
     if(a_pitch != a_pkq->last_pitch)
     {
         a_pkq->last_pitch = a_pitch;
-        a_pkq->warp_input = f_pit_midi_note_to_hz_fast(
-                a_pitch, a_pkq->pitch_core) * (a_pkq->pi_div_sr);
+        a_pkq->warp_input =
+            f_pit_midi_note_to_hz_fast(a_pitch) * (a_pkq->pi_div_sr);
         a_pkq->warp_input_squared = (a_pkq->warp_input) * (a_pkq->warp_input);
         a_pkq->warp_input_tripled =
                 (a_pkq->warp_input_squared) * (a_pkq->warp_input);
@@ -156,7 +152,6 @@ t_pkq_peak_eq * g_pkq_get(float a_sample_rate)
     f_result->BW = 0.0f;
     f_result->coeff1 = 0.0f;
     f_result->coeff2 = 0.0f;
-    f_result->amp_ptr = g_amp_get();
     f_result->d = 0.0f;
     f_result->dB = 0.0f;
     f_result->d_times_B = 0.0f;
@@ -176,7 +171,6 @@ t_pkq_peak_eq * g_pkq_get(float a_sample_rate)
     f_result->output1 = 0.0f;
     f_result->pi_div_sr = PI / a_sample_rate;
     f_result->pitch = 66.0f;
-    f_result->pitch_core = g_pit_get();
     f_result->coeff0 = 0.0f;
     f_result->warp_input = 0.0f;
     f_result->warp_input_squared = 0.0f;

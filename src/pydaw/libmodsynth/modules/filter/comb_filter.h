@@ -44,9 +44,6 @@ typedef struct st_comb_filter
     float delay_samples;  //How many samples, including the fractional part, to delay the signal
     float sr;
     float * input_buffer;
-    t_lin_interpolater * linear;
-    t_pit_pitch_core * pitch_core;
-    t_amp * amp_ptr;
     int mc_delay_samples[MC_CMB_COUNT];
     float mc_detune;
 
@@ -64,17 +61,22 @@ void v_cmb_free(t_comb_filter *);
  * This runs the filter.  You can then use the output sample in your plugin*/
 inline void v_cmb_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
 {
-    a_cmb_ptr->delay_pointer = (a_cmb_ptr->input_pointer) - (a_cmb_ptr->delay_samples);
+    a_cmb_ptr->delay_pointer =
+        (a_cmb_ptr->input_pointer) - (a_cmb_ptr->delay_samples);
 
     if((a_cmb_ptr->delay_pointer) < 0.0f)
     {
-        a_cmb_ptr->delay_pointer = (a_cmb_ptr->delay_pointer) + (a_cmb_ptr->buffer_size);
+        a_cmb_ptr->delay_pointer =
+            (a_cmb_ptr->delay_pointer) + (a_cmb_ptr->buffer_size);
     }
 
-    a_cmb_ptr->wet_sample = (f_linear_interpolate_arr_wrap(a_cmb_ptr->input_buffer,
-            (a_cmb_ptr->buffer_size), (a_cmb_ptr->delay_pointer), a_cmb_ptr->linear));
+    a_cmb_ptr->wet_sample =
+        (f_linear_interpolate_arr_wrap(a_cmb_ptr->input_buffer,
+        (a_cmb_ptr->buffer_size), (a_cmb_ptr->delay_pointer)));
 
-    a_cmb_ptr->input_buffer[(a_cmb_ptr->input_pointer)] = f_remove_denormal(a_value + ((a_cmb_ptr->wet_sample) * (a_cmb_ptr->feedback_linear)));
+    a_cmb_ptr->input_buffer[(a_cmb_ptr->input_pointer)] =
+        f_remove_denormal(a_value + ((a_cmb_ptr->wet_sample) *
+        (a_cmb_ptr->feedback_linear)));
 
     if((a_cmb_ptr->wet_db) <= -20.0f)
     {
@@ -82,7 +84,8 @@ inline void v_cmb_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
     }
     else
     {
-        a_cmb_ptr->output_sample = (a_value + ((a_cmb_ptr->wet_sample) * (a_cmb_ptr->wet_linear)));
+        a_cmb_ptr->output_sample =
+            (a_value + ((a_cmb_ptr->wet_sample) * (a_cmb_ptr->wet_linear)));
     }
 
 
@@ -104,20 +107,24 @@ inline void v_cmb_mc_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
         int f_i = 0;
         while(f_i < MC_CMB_COUNT)
         {
-            a_cmb_ptr->delay_pointer = (a_cmb_ptr->input_pointer) - (a_cmb_ptr->mc_delay_samples[f_i]);
+            a_cmb_ptr->delay_pointer =
+                (a_cmb_ptr->input_pointer) - (a_cmb_ptr->mc_delay_samples[f_i]);
 
             if((a_cmb_ptr->delay_pointer) < 0.0f)
             {
-                a_cmb_ptr->delay_pointer = (a_cmb_ptr->delay_pointer) + (a_cmb_ptr->buffer_size);
+                a_cmb_ptr->delay_pointer =
+                    (a_cmb_ptr->delay_pointer) + (a_cmb_ptr->buffer_size);
             }
 
-            a_cmb_ptr->wet_sample = (f_linear_interpolate_arr_wrap(a_cmb_ptr->input_buffer,
-                    (a_cmb_ptr->buffer_size), (a_cmb_ptr->delay_pointer), a_cmb_ptr->linear));
+            a_cmb_ptr->wet_sample =
+                (f_linear_interpolate_arr_wrap(a_cmb_ptr->input_buffer,
+                (a_cmb_ptr->buffer_size), (a_cmb_ptr->delay_pointer)));
 
             a_cmb_ptr->input_buffer[(a_cmb_ptr->input_pointer)] +=
                     ((a_cmb_ptr->wet_sample) * (a_cmb_ptr->feedback_linear));
 
-            a_cmb_ptr->output_sample += ((a_cmb_ptr->wet_sample) * (a_cmb_ptr->wet_linear));
+            a_cmb_ptr->output_sample +=
+                ((a_cmb_ptr->wet_sample) * (a_cmb_ptr->wet_linear));
 
             f_i++;
         }
@@ -143,13 +150,14 @@ inline void v_cmb_mc_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
  *
  * Sets all parameters of the comb filter.
  */
-inline void v_cmb_set_all(t_comb_filter*__restrict a_cmb_ptr, float a_wet_db, float a_feedback_db, float a_midi_note_number)
+inline void v_cmb_set_all(t_comb_filter*__restrict a_cmb_ptr,
+    float a_wet_db, float a_feedback_db, float a_midi_note_number)
 {
     /*Set wet_linear, but only if it's changed since last time*/
     if((a_cmb_ptr->wet_db) != a_wet_db)
     {
         a_cmb_ptr->wet_db = a_wet_db;
-        a_cmb_ptr->wet_linear = f_db_to_linear_fast(a_wet_db, a_cmb_ptr->amp_ptr);
+        a_cmb_ptr->wet_linear = f_db_to_linear_fast(a_wet_db);
     }
 
     /*Set feedback_linear, but only if it's changed since last time*/
@@ -164,13 +172,16 @@ inline void v_cmb_set_all(t_comb_filter*__restrict a_cmb_ptr, float a_wet_db, fl
             a_cmb_ptr->feedback_db = a_feedback_db;
         }
 
-        a_cmb_ptr->feedback_linear = f_db_to_linear_fast((a_cmb_ptr->feedback_db), a_cmb_ptr->amp_ptr); // * -1;  //negative feedback, gives a comb-ier sound
+        a_cmb_ptr->feedback_linear =
+            f_db_to_linear_fast(a_cmb_ptr->feedback_db);
+            // * -1;  //negative feedback, gives a comb-ier sound
     }
 
     if((a_cmb_ptr->midi_note_number) != a_midi_note_number)
     {
         a_cmb_ptr->midi_note_number = a_midi_note_number;
-        a_cmb_ptr->delay_samples = f_pit_midi_note_to_samples(a_midi_note_number, (a_cmb_ptr->sr), a_cmb_ptr->pitch_core);
+        a_cmb_ptr->delay_samples =
+            f_pit_midi_note_to_samples(a_midi_note_number, (a_cmb_ptr->sr));
     }
 
 }
@@ -185,8 +196,7 @@ inline void v_cmb_mc_set_all(t_comb_filter*__restrict a_cmb, float a_wet_db, flo
         while(f_i < MC_CMB_COUNT)
         {
             a_cmb->mc_delay_samples[f_i] = f_pit_midi_note_to_samples(
-                    a_midi_note_number + (a_detune * (float)f_i),
-                    (a_cmb->sr), a_cmb->pitch_core);
+                    a_midi_note_number + (a_detune * (float)f_i), (a_cmb->sr));
             f_i++;
         }
     }
@@ -207,7 +217,7 @@ t_comb_filter * g_cmb_get_comb_filter(float a_sr)
 
     f_result->buffer_size = (int)((a_sr / 20.0f) + 300);  //Allocate enough memory to accomodate 20hz filter frequency
 
-    lmalloc((void**)(&(f_result->input_buffer)), 
+    lmalloc((void**)(&(f_result->input_buffer)),
         sizeof(float) * (f_result->buffer_size));
 
     while(f_i < (f_result->buffer_size))
@@ -227,9 +237,6 @@ t_comb_filter * g_cmb_get_comb_filter(float a_sr)
     f_result->midi_note_number = 60.0f;
     f_result->delay_samples = 150.0f;
     f_result->sr = a_sr;
-    f_result->linear = g_lin_get();
-    f_result->pitch_core = g_pit_get();
-    f_result->amp_ptr = g_amp_get();
     f_result->mc_detune = 999.999f;
 
 
@@ -242,10 +249,7 @@ t_comb_filter * g_cmb_get_comb_filter(float a_sr)
 
 void v_cmb_free(t_comb_filter * a_cmb)
 {
-    v_amp_free(a_cmb->amp_ptr);
-    free(a_cmb->linear);
     free(a_cmb->input_buffer);
-    v_pit_free(a_cmb->pitch_core);
     free(a_cmb);
 }
 

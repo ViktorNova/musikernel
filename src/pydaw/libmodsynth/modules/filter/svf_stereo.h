@@ -52,8 +52,6 @@ typedef struct
     float cutoff_base, cutoff_mod, cutoff_last,  velocity_mod_amt;
     float oversample_iterator;
     t_svf2_kernel * filter_kernels [SVF_MAX_CASCADE][2];
-    t_amp * amp_ptr;
-    t_pit_pitch_core * pitch_core;
     float output0, output1;
 } t_svf2_filter;
 
@@ -112,7 +110,6 @@ void v_svf2_free(t_svf2_filter*);
 
 void v_svf2_free(t_svf2_filter* a_svf2)
 {
-    v_amp_free(a_svf2->amp_ptr);
     int f_i = 0;
     while(f_i < SVF_MAX_CASCADE)
     {
@@ -410,8 +407,8 @@ inline void v_svf2_set_cutoff(t_svf2_filter *__restrict a_svf)
 
     a_svf->cutoff_last = (a_svf->cutoff_note);
 
-    a_svf->cutoff_hz = f_pit_midi_note_to_hz_fast((a_svf->cutoff_note),
-            a_svf->pitch_core); //_svf->cutoff_smoother->last_value);
+    a_svf->cutoff_hz = f_pit_midi_note_to_hz_fast((a_svf->cutoff_note));
+    //_svf->cutoff_smoother->last_value);
 
     a_svf->cutoff_filter = (a_svf->pi2_div_sr) * (a_svf->cutoff_hz) * 4.0f;
 
@@ -446,8 +443,8 @@ void v_svf2_set_res(t_svf2_filter *__restrict a_svf, float a_db)
         a_svf->filter_res_db = a_db;
     }
 
-       a_svf->filter_res = (1.0f - (f_db_to_linear_fast((a_svf->filter_res_db),
-               a_svf->amp_ptr))) * 2.0f;
+       a_svf->filter_res =
+            (1.0f - (f_db_to_linear_fast((a_svf->filter_res_db)))) * 2.0f;
 }
 
 /* t_svf2_filter * g_svf2_get(float a_sample_rate)
@@ -484,8 +481,6 @@ t_svf2_filter * g_svf2_get(float a_sample_rate)
     f_svf->velocity_cutoff = 0.0f;
     f_svf->velocity_mod_amt = 1.0f;
 
-    f_svf->amp_ptr = g_amp_get();
-    f_svf->pitch_core = g_pit_get();
     f_svf->oversample_iterator = 0.0f;
 
     v_svf2_set_cutoff_base(f_svf, 75.0f);

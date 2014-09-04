@@ -34,8 +34,6 @@ typedef struct
     int buffer_size, buffer_ptr;
     float buffer_size_float;
     t_lfs_lfo * lfo;
-    t_cubic_interpolater * cubic;
-    t_amp * amp;
     t_svf2_filter * hp;
     t_svf2_filter * lp;
 }t_crs_chorus;
@@ -68,11 +66,9 @@ t_crs_chorus* g_crs_chorus_get(float a_sr)
     f_result->buffer_ptr = 0;
     f_result->delay_offset_amt =  a_sr * 0.03f;
     f_result->delay_offset = 0.0f;
-    f_result->cubic = g_cubic_get();
     f_result->lfo = g_lfs_get(a_sr);
     f_result->wet_lin = 0.0f;
     f_result->wet_db = -99.99f;
-    f_result->amp = g_amp_get();
     f_result->mod_amt = a_sr * 0.01f;
     f_result->freq_last = -99.99f;
     f_result->output0 = 0.0f;
@@ -95,7 +91,7 @@ void v_crs_chorus_set(t_crs_chorus* a_crs, float a_freq, float a_wet)
     if(a_wet != (a_crs->wet_db))
     {
         a_crs->wet_db = a_wet;
-        a_crs->wet_lin = f_db_to_linear_fast(a_wet, a_crs->amp);
+        a_crs->wet_lin = f_db_to_linear_fast(a_wet);
     }
 
     if(a_freq != (a_crs->freq_last))
@@ -139,11 +135,9 @@ void v_crs_chorus_run(t_crs_chorus* a_crs, float a_input0, float a_input1)
     }
 
     a_crs->output0 = a_input0 + (f_cubic_interpolate_ptr_wrap(a_crs->buffer,
-            (a_crs->buffer_size),
-            (a_crs->pos_left), a_crs->cubic) * (a_crs->wet_lin));
+            (a_crs->buffer_size), (a_crs->pos_left)) * (a_crs->wet_lin));
     a_crs->output1 = a_input1 +  (f_cubic_interpolate_ptr_wrap(a_crs->buffer,
-            (a_crs->buffer_size),
-            (a_crs->pos_right), a_crs->cubic) * (a_crs->wet_lin));
+            (a_crs->buffer_size), (a_crs->pos_right)) * (a_crs->wet_lin));
 
     v_svf2_run_2_pole_hp(a_crs->hp, a_crs->output0, a_crs->output1);
     v_svf2_run_2_pole_lp(a_crs->lp, a_crs->hp->output0, a_crs->hp->output1);
@@ -160,9 +154,7 @@ void v_crs_chorus_run(t_crs_chorus* a_crs, float a_input0, float a_input1)
 
 void v_crs_free(t_crs_chorus * a_crs)
 {
-    v_amp_free(a_crs->amp);
     free(a_crs->buffer);
-    free(a_crs->cubic);
     v_svf2_free(a_crs->hp);
     v_lfs_free(a_crs->lfo);
     v_svf2_free(a_crs->lp);

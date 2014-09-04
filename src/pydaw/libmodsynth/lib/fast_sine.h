@@ -22,10 +22,10 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-inline float f_sine_fast_run(float, t_lin_interpolater*);
-inline float f_sine_fast_run_radians(float, t_lin_interpolater*);
-inline float f_cosine_fast_run(float, t_lin_interpolater*);
-inline float f_cosine_fast_run_radians(float, t_lin_interpolater*);
+inline float f_sine_fast_run(float);
+inline float f_sine_fast_run_radians(float);
+inline float f_cosine_fast_run(float);
+inline float f_cosine_fast_run_radians(float);
 
 #ifdef	__cplusplus
 }
@@ -84,22 +84,20 @@ float arr_sine [arr_sine_count] __attribute__((aligned(16))) = {
  *
  * Accepts zero to one input.
  */
-inline float f_sine_fast_run(float a_osc_core,
-        t_lin_interpolater *__restrict a_lin)
+inline float f_sine_fast_run(float a_osc_core)
 {
     return f_linear_interpolate_arr_wrap(arr_sine, arr_sine_count,
-            (a_osc_core * arr_sine_count), a_lin);
+            (a_osc_core * arr_sine_count));
 }
 
 /* inline float f_sine_fast_run(float a_osc_core)
  *
  * Accepts input in radians (zero to (PI * 2))
  */
-inline float f_sine_fast_run_radians(float a_osc_core,
-        t_lin_interpolater *__restrict a_lin)
+inline float f_sine_fast_run_radians(float a_osc_core)
 {
     return f_linear_interpolate_arr_wrap(arr_sine, arr_sine_count,
-            (a_osc_core * arr_sine_count_radians), a_lin);
+            (a_osc_core * arr_sine_count_radians));
 }
 
 /* inline float f_cosine_fast_run(
@@ -108,11 +106,10 @@ inline float f_sine_fast_run_radians(float a_osc_core,
  *
  * Perform a fast, table-lookup based cosine.  Accepts zero to one input
  */
-inline float f_cosine_fast_run(float a_osc_core,
-        t_lin_interpolater *__restrict a_lin)
+inline float f_cosine_fast_run(float a_osc_core)
 {
     return f_linear_interpolate_arr_wrap(arr_sine, arr_sine_count,
-            ((a_osc_core * arr_sine_count) + 0.25f), a_lin);
+            ((a_osc_core * arr_sine_count) + 0.25f));
 }
 
 
@@ -123,12 +120,10 @@ inline float f_cosine_fast_run(float a_osc_core,
  * Perform a fast, table-lookup based cosine.
  * Accepts input in Radians (zero to (PI * 2))
  */
-inline float f_cosine_fast_run_radians(float a_osc_core,
-        t_lin_interpolater *__restrict a_lin)
+inline float f_cosine_fast_run_radians(float a_osc_core)
 {
     return f_linear_interpolate_arr_wrap(arr_sine, arr_sine_count,
-            ((a_osc_core * arr_sine_count_radians) + arr_cosine_phase_radians),
-            a_lin);
+        ((a_osc_core * arr_sine_count_radians) + arr_cosine_phase_radians));
 }
 
 

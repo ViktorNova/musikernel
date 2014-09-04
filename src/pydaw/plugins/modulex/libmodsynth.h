@@ -60,7 +60,6 @@ typedef struct
 
     t_smoother_linear * smoothers[8][3];
 
-    t_amp * amp_ptr;
     t_pkq_peak_eq * eqs[MODULEX_EQ_COUNT];
     t_spa_spectrum_analyzer * spectrum_analyzer;
     t_gat_gate * gate;
@@ -100,8 +99,6 @@ t_modulex_mono_modules * v_modulex_mono_init(float a_sr, int a_plugin_uid)
         a_mono->eqs[f_i] = g_pkq_get(a_sr);
         f_i++;
     }
-
-    a_mono->amp_ptr = g_amp_get();
 
     a_mono->delay = g_ldl_get_delay(1, a_sr);
     a_mono->time_smoother =

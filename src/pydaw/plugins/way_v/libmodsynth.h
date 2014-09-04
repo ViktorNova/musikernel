@@ -49,7 +49,6 @@ typedef struct
     t_wt_wavetables * wavetables;
     t_smoother_linear * pitchbend_smoother;
     t_smoother_linear * fm_macro_smoother[WAYV_FM_MACRO_COUNT];
-    t_amp * amp_ptr;
     int reset_wavetables;
 }t_wayv_mono_modules;
 
@@ -91,8 +90,6 @@ typedef struct
     /*This corresponds to the current sample being processed on this voice.
      * += this to the output buffer when finished.*/
     float current_sample;
-
-    t_amp * amp_ptr;
 
     float   amp;
     float master_vol_lin;
@@ -177,8 +174,6 @@ t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono)
     f_voice->base_pitch = 66.0f;
 
     f_voice->current_sample = 0.0f;
-
-    f_voice->amp_ptr = g_amp_get();
 
     f_voice->amp = 1.0f;
     f_voice->note_f = 1.0f;
@@ -294,7 +289,6 @@ t_wayv_mono_modules * v_wayv_mono_init(float a_sr)
         f_i++;
     }
 
-    a_mono->amp_ptr = g_amp_get();
     a_mono->wavetables = g_wt_wavetables_get();
     //indicates that wavetables must be re-pointered immediately
     a_mono->reset_wavetables = 0;

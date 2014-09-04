@@ -59,8 +59,6 @@ typedef struct
     float gain_db, gain_linear;
     float oversample_iterator;
     t_svf_kernel * filter_kernels [SVF_MAX_CASCADE];
-    t_amp * amp_ptr;
-    t_pit_pitch_core * pitch_core;
 } t_state_variable_filter;
 
 //Used to switch between values
@@ -130,7 +128,7 @@ inline void v_svf_set_eq(t_state_variable_filter*__restrict a_svf, float a_gain)
     if(a_gain != (a_svf->gain_db))
     {
         a_svf->gain_db = a_gain;
-        a_svf->gain_linear = f_db_to_linear_fast(a_gain, a_svf->amp_ptr);
+        a_svf->gain_linear = f_db_to_linear_fast(a_gain);
     }
 }
 
@@ -140,8 +138,7 @@ inline void v_svf_set_eq4(t_state_variable_filter*__restrict a_svf,
     if(a_gain != (a_svf->gain_db))
     {
         a_svf->gain_db = a_gain;
-        a_svf->gain_linear = f_db_to_linear_fast((a_gain * .05),
-                a_svf->amp_ptr);
+        a_svf->gain_linear = f_db_to_linear_fast((a_gain * .05));
     }
 }
 
@@ -427,8 +424,8 @@ inline void v_svf_set_cutoff(t_state_variable_filter *__restrict a_svf)
 
     a_svf->cutoff_last = (a_svf->cutoff_note);
 
-    a_svf->cutoff_hz = f_pit_midi_note_to_hz_fast((a_svf->cutoff_note),
-            a_svf->pitch_core); //_svf->cutoff_smoother->last_value);
+    a_svf->cutoff_hz = f_pit_midi_note_to_hz_fast(a_svf->cutoff_note);
+    //_svf->cutoff_smoother->last_value);
 
     a_svf->cutoff_filter = (a_svf->pi2_div_sr) * (a_svf->cutoff_hz) * 4.0f;
 
@@ -463,8 +460,8 @@ void v_svf_set_res(t_state_variable_filter *__restrict a_svf, float a_db)
         a_svf->filter_res_db = a_db;
     }
 
-       a_svf->filter_res = (1.0f - (f_db_to_linear_fast((a_svf->filter_res_db),
-               a_svf->amp_ptr))) * 2.0f;
+       a_svf->filter_res =
+            (1.0f - (f_db_to_linear_fast(a_svf->filter_res_db))) * 2.0f;
 }
 
 
@@ -506,8 +503,6 @@ t_state_variable_filter * g_svf_get(float a_sample_rate)
     f_svf->gain_db = 0.0f;
     f_svf->gain_linear = 1.0f;
 
-    f_svf->amp_ptr = g_amp_get();
-    f_svf->pitch_core = g_pit_get();
     f_svf->oversample_iterator = 0.0f;
 
     v_svf_set_cutoff_base(f_svf, 75.0f);

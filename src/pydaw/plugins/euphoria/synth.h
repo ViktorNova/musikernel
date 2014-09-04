@@ -120,8 +120,6 @@ typedef struct {
 
     float adjusted_base_pitch[EUPHORIA_MAX_SAMPLE_COUNT];
 
-    t_lin_interpolater * linear_interpolator;
-
     /*TODO:  Deprecate these 2?*/
     int loaded_samples[EUPHORIA_MAX_SAMPLE_COUNT];
     int loaded_samples_count;
@@ -154,8 +152,6 @@ typedef struct {
 
     //pthread_mutex_t mutex;
     t_euphoria_mono_modules * mono_modules;
-    t_amp * amp_ptr;
-    t_pit_pitch_core * smp_pit_core;
     t_pit_ratio * smp_pit_ratio;
     t_euphoria_poly_voice * data[EUPHORIA_POLYPHONY];
 
@@ -171,8 +167,6 @@ typedef struct {
     int i_ctrl;
 
     float amp;  //linear amplitude, from the master volume knob
-
-    t_cubic_interpolater * cubic_interpolator;
 
     float sv_pitch_bend_value;
     float sv_last_note;  //For glide

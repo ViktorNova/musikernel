@@ -29,7 +29,6 @@ typedef struct
     float output0, output1;
     t_osc_simple_unison * osc;
     float osc_output;
-    t_amp * amp;
     t_audio_xfade * xfade;
 }t_rmd_ring_mod;
 
@@ -42,7 +41,6 @@ void v_rmd_ring_mod_free(t_rmd_ring_mod* a_rmd)
 {
     if(a_rmd)
     {
-        v_amp_free(a_rmd->amp);
         free(a_rmd->xfade);
         //TODO:  Free the unison osc
         free(a_rmd);
@@ -62,7 +60,6 @@ t_rmd_ring_mod * g_rmd_ring_mod_get(float a_sr)
     f_result->output1 = 0.0f;
     f_result->last_wet = -110.0f;
     f_result->pitch = -99.99f;
-    f_result->amp = g_amp_get();
     f_result->osc_output = 0.0f;
     f_result->xfade = g_axf_get_audio_xfade(0.5f);
 

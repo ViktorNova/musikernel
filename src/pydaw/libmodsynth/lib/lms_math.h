@@ -25,7 +25,7 @@ inline float f_lms_max(float,float);
 inline float f_lms_min(float,float);
 inline float f_lms_floor(float,float);
 inline float f_lms_ceiling(float,float);
-inline float f_lms_sqrt(float, t_lin_interpolater*);
+inline float f_lms_sqrt(float);
 
 #ifdef	__cplusplus
 }
@@ -189,9 +189,9 @@ float arr_sqrt [arr_sqrt_count] = {
  * Calculate a square root using a fast table-based lookup.
  * The range is zero to 4
  */
-inline float f_lms_sqrt(float a_input, t_lin_interpolater* a_lin)
+inline float f_lms_sqrt(float a_input)
 {
-    return f_linear_interpolate_arr(arr_sqrt, (a_input * 100.0f), a_lin);
+    return f_linear_interpolate_arr(arr_sqrt, (a_input * 100.0f));
 }
 
 

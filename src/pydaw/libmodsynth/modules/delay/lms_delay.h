@@ -60,7 +60,6 @@ typedef struct st_lms_delay
     t_state_variable_filter * svf0;
     t_state_variable_filter * svf1;
 
-    t_amp * amp_ptr;
 }t_lms_delay;
 
 t_lms_delay * g_ldl_get_delay(float,float);
@@ -97,7 +96,6 @@ t_lms_delay * g_ldl_get_delay(float a_seconds, float a_sr)
     f_result->input_env_follower = g_enf_get_env_follower(a_sr);
     f_result->combined_inputs = 0.0f;
 
-    f_result->amp_ptr = g_amp_get();
     f_result->limiter = g_lim_get(a_sr);
     f_result->last_duck = -99.999f;
 
@@ -173,8 +171,7 @@ inline void v_ldl_set_delay(t_lms_delay* a_dly,float a_seconds,
     if(a_feeback_db != (a_dly->feedback_db))
     {
         a_dly->feedback_db = a_feeback_db;
-        a_dly->feedback_linear =
-                f_db_to_linear_fast(a_feeback_db, a_dly->amp_ptr);
+        a_dly->feedback_linear = f_db_to_linear_fast(a_feeback_db);
         if(a_dly->feedback_linear > 0.9f)
         {
             a_dly->feedback_linear = 0.9f;

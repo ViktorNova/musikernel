@@ -32,8 +32,6 @@ typedef struct st_amp_and_panner
     float amp_linear1;
     float output0;
     float output1;
-    t_amp * amp_ptr;
-    t_lin_interpolater * linear_interpolator;
 }t_amp_and_panner;
 
 void v_app_set(t_amp_and_panner*,float,float);
@@ -45,12 +43,14 @@ void v_app_set(t_amp_and_panner* a_app,float a_db,float a_pan)
     a_app->amp_db = a_db;
     a_app->pan = a_pan;
 
-    a_app->amp_linear = f_db_to_linear_fast(a_db , a_app->amp_ptr);
+    a_app->amp_linear = f_db_to_linear_fast(a_db);
 
-    a_app->amp_linear0 = (f_sine_fast_run(((a_pan * .5f) + 0.25f),
-            a_app->linear_interpolator) * 0.5f + 1.0f) * (a_app->amp_linear);
-    a_app->amp_linear1 = (f_sine_fast_run((0.75f - (a_pan * 0.5f)),
-            a_app->linear_interpolator) * 0.5f + 1.0f) * (a_app->amp_linear);
+    a_app->amp_linear0 =
+        (f_sine_fast_run(((a_pan * .5f) + 0.25f)) * 0.5f + 1.0f)
+            * (a_app->amp_linear);
+    a_app->amp_linear1 =
+        (f_sine_fast_run((0.75f - (a_pan * 0.5f))) * 0.5f + 1.0f)
+            * (a_app->amp_linear);
 }
 
 void v_app_run(t_amp_and_panner* a_app, float a_in0, float a_in1)
@@ -78,16 +78,12 @@ t_amp_and_panner * g_app_get()
     f_result->amp_linear1 = 1.0f;
     f_result->output0 = 0.0f;
     f_result->output1 = 0.0f;
-    f_result->amp_ptr = g_amp_get();
-    f_result->linear_interpolator = g_lin_get();
 
     return f_result;
 }
 
 void v_app_free(t_amp_and_panner * a_app)
 {
-    v_amp_free(a_app->amp_ptr);
-    free(a_app->linear_interpolator);
     free(a_app);
 }
 

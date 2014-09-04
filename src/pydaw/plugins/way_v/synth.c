@@ -722,13 +722,10 @@ static void v_run_wayv(PYFX_Handle instance, int sample_count,
                 plugin_data->data[f_voice]->amp =
                         f_db_to_linear_fast(
                         ((events[(plugin_data->event_pos)].velocity
-                        * 0.094488) - 12), //-12db to 0db
-                        plugin_data->mono_modules->amp_ptr);
+                        * 0.094488) - 12)); //-12db to 0db
 
                 plugin_data->data[f_voice]->master_vol_lin =
-                        f_db_to_linear_fast(
-                            (*(plugin_data->master_vol)),
-                            plugin_data->mono_modules->amp_ptr);
+                        f_db_to_linear_fast((*(plugin_data->master_vol)));
 
                 plugin_data->data[f_voice]->keyboard_track =
                         ((float)(events[(plugin_data->event_pos)].note))
@@ -813,8 +810,7 @@ static void v_run_wayv(PYFX_Handle instance, int sample_count,
                         plugin_data->data[f_voice]->adsr_amp_osc[f_i]);
 
                     plugin_data->data[f_voice]->osc_linamp[f_i] =
-                        f_db_to_linear_fast(f_db,
-                            plugin_data->mono_modules->amp_ptr);
+                        f_db_to_linear_fast(f_db);
 
                     if(f_db > -29.2f)
                     {
@@ -854,8 +850,7 @@ static void v_run_wayv(PYFX_Handle instance, int sample_count,
                 }
 
                 plugin_data->data[f_voice]->noise_linamp =
-                    f_db_to_linear_fast(*(plugin_data->noise_amp),
-                        plugin_data->mono_modules->amp_ptr);
+                    f_db_to_linear_fast(*(plugin_data->noise_amp));
 
                 plugin_data->data[f_voice]->adsr_noise_on =
                         (int)*plugin_data->noise_adsr_on;
@@ -923,8 +918,7 @@ static void v_run_wayv(PYFX_Handle instance, int sample_count,
                         (*plugin_data->hold_main) * 0.01f);
 
                 plugin_data->data[f_voice]->noise_amp =
-                    f_db_to_linear(*(plugin_data->noise_amp),
-                        plugin_data->mono_modules->amp_ptr);
+                    f_db_to_linear(*(plugin_data->noise_amp));
 
                 /*Set the last_note property, so the next note can glide from
                  * it if glide is turned on*/
@@ -1055,8 +1049,7 @@ static void v_run_wayv(PYFX_Handle instance, int sample_count,
                         (*plugin_data->ramp_curve) * 0.01f);
 
                 plugin_data->data[f_voice]->noise_amp =
-                        f_db_to_linear(*(plugin_data->noise_amp),
-                        plugin_data->mono_modules->amp_ptr);
+                        f_db_to_linear(*(plugin_data->noise_amp));
 
                 plugin_data->data[f_voice]->adsr_prefx =
                         (int)*plugin_data->adsr_prefx;
@@ -1267,8 +1260,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
     a_voice->lfo_amp_output =
             f_db_to_linear_fast((((*plugin_data->lfo_amp) *
             (a_voice->lfo_amount_output)) -
-            (f_lms_abs((*plugin_data->lfo_amp)) * 0.5)),
-            a_voice->amp_ptr);
+            (f_lms_abs((*plugin_data->lfo_amp)) * 0.5)));
 
     a_voice->lfo_pitch_output =
             (*plugin_data->lfo_pitch + (*plugin_data->lfo_pitch_fine * 0.01f))
@@ -1390,8 +1382,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
             if(a_voice->osc_audible[f_osc_num] || f_macro_amp >= 1.0f)
             {
                 f_osc_amp = (a_voice->osc_linamp[f_osc_num]) *
-                        f_db_to_linear(f_macro_amp,
-                            plugin_data->mono_modules->amp_ptr);
+                        f_db_to_linear(f_macro_amp);
 
                 if(f_osc_amp > 1.0f)  //clip at 0dB
                 {

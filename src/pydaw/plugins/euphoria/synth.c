@@ -489,12 +489,9 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
     plugin_data->i_selected_sample = 0;
     plugin_data->current_sample = 0;
     plugin_data->loaded_samples_count = 0;
-    plugin_data->cubic_interpolator = g_cubic_get();
-    plugin_data->linear_interpolator = g_lin_get();
     plugin_data->amp = 1.0f;
     plugin_data->i_slow_index = EUPHORIA_SLOW_INDEX_COUNT;
 
-    plugin_data->smp_pit_core = g_pit_get();
     plugin_data->smp_pit_ratio = g_pit_ratio();
 
     int f_i = 0;
@@ -539,7 +536,6 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
     plugin_data->sv_pitch_bend_value = 0.0f;
     plugin_data->sv_last_note = -1.0f;
     plugin_data->channels = 2;
-    plugin_data->amp_ptr = g_amp_get();
     plugin_data->mono_modules = g_euphoria_mono_init(s_rate);
     plugin_data->fs = s_rate;
 
@@ -599,8 +595,7 @@ static int calculate_ratio_sinc(t_euphoria *__restrict plugin_data, int n)
     plugin_data->ratio =
     f_pit_midi_note_to_ratio_fast(plugin_data->adjusted_base_pitch[(plugin_data->current_sample)],
             ((plugin_data->data[n]->base_pitch) //+ (plugin_data->data[n]->lfo_pitch_output)
-            ),
-            plugin_data->smp_pit_core, plugin_data->smp_pit_ratio)
+            ), plugin_data->smp_pit_ratio)
             *
             plugin_data->wavpool_items[(plugin_data->current_sample)]->ratio_orig;
 
@@ -639,8 +634,7 @@ static void run_sampler_interpolation_linear(t_euphoria *__restrict plugin_data,
         f_cubic_interpolate_ptr_ifh(
             plugin_data->wavpool_items[(plugin_data->current_sample)]->samples[ch],
             (plugin_data->sample_read_heads[n][(plugin_data->current_sample)]->whole_number),
-            (plugin_data->sample_read_heads[n][(plugin_data->current_sample)]->fraction),
-            plugin_data->cubic_interpolator);
+            (plugin_data->sample_read_heads[n][(plugin_data->current_sample)]->fraction));
 }
 
 
@@ -735,7 +729,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
 
             f_fade_vol =  (f_read_head_pos - f_start_pos) * f_fade_in_inc;
             f_fade_vol = (f_fade_vol * 18.0f) - 18.0f;
-            f_fade_vol = f_db_to_linear_fast(f_fade_vol, plugin_data->amp_ptr);
+            f_fade_vol = f_db_to_linear_fast(f_fade_vol);
         }
         else if(plugin_data->sample_read_heads[n][plugin_data->current_sample]->whole_number >
                 f_voice->sample_fade_out_start_sample[plugin_data->current_sample])
@@ -748,7 +742,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
 
             f_fade_vol = (f_sample_end_pos - f_read_head_pos) * f_fade_out_dec;
             f_fade_vol = (f_fade_vol * 18.0f) - 18.0f;
-            f_fade_vol = f_db_to_linear_fast(f_fade_vol, plugin_data->amp_ptr);
+            f_fade_vol = f_db_to_linear_fast(f_fade_vol);
         }
 
         f_voice->noise_sample =
@@ -869,7 +863,7 @@ static inline void v_euphoria_slow_index(t_euphoria* plugin_data)
         if(f_index > 0)
         {
             plugin_data->mono_modules->noise_linamp[(plugin_data->loaded_samples[i])] =
-                    f_db_to_linear_fast(*(plugin_data->noise_amp[(plugin_data->loaded_samples[i])]), plugin_data->mono_modules->amp_ptr);
+                f_db_to_linear_fast(*(plugin_data->noise_amp[(plugin_data->loaded_samples[i])]));
         }
         i++;
     }
@@ -1051,8 +1045,7 @@ static void v_run_lms_euphoria(PYFX_Handle instance, int sample_count,
 
                         plugin_data->sample_amp[(plugin_data->loaded_samples[i])] = f_db_to_linear(
                             (*(plugin_data->sample_vol[(plugin_data->loaded_samples[i])])) +
-                            (plugin_data->vel_sens_output[f_voice_num][(plugin_data->loaded_samples[i])])
-                            , plugin_data->amp_ptr);
+                            (plugin_data->vel_sens_output[f_voice_num][(plugin_data->loaded_samples[i])]));
 
                         switch((int)(*(plugin_data->sample_interpolation_mode[(plugin_data->loaded_samples[i])])))
                         {
@@ -1149,8 +1142,7 @@ static void v_run_lms_euphoria(PYFX_Handle instance, int sample_count,
                 }
 
                 plugin_data->amp =
-                        f_db_to_linear_fast(*(plugin_data->master_vol),
-                        plugin_data->mono_modules->amp_ptr);
+                        f_db_to_linear_fast(*(plugin_data->master_vol));
 
                 plugin_data->data[f_voice_num]->note_f = (float)f_note;
 

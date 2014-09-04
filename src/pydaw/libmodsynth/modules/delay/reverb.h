@@ -41,8 +41,6 @@ typedef struct
     t_state_variable_filter * hp;
     t_state_variable_filter * lp;
     t_comb_filter * taps[PYDAW_REVERB_TAP_COUNT];
-    t_pit_pitch_core * pitch_core;
-    t_amp * amp;
     float comb_tunings[PYDAW_REVERB_TAP_COUNT];
     float allpass_tunings[PYDAW_REVERB_DIFFUSER_COUNT];
     int predelay_counter;
@@ -163,9 +161,6 @@ t_rvb_reverb * g_rvb_reverb_get(float a_sr)
     f_result->wet_linear = 0.0f;
 
     f_result->sr = a_sr;
-
-    f_result->amp = g_amp_get();
-    f_result->pitch_core = g_pit_get();
 
     f_result->comb_tunings[0] = 24.0f;
     f_result->comb_tunings[1] = 25.0f;

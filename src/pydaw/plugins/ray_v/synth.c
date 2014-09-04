@@ -339,8 +339,7 @@ static void v_run_rayv(PYFX_Handle instance, int sample_count,
                         f_db_to_linear_fast(
                         //-20db to 0db, + master volume (0 to -60)
                         ((events[(plugin_data->event_pos)].velocity * 0.094488)
-                        - 12.0f + (*(plugin_data->master_vol))),
-                        plugin_data->mono_modules->amp_ptr);
+                        - 12.0f + (*(plugin_data->master_vol))));
                 v_svf_velocity_mod(plugin_data->data[f_voice]->svf_filter,
                         events[(plugin_data->event_pos)].velocity);
 
@@ -380,14 +379,11 @@ static void v_run_rayv(PYFX_Handle instance, int sample_count,
                         (plugin_data->data[f_voice]->target_pitch));
 
                 plugin_data->data[f_voice]->osc1_linamp =
-                        f_db_to_linear_fast(*(plugin_data->osc1vol),
-                        plugin_data->mono_modules->amp_ptr);
+                        f_db_to_linear_fast(*(plugin_data->osc1vol));
                 plugin_data->data[f_voice]->osc2_linamp =
-                        f_db_to_linear_fast(*(plugin_data->osc2vol),
-                        plugin_data->mono_modules->amp_ptr);
+                        f_db_to_linear_fast(*(plugin_data->osc2vol));
                 plugin_data->data[f_voice]->noise_linamp =
-                        f_db_to_linear_fast(*(plugin_data->noise_amp),
-                        plugin_data->mono_modules->amp_ptr);
+                        f_db_to_linear_fast(*(plugin_data->noise_amp));
 
                 plugin_data->data[f_voice]->unison_spread =
                         (*plugin_data->master_uni_spread) * 0.01f;
@@ -433,8 +429,7 @@ static void v_run_rayv(PYFX_Handle instance, int sample_count,
                         *plugin_data->res);
 
                 plugin_data->data[f_voice]->noise_amp =
-                        f_db_to_linear(*(plugin_data->noise_amp),
-                        plugin_data->mono_modules->amp_ptr);
+                        f_db_to_linear(*(plugin_data->noise_amp));
 
                 v_axf_set_xfade(plugin_data->data[f_voice]->dist_dry_wet,
                         *(plugin_data->dist_wet) * 0.01f);
@@ -622,8 +617,7 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
     v_lfs_run(a_voice->lfo1);
     a_voice->lfo_amp_output =
         f_db_to_linear_fast((((*plugin_data->lfo_amp) *
-        (a_voice->lfo1->output)) - (f_lms_abs((*plugin_data->lfo_amp)) * 0.5)),
-            a_voice->amp_ptr);
+        (a_voice->lfo1->output)) - (f_lms_abs((*plugin_data->lfo_amp)) * 0.5)));
     a_voice->lfo_filter_output =
             (*plugin_data->lfo_filter) * (a_voice->lfo1->output);
     a_voice->lfo_pitch_output =

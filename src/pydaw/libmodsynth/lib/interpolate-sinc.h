@@ -36,7 +36,6 @@ typedef struct
     float float_iterator_down;
     int pos_int;
     float pos_frac;
-    t_lin_interpolater * linear_interpolate;
 }t_sinc_interpolator;
 
 
@@ -97,24 +96,20 @@ float f_sinc_interpolate2(t_sinc_interpolator *__restrict a_sinc,
     a_sinc->result = 0.0f;
 
     a_sinc->result +=
-                f_linear_interpolate_ptr(a_sinc->sinc_table,
-            (a_sinc->float_iterator_up), a_sinc->linear_interpolate)
-                *
-                a_array[(a_sinc->pos_int)];
+        f_linear_interpolate_ptr(a_sinc->sinc_table,
+        (a_sinc->float_iterator_up)) * a_array[(a_sinc->pos_int)];
 
     for(a_sinc->i = 1;
             (a_sinc->i) <= (a_sinc->points_div2); a_sinc->i = (a_sinc->i) + 1)
     {
         a_sinc->result +=
                 f_linear_interpolate_ptr_wrap(a_sinc->sinc_table,
-                a_sinc->table_size, a_sinc->float_iterator_down,
-                a_sinc->linear_interpolate)
+                a_sinc->table_size, a_sinc->float_iterator_down)
                 *
                 a_array[(a_sinc->pos_int) - (a_sinc->i)];
         a_sinc->result +=
                 f_linear_interpolate_ptr_wrap(a_sinc->sinc_table,
-                a_sinc->table_size, (a_sinc->float_iterator_up),
-                a_sinc->linear_interpolate)
+                a_sinc->table_size, (a_sinc->float_iterator_up))
                 *
                 a_array[(a_sinc->pos_int) + (a_sinc->i)];
 
@@ -212,7 +207,6 @@ t_sinc_interpolator * g_sinc_get(int a_points, int a_samples_per_point,
                     (f_result->sinc_table[i_int]) * f_normalize;
         }
     }
-    f_result->linear_interpolate = g_lin_get();
 
     return f_result;
 

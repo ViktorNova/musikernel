@@ -58,7 +58,6 @@ typedef struct
     t_audio_xfade * xfader;
     t_amp_and_panner * amp_and_panner;
     float outgain;  //For anything with an outgain knob
-    t_amp * amp_ptr;
     t_for_formant_filter * formant_filter;
     t_crs_chorus * chorus;
     t_glc_glitch * glitch;
@@ -402,7 +401,7 @@ inline void v_mf3_run_dist(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[0] = ((a_mf3->control[0]) * 0.377952756f);
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.007874016f);
     a_mf3->control_value[2] = (((a_mf3->control[2]) * 0.236220472f) - 30.0f);
-    a_mf3->outgain = f_db_to_linear((a_mf3->control_value[2]), a_mf3->amp_ptr);
+    a_mf3->outgain = f_db_to_linear(a_mf3->control_value[2]);
     v_clp_set_in_gain(a_mf3->clipper, (a_mf3->control_value[0]));
     v_axf_set_xfade(a_mf3->xfader, (a_mf3->control_value[1]));
 
@@ -763,7 +762,6 @@ t_mf3_multi * g_mf3_get(float a_sample_rate)
     f_result->mod_value[2] = 0.0f;
     f_result->xfader = g_axf_get_audio_xfade(-3.0f);
     f_result->outgain = 1.0f;
-    f_result->amp_ptr = g_amp_get();
     f_result->amp_and_panner = g_app_get();
     f_result->saturator = g_sat_get();
     f_result->formant_filter = g_for_formant_filter_get(a_sample_rate);
@@ -782,7 +780,6 @@ void v_mf3_free(t_mf3_multi * a_mf3 )
     if(a_mf3)
     {
         v_app_free(a_mf3->amp_and_panner);
-        v_amp_free(a_mf3->amp_ptr);
         v_crs_free(a_mf3->chorus);
         v_clp_free(a_mf3->clipper);
         v_cmb_free(a_mf3->comb_filter0);

@@ -31,7 +31,6 @@ typedef struct
     float sr, sample_tmp;
     float output0, output1;
     t_audio_xfade * xfade;
-    t_pit_pitch_core * pitch;
 }t_glc_glitch;
 
 t_glc_glitch * g_glc_glitch_get(float);
@@ -44,7 +43,6 @@ void v_glc_glitch_free(t_glc_glitch * a_glc)
     if(a_glc)
     {
         free(a_glc->buffer);
-        v_pit_free(a_glc->pitch);
         free(a_glc);
     }
 }
@@ -73,7 +71,6 @@ t_glc_glitch * g_glc_glitch_get(float a_sr)
     f_result->last_pitch = 55.5555f;
     f_result->last_repeat = 99.99f;
     f_result->last_wet = -1.111f;
-    f_result->pitch = g_pit_get();
     f_result->repeat_count = 42;
     f_result->sample_count = 99.99f;
     f_result->sample_tmp = 0.0f;
@@ -89,8 +86,8 @@ void v_glc_glitch_set(t_glc_glitch* a_glc, float a_pitch, float a_repeat,
     if(a_glc->last_pitch != a_pitch)
     {
         a_glc->last_pitch = a_pitch;
-        a_glc->sample_count = (int)((a_glc->sr) /
-                (f_pit_midi_note_to_hz_fast(a_pitch, a_glc->pitch)));
+        a_glc->sample_count =
+            (int)((a_glc->sr) / (f_pit_midi_note_to_hz_fast(a_pitch)));
     }
 
     if(a_glc->last_repeat != a_repeat)

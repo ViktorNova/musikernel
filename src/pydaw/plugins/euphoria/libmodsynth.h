@@ -45,7 +45,6 @@ extern "C" {
 typedef struct
 {
     t_smoother_linear * pitchbend_smoother;
-    t_amp * amp_ptr;
     t_sinc_interpolator * sinc_interpolator;
     t_dco_dc_offset_filter * dc_offset_filters[EUPHORIA_CHANNEL_COUNT];
 
@@ -86,8 +85,6 @@ typedef struct
     float current_sample;
 
     t_lfs_lfo * lfo1;
-
-    t_amp * amp_ptr;
 
     float note_f;
     float noise_sample;
@@ -150,8 +147,6 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 
     f_voice->lfo1 = g_lfs_get(a_sr);
 
-    f_voice->amp_ptr = g_amp_get();
-
     f_voice->note_f = 1.0f;
     f_voice->noise_sample = 0.0f;
 
@@ -210,7 +205,6 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
 
     a_mono->pitchbend_smoother =
             g_sml_get_smoother_linear(a_sr, 1.0f, -1.0f, 0.2f);
-    a_mono->amp_ptr = g_amp_get();
     a_mono->sinc_interpolator =
             g_sinc_get(EUPHORIA_SINC_INTERPOLATION_POINTS, 6000, 8000.0f,
             a_sr, 0.42f);
