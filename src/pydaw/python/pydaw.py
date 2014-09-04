@@ -4911,6 +4911,7 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
             if f_item.isSelected():
                 f_selected_list.append(str(f_item.audio_item))
         AUDIO_SEQ.setUpdatesEnabled(False)
+        AUDIO_SEQ.update_zoom()
         AUDIO_SEQ.clear_drawn_items()
         if AUDIO_ITEMS:
             for k, v in AUDIO_ITEMS.items.items():
