@@ -1062,14 +1062,6 @@ class region_editor(QtGui.QGraphicsView):
 
         self.menu = QtGui.QMenu()
 
-        self.insert_action = self.menu.addAction(
-            _("Insert Item(s)"))
-        self.insert_action.triggered.connect(self.show_cell_dialog)
-        self.insert_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+E"))
-        self.addAction(self.insert_action)
-
-        self.menu.addSeparator()
-
         self.edit_group_action = self.menu.addAction(
             _("Edit Selected Item(s)"))
         self.edit_group_action.triggered.connect(self.edit_group)
