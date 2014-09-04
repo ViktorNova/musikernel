@@ -996,9 +996,12 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         QtGui.QApplication.restoreOverrideCursor()
         REGION_EDITOR.click_enabled = True
 
+ALL_PEAK_METERS = []
 
 class tracks_widget:
     def __init__(self):
+        global ALL_PEAK_METERS
+        ALL_PEAK_METERS = []
         self.tracks = {}
         self.tracks_widget = QtGui.QWidget()
         self.tracks_widget.setContentsMargins(0, 0, 0, 0)
@@ -1012,8 +1015,10 @@ class tracks_widget:
         self.tracks_layout.setContentsMargins(0, 0, 0, 0)
         for i in range(REGION_EDITOR_TRACK_COUNT):
             f_track = seq_track(i, TRACK_NAMES[i])
+            ALL_PEAK_METERS.append(f_track.peak_meter)
             self.tracks[i] = f_track
             self.tracks_layout.addWidget(f_track.group_box)
+        ALL_PEAK_METERS.append(WAVE_EDITOR.peak_meter)
 
 
 class region_editor(QtGui.QGraphicsView):
@@ -9688,9 +9693,6 @@ class pydaw_main_window(QtGui.QMainWindow):
             event.accept()
 
 def global_update_peak_meters(a_val):
-    ALL_PEAK_METERS = [TRACK_PANEL.tracks[k].peak_meter
-        for k in sorted(TRACK_PANEL.tracks)]
-    ALL_PEAK_METERS.append(WAVE_EDITOR.peak_meter)
     for f_val in a_val.split("|"):
         f_list = f_val.split(":")
         f_index = int(f_list[0])
