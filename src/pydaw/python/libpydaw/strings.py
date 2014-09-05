@@ -20,7 +20,7 @@ A track can be any/all of: instrument, audio, bus or send.
 An item is one bar of MIDI notes and/or pitch-bend.
 Click an empty cell to add a new item.
 Double click an item to open it in the piano-roll-editor or select
- multiple using CTRL+drag and right-click->'Edit Selected Items'
+ multiple using CTRL+click+drag and right-click->'Edit Selected Items'
 
 Shift+click+drag to delete items with the mouse
 

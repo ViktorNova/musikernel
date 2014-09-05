@@ -622,11 +622,11 @@ class region_settings:
 
 
     def unsolo_all(self):
-        for f_track in REGION_EDITOR.tracks:
+        for f_track in TRACK_PANEL.tracks:
             f_track.solo_checkbox.setChecked(False)
 
     def unmute_all(self):
-        for f_track in REGION_EDITOR.tracks:
+        for f_track in TRACK_PANEL.tracks:
             f_track.mute_checkbox.setChecked(False)
 
 
@@ -1085,19 +1085,16 @@ class region_editor(QtGui.QGraphicsView):
 
         self.paste_action = self.menu.addAction(_("Paste"))
         self.paste_action.triggered.connect(self.paste_clipboard)
-        self.paste_action.setShortcut(QtGui.QKeySequence.Paste)
         self.addAction(self.paste_action)
 
         self.paste_to_end_action = self.menu.addAction(
             _("Paste to Region End"))
         self.paste_to_end_action.triggered.connect(self.paste_to_region_end)
-        self.paste_to_end_action.setShortcut(
-            QtGui.QKeySequence.fromString("ALT+V"))
-        self.addAction(self.paste_to_end_action)
 
         self.paste_to_orig_action = self.menu.addAction(
             _("Paste to Original Pos"))
         self.paste_to_orig_action.triggered.connect(self.paste_at_original_pos)
+        self.paste_to_orig_action.setShortcut(QtGui.QKeySequence.Paste)
         self.addAction(self.paste_to_orig_action)
 
         self.select_all_action = QtGui.QAction(_("Select All"), self)
@@ -1278,11 +1275,12 @@ class region_editor(QtGui.QGraphicsView):
                 f_step = 1 if f_start <= f_end else -1
                 f_range = f_take_dict[f_cell_text][f_start:f_end:f_step]
                 for f_suffix, f_pos in zip(
-                f_range, range(x, pydaw_get_current_region_length())):
+                f_range, range(y, pydaw_get_current_region_length())):
                     f_name = "".join((f_cell_text, f_suffix))
-                    self.draw_item(f_pos, y, f_name, True)
+                    print(f_name)
+                    self.draw_item(x, f_pos, f_name, True)
                     CURRENT_REGION.add_item_ref_by_name(
-                        f_pos, y, f_name, f_item_dict)
+                        x, f_pos, f_name, f_item_dict)
             PROJECT.save_region(
                 str(REGION_SETTINGS.region_name_lineedit.text()),
                 CURRENT_REGION)
@@ -1925,7 +1923,7 @@ class region_editor(QtGui.QGraphicsView):
             if f_column >= f_region_length or f_column < 0:
                 continue
             f_row = f_item[0] + f_base_row
-            if f_row >= len(self.tracks) or f_row < 0:
+            if f_row >= len(TRACK_PANEL.tracks) or f_row < 0:
                 continue
             self.draw_item(f_row, f_column, f_item[2], a_selected=True)
         global_tablewidget_to_region()
