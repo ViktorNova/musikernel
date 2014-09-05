@@ -4740,9 +4740,6 @@ void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
             char f_file_name[1024];
             sprintf(f_file_name, "%s%i", self->plugins_folder, a_plugin_uid);
 
-            printf("Attempting to open %s \n(TODO: delete this printf)\n",
-                f_file_name);
-
             if(i_pydaw_file_exists(f_file_name))
             {
                 printf("v_pydaw_open_plugin:  plugin exists %s , loading\n",
