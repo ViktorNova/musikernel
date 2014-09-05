@@ -1000,8 +1000,6 @@ ALL_PEAK_METERS = {}
 
 class tracks_widget:
     def __init__(self):
-        global ALL_PEAK_METERS
-        ALL_PEAK_METERS = {}
         self.tracks = {}
         self.tracks_widget = QtGui.QWidget()
         self.tracks_widget.setObjectName("plugin_ui")
@@ -1017,10 +1015,8 @@ class tracks_widget:
         self.tracks_layout.setContentsMargins(0, 0, 0, 0)
         for i in range(REGION_EDITOR_TRACK_COUNT):
             f_track = seq_track(i, TRACK_NAMES[i])
-            ALL_PEAK_METERS[i] = f_track.peak_meter
             self.tracks[i] = f_track
             self.tracks_layout.addWidget(f_track.group_box)
-        ALL_PEAK_METERS[REGION_EDITOR_TRACK_COUNT] = WAVE_EDITOR.peak_meter
 
 
 class region_editor(QtGui.QGraphicsView):
@@ -7876,6 +7872,7 @@ class seq_track:
         self.main_vlayout = QtGui.QVBoxLayout()
         self.main_hlayout.addLayout(self.main_vlayout)
         self.peak_meter = pydaw_widgets.peak_meter()
+        ALL_PEAK_METERS[a_track_num] = self.peak_meter
         self.main_hlayout.addWidget(self.peak_meter.widget)
         self.group_box.setLayout(self.main_hlayout)
         self.track_name_lineedit = QtGui.QLineEdit()
@@ -10121,6 +10118,7 @@ class pydaw_wave_editor_widget:
         self.vol_label.setMinimumWidth(51)
         self.vol_layout.addWidget(self.vol_label)
         self.peak_meter = pydaw_widgets.peak_meter(28, a_text=True)
+        ALL_PEAK_METERS[REGION_EDITOR_TRACK_COUNT] = self.peak_meter
         self.edit_hlayout.addWidget(self.peak_meter.widget)
         self.ctrl_vlayout = QtGui.QVBoxLayout()
         self.edit_hlayout.addLayout(self.ctrl_vlayout)
