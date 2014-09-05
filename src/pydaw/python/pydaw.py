@@ -796,8 +796,6 @@ class region_settings:
         self.length_alternate_radiobutton.setEnabled(True)
         self.length_alternate_spinbox.setEnabled(True)
 
-########  Nu hottness
-
 
 def global_set_region_editor_zoom():
     global REGION_EDITOR_GRID_WIDTH
@@ -896,9 +894,14 @@ def region_editor_set_delete_mode(a_enabled):
         QtGui.QApplication.restoreOverrideCursor()
         global_tablewidget_to_region()
 
+class ITEM_TYPE:
+    midi = 0
+    automation = 1
+    def __init__(self):
+        assert(False)
 
 class region_editor_item(QtGui.QGraphicsRectItem):
-    def __init__(self, a_track, a_bar, a_name, a_enabled=True):
+    def __init__(self, a_track, a_bar, a_name, a_type, a_enabled=True):
         self.bar_width = (REGION_EDITOR_GRID_WIDTH /
             pydaw_get_current_region_length())
         QtGui.QGraphicsRectItem.__init__(
@@ -912,6 +915,8 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             self.setZValue(1001.0)
             self.setEnabled(False)
             self.setOpacity(0.3)
+        self.enabled = a_enabled
+        self.type = a_type
         self.track_num = int(a_track)
         self.bar = int(a_bar)
         self.setAcceptHoverEvents(True)
@@ -934,11 +939,16 @@ class region_editor_item(QtGui.QGraphicsRectItem):
     def set_brush(self):
         if self.isSelected():
             self.setBrush(pydaw_selected_gradient)
-            self.label.setBrush(QtCore.Qt.darkGray)
+            self.label.setBrush(QtCore.Qt.black)
         else:
             self.label.setBrush(QtCore.Qt.white)
-            f_index = self.track_num % len(pydaw_track_gradients)
-            self.setBrush(pydaw_track_gradients[f_index])
+            if self.type == ITEM_TYPE.midi:
+                f_index = self.track_num % len(pydaw_track_gradients)
+                self.setBrush(pydaw_track_gradients[f_index])
+            elif self.type == ITEM_TYPE.automation:
+                self.setBrush(QtGui.QColor(150, 150, 150, 120))
+            else:
+                assert(False)
 
     def hoverMoveEvent(self, a_event):
         #QtGui.QGraphicsRectItem.hoverMoveEvent(self, a_event)
@@ -1485,7 +1495,8 @@ class region_editor(QtGui.QGraphicsView):
         self.current_coord = self.get_item_coord(a_event.scenePos())
         self.current_item = None
         for f_item in self.scene.items(a_event.scenePos()):
-                if isinstance(f_item, region_editor_item):
+                if isinstance(f_item, region_editor_item) and \
+                f_item.enabled:
                     self.current_item = f_item
                     if not f_item.isSelected():
                         self.scene.clearSelection()
@@ -1577,7 +1588,9 @@ class region_editor(QtGui.QGraphicsView):
         for f_item in CURRENT_REGION.items:
             if f_item.bar_num < pydaw_get_current_region_length():
                 f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
-                self.draw_item(f_item.track_num,f_item.bar_num, f_item_name)
+                self.draw_item(
+                    f_item.track_num, f_item.bar_num,
+                    f_item_name, ITEM_TYPE.midi)
                 if "".join(str(x) for x in
                 (f_item.track_num, f_item.bar_num, f_item_name)
                 ) in self.selected_item_strings:
@@ -1624,10 +1637,9 @@ class region_editor(QtGui.QGraphicsView):
         for f_item in self.get_all_items():
             f_item.setSelected(False)
 
-    def draw_item(self, a_track, a_bar, a_name,
+    def draw_item(self, a_track, a_bar, a_name, a_type,
                   a_enabled=True, a_selected=False):
-        f_item = region_editor_item(
-            a_track, a_bar, a_name, a_enabled)
+        f_item = region_editor_item(a_track, a_bar, a_name, a_type, a_enabled)
         self.scene.addItem(f_item)
         if a_selected:
             f_item.setSelected(True)
@@ -1982,8 +1994,6 @@ class region_editor(QtGui.QGraphicsView):
             for a region ref
         """
         return [(x.track_num, x.bar, x.name) for x in self.get_all_items()]
-
-########  End nu hottness
 
 
 REGION_CLIPBOARD_ROW_OFFSET = 0
@@ -7725,10 +7735,12 @@ class plugin_settings:
     instrument = 0
     effect = 1
     def __init__(self, a_index, a_track_num,
-                 a_layout, a_type, a_save_callback, a_name_callback):
+                 a_layout, a_type, a_save_callback, a_name_callback,
+                 a_automation_callback):
         self.suppress_osc = False
         self.save_callback = a_save_callback
         self.name_callback = a_name_callback
+        self.automation_callback = a_automation_callback
         self.plugin_uid = -1
         self.type = a_type
         self.track_num = a_track_num
@@ -7750,6 +7762,15 @@ class plugin_settings:
         self.ui_button.setObjectName("uibutton")
         self.ui_button.setFixedWidth(24)
         a_layout.addWidget(self.ui_button, a_index + 1, f_offset + 1)
+        self.automation_radiobutton = QtGui.QRadioButton("A")
+        a_layout.addWidget(
+            self.automation_radiobutton, a_index + 1, f_offset + 2)
+        self.automation_radiobutton.pressed.connect(
+            self.automation_check_changed)
+
+    def automation_check_changed(self, a_val=None):
+        if self.automation_radiobutton.isChecked():
+            self.automation_callback(self.type, self.index, self.plugin_uid)
 
     def set_value(self, a_val):
         self.suppress_osc = True
@@ -7864,6 +7885,9 @@ class track_send:
 class seq_track:
     def __init__(self, a_track_num, a_track_text=_("track")):
         self.suppress_osc = True
+        self.automation_type = None
+        self.automation_index = None
+        self.automation_uid = None
         self.track_number = a_track_num
         self.group_box = QtGui.QWidget()
         self.group_box.setFixedHeight(REGION_EDITOR_TRACK_HEIGHT)
@@ -7932,7 +7956,7 @@ class seq_track:
                 f_plugin = plugin_settings(
                     f_i, self.track_number, self.menu_gridlayout,
                     plugin_settings.instrument, self.save_callback,
-                    self.name_callback)
+                    self.name_callback, self.automation_callback)
                 self.instruments.append(f_plugin)
         self.menu_gridlayout.addWidget(
             QtGui.QLabel(_("Effects")), 0, 10)
@@ -7941,7 +7965,7 @@ class seq_track:
             f_plugin = plugin_settings(
                 f_i, self.track_number, self.menu_gridlayout,
                 plugin_settings.effect, self.save_callback,
-                self.name_callback)
+                self.name_callback, self.automation_callback)
             self.effects.append(f_plugin)
         self.sends = []
         if self.track_number != 0:
@@ -7992,6 +8016,11 @@ class seq_track:
 
     def context_menu_event(self, a_event=None):
         pass
+
+    def automation_callback(self, a_type, a_index, a_uid):
+        self.automation_type = a_type
+        self.automation_index = a_index
+        self.automation_uid = a_uid
 
     def save_callback(self):
         f_result = pydaw_track_plugins(
