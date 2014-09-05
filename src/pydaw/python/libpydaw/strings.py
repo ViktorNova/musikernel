@@ -17,19 +17,17 @@ from libpydaw.translate import _
 region_list_editor = _(
 """This is a region editor, it consists of items and tracks.
 A track can be any/all of: instrument, audio, bus or send.
-An item is one bar of MIDI notes or plugin automation.
+An item is one bar of MIDI notes and/or pitch-bend.
 Click an empty cell to add a new item.
 Double click an item to open it in the piano-roll-editor or select
- multiple and right-click->'Edit Selected Items'
+ multiple using CTRL+drag and right-click->'Edit Selected Items'
 
-The selected items can be copied by pressing CTRL+C, cut with CTRL+X,
- pasted with CTRL+V, and deleted by pressing 'Delete'
+See the right-click context menu for additional actions and keyboard shortcuts.
 
-Additional functions can be found by right-clicking on
-the items, the term 'unlink' means to create a new copy of the item that
-does not change it's parent item when edited.
-(by default all items are 'ghost items' that update all
-items with the same name)
+The term 'unlink' means to create a new copy of the item that does not
+change it's parent item when edited. (by default all items are
+'ghost items' that update all items with the same name)
+
 Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
 
 audio_viewer_item = _(
@@ -43,7 +41,7 @@ You can multi-select individual items by SHIFT+ALT+clicking on them.
 
 You can glue together multiple items by selecting items and pressing CTRL+G,
 the glued item will retain all of the fades, stretches and per-item fx of
-the original items.\n""")
+the original items.""")
 
 
 audio_viewer_widget_folders = _(
