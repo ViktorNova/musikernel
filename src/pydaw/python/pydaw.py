@@ -523,47 +523,6 @@ CURRENT_REGION = None
 CURRENT_REGION_NAME = None
 
 class region_settings:
-    def update_region_length(self, a_value=None):
-        f_region_name = str(self.region_name_lineedit.text())
-        global CURRENT_REGION
-        if not IS_PLAYING and \
-        CURRENT_REGION is not None and f_region_name != "":
-            if not self.enabled or CURRENT_REGION is None:
-                return
-            if self.length_alternate_radiobutton.isChecked():
-                f_region_length = self.length_alternate_spinbox.value()
-                CURRENT_REGION.region_length_bars = f_region_length
-                f_commit_message = _(
-                    "Set region '{}' length to {}").format(f_region_name,
-                    self.length_alternate_spinbox.value())
-            else:
-                CURRENT_REGION.region_length_bars = 0
-                f_region_length = 8
-                f_commit_message = _(
-                    "Set region '{}' length to default value").format(
-                    f_region_name)
-            PROJECT.save_region(
-                f_region_name, CURRENT_REGION)
-            AUDIO_ITEMS.set_region_length(f_region_length)
-            PROJECT.save_audio_region(
-                CURRENT_REGION.uid, AUDIO_ITEMS)
-            self.open_region(self.region_name_lineedit.text())
-            f_resave = False
-            for f_item in AUDIO_SEQ.audio_items:
-                if f_item.clip_at_region_end():
-                    f_resave = True
-            if f_resave:
-                PROJECT.save_audio_region(
-                    CURRENT_REGION.uid, AUDIO_ITEMS)
-            PROJECT.commit(f_commit_message)
-            global_update_region_time()
-            pydaw_set_audio_seq_zoom(AUDIO_SEQ.h_zoom, AUDIO_SEQ.v_zoom)
-            global_open_audio_items()
-
-    def toggle_hide_inactive(self):
-        self.hide_inactive = self.toggle_hide_action.isChecked()
-        global_update_hidden_rows()
-
     def __init__(self):
         self.enabled = False
         self.hlayout0 = QtGui.QHBoxLayout()
@@ -574,6 +533,14 @@ class region_settings:
         self.region_name_lineedit.setEnabled(False)
         self.region_name_lineedit.setMaximumWidth(210)
         self.hlayout0.addWidget(self.region_name_lineedit)
+
+        self.edit_mode_combobox = QtGui.QComboBox()
+        self.edit_mode_combobox.setMinimumWidth(132)
+        self.edit_mode_combobox.addItems([_("Items"), _("Automation")])
+        self.edit_mode_combobox.currentIndexChanged.connect(
+            self.edit_mode_changed)
+        self.hlayout0.addWidget(QtGui.QLabel(_("Edit Mode:")))
+        self.hlayout0.addWidget(self.edit_mode_combobox)
 
         self.menu_button = QtGui.QPushButton(_("Menu"))
         self.hlayout0.addWidget(self.menu_button)
@@ -620,6 +587,49 @@ class region_settings:
             self.update_region_length)
         self.hlayout0.addWidget(self.length_alternate_spinbox)
 
+    def edit_mode_changed(self, a_value=None):
+        pass
+
+    def update_region_length(self, a_value=None):
+        f_region_name = str(self.region_name_lineedit.text())
+        global CURRENT_REGION
+        if not IS_PLAYING and \
+        CURRENT_REGION is not None and f_region_name != "":
+            if not self.enabled or CURRENT_REGION is None:
+                return
+            if self.length_alternate_radiobutton.isChecked():
+                f_region_length = self.length_alternate_spinbox.value()
+                CURRENT_REGION.region_length_bars = f_region_length
+                f_commit_message = _(
+                    "Set region '{}' length to {}").format(f_region_name,
+                    self.length_alternate_spinbox.value())
+            else:
+                CURRENT_REGION.region_length_bars = 0
+                f_region_length = 8
+                f_commit_message = _(
+                    "Set region '{}' length to default value").format(
+                    f_region_name)
+            PROJECT.save_region(
+                f_region_name, CURRENT_REGION)
+            AUDIO_ITEMS.set_region_length(f_region_length)
+            PROJECT.save_audio_region(
+                CURRENT_REGION.uid, AUDIO_ITEMS)
+            self.open_region(self.region_name_lineedit.text())
+            f_resave = False
+            for f_item in AUDIO_SEQ.audio_items:
+                if f_item.clip_at_region_end():
+                    f_resave = True
+            if f_resave:
+                PROJECT.save_audio_region(
+                    CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.commit(f_commit_message)
+            global_update_region_time()
+            pydaw_set_audio_seq_zoom(AUDIO_SEQ.h_zoom, AUDIO_SEQ.v_zoom)
+            global_open_audio_items()
+
+    def toggle_hide_inactive(self):
+        self.hide_inactive = self.toggle_hide_action.isChecked()
+        global_update_hidden_rows()
 
     def unsolo_all(self):
         for f_track in TRACK_PANEL.tracks:
