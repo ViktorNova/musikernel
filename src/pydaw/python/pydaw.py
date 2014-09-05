@@ -2973,7 +2973,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_path = self.get_file_path()
         WAVE_EDITOR.open_file(f_path)
         WAVE_EDITOR.set_audio_item(self.audio_item)
-        MAIN_WINDOW.main_tabwidget.setCurrentIndex(3)
+        MAIN_WINDOW.main_tabwidget.setCurrentIndex(4)
 
     def edit_properties(self):
         AUDIO_SEQ.scene.clearSelection()
@@ -7234,13 +7234,10 @@ class item_list_editor:
         self.piano_roll_tab = QtGui.QGroupBox()
         self.tab_widget.addTab(self.piano_roll_tab, _("Piano Roll"))
         self.notes_tab = QtGui.QGroupBox()
-        self.group_box = QtGui.QGroupBox()
-        #self.tab_widget.addTab(self.group_box, _("CCs"))
+
         self.pitchbend_tab = QtGui.QGroupBox()
         self.tab_widget.addTab(self.pitchbend_tab, _("Pitchbend"))
 
-        self.main_vlayout = QtGui.QVBoxLayout()
-        self.group_box.setLayout(self.main_vlayout)
         self.editing_hboxlayout = QtGui.QHBoxLayout()
         self.master_vlayout.addWidget(self.tab_widget)
 
@@ -7300,9 +7297,6 @@ class item_list_editor:
         self.ccs_table_widget.resizeColumnsToContents()
         self.ccs_vlayout.addWidget(self.ccs_table_widget)
         self.notes_hlayout.addWidget(self.ccs_groupbox)
-
-        self.main_vlayout.addWidget(CC_EDITOR_WIDGET.widget)
-
         self.pb_hlayout = QtGui.QHBoxLayout()
         self.pitchbend_tab.setLayout(self.pb_hlayout)
         self.pb_groupbox = QtGui.QGroupBox(_("Pitchbend"))
@@ -8124,9 +8118,9 @@ class transport_widget:
             f_we_enabled = WAVE_EDITOR.enabled_checkbox.isChecked()
             f_tab_index = MAIN_WINDOW.main_tabwidget.currentIndex()
             if WAVE_EDITOR.history:
-                if f_tab_index == 3 and not f_we_enabled:
+                if f_tab_index == 4 and not f_we_enabled:
                     WAVE_EDITOR.enabled_checkbox.setChecked(True)
-                elif f_tab_index != 3 and f_we_enabled:
+                elif f_tab_index != 4 and f_we_enabled:
                     WAVE_EDITOR.enabled_checkbox.setChecked(False)
         SONG_EDITOR.table_widget.setEnabled(False)
         REGION_SETTINGS.on_play()
@@ -9059,7 +9053,7 @@ class pydaw_main_window(QtGui.QMainWindow):
 
     def tab_changed(self):
         f_index = self.main_tabwidget.currentIndex()
-        if not IS_PLAYING and f_index != 3:
+        if not IS_PLAYING and f_index != 4:
             WAVE_EDITOR.enabled_checkbox.setChecked(False)
         if f_index == 1:
             ITEM_EDITOR.tab_changed()
@@ -9523,7 +9517,14 @@ class pydaw_main_window(QtGui.QMainWindow):
         self.regions_tab_widget.currentChanged.connect(
             self.regions_tab_changed)
 
-        self.main_tabwidget.addTab(ITEM_EDITOR.widget, _("MIDI Item"))
+        self.main_tabwidget.addTab(ITEM_EDITOR.widget, _("MIDI Items"))
+
+        self.automation_tab = QtGui.QWidget()
+        self.automation_tab.setObjectName("plugin_ui")
+        self.main_tabwidget.addTab(self.automation_tab, _("Automation Items"))
+        self.automation_vlayout = QtGui.QVBoxLayout()
+        self.automation_tab.setLayout(self.automation_vlayout)
+        self.automation_vlayout.addWidget(CC_EDITOR_WIDGET.widget)
 
         self.cc_map_tab = QtGui.QWidget()
         self.cc_map_tab.setObjectName("ccmaptabwidget")
@@ -10752,7 +10753,7 @@ PIANO_ROLL_EDITOR_WIDGET = piano_roll_editor_widget()
 ITEM_EDITOR = item_list_editor()
 AUDIO_SEQ = audio_items_viewer()
 
-MIDI_EDITORS = (CC_EDITOR, PIANO_ROLL_EDITOR, PB_EDITOR)
+MIDI_EDITORS = (PIANO_ROLL_EDITOR, PB_EDITOR)
 
 def global_check_device():
     f_device_dialog = pydaw_device_dialog.pydaw_device_dialog(
