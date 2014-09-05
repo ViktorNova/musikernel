@@ -22,6 +22,8 @@ Click an empty cell to add a new item.
 Double click an item to open it in the piano-roll-editor or select
  multiple using CTRL+drag and right-click->'Edit Selected Items'
 
+Shift+click+drag to delete items with the mouse
+
 See the right-click context menu for additional actions and keyboard shortcuts.
 
 The term 'unlink' means to create a new copy of the item that does not
