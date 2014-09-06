@@ -1523,12 +1523,12 @@ class region_editor(QtGui.QGraphicsView):
         self.current_coord = self.get_item_coord(a_event.scenePos())
         self.current_item = None
         for f_item in self.scene.items(a_event.scenePos()):
-                if isinstance(f_item, region_editor_item):
-                    self.current_item = f_item
-                    if not f_item.isSelected():
-                        self.scene.clearSelection()
-                    f_item.setSelected(True)
-                    break
+            if isinstance(f_item, region_editor_item):
+                self.current_item = f_item
+                if not f_item.isSelected():
+                    self.scene.clearSelection()
+                f_item.setSelected(True)
+                break
         if a_event.button() == QtCore.Qt.RightButton:
             if self.current_coord:
                 self.show_context_menu()
