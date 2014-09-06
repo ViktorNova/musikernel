@@ -1242,15 +1242,17 @@ class region_editor(QtGui.QGraphicsView):
         f_pos_x < REGION_EDITOR_MAX_START and \
         f_pos_y > REGION_EDITOR_HEADER_HEIGHT and \
         f_pos_y < REGION_EDITOR_TOTAL_HEIGHT:
-            f_track = ((f_pos_y - REGION_EDITOR_HEADER_HEIGHT) / (
-                self.tracks_height)) * REGION_EDITOR_TRACK_COUNT
-            f_bar = (f_pos_x / self.viewer_width) * self.item_length
-            return int(f_track), int(f_bar)
+            f_track = int(((f_pos_y - REGION_EDITOR_HEADER_HEIGHT) / (
+                self.tracks_height)) * REGION_EDITOR_TRACK_COUNT)
+            f_bar = int((f_pos_x / self.viewer_width) * self.item_length)
+            f_beat = (((f_pos_x / self.viewer_width) *
+                self.item_length) - f_bar) * 4.0
+            return f_track, f_bar, f_beat
         else:
             return None
 
     def show_cell_dialog(self):
-        x, y = self.current_coord
+        x, y, f_beat = self.current_coord
         def note_ok_handler():
             self.scene.clearSelection()
             global CURRENT_REGION
@@ -1835,7 +1837,7 @@ class region_editor(QtGui.QGraphicsView):
             return
 
         f_current_item_text = self.current_item.name
-        x, y = self.current_coord
+        x, y, f_beat = self.current_coord
 
         def note_ok_handler():
             f_cell_text = str(f_new_lineedit.text())
@@ -1942,7 +1944,7 @@ class region_editor(QtGui.QGraphicsView):
                 "clipboard.\n"
                 "You have {} items copied.").format(len(REGION_CLIPBOARD)))
             return
-        f_base_row, f_base_column = self.current_coord
+        f_base_row, f_base_column, f_beat = self.current_coord
         f_region_length = pydaw_get_current_region_length()
         f_item = REGION_CLIPBOARD[0]
         for f_column in range(f_base_column, f_region_length):
@@ -1962,7 +1964,7 @@ class region_editor(QtGui.QGraphicsView):
         else:
             if not self.current_coord:
                 return
-            f_base_row, f_base_column = self.current_coord
+            f_base_row, f_base_column, f_beat = self.current_coord
         self.scene.clearSelection()
         f_region_length = pydaw_get_current_region_length()
         for f_item in REGION_CLIPBOARD:
