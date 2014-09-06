@@ -97,7 +97,7 @@ def get_scaled_pixmap_knob(a_size):
     return PYDAW_KNOB_PIXMAP_CACHE[a_size]
 
 CC_CLIPBOARD = None
-TEMPO = 140.0
+TEMPO = 128.0
 
 def set_global_tempo(a_tempo):
     global TEMPO
