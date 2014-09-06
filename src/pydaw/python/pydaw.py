@@ -1028,28 +1028,25 @@ class tracks_widget:
             self.tracks[i] = f_track
             self.tracks_layout.addWidget(f_track.group_box)
 
-ATM_POINT_DIAMETER = 12.0
+ATM_POINT_DIAMETER = 6.0
 ATM_POINT_RADIUS = ATM_POINT_DIAMETER * 0.5
 
 ATM_GRADIENT = QtGui.QLinearGradient(
     0, 0, ATM_POINT_DIAMETER, ATM_POINT_DIAMETER)
 ATM_GRADIENT.setColorAt(0, QtGui.QColor(255, 255, 255))
-ATM_GRADIENT.setColorAt(1, QtGui.QColor(240, 240, 240))
+ATM_GRADIENT.setColorAt(0.5, QtGui.QColor(210, 210, 210))
 
 
 class atm_item(QtGui.QGraphicsEllipseItem):
-    def __init__(self, a_item, a_save_callback, a_parent):
+    def __init__(self, a_item, a_save_callback):
         QtGui.QGraphicsEllipseItem.__init__(
-            self, 0, 0, ATM_POINT_DIAMETER, ATM_POINT_DIAMETER, a_parent)
+            self, 0, 0, ATM_POINT_DIAMETER, ATM_POINT_DIAMETER)
         self.save_callback = a_save_callback
         self.item = a_item
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
+        self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
         self.setZValue(1100.0)
         self.set_brush()
-        self.set_pos()
-
-    def set_pos(self):
-        self.setPos()
 
     def set_brush(self):
         if self.isSelected():
@@ -1523,29 +1520,43 @@ class region_editor(QtGui.QGraphicsView):
 
     def sceneMousePressEvent(self, a_event):
         self.current_coord = self.get_item_coord(a_event.scenePos())
-        self.current_item = None
-        for f_item in self.scene.items(a_event.scenePos()):
-            if isinstance(f_item, region_editor_item):
-                self.current_item = f_item
-                if not f_item.isSelected():
-                    self.scene.clearSelection()
-                f_item.setSelected(True)
-                break
-        if a_event.button() == QtCore.Qt.RightButton:
-            if self.current_coord:
-                self.show_context_menu()
-            return
-        elif a_event.modifiers() == QtCore.Qt.ControlModifier:
-            pass
-        elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
-            region_editor_set_delete_mode(True)
-            return
-        else:
-            if not self.current_item:
-                self.show_cell_dialog()
+        if REGION_EDITOR_MODE == 0:
+            self.current_item = None
+            for f_item in self.scene.items(a_event.scenePos()):
+                if isinstance(f_item, region_editor_item):
+                    self.current_item = f_item
+                    if not f_item.isSelected():
+                        self.scene.clearSelection()
+                    f_item.setSelected(True)
+                    break
+            if a_event.button() == QtCore.Qt.RightButton:
+                if self.current_coord:
+                    self.show_context_menu()
+                return
+            elif a_event.modifiers() == QtCore.Qt.ControlModifier:
+                pass
+            elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
+                region_editor_set_delete_mode(True)
+                return
+            else:
+                if not self.current_item:
+                    self.show_cell_dialog()
+        elif REGION_EDITOR_MODE == 1:
+            if a_event.modifiers() == QtCore.Qt.ControlModifier:
+                pass
+            elif a_event.button() == QtCore.Qt.RightButton:
+                pass
+            else:
+                f_item = atm_item(None, self.automation_save_callback)
+                self.scene.addItem(f_item)
+                f_item.setPos(a_event.scenePos())
+
         a_event.setAccepted(True)
         QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
         QtGui.QApplication.restoreOverrideCursor()
+
+    def automation_save_callback(self):
+        pass
 
     def mouseMoveEvent(self, a_event):
         QtGui.QGraphicsView.mouseMoveEvent(self, a_event)
@@ -3020,7 +3031,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_path = self.get_file_path()
         WAVE_EDITOR.open_file(f_path)
         WAVE_EDITOR.set_audio_item(self.audio_item)
-        MAIN_WINDOW.main_tabwidget.setCurrentIndex(4)
+        MAIN_WINDOW.main_tabwidget.setCurrentIndex(3)
 
     def edit_properties(self):
         AUDIO_SEQ.scene.clearSelection()
@@ -7232,26 +7243,12 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
             OPEN_ITEM_UIDS.append(
                 f_items_dict.get_uid_by_name(f_item_name))
 
-    CC_EDITOR.clear_drawn_items()
     PB_EDITOR.clear_drawn_items()
-
     ITEM_EDITOR.items = []
-    f_cc_dict = {}
 
     for f_item_uid in OPEN_ITEM_UIDS:
         f_item = PROJECT.get_item_by_uid(f_item_uid)
         ITEM_EDITOR.items.append(f_item)
-        for cc in f_item.ccs:
-            f_key = "{}|{}".format(cc.plugin_index, cc.cc_num)
-            if not f_key in f_cc_dict:
-                f_cc_dict[f_key] = []
-            f_cc_dict[f_key] = cc
-
-    CC_EDITOR_WIDGET.update_ccs_in_use(list(f_cc_dict.keys()))
-
-    if a_items is not None:
-        for f_cc_num in list(f_cc_dict.keys()):
-            CC_EDITOR_WIDGET.set_cc_num(f_cc_num)
 
     ITEM_EDITOR.tab_changed()
     if ITEM_EDITOR.items:
@@ -8184,9 +8181,9 @@ class transport_widget:
             f_we_enabled = WAVE_EDITOR.enabled_checkbox.isChecked()
             f_tab_index = MAIN_WINDOW.main_tabwidget.currentIndex()
             if WAVE_EDITOR.history:
-                if f_tab_index == 4 and not f_we_enabled:
+                if f_tab_index == 3 and not f_we_enabled:
                     WAVE_EDITOR.enabled_checkbox.setChecked(True)
-                elif f_tab_index != 4 and f_we_enabled:
+                elif f_tab_index != 3 and f_we_enabled:
                     WAVE_EDITOR.enabled_checkbox.setChecked(False)
         SONG_EDITOR.table_widget.setEnabled(False)
         REGION_SETTINGS.on_play()
@@ -9119,7 +9116,7 @@ class pydaw_main_window(QtGui.QMainWindow):
 
     def tab_changed(self):
         f_index = self.main_tabwidget.currentIndex()
-        if not IS_PLAYING and f_index != 4:
+        if not IS_PLAYING and f_index != 3:
             WAVE_EDITOR.enabled_checkbox.setChecked(False)
         if f_index == 1:
             ITEM_EDITOR.tab_changed()
@@ -9587,10 +9584,6 @@ class pydaw_main_window(QtGui.QMainWindow):
 
         self.automation_tab = QtGui.QWidget()
         self.automation_tab.setObjectName("plugin_ui")
-        self.main_tabwidget.addTab(self.automation_tab, _("Automation Items"))
-        self.automation_vlayout = QtGui.QVBoxLayout()
-        self.automation_tab.setLayout(self.automation_vlayout)
-        self.automation_vlayout.addWidget(CC_EDITOR_WIDGET.widget)
 
         self.cc_map_tab = QtGui.QWidget()
         self.cc_map_tab.setObjectName("ccmaptabwidget")
@@ -9727,8 +9720,6 @@ class pydaw_main_window(QtGui.QMainWindow):
                 try:
                     AUDIO_SEQ.prepare_to_quit()
                     PIANO_ROLL_EDITOR.prepare_to_quit()
-
-                    CC_EDITOR.prepare_to_quit()
                     time.sleep(0.5)
                     global_close_all_plugin_windows()
                     if self.osc_server is not None:
@@ -10684,8 +10675,6 @@ def global_close_all():
     SONG_EDITOR.table_widget.clearContents()
     AUDIO_SEQ.clear_drawn_items()
     PB_EDITOR.clear_drawn_items()
-    CC_EDITOR.clear_drawn_items()
-    CC_EDITOR_WIDGET.update_ccs_in_use([])
     WAVE_EDITOR.clear()
     TRANSPORT.reset()
     OPEN_ITEM_UIDS = []
@@ -10796,8 +10785,6 @@ APP.setWindowIcon(
     pydaw_util.global_pydaw_install_prefix, global_pydaw_version_string)))
 
 PB_EDITOR = automation_viewer(a_is_cc=False)
-CC_EDITOR = automation_viewer()
-CC_EDITOR_WIDGET = automation_viewer_widget(CC_EDITOR)
 
 WAVE_EDITOR = pydaw_wave_editor_widget()
 
@@ -10977,11 +10964,6 @@ PIANO_ROLL_EDITOR_WIDGET.snap_combobox.setCurrentIndex(4)
 if TOOLTIPS_ENABLED:
     pydaw_set_tooltips_enabled(TOOLTIPS_ENABLED)
 
-#Get the plugin/control comboboxes populated
-CC_EDITOR_WIDGET.plugin_changed()
-
-# ^^TODO:  Move the CC maps out of the main window class
-# and instantiate earlier
 
 default_project_file = pydaw_util.get_file_setting("last-project", str, None)
 
