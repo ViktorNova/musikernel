@@ -588,7 +588,9 @@ class region_settings:
         self.hlayout0.addWidget(self.length_alternate_spinbox)
 
     def edit_mode_changed(self, a_value=None):
-        pass
+        global REGION_EDITOR_MODE
+        REGION_EDITOR_MODE = a_value
+        REGION_EDITOR.open_region()
 
     def update_region_length(self, a_value=None):
         f_region_name = str(self.region_name_lineedit.text())
@@ -831,6 +833,7 @@ SELECTED_ITEM_GRADIENT = QtGui.QLinearGradient(
 SELECTED_ITEM_GRADIENT.setColorAt(0, QtGui.QColor(180, 172, 100))
 SELECTED_ITEM_GRADIENT.setColorAt(1, QtGui.QColor(240, 240, 240))
 
+REGION_EDITOR_MODE = 0
 
 def pydaw_set_region_editor_quantize(a_index):
     global REGION_EDITOR_SNAP
@@ -894,19 +897,13 @@ def region_editor_set_delete_mode(a_enabled):
         QtGui.QApplication.restoreOverrideCursor()
         global_tablewidget_to_region()
 
-class ITEM_TYPE:
-    midi = 0
-    automation = 1
-    def __init__(self):
-        assert(False)
-
 class region_editor_item(QtGui.QGraphicsRectItem):
-    def __init__(self, a_track, a_bar, a_name, a_type, a_enabled=True):
+    def __init__(self, a_track, a_bar, a_name):
         self.bar_width = (REGION_EDITOR_GRID_WIDTH /
             pydaw_get_current_region_length())
         QtGui.QGraphicsRectItem.__init__(
             self, 0, 0, self.bar_width, REGION_EDITOR_TRACK_HEIGHT)
-        if a_enabled:
+        if REGION_EDITOR_MODE == 0:
             self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
             self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
             self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
@@ -914,9 +911,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         else:
             self.setZValue(1001.0)
             self.setEnabled(False)
-            self.setOpacity(0.3)
-        self.enabled = a_enabled
-        self.type = a_type
+            self.setOpacity(0.6)
         self.track_num = int(a_track)
         self.bar = int(a_bar)
         self.setAcceptHoverEvents(True)
@@ -942,13 +937,8 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             self.label.setBrush(QtCore.Qt.black)
         else:
             self.label.setBrush(QtCore.Qt.white)
-            if self.type == ITEM_TYPE.midi:
-                f_index = self.track_num % len(pydaw_track_gradients)
-                self.setBrush(pydaw_track_gradients[f_index])
-            elif self.type == ITEM_TYPE.automation:
-                self.setBrush(QtGui.QColor(150, 150, 150, 120))
-            else:
-                assert(False)
+            f_index = self.track_num % len(pydaw_track_gradients)
+            self.setBrush(pydaw_track_gradients[f_index])
 
     def hoverMoveEvent(self, a_event):
         #QtGui.QGraphicsRectItem.hoverMoveEvent(self, a_event)
@@ -1038,6 +1028,44 @@ class tracks_widget:
             self.tracks[i] = f_track
             self.tracks_layout.addWidget(f_track.group_box)
 
+ATM_POINT_DIAMETER = 12.0
+ATM_POINT_RADIUS = ATM_POINT_DIAMETER * 0.5
+
+ATM_GRADIENT = QtGui.QLinearGradient(
+    0, 0, ATM_POINT_DIAMETER, ATM_POINT_DIAMETER)
+ATM_GRADIENT.setColorAt(0, QtGui.QColor(255, 255, 255))
+ATM_GRADIENT.setColorAt(1, QtGui.QColor(240, 240, 240))
+
+
+class atm_item(QtGui.QGraphicsEllipseItem):
+    def __init__(self, a_item, a_save_callback, a_parent):
+        QtGui.QGraphicsEllipseItem.__init__(
+            self, 0, 0, ATM_POINT_DIAMETER, ATM_POINT_DIAMETER, a_parent)
+        self.save_callback = a_save_callback
+        self.item = a_item
+        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
+        self.setZValue(1100.0)
+        self.set_brush()
+        self.set_pos()
+
+    def set_pos(self):
+        self.setPos()
+
+    def set_brush(self):
+        if self.isSelected():
+            self.setBrush(QtCore.Qt.black)
+        else:
+            self.setBrush(ATM_GRADIENT)
+
+    def mouseMoveEvent(self, a_event):
+        QtGui.QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
+
+    def mouseReleaseEvent(self, a_event):
+        QtGui.QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
+        self.save_callback()
+
+    def __lt__(self, other):
+        return self.pos().x() < other.pos().x()
 
 class region_editor(QtGui.QGraphicsView):
     def __init__(self):
@@ -1495,8 +1523,7 @@ class region_editor(QtGui.QGraphicsView):
         self.current_coord = self.get_item_coord(a_event.scenePos())
         self.current_item = None
         for f_item in self.scene.items(a_event.scenePos()):
-                if isinstance(f_item, region_editor_item) and \
-                f_item.enabled:
+                if isinstance(f_item, region_editor_item):
                     self.current_item = f_item
                     if not f_item.isSelected():
                         self.scene.clearSelection()
@@ -1588,13 +1615,13 @@ class region_editor(QtGui.QGraphicsView):
         for f_item in CURRENT_REGION.items:
             if f_item.bar_num < pydaw_get_current_region_length():
                 f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
-                self.draw_item(
-                    f_item.track_num, f_item.bar_num,
-                    f_item_name, ITEM_TYPE.midi)
-                if "".join(str(x) for x in
-                (f_item.track_num, f_item.bar_num, f_item_name)
-                ) in self.selected_item_strings:
+                self.draw_item(f_item.track_num, f_item.bar_num, f_item_name)
+                if "|".join(str(x) for x in
+                (f_item.track_num, f_item.bar_num,
+                f_item_name)) in self.selected_item_strings:
                     f_item.setSelected(True)
+        if REGION_EDITOR_MODE == 1:
+            pass
         self.setUpdatesEnabled(True)
         self.update()
         self.enabled = True
@@ -1637,15 +1664,13 @@ class region_editor(QtGui.QGraphicsView):
         for f_item in self.get_all_items():
             f_item.setSelected(False)
 
-    def draw_item(self, a_track, a_bar, a_name, a_type,
-                  a_enabled=True, a_selected=False):
-        f_item = region_editor_item(a_track, a_bar, a_name, a_type, a_enabled)
+    def draw_item(self, a_track, a_bar, a_name, a_selected=False):
+        f_item = region_editor_item(a_track, a_bar, a_name)
         self.scene.addItem(f_item)
         if a_selected:
             f_item.setSelected(True)
-        if a_enabled:
-            self.set_item(f_item)
-            return f_item
+        self.set_item(f_item)
+        return f_item
 
     def pop_item(self, a_item):
         self.region_items[a_item.track_num].pop(a_item.bar)
