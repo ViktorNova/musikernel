@@ -47,6 +47,7 @@ pydaw_folder_audio_per_item_fx = "projects/edmnext/audio_per_item_fx"
 pydaw_folder_items = "projects/edmnext/items"
 pydaw_folder_regions = "projects/edmnext/regions"
 pydaw_folder_regions_audio = "projects/edmnext/regions_audio"
+pydaw_folder_regions_atm = "projects/edmnext/regions_atm"
 pydaw_folder_samplegraph = "audio/samplegraph"
 pydaw_folder_samples = "audio/samples"
 pydaw_folder_timestretch = "audio/timestretch"
@@ -190,6 +191,8 @@ class pydaw_project:
             self.project_folder, pydaw_folder_regions)
         self.regions_audio_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_regions_audio)
+        self.regions_atm_folder = "{}/{}".format(
+            self.project_folder, pydaw_folder_regions_atm)
         self.items_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_items)
         self.audio_folder = "{}/{}".format(
@@ -256,7 +259,8 @@ class pydaw_project:
             self.audio_per_item_fx_folder, self.samplegraph_folder,
             self.audio_tmp_folder, self.regions_audio_folder,
             self.timestretch_folder, self.glued_folder, self.user_folder,
-            self.plugin_pool_folder, self.track_pool_folder]
+            self.plugin_pool_folder, self.track_pool_folder,
+            self.regions_atm_folder]
 
         for project_dir in project_folders:
             print(project_dir)
@@ -450,6 +454,17 @@ class pydaw_project:
     def get_region_by_uid(self, a_region_uid):
         f_uid = str(a_region_uid)
         return pydaw_region.from_str(f_uid, self.get_region_string(f_uid))
+
+    def get_atm_region_by_uid(self, a_region_uid):
+        f_path = "{}/{}".format(self.regions_atm_folder, a_region_uid)
+        if os.path.isfile(f_path):
+            with open(f_path) as f_file:
+                return pydaw_atm_region.from_str(f_file.read())
+        else:
+            return pydaw_atm_region()
+
+    def save_atm_region(self, a_region, a_uid):
+        self.save_file(pydaw_folder_regions_atm, a_uid, str(a_region))
 
     def rename_items(self, a_item_names, a_new_item_name):
         f_items_dict = self.get_items_dict()
@@ -1064,6 +1079,8 @@ class pydaw_project:
         self.save_file(pydaw_folder_regions, f_uid, pydaw_terminating_char)
         self.save_file(
             pydaw_folder_regions_audio, f_uid, pydaw_terminating_char)
+        self.save_file(
+            pydaw_folder_regions_atm, f_uid, pydaw_terminating_char)
         self.save_regions_dict(f_regions_dict)
         return f_uid
 
@@ -1087,6 +1104,10 @@ class pydaw_project:
             pydaw_folder_regions_audio,  str(f_uid),
             pydaw_read_file_text(
                 "{}/{}".format(self.regions_audio_folder, f_old_uid)))
+        self.save_file(
+            pydaw_folder_regions_atm,  str(f_uid),
+            pydaw_read_file_text(
+                "{}/{}".format(self.regions_atm_folder, f_old_uid)))
         f_paif_file = "{}/{}".format(self.audio_per_item_fx_folder, f_old_uid)
         if os.path.isfile(f_paif_file):
             self.save_file(pydaw_folder_audio_per_item_fx, str(f_uid),
@@ -1517,6 +1538,95 @@ class pydaw_region:
                 return self.bar_num < other.bar_num
             else:
                 return self.track_num < other.track_num
+
+class pydaw_atm_region:
+    def __init__(self):
+        self.tracks = {}
+
+    def add_point(self, a_point):
+        if not a_point.track in self.tracks:
+            self.tracks[a_point.track] = {}
+        if not a_point.port_num in self.tracks[a_point.track]:
+            self.tracks[a_point.track][a_point.port_num] = []
+        self.tracks[a_point.track][a_point.port_num].append(a_point)
+
+    def get_points(self, a_track_num, a_port_num):
+        a_track_num = int(a_track_num)
+        a_port_num = int(a_port_num)
+        if a_track_num not in self.tracks or \
+        a_port_num not in self.tracks[a_track_num]:
+            return []
+        else:
+            return sorted(self.tracks[a_track_num][a_port_num])
+
+    def __str__(self):
+        f_result = []
+        for f_track in sorted(self.tracks):
+            for f_port in sorted(self.tracks[f_track]):
+                for f_point in sorted(self.tracks[f_track][f_port]):
+                    f_result.append(str(f_point))
+        f_result.append(pydaw_terminating_char)
+        return "\n".join(f_result)
+
+    @staticmethod
+    def from_str(a_str):
+        f_result = pydaw_atm_region()
+        for f_line in str(a_str).split("\n"):
+            if f_line == pydaw_terminating_char:
+                break
+            f_point = pydaw_atm_point.from_str(f_line)
+            f_result.add_point(f_point)
+        return f_result
+
+class pydaw_atm_point:
+    def __init__(self, a_track, a_bar, a_beat, a_port_num, a_cc_val,
+                 a_index, a_plugin_index, a_plugin_type):
+        self.track = int(a_track)
+        self.bar = int(a_bar)
+        self.beat = round(float(a_beat), 6)
+        self.port_num = int(a_port_num)
+        self.cc_val = round(float(a_cc_val), 6)
+        self.index = int(a_index)
+        self.plugin_index = int(a_plugin_index)
+        self.plugin_type = int(a_plugin_type)
+
+    def set_val(self, a_val):
+        self.cc_val = pydaw_clip_value(float(a_val), 0.0, 127.0, True)
+
+    def __lt__(self, other):
+        return ((self.bar < other.bar) or
+            (self.bar == other.bar and self.beat <= other.beat))
+
+    def __eq__(self, other):
+        return (
+            (self.track == other.track) and
+            (self.bar == other.bar) and
+            (self.beat == other.beat) and
+            (self.port_num == other.port_num) and
+            (self.cc_val == other.cc_val) and
+            (self.index == other.index) and
+            (self.plugin_index == other.plugin_index) and
+            (self.plugin_type == other.plugin_type))
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            (self.track, self.bar, self.beat,
+             self.port_num, self.cc_val, self.index,
+             self.plugin_index, self.plugin_type, "\n"))
+
+    @staticmethod
+    def from_arr(a_arr):
+        f_result = pydaw_atm_point(*a_arr)
+        return f_result
+
+    @staticmethod
+    def from_str(a_str):
+        f_arr = a_str.split("|")
+        return pydaw_atm_point.from_arr(f_arr[1:])
+
+    def clone(self):
+        return pydaw_atm_point.from_str(str(self))
+
 
 def pydaw_smooth_automation_points(
     a_items_list, a_is_cc, a_cc_num=-1):
@@ -2061,38 +2171,6 @@ class pydaw_note(pydaw_abstract_midi_event):
         return "{}\n".format("|".join(map(proj_file_str,
             ("n", self.start, self.length, self.note_num, self.velocity))))
 
-class pydaw_atm_point:
-    def __eq__(self, other):
-        return ((self.beat == other.beat) and
-        (self.port_num == other.port_num) and (self.cc_val == other.cc_val))
-
-    def __init__(self, a_bar, a_beat, a_port_num, a_cc_val):
-        self.bar = int(a_bar)
-        self.beat = float(a_start)
-        #This is really port_num, I'll rename later...
-        self.port_num = int(a_port_num)
-        self.cc_val = float(a_cc_val)
-
-    def set_val(self, a_val):
-        self.cc_val = pydaw_clip_value(float(a_val), 0.0, 127.0, True)
-
-    def __str__(self):
-        return "|".join(str(x) for x in
-            (self.bar, self.beat, self.plugin_index, self.port_num,
-             self.cc_val, "\n"))
-
-    @staticmethod
-    def from_arr(a_arr):
-        f_result = pydaw_atm_point(*a_arr)
-        return f_result
-
-    @staticmethod
-    def from_str(a_str):
-        f_arr = a_str.split("|")
-        return pydaw_atm_point.from_arr(f_arr[1:])
-
-    def clone(self):
-        return pydaw_atm_point.from_str(str(self))
 
 class pydaw_pitchbend(pydaw_abstract_midi_event):
     def __eq__(self, other):

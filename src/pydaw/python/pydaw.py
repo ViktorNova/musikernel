@@ -1029,13 +1029,18 @@ class tracks_widget:
             f_track = seq_track(i, TRACK_NAMES[i])
             self.tracks[i] = f_track
             self.tracks_layout.addWidget(f_track.group_box)
-        self.automation_dict = {x:False
-            for x in range(REGION_EDITOR_TRACK_COUNT)}
+        self.automation_dict = {
+            x:None for x in range(REGION_EDITOR_TRACK_COUNT)}
+
+    def get_atm_params(self, a_track_num):
+        f_track = self.tracks[int(a_track_num)]
+        return (
+            f_track.automation_index, f_track.automation_plugin,
+            f_track.automation_type)
 
     def update_automation(self):
         self.automation_dict = {
-            x:(self.tracks[x].port_num is not None)
-            for x in self.tracks}
+            x:self.tracks[x].port_num for x in self.tracks}
 
     def has_automation(self, a_track_num):
         return self.automation_dict[int(a_track_num)]
@@ -1049,27 +1054,7 @@ ATM_GRADIENT = QtGui.QLinearGradient(
 ATM_GRADIENT.setColorAt(0, QtGui.QColor(255, 255, 255))
 ATM_GRADIENT.setColorAt(0.5, QtGui.QColor(210, 210, 210))
 
-class automation_points:
-    def __init__(self):
-        self.dict = {}
-
-    def clear(self):
-        self.dict.clear()
-
-    def add_point(self, a_point, a_track_num):
-        a_track_num = int(a_track_num)
-        if not a_track_num in self.dict:
-            self.dict[a_track_num] = []
-        self.dict[a_track_num].append(a_point)
-
-    def get_points_for_track(self, a_track_num):
-        a_track_num = int(a_track_num)
-        if a_track_num in self.dict:
-            return sorted(self.dict[a_track_num])
-        else:
-            return []
-
-ATM_POINTS = automation_points()
+ATM_REGION = pydaw_atm_region()
 
 class atm_item(QtGui.QGraphicsEllipseItem):
     def __init__(self, a_item, a_save_callback, a_min_y, a_max_y):
@@ -1077,6 +1062,7 @@ class atm_item(QtGui.QGraphicsEllipseItem):
             self, 0, 0, ATM_POINT_DIAMETER, ATM_POINT_DIAMETER)
         self.save_callback = a_save_callback
         self.item = a_item
+        a_item.parent = self
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
         self.setZValue(1100.0)
@@ -1093,10 +1079,13 @@ class atm_item(QtGui.QGraphicsEllipseItem):
     def mousePressEvent(self, a_event):
         a_event.setAccepted(True)
         QtGui.QGraphicsEllipseItem.mousePressEvent(self, a_event)
+        self.selected_items = [x.parent for x in
+            ATM_REGION.get_points(self.item.track, self.item.port_num)
+            if x.parent.isSelected()]
 
     def mouseMoveEvent(self, a_event):
         QtGui.QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
-        for f_item in (x for x in ATM_POINTS if x.isSelected()):
+        for f_item in self.selected_items:
             f_pos = f_item.pos()
             f_x = pydaw_util.pydaw_clip_value(
                 f_pos.x(), 0.0, REGION_EDITOR_MAX_START)
@@ -1106,6 +1095,11 @@ class atm_item(QtGui.QGraphicsEllipseItem):
 
     def mouseReleaseEvent(self, a_event):
         QtGui.QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
+        for f_item in self.selected_items:
+            f_pos = f_item.pos()
+            f_point = f_item.item
+            f_point.track, f_point.bar, f_point.beat = \
+                REGION_EDITOR.get_item_coord(f_pos)
         self.save_callback()
 
     def __lt__(self, other):
@@ -1295,6 +1289,14 @@ class region_editor(QtGui.QGraphicsView):
             return f_track, f_bar, f_beat
         else:
             return None
+
+    def get_pos_from_point(self, a_point):
+        f_item_width = self.viewer_width / self.item_length
+        return QtCore.QPointF(
+            (a_point.bar * f_item_width) +
+            (a_point.beat * 0.25 * f_item_width),
+            (REGION_EDITOR_TRACK_HEIGHT * (a_point.cc_val / 127.0)) +
+            (REGION_EDITOR_TRACK_HEIGHT * a_point.track))
 
     def show_cell_dialog(self):
         x, y, f_beat = self.current_coord
@@ -1594,15 +1596,23 @@ class region_editor(QtGui.QGraphicsView):
                 pass
             elif a_event.button() == QtCore.Qt.RightButton:
                 pass
-            elif TRACK_PANEL.has_automation(self.current_coord[0]):
-                self.draw_point(a_event.scenePos())
+            else:
+                f_port = TRACK_PANEL.has_automation(self.current_coord[0])
+                if f_port is not None:
+                    f_track, f_bar, f_beat = self.current_coord
+                    f_point = pydaw_atm_point(
+                        f_track, f_bar, f_beat, f_port, 0.0,
+                        *TRACK_PANEL.get_atm_params(f_track))
+                    ATM_REGION.add_point(f_point)
+                    self.draw_point(f_point)
+                    self.automation_save_callback()
 
         a_event.setAccepted(True)
         QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
         QtGui.QApplication.restoreOverrideCursor()
 
     def automation_save_callback(self):
-        pass
+        PROJECT.save_atm_region(ATM_REGION, CURRENT_REGION.uid)
 
     def mouseMoveEvent(self, a_event):
         QtGui.QGraphicsView.mouseMoveEvent(self, a_event)
@@ -1666,9 +1676,11 @@ class region_editor(QtGui.QGraphicsView):
 
     def open_region(self):
         self.enabled = False
-        ATM_POINTS.clear()
+        global ATM_REGION
         if not CURRENT_REGION:
+            ATM_REGION = None
             return
+        ATM_REGION = PROJECT.get_atm_region_by_uid(CURRENT_REGION.uid)
         f_items_dict = PROJECT.get_items_dict()
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
@@ -1732,14 +1744,14 @@ class region_editor(QtGui.QGraphicsView):
         self.set_item(f_item)
         return f_item
 
-    def draw_point(self, a_pos):
+    def draw_point(self, a_point):
         f_min = (self.current_coord[0] *
             REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
         f_max = f_min + REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
         f_item = atm_item(
-            None, self.automation_save_callback, f_min, f_max)
+            a_point, self.automation_save_callback, f_min, f_max)
         self.scene.addItem(f_item)
-        f_item.setPos(a_pos)
+        f_item.setPos(self.get_pos_from_point(a_point))
 
     def pop_item(self, a_item):
         self.region_items[a_item.track_num].pop(a_item.bar)
@@ -7850,7 +7862,8 @@ class plugin_settings:
 
     def automation_check_changed(self):
         if self.automation_radiobutton.isChecked():
-            self.automation_callback(self.type, self.index, self.plugin_uid)
+            self.automation_callback(
+                self.type, self.index, self.plugin_combobox.currentIndex())
 
     def set_value(self, a_val):
         self.suppress_osc = True
@@ -7967,7 +7980,7 @@ class seq_track:
         self.suppress_osc = True
         self.automation_type = None
         self.automation_index = None
-        self.automation_uid = None
+        self.automation_plugin = None
         self.track_number = a_track_num
         self.group_box = QtGui.QWidget()
         self.group_box.setFixedHeight(REGION_EDITOR_TRACK_HEIGHT)
@@ -8146,10 +8159,10 @@ class seq_track:
     def context_menu_event(self, a_event=None):
         pass
 
-    def automation_callback(self, a_type, a_index, a_uid):
+    def automation_callback(self, a_type, a_index, a_plugin):
         self.automation_type = a_type
         self.automation_index = a_index
-        self.automation_uid = a_uid
+        self.automation_plugin = a_plugin
         self.plugin_changed()
 
     def save_callback(self):
