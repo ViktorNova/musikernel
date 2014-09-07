@@ -7789,10 +7789,10 @@ class plugin_settings:
         self.automation_radiobutton = QtGui.QRadioButton("A")
         a_layout.addWidget(
             self.automation_radiobutton, a_index + 1, f_offset + 2)
-        self.automation_radiobutton.pressed.connect(
+        self.automation_radiobutton.clicked.connect(
             self.automation_check_changed)
 
-    def automation_check_changed(self, a_val=None):
+    def automation_check_changed(self):
         if self.automation_radiobutton.isChecked():
             self.automation_callback(self.type, self.index, self.plugin_uid)
 
@@ -7957,6 +7957,8 @@ class seq_track:
             self.mute_checkbox.stateChanged.connect(self.on_mute)
             self.mute_checkbox.setObjectName("mute_checkbox")
             self.hlayout3.addWidget(self.mute_checkbox)
+        self.plugin_name = "None"
+        self.port_num = None
         self.suppress_osc = False
 
     def menu_button_pressed(self):
@@ -8004,6 +8006,50 @@ class seq_track:
         self.action_widget.setDefaultWidget(self.menu_widget)
         self.button_menu.addAction(self.action_widget)
 
+        self.control_combobox = QtGui.QComboBox()
+        self.control_combobox.setMinimumWidth(240)
+        self.menu_gridlayout.addWidget(QtGui.QLabel(_("Automation:")), 9, 20)
+        self.menu_gridlayout.addWidget(self.control_combobox, 9, 21)
+        self.control_combobox.currentIndexChanged.connect(
+            self.control_changed)
+        self.ccs_in_use_combobox = QtGui.QComboBox()
+        self.ccs_in_use_combobox.setMinimumWidth(300)
+        self.suppress_ccs_in_use = False
+        self.ccs_in_use_combobox.currentIndexChanged.connect(
+            self.ccs_in_use_combobox_changed)
+        self.menu_gridlayout.addWidget(QtGui.QLabel(_("In Use:")), 10, 20)
+        self.menu_gridlayout.addWidget(self.ccs_in_use_combobox, 10, 21)
+
+    def plugin_changed(self, a_val=None):
+        self.control_combobox.clear()
+        if self.automation_type == 0:
+            f_cbox = self.instruments[self.automation_index].plugin_combobox
+        elif self.automation_type == 1:
+            f_cbox = self.effects[self.automation_index].plugin_combobox
+        self.plugin_name = str(f_cbox.currentText())
+        if self.plugin_name != "None":
+            self.control_combobox.addItems(CC_NAMES[self.plugin_name])
+
+    def control_changed(self, a_val=None):
+        self.set_cc_num()
+        self.ccs_in_use_combobox.setCurrentIndex(0)
+
+    def set_cc_num(self, a_val=None):
+        f_port_name = str(self.control_combobox.currentText())
+        if f_port_name != "":
+            self.port_num = CONTROLLER_PORT_NAME_DICT[
+                self.plugin_name][f_port_name].port
+
+    def ccs_in_use_combobox_changed(self, a_val=None):
+        if not self.suppress_ccs_in_use:
+            f_str = str(self.ccs_in_use_combobox.currentText())
+            if f_str != "":
+                f_arr = f_str.split("|")
+                self.plugin_combobox.setCurrentIndex(
+                    self.plugin_combobox.findText(f_arr[0]))
+                self.control_combobox.setCurrentIndex(
+                    self.control_combobox.findText(f_arr[1]))
+
     def on_solo(self, value):
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_solo(
@@ -8045,6 +8091,7 @@ class seq_track:
         self.automation_type = a_type
         self.automation_index = a_index
         self.automation_uid = a_uid
+        self.plugin_changed()
 
     def save_callback(self):
         f_result = pydaw_track_plugins(
