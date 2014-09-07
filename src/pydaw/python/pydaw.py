@@ -907,11 +907,10 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
             self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
             self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
-            self.setZValue(1002.0)
         else:
-            self.setZValue(1001.0)
             self.setEnabled(False)
             self.setOpacity(0.6)
+        self.setZValue(1001.0)
         self.track_num = int(a_track)
         self.bar = int(a_bar)
         self.setAcceptHoverEvents(True)
@@ -964,7 +963,9 @@ class region_editor_item(QtGui.QGraphicsRectItem):
 
 
     def mousePressEvent(self, a_event):
-        if a_event.button() == QtCore.Qt.RightButton:
+        if not self.isEnabled():
+            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
+        elif a_event.button() == QtCore.Qt.RightButton:
             self.setSelected(True)
             return
         elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
@@ -985,12 +986,13 @@ class region_editor_item(QtGui.QGraphicsRectItem):
 
     def mouseMoveEvent(self, a_event):
         QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
-        for f_item in REGION_EDITOR.get_selected_items():
-            f_pos = f_item.scenePos()
-            f_coord = REGION_EDITOR.get_item_coord(f_pos)
-            if f_coord:
-                f_item.track_num, f_item.bar = f_coord
-            f_item.set_pos()
+        if self.isEnabled():
+            for f_item in REGION_EDITOR.get_selected_items():
+                f_pos = f_item.scenePos()
+                f_coord = REGION_EDITOR.get_item_coord(f_pos)
+                if f_coord:
+                    f_item.track_num, f_item.bar = f_coord
+                f_item.set_pos()
 
     def mouseReleaseEvent(self, a_event):
         a_event.setAccepted(True)
@@ -1047,6 +1049,27 @@ ATM_GRADIENT = QtGui.QLinearGradient(
 ATM_GRADIENT.setColorAt(0, QtGui.QColor(255, 255, 255))
 ATM_GRADIENT.setColorAt(0.5, QtGui.QColor(210, 210, 210))
 
+class automation_points:
+    def __init__(self):
+        self.dict = {}
+
+    def clear(self):
+        self.dict.clear()
+
+    def add_point(self, a_point, a_track_num):
+        a_track_num = int(a_track_num)
+        if not a_track_num in self.dict:
+            self.dict[a_track_num] = []
+        self.dict[a_track_num].append(a_point)
+
+    def get_points_for_track(self, a_track_num):
+        a_track_num = int(a_track_num)
+        if a_track_num in self.dict:
+            return sorted(self.dict[a_track_num])
+        else:
+            return []
+
+ATM_POINTS = automation_points()
 
 class atm_item(QtGui.QGraphicsEllipseItem):
     def __init__(self, a_item, a_save_callback, a_min_y, a_max_y):
@@ -1067,13 +1090,19 @@ class atm_item(QtGui.QGraphicsEllipseItem):
         else:
             self.setBrush(ATM_GRADIENT)
 
+    def mousePressEvent(self, a_event):
+        a_event.setAccepted(True)
+        QtGui.QGraphicsEllipseItem.mousePressEvent(self, a_event)
+
     def mouseMoveEvent(self, a_event):
         QtGui.QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
-        f_pos = a_event.scenePos()
-        f_x = pydaw_util.pydaw_clip_value(
-            f_pos.x(), 0.0, REGION_EDITOR_MAX_START)
-        f_y = pydaw_util.pydaw_clip_value(f_pos.y(), self.min_y, self.max_y)
-        self.setPos(f_x, f_y)
+        for f_item in (x for x in ATM_POINTS if x.isSelected()):
+            f_pos = f_item.pos()
+            f_x = pydaw_util.pydaw_clip_value(
+                f_pos.x(), 0.0, REGION_EDITOR_MAX_START)
+            f_y = pydaw_util.pydaw_clip_value(
+                f_pos.y(), f_item.min_y, f_item.max_y)
+            f_item.setPos(f_x, f_y)
 
     def mouseReleaseEvent(self, a_event):
         QtGui.QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
@@ -1081,6 +1110,7 @@ class atm_item(QtGui.QGraphicsEllipseItem):
 
     def __lt__(self, other):
         return self.pos().x() < other.pos().x()
+
 
 class region_editor(QtGui.QGraphicsView):
     def __init__(self):
@@ -1565,13 +1595,7 @@ class region_editor(QtGui.QGraphicsView):
             elif a_event.button() == QtCore.Qt.RightButton:
                 pass
             elif TRACK_PANEL.has_automation(self.current_coord[0]):
-                f_min = (self.current_coord[0] *
-                    REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
-                f_max = f_min + REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
-                f_item = atm_item(
-                    None, self.automation_save_callback, f_min, f_max)
-                self.scene.addItem(f_item)
-                f_item.setPos(a_event.scenePos())
+                self.draw_point(a_event.scenePos())
 
         a_event.setAccepted(True)
         QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
@@ -1642,6 +1666,7 @@ class region_editor(QtGui.QGraphicsView):
 
     def open_region(self):
         self.enabled = False
+        ATM_POINTS.clear()
         if not CURRENT_REGION:
             return
         f_items_dict = PROJECT.get_items_dict()
@@ -1706,6 +1731,15 @@ class region_editor(QtGui.QGraphicsView):
             f_item.setSelected(True)
         self.set_item(f_item)
         return f_item
+
+    def draw_point(self, a_pos):
+        f_min = (self.current_coord[0] *
+            REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
+        f_max = f_min + REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
+        f_item = atm_item(
+            None, self.automation_save_callback, f_min, f_max)
+        self.scene.addItem(f_item)
+        f_item.setPos(a_pos)
 
     def pop_item(self, a_item):
         self.region_items[a_item.track_num].pop(a_item.bar)
