@@ -1027,6 +1027,17 @@ class tracks_widget:
             f_track = seq_track(i, TRACK_NAMES[i])
             self.tracks[i] = f_track
             self.tracks_layout.addWidget(f_track.group_box)
+        self.automation_dict = {x:False
+            for x in range(REGION_EDITOR_TRACK_COUNT)}
+
+    def update_automation(self):
+        self.automation_dict = {
+            x:(self.tracks[x].port_num is not None)
+            for x in self.tracks}
+
+    def has_automation(self, a_track_num):
+        return self.automation_dict[int(a_track_num)]
+
 
 ATM_POINT_DIAMETER = 6.0
 ATM_POINT_RADIUS = ATM_POINT_DIAMETER * 0.5
@@ -8036,9 +8047,12 @@ class seq_track:
 
     def set_cc_num(self, a_val=None):
         f_port_name = str(self.control_combobox.currentText())
-        if f_port_name != "":
+        if f_port_name == "":
+            self.port_num = None
+        else:
             self.port_num = CONTROLLER_PORT_NAME_DICT[
                 self.plugin_name][f_port_name].port
+        TRACK_PANEL.update_automation()
 
     def ccs_in_use_combobox_changed(self, a_val=None):
         if not self.suppress_ccs_in_use:
