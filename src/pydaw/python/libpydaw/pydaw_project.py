@@ -1580,7 +1580,7 @@ class pydaw_atm_region:
 
 class pydaw_atm_point:
     def __init__(self, a_track, a_bar, a_beat, a_port_num, a_cc_val,
-                 a_index, a_plugin_index, a_plugin_type):
+                 a_index, a_plugin_index):
         self.track = int(a_track)
         self.bar = int(a_bar)
         self.beat = round(float(a_beat), 6)
@@ -1588,7 +1588,6 @@ class pydaw_atm_point:
         self.cc_val = round(float(a_cc_val), 6)
         self.index = int(a_index) # Index within the track inst./fx
         self.plugin_index = int(a_plugin_index) # UID of the plugin
-        self.plugin_type = int(a_plugin_type) # 0 inst. 1 fx
 
     def set_val(self, a_val):
         self.cc_val = pydaw_clip_value(float(a_val), 0.0, 127.0, True)
@@ -1605,14 +1604,12 @@ class pydaw_atm_point:
             (self.port_num == other.port_num) and
             (self.cc_val == other.cc_val) and
             (self.index == other.index) and
-            (self.plugin_index == other.plugin_index) and
-            (self.plugin_type == other.plugin_type))
+            (self.plugin_index == other.plugin_index))
 
     def __str__(self):
         return "|".join(str(x) for x in
             (self.track, self.bar, self.beat,
-             self.port_num, self.cc_val, self.index,
-             self.plugin_index, self.plugin_type))
+             self.port_num, self.cc_val, self.index, self.plugin_index))
 
     @staticmethod
     def from_arr(a_arr):
@@ -2246,9 +2243,8 @@ class pydaw_track:
             self.track_pos, self.name))))
 
 class pydaw_track_plugin:
-    def __init__(self, a_type, a_index, a_plugin_index, a_plugin_uid,
+    def __init__(self, a_index, a_plugin_index, a_plugin_uid,
                  a_mute=0, a_solo=0, a_power=1):
-        self.type = int(a_type)
         self.index = int(a_index)
         self.plugin_index = int(a_plugin_index)
         self.plugin_uid = int(a_plugin_uid)
@@ -2258,7 +2254,7 @@ class pydaw_track_plugin:
 
     def __str__(self):
         return "|".join(str(x) for x in
-            ("p", self.type, self.index, self.plugin_index,
+            ("p", self.index, self.plugin_index,
              self.plugin_uid, self.mute, self.solo, self.power))
 
 
@@ -2347,13 +2343,12 @@ class pydaw_track_send:
         return self.index < other.index
 
 class pydaw_track_plugins:
-    def __init__(self, a_instruments=[], a_effects=[]):
-        self.instruments = a_instruments
-        self.effects = a_effects
+    def __init__(self, a_plugins=[]):
+        self.plugins = a_plugins
 
     def __str__(self):
         return "\n".join(str(x) for x in
-            self.instruments + self.effects + [pydaw_terminating_char])
+            self.plugins + [pydaw_terminating_char])
 
     @staticmethod
     def from_str(a_str):
@@ -2364,14 +2359,7 @@ class pydaw_track_plugins:
                 break
             f_line_arr = f_line.split("|")
             if f_line_arr[0] == "p":
-                if int(f_line_arr[1]) == 0:
-                    f_result.instruments.append(
-                        pydaw_track_plugin(*f_line_arr[1:]))
-                elif int(f_line_arr[1]) == 1:
-                    f_result.effects.append(
-                        pydaw_track_plugin(*f_line_arr[1:]))
-                else:
-                    assert(False)
+                f_result.plugins.append(pydaw_track_plugin(*f_line_arr[1:]))
             else:
                 assert(False)
         return f_result

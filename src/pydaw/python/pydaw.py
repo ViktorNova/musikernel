@@ -1035,8 +1035,7 @@ class tracks_widget:
     def get_atm_params(self, a_track_num):
         f_track = self.tracks[int(a_track_num)]
         return (
-            f_track.automation_index, f_track.automation_plugin,
-            f_track.automation_type)
+            f_track.automation_index, f_track.automation_plugin)
 
     def update_automation(self):
         self.automation_dict = {
@@ -7832,46 +7831,39 @@ class midi_device_dialog:
         pass
 
 class plugin_settings:
-    instrument = 0
-    effect = 1
     def __init__(self, a_index, a_track_num,
-                 a_layout, a_type, a_save_callback, a_name_callback,
+                 a_layout, a_save_callback, a_name_callback,
                  a_automation_callback):
         self.suppress_osc = False
         self.save_callback = a_save_callback
         self.name_callback = a_name_callback
         self.automation_callback = a_automation_callback
         self.plugin_uid = -1
-        self.type = a_type
         self.track_num = a_track_num
-        f_offset = 0 if self.type == self.instrument else 10
         self.index = a_index
         self.plugin_combobox = QtGui.QComboBox()
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
-        if self.type == plugin_settings.instrument:
-            self.plugin_combobox.addItems(
-                ["None", "Euphoria", "Ray-V", "Way-V"])
-        elif self.type == plugin_settings.effect:
-            self.plugin_combobox.addItems(["None", "Modulex"])
+        self.plugin_combobox.addItems(
+            ["None", "Euphoria", "Ray-V", "Way-V", "Modulex"])
         self.plugin_combobox.currentIndexChanged.connect(
             self.on_plugin_change)
-        a_layout.addWidget(self.plugin_combobox, a_index + 1, f_offset)
+        a_layout.addWidget(self.plugin_combobox, a_index + 1, 0)
         self.ui_button = QtGui.QPushButton("UI")
         self.ui_button.pressed.connect(self.on_show_ui)
         self.ui_button.setObjectName("uibutton")
         self.ui_button.setFixedWidth(24)
-        a_layout.addWidget(self.ui_button, a_index + 1, f_offset + 1)
+        a_layout.addWidget(self.ui_button, a_index + 1, 1)
         self.automation_radiobutton = QtGui.QRadioButton("A")
         a_layout.addWidget(
-            self.automation_radiobutton, a_index + 1, f_offset + 2)
+            self.automation_radiobutton, a_index + 1, 2)
         self.automation_radiobutton.clicked.connect(
             self.automation_check_changed)
 
     def automation_check_changed(self):
         if self.automation_radiobutton.isChecked():
             self.automation_callback(
-                self.type, self.index, self.plugin_combobox.currentIndex())
+                self.index, self.plugin_combobox.currentIndex())
 
     def set_value(self, a_val):
         self.suppress_osc = True
@@ -7881,8 +7873,7 @@ class plugin_settings:
 
     def get_value(self):
         return pydaw_track_plugin(
-            self.type, self.index, self.plugin_combobox.currentIndex(),
-            self.plugin_uid)
+            self.index, self.plugin_combobox.currentIndex(), self.plugin_uid)
 
     def on_plugin_change(self, a_val):
         if self.suppress_osc:
@@ -7892,8 +7883,7 @@ class plugin_settings:
         else:
             self.plugin_uid = PROJECT.get_next_plugin_uid()
         PROJECT.this_pydaw_osc.pydaw_set_plugin_index(
-            self.track_num, self.type, self.index,
-            a_val, self.plugin_uid)
+            self.track_num, self.index, a_val, self.plugin_uid)
         self.save_callback()
 
     def wheel_event(self, a_event=None):
@@ -7904,7 +7894,7 @@ class plugin_settings:
         if f_index == 0 or self.plugin_uid == -1:
             return
         global_open_plugin_ui(
-            self.plugin_uid, self.type, f_index,
+            self.plugin_uid, f_index,
             "Track:  {}".format(self.name_callback()))
 
 
@@ -7986,7 +7976,6 @@ class track_send:
 class seq_track:
     def __init__(self, a_track_num, a_track_text=_("track")):
         self.suppress_osc = True
-        self.automation_type = None
         self.automation_index = None
         self.automation_plugin = None
         self.track_number = a_track_num
@@ -8051,25 +8040,15 @@ class seq_track:
         self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
         self.menu_gridlayout = QtGui.QGridLayout()
         self.menu_hlayout.addLayout(self.menu_gridlayout)
-        self.instruments = []
-        if self.track_number != 0:
-            self.menu_gridlayout.addWidget(
-                QtGui.QLabel(_("Instruments")), 0, 0)
-            for f_i in range(5):
-                f_plugin = plugin_settings(
-                    f_i, self.track_number, self.menu_gridlayout,
-                    plugin_settings.instrument, self.save_callback,
-                    self.name_callback, self.automation_callback)
-                self.instruments.append(f_plugin)
         self.menu_gridlayout.addWidget(
-            QtGui.QLabel(_("Effects")), 0, 10)
-        self.effects = []
+            QtGui.QLabel(_("Plugins")), 0, 0)
+        self.plugins = []
         for f_i in range(10):
             f_plugin = plugin_settings(
                 f_i, self.track_number, self.menu_gridlayout,
-                plugin_settings.effect, self.save_callback,
-                self.name_callback, self.automation_callback)
-            self.effects.append(f_plugin)
+                self.save_callback, self.name_callback,
+                self.automation_callback)
+            self.plugins.append(f_plugin)
         self.sends = []
         if self.track_number != 0:
             self.menu_gridlayout.addWidget(
@@ -8099,10 +8078,7 @@ class seq_track:
 
     def plugin_changed(self, a_val=None):
         self.control_combobox.clear()
-        if self.automation_type == 0:
-            f_cbox = self.instruments[self.automation_index].plugin_combobox
-        elif self.automation_type == 1:
-            f_cbox = self.effects[self.automation_index].plugin_combobox
+        f_cbox = self.plugins[self.automation_index].plugin_combobox
         self.plugin_name = str(f_cbox.currentText())
         if self.plugin_name != "None":
             self.control_combobox.addItems(CC_NAMES[self.plugin_name])
@@ -8160,7 +8136,7 @@ class seq_track:
         f_plugins = PROJECT.get_track_plugins(self.track_number)
         if not f_plugins:
             return
-        for f_plugin in f_plugins.instruments + f_plugins.effects:
+        for f_plugin in f_plugins.plugins:
             global_plugin_set_window_title(
                 f_plugin.plugin_uid,
                 _("Track: {}").format(self.name_callback()))
@@ -8168,8 +8144,7 @@ class seq_track:
     def context_menu_event(self, a_event=None):
         pass
 
-    def automation_callback(self, a_type, a_index, a_plugin):
-        self.automation_type = a_type
+    def automation_callback(self, a_index, a_plugin):
         self.automation_index = a_index
         self.automation_plugin = a_plugin
         self.plugin_changed()
@@ -8177,8 +8152,7 @@ class seq_track:
 
     def save_callback(self):
         f_result = pydaw_track_plugins(
-            [x.get_value() for x in self.instruments],
-            [x.get_value() for x in self.effects])
+            [x.get_value() for x in self.plugins])
         PROJECT.save_track_plugins(self.track_number, f_result)
         PROJECT.commit(
             "Update track plugins for '{}', {}".format(
@@ -8199,11 +8173,8 @@ class seq_track:
         f_plugins = PROJECT.get_track_plugins(self.track_number)
         if not f_plugins:
             return
-        if self.track_number != 0:
-            for f_plugin in f_plugins.instruments:
-                self.instruments[f_plugin.index].set_value(f_plugin)
-        for f_plugin in f_plugins.effects:
-            self.effects[f_plugin.index].set_value(f_plugin)
+        for f_plugin in f_plugins.plugins:
+            self.plugins[f_plugin.index].set_value(f_plugin)
 
         f_graph = PROJECT.get_routing_graph()
         if self.track_number in f_graph.graph:
@@ -8691,19 +8662,15 @@ class transport_widget:
 PLUGIN_UI_DICT = {}
 
 PLUGIN_UI_TYPES = {
-    0:{
-        1:pydaw_widgets.pydaw_euphoria_plugin_ui,
-        2:pydaw_widgets.pydaw_rayv_plugin_ui,
-        3:pydaw_widgets.pydaw_wayv_plugin_ui
-    },
-    1:{
-        1:pydaw_widgets.pydaw_modulex_plugin_ui
-    }
+    1:pydaw_widgets.pydaw_euphoria_plugin_ui,
+    2:pydaw_widgets.pydaw_rayv_plugin_ui,
+    3:pydaw_widgets.pydaw_wayv_plugin_ui,
+    4:pydaw_widgets.pydaw_modulex_plugin_ui
 }
 
-def global_open_plugin_ui(a_plugin_uid, a_type, a_plugin_type, a_title):
+def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title):
     if not a_plugin_uid in PLUGIN_UI_DICT:
-        f_plugin = PLUGIN_UI_TYPES[a_type][a_plugin_type](
+        f_plugin = PLUGIN_UI_TYPES[a_plugin_type](
             PROJECT.this_pydaw_osc.pydaw_update_plugin_control,
             PROJECT, PROJECT.plugin_pool_folder, a_plugin_uid,
             a_title, MAIN_WINDOW.styleSheet(),

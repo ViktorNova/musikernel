@@ -40,47 +40,32 @@ typedef struct
 }t_pydaw_plugin;
 
 
-t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index, int a_type,
+t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
         fp_get_wavpool_item_from_host a_host_wavpool_func,
         int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_pydaw_plugin * f_result = (t_pydaw_plugin*)malloc(sizeof(t_pydaw_plugin));
 
-    if(a_type == 0)
+    switch(a_index)
     {
-        switch(a_index)
-        {
-            case 1:
-                f_result->descfn =
-                        (PYFX_Descriptor_Function)euphoria_PYFX_descriptor;
-                break;
-            case 2:
-                f_result->descfn =
-                        (PYFX_Descriptor_Function)rayv_PYFX_descriptor;
-                break;
-            case 3:
-                f_result->descfn =
-                        (PYFX_Descriptor_Function)wayv_PYFX_descriptor;
-                break;
-            default:
-                assert(0);
-        }
-    }
-    else if(a_type == 1)
-    {
-        switch(a_index)
-        {
-            case 1:
-                f_result->descfn =
-                        (PYFX_Descriptor_Function)modulex_PYFX_descriptor;
-                break;
-            default:
-                assert(0);
-        }
-    }
-    else
-    {
-        assert(0);
+        case 1:
+            f_result->descfn =
+                    (PYFX_Descriptor_Function)euphoria_PYFX_descriptor;
+            break;
+        case 2:
+            f_result->descfn =
+                    (PYFX_Descriptor_Function)rayv_PYFX_descriptor;
+            break;
+        case 3:
+            f_result->descfn =
+                    (PYFX_Descriptor_Function)wayv_PYFX_descriptor;
+            break;
+        case 4:
+            f_result->descfn =
+                    (PYFX_Descriptor_Function)modulex_PYFX_descriptor;
+            break;
+        default:
+            assert(0);
     }
 
     f_result->descriptor = f_result->descfn(0);
