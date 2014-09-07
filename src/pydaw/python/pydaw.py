@@ -991,7 +991,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                 f_pos = f_item.scenePos()
                 f_coord = REGION_EDITOR.get_item_coord(f_pos)
                 if f_coord:
-                    f_item.track_num, f_item.bar = f_coord
+                    f_item.track_num, f_item.bar = f_coord[:2]
                 f_item.set_pos()
 
     def mouseReleaseEvent(self, a_event):
@@ -1062,7 +1062,6 @@ class atm_item(QtGui.QGraphicsEllipseItem):
             self, 0, 0, ATM_POINT_DIAMETER, ATM_POINT_DIAMETER)
         self.save_callback = a_save_callback
         self.item = a_item
-        a_item.parent = self
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
         self.setZValue(1100.0)
@@ -1079,27 +1078,22 @@ class atm_item(QtGui.QGraphicsEllipseItem):
     def mousePressEvent(self, a_event):
         a_event.setAccepted(True)
         QtGui.QGraphicsEllipseItem.mousePressEvent(self, a_event)
-        self.selected_items = [x.parent for x in
-            ATM_REGION.get_points(self.item.track, self.item.port_num)
-            if x.parent.isSelected()]
 
     def mouseMoveEvent(self, a_event):
         QtGui.QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
-        for f_item in self.selected_items:
-            f_pos = f_item.pos()
-            f_x = pydaw_util.pydaw_clip_value(
-                f_pos.x(), 0.0, REGION_EDITOR_MAX_START)
-            f_y = pydaw_util.pydaw_clip_value(
-                f_pos.y(), f_item.min_y, f_item.max_y)
-            f_item.setPos(f_x, f_y)
+        f_pos = self.pos()
+        f_x = pydaw_util.pydaw_clip_value(
+            f_pos.x(), 0.0, REGION_EDITOR_MAX_START)
+        f_y = pydaw_util.pydaw_clip_value(
+            f_pos.y(), self.min_y, self.max_y)
+        self.setPos(f_x, f_y)
 
     def mouseReleaseEvent(self, a_event):
         QtGui.QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
-        for f_item in self.selected_items:
-            f_pos = f_item.pos()
-            f_point = f_item.item
-            f_point.track, f_point.bar, f_point.beat = \
-                REGION_EDITOR.get_item_coord(f_pos)
+        f_pos = self.pos()
+        f_point = self.item
+        f_point.track, f_point.bar, f_point.beat, f_point.cc_val = \
+            REGION_EDITOR.get_item_coord(f_pos)
         self.save_callback()
 
     def __lt__(self, other):
@@ -1281,12 +1275,16 @@ class region_editor(QtGui.QGraphicsView):
         f_pos_x < REGION_EDITOR_MAX_START and \
         f_pos_y > REGION_EDITOR_HEADER_HEIGHT and \
         f_pos_y < REGION_EDITOR_TOTAL_HEIGHT:
-            f_track = int(((f_pos_y - REGION_EDITOR_HEADER_HEIGHT) / (
-                self.tracks_height)) * REGION_EDITOR_TRACK_COUNT)
+            f_pos_y = f_pos_y - REGION_EDITOR_HEADER_HEIGHT
+            f_track = int((f_pos_y / (self.tracks_height))
+                * REGION_EDITOR_TRACK_COUNT)
+            f_val = (1.0 - ((f_pos_y -
+                (f_track * REGION_EDITOR_TRACK_HEIGHT) - ATM_POINT_DIAMETER)
+                / REGION_EDITOR_TRACK_HEIGHT)) * 127.0
             f_bar = int((f_pos_x / self.viewer_width) * self.item_length)
             f_beat = (((f_pos_x / self.viewer_width) *
                 self.item_length) - f_bar) * 4.0
-            return f_track, f_bar, f_beat
+            return f_track, f_bar, round(f_beat, 6), round(f_val, 6)
         else:
             return None
 
@@ -1295,11 +1293,12 @@ class region_editor(QtGui.QGraphicsView):
         return QtCore.QPointF(
             (a_point.bar * f_item_width) +
             (a_point.beat * 0.25 * f_item_width),
-            (REGION_EDITOR_TRACK_HEIGHT * (a_point.cc_val / 127.0)) +
-            (REGION_EDITOR_TRACK_HEIGHT * a_point.track))
+            (REGION_EDITOR_TRACK_HEIGHT * (1.0 - (a_point.cc_val / 127.0))) +
+            (REGION_EDITOR_TRACK_HEIGHT * a_point.track) +
+            REGION_EDITOR_HEADER_HEIGHT)
 
     def show_cell_dialog(self):
-        x, y, f_beat = self.current_coord
+        x, y = self.current_coord[:2]
         def note_ok_handler():
             self.scene.clearSelection()
             global CURRENT_REGION
@@ -1596,12 +1595,12 @@ class region_editor(QtGui.QGraphicsView):
                 pass
             elif a_event.button() == QtCore.Qt.RightButton:
                 pass
-            else:
+            elif self.current_coord is not None:
                 f_port = TRACK_PANEL.has_automation(self.current_coord[0])
                 if f_port is not None:
-                    f_track, f_bar, f_beat = self.current_coord
+                    f_track, f_bar, f_beat, f_val = self.current_coord
                     f_point = pydaw_atm_point(
-                        f_track, f_bar, f_beat, f_port, 0.0,
+                        f_track, f_bar, f_beat, f_port, f_val,
                         *TRACK_PANEL.get_atm_params(f_track))
                     ATM_REGION.add_point(f_point)
                     self.draw_point(f_point)
@@ -1687,11 +1686,12 @@ class region_editor(QtGui.QGraphicsView):
         for f_item in CURRENT_REGION.items:
             if f_item.bar_num < pydaw_get_current_region_length():
                 f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
-                self.draw_item(f_item.track_num, f_item.bar_num, f_item_name)
+                f_new_item = self.draw_item(
+                    f_item.track_num, f_item.bar_num, f_item_name)
                 if "|".join(str(x) for x in
                 (f_item.track_num, f_item.bar_num,
                 f_item_name)) in self.selected_item_strings:
-                    f_item.setSelected(True)
+                    f_new_item.setSelected(True)
         if REGION_EDITOR_MODE == 1:
             pass
         self.setUpdatesEnabled(True)
@@ -1745,7 +1745,7 @@ class region_editor(QtGui.QGraphicsView):
         return f_item
 
     def draw_point(self, a_point):
-        f_min = (self.current_coord[0] *
+        f_min = (a_point.track *
             REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
         f_max = f_min + REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
         f_item = atm_item(
@@ -1916,7 +1916,7 @@ class region_editor(QtGui.QGraphicsView):
             return
 
         f_current_item_text = self.current_item.name
-        x, y, f_beat = self.current_coord
+        x, y, f_beat = self.current_coord[:3]
 
         def note_ok_handler():
             f_cell_text = str(f_new_lineedit.text())
@@ -2023,7 +2023,7 @@ class region_editor(QtGui.QGraphicsView):
                 "clipboard.\n"
                 "You have {} items copied.").format(len(REGION_CLIPBOARD)))
             return
-        f_base_row, f_base_column, f_beat = self.current_coord
+        f_base_row, f_base_column, f_beat = self.current_coord[:3]
         f_region_length = pydaw_get_current_region_length()
         f_item = REGION_CLIPBOARD[0]
         for f_column in range(f_base_column, f_region_length):
@@ -2043,7 +2043,7 @@ class region_editor(QtGui.QGraphicsView):
         else:
             if not self.current_coord:
                 return
-            f_base_row, f_base_column, f_beat = self.current_coord
+            f_base_row, f_base_column, f_beat = self.current_coord[:3]
         self.scene.clearSelection()
         f_region_length = pydaw_get_current_region_length()
         for f_item in REGION_CLIPBOARD:

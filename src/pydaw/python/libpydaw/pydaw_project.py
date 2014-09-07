@@ -1612,7 +1612,7 @@ class pydaw_atm_point:
         return "|".join(str(x) for x in
             (self.track, self.bar, self.beat,
              self.port_num, self.cc_val, self.index,
-             self.plugin_index, self.plugin_type, "\n"))
+             self.plugin_index, self.plugin_type))
 
     @staticmethod
     def from_arr(a_arr):
@@ -1622,7 +1622,7 @@ class pydaw_atm_point:
     @staticmethod
     def from_str(a_str):
         f_arr = a_str.split("|")
-        return pydaw_atm_point.from_arr(f_arr[1:])
+        return pydaw_atm_point.from_arr(f_arr)
 
     def clone(self):
         return pydaw_atm_point.from_str(str(self))
