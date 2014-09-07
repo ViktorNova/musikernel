@@ -1693,10 +1693,17 @@ class region_editor(QtGui.QGraphicsView):
                 f_item_name)) in self.selected_item_strings:
                     f_new_item.setSelected(True)
         if REGION_EDITOR_MODE == 1:
-            pass
+            self.open_atm_region()
         self.setUpdatesEnabled(True)
         self.update()
         self.enabled = True
+
+    def open_atm_region(self):
+        for f_track in TRACK_PANEL.tracks:
+            f_port = TRACK_PANEL.has_automation(f_track)
+            if f_port is not None:
+                for f_point in ATM_REGION.get_points(f_track, f_port):
+                    self.draw_point(f_point)
 
     def clear_drawn_items(self):
         global REGION_EDITOR_GRID_WIDTH, REGION_EDITOR_MAX_START
@@ -8102,6 +8109,7 @@ class seq_track:
     def control_changed(self, a_val=None):
         self.set_cc_num()
         self.ccs_in_use_combobox.setCurrentIndex(0)
+        REGION_EDITOR.open_region()
 
     def set_cc_num(self, a_val=None):
         f_port_name = str(self.control_combobox.currentText())
@@ -8164,6 +8172,7 @@ class seq_track:
         self.automation_index = a_index
         self.automation_plugin = a_plugin
         self.plugin_changed()
+        REGION_EDITOR.open_region()
 
     def save_callback(self):
         f_result = pydaw_track_plugins(
