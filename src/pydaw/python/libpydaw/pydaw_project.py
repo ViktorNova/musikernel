@@ -1586,9 +1586,9 @@ class pydaw_atm_point:
         self.beat = round(float(a_beat), 6)
         self.port_num = int(a_port_num)
         self.cc_val = round(float(a_cc_val), 6)
-        self.index = int(a_index)
-        self.plugin_index = int(a_plugin_index)
-        self.plugin_type = int(a_plugin_type)
+        self.index = int(a_index) # Index within the track inst./fx
+        self.plugin_index = int(a_plugin_index) # UID of the plugin
+        self.plugin_type = int(a_plugin_type) # 0 inst. 1 fx
 
     def set_val(self, a_val):
         self.cc_val = pydaw_clip_value(float(a_val), 0.0, 127.0, True)
