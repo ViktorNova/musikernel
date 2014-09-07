@@ -1049,7 +1049,7 @@ ATM_GRADIENT.setColorAt(0.5, QtGui.QColor(210, 210, 210))
 
 
 class atm_item(QtGui.QGraphicsEllipseItem):
-    def __init__(self, a_item, a_save_callback):
+    def __init__(self, a_item, a_save_callback, a_min_y, a_max_y):
         QtGui.QGraphicsEllipseItem.__init__(
             self, 0, 0, ATM_POINT_DIAMETER, ATM_POINT_DIAMETER)
         self.save_callback = a_save_callback
@@ -1058,6 +1058,8 @@ class atm_item(QtGui.QGraphicsEllipseItem):
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
         self.setZValue(1100.0)
         self.set_brush()
+        self.min_y = a_min_y
+        self.max_y = a_max_y
 
     def set_brush(self):
         if self.isSelected():
@@ -1067,6 +1069,11 @@ class atm_item(QtGui.QGraphicsEllipseItem):
 
     def mouseMoveEvent(self, a_event):
         QtGui.QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
+        f_pos = a_event.scenePos()
+        f_x = pydaw_util.pydaw_clip_value(
+            f_pos.x(), 0.0, REGION_EDITOR_MAX_START)
+        f_y = pydaw_util.pydaw_clip_value(f_pos.y(), self.min_y, self.max_y)
+        self.setPos(f_x, f_y)
 
     def mouseReleaseEvent(self, a_event):
         QtGui.QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
@@ -1557,8 +1564,12 @@ class region_editor(QtGui.QGraphicsView):
                 pass
             elif a_event.button() == QtCore.Qt.RightButton:
                 pass
-            else:
-                f_item = atm_item(None, self.automation_save_callback)
+            elif TRACK_PANEL.has_automation(self.current_coord[0]):
+                f_min = (self.current_coord[0] *
+                    REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
+                f_max = f_min + REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
+                f_item = atm_item(
+                    None, self.automation_save_callback, f_min, f_max)
                 self.scene.addItem(f_item)
                 f_item.setPos(a_event.scenePos())
 
