@@ -1039,7 +1039,8 @@ class tracks_widget:
 
     def update_automation(self):
         self.automation_dict = {
-            x:self.tracks[x].port_num for x in self.tracks}
+            x:(self.tracks[x].port_num, self.tracks[x].automation_index)
+            for x in self.tracks}
 
     def has_automation(self, a_track_num):
         return self.automation_dict[int(a_track_num)]
@@ -1596,7 +1597,8 @@ class region_editor(QtGui.QGraphicsView):
             elif a_event.button() == QtCore.Qt.RightButton:
                 pass
             elif self.current_coord is not None:
-                f_port = TRACK_PANEL.has_automation(self.current_coord[0])
+                f_port, f_index = TRACK_PANEL.has_automation(
+                    self.current_coord[0])
                 if f_port is not None:
                     f_track, f_bar, f_beat, f_val = self.current_coord
                     f_point = pydaw_atm_point(
@@ -1700,9 +1702,10 @@ class region_editor(QtGui.QGraphicsView):
 
     def open_atm_region(self):
         for f_track in TRACK_PANEL.tracks:
-            f_port = TRACK_PANEL.has_automation(f_track)
+            f_port, f_index = TRACK_PANEL.has_automation(f_track)
             if f_port is not None:
-                for f_point in ATM_REGION.get_points(f_track, f_port):
+                for f_point in ATM_REGION.get_points(
+                f_track, f_index, f_port):
                     self.draw_point(f_point)
 
     def clear_drawn_items(self):

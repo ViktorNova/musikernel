@@ -1546,25 +1546,32 @@ class pydaw_atm_region:
     def add_point(self, a_point):
         if not a_point.track in self.tracks:
             self.tracks[a_point.track] = {}
-        if not a_point.port_num in self.tracks[a_point.track]:
-            self.tracks[a_point.track][a_point.port_num] = []
-        self.tracks[a_point.track][a_point.port_num].append(a_point)
+        if not a_point.index in self.tracks[a_point.track]:
+            self.tracks[a_point.track][a_point.index] = {}
+        if not a_point.port_num in self.tracks[a_point.track][a_point.index]:
+            self.tracks[a_point.track][a_point.index][a_point.port_num] = []
+        self.tracks[
+            a_point.track][a_point.index][a_point.port_num].append(a_point)
 
-    def get_points(self, a_track_num, a_port_num):
+    def get_points(self, a_track_num, a_index, a_port_num):
         a_track_num = int(a_track_num)
         a_port_num = int(a_port_num)
+        a_index = int(a_index)
         if a_track_num not in self.tracks or \
-        a_port_num not in self.tracks[a_track_num]:
+        a_index not in self.tracks[a_track_num] or \
+        a_port_num not in self.tracks[a_track_num][a_index]:
             return []
         else:
-            return sorted(self.tracks[a_track_num][a_port_num])
+            return sorted(self.tracks[a_track_num][a_index][a_port_num])
 
     def __str__(self):
         f_result = []
         for f_track in sorted(self.tracks):
-            for f_port in sorted(self.tracks[f_track]):
-                for f_point in sorted(self.tracks[f_track][f_port]):
-                    f_result.append(str(f_point))
+            for f_index in sorted(self.tracks[f_track]):
+                for f_port in sorted(self.tracks[f_track][f_index]):
+                    for f_point in sorted(
+                    self.tracks[f_track][f_index][f_port]):
+                        f_result.append(str(f_point))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 
