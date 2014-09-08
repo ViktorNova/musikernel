@@ -893,7 +893,7 @@ def region_editor_set_delete_mode(a_enabled):
     else:
         REGION_EDITOR.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         REGION_EDITOR_DELETE_MODE = False
-        REGION_EDITOR.selected_item_strings = []
+        REGION_EDITOR.selected_item_strings = set([])
         QtGui.QApplication.restoreOverrideCursor()
         global_tablewidget_to_region()
 
@@ -1135,8 +1135,9 @@ class region_editor(QtGui.QGraphicsView):
         self.last_scale = 1.0
         self.last_x_scale = 1.0
         self.scene.selectionChanged.connect(self.highlight_selected)
-        self.selected_item_strings = []
+        self.selected_item_strings = set([])
         self.clipboard = []
+        self.automation_points = []
 
         self.current_coord = None
         self.current_item = None
@@ -1303,6 +1304,8 @@ class region_editor(QtGui.QGraphicsView):
             REGION_EDITOR_HEADER_HEIGHT)
 
     def show_cell_dialog(self):
+        if not self.current_coord:
+            return
         x, y = self.current_coord[:2]
         def note_ok_handler():
             self.scene.clearSelection()
@@ -1540,22 +1543,43 @@ class region_editor(QtGui.QGraphicsView):
             for k2 in sorted(self.region_items[k1]):
                 yield self.region_items[k1][k2]
 
+    def get_all_points(self):
+        for f_point in self.automation_points:
+            yield f_point
+
+    def get_selected_points(self, a_track=None):
+        a_track = int(a_track)
+        if a_track is None:
+            for f_point in self.automation_points:
+                if f_point.isSelected():
+                    yield f_point
+        else:
+            for f_point in self.automation_points:
+                if f_point.item.track == a_track and \
+                f_point.isSelected():
+                    yield f_point
+
     def select_all(self):
         for f_item in self.get_all_items():
             f_item.setSelected(True)
 
     def highlight_selected(self):
+        self.setUpdatesEnabled(False)
         self.has_selected = False
-        for f_item in self.get_all_items():
-            if f_item.isSelected():
-                f_item.setBrush(SELECTED_ITEM_GRADIENT)
-                self.has_selected = True
-            else:
+        if REGION_EDITOR_MODE == 0:
+            for f_item in self.get_all_items():
                 f_item.set_brush()
+                self.has_selected = True
+        elif REGION_EDITOR_MODE == 1:
+            for f_item in self.get_all_points():
+                f_item.set_brush()
+                self.has_selected = True
+        self.setUpdatesEnabled(True)
+        self.update()
 
     def set_selected_strings(self):
-        self.selected_item_strings = [x.get_selected_string()
-            for x in self.get_selected_items()]
+        self.selected_item_strings = {x.get_selected_string()
+            for x in self.get_selected_items()}
 
     def keyPressEvent(self, a_event):
         QtGui.QGraphicsView.keyPressEvent(self, a_event)
@@ -1598,6 +1622,12 @@ class region_editor(QtGui.QGraphicsView):
         elif REGION_EDITOR_MODE == 1:
             if a_event.modifiers() == QtCore.Qt.ControlModifier:
                 pass
+            elif a_event.modifiers() == \
+            QtCore.Qt.AltModifier | QtCore.Qt.ControlModifier:
+                a_event.setAccepted(True)
+                QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
+                self.automation_select_bar()
+                return
             elif a_event.button() == QtCore.Qt.RightButton:
                 pass
             elif self.current_coord is not None:
@@ -1615,6 +1645,15 @@ class region_editor(QtGui.QGraphicsView):
         a_event.setAccepted(True)
         QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
         QtGui.QApplication.restoreOverrideCursor()
+
+    def automation_select_bar(self):
+        f_track, f_bar = (int(x) for x in self.current_coord[:2])
+        for f_point in self.get_all_points():
+            if f_point.item.bar == f_bar and \
+            f_point.item.track == f_track:
+                f_point.setSelected(True)
+                f_point.set_brush()
+                print(f_point)
 
     def automation_save_callback(self):
         PROJECT.save_atm_region(ATM_REGION, CURRENT_REGION.uid)
@@ -1724,6 +1763,7 @@ class region_editor(QtGui.QGraphicsView):
         self.px_per_beat = self.px_per_bar / 4.0
 
         self.region_items = {}
+        self.automation_points = []
         self.scene.clear()
         self.update_note_height()
         self.draw_header()
@@ -1767,6 +1807,7 @@ class region_editor(QtGui.QGraphicsView):
             a_point, self.automation_save_callback, f_min, f_max)
         self.scene.addItem(f_item)
         f_item.setPos(self.get_pos_from_point(a_point))
+        self.automation_points.append(f_item)
 
     def pop_item(self, a_item):
         self.region_items[a_item.track_num].pop(a_item.bar)
