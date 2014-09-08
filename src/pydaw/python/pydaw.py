@@ -1283,8 +1283,8 @@ class region_editor(QtGui.QGraphicsView):
             f_track_height = REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
             f_track = int((f_pos_y / (self.tracks_height))
                 * REGION_EDITOR_TRACK_COUNT)
-            f_val = ((f_pos_y - (f_track * REGION_EDITOR_TRACK_HEIGHT))
-                / f_track_height) * 127.0
+            f_val = (1.0 - ((f_pos_y - (f_track * REGION_EDITOR_TRACK_HEIGHT))
+                / f_track_height)) * 127.0
             f_bar = int((f_pos_x / self.viewer_width) * self.item_length)
             f_beat = (((f_pos_x / self.viewer_width) *
                 self.item_length) - f_bar) * 4.0
@@ -1298,7 +1298,7 @@ class region_editor(QtGui.QGraphicsView):
         return QtCore.QPointF(
             (a_point.bar * f_item_width) +
             (a_point.beat * 0.25 * f_item_width),
-            (f_track_height * (a_point.cc_val / 127.0)) +
+            (f_track_height * (1.0 - (a_point.cc_val / 127.0))) +
             (REGION_EDITOR_TRACK_HEIGHT * a_point.track) +
             REGION_EDITOR_HEADER_HEIGHT)
 
