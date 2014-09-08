@@ -108,6 +108,12 @@ def case_insensitive_path(a_path, a_assert=True):
         print(f_path)
         return f_path
 
+def count_beats(a_start_bar, a_start_beat, a_end_bar, a_end_beat):
+    a_start_bar, a_end_bar = (int(x) for x in (a_start_bar, a_end_bar))
+    a_start_beat, a_end_beat = (float(x) for x in (a_start_beat, a_end_beat))
+    return ((a_end_bar - a_start_bar) * 4.0) + (a_end_beat - a_start_beat)
+
+
 AUDIO_FILE_EXTS = [".WAV", ".AIF", ".AIFF", ".FLAC"]
 
 def is_audio_file(a_file):
