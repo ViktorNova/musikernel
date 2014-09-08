@@ -17,7 +17,7 @@ PLAT_FLAGS     ?= -mstackrealign -msse -msse2 -msse3 -mfpmath=sse \
 BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
 -floop-optimize -fsingle-precision-constant -funroll-loops -Wall \
 -Isrc -Iportaudio/include -fstrength-reduce -fstrict-aliasing \
--finline-functions
+-finline-functions -Wstrict-aliasing
 
 
 BUILD_CFLAGS   = $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
