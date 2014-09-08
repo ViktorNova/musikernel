@@ -1553,6 +1553,15 @@ class pydaw_atm_region:
         self.tracks[
             a_point.track][a_point.index][a_point.port_num].append(a_point)
 
+    def get_ports(self, a_track_num, a_index):
+        a_track_num = int(a_track_num)
+        a_index = int(a_index)
+        if a_track_num not in self.tracks or \
+        a_index not in self.tracks[a_track_num]:
+            return []
+        else:
+            return sorted(self.tracks[a_track_num][a_index])
+
     def get_points(self, a_track_num, a_index, a_port_num):
         a_track_num = int(a_track_num)
         a_port_num = int(a_port_num)

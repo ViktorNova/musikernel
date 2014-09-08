@@ -1030,7 +1030,7 @@ class tracks_widget:
             self.tracks[i] = f_track
             self.tracks_layout.addWidget(f_track.group_box)
         self.automation_dict = {
-            x:None for x in range(REGION_EDITOR_TRACK_COUNT)}
+            x:(None, None) for x in range(REGION_EDITOR_TRACK_COUNT)}
 
     def get_atm_params(self, a_track_num):
         f_track = self.tracks[int(a_track_num)]
@@ -1044,6 +1044,10 @@ class tracks_widget:
 
     def has_automation(self, a_track_num):
         return self.automation_dict[int(a_track_num)]
+
+    def update_ccs_in_use(self):
+        for v in self.tracks.values():
+            v.update_in_use_combobox()
 
 
 ATM_POINT_DIAMETER = 6.0
@@ -1696,6 +1700,7 @@ class region_editor(QtGui.QGraphicsView):
                     f_new_item.setSelected(True)
         if REGION_EDITOR_MODE == 1:
             self.open_atm_region()
+            TRACK_PANEL.update_ccs_in_use()
         self.setUpdatesEnabled(True)
         self.update()
         self.enabled = True
@@ -7866,7 +7871,8 @@ class plugin_settings:
     def automation_check_changed(self):
         if self.automation_radiobutton.isChecked():
             self.automation_callback(
-                self.index, self.plugin_combobox.currentIndex())
+                self.index, self.plugin_combobox.currentIndex(),
+                self.plugin_combobox.currentText())
 
     def set_value(self, a_val):
         self.suppress_osc = True
@@ -8026,8 +8032,9 @@ class seq_track:
             self.mute_checkbox.stateChanged.connect(self.on_mute)
             self.mute_checkbox.setObjectName("mute_checkbox")
             self.hlayout3.addWidget(self.mute_checkbox)
-        self.plugin_name = "None"
+        self.automation_plugin_name = "None"
         self.port_num = None
+        self.ccs_in_use_combobox = None
         self.suppress_osc = False
 
     def menu_button_pressed(self):
@@ -8078,13 +8085,13 @@ class seq_track:
             self.ccs_in_use_combobox_changed)
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("In Use:")), 10, 20)
         self.menu_gridlayout.addWidget(self.ccs_in_use_combobox, 10, 21)
+        self.update_in_use_combobox()
 
     def plugin_changed(self, a_val=None):
         self.control_combobox.clear()
-        f_cbox = self.plugins[self.automation_index].plugin_combobox
-        self.plugin_name = str(f_cbox.currentText())
-        if self.plugin_name != "None":
-            self.control_combobox.addItems(CC_NAMES[self.plugin_name])
+        if self.automation_plugin_name != "None":
+            self.control_combobox.addItems(
+                CC_NAMES[self.automation_plugin_name])
 
     def control_changed(self, a_val=None):
         self.set_cc_num()
@@ -8097,18 +8104,27 @@ class seq_track:
             self.port_num = None
         else:
             self.port_num = CONTROLLER_PORT_NAME_DICT[
-                self.plugin_name][f_port_name].port
+                self.automation_plugin_name][f_port_name].port
         TRACK_PANEL.update_automation()
 
     def ccs_in_use_combobox_changed(self, a_val=None):
         if not self.suppress_ccs_in_use:
             f_str = str(self.ccs_in_use_combobox.currentText())
-            if f_str != "":
-                f_arr = f_str.split("|")
-                self.plugin_combobox.setCurrentIndex(
-                    self.plugin_combobox.findText(f_arr[0]))
+            if f_str:
                 self.control_combobox.setCurrentIndex(
-                    self.control_combobox.findText(f_arr[1]))
+                    self.control_combobox.findText(f_str))
+
+    def update_in_use_combobox(self):
+        if self.ccs_in_use_combobox is not None:
+            self.ccs_in_use_combobox.clear()
+            if self.automation_index is not None:
+                f_list = ATM_REGION.get_ports(
+                    self.track_number, self.automation_index)
+                self.ccs_in_use_combobox.addItems(
+                    [""] +
+                    [CONTROLLER_PORT_NUM_DICT[
+                        self.automation_plugin_name][x].name
+                    for x in f_list])
 
     def on_solo(self, value):
         if not self.suppress_osc:
@@ -8147,9 +8163,10 @@ class seq_track:
     def context_menu_event(self, a_event=None):
         pass
 
-    def automation_callback(self, a_index, a_plugin):
-        self.automation_index = a_index
-        self.automation_plugin = a_plugin
+    def automation_callback(self, a_index, a_plugin, a_name):
+        self.automation_index = int(a_index)
+        self.automation_plugin = int(a_plugin)
+        self.automation_plugin_name = str(a_name)
         self.plugin_changed()
         REGION_EDITOR.open_region()
 
