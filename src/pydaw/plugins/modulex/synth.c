@@ -801,6 +801,7 @@ PYFX_Descriptor *modulex_PYFX_descriptor(int index)
     f_result->configure = NULL;
     f_result->run_synth = v_modulex_run;
     f_result->on_stop = v_modulex_on_stop;
+    f_result->offline_render_prep = NULL;
 
     return f_result;
 }
