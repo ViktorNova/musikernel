@@ -894,8 +894,7 @@ def region_editor_set_delete_mode(a_enabled):
         REGION_EDITOR.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         REGION_EDITOR_DELETE_MODE = False
         REGION_EDITOR.selected_item_strings = set([])
-        QtGui.QApplication.restoreOverrideCursor()
-        global_tablewidget_to_region()
+
 
 class region_editor_item(QtGui.QGraphicsRectItem):
     def __init__(self, a_track, a_bar, a_name):
@@ -995,14 +994,16 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                 f_item.set_pos()
 
     def mouseReleaseEvent(self, a_event):
+        if not self.isEnabled():
+            QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
+            return
         a_event.setAccepted(True)
         QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
+        if not self.isEnabled():
+            return
         if REGION_EDITOR_DELETE_MODE:
             region_editor_set_delete_mode(False)
             return
-            for f_item in REGION_EDITOR.get_selected_items():
-                REGION_EDITOR.pop_orig_item(f_item)
-                REGION_EDITOR.set_item(f_item)
         REGION_EDITOR.set_selected_strings()
         global_tablewidget_to_region()
         QtGui.QApplication.restoreOverrideCursor()
@@ -1049,6 +1050,15 @@ class tracks_widget:
         for v in self.tracks.values():
             v.update_in_use_combobox()
 
+    def open_tracks(self):
+        global TRACK_NAMES
+        f_tracks = PROJECT.get_tracks()
+        TRACK_NAMES = f_tracks.get_names()
+        for f_track_num, f_name in zip(sorted(self.tracks), TRACK_NAMES):
+            self.tracks[f_track_num].track_name_lineedit.setText(f_name)
+        for key, f_track in f_tracks.tracks.items():
+            self.tracks[key].open_track(f_track)
+
 
 ATM_POINT_DIAMETER = 6.0
 ATM_POINT_RADIUS = ATM_POINT_DIAMETER * 0.5
@@ -1093,6 +1103,7 @@ class atm_item(QtGui.QGraphicsEllipseItem):
         self.setPos(f_x, f_y)
 
     def mouseReleaseEvent(self, a_event):
+        a_event.setAccepted(True)
         QtGui.QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
         f_pos = self.pos()
         f_point = self.item
@@ -1136,6 +1147,7 @@ class region_editor(QtGui.QGraphicsView):
         self.last_x_scale = 1.0
         self.scene.selectionChanged.connect(self.highlight_selected)
         self.selected_item_strings = set([])
+        self.selected_point_strings = set([])
         self.clipboard = []
         self.automation_points = []
 
@@ -1548,12 +1560,12 @@ class region_editor(QtGui.QGraphicsView):
             yield f_point
 
     def get_selected_points(self, a_track=None):
-        a_track = int(a_track)
         if a_track is None:
             for f_point in self.automation_points:
                 if f_point.isSelected():
                     yield f_point
         else:
+            a_track = int(a_track)
             for f_point in self.automation_points:
                 if f_point.item.track == a_track and \
                 f_point.isSelected():
@@ -1581,6 +1593,10 @@ class region_editor(QtGui.QGraphicsView):
         self.selected_item_strings = {x.get_selected_string()
             for x in self.get_selected_items()}
 
+    def set_selected_point_strings(self):
+        self.selected_point_strings = {
+            str(x.item) for x in self.get_selected_points()}
+
     def keyPressEvent(self, a_event):
         QtGui.QGraphicsView.keyPressEvent(self, a_event)
         QtGui.QApplication.restoreOverrideCursor()
@@ -1592,6 +1608,7 @@ class region_editor(QtGui.QGraphicsView):
     def sceneMouseReleaseEvent(self, a_event):
         if REGION_EDITOR_DELETE_MODE:
             region_editor_set_delete_mode(False)
+            global_tablewidget_to_region()
         else:
             QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         self.click_enabled = True
@@ -1624,10 +1641,7 @@ class region_editor(QtGui.QGraphicsView):
                 pass
             elif a_event.modifiers() == \
             QtCore.Qt.AltModifier | QtCore.Qt.ControlModifier:
-                a_event.setAccepted(True)
-                QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
                 self.automation_select_bar()
-                return
             elif a_event.button() == QtCore.Qt.RightButton:
                 pass
             elif self.current_coord is not None:
@@ -1653,7 +1667,7 @@ class region_editor(QtGui.QGraphicsView):
             f_point.item.track == f_track:
                 f_point.setSelected(True)
                 f_point.set_brush()
-                print(f_point)
+        self.set_selected_point_strings()
 
     def automation_save_callback(self):
         PROJECT.save_atm_region(ATM_REGION, CURRENT_REGION.uid)
@@ -1778,15 +1792,6 @@ class region_editor(QtGui.QGraphicsView):
         global REGION_CLIPBOARD
         REGION_CLIPBOARD = []
 
-    def open_tracks(self):
-        global TRACK_NAMES
-        #self.reset_tracks()
-        f_tracks = PROJECT.get_tracks()
-        for key, f_track in f_tracks.tracks.items():
-            self.tracks[key].open_track(f_track)
-        TRACK_NAMES = [f_tracks.tracks[k].name
-            for k in sorted(f_tracks.tracks)]
-
     def clearSelection(self):
         for f_item in self.get_all_items():
             f_item.setSelected(False)
@@ -1808,6 +1813,8 @@ class region_editor(QtGui.QGraphicsView):
         self.scene.addItem(f_item)
         f_item.setPos(self.get_pos_from_point(a_point))
         self.automation_points.append(f_item)
+        if str(a_point) in self.selected_point_strings:
+            f_item.setSelected(True)
 
     def pop_item(self, a_item):
         self.region_items[a_item.track_num].pop(a_item.bar)
@@ -10875,9 +10882,7 @@ def global_open_project(a_project_file, a_wait=True):
     PROJECT = pydaw_project(global_pydaw_with_audio)
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
-    TRACK_NAMES = PROJECT.get_tracks().get_names()
-    for f_track_num, f_name in zip(sorted(TRACK_PANEL.tracks), TRACK_NAMES):
-        TRACK_PANEL.tracks[f_track_num].track_name_lineedit.setText(f_name)
+    TRACK_PANEL.open_tracks()
     WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
     SONG_EDITOR.open_song()
     REGION_EDITOR.clear_drawn_items()
