@@ -15,14 +15,22 @@ GNU General Public License for more details.
 from libpydaw.translate import _
 
 region_list_editor = _(
-"""This is a region editor, it consists of items and tracks.
+"""This is a region editor, it consists of items, tracks and automation.
+
 A track can be any/all of: instrument, audio, bus or send.
 An item is one bar of MIDI notes and/or pitch-bend.
-Click an empty cell to add a new item.
-Double click an item to open it in the piano-roll-editor or select
- multiple using CTRL+click+drag and right-click->'Edit Selected Items'
+An automation point moves a control on a plugin.  The automation points are
+steppy, you must smooth the points to get a continuous line.  (TODO)
 
-Shift+click+drag to delete items with the mouse
+Click an empty cell to add a new item.
+
+Select multiple items or automation points using CTRL+click+drag
+(automation points only allow selecting from one track at a time)
+
+Double click an item to open it in the piano-roll-editor or select
+ multiple and right-click->'Edit Selected Items'
+
+Shift+click+drag to delete items or automation points with the mouse
 
 See the right-click context menu for additional actions and keyboard shortcuts.
 
