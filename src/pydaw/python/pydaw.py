@@ -590,6 +590,10 @@ class region_settings:
     def edit_mode_changed(self, a_value=None):
         global REGION_EDITOR_MODE
         REGION_EDITOR_MODE = a_value
+        if a_value == 0:
+            REGION_EDITOR.setDragMode(QtGui.QGraphicsView.NoDrag)
+        elif a_value == 1:
+            REGION_EDITOR.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         REGION_EDITOR.open_region()
 
     def update_region_length(self, a_value=None):
@@ -1118,6 +1122,7 @@ class region_editor(QtGui.QGraphicsView):
         self.scene.setItemIndexMethod(QtGui.QGraphicsScene.NoIndex)
         self.scene.setBackgroundBrush(QtGui.QColor(100, 100, 100))
         self.scene.mousePressEvent = self.sceneMousePressEvent
+        self.scene.mouseMoveEvent = self.sceneMouseMoveEvent
         self.scene.mouseReleaseEvent = self.sceneMouseReleaseEvent
         self.setAlignment(QtCore.Qt.AlignLeft)
         self.setScene(self.scene)
@@ -1137,6 +1142,9 @@ class region_editor(QtGui.QGraphicsView):
         self.selected_point_strings = set([])
         self.clipboard = []
         self.automation_points = []
+
+        self.atm_select_pos_x = None
+        self.atm_select_track = None
 
         self.current_coord = None
         self.current_item = None
@@ -1542,9 +1550,15 @@ class region_editor(QtGui.QGraphicsView):
             for k2 in sorted(self.region_items[k1]):
                 yield self.region_items[k1][k2]
 
-    def get_all_points(self):
-        for f_point in self.automation_points:
-            yield f_point
+    def get_all_points(self, a_track=None):
+        if a_track is None:
+            for f_point in self.automation_points:
+                yield f_point
+        else:
+            a_track = int(a_track)
+            for f_point in self.automation_points:
+                if f_point.item.track == a_track:
+                    yield f_point
 
     def get_selected_points(self, a_track=None):
         if a_track is None:
@@ -1598,6 +1612,22 @@ class region_editor(QtGui.QGraphicsView):
             global_tablewidget_to_region()
         else:
             QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
+        self.atm_select_pos_x = None
+        self.atm_select_track = None
+
+    def sceneMouseMoveEvent(self, a_event):
+        QtGui.QGraphicsScene.mouseMoveEvent(self.scene, a_event)
+        if REGION_EDITOR_MODE == 1:
+            if self.atm_select_pos_x is not None:
+                f_pos_x = a_event.scenePos().x()
+                f_vals = sorted((f_pos_x, self.atm_select_pos_x))
+                for f_item in self.get_all_points(self.atm_select_track):
+                    f_item_pos_x = f_item.pos().x()
+                    if f_item_pos_x >= f_vals[0] and \
+                    f_item_pos_x <= f_vals[1]:
+                        f_item.setSelected(True)
+                    else:
+                        f_item.setSelected(False)
 
     def sceneMousePressEvent(self, a_event):
         self.current_coord = self.get_item_coord(a_event.scenePos())
@@ -1623,8 +1653,14 @@ class region_editor(QtGui.QGraphicsView):
                 if not self.current_item:
                     self.show_cell_dialog()
         elif REGION_EDITOR_MODE == 1:
+            REGION_EDITOR.setDragMode(QtGui.QGraphicsView.NoDrag)
+            self.atm_select_pos_x = None
+            self.atm_select_track = None
             if a_event.modifiers() == QtCore.Qt.ControlModifier:
-                self.automation_select_bar()
+                self.clearSelection()
+                self.atm_select_pos_x = a_event.scenePos().x()
+                self.atm_select_track = self.current_coord[0]
+                return
             elif self.current_coord is not None:
                 f_port, f_index = TRACK_PANEL.has_automation(
                     self.current_coord[0])
@@ -1640,15 +1676,6 @@ class region_editor(QtGui.QGraphicsView):
         a_event.setAccepted(True)
         QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
         QtGui.QApplication.restoreOverrideCursor()
-
-    def automation_select_bar(self):
-        f_track, f_bar = (int(x) for x in self.current_coord[:2])
-        for f_point in self.get_all_points():
-            if f_point.item.bar == f_bar and \
-            f_point.item.track == f_track:
-                f_point.setSelected(True)
-                f_point.set_brush()
-        self.set_selected_point_strings()
 
     def automation_save_callback(self):
         PROJECT.save_atm_region(ATM_REGION, CURRENT_REGION.uid)
