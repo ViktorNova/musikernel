@@ -938,10 +938,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             f_index = self.track_num % len(pydaw_track_gradients)
             self.setBrush(pydaw_track_gradients[f_index])
 
-    def hoverMoveEvent(self, a_event):
-        #QtGui.QGraphicsRectItem.hoverMoveEvent(self, a_event)
-        REGION_EDITOR.click_enabled = False  # TODO: ????
-
     def get_selected_string(self):
         return "|".join(str(x) for x in (self.track_num, self.bar, self.name))
 
@@ -951,7 +947,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
 
     def hoverLeaveEvent(self, a_event):
         QtGui.QGraphicsRectItem.hoverLeaveEvent(self, a_event)
-        REGION_EDITOR.click_enabled = True
         QtGui.QApplication.restoreOverrideCursor()
 
     def mouseDoubleClickEvent(self, a_event):
@@ -960,28 +955,16 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         global_open_items([self.name], a_reset_scrollbar=True)
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
 
-
     def mousePressEvent(self, a_event):
         if not self.isEnabled():
-            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
-        elif a_event.button() == QtCore.Qt.RightButton:
-            self.setSelected(True)
             return
-        elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
+        a_event.setAccepted(True)
+        QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
+        self.setSelected(True)
+        if a_event.button() == QtCore.Qt.RightButton:
+            return
+        if a_event.modifiers() == QtCore.Qt.ShiftModifier:
             region_editor_set_delete_mode(True)
-            self.delete_later()
-        else:
-            a_event.setAccepted(True)
-            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
-            self.setBrush(SELECTED_ITEM_GRADIENT)
-            self.o_pos = self.pos()
-            if a_event.modifiers() == QtCore.Qt.ControlModifier:
-                for f_item in REGION_EDITOR.get_selected_items():
-                    f_item.orig_track_num = f_item.track_num
-                    f_item.orig_bar = f_item.bar
-                    REGION_EDITOR.draw_item(
-                        f_item.track_num, f_item.bar, f_item.name)
-        REGION_EDITOR.click_enabled = True
 
     def mouseMoveEvent(self, a_event):
         QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
@@ -1007,7 +990,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         REGION_EDITOR.set_selected_strings()
         global_tablewidget_to_region()
         QtGui.QApplication.restoreOverrideCursor()
-        REGION_EDITOR.click_enabled = True
+
 
 ALL_PEAK_METERS = {}
 
@@ -1141,9 +1124,6 @@ class region_editor(QtGui.QGraphicsView):
         self.region_items = {}
         self.playback_cursor = None
 
-        self.right_click = False
-        self.left_click = False
-        self.click_enabled = True
         self.last_scale = 1.0
         self.last_x_scale = 1.0
         self.scene.selectionChanged.connect(self.highlight_selected)
@@ -1612,7 +1592,6 @@ class region_editor(QtGui.QGraphicsView):
             global_tablewidget_to_region()
         else:
             QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
-        self.click_enabled = True
 
     def sceneMousePressEvent(self, a_event):
         self.current_coord = self.get_item_coord(a_event.scenePos())
@@ -1639,12 +1618,7 @@ class region_editor(QtGui.QGraphicsView):
                     self.show_cell_dialog()
         elif REGION_EDITOR_MODE == 1:
             if a_event.modifiers() == QtCore.Qt.ControlModifier:
-                pass
-            elif a_event.modifiers() == \
-            QtCore.Qt.AltModifier | QtCore.Qt.ControlModifier:
                 self.automation_select_bar()
-            elif a_event.button() == QtCore.Qt.RightButton:
-                pass
             elif self.current_coord is not None:
                 f_port, f_index = TRACK_PANEL.has_automation(
                     self.current_coord[0])
@@ -1794,8 +1768,7 @@ class region_editor(QtGui.QGraphicsView):
         REGION_CLIPBOARD = []
 
     def clearSelection(self):
-        for f_item in self.get_all_items():
-            f_item.setSelected(False)
+        self.scene.clearSelection()
 
     def draw_item(self, a_track, a_bar, a_name, a_selected=False):
         f_item = region_editor_item(a_track, a_bar, a_name)
@@ -2129,7 +2102,7 @@ class region_editor(QtGui.QGraphicsView):
             self.scene.removeItem(f_item)
             self.pop_item(f_item)
         global_tablewidget_to_region()
-        self.scene.clearSelection()
+        #self.scene.clearSelection()
 
     def copy_selected(self):
         if not self.enabled:
@@ -2181,6 +2154,7 @@ def global_tablewidget_to_region():
     PROJECT.save_region(
         str(REGION_SETTINGS.region_name_lineedit.text()), CURRENT_REGION)
     PROJECT.commit(_("Edit region"))
+    REGION_EDITOR.open_region()
 
 
 def global_update_track_comboboxes(a_index=None, a_value=None):
