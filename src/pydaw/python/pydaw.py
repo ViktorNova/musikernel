@@ -2164,6 +2164,7 @@ class region_editor(QtGui.QGraphicsView):
             global_tablewidget_to_region()
             global_update_hidden_rows()
         elif REGION_EDITOR_MODE == 1:
+
             if a_original_pos:
                 f_base_row = ATM_CLIPBOARD_ROW_OFFSET
                 f_base_column = ATM_CLIPBOARD_COL_OFFSET
@@ -2181,11 +2182,14 @@ class region_editor(QtGui.QGraphicsView):
                 f_row = f_item[0] + f_base_row
                 if f_row >= len(TRACK_PANEL.tracks) or f_row < 0:
                     continue
+                f_track_params = TRACK_PANEL.get_atm_params(f_row)
+                if f_track_params[0] is None:
+                    continue
                 f_point = f_item[2]
                 ATM_REGION.add_point(
                     pydaw_atm_point(
                         f_row, f_column, f_point.beat, f_point.port_num,
-                        f_point.cc_val, *TRACK_PANEL.get_atm_params(f_row)))
+                        f_point.cc_val, *f_track_params))
             self.automation_save_callback()
             self.open_region()
 
