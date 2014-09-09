@@ -1120,6 +1120,7 @@ class region_editor(QtGui.QGraphicsView):
         QtGui.QGraphicsView.__init__(self)
 
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.last_item_copied = None
         self.padding = 2
         self.update_note_height()
