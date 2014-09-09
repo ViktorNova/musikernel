@@ -8200,6 +8200,8 @@ class seq_track:
         PROJECT.commit(
             "Update track plugins for '{}', {}".format(
             self.name_callback(), self.track_number))
+        if not all(x.bus_combobox.currentIndex() for x in self.sends):
+            self.sends[0].bus_combobox.setCurrentIndex(1)
 
     def name_callback(self):
         return str(self.track_name_lineedit.text())
