@@ -2201,9 +2201,9 @@ class region_editor(QtGui.QGraphicsView):
             #self.scene.clearSelection()
         elif REGION_EDITOR_MODE == 1:
             for f_point in self.get_selected_points():
-                ATM_REGION.remove_point(f_point)
-                self.automation_save_callback()
-                self.open_region()
+                ATM_REGION.remove_point(f_point.item)
+            self.automation_save_callback()
+            self.open_region()
 
     def copy_selected(self):
         if not self.enabled:
