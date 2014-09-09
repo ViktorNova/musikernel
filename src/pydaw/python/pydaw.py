@@ -1151,6 +1151,7 @@ class region_editor(QtGui.QGraphicsView):
         self.current_item = None
 
         self.menu = QtGui.QMenu()
+        self.atm_menu = QtGui.QMenu()
 
         self.edit_group_action = self.menu.addAction(
             _("Edit Selected Item(s)"))
@@ -1171,25 +1172,29 @@ class region_editor(QtGui.QGraphicsView):
         self.copy_action.triggered.connect(self.copy_selected)
         self.copy_action.setShortcut(QtGui.QKeySequence.Copy)
         self.addAction(self.copy_action)
+        self.atm_menu.addAction(self.copy_action)
 
         self.cut_action = self.menu.addAction(_("Cut"))
         self.cut_action.triggered.connect(self.cut_selected)
         self.cut_action.setShortcut(QtGui.QKeySequence.Cut)
         self.addAction(self.cut_action)
+        self.atm_menu.addAction(self.cut_action)
 
         self.paste_action = self.menu.addAction(_("Paste"))
         self.paste_action.triggered.connect(self.paste_clipboard)
-        self.addAction(self.paste_action)
+        self.atm_menu.addAction(self.paste_action)
 
         self.paste_to_end_action = self.menu.addAction(
             _("Paste to Region End"))
         self.paste_to_end_action.triggered.connect(self.paste_to_region_end)
+        self.atm_menu.addAction(self.paste_to_end_action)
 
         self.paste_to_orig_action = self.menu.addAction(
             _("Paste to Original Pos"))
         self.paste_to_orig_action.triggered.connect(self.paste_at_original_pos)
         self.paste_to_orig_action.setShortcut(QtGui.QKeySequence.Paste)
         self.addAction(self.paste_to_orig_action)
+        self.atm_menu.addAction(self.paste_to_orig_action)
 
         self.select_all_action = QtGui.QAction(_("Select All"), self)
         self.select_all_action.triggered.connect(self.select_all)
@@ -1206,6 +1211,7 @@ class region_editor(QtGui.QGraphicsView):
         self.delete_action.triggered.connect(self.delete_selected)
         self.delete_action.setShortcut(QtGui.QKeySequence.Delete)
         self.addAction(self.delete_action)
+        self.atm_menu.addAction(self.delete_action)
 
         self.menu.addSeparator()
 
@@ -1268,7 +1274,10 @@ class region_editor(QtGui.QGraphicsView):
                 f_item.setSelected(True)
 
     def show_context_menu(self):
-        self.menu.exec_(QtGui.QCursor.pos())
+        if REGION_EDITOR_MODE == 0:
+            self.menu.exec_(QtGui.QCursor.pos())
+        elif REGION_EDITOR_MODE == 1:
+            self.atm_menu.exec_(QtGui.QCursor.pos())
 
     def update_note_height(self):
         self.tracks_height = \
@@ -1312,6 +1321,8 @@ class region_editor(QtGui.QGraphicsView):
             REGION_EDITOR_HEADER_HEIGHT)
 
     def show_cell_dialog(self):
+        if REGION_EDITOR_MODE != 0:
+            return
         if not self.current_coord:
             return
         x, y = self.current_coord[:2]
@@ -1638,6 +1649,10 @@ class region_editor(QtGui.QGraphicsView):
 
     def sceneMousePressEvent(self, a_event):
         self.current_coord = self.get_item_coord(a_event.scenePos())
+        if a_event.button() == QtCore.Qt.RightButton:
+            if self.current_coord:
+                self.show_context_menu()
+            return
         if REGION_EDITOR_MODE == 0:
             self.current_item = None
             for f_item in self.scene.items(a_event.scenePos()):
@@ -1647,11 +1662,7 @@ class region_editor(QtGui.QGraphicsView):
                         self.scene.clearSelection()
                     f_item.setSelected(True)
                     break
-            if a_event.button() == QtCore.Qt.RightButton:
-                if self.current_coord:
-                    self.show_context_menu()
-                return
-            elif a_event.modifiers() == QtCore.Qt.ControlModifier:
+            if a_event.modifiers() == QtCore.Qt.ControlModifier:
                 pass
             elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
                 region_editor_set_delete_mode(True)
@@ -1849,6 +1860,8 @@ class region_editor(QtGui.QGraphicsView):
         self.region_items[a_item.track_num][a_item.bar] = a_item
 
     def transpose_dialog(self):
+        if REGION_EDITOR_MODE != 0:
+            return
         if pydaw_current_region_is_none():
             return
 
@@ -1908,6 +1921,8 @@ class region_editor(QtGui.QGraphicsView):
         self.edit_group(True)
 
     def edit_group(self, a_unique=False):
+        if REGION_EDITOR_MODE != 0:
+            return
         f_result = [x.name for x in self.get_selected_items()]
         f_result2 = []
         for x in f_result:
@@ -1931,6 +1946,8 @@ class region_editor(QtGui.QGraphicsView):
 
 
     def on_rename_items(self):
+        if REGION_EDITOR_MODE != 0:
+            return
         f_result = []
         for f_item_name in (x.name for x in self.get_selected_items()):
             if not f_item_name in f_result:
@@ -1991,7 +2008,8 @@ class region_editor(QtGui.QGraphicsView):
         if not self.enabled:
             self.warn_no_region_selected()
             return
-
+        if REGION_EDITOR_MODE != 0:
+            return
         if not self.current_coord or not self.current_item:
             return
 
@@ -2051,6 +2069,8 @@ class region_editor(QtGui.QGraphicsView):
 
     def on_auto_unlink_selected(self):
         """ Adds an automatic -N suffix """
+        if REGION_EDITOR_MODE != 0:
+            return
         for f_item in self.get_selected_items():
             f_name_suffix = 1
             while PROJECT.item_exists(
@@ -2068,6 +2088,8 @@ class region_editor(QtGui.QGraphicsView):
         PROJECT.commit(_("Auto-Unlink items"))
 
     def on_auto_unlink_unique(self):
+        if REGION_EDITOR_MODE != 0:
+            return
         f_result = {(x.track_num, x.bar):x.name
             for x in self.get_selected_items()}
 
@@ -2096,19 +2118,23 @@ class region_editor(QtGui.QGraphicsView):
             return
         if not self.current_coord:
             return
-        if len(REGION_CLIPBOARD) != 1:
-            QtGui.QMessageBox.warning(
-                MAIN_WINDOW, _("Error"), _("Paste to region end only "
-                "works when you have exactly one item copied to the "
-                "clipboard.\n"
-                "You have {} items copied.").format(len(REGION_CLIPBOARD)))
-            return
-        f_base_row, f_base_column, f_beat = self.current_coord[:3]
-        f_region_length = pydaw_get_current_region_length()
-        f_item = REGION_CLIPBOARD[0]
-        for f_column in range(f_base_column, f_region_length):
-            self.draw_item(f_base_row, f_column, f_item[2])
-        global_tablewidget_to_region()
+        if REGION_EDITOR_MODE == 0:
+            if len(REGION_CLIPBOARD) != 1:
+                QtGui.QMessageBox.warning(
+                    MAIN_WINDOW, _("Error"), _("Paste to region end only "
+                    "works when you have exactly one item copied to the "
+                    "clipboard.\n"
+                    "You have {} items copied.").format(len(REGION_CLIPBOARD)))
+                return
+            f_base_row, f_base_column, f_beat = self.current_coord[:3]
+            f_region_length = pydaw_get_current_region_length()
+            f_item = REGION_CLIPBOARD[0]
+            for f_column in range(f_base_column, f_region_length):
+                self.draw_item(f_base_row, f_column, f_item[2])
+            global_tablewidget_to_region()
+        elif REGION_EDITOR_MODE == 1:
+            raise NotImplementedError()
+            # this will be tricky and require new variables
 
     def paste_at_original_pos(self):
         self.paste_clipboard(True)
@@ -2117,57 +2143,108 @@ class region_editor(QtGui.QGraphicsView):
         if not self.enabled:
             self.warn_no_region_selected()
             return
-        if a_original_pos:
-            f_base_row = REGION_CLIPBOARD_ROW_OFFSET
-            f_base_column = REGION_CLIPBOARD_COL_OFFSET
-        else:
-            if not self.current_coord:
-                return
-            f_base_row, f_base_column, f_beat = self.current_coord[:3]
-        self.scene.clearSelection()
-        f_region_length = pydaw_get_current_region_length()
-        for f_item in REGION_CLIPBOARD:
-            f_column = f_item[1] + f_base_column
-            if f_column >= f_region_length or f_column < 0:
-                continue
-            f_row = f_item[0] + f_base_row
-            if f_row >= len(TRACK_PANEL.tracks) or f_row < 0:
-                continue
-            self.draw_item(f_row, f_column, f_item[2], a_selected=True)
-        global_tablewidget_to_region()
-        global_update_hidden_rows()
+        if REGION_EDITOR_MODE == 0:
+            if a_original_pos:
+                f_base_row = REGION_CLIPBOARD_ROW_OFFSET
+                f_base_column = REGION_CLIPBOARD_COL_OFFSET
+            else:
+                if not self.current_coord:
+                    return
+                f_base_row, f_base_column, f_beat = self.current_coord[:3]
+            self.scene.clearSelection()
+            f_region_length = pydaw_get_current_region_length()
+            for f_item in REGION_CLIPBOARD:
+                f_column = f_item[1] + f_base_column
+                if f_column >= f_region_length or f_column < 0:
+                    continue
+                f_row = f_item[0] + f_base_row
+                if f_row >= len(TRACK_PANEL.tracks) or f_row < 0:
+                    continue
+                self.draw_item(f_row, f_column, f_item[2], a_selected=True)
+            global_tablewidget_to_region()
+            global_update_hidden_rows()
+        elif REGION_EDITOR_MODE == 1:
+            if a_original_pos:
+                f_base_row = ATM_CLIPBOARD_ROW_OFFSET
+                f_base_column = ATM_CLIPBOARD_COL_OFFSET
+            else:
+                if not self.current_coord:
+                    return
+                f_base_row, f_base_column = self.current_coord[:2]
+            f_val, f_beat = self.current_coord[2:]
+            self.scene.clearSelection()
+            f_region_length = pydaw_get_current_region_length()
+            for f_item in ATM_CLIPBOARD:
+                f_column = f_item[1] + f_base_column
+                if f_column >= f_region_length or f_column < 0:
+                    continue
+                f_row = f_item[0] + f_base_row
+                if f_row >= len(TRACK_PANEL.tracks) or f_row < 0:
+                    continue
+                f_point = f_item[2]
+                ATM_REGION.add_point(
+                    pydaw_atm_point(
+                        f_row, f_column, f_point.beat, f_point.port_num,
+                        f_point.cc_val, *TRACK_PANEL.get_atm_params(f_row)))
+            self.automation_save_callback()
+            self.open_region()
 
     def delete_selected(self):
         if not self.enabled:
             self.warn_no_region_selected()
             return
-        for f_item in self.get_selected_items():
-            self.scene.removeItem(f_item)
-            self.pop_item(f_item)
-        global_tablewidget_to_region()
-        #self.scene.clearSelection()
+        if REGION_EDITOR_MODE == 0:
+            for f_item in self.get_selected_items():
+                self.scene.removeItem(f_item)
+                self.pop_item(f_item)
+            global_tablewidget_to_region()
+            #self.scene.clearSelection()
+        elif REGION_EDITOR_MODE == 1:
+            for f_point in self.get_selected_points():
+                ATM_REGION.remove_point(f_point)
+                self.automation_save_callback()
+                self.open_region()
 
     def copy_selected(self):
         if not self.enabled:
             self.warn_no_region_selected()
             return
-        global REGION_CLIPBOARD, REGION_CLIPBOARD_ROW_OFFSET, \
-            REGION_CLIPBOARD_COL_OFFSET
-        REGION_CLIPBOARD = []  #Clear the clipboard
-        for f_item in self.get_selected_items():
-            REGION_CLIPBOARD.append(
-                [f_item.track_num, f_item.bar, f_item.name])
-        if REGION_CLIPBOARD:
-            REGION_CLIPBOARD.sort(key=lambda x: x[0])
-            f_row_offset = REGION_CLIPBOARD[0][0]
-            for f_item in REGION_CLIPBOARD:
-                f_item[0] -= f_row_offset
-            REGION_CLIPBOARD.sort(key=lambda x: x[1])
-            f_column_offset = REGION_CLIPBOARD[0][1]
-            for f_item in REGION_CLIPBOARD:
-                f_item[1] -= f_column_offset
-            REGION_CLIPBOARD_COL_OFFSET = f_column_offset
-            REGION_CLIPBOARD_ROW_OFFSET = f_row_offset
+        if REGION_EDITOR_MODE == 0:
+            global REGION_CLIPBOARD, REGION_CLIPBOARD_ROW_OFFSET, \
+                REGION_CLIPBOARD_COL_OFFSET
+            REGION_CLIPBOARD = []  #Clear the clipboard
+            for f_item in self.get_selected_items():
+                REGION_CLIPBOARD.append(
+                    [f_item.track_num, f_item.bar, f_item.name])
+            if REGION_CLIPBOARD:
+                REGION_CLIPBOARD.sort(key=lambda x: x[0])
+                f_row_offset = REGION_CLIPBOARD[0][0]
+                for f_item in REGION_CLIPBOARD:
+                    f_item[0] -= f_row_offset
+                REGION_CLIPBOARD.sort(key=lambda x: x[1])
+                f_column_offset = REGION_CLIPBOARD[0][1]
+                for f_item in REGION_CLIPBOARD:
+                    f_item[1] -= f_column_offset
+                REGION_CLIPBOARD_COL_OFFSET = f_column_offset
+                REGION_CLIPBOARD_ROW_OFFSET = f_row_offset
+        elif REGION_EDITOR_MODE == 1:
+            global ATM_CLIPBOARD, ATM_CLIPBOARD_ROW_OFFSET, \
+                ATM_CLIPBOARD_COL_OFFSET
+            ATM_CLIPBOARD = []  #Clear the clipboard
+            for f_item in self.get_selected_points(self.current_coord[0]):
+                ATM_CLIPBOARD.append(
+                    [f_item.item.track, f_item.item.bar, f_item.item])
+            if ATM_CLIPBOARD:
+                ATM_CLIPBOARD.sort(key=lambda x: x[0])
+                f_row_offset = ATM_CLIPBOARD[0][0]
+                for f_item in ATM_CLIPBOARD:
+                    f_item[0] -= f_row_offset
+                ATM_CLIPBOARD.sort(key=lambda x: x[1])
+                f_column_offset = ATM_CLIPBOARD[0][1]
+                for f_item in ATM_CLIPBOARD:
+                    f_item[1] -= f_column_offset
+                ATM_CLIPBOARD_COL_OFFSET = f_column_offset
+                ATM_CLIPBOARD_ROW_OFFSET = f_row_offset
 
     def warn_no_region_selected(self):
         QtGui.QMessageBox.warning(
@@ -2181,6 +2258,11 @@ class region_editor(QtGui.QGraphicsView):
         """
         return [(x.track_num, x.bar, x.name) for x in self.get_all_items()]
 
+
+ATM_CLIPBOARD_ROW_OFFSET = 0
+ATM_CLIPBOARD_COL_OFFSET = 0
+
+ATM_CLIPBOARD = []
 
 REGION_CLIPBOARD_ROW_OFFSET = 0
 REGION_CLIPBOARD_COL_OFFSET = 0
