@@ -1556,6 +1556,11 @@ class pydaw_atm_region:
         self.tracks[
             a_point.track][a_point.index][a_point.port_num].append(a_point)
 
+    def remove_point(self, a_point):
+        #self.add_port_list(a_point)
+        self.tracks[
+            a_point.track][a_point.index][a_point.port_num].remove(a_point)
+
     def get_ports(self, a_track_num, a_index):
         a_track_num = int(a_track_num)
         a_index = int(a_index)
@@ -1661,15 +1666,15 @@ class pydaw_atm_point:
         return ((self.bar < other.bar) or
             (self.bar == other.bar and self.beat <= other.beat))
 
-    def __eq__(self, other):
-        return (
-            (self.track == other.track) and
-            (self.bar == other.bar) and
-            (self.beat == other.beat) and
-            (self.port_num == other.port_num) and
-            (self.cc_val == other.cc_val) and
-            (self.index == other.index) and
-            (self.plugin_index == other.plugin_index))
+#    def __eq__(self, other):
+#        return (
+#            (self.track == other.track) and
+#            (self.bar == other.bar) and
+#            (self.beat == other.beat) and
+#            (self.port_num == other.port_num) and
+#            (self.cc_val == other.cc_val) and
+#            (self.index == other.index) and
+#            (self.plugin_index == other.plugin_index))
 
     def __str__(self):
         return "|".join(str(x) for x in

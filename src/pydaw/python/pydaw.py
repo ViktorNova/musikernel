@@ -1145,6 +1145,7 @@ class region_editor(QtGui.QGraphicsView):
 
         self.atm_select_pos_x = None
         self.atm_select_track = None
+        self.atm_delete = False
 
         self.current_coord = None
         self.current_item = None
@@ -1612,8 +1613,14 @@ class region_editor(QtGui.QGraphicsView):
             global_tablewidget_to_region()
         else:
             QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
+        if self.atm_delete:
+            for f_point in self.get_selected_points(self.atm_select_track):
+                ATM_REGION.remove_point(f_point.item)
+            self.automation_save_callback()
+            self.open_region()
         self.atm_select_pos_x = None
         self.atm_select_track = None
+        self.atm_delete = False
 
     def sceneMouseMoveEvent(self, a_event):
         QtGui.QGraphicsScene.mouseMoveEvent(self.scene, a_event)
@@ -1656,10 +1663,13 @@ class region_editor(QtGui.QGraphicsView):
             REGION_EDITOR.setDragMode(QtGui.QGraphicsView.NoDrag)
             self.atm_select_pos_x = None
             self.atm_select_track = None
-            if a_event.modifiers() == QtCore.Qt.ControlModifier:
+            if a_event.modifiers() == QtCore.Qt.ControlModifier or \
+            a_event.modifiers() == QtCore.Qt.ShiftModifier:
                 self.clearSelection()
                 self.atm_select_pos_x = a_event.scenePos().x()
                 self.atm_select_track = self.current_coord[0]
+                if a_event.modifiers() == QtCore.Qt.ShiftModifier:
+                    self.atm_delete = True
                 return
             elif self.current_coord is not None:
                 f_port, f_index = TRACK_PANEL.has_automation(
