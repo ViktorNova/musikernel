@@ -1042,6 +1042,12 @@ class tracks_widget:
         for key, f_track in f_tracks.tracks.items():
             self.tracks[key].open_track(f_track)
 
+    def get_tracks(self):
+        f_result = pydaw_tracks()
+        for k, v in self.tracks.items():
+            f_result.add_track(k, v.get_track())
+        return f_result
+
 
 ATM_POINT_DIAMETER = 6.0
 ATM_POINT_RADIUS = ATM_POINT_DIAMETER * 0.5
@@ -5093,10 +5099,6 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
         AUDIO_SEQ.update()
 
 
-def global_save_all_region_tracks():
-    PROJECT.save_tracks(REGION_EDITOR.get_tracks())
-
-
 def global_set_piano_roll_zoom():
     global PIANO_ROLL_GRID_WIDTH
     global MIDI_SCALE
@@ -8153,7 +8155,7 @@ class seq_track:
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_solo(
                 self.track_number, self.solo_checkbox.isChecked())
-            PROJECT.save_tracks(REGION_EDITOR.get_tracks())
+            PROJECT.save_tracks(TRACK_PANEL.get_tracks())
             PROJECT.commit(_("Set solo for track {} to {}").format(
                 self.track_number, self.solo_checkbox.isChecked()))
 
@@ -8161,7 +8163,7 @@ class seq_track:
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_mute(
                 self.track_number, self.mute_checkbox.isChecked())
-            PROJECT.save_tracks(REGION_EDITOR.get_tracks())
+            PROJECT.save_tracks(TRACK_PANEL.get_tracks())
             PROJECT.commit(_("Set mute for track {} to {}").format(
                 self.track_number, self.mute_checkbox.isChecked()))
 
@@ -8213,6 +8215,7 @@ class seq_track:
             self.track_name_lineedit.setText(a_track.name)
             self.solo_checkbox.setChecked(a_track.solo)
             self.mute_checkbox.setChecked(a_track.mute)
+        self.suppress_osc = False
 
     def open_plugins(self):
         f_plugins = PROJECT.get_track_plugins(self.track_number)
