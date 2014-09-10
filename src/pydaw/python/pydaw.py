@@ -1200,6 +1200,13 @@ class region_editor(QtGui.QGraphicsView):
         self.select_all_action.setShortcut(QtGui.QKeySequence.SelectAll)
         self.addAction(self.select_all_action)
 
+        self.smooth_atm_action = self.atm_menu.addAction(
+            _("Smooth Selected Points"))
+        self.smooth_atm_action.triggered.connect(self.smooth_atm_points)
+        self.smooth_atm_action.setShortcut(
+            QtGui.QKeySequence.fromString("ALT+S"))
+        self.addAction(self.smooth_atm_action)
+
         self.clear_selection_action = self.menu.addAction(_("Clear Selection"))
         self.clear_selection_action.triggered.connect(self.clearSelection)
         self.clear_selection_action.setShortcut(
@@ -1857,6 +1864,19 @@ class region_editor(QtGui.QGraphicsView):
             if f_old != a_item:
                 self.scene.removeItem(f_old)
         self.region_items[a_item.track_num][a_item.bar] = a_item
+
+    def smooth_atm_points(self):
+        if not self.current_coord:
+            return
+        f_track, f_bar, f_beat, f_val = self.current_coord
+        f_index, f_plugin = TRACK_PANEL.get_atm_params(f_track)
+        if f_index is None:
+            return
+        f_port, f_index = TRACK_PANEL.has_automation(f_track)
+        f_points = [x.item for x in self.get_selected_points()]
+        ATM_REGION.smooth_points(f_track, f_index, f_port, f_plugin, f_points)
+        self.automation_save_callback()
+        self.open_region()
 
     def transpose_dialog(self):
         if REGION_EDITOR_MODE != 0:

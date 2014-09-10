@@ -1593,8 +1593,8 @@ class pydaw_atm_region:
                 (x.bar == a_end_bar and x.beat > a_end_beat)]
             self.tracks[a_track_num][a_index][a_port_num] = f_result
 
-    def smooth_points(self, a_track_num, a_index, a_port_num, a_plugin_index,
-                      a_points):
+    def smooth_points(self, a_track_num, a_index, a_port_num,
+                      a_plugin_index, a_points):
         if len(a_points) <= 1:
             return
         f_start = a_points[0]
@@ -1611,15 +1611,17 @@ class pydaw_atm_region:
             f_bar_next = f_next.bar
             f_beat_next = f_next.beat
             f_val_next = f_next.cc_val
-            f_beat_diff = pydaw_util.count_beats(
+            f_beat_diff = count_beats(
                 f_bar, f_beat, f_bar_next, f_beat_next)
+            if f_beat_diff < f_inc:
+                continue
             f_val_diff = f_val_next - f_val
             f_inc_count = int(round(f_beat_diff / f_inc))
             f_val_inc = f_val_diff / f_inc_count
             for f_i in range(f_inc_count):
                 f_result.append(pydaw_atm_point(
-                    f_track, f_bar, f_beat, a_port_num, f_val, a_index,
-                    a_plugin_index))
+                    a_track_num, f_bar, f_beat, a_port_num, f_val,
+                    a_index, a_plugin_index))
                 f_val += f_val_inc
                 f_beat += f_inc
                 if f_beat >= 4.0:
