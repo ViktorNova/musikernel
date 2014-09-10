@@ -2164,31 +2164,27 @@ class region_editor(QtGui.QGraphicsView):
             global_tablewidget_to_region()
             global_update_hidden_rows()
         elif REGION_EDITOR_MODE == 1:
-
-            if a_original_pos:
-                f_base_row = ATM_CLIPBOARD_ROW_OFFSET
-                f_base_column = ATM_CLIPBOARD_COL_OFFSET
-            else:
-                if not self.current_coord:
-                    return
-                f_base_row, f_base_column = self.current_coord[:2]
-            f_val, f_beat = self.current_coord[2:]
+            if not self.current_coord:
+                return
+            f_track_port_num, f_track_index = TRACK_PANEL.has_automation(
+                self.current_coord[0])
+            if f_track_port_num is None:
+                QtGui.QMessageBox.warning(
+                    self, _("Error"),
+                    _("No automation selected for this track"))
+                return
+            f_row, f_base_column, f_val, f_beat = self.current_coord
+            f_track_params = TRACK_PANEL.get_atm_params(f_row)
             self.scene.clearSelection()
             f_region_length = pydaw_get_current_region_length()
             for f_item in ATM_CLIPBOARD:
                 f_column = f_item[1] + f_base_column
                 if f_column >= f_region_length or f_column < 0:
                     continue
-                f_row = f_item[0] + f_base_row
-                if f_row >= len(TRACK_PANEL.tracks) or f_row < 0:
-                    continue
-                f_track_params = TRACK_PANEL.get_atm_params(f_row)
-                if f_track_params[0] is None:
-                    continue
                 f_point = f_item[2]
                 ATM_REGION.add_point(
                     pydaw_atm_point(
-                        f_row, f_column, f_point.beat, f_point.port_num,
+                        f_row, f_column, f_point.beat, f_track_port_num,
                         f_point.cc_val, *f_track_params))
             self.automation_save_callback()
             self.open_region()
@@ -10022,8 +10018,8 @@ def global_update_peak_meters(a_val):
             print("{} not in ALL_PEAK_METERS".format(f_index))
 
 PLUGIN_NAMES = ["Euphoria", "Way-V", "Ray-V", "Modulex"]
-PLUGIN_NUMBERS = [1, 3, 2, -1]
-PLUGIN_INDEXES = {1:0, 3:1, 2:2, -1:3}
+PLUGIN_NUMBERS = [1, 3, 2, 4]
+PLUGIN_INDEXES = {1:0, 3:1, 2:2, 4:3}
 CC_NAMES = {"Euphoria":[], "Way-V":[], "Ray-V":[], "Modulex":[]}
 CONTROLLER_PORT_NAME_DICT = {
     "Euphoria":{}, "Way-V":{}, "Ray-V":{}, "Modulex":{}}
