@@ -1187,14 +1187,13 @@ class region_editor(QtGui.QGraphicsView):
         self.paste_to_end_action = self.menu.addAction(
             _("Paste to Region End"))
         self.paste_to_end_action.triggered.connect(self.paste_to_region_end)
-        self.atm_menu.addAction(self.paste_to_end_action)
+        #self.atm_menu.addAction(self.paste_to_end_action)
 
         self.paste_to_orig_action = self.menu.addAction(
             _("Paste to Original Pos"))
         self.paste_to_orig_action.triggered.connect(self.paste_at_original_pos)
         self.paste_to_orig_action.setShortcut(QtGui.QKeySequence.Paste)
         self.addAction(self.paste_to_orig_action)
-        self.atm_menu.addAction(self.paste_to_orig_action)
 
         self.select_all_action = QtGui.QAction(_("Select All"), self)
         self.select_all_action.triggered.connect(self.select_all)
