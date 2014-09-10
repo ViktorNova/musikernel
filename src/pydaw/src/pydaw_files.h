@@ -22,6 +22,7 @@ GNU General Public License for more details.
 #include <assert.h>
 
 /*Standard string sizes*/
+#define PYDAW_XLARGE_STRING 1048576
 #define PYDAW_LARGE_STRING  65536 //1048576
 #define PYDAW_MEDIUM_STRING  32768 //262144 //8192
 #define PYDAW_SMALL_STRING  16384 //65536 //512

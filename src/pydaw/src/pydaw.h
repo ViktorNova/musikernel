@@ -137,6 +137,33 @@ typedef struct
 
 typedef struct
 {
+    int track;
+    int bar;
+    float beat;
+    int port;
+    float val;
+    int index;
+    int plugin;
+}t_pydaw_atm_point;
+
+typedef struct
+{
+    t_pydaw_atm_point * points;
+    int point_count;
+}t_pydaw_atm_plugin;
+
+typedef struct
+{
+    t_pydaw_atm_plugin plugins[MAX_PLUGIN_COUNT];
+}t_pydaw_atm_track;
+
+typedef struct
+{
+    t_pydaw_atm_track tracks[PYDAW_TRACK_COUNT_ALL];
+}t_pydaw_atm_region;
+
+typedef struct
+{
     float a_knobs[3];
     int fx_type;
     fp_mf3_run func_ptr;
@@ -153,6 +180,7 @@ typedef struct
 {
     t_pyregion * regions[PYDAW_MAX_REGION_COUNT];
     t_pydaw_audio_items * audio_items[PYDAW_MAX_REGION_COUNT];
+    t_pydaw_atm_region * regions_atm[PYDAW_MAX_REGION_COUNT];
     t_pydaw_per_audio_item_fx_region
             *per_audio_item_fx[PYDAW_MAX_REGION_COUNT];
     int default_bar_length;
@@ -224,6 +252,7 @@ typedef struct
     char * item_folder;
     char * region_folder;
     char * region_audio_folder;
+    char * region_atm_folder;
     char * audio_folder;
     char * audio_tmp_folder;
     char * samples_folder;
@@ -346,7 +375,9 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data *);
 void v_pytrack_routing_graph_free(t_pydaw_routing_graph*);
 void v_pytrack_routing_set(t_pytrack_routing *, int, float);
 void v_pytrack_routing_free(t_pytrack_routing *);
-t_pyregion * g_pyregion_get(t_pydaw_data* a_pydaw, const int);
+t_pyregion * g_pyregion_get(t_pydaw_data*, const int);
+t_pydaw_atm_region * g_atm_region_get(t_pydaw_data*, int);
+void v_atm_region_free(t_pydaw_atm_region*);
 void g_pyitem_get(t_pydaw_data*, int);
 
 t_pydaw_seq_event * g_pycc_get(int, float, float);
@@ -3188,6 +3219,7 @@ void g_pysong_get(t_pydaw_data* self, int a_lock)
     while(f_i < PYDAW_MAX_REGION_COUNT)
     {
         f_result->regions[f_i] = 0;
+        f_result->regions_atm[f_i] = 0;
         f_result->audio_items[f_i] = 0;
         f_result->per_audio_item_fx[f_i] = 0;
         f_i++;
@@ -3216,6 +3248,7 @@ void g_pysong_get(t_pydaw_data* self, int a_lock)
             int f_uid = atoi(f_region_char);
             f_result->regions[f_pos] = g_pyregion_get(self, f_uid);
             f_result->regions[f_pos]->uid = f_uid;
+            f_result->regions_atm[f_pos] = g_atm_region_get(self, f_uid);
             //v_pydaw_audio_items_free(self->audio_items);
             f_result->audio_items[f_pos] =
                 v_audio_items_load_all(self, f_uid);
@@ -3268,6 +3301,147 @@ int i_get_song_index_from_region_uid(t_pydaw_data* self, int a_uid)
         f_i++;
     }
     return -1;
+}
+
+t_pydaw_atm_region * g_atm_region_get(t_pydaw_data * self, int a_uid)
+{
+    t_pydaw_atm_region * f_result = 0;
+
+    char f_file[1024] = "\0";
+    sprintf(f_file, "%s%i", self->region_atm_folder, a_uid);
+
+    if(i_pydaw_file_exists(f_file))
+    {
+        printf("g_atm_region_get: loading a_file: \"%s\"\n", f_file);
+
+        lmalloc((void**)&f_result, sizeof(t_pydaw_atm_region));
+
+        int f_i = 0;
+
+        while(f_i < PYDAW_TRACK_COUNT_ALL)
+        {
+            int f_i2 = 0;
+            while(f_i2 < MAX_PLUGIN_COUNT)
+            {
+                f_result->tracks[f_i].plugins[f_i2].point_count = 0;
+                f_result->tracks[f_i].plugins[f_i2].points = 0;
+                f_i2++;
+            }
+            f_i++;
+        }
+
+        t_2d_char_array * f_current_string = g_get_2d_array_from_file(f_file,
+            PYDAW_XLARGE_STRING); //TODO:  1MB big enough???
+
+        int f_pos = 0;
+
+        while(1)
+        {
+            char * f_first = c_iterate_2d_char_array(f_current_string);
+            if(f_current_string->eof)
+            {
+                free(f_first);
+                break;
+            }
+
+            if(f_first[0] == 'p')
+            {
+                free(f_first);
+                char * f_track_char = c_iterate_2d_char_array(f_current_string);
+                int f_track = atoi(f_track_char);
+                free(f_track_char);
+
+                char * f_index_char = c_iterate_2d_char_array(f_current_string);
+                int f_index = atoi(f_index_char);
+                free(f_index_char);
+
+                char * f_count_char = c_iterate_2d_char_array(f_current_string);
+                int f_count = atoi(f_count_char);
+                free(f_count_char);
+
+                assert(f_count >= 1 && f_count < 100000);  //sanity check
+
+                f_result->tracks[f_track].plugins[f_index].point_count =
+                    f_count;
+                lmalloc(
+                    (void**)&f_result->tracks[f_track].plugins[f_index].points,
+                    sizeof(t_pydaw_atm_point) * f_count);
+                f_pos = 0;
+            }
+            else
+            {
+                int f_track = atoi(f_first);
+                free(f_first);
+
+                char * f_bar_char = c_iterate_2d_char_array(f_current_string);
+                int f_bar = atoi(f_bar_char);
+                free(f_bar_char);
+
+                char * f_beat_char = c_iterate_2d_char_array(f_current_string);
+                float f_beat = atoi(f_beat_char);
+                free(f_beat_char);
+
+                char * f_port_char = c_iterate_2d_char_array(f_current_string);
+                int f_port = atoi(f_port_char);
+                free(f_port_char);
+
+                char * f_val_char = c_iterate_2d_char_array(f_current_string);
+                float f_val = atoi(f_val_char);
+                free(f_val_char);
+
+                char * f_index_char = c_iterate_2d_char_array(f_current_string);
+                int f_index = atoi(f_index_char);
+                free(f_index_char);
+
+                char * f_plugin_char =
+                    c_iterate_2d_char_array(f_current_string);
+                int f_plugin = atoi(f_plugin_char);
+                free(f_plugin_char);
+
+                assert(f_pos <
+                    f_result->tracks[f_track].plugins[f_index].point_count);
+
+                assert(f_result->tracks[f_track].plugins[f_index].points);
+
+                t_pydaw_atm_point * f_point =
+                    &f_result->tracks[f_track].plugins[f_index].points[f_pos];
+                f_point->track = f_track;
+
+                f_point->track = f_track;
+                f_point->bar = f_bar;
+                f_point->beat = f_beat;
+                f_point->port = f_port;
+                f_point->val = f_val;
+                f_point->index = f_index;
+                f_point->plugin = f_plugin;
+
+                f_pos++;
+            }
+        }
+
+        g_free_2d_char_array(f_current_string);
+    }
+
+    return f_result;
+}
+
+void v_atm_region_free(t_pydaw_atm_region * self)
+{
+    int f_i = 0;
+    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    {
+        int f_i2 = 0;
+        while(f_i2 < MAX_PLUGIN_COUNT)
+        {
+            if(self->tracks[f_i].plugins[f_i2].point_count)
+            {
+                free(self->tracks[f_i].plugins[f_i2].points);
+            }
+            f_i2++;
+        }
+        f_i++;
+    }
+    free(self);
 }
 
 t_pyregion * g_pyregion_get(t_pydaw_data* self, int a_uid)
@@ -3570,6 +3744,7 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
     f_result->samples_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->wav_pool_file = (char*)malloc(sizeof(char) * 1024);
     f_result->region_audio_folder = (char*)malloc(sizeof(char) * 1024);
+    f_result->region_atm_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->per_audio_item_fx_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->tracks_folder = (char*)malloc(sizeof(char) * 1024);
 
@@ -3839,6 +4014,8 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
     sprintf(self->region_folder, "%s/projects/edmnext/regions/",
         self->project_folder);
     sprintf(self->region_audio_folder, "%s/projects/edmnext/regions_audio/",
+        self->project_folder);
+    sprintf(self->region_atm_folder, "%s/projects/edmnext/regions_atm/",
         self->project_folder);
     sprintf(self->audio_folder, "%s/audio/files", self->project_folder);
     sprintf(self->audio_tmp_folder, "%s/audio/files/tmp/",

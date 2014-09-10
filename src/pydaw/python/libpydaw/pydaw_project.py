@@ -1632,22 +1632,16 @@ class pydaw_atm_region:
     def __str__(self):
         f_result = []
         for f_track in sorted(self.tracks):
-            f_track_len = len(self.tracks[f_track])
-            f_result.append(
-                "|".join(str(x) for x in ("t", f_track, f_track_len)))
             for f_index in sorted(self.tracks[f_track]):
-                f_index_len = len(self.tracks[f_track][f_index])
+                f_point_list = []
+                for f_port in self.tracks[f_track][f_index].values():
+                    f_point_list.extend(f_port)
+                f_point_len = len(f_point_list)
                 f_result.append(
                     "|".join(str(x) for x in
-                    ("i", f_track, f_index, f_index_len)))
-                for f_port in sorted(self.tracks[f_track][f_index]):
-                    f_port_len = len(self.tracks[f_track][f_index][f_port])
-                    f_result.append(
-                        "|".join(str(x) for x in
-                        ("p", f_track, f_index, f_port, f_port_len)))
-                    for f_point in sorted(
-                    self.tracks[f_track][f_index][f_port]):
-                        f_result.append(str(f_point))
+                    ("p", f_track, f_index, f_point_len)))
+                for f_point in sorted(f_point_list):
+                    f_result.append(str(f_point))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 
@@ -1657,7 +1651,7 @@ class pydaw_atm_region:
         for f_line in str(a_str).split("\n"):
             if f_line == pydaw_terminating_char:
                 break
-            if f_line[0] in "tip":
+            if f_line[0] == "p":
                 continue
             f_point = pydaw_atm_point.from_str(f_line)
             f_result.add_point(f_point)
