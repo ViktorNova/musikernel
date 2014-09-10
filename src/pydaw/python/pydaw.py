@@ -1312,7 +1312,7 @@ class region_editor(QtGui.QGraphicsView):
             f_bar = int((f_pos_x / self.viewer_width) * self.item_length)
             f_beat = (((f_pos_x / self.viewer_width) *
                 self.item_length) - f_bar) * 4.0
-            return f_track, f_bar, round(f_beat, 6), round(f_val, 6)
+            return f_track, f_bar, round(f_beat, 4), round(f_val, 4)
         else:
             return None
 

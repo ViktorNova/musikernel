@@ -1655,9 +1655,9 @@ class pydaw_atm_point:
                  a_index, a_plugin_index):
         self.track = int(a_track)
         self.bar = int(a_bar)
-        self.beat = round(float(a_beat), 6)
+        self.beat = round(float(a_beat), 4)
         self.port_num = int(a_port_num)
-        self.cc_val = round(float(a_cc_val), 6)
+        self.cc_val = round(float(a_cc_val), 4)
         self.index = int(a_index) # Index within the track inst./fx
         self.plugin_index = int(a_plugin_index) # UID of the plugin
 
