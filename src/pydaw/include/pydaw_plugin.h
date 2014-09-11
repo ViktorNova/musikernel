@@ -156,9 +156,71 @@ typedef struct _PYFX_Descriptor {
 
 typedef PYFX_Descriptor * (*PYFX_Descriptor_Function)(int Index);
 
+typedef struct
+{
+    int count;
+    int pos;
+    int types[200];
+    int ticks[200];
+    float values[200];
+    int ports[200];
+}t_plugin_event_queue;
+
+void v_plugin_event_queue_add(t_plugin_event_queue*, int, int, float, int);
+void v_plugin_event_queue_reset(t_plugin_event_queue*);
+int v_plugin_event_queue_iter(t_plugin_event_queue*, int);
+void v_plugin_event_queue_atm_set(t_plugin_event_queue*, int, float*);
+
 #ifdef __cplusplus
 }
 #endif
+
+inline void v_plugin_event_queue_add(
+    t_plugin_event_queue *self, int a_type, int a_tick, float a_val, int a_port)
+{
+    self->types[self->count] = a_type;
+    self->ticks[self->count] = a_tick;
+    self->values[self->count] = a_val;
+    self->ports[self->count] = a_port;
+    self->count++;
+}
+
+inline void v_plugin_event_queue_reset(t_plugin_event_queue * self)
+{
+    self->pos = 0;
+    self->count = 0;
+}
+
+inline int v_plugin_event_queue_iter(
+    t_plugin_event_queue *self, int a_sample_num)
+{
+    if(self->pos < self->count &&
+       a_sample_num == self->ticks[self->pos])
+    {
+       int f_result = self->pos;
+       self->pos++;
+       return f_result;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+inline void v_plugin_event_queue_atm_set(
+    t_plugin_event_queue *self, int a_sample_num, float * a_table)
+{
+    while(1)
+    {
+        int f_pos = v_plugin_event_queue_iter(self, a_sample_num);
+        if(f_pos == -1)
+        {
+            break;
+        }
+
+        a_table[self->ports[f_pos]] = self->values[f_pos];
+    }
+}
 
 void v_pydaw_ev_clear(t_pydaw_seq_event* a_event)
 {

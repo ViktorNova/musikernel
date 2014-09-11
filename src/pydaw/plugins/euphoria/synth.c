@@ -1235,7 +1235,19 @@ static void v_run_lms_euphoria(
             plugin_data->midi_event_count++;
         }
 
-        ++event_pos;
+        event_pos++;
+    }
+
+    v_plugin_event_queue_reset(&plugin_data->atm_queue);
+
+    int f_i = 0;
+
+    while(f_i < atm_event_count)
+    {
+        v_plugin_event_queue_add(
+            &plugin_data->atm_queue, atm_events[f_i].type,
+            atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
+        f_i++;
     }
 
     float f_temp_sample0, f_temp_sample1;
@@ -1268,6 +1280,9 @@ static void v_run_lms_euphoria(
 
             midi_event_pos++;
         }
+
+        v_plugin_event_queue_atm_set(
+            &plugin_data->atm_queue, i, plugin_data->port_table);
 
         v_sml_run(plugin_data->mono_modules->pitchbend_smoother,
                 (plugin_data->sv_pitch_bend_value));

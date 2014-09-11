@@ -524,6 +524,18 @@ static void v_run_rayv(
         assert(plugin_data->midi_event_count < 200);
     }
 
+    int f_i = 0;
+
+    v_plugin_event_queue_reset(&plugin_data->atm_queue);
+
+    while(f_i < atm_event_count)
+    {
+        v_plugin_event_queue_add(
+            &plugin_data->atm_queue, atm_events[f_i].type,
+            atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
+        f_i++;
+    }
+
     plugin_data->i_iterator = 0;
 
     while((plugin_data->i_iterator) < sample_count)
@@ -547,6 +559,10 @@ static void v_run_rayv(
 
             midi_event_pos++;
         }
+
+        v_plugin_event_queue_atm_set(
+            &plugin_data->atm_queue, plugin_data->i_iterator,
+            plugin_data->port_table);
 
         v_sml_run(plugin_data->mono_modules->lfo_smoother,
                 (*plugin_data->lfo_freq));

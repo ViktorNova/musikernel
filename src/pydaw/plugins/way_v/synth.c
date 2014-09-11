@@ -1113,6 +1113,18 @@ static void v_run_wayv(
         }
     }
 
+    int f_i = 0;
+
+    v_plugin_event_queue_reset(&plugin_data->atm_queue);
+
+    while(f_i < atm_event_count)
+    {
+        v_plugin_event_queue_add(
+            &plugin_data->atm_queue, atm_events[f_i].type,
+            atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
+        f_i++;
+    }
+
     /*Clear the output buffer*/
     plugin_data->i_iterator = 0;
 
@@ -1134,6 +1146,10 @@ static void v_run_wayv(
 
             midi_event_pos++;
         }
+
+        v_plugin_event_queue_atm_set(
+            &plugin_data->atm_queue, plugin_data->i_iterator,
+            plugin_data->port_table);
 
         if(plugin_data->mono_modules->reset_wavetables)
         {

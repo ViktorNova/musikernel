@@ -447,6 +447,18 @@ static void v_modulex_run(
 
     int f_i = 0;
 
+    v_plugin_event_queue_reset(&plugin_data->atm_queue);
+
+    while(f_i < atm_event_count)
+    {
+        v_plugin_event_queue_add(
+            &plugin_data->atm_queue, atm_events[f_i].type,
+            atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
+        f_i++;
+    }
+
+    f_i = 0;
+
     if(plugin_data->i_slow_index >= MODULEX_SLOW_INDEX_ITERATIONS)
     {
         plugin_data->i_slow_index -= MODULEX_SLOW_INDEX_ITERATIONS;
@@ -520,6 +532,10 @@ static void v_modulex_run(
 
                 midi_event_pos++;
             }
+
+            v_plugin_event_queue_atm_set(
+                &plugin_data->atm_queue, plugin_data->i_mono_out,
+                plugin_data->port_table);
 
             plugin_data->mono_modules->current_sample0 =
                     plugin_data->output0[(plugin_data->i_mono_out)];
