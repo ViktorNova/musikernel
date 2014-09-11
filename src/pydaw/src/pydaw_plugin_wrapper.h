@@ -37,6 +37,8 @@ typedef struct
     int mute;
     int solo;
     int power;
+    int atm_count;
+    t_pydaw_seq_event * atm_buffer;
 }t_pydaw_plugin;
 
 
@@ -78,6 +80,9 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
     f_result->mute = 0;
     f_result->power = 1;
 
+    f_result->atm_count = 0;
+    lmalloc((void**)&f_result->atm_buffer, sizeof(t_pydaw_seq_event) * 512);
+
     return f_result;
 }
 
@@ -90,6 +95,7 @@ void v_free_pydaw_plugin(t_pydaw_plugin * a_plugin)
             a_plugin->descriptor->cleanup(a_plugin->PYFX_handle);
         }
 
+        free(a_plugin->atm_buffer);
         free(a_plugin);
     }
     else

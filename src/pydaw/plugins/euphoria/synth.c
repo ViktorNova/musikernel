@@ -33,8 +33,8 @@ GNU General Public License for more details.
 
 static fp_get_wavpool_item_from_host wavpool_get_func;
 
-static void v_run_lms_euphoria(PYFX_Handle instance, int sample_count,
-		       t_pydaw_seq_event *events, int EventCount);
+static void v_run_lms_euphoria(
+    PYFX_Handle, int, t_pydaw_seq_event*, int, t_pydaw_seq_event*, int);
 
 static inline void v_euphoria_slow_index(t_euphoria*);
 
@@ -869,8 +869,10 @@ static inline void v_euphoria_slow_index(t_euphoria* plugin_data)
     }
 }
 
-static void v_run_lms_euphoria(PYFX_Handle instance, int sample_count,
-		       t_pydaw_seq_event *events, int event_count)
+static void v_run_lms_euphoria(
+        PYFX_Handle instance, int sample_count,
+        t_pydaw_seq_event *events, int event_count,
+        t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_euphoria *plugin_data = (t_euphoria *) instance;
     int event_pos = 0;

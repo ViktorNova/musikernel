@@ -31,8 +31,8 @@ GNU General Public License for more details.
 #include "synth.h"
 
 
-static void v_run_rayv(PYFX_Handle instance, int sample_count,
-		  t_pydaw_seq_event * events, int EventCount);
+static void v_run_rayv(
+    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int);
 
 static void v_run_rayv_voice(t_rayv *p, t_voc_single_voice a_poly_voice,
         t_rayv_poly_voice *d, PYFX_Data *out0, PYFX_Data *out1, int a_i);
@@ -297,8 +297,10 @@ static void v_rayv_set_port_value(PYFX_Handle Instance,
     plugin_data->port_table[a_port] = a_value;
 }
 
-static void v_run_rayv(PYFX_Handle instance, int sample_count,
-		  t_pydaw_seq_event *events, int event_count)
+static void v_run_rayv(
+        PYFX_Handle instance, int sample_count,
+        t_pydaw_seq_event *events, int event_count,
+        t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_rayv *plugin_data = (t_rayv *) instance;
 

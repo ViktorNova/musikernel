@@ -29,11 +29,12 @@ GNU General Public License for more details.
 #include "synth.h"
 #include "../../src/pydaw_files.h"
 
-static void v_run_wayv(PYFX_Handle instance, int sample_count,
-		  t_pydaw_seq_event * events, int EventCount);
+static void v_run_wayv(
+    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int);
 
-static void v_run_wayv_voice(t_wayv *, t_voc_single_voice, t_wayv_poly_voice *,
-		      PYFX_Data *, PYFX_Data *, int, int );
+static void v_run_wayv_voice(
+        t_wayv *, t_voc_single_voice, t_wayv_poly_voice *,
+        PYFX_Data *, PYFX_Data *, int, int );
 
 PYFX_Descriptor *wayv_PYFX_descriptor(int index);
 
@@ -679,8 +680,10 @@ static void v_wayv_set_port_value(PYFX_Handle Instance,
     plugin_data->port_table[a_port] = a_value;
 }
 
-static void v_run_wayv(PYFX_Handle instance, int sample_count,
-		  t_pydaw_seq_event *events, int event_count)
+static void v_run_wayv(
+        PYFX_Handle instance, int sample_count,
+        t_pydaw_seq_event *events, int event_count,
+        t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_wayv *plugin_data = (t_wayv *) instance;
 

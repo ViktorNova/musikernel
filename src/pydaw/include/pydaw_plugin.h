@@ -136,8 +136,10 @@ typedef struct _PYFX_Descriptor {
     void (*configure)(PYFX_Handle Instance, char *Key, char *Value,
         pthread_spinlock_t * a_spinlock);
 
-    void (*run_synth)(PYFX_Handle Instance, int SampleCount,
-		      t_pydaw_seq_event *Events, int EventCount);
+    void (*run_synth)(
+        PYFX_Handle Instance, int SampleCount,
+        t_pydaw_seq_event *Events, int EventCount,
+        t_pydaw_seq_event *AtmEvents, int AtmEventCount);
 
     /* Do anything like warming up oscillators, etc...  in preparation
      * for offline rendering.  This must be called after loading

@@ -1613,7 +1613,8 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
         {
             f_plugin->descriptor->run_synth(
                 f_plugin->PYFX_handle, self->sample_count,
-                    f_track->event_buffer, f_track->period_event_index);
+                f_track->event_buffer, f_track->period_event_index,
+                f_plugin->atm_buffer, f_plugin->atm_count);
         }
         f_i++;
     }
@@ -2537,7 +2538,8 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
         {
             f_plugin->descriptor->run_synth(
                 f_plugin->PYFX_handle, sample_count,
-                    f_track->event_buffer, f_track->period_event_index);
+                f_track->event_buffer, f_track->period_event_index,
+                f_plugin->atm_buffer, f_plugin->atm_count);
         }
         f_i++;
     }
@@ -2673,7 +2675,8 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
             f_plugin->descriptor->run_synth(
                 f_plugin->PYFX_handle, sample_count,
                     f_master_track->event_buffer,
-                    f_master_track->period_event_index);
+                    f_master_track->period_event_index,
+                    f_plugin->atm_buffer, f_plugin->atm_count);
         }
         f_i++;
     }

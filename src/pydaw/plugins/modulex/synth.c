@@ -42,8 +42,8 @@ GNU General Public License for more details.
 
 int MODULEX_AMORITIZER = 0;
 
-static void v_modulex_run(PYFX_Handle instance, int sample_count,
-		  t_pydaw_seq_event * events, int EventCount);
+static void v_modulex_run(
+    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int);
 
 PYFX_Descriptor *modulex_PYFX_descriptor(int index);
 
@@ -330,8 +330,10 @@ static inline void v_modulex_run_glitch(t_modulex *plugin_data,
     v_glc_glitch_v2_run(plugin_data->mono_modules->glitch, a_in0, a_in1);
 }
 
-static void v_modulex_run(PYFX_Handle instance, int sample_count,
-		  t_pydaw_seq_event *events, int event_count)
+static void v_modulex_run(
+        PYFX_Handle instance, int sample_count,
+        t_pydaw_seq_event *events, int event_count,
+        t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_modulex *plugin_data = (t_modulex*)instance;
 
