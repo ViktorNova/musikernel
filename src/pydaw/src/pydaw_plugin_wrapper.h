@@ -37,6 +37,7 @@ typedef struct
     int mute;
     int solo;
     int power;
+    int uid;
     int atm_count;
     t_pydaw_seq_event * atm_buffer;
 }t_pydaw_plugin;
@@ -47,6 +48,8 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
         int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_pydaw_plugin * f_result = (t_pydaw_plugin*)malloc(sizeof(t_pydaw_plugin));
+
+    f_result->uid = a_plugin_uid;
 
     switch(a_index)
     {

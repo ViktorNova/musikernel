@@ -9979,10 +9979,10 @@ class pydaw_main_window(QtGui.QMainWindow):
                 PLUGIN_UI_DICT[int(f_plugin_uid)].ui_message(
                     f_name, f_val)
         for k, f_val in f_pc_dict.items():
-            f_plugin_uid, f_port = k
-            if int(f_plugin_uid) in PLUGIN_UI_DICT:
-                PLUGIN_UI_DICT[int(f_plugin_uid)].set_control_val(
-                    int(f_port), float(f_val))
+            f_plugin_uid, f_port = (int(x) for x in k)
+            if f_plugin_uid in PLUGIN_UI_DICT:
+                PLUGIN_UI_DICT[f_plugin_uid].set_control_val(
+                    f_port, float(f_val))
 
 
     def closeEvent(self, event):

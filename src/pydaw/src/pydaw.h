@@ -450,6 +450,8 @@ inline void v_pydaw_zero_buffer(float**, int);
 void v_pydaw_panic(t_pydaw_data * self);
 inline void v_queue_osc_message(char * a_key, char * a_val);
 
+void v_pydaw_process_atm(
+    t_pydaw_data * self, int f_track_num, int f_index, int sample_count);
 
 #ifdef	__cplusplus
 }
@@ -1612,6 +1614,8 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
         f_plugin = f_track->plugins[f_i];
         if(f_plugin)
         {
+            v_pydaw_process_atm(
+                self, a_global_track_num, f_i, self->sample_count);
             f_plugin->descriptor->run_synth(
                 f_plugin->PYFX_handle, self->sample_count,
                 f_track->event_buffer, f_track->period_event_index,
@@ -1876,7 +1880,7 @@ inline void v_pydaw_process_atm(
                     f_buff_ev->port = f_point->port;
                     f_buff_ev->tick = f_note_sample_offset;
                     v_pydaw_set_control_from_cc(
-                        f_plugin, controller, f_buff_ev, self, f_point->plugin,
+                        f_plugin, controller, f_buff_ev, self, f_plugin->uid,
                         f_track_num);
                     f_plugin->atm_count += 1;
                     f_current_item->current_pos += 1;
