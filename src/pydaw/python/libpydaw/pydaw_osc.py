@@ -155,6 +155,9 @@ class pydaw_osc:
             "tr", "|".join(str(x) for x in
             (a_track_num, bool_to_int(a_bool))))
 
+    def pydaw_save_atm_region(self, a_region_uid):
+        self.send_configure("sa", str(a_region_uid))
+
     def pydaw_offline_render(self, a_start_region, a_start_bar, a_end_region,
                              a_end_bar, a_file_name):
         self.send_configure(

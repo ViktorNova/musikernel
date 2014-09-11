@@ -72,6 +72,7 @@ GNU General Public License for more details.
 #define PYDAW_CONFIGURE_KEY_OS "os"
 #define PYDAW_CONFIGURE_KEY_SI "si"
 #define PYDAW_CONFIGURE_KEY_SR "sr"
+#define PYDAW_CONFIGURE_KEY_SAVE_ATM "sa"
 #define PYDAW_CONFIGURE_KEY_PLAY "play"
 #define PYDAW_CONFIGURE_KEY_REC "rec"
 #define PYDAW_CONFIGURE_KEY_STOP "stop"
@@ -1378,8 +1379,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
 
         int f_uid = atoi(a_value);
         t_pyregion * f_result = g_pyregion_get(self, f_uid);
-        int f_region_index = i_get_song_index_from_region_uid(self,
-                f_uid);
+        int f_region_index = i_get_song_index_from_region_uid(self, f_uid);
 
         if(f_region_index >= 0 )
         {
@@ -1410,6 +1410,32 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SS))  //Save Song
     {
         g_pysong_get(self, 1);
+    }
+    else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_SAVE_ATM))
+    {
+        int f_uid = atoi(a_value);
+        t_pydaw_atm_region * f_result = g_atm_region_get(self, f_uid);
+        int f_region_index = i_get_song_index_from_region_uid(self, f_uid);
+
+        if(f_region_index >= 0 )
+        {
+            t_pydaw_atm_region * f_old_region = NULL;
+            if(self->pysong->regions_atm[f_region_index])
+            {
+                f_old_region = self->pysong->regions_atm[f_region_index];
+            }
+            pthread_spin_lock(&self->main_lock);
+            self->pysong->regions_atm[f_region_index] = f_result;
+            pthread_spin_unlock(&self->main_lock);
+            if(f_old_region)
+            {
+                v_atm_region_free(f_old_region);
+            }
+        }
+        else
+        {
+            printf("region %i is not in song, not loading...", f_uid);
+        }
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL))
     {
