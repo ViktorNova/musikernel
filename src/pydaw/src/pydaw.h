@@ -1803,6 +1803,8 @@ inline void v_pydaw_process_atm(
     float f_track_next_period_beats = self->ml_next_period_beats;
     float f_track_beats_offset = 0.0f;
 
+    f_plugin->atm_count = 0;
+
     if((!self->overdub_mode) && (self->playback_mode == 2) &&
         (self->record_armed_track_index_all == f_track_num))
     {
@@ -1855,13 +1857,19 @@ inline void v_pydaw_process_atm(
             t_pydaw_atm_point * f_point =
                 &f_current_item->points[f_current_item->current_pos];
 
-            //TODO: this logic is incomplete, need to account for
-            //the next bar also if moving to a new bar
+            if((f_point->bar < f_current_track_bar) ||
+                ((f_point->bar == f_current_track_bar) &&
+                (f_point->beat < f_track_current_period_beats)))
+            {
+                f_current_item->current_pos += 1;
+                continue;
+            }
+
+
             if((f_point->bar == f_current_track_bar) &&
                 (f_point->beat >= f_track_current_period_beats) &&
                 (f_point->beat < f_track_next_period_beats))
             {
-                int controller = f_point->port;
                 t_pydaw_seq_event * f_buff_ev =
                     &f_plugin->atm_buffer[f_plugin->atm_count];
 
@@ -1879,7 +1887,7 @@ inline void v_pydaw_process_atm(
                 f_buff_ev->port = f_point->port;
                 f_buff_ev->tick = f_note_sample_offset;
                 v_pydaw_set_control_from_cc(
-                    f_plugin, controller, f_buff_ev, self, f_plugin->uid,
+                    f_plugin, f_point->port, f_buff_ev, self, f_plugin->uid,
                     f_track_num);
                 f_plugin->atm_count += 1;
                 f_current_item->current_pos += 1;
