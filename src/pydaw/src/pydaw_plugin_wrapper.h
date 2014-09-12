@@ -39,6 +39,7 @@ typedef struct
     int power;
     int uid;
     int atm_count;
+    int atm_pos;  //position within the automation region
     t_pydaw_seq_event * atm_buffer;
 }t_pydaw_plugin;
 
@@ -50,6 +51,8 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
     t_pydaw_plugin * f_result = (t_pydaw_plugin*)malloc(sizeof(t_pydaw_plugin));
 
     f_result->uid = a_plugin_uid;
+    f_result->atm_pos = 0;
+    f_result->atm_count = 0;
 
     switch(a_index)
     {
@@ -83,7 +86,6 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
     f_result->mute = 0;
     f_result->power = 1;
 
-    f_result->atm_count = 0;
     lmalloc((void**)&f_result->atm_buffer, sizeof(t_pydaw_seq_event) * 512);
 
     return f_result;

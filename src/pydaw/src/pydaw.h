@@ -150,7 +150,6 @@ typedef struct
 {
     t_pydaw_atm_point * points;
     int point_count;
-    int current_pos;
 }t_pydaw_atm_plugin;
 
 typedef struct
@@ -1821,7 +1820,7 @@ inline void v_pydaw_process_atm(
                 &self->pysong->regions_atm[f_current_track_region]->tracks[
                     f_track_num].plugins[f_index];
 
-            if((f_plugin->atm_count) >= (f_current_item->point_count))
+            if((f_plugin->atm_pos) >= (f_current_item->point_count))
             {
                 if(f_track_next_period_beats >= 4.0f)
                 {
@@ -1832,7 +1831,7 @@ inline void v_pydaw_process_atm(
                         ((self->ml_sample_period_inc) * 4.0f) -
                         f_track_next_period_beats;
 
-                    f_current_item->current_pos = 0;
+                    f_plugin->atm_pos = 0;
 
                     f_current_track_bar++;
 
@@ -1855,13 +1854,13 @@ inline void v_pydaw_process_atm(
             }
 
             t_pydaw_atm_point * f_point =
-                &f_current_item->points[f_current_item->current_pos];
+                &f_current_item->points[f_plugin->atm_pos];
 
             if((f_point->bar < f_current_track_bar) ||
                 ((f_point->bar == f_current_track_bar) &&
                 (f_point->beat < f_track_current_period_beats)))
             {
-                f_current_item->current_pos += 1;
+                f_plugin->atm_pos += 1;
                 continue;
             }
 
@@ -1890,7 +1889,7 @@ inline void v_pydaw_process_atm(
                     f_plugin, f_point->port, f_buff_ev, self, f_plugin->uid,
                     f_track_num);
                 f_plugin->atm_count += 1;
-                f_current_item->current_pos += 1;
+                f_plugin->atm_pos += 1;
             }
             else
             {
@@ -1908,13 +1907,12 @@ inline void v_pydaw_process_atm(
                     ((self->ml_sample_period_inc) * 4.0f) -
                         f_track_next_period_beats;
 
-                f_plugin->atm_count = 0;
-
                 f_current_track_bar++;
 
                 if(f_current_track_bar >= self->f_region_length_bars)
                 {
                     f_current_track_bar = 0;
+                    f_plugin->atm_pos = 0;
 
                     if(self->loop_mode != PYDAW_LOOP_MODE_REGION)
                     {
@@ -3473,7 +3471,6 @@ t_pydaw_atm_region * g_atm_region_get(t_pydaw_data * self, int a_uid)
             {
                 f_result->tracks[f_i].plugins[f_i2].point_count = 0;
                 f_result->tracks[f_i].plugins[f_i2].points = 0;
-                f_result->tracks[f_i].plugins[f_i2].current_pos = 0;
                 f_i2++;
             }
             f_i++;
@@ -4464,6 +4461,17 @@ void v_set_playback_cursor(t_pydaw_data * self, int a_region, int a_bar)
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
         self->track_pool_all[f_i]->item_event_index = 0;
+        f_i++;
+    }
+
+    f_i = 0;
+
+    while(f_i < MAX_PLUGIN_COUNT)
+    {
+        if(self->plugin_pool[f_i])
+        {
+            self->plugin_pool[f_i]->atm_pos = 0;
+        }
         f_i++;
     }
 }
