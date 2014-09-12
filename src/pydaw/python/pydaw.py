@@ -927,6 +927,10 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.set_brush()
         self.set_pos()
 
+    def setSelected(self, a_bool):
+        QtGui.QGraphicsRectItem.setSelected(self, a_bool)
+        self.set_brush()
+
     def set_pos(self):
         f_start = self.bar_width * self.bar
         f_track_pos = REGION_EDITOR_HEADER_HEIGHT + (self.track_num *
@@ -1788,9 +1792,8 @@ class region_editor(QtGui.QGraphicsView):
                 f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
                 f_new_item = self.draw_item(
                     f_item.track_num, f_item.bar_num, f_item_name)
-                if "|".join(str(x) for x in
-                (f_item.track_num, f_item.bar_num,
-                f_item_name)) in self.selected_item_strings:
+                if f_new_item.get_selected_string() in \
+                self.selected_item_strings:
                     f_new_item.setSelected(True)
         if REGION_EDITOR_MODE == 1:
             self.open_atm_region()
@@ -2103,10 +2106,11 @@ class region_editor(QtGui.QGraphicsView):
                 f_name_suffix += 1
             f_cell_text = "{}-{}".format(f_item.name, f_name_suffix)
             f_uid = PROJECT.copy_item(f_item.name, f_cell_text)
-            self.draw_item(f_item.track_num, f_item.bar, f_cell_text)
+            self.draw_item(f_item.track_num, f_item.bar, f_cell_text, True)
             self.scene.removeItem(f_item)
             CURRENT_REGION.add_item_ref_by_uid(
                 f_item.track_num, f_item.bar, f_uid)
+        self.set_selected_strings()
         PROJECT.save_region(
             str(REGION_SETTINGS.region_name_lineedit.text()),
             CURRENT_REGION)
@@ -2117,6 +2121,9 @@ class region_editor(QtGui.QGraphicsView):
             return
         f_result = {(x.track_num, x.bar):x.name
             for x in self.get_selected_items()}
+
+        for f_item in self.get_selected_items():
+            self.scene.removeItem(f_item)
 
         old_new_map = {}
 
@@ -2130,7 +2137,7 @@ class region_editor(QtGui.QGraphicsView):
             old_new_map[f_item_name] = (f_cell_text, f_uid)
 
         for k, v in f_result.items():
-            self.draw_item(k[0], k[1], old_new_map[v][0])
+            self.draw_item(k[0], k[1], old_new_map[v][0], True)
             CURRENT_REGION.add_item_ref_by_uid(k[0], k[1], old_new_map[v][1])
         PROJECT.save_region(
             str(REGION_SETTINGS.region_name_lineedit.text()),
