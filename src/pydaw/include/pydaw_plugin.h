@@ -170,10 +170,19 @@ void v_plugin_event_queue_add(t_plugin_event_queue*, int, int, float, int);
 void v_plugin_event_queue_reset(t_plugin_event_queue*);
 int v_plugin_event_queue_iter(t_plugin_event_queue*, int);
 void v_plugin_event_queue_atm_set(t_plugin_event_queue*, int, float*);
+inline float f_cc_to_ctrl_val(PYFX_Descriptor*, int, float);
 
 #ifdef __cplusplus
 }
 #endif
+
+inline float f_cc_to_ctrl_val(PYFX_Descriptor *self, int a_port, float a_val)
+{
+    PYFX_PortRangeHint f_range = self->PortRangeHints[a_port];
+    a_val *= 0.007874f;  // a_val / 127.0f
+    return (a_val * (f_range.UpperBound - f_range.LowerBound)) +
+        f_range.LowerBound;
+}
 
 inline void v_plugin_event_queue_add(
     t_plugin_event_queue *self, int a_type, int a_tick, float a_val, int a_port)

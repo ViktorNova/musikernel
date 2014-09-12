@@ -1612,6 +1612,10 @@ class pydaw_atm_region:
             f_bar_next = f_next.bar
             f_beat_next = f_next.beat
             f_val_next = f_next.cc_val
+            if round(f_val, 3) == round(f_val_next, 3):
+                f_result.append(f_point)
+                f_result.append(f_next)
+                continue
             f_beat_diff = count_beats(
                 f_bar, f_beat, f_bar_next, f_beat_next)
             if f_beat_diff < f_inc:
@@ -1619,7 +1623,7 @@ class pydaw_atm_region:
             f_val_diff = f_val_next - f_val
             f_inc_count = int(round(f_beat_diff / f_inc))
             f_val_inc = f_val_diff / f_inc_count
-            for f_i in range(f_inc_count):
+            for f_i in range(f_inc_count - 1):
                 f_result.append(pydaw_atm_point(
                     a_track_num, f_bar, f_beat, a_port_num, f_val,
                     a_index, a_plugin_index))
@@ -1638,6 +1642,8 @@ class pydaw_atm_region:
                 for f_port in self.tracks[f_track][f_index].values():
                     f_point_list.extend(f_port)
                 f_point_len = len(f_point_list)
+                if f_point_len == 0:
+                    continue
                 f_result.append(
                     "|".join(str(x) for x in
                     ("p", f_track, f_index, f_point_len)))

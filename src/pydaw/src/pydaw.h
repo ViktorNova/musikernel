@@ -1881,14 +1881,19 @@ inline void v_pydaw_process_atm(
                 f_note_sample_offset =
                     (int)(f_note_start_frac * (float)sample_count);
 
-                v_pydaw_ev_clear(f_buff_ev);
-                v_pydaw_ev_set_controller(f_buff_ev, 0, 0, f_point->val);
-                f_buff_ev->port = f_point->port;
-                f_buff_ev->tick = f_note_sample_offset;
-                v_pydaw_set_control_from_cc(
-                    f_plugin, f_point->port, f_buff_ev, self, f_plugin->uid,
-                    f_track_num);
-                f_plugin->atm_count += 1;
+                if(f_plugin->uid == f_point->plugin)
+                {
+                    float f_val = f_cc_to_ctrl_val(
+                        f_plugin->descriptor, f_point->port, f_point->val);
+                    v_pydaw_ev_clear(f_buff_ev);
+                    v_pydaw_ev_set_controller(f_buff_ev, 0, 0, f_val);
+                    f_buff_ev->port = f_point->port;
+                    f_buff_ev->tick = f_note_sample_offset;
+                    v_pydaw_set_control_from_cc(
+                        f_plugin, f_point->port, f_buff_ev, self,
+                        f_plugin->pool_uid, f_track_num);
+                    f_plugin->atm_count += 1;
+                }
                 f_plugin->atm_pos += 1;
             }
             else
@@ -3526,7 +3531,7 @@ t_pydaw_atm_region * g_atm_region_get(t_pydaw_data * self, int a_uid)
                 free(f_bar_char);
 
                 char * f_beat_char = c_iterate_2d_char_array(f_current_string);
-                float f_beat = atoi(f_beat_char);
+                float f_beat = atof(f_beat_char);
                 free(f_beat_char);
 
                 char * f_port_char = c_iterate_2d_char_array(f_current_string);
@@ -3534,7 +3539,7 @@ t_pydaw_atm_region * g_atm_region_get(t_pydaw_data * self, int a_uid)
                 free(f_port_char);
 
                 char * f_val_char = c_iterate_2d_char_array(f_current_string);
-                float f_val = atoi(f_val_char);
+                float f_val = atof(f_val_char);
                 free(f_val_char);
 
                 char * f_index_char = c_iterate_2d_char_array(f_current_string);

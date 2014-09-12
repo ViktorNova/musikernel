@@ -38,6 +38,7 @@ typedef struct
     int solo;
     int power;
     int uid;
+    int pool_uid;
     int atm_count;
     int atm_pos;  //position within the automation region
     t_pydaw_seq_event * atm_buffer;
@@ -50,7 +51,8 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
 {
     t_pydaw_plugin * f_result = (t_pydaw_plugin*)malloc(sizeof(t_pydaw_plugin));
 
-    f_result->uid = a_plugin_uid;
+    f_result->uid = a_index;
+    f_result->pool_uid = a_plugin_uid;
     f_result->atm_pos = 0;
     f_result->atm_count = 0;
 

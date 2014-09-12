@@ -1692,6 +1692,8 @@ class region_editor(QtGui.QGraphicsView):
             self.atm_select_track = None
             if a_event.modifiers() == QtCore.Qt.ControlModifier or \
             a_event.modifiers() == QtCore.Qt.ShiftModifier:
+                self.current_coord = self.get_item_coord(
+                    a_event.scenePos(), True)
                 self.clearSelection()
                 self.atm_select_pos_x = a_event.scenePos().x()
                 self.atm_select_track = self.current_coord[0]
