@@ -2815,6 +2815,8 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         f_plugin = f_master_track->plugins[f_i];
         if(f_plugin)
         {
+            v_pydaw_process_atm(
+                self, 0, f_i, sample_count);
             f_plugin->descriptor->run_synth(
                 f_plugin->PYFX_handle, sample_count,
                     f_master_track->event_buffer,
