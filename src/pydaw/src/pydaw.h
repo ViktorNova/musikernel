@@ -1806,91 +1806,20 @@ inline void v_pydaw_process_atm(
     if((!self->overdub_mode) && (self->playback_mode == 2) &&
         (self->record_armed_track_index_all == f_track_num))
     {
-
+        return;
     }
-    else
+
+    while(1)
     {
-        while(1)
+        if(self->pysong->regions_atm[f_current_track_region] &&
+            self->pysong->regions_atm[f_current_track_region]->tracks[
+                f_track_num].plugins[f_index].point_count)
         {
-            if(self->pysong->regions_atm[f_current_track_region] &&
-                self->pysong->regions_atm[f_current_track_region]->tracks[
-                    f_track_num].plugins[f_index].point_count)
-            {
-                t_pydaw_atm_plugin * f_current_item =
-                    &self->pysong->regions_atm[f_current_track_region]->tracks[
-                        f_track_num].plugins[f_index];
+            t_pydaw_atm_plugin * f_current_item =
+                &self->pysong->regions_atm[f_current_track_region]->tracks[
+                    f_track_num].plugins[f_index];
 
-                if((f_plugin->atm_count) >= (f_current_item->point_count))
-                {
-                    if(f_track_next_period_beats >= 4.0f)
-                    {
-                        f_track_current_period_beats = 0.0f;
-                        f_track_next_period_beats =
-                            f_track_next_period_beats - 4.0f;
-                        f_track_beats_offset =
-                            ((self->ml_sample_period_inc) * 4.0f) -
-                            f_track_next_period_beats;
-
-                        f_current_item->current_pos = 0;
-
-                        f_current_track_bar++;
-
-                        if(f_current_track_bar >= self->f_region_length_bars)
-                        {
-                            f_current_track_bar = 0;
-
-                            if(self->loop_mode != PYDAW_LOOP_MODE_REGION)
-                            {
-                                f_current_track_region++;
-                            }
-                        }
-
-                        continue;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                t_pydaw_atm_point * f_point =
-                    &f_current_item->points[f_current_item->current_pos];
-
-                //TODO: this logic is incomplete, need to account for
-                //the next bar also if moving to a new bar
-                if((f_point->bar == f_current_track_bar) &&
-                    (f_point->beat >= f_track_current_period_beats) &&
-                    (f_point->beat < f_track_next_period_beats))
-                {
-                    int controller = f_point->port;
-                    t_pydaw_seq_event * f_buff_ev =
-                        &f_plugin->atm_buffer[f_plugin->atm_count];
-
-                    int f_note_sample_offset = 0;
-                    float f_note_start_diff =
-                        ((f_point->beat) - f_track_current_period_beats) +
-                        f_track_beats_offset;
-                    float f_note_start_frac =
-                        f_note_start_diff / self->ml_sample_period_inc_beats;
-                    f_note_sample_offset =
-                        (int)(f_note_start_frac * (float)sample_count);
-
-                    v_pydaw_ev_clear(f_buff_ev);
-                    v_pydaw_ev_set_controller(f_buff_ev, 0, 0, f_point->val);
-                    f_buff_ev->port = f_point->port;
-                    f_buff_ev->tick = f_note_sample_offset;
-                    v_pydaw_set_control_from_cc(
-                        f_plugin, controller, f_buff_ev, self, f_plugin->uid,
-                        f_track_num);
-                    f_plugin->atm_count += 1;
-                    f_current_item->current_pos += 1;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            else
+            if((f_plugin->atm_count) >= (f_current_item->point_count))
             {
                 if(f_track_next_period_beats >= 4.0f)
                 {
@@ -1899,9 +1828,9 @@ inline void v_pydaw_process_atm(
                         f_track_next_period_beats - 4.0f;
                     f_track_beats_offset =
                         ((self->ml_sample_period_inc) * 4.0f) -
-                            f_track_next_period_beats;
+                        f_track_next_period_beats;
 
-                    f_plugin->atm_count = 0;
+                    f_current_item->current_pos = 0;
 
                     f_current_track_bar++;
 
@@ -1921,6 +1850,75 @@ inline void v_pydaw_process_atm(
                 {
                     break;
                 }
+            }
+
+            t_pydaw_atm_point * f_point =
+                &f_current_item->points[f_current_item->current_pos];
+
+            //TODO: this logic is incomplete, need to account for
+            //the next bar also if moving to a new bar
+            if((f_point->bar == f_current_track_bar) &&
+                (f_point->beat >= f_track_current_period_beats) &&
+                (f_point->beat < f_track_next_period_beats))
+            {
+                int controller = f_point->port;
+                t_pydaw_seq_event * f_buff_ev =
+                    &f_plugin->atm_buffer[f_plugin->atm_count];
+
+                int f_note_sample_offset = 0;
+                float f_note_start_diff =
+                    ((f_point->beat) - f_track_current_period_beats) +
+                    f_track_beats_offset;
+                float f_note_start_frac =
+                    f_note_start_diff / self->ml_sample_period_inc_beats;
+                f_note_sample_offset =
+                    (int)(f_note_start_frac * (float)sample_count);
+
+                v_pydaw_ev_clear(f_buff_ev);
+                v_pydaw_ev_set_controller(f_buff_ev, 0, 0, f_point->val);
+                f_buff_ev->port = f_point->port;
+                f_buff_ev->tick = f_note_sample_offset;
+                v_pydaw_set_control_from_cc(
+                    f_plugin, controller, f_buff_ev, self, f_plugin->uid,
+                    f_track_num);
+                f_plugin->atm_count += 1;
+                f_current_item->current_pos += 1;
+            }
+            else
+            {
+                break;
+            }
+        }
+        else
+        {
+            if(f_track_next_period_beats >= 4.0f)
+            {
+                f_track_current_period_beats = 0.0f;
+                f_track_next_period_beats =
+                    f_track_next_period_beats - 4.0f;
+                f_track_beats_offset =
+                    ((self->ml_sample_period_inc) * 4.0f) -
+                        f_track_next_period_beats;
+
+                f_plugin->atm_count = 0;
+
+                f_current_track_bar++;
+
+                if(f_current_track_bar >= self->f_region_length_bars)
+                {
+                    f_current_track_bar = 0;
+
+                    if(self->loop_mode != PYDAW_LOOP_MODE_REGION)
+                    {
+                        f_current_track_region++;
+                    }
+                }
+
+                continue;
+            }
+            else
+            {
+                break;
             }
         }
     }
