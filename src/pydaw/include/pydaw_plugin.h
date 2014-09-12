@@ -222,13 +222,13 @@ inline void v_plugin_event_queue_atm_set(
     }
 }
 
-void v_pydaw_ev_clear(t_pydaw_seq_event* a_event)
+inline void v_pydaw_ev_clear(t_pydaw_seq_event * a_event)
 {
     a_event->type = -1;
     a_event->tick = 0;
 }
 
-void v_pydaw_ev_set_pitchbend(t_pydaw_seq_event* a_event,
+inline void v_pydaw_ev_set_pitchbend(t_pydaw_seq_event* a_event,
         int a_channel, int a_value)
 {
     a_event->type = PYDAW_EVENT_PITCHBEND;
@@ -236,7 +236,7 @@ void v_pydaw_ev_set_pitchbend(t_pydaw_seq_event* a_event,
     a_event->value = a_value;
 }
 
-void v_pydaw_ev_set_noteoff(t_pydaw_seq_event* a_event,
+inline void v_pydaw_ev_set_noteoff(t_pydaw_seq_event* a_event,
         int a_channel, int a_note, int a_velocity)
 {
     a_event->type = PYDAW_EVENT_NOTEOFF;
@@ -245,7 +245,7 @@ void v_pydaw_ev_set_noteoff(t_pydaw_seq_event* a_event,
     a_event->velocity = a_velocity;
 }
 
-void v_pydaw_ev_set_noteon(t_pydaw_seq_event* a_event,
+inline void v_pydaw_ev_set_noteon(t_pydaw_seq_event* a_event,
         int a_channel, int a_note, int a_velocity)
 {
     a_event->type = PYDAW_EVENT_NOTEON;
@@ -254,7 +254,7 @@ void v_pydaw_ev_set_noteon(t_pydaw_seq_event* a_event,
     a_event->velocity = a_velocity;
 }
 
-void v_pydaw_ev_set_controller(t_pydaw_seq_event* a_event,
+inline void v_pydaw_ev_set_controller(t_pydaw_seq_event* a_event,
         int a_channel, int a_cc_num, int a_value)
 {
     a_event->type = PYDAW_EVENT_CONTROLLER;
