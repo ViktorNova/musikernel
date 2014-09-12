@@ -166,15 +166,80 @@ typedef struct
     int ports[200];
 }t_plugin_event_queue;
 
+typedef struct
+{
+    int map[128];
+}t_plugin_cc_map;
+
 void v_plugin_event_queue_add(t_plugin_event_queue*, int, int, float, int);
 void v_plugin_event_queue_reset(t_plugin_event_queue*);
 int v_plugin_event_queue_iter(t_plugin_event_queue*, int);
 void v_plugin_event_queue_atm_set(t_plugin_event_queue*, int, float*);
 inline float f_cc_to_ctrl_val(PYFX_Descriptor*, int, float);
+t_plugin_cc_map* g_cc_map_get();
+t_plugin_cc_map* g_cc_map_open(char*);
+void v_cc_map_translate(t_plugin_cc_map*, PYFX_Descriptor*, float*, int, float);
 
 #ifdef __cplusplus
 }
 #endif
+
+t_plugin_cc_map* g_cc_map_get()
+{
+    t_plugin_cc_map * f_result;
+    lmalloc((void**)&f_result, sizeof(t_plugin_cc_map));
+
+    int f_i = 0;
+    while(f_i < 128)
+    {
+        f_result->map[f_i] = -1;
+        f_i++;
+    }
+
+    return f_result;
+}
+
+t_plugin_cc_map* g_cc_map_open(char *a_path)
+{
+    t_plugin_cc_map *f_result = g_cc_map_get();
+    t_2d_char_array * f_2d_array = g_get_2d_array_from_file(
+        a_path, PYDAW_MEDIUM_STRING);
+
+    while(1)
+    {
+        char * f_key_str = c_iterate_2d_char_array(f_2d_array);
+
+        if(f_2d_array->eof)
+        {
+            free(f_key_str);
+            break;
+        }
+
+        int f_key = atoi(f_key_str);
+
+        char * f_val_str = c_iterate_2d_char_array(f_2d_array);
+        int f_val = atoi(f_val_str);
+
+        f_result->map[f_key] = f_val;
+
+        free(f_key_str);
+        free(f_val_str);
+    }
+
+    g_free_2d_char_array(f_2d_array);
+
+    return f_result;
+}
+
+void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
+    float *a_port_table, int a_cc, float a_value)
+{
+    if(self->map[a_cc] != -1)
+    {
+        a_port_table[self->map[a_cc]] =
+            f_cc_to_ctrl_val(desc, self->map[a_cc], a_value);
+    }
+}
 
 inline float f_cc_to_ctrl_val(PYFX_Descriptor *self, int a_port, float a_val)
 {
