@@ -1870,7 +1870,7 @@ class region_editor(QtGui.QGraphicsView):
             self.region_items[a_item.track_num] = {}
         if a_item.bar in self.region_items[a_item.track_num]:
             f_old = self.region_items[a_item.track_num][a_item.bar]
-            if f_old != a_item:
+            if f_old != a_item and f_old.scene():
                 self.scene.removeItem(f_old)
         self.region_items[a_item.track_num][a_item.bar] = a_item
 
@@ -2107,7 +2107,8 @@ class region_editor(QtGui.QGraphicsView):
             f_cell_text = "{}-{}".format(f_item.name, f_name_suffix)
             f_uid = PROJECT.copy_item(f_item.name, f_cell_text)
             self.draw_item(f_item.track_num, f_item.bar, f_cell_text, True)
-            self.scene.removeItem(f_item)
+            if f_item.scene():
+                self.scene.removeItem(f_item)
             CURRENT_REGION.add_item_ref_by_uid(
                 f_item.track_num, f_item.bar, f_uid)
         self.set_selected_strings()
@@ -2123,7 +2124,8 @@ class region_editor(QtGui.QGraphicsView):
             for x in self.get_selected_items()}
 
         for f_item in self.get_selected_items():
-            self.scene.removeItem(f_item)
+            if f_item.scene():
+                self.scene.removeItem(f_item)
 
         old_new_map = {}
 
