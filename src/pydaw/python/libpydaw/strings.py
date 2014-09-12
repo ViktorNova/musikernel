@@ -17,10 +17,12 @@ from libpydaw.translate import _
 region_list_editor = _(
 """This is a region editor, it consists of items, tracks and automation.
 
+Tracks:
+
 A track can be any/all of: instrument, audio, bus or send.
 An item is one bar of MIDI notes and/or pitch-bend.
-An automation point moves a control on a plugin.  The automation points are
-steppy, you must smooth the points to get a continuous line.  (TODO)
+
+Items:
 
 Click an empty cell to add a new item.
 
@@ -30,13 +32,21 @@ Select multiple items or automation points using CTRL+click+drag
 Double click an item to open it in the piano-roll-editor or select
  multiple and right-click->'Edit Selected Items'
 
-Shift+click+drag to delete items or automation points with the mouse
-
-See the right-click context menu for additional actions and keyboard shortcuts.
-
 The term 'unlink' means to create a new copy of the item that does not
 change it's parent item when edited. (by default all items are
 'ghost items' that update all items with the same name)
+
+See the right-click context menu for additional actions and keyboard shortcuts.
+
+Automation:
+
+An automation point moves a control on a plugin.  The automation points are
+steppy, you must smooth the points to get a continuous line by selecting
+points using CTRL+drag and pressing ALT+s.
+
+Shift+click+drag to delete items or automation points with the mouse
+
+See the right-click context menu for additional actions and keyboard shortcuts.
 
 Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
 
