@@ -1101,7 +1101,7 @@ class atm_item(QtGui.QGraphicsEllipseItem):
         f_pos = self.pos()
         f_point = self.item
         f_point.track, f_point.bar, f_point.beat, f_point.cc_val = \
-            REGION_EDITOR.get_item_coord(f_pos)
+            REGION_EDITOR.get_item_coord(f_pos, a_clip=True)
         self.save_callback()
 
     def __lt__(self, other):
@@ -1296,13 +1296,19 @@ class region_editor(QtGui.QGraphicsView):
     def get_selected_items(self):
         return [x for x in self.get_all_items() if x.isSelected()]
 
-    def get_item_coord(self, a_pos):
+    def get_item_coord(self, a_pos, a_clip=False):
         f_pos_x = a_pos.x()
         f_pos_y = a_pos.y()
-        if f_pos_x > 0 and \
-        f_pos_x < REGION_EDITOR_MAX_START and \
-        f_pos_y > REGION_EDITOR_HEADER_HEIGHT and \
-        f_pos_y < REGION_EDITOR_TOTAL_HEIGHT:
+        if a_clip or (
+        f_pos_x > 0 and
+        f_pos_x < REGION_EDITOR_MAX_START and
+        f_pos_y > REGION_EDITOR_HEADER_HEIGHT and
+        f_pos_y < REGION_EDITOR_TOTAL_HEIGHT):
+            f_pos_x = pydaw_util.pydaw_clip_value(
+                f_pos_x, 0.0, REGION_EDITOR_MAX_START)
+            f_pos_y = pydaw_util.pydaw_clip_value(
+                f_pos_y, REGION_EDITOR_HEADER_HEIGHT,
+                REGION_EDITOR_TOTAL_HEIGHT)
             f_pos_y = f_pos_y - REGION_EDITOR_HEADER_HEIGHT
             f_track_height = REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
             f_track = int((f_pos_y / (self.tracks_height))
