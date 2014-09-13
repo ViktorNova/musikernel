@@ -7986,8 +7986,6 @@ class item_list_editor:
         self.pitchbend_table_widget.resizeColumnsToContents()
 
 
-REC_BUTTON_GROUP = QtGui.QButtonGroup()
-
 LAST_REC_ARMED_TRACK = None
 
 def global_set_record_armed_track():
@@ -7998,15 +7996,21 @@ def global_set_record_armed_track():
 
 class midi_device:
     def __init__(self, a_name, a_index, a_layout):
-        # TODO:  Convert to a checkbox
-        self.record_radiobutton = QtGui.QRadioButton()
-        REC_BUTTON_GROUP.addButton(self.record_radiobutton)
-        self.record_radiobutton.toggled.connect(self.on_rec)
-        self.record_radiobutton.setObjectName("rec_arm_radiobutton")
-        self.hlayout3.addWidget(self.record_radiobutton)
+        self.index = int(a_index)
+        self.record_checkbox = QtGui.QCheckBox()
+        self.record_checkbox.toggled.connect(self.on_rec)
+        f_index = int(a_index) + 1
+        a_layout.addWidget(self.record_checkbox, f_index, 0)
+        a_layout.addWidget(QtGui.QLabel(a_name), f_index, 1)
+        self.track_combobox = QtGui.QComboBox()
+        self.track_combobox.setMinimumWidth(180)
+        self.track_combobox.addItems(TRACK_NAMES)
+        AUDIO_TRACK_COMBOBOXES.append(self.track_combobox)
+        self.track_combobox.currentIndexChanged.connect(self.on_track_changed)
+        a_layout.addWidget(self.track_combobox, f_index, 2)
 
     def on_rec(self, value):
-        assert(False)  # needs a major rework
+        raise NotImplementedError()  # needs a major rework
         if not self.suppress_osc:
             PROJECT.this_pydaw_osc.pydaw_set_track_rec(
                 self.track_number,
@@ -8014,9 +8018,21 @@ class midi_device:
             global LAST_REC_ARMED_TRACK
             LAST_REC_ARMED_TRACK = self.track_number
 
-class midi_device_dialog:
+    def on_track_changed(self, a_val=None):
+        raise NotImplementedError()
+
+class midi_devices_dialog:
     def __init__(self):
-        pass
+        self.layout = QtGui.QGridLayout()
+        if not pydaw_util.MIDI_IN_DEVICES:
+            return
+        self.layout.addWidget(QtGui.QLabel(_("On")), 0, 0)
+        self.layout.addWidget(QtGui.QLabel(_("MIDI Device")), 0, 1)
+        self.layout.addWidget(QtGui.QLabel(_("Output")), 0, 2)
+        self.devices = []
+        for f_name, f_i in zip(
+        pydaw_util.MIDI_IN_DEVICES, range(len(pydaw_util.MIDI_IN_DEVICES))):
+            self.devices.append(midi_device(f_name, f_i, self.layout))
 
 class plugin_settings:
     def __init__(self, a_index, a_track_num,
@@ -8397,6 +8413,122 @@ class seq_track:
 MREC_EVENTS = []
 
 class transport_widget:
+    def __init__(self):
+        self.suppress_osc = True
+        self.is_recording = False
+        self.is_playing = False
+        self.start_region = 0
+        self.last_bar = 0
+        self.last_open_dir = global_home
+        self.transport = pydaw_transport()
+        self.group_box = QtGui.QGroupBox()
+        self.group_box.setObjectName("transport_panel")
+        self.vlayout = QtGui.QVBoxLayout()
+        self.group_box.setLayout(self.vlayout)
+        self.hlayout1 = QtGui.QHBoxLayout()
+        self.vlayout.addLayout(self.hlayout1)
+        self.play_button = QtGui.QRadioButton()
+        self.play_button.setObjectName("play_button")
+        self.play_button.clicked.connect(self.on_play)
+        self.hlayout1.addWidget(self.play_button)
+        self.stop_button = QtGui.QRadioButton()
+        self.stop_button.setChecked(True)
+        self.stop_button.setObjectName("stop_button")
+        self.stop_button.clicked.connect(self.on_stop)
+        self.hlayout1.addWidget(self.stop_button)
+        self.rec_button = QtGui.QRadioButton()
+        self.rec_button.setObjectName("rec_button")
+        self.rec_button.clicked.connect(self.on_rec)
+        self.hlayout1.addWidget(self.rec_button)
+        self.playback_menu_button = QtGui.QPushButton("")
+        self.playback_menu_button.setMaximumWidth(21)
+        self.playback_menu_button.setSizePolicy(
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.hlayout1.addWidget(self.playback_menu_button)
+        self.grid_layout1 = QtGui.QGridLayout()
+        self.hlayout1.addLayout(self.grid_layout1)
+        self.grid_layout1.addWidget(QtGui.QLabel(_("BPM")), 0, 0)
+        self.tempo_spinbox = QtGui.QSpinBox()
+        self.tempo_spinbox.setKeyboardTracking(False)
+        self.tempo_spinbox.setObjectName("large_spinbox")
+        self.tempo_spinbox.setRange(50, 200)
+        self.tempo_spinbox.valueChanged.connect(self.on_tempo_changed)
+        self.grid_layout1.addWidget(self.tempo_spinbox, 1, 0)
+        self.grid_layout1.addWidget(QtGui.QLabel(_("Region")), 0, 10)
+        self.region_spinbox = QtGui.QSpinBox()
+        self.region_spinbox.setObjectName("large_spinbox")
+        self.region_spinbox.setRange(1, 300)
+        self.region_spinbox.valueChanged.connect(self.on_region_changed)
+        self.grid_layout1.addWidget(self.region_spinbox, 1, 10)
+        self.grid_layout1.addWidget(QtGui.QLabel(_("Bar")), 0, 20)
+        self.bar_spinbox = QtGui.QSpinBox()
+        self.bar_spinbox.setObjectName("large_spinbox")
+        self.bar_spinbox.setRange(1, 8)
+        self.bar_spinbox.valueChanged.connect(self.on_bar_changed)
+        self.grid_layout1.addWidget(self.bar_spinbox, 1, 20)
+
+        f_time_label = QtGui.QLabel(_("Time"))
+        f_time_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.grid_layout1.addWidget(f_time_label, 0, 27)
+        self.time_label = QtGui.QLabel(_("0:00"))
+        self.time_label.setMinimumWidth(90)
+        self.time_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.grid_layout1.addWidget(self.time_label, 1, 27)
+
+        self.playback_menu = QtGui.QMenu(self.playback_menu_button)
+        self.playback_menu_button.setMenu(self.playback_menu)
+        self.playback_widget_action = QtGui.QWidgetAction(self.playback_menu)
+        self.playback_widget = QtGui.QWidget()
+        self.playback_widget_action.setDefaultWidget(self.playback_widget)
+        self.playback_vlayout = QtGui.QVBoxLayout(self.playback_widget)
+        self.playback_menu.addAction(self.playback_widget_action)
+
+        self.grid_layout1.addWidget(QtGui.QLabel(_("Loop Mode:")), 0, 45)
+        self.loop_mode_combobox = QtGui.QComboBox()
+        self.loop_mode_combobox.addItems([_("Off"), _("Region")])
+        self.loop_mode_combobox.setMinimumWidth(90)
+        self.loop_mode_combobox.currentIndexChanged.connect(
+            self.on_loop_mode_changed)
+        self.grid_layout1.addWidget(self.loop_mode_combobox, 1, 45)
+        self.follow_checkbox = QtGui.QCheckBox(_("Follow"))
+        self.follow_checkbox.setChecked(True)
+        self.follow_checkbox.clicked.connect(
+            self.on_follow_cursor_check_changed)
+        self.playback_vlayout.addWidget(self.follow_checkbox)
+        self.overdub_checkbox = QtGui.QCheckBox(_("Overdub"))
+        self.overdub_checkbox.clicked.connect(self.on_overdub_changed)
+        self.playback_vlayout.addWidget(self.overdub_checkbox)
+
+        self.midi_devices = midi_devices_dialog()
+        self.playback_vlayout.addLayout(self.midi_devices.layout)
+
+        self.menu_button = QtGui.QPushButton(_("Menu"))
+        self.grid_layout1.addWidget(self.menu_button, 1, 50)
+        self.panic_button = QtGui.QPushButton(_("Panic"))
+        self.panic_button.pressed.connect(self.on_panic)
+        self.grid_layout1.addWidget(self.panic_button, 0, 50)
+        self.master_vol_knob = pydaw_widgets.pydaw_pixmap_knob(60, -480, 0)
+        self.hlayout1.addWidget(self.master_vol_knob)
+        self.master_vol_knob.valueChanged.connect(self.master_vol_changed)
+        self.master_vol_knob.sliderReleased.connect(self.master_vol_released)
+        self.last_region_num = -99
+        self.suppress_osc = False
+
+    def master_vol_released(self):
+        pydaw_util.set_file_setting(
+            "master_vol", self.master_vol_knob.value())
+
+    def load_master_vol(self):
+        self.master_vol_knob.setValue(
+            pydaw_util.get_file_setting("master_vol", int, 0))
+
+    def master_vol_changed(self, a_val):
+        if a_val == 0:
+            f_result = 1.0
+        else:
+            f_result = pydaw_util.pydaw_db_to_lin(float(a_val) * 0.1)
+        PROJECT.this_pydaw_osc.pydaw_master_vol(f_result)
+
     def set_time(self, a_region, a_bar, a_beat):
         f_seconds = REGION_TIME[a_region]
         f_seconds_per_beat = 60.0 / float(self.tempo_spinbox.value())
@@ -8720,118 +8852,6 @@ class transport_widget:
 
     def on_panic(self):
         PROJECT.this_pydaw_osc.pydaw_panic()
-
-    def __init__(self):
-        self.suppress_osc = True
-        self.is_recording = False
-        self.is_playing = False
-        self.start_region = 0
-        self.last_bar = 0
-        self.last_open_dir = global_home
-        self.transport = pydaw_transport()
-        self.group_box = QtGui.QGroupBox()
-        self.group_box.setObjectName("transport_panel")
-        self.vlayout = QtGui.QVBoxLayout()
-        self.group_box.setLayout(self.vlayout)
-        self.hlayout1 = QtGui.QHBoxLayout()
-        self.vlayout.addLayout(self.hlayout1)
-        self.play_button = QtGui.QRadioButton()
-        self.play_button.setObjectName("play_button")
-        self.play_button.clicked.connect(self.on_play)
-        self.hlayout1.addWidget(self.play_button)
-        self.stop_button = QtGui.QRadioButton()
-        self.stop_button.setChecked(True)
-        self.stop_button.setObjectName("stop_button")
-        self.stop_button.clicked.connect(self.on_stop)
-        self.hlayout1.addWidget(self.stop_button)
-        self.rec_button = QtGui.QRadioButton()
-        self.rec_button.setObjectName("rec_button")
-        self.rec_button.clicked.connect(self.on_rec)
-        self.hlayout1.addWidget(self.rec_button)
-        self.playback_menu_button = QtGui.QPushButton("")
-        self.playback_menu_button.setMaximumWidth(21)
-        self.playback_menu_button.setSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.hlayout1.addWidget(self.playback_menu_button)
-        self.grid_layout1 = QtGui.QGridLayout()
-        self.hlayout1.addLayout(self.grid_layout1)
-        self.grid_layout1.addWidget(QtGui.QLabel(_("BPM")), 0, 0)
-        self.tempo_spinbox = QtGui.QSpinBox()
-        self.tempo_spinbox.setKeyboardTracking(False)
-        self.tempo_spinbox.setObjectName("large_spinbox")
-        self.tempo_spinbox.setRange(50, 200)
-        self.tempo_spinbox.valueChanged.connect(self.on_tempo_changed)
-        self.grid_layout1.addWidget(self.tempo_spinbox, 1, 0)
-        self.grid_layout1.addWidget(QtGui.QLabel(_("Region")), 0, 10)
-        self.region_spinbox = QtGui.QSpinBox()
-        self.region_spinbox.setObjectName("large_spinbox")
-        self.region_spinbox.setRange(1, 300)
-        self.region_spinbox.valueChanged.connect(self.on_region_changed)
-        self.grid_layout1.addWidget(self.region_spinbox, 1, 10)
-        self.grid_layout1.addWidget(QtGui.QLabel(_("Bar")), 0, 20)
-        self.bar_spinbox = QtGui.QSpinBox()
-        self.bar_spinbox.setObjectName("large_spinbox")
-        self.bar_spinbox.setRange(1, 8)
-        self.bar_spinbox.valueChanged.connect(self.on_bar_changed)
-        self.grid_layout1.addWidget(self.bar_spinbox, 1, 20)
-
-        f_time_label = QtGui.QLabel(_("Time"))
-        f_time_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.grid_layout1.addWidget(f_time_label, 0, 27)
-        self.time_label = QtGui.QLabel(_("0:00"))
-        self.time_label.setMinimumWidth(90)
-        self.time_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.grid_layout1.addWidget(self.time_label, 1, 27)
-
-        self.playback_menu = QtGui.QMenu(self.playback_menu_button)
-        self.playback_menu_button.setMenu(self.playback_menu)
-        self.playback_widget_action = QtGui.QWidgetAction(self.playback_menu)
-        self.playback_widget = QtGui.QWidget()
-        self.playback_widget_action.setDefaultWidget(self.playback_widget)
-        self.playback_vlayout = QtGui.QVBoxLayout(self.playback_widget)
-        self.playback_menu.addAction(self.playback_widget_action)
-
-        self.grid_layout1.addWidget(QtGui.QLabel(_("Loop Mode:")), 0, 45)
-        self.loop_mode_combobox = QtGui.QComboBox()
-        self.loop_mode_combobox.addItems([_("Off"), _("Region")])
-        self.loop_mode_combobox.setMinimumWidth(90)
-        self.loop_mode_combobox.currentIndexChanged.connect(
-            self.on_loop_mode_changed)
-        self.grid_layout1.addWidget(self.loop_mode_combobox, 1, 45)
-        self.follow_checkbox = QtGui.QCheckBox(_("Follow"))
-        self.follow_checkbox.setChecked(True)
-        self.follow_checkbox.clicked.connect(
-            self.on_follow_cursor_check_changed)
-        self.playback_vlayout.addWidget(self.follow_checkbox)
-        self.overdub_checkbox = QtGui.QCheckBox(_("Overdub"))
-        self.overdub_checkbox.clicked.connect(self.on_overdub_changed)
-        self.playback_vlayout.addWidget(self.overdub_checkbox)
-        self.menu_button = QtGui.QPushButton(_("Menu"))
-        self.grid_layout1.addWidget(self.menu_button, 1, 50)
-        self.panic_button = QtGui.QPushButton(_("Panic"))
-        self.panic_button.pressed.connect(self.on_panic)
-        self.grid_layout1.addWidget(self.panic_button, 0, 50)
-        self.master_vol_knob = pydaw_widgets.pydaw_pixmap_knob(60, -480, 0)
-        self.hlayout1.addWidget(self.master_vol_knob)
-        self.master_vol_knob.valueChanged.connect(self.master_vol_changed)
-        self.master_vol_knob.sliderReleased.connect(self.master_vol_released)
-        self.last_region_num = -99
-        self.suppress_osc = False
-
-    def master_vol_released(self):
-        pydaw_util.set_file_setting(
-            "master_vol", self.master_vol_knob.value())
-
-    def load_master_vol(self):
-        self.master_vol_knob.setValue(
-            pydaw_util.get_file_setting("master_vol", int, 0))
-
-    def master_vol_changed(self, a_val):
-        if a_val == 0:
-            f_result = 1.0
-        else:
-            f_result = pydaw_util.pydaw_db_to_lin(float(a_val) * 0.1)
-        PROJECT.this_pydaw_osc.pydaw_master_vol(f_result)
 
     def reset(self):
         self.loop_mode_combobox.setCurrentIndex(0)

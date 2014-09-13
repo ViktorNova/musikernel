@@ -457,6 +457,8 @@ def set_file_setting(a_name, a_val):
 global_device_val_dict = {}
 global_pydaw_device_config = "{}/device.txt".format(CONFIG_DIR)
 
+MIDI_IN_DEVICES = []
+
 SAMPLE_RATE = None
 NYQUIST_FREQ = None
 
@@ -467,10 +469,11 @@ def pydaw_delete_device_config():
         os.system("rm -f '{}'".format(global_pydaw_device_config))
 
 def pydaw_read_device_config():
-    global global_pydaw_bin_path, global_device_val_dict
+    global global_pydaw_bin_path, global_device_val_dict, MIDI_IN_DEVICES
     global global_pydaw_is_sandboxed, global_pydaw_with_audio
 
     global_device_val_dict = {}
+    MIDI_IN_DEVICES = []
 
     try:
         if os.path.isfile(global_pydaw_device_config):
@@ -479,10 +482,12 @@ def pydaw_read_device_config():
                 if f_line.strip() == "\\":
                     break
                 if f_line.strip() != "":
-                    f_line_arr = f_line.split("|", 1)
-                    global_device_val_dict[
-                        f_line_arr[0].strip()] = f_line_arr[1].strip()
-
+                    f_key, f_val = (x.strip() for x in f_line.split("|", 1))
+                    if f_key == "midiInDevice":
+                        MIDI_IN_DEVICES.append(f_val)
+                    else:
+                        global_device_val_dict[f_key] = f_val
+            MIDI_IN_DEVICES.sort()
             pydaw_set_bin_path()
             global_pydaw_is_sandboxed = False
             global_pydaw_with_audio = True
