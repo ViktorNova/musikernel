@@ -104,15 +104,6 @@ extern "C" {
 
 typedef struct
 {
-    int effects_only;
-    int rayv_port;
-    int wayv_port;
-    int modulex_port;
-    int euphoria_port;
-}t_py_cc_map_item;
-
-typedef struct
-{
     t_pydaw_seq_event * events[PYDAW_MAX_EVENTS_PER_ITEM_COUNT];
     int event_count;
     //Used to avoid reading the same event twice in an unsorted item.
@@ -330,7 +321,6 @@ typedef struct
     /*used to prevent new audio items from playing while
      * the existing are being faded out.*/
     int suppress_new_audio_items;
-    t_py_cc_map_item * cc_map[PYDAW_MIDI_NOTE_COUNT];
     t_wav_pool * wav_pool;
     t_wav_pool_item * ab_wav_item;
     t_pydaw_audio_item * ab_audio_item;
@@ -422,10 +412,6 @@ void * v_pydaw_audio_recording_thread(void* a_arg);
 inline float v_pydaw_count_beats(t_pydaw_data * self,
         int a_start_region, int a_start_bar, float a_start_beat,
         int a_end_region, int a_end_bar, float a_end_beat);
-t_py_cc_map_item * g_py_cc_map_item_get(int a_effects_only,
-        int a_rayv_port, int a_wayv_port, int a_euphoria_port,
-        int a_modulex_port);
-void v_pydaw_load_cc_map(t_pydaw_data * self, const char * a_name);
 t_pydaw_audio_items * v_audio_items_load_all(t_pydaw_data * self,
         int a_region_uid);
 
@@ -1705,92 +1691,6 @@ void * v_pydaw_worker_thread(void* a_arg)
     return (void*)1;
 }
 
-
-t_py_cc_map_item * g_py_cc_map_item_get(int a_effects_only, int a_rayv_port,
-        int a_wayv_port, int a_euphoria_port, int a_modulex_port)
-{
-    t_py_cc_map_item * f_result =
-            (t_py_cc_map_item*)malloc(sizeof(t_py_cc_map_item));
-    f_result->effects_only = a_effects_only;
-
-    if(a_effects_only)
-    {
-        f_result->modulex_port = a_modulex_port;
-        f_result->euphoria_port = 0;
-        f_result->rayv_port = 0;
-        f_result->wayv_port = 0;
-    }
-    else
-    {
-        f_result->modulex_port = 0;
-        f_result->euphoria_port = a_euphoria_port;
-        f_result->rayv_port = a_rayv_port;
-        f_result->wayv_port = a_wayv_port;
-    }
-
-    return f_result;
-}
-
-void v_pydaw_load_cc_map(t_pydaw_data * self, const char * a_name)
-{
-    int f_i = 0;
-    while(f_i < PYDAW_MIDI_NOTE_COUNT)
-    {
-        if(self->cc_map[f_i])
-        {
-            free(self->cc_map[f_i]);
-            self->cc_map[f_i] = 0;
-        }
-        f_i++;
-    }
-    char f_temp[1024];
-    char * f_home = getenv("HOME");
-    sprintf(f_temp, "%s/%s/cc_maps/%s", f_home, PYDAW_VERSION, a_name);
-    if(i_pydaw_file_exists(f_temp))
-    {
-        t_2d_char_array * f_current_string =
-                g_get_2d_array_from_file(f_temp, PYDAW_LARGE_STRING);
-        f_i = 0;
-        while(f_i < PYDAW_MIDI_NOTE_COUNT)
-        {
-            char * f_cc_char = c_iterate_2d_char_array(f_current_string);
-            if(f_current_string->eof)
-            {
-                free(f_cc_char);
-                break;
-            }
-            int f_cc = atoi(f_cc_char);
-            free(f_cc_char);
-            char * f_effects_only_char =
-                c_iterate_2d_char_array(f_current_string);
-            int f_effects_only = atoi(f_effects_only_char);
-            free(f_effects_only_char);
-            char * f_rayv_port_char =
-                c_iterate_2d_char_array(f_current_string);
-            int f_rayv_port = atoi(f_rayv_port_char);
-            free(f_rayv_port_char);
-            char * f_wayv_port_char = c_iterate_2d_char_array(f_current_string);
-            int f_wayv_port = atoi(f_wayv_port_char);
-            free(f_wayv_port_char);
-            char * f_euphoria_port_char =
-                c_iterate_2d_char_array(f_current_string);
-            int f_euphoria_port = atoi(f_euphoria_port_char);
-            free(f_euphoria_port_char);
-            char * f_modulex_port_char =
-                c_iterate_2d_char_array(f_current_string);
-            int f_modulex_port = atoi(f_modulex_port_char);
-            free(f_modulex_port_char);
-            self->cc_map[f_cc] =
-                    g_py_cc_map_item_get(f_effects_only, f_rayv_port,
-                        f_wayv_port, f_euphoria_port, f_modulex_port);
-            f_i++;
-        }
-
-        g_free_2d_char_array(f_current_string);
-
-    }
-}
-
 inline void v_pydaw_process_atm(
     t_pydaw_data * self, int f_track_num, int f_index, int sample_count)
 {
@@ -2345,115 +2245,43 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
                     v_queue_osc_message("ml", f_osc_msg);
                 }
 
-                if(self->cc_map[controller])
+                float f_start =
+                    ((self->playback_cursor) +
+                    ((((float)(events[f_i2].tick))/((float)sample_count))
+                    * (self->playback_inc))) * 4.0f;
+
+                int controlIn = -9999;   // TODO
+
+                if (controlIn > 0)
                 {
-                    float f_start =
-                        ((self->playback_cursor) +
-                        ((((float)(events[f_i2].tick))/((float)sample_count))
-                        * (self->playback_inc))) * 4.0f;
+                    v_pydaw_ev_clear(f_event);
+                    v_pydaw_ev_set_controller(
+                        f_event, 0, 0, events[f_i2].value);
+                    f_event->start = f_start;
+                    f_event->port = controlIn;
+                    f_event->tick = (events[f_i2].tick);
 
-                    int controlIn;
+                    v_pydaw_set_control_from_cc(
+                        f_track->plugins[0], controlIn, f_event, self, 0,
+                        self->record_armed_track_index_all);
 
-                    if(!self->cc_map[controller]->effects_only)
+                    f_track->period_event_index += 1;
+
+                    if(self->playback_mode ==
+                            PYDAW_PLAYBACK_MODE_REC)
                     {
-                        int f_port = -9999;
+                        float f_beat =
+                            self->ml_current_period_beats +
+                            f_pydaw_samples_to_beat_count(
+                                events[f_i2].tick, self->tempo,
+                                self->sample_rate);
 
-                        /*if(f_index == 1)  //Euphoria
-                        {
-                            f_port = self->cc_map[
-                                    controller]->euphoria_port;
-                        }
-                        else if(f_index == 2) //Ray-V
-                        {
-                            f_port = self->cc_map[
-                                controller]->rayv_port;
-                        }
-                        else if(f_index == 3) //Way-V
-                        {
-                            f_port = self->cc_map[
-                                controller]->wayv_port;
-                        }*/
-
-                        assert(0);  //TODO:  Fix this
-
-                        controlIn = f_port;
-
-                        if (controlIn > 0)
-                        {
-                            v_pydaw_ev_clear(f_event);
-                            v_pydaw_ev_set_controller(
-                                    f_event, 0, 0, events[f_i2].value);
-                            f_event->start = f_start;
-                            f_event->port = f_port;
-                            f_event->tick = (events[f_i2].tick);
-                            /*
-                            v_pydaw_set_control_from_cc(
-                                f_track->instruments[0],
-                                    controlIn, f_event, self, 1,
-                                    self->
-                                        record_armed_track_index_all);
-                            */
-                            f_track->period_event_index += 1;
-
-                            if(self->playback_mode ==
-                                    PYDAW_PLAYBACK_MODE_REC)
-                            {
-                                float f_beat =
-                                    self->ml_current_period_beats +
-                                    f_pydaw_samples_to_beat_count(
-                                        events[f_i2].tick, self->tempo,
-                                        self->sample_rate);
-
-                                sprintf(
-                                    f_osc_msg,
-                                    "cc|%i|%i|%f|%i|%f",
-                                    self->current_region,
-                                    self->current_bar, f_beat,
-                                    controlIn, events[f_i2].value);
-                                v_queue_osc_message("mrec",
-                                    f_osc_msg);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        controlIn =
-                            self->cc_map[controller]->modulex_port;
-
-                        if (controlIn > 0)
-                        {
-                            v_pydaw_ev_clear(f_event);
-                            v_pydaw_ev_set_controller(
-                                f_event, 0, 0, events[f_i2].value);
-                            f_event->start = f_start;
-                            f_event->port = controlIn;
-                            f_event->tick =
-                                    (events[f_i2].tick);
-
-                            v_pydaw_set_control_from_cc(
-                                    f_track->plugins[0],
-                                    controlIn, f_event, self, 0,
-                                    self->record_armed_track_index_all);
-
-                            f_track->period_event_index += 1;
-
-                            if(self->playback_mode ==
-                                    PYDAW_PLAYBACK_MODE_REC)
-                            {
-                                float f_beat =
-                                    self->ml_current_period_beats +
-                                    f_pydaw_samples_to_beat_count(
-                                        events[f_i2].tick, self->tempo,
-                                        self->sample_rate);
-
-                                sprintf(f_osc_msg,
-                                    "cc|%i|%i|%f|-1|%i|%f",
-                                    self->current_region,
-                                    self->current_bar, f_beat,
-                                    controlIn, events[f_i2].value);
-                                v_queue_osc_message("mrec", f_osc_msg);
-                            }
-                        }
+                        sprintf(f_osc_msg,
+                            "cc|%i|%i|%f|-1|%i|%f",
+                            self->current_region,
+                            self->current_bar, f_beat,
+                            controlIn, events[f_i2].value);
+                        v_queue_osc_message("mrec", f_osc_msg);
                     }
                 }
             }
@@ -3946,16 +3774,6 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
     f_result->routing_graph = 0;
 
     int f_i = 0;
-
-    while(f_i < PYDAW_MIDI_NOTE_COUNT)
-    {
-        f_result->cc_map[f_i] = 0;
-        f_i++;
-    }
-
-    v_pydaw_load_cc_map(f_result, "default");
-
-    f_i = 0;
     int f_track_total = 0;
 
     while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
