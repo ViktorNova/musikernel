@@ -2719,9 +2719,9 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
     }
     else
     {
-        v_pydaw_run_engine(self, sample_count,
-                events, event_count, f_next_current_sample,
-                output0, output1, a_input_buffers);
+        v_pydaw_run_engine(
+            self, sample_count, events, event_count, f_next_current_sample,
+            output0, output1, a_input_buffers);
     }
 
     if(self->is_previewing)
@@ -2755,20 +2755,16 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
                 {
                     output0[f_i] = f_cubic_interpolate_ptr_ifh(
                     (self->preview_wav_item->samples[0]),
-                    (self->preview_audio_item->sample_read_head->
-                            whole_number),
-                    (self->preview_audio_item->sample_read_head->
-                            fraction)) *
+                    (self->preview_audio_item->sample_read_head->whole_number),
+                    (self->preview_audio_item->sample_read_head->fraction)) *
                     (self->preview_audio_item->adsr->output) *
                     (self->preview_amp_lin); // *
                     //(self->preview_audio_item->fade_vol);
 
                     output1[f_i] = f_cubic_interpolate_ptr_ifh(
                     (self->preview_wav_item->samples[1]),
-                    (self->preview_audio_item->sample_read_head->
-                            whole_number),
-                    (self->preview_audio_item->sample_read_head->
-                            fraction)) *
+                    (self->preview_audio_item->sample_read_head->whole_number),
+                    (self->preview_audio_item->sample_read_head->fraction)) *
                     (self->preview_audio_item->adsr->output) *
                     (self->preview_amp_lin); // *
                     //(self->preview_audio_item->fade_vol);
@@ -2777,15 +2773,13 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
                 v_ifh_run(self->preview_audio_item->sample_read_head,
                         self->preview_audio_item->ratio);
 
-                if((self->preview_audio_item->sample_read_head->
-                        whole_number)
-                        >=  (self->preview_max_sample_count))
+                if((self->preview_audio_item->sample_read_head->whole_number)
+                    >=  (self->preview_max_sample_count))
                 {
                     v_adsr_release(self->preview_audio_item->adsr);
                 }
 
-                if(self->preview_audio_item->adsr->stage
-                        == ADSR_STAGE_OFF)
+                if(self->preview_audio_item->adsr->stage == ADSR_STAGE_OFF)
                 {
                     self->is_previewing = 0;
                     break;
