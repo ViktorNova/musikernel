@@ -278,6 +278,8 @@ static PYFX_Handle g_rayv_instantiate(PYFX_Descriptor * descriptor,
     plugin_data->port_table = g_pydaw_get_port_table(
         (void**)plugin_data, descriptor);
 
+    v_cc_map_init(&plugin_data->cc_map);
+
     return (PYFX_Handle) plugin_data;
 }
 
@@ -287,7 +289,7 @@ static void v_rayv_load(PYFX_Handle instance,
 {
     t_rayv *plugin_data = (t_rayv*)instance;
     pydaw_generic_file_loader(instance, Descriptor,
-        a_file_path, plugin_data->port_table);
+        a_file_path, plugin_data->port_table, &plugin_data->cc_map);
 }
 
 static void v_rayv_set_port_value(PYFX_Handle Instance,

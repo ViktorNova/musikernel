@@ -458,7 +458,7 @@ static void v_euphoria_load(PYFX_Handle instance,
 {
     t_euphoria *plugin_data = (t_euphoria*)instance;
     pydaw_generic_file_loader(instance, Descriptor,
-        a_file_path, plugin_data->port_table);
+        a_file_path, plugin_data->port_table, &plugin_data->cc_map);
 }
 
 static void v_euphoria_set_port_value(PYFX_Handle Instance,
@@ -551,6 +551,8 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
 
     plugin_data->port_table = g_pydaw_get_port_table(
             (void**)plugin_data, descriptor);
+
+    v_cc_map_init(&plugin_data->cc_map);
 
     return (PYFX_Handle) plugin_data;
 }

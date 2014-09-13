@@ -153,6 +153,7 @@ typedef struct {
     int midi_event_count;
     t_plugin_event_queue atm_queue;
     float * port_table;
+    t_plugin_cc_map cc_map;
 } t_rayv;
 
 

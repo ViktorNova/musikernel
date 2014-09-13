@@ -176,59 +176,21 @@ void v_plugin_event_queue_reset(t_plugin_event_queue*);
 int v_plugin_event_queue_iter(t_plugin_event_queue*, int);
 void v_plugin_event_queue_atm_set(t_plugin_event_queue*, int, float*);
 inline float f_cc_to_ctrl_val(PYFX_Descriptor*, int, float);
-t_plugin_cc_map* g_cc_map_get();
-t_plugin_cc_map* g_cc_map_open(char*);
+void v_cc_map_init(t_plugin_cc_map*);
 void v_cc_map_translate(t_plugin_cc_map*, PYFX_Descriptor*, float*, int, float);
 
 #ifdef __cplusplus
 }
 #endif
 
-t_plugin_cc_map* g_cc_map_get()
+void v_cc_map_init(t_plugin_cc_map * a_map)
 {
-    t_plugin_cc_map * f_result;
-    lmalloc((void**)&f_result, sizeof(t_plugin_cc_map));
-
     int f_i = 0;
     while(f_i < 128)
     {
-        f_result->map[f_i] = -1;
+        a_map->map[f_i] = -1;
         f_i++;
     }
-
-    return f_result;
-}
-
-t_plugin_cc_map* g_cc_map_open(char *a_path)
-{
-    t_plugin_cc_map *f_result = g_cc_map_get();
-    t_2d_char_array * f_2d_array = g_get_2d_array_from_file(
-        a_path, PYDAW_MEDIUM_STRING);
-
-    while(1)
-    {
-        char * f_key_str = c_iterate_2d_char_array(f_2d_array);
-
-        if(f_2d_array->eof)
-        {
-            free(f_key_str);
-            break;
-        }
-
-        int f_key = atoi(f_key_str);
-
-        char * f_val_str = c_iterate_2d_char_array(f_2d_array);
-        int f_val = atoi(f_val_str);
-
-        f_result->map[f_key] = f_val;
-
-        free(f_key_str);
-        free(f_val_str);
-    }
-
-    g_free_2d_char_array(f_2d_array);
-
-    return f_result;
 }
 
 void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
@@ -416,7 +378,8 @@ float * g_pydaw_get_port_table(PYFX_Handle * handle,
 }
 
 void pydaw_generic_file_loader(PYFX_Handle Instance,
-        PYFX_Descriptor * Descriptor, char * a_path, float * a_table)
+        PYFX_Descriptor * Descriptor, char * a_path, float * a_table,
+        t_plugin_cc_map * a_cc_map)
 {
     t_2d_char_array * f_2d_array = g_get_2d_array_from_file(a_path,
                 PYDAW_LARGE_STRING);
@@ -440,6 +403,13 @@ void pydaw_generic_file_loader(PYFX_Handle Instance,
                 c_iterate_2d_char_array_to_next_line(f_2d_array);
 
             Descriptor->configure(Instance, f_config_key, f_value, 0);
+        }
+        else if(f_key[0] == 'm')
+        {
+            char * f_cc_str = c_iterate_2d_char_array(f_2d_array);
+            char * f_port_str =
+                c_iterate_2d_char_array_to_next_line(f_2d_array);
+            a_cc_map->map[atoi(f_cc_str)] = atoi(f_port_str);
         }
         else
         {

@@ -179,6 +179,7 @@ typedef struct {
     t_plugin_event_queue atm_queue;
     float * port_table;
     int plugin_uid;
+    t_plugin_cc_map cc_map;
 } t_euphoria __attribute__((aligned(16)));
 
 

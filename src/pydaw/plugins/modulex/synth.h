@@ -177,6 +177,7 @@ typedef struct
     fp_queue_message queue_func;
 
     float * port_table;
+    t_plugin_cc_map cc_map;
 } t_modulex;
 
 #ifdef	__cplusplus

@@ -35,10 +35,15 @@ KNOB_ARC_PEN = QtGui.QPen(
     QtCore.Qt.RoundJoin)
 
 class pydaw_plugin_file:
-    """ Abstracts a .pyinst or .pyfx file """
+    """ Abstracts an instrument state file.  Plugins are not required
+        to implement this and can instead implement their own custom
+        state files, but this should be a sane and well tested way
+        for most plugins to save their state.
+    """
     def __init__(self, a_path=None):
         self.port_dict = {}
         self.configure_dict = {}
+        self.cc_map = {}
         if a_path is not None:
             f_text = pydaw_util.pydaw_read_file_text(a_path)
             self.set_from_str(f_text)
@@ -52,6 +57,9 @@ class pydaw_plugin_file:
             if f_items[0] == 'c':
                 f_items2 = f_items[1].split("|", 1)
                 self.configure_dict[(f_items2[0])] = f_items2[1]
+            elif f_items[0] == 'm':
+                f_cc, f_val = (int(x) for x in f_items[1].split("|", 1))
+                self.cc_map[f_cc] = f_val
             else:
                 self.port_dict[int(f_items[0])] = int(float(f_items[1]))
 
@@ -62,23 +70,29 @@ class pydaw_plugin_file:
         return f_result
 
     @staticmethod
-    def from_dict(a_port_dict, a_configure_dict):
+    def from_dict(a_port_dict, a_configure_dict, a_cc_map_dict):
         f_result = pydaw_plugin_file()
-        for k, v in list(a_port_dict.items()):
+        for k, v in a_port_dict.items():
             f_result.port_dict[int(k)] = v
-        for k, v in list(a_configure_dict.items()):
+        for k, v in a_configure_dict.items():
             f_result.configure_dict[k] = v
+        for k, v in a_cc_map_dict.items():
+            f_result.cc_map[k] = v
         return f_result
 
     def __str__(self):
-        f_result = ""
-        for k in sorted(self.configure_dict.keys()):
+        f_result = []
+        for k in sorted(self.configure_dict):
             v = self.configure_dict[k]
-            f_result += "c|{}|{}\n".format(k, v)
-        for k in sorted(self.port_dict.keys()):
+            f_result.append("|".join(str(x) for x in ("c", k, v)))
+        for k in sorted(self.cc_map):
+            v = self.cc_map[k]
+            f_result.append("|".join(str(x) for x in ("m", k, v)))
+        for k in sorted(self.port_dict):
             v = self.port_dict[k]
-            f_result += "{}|{}\n".format(int(k), int(v.get_value()))
-        return f_result + "\\"
+            f_result.append("|".join(str(int(x)) for x in (k, v.get_value())))
+        f_result.append("\\")
+        return "\n".join(f_result)
 
 PYDAW_KNOB_PIXMAP = None
 PYDAW_KNOB_PIXMAP_CACHE = {}
@@ -3964,6 +3978,7 @@ class pydaw_abstract_plugin_ui:
         self.port_dict = {}
         self.effects = []
         self.configure_dict = {}
+        self.cc_map = {}
         self.save_file_on_exit = True
         self.is_quitting = False
         self._plugin_name = None
@@ -4012,10 +4027,11 @@ class pydaw_abstract_plugin_ui:
             f_file_path = "{}/{}".format(self.folder, self.plugin_uid)
             if os.path.isfile(f_file_path):
                 f_file = pydaw_plugin_file(f_file_path)
-                for k, v in list(f_file.port_dict.items()):
+                for k, v in f_file.port_dict.items():
                     self.set_control_val(int(k), v)
-                for k, v in list(f_file.configure_dict.items()):
+                for k, v in f_file.configure_dict.items():
                     self.set_configure(k, v)
+                self.cc_map = f_file.cc_map
             else:
                 print("pydaw_abstract_plugin_ui.open_plugin_file():"
                     " '{}' did not exist, not loading.".format(f_file_path))
@@ -4026,7 +4042,7 @@ class pydaw_abstract_plugin_ui:
     def save_plugin_file(self):
         if self.folder is not None:
             f_file = pydaw_plugin_file.from_dict(
-                self.port_dict, self.configure_dict)
+                self.port_dict, self.configure_dict, self.cc_map)
             self.pydaw_project.save_file(
                 pydaw_folder_plugins, self.plugin_uid, str(f_file))
             self.pydaw_project.commit(
@@ -6809,7 +6825,7 @@ class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
     def copy_instrument(self):
         global EUPHORIA_INSTRUMENT_CLIPBOARD
         f_plugin_file = pydaw_plugin_file.from_dict(
-            self.port_dict, self.configure_dict)
+            self.port_dict, self.configure_dict, self.cc_map)
         EUPHORIA_INSTRUMENT_CLIPBOARD = str(f_plugin_file)
 
     def paste_instrument(self):
@@ -6850,7 +6866,8 @@ class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     if f_answer == QtGui.QMessageBox.No:
                         continue
                 f_sample_str = self.copySamplesToSingleDirectory(f_dir)
-                f_plugin_file = pydaw_plugin_file.from_dict(self.port_dict, {})
+                f_plugin_file = pydaw_plugin_file.from_dict(
+                    self.port_dict, {}, {})
                 f_result_str = "{}{}".format(f_sample_str, f_plugin_file)
                 pydaw_util.pydaw_write_file_text(f_selected_path, f_result_str)
             else:
