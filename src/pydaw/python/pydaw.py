@@ -3298,7 +3298,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_path = self.get_file_path()
         WAVE_EDITOR.open_file(f_path)
         WAVE_EDITOR.set_audio_item(self.audio_item)
-        MAIN_WINDOW.main_tabwidget.setCurrentIndex(3)
+        MAIN_WINDOW.main_tabwidget.setCurrentIndex(2)
 
     def edit_properties(self):
         AUDIO_SEQ.scene.clearSelection()
@@ -8484,9 +8484,9 @@ class transport_widget:
             f_we_enabled = WAVE_EDITOR.enabled_checkbox.isChecked()
             f_tab_index = MAIN_WINDOW.main_tabwidget.currentIndex()
             if WAVE_EDITOR.history:
-                if f_tab_index == 3 and not f_we_enabled:
+                if f_tab_index == 2 and not f_we_enabled:
                     WAVE_EDITOR.enabled_checkbox.setChecked(True)
-                elif f_tab_index != 3 and f_we_enabled:
+                elif f_tab_index != 2 and f_we_enabled:
                     WAVE_EDITOR.enabled_checkbox.setChecked(False)
         SONG_EDITOR.table_widget.setEnabled(False)
         REGION_SETTINGS.on_play()
@@ -8528,7 +8528,7 @@ class transport_widget:
 
         f_we_enabled = WAVE_EDITOR.enabled_checkbox.isChecked()
         f_tab_index = MAIN_WINDOW.main_tabwidget.currentIndex()
-        if f_tab_index != 3 and f_we_enabled:
+        if f_tab_index != 2 and f_we_enabled:
             WAVE_EDITOR.enabled_checkbox.setChecked(False)
 
         self.bar_spinbox.setEnabled(True)
@@ -9415,7 +9415,7 @@ class pydaw_main_window(QtGui.QMainWindow):
 
     def tab_changed(self):
         f_index = self.main_tabwidget.currentIndex()
-        if not IS_PLAYING and f_index != 3:
+        if not IS_PLAYING and f_index != 2:
             WAVE_EDITOR.enabled_checkbox.setChecked(False)
         if f_index == 1:
             ITEM_EDITOR.tab_changed()
@@ -9667,16 +9667,12 @@ class pydaw_main_window(QtGui.QMainWindow):
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.cc_map_tab.setToolTip(
-            _("Use this tab to create CC maps for your "
-            "MIDI controller to MusiKernel's built-in plugins\n"
-            "Each CC routes to a different control for each instrument, "
-            "or if the CC is 'Effects Only', it routes only to Modulex"))
+            pass
         else:
-            self.cc_map_tab.setToolTip("")
+            pass
 
     def regions_tab_changed(self, a_val=None):
-        if self.regions_tab_widget.currentIndex() == 3 and \
+        if self.regions_tab_widget.currentIndex() == 1 and \
         self.first_audio_tab_click:
             self.first_audio_tab_click = False
             pydaw_set_audio_seq_zoom(1.0, 1.0)
@@ -9884,17 +9880,6 @@ class pydaw_main_window(QtGui.QMainWindow):
         self.automation_tab = QtGui.QWidget()
         self.automation_tab.setObjectName("plugin_ui")
 
-        self.cc_map_tab = QtGui.QWidget()
-        self.cc_map_tab.setObjectName("ccmaptabwidget")
-        f_cc_map_main_vlayout = QtGui.QVBoxLayout(self.cc_map_tab)
-        f_cc_map_hlayout = QtGui.QHBoxLayout()
-        f_cc_map_main_vlayout.addLayout(f_cc_map_hlayout)
-        self.cc_map_table = pydaw_cc_map_editor()
-        f_cc_map_hlayout.addWidget(self.cc_map_table.groupbox)
-        f_cc_map_hlayout.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding,
-                              QtGui.QSizePolicy.Minimum))
-        self.main_tabwidget.addTab(self.cc_map_tab, _("CC Maps"))
         self.main_tabwidget.addTab(WAVE_EDITOR.widget, _("Wave Editor"))
 
         self.notes_tab = QtGui.QTextEdit(self)
@@ -9980,8 +9965,7 @@ class pydaw_main_window(QtGui.QMainWindow):
                 f_state, f_note = a_val.split("|")
                 PIANO_ROLL_EDITOR.highlight_keys(f_state, f_note)
             elif a_key == "ml":
-                if self.cc_map_table.cc_spinbox is not None:
-                    self.cc_map_table.cc_spinbox.setValue(int(a_val))
+                print("ml event, ignoring for now.  TODO:  implement")
             elif a_key == "wec":
                 if IS_PLAYING:
                     WAVE_EDITOR.set_playback_cursor(float(a_val))
@@ -10079,298 +10063,6 @@ def pydaw_load_controller_maps():
             CONTROLLER_PORT_NUM_DICT[k][int(v2)] = f_map
             CC_NAMES[k].append(k2)
         CC_NAMES[k].sort()
-
-def pydaw_get_cc_map(a_name):
-    return pydaw_cc_map.from_str(
-        pydaw_read_file_text("{}/{}".format(
-            pydaw_util.CC_MAP_FOLDER, a_name)))
-
-def pydaw_save_cc_map(a_name, a_map):
-    pydaw_write_file_text(
-        "{}/{}".format(pydaw_util.CC_MAP_FOLDER, a_name), str(a_map))
-
-class pydaw_cc_map_editor:
-    def add_map(self, a_item):
-        if not a_item in self.cc_maps_list:
-            self.cc_maps_list.append(a_item)
-        self.ignore_combobox = True
-        self.map_combobox.clear()
-        self.map_combobox.addItems(self.cc_maps_list)
-        self.ignore_combobox = False
-        self.map_combobox.setCurrentIndex(self.map_combobox.findText(a_item))
-
-    def on_save_as(self):
-        def ok_handler():
-            f_str = str(f_name.text())
-            if f_str == "":
-                return
-            f_map = pydaw_get_cc_map(self.current_map_name)
-            self.current_map_name = f_str
-            pydaw_save_cc_map(self.current_map_name, f_map)
-            self.add_map(f_str)
-            PROJECT.this_pydaw_osc.pydaw_load_cc_map(self.current_map_name)
-            f_window.close()
-
-        def cancel_handler():
-            f_window.close()
-
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Save CC Map"))
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-
-        f_name = QtGui.QLineEdit()
-        f_name.setMinimumWidth(240)
-        f_layout.addWidget(QtGui.QLabel(_("File Name:")), 0, 0)
-        f_layout.addWidget(f_name, 0, 1)
-
-        f_ok_layout = QtGui.QHBoxLayout()
-        f_ok_layout.addItem(QtGui.QSpacerItem(10, 10,
-                                              QtGui.QSizePolicy.Expanding,
-                                              QtGui.QSizePolicy.Minimum))
-        f_ok = QtGui.QPushButton(_("OK"))
-        f_ok.pressed.connect(ok_handler)
-        f_ok_layout.addWidget(f_ok)
-        f_layout.addLayout(f_ok_layout, 9, 1)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
-        f_cancel.pressed.connect(cancel_handler)
-        f_layout.addWidget(f_cancel, 9, 2)
-        f_window.exec_()
-
-    def on_new(self):
-        def ok_handler():
-            f_str = str(f_name.text())
-            if f_str == "":
-                return
-            f_map = pydaw_cc_map()
-            self.current_map_name = f_str
-            pydaw_save_cc_map(self.current_map_name, f_map)
-            self.add_map(f_str)
-            PROJECT.this_pydaw_osc.pydaw_load_cc_map(self.current_map_name)
-            f_window.close()
-
-        def cancel_handler():
-            f_window.close()
-
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("New CC Map"))
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-
-        f_name = QtGui.QLineEdit()
-        f_name.setMinimumWidth(240)
-        f_layout.addWidget(QtGui.QLabel(_("File Name:")), 0, 0)
-        f_layout.addWidget(f_name, 0, 1)
-
-        f_ok_layout = QtGui.QHBoxLayout()
-        f_ok_layout.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding,
-            QtGui.QSizePolicy.Minimum))
-        f_ok = QtGui.QPushButton(_("OK"))
-        f_ok.pressed.connect(ok_handler)
-        f_ok_layout.addWidget(f_ok)
-        f_layout.addLayout(f_ok_layout, 9, 1)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
-        f_cancel.pressed.connect(cancel_handler)
-        f_layout.addWidget(f_cancel, 9, 2)
-        f_window.exec_()
-
-    def on_open(self, a_val=None):
-        if not self.ignore_combobox:
-            self.current_map_name = str(self.map_combobox.currentText())
-            self.open_map(self.current_map_name)
-            PROJECT.this_pydaw_osc.pydaw_load_cc_map(self.current_map_name)
-
-    def on_new_cc(self):
-        self.on_click()
-
-    def on_click(self, x=None, y=None):
-        def cc_ok_handler():
-            f_map = pydaw_get_cc_map(self.current_map_name)
-            f_map.add_item(
-                self.cc_spinbox.value(),
-                pydaw_cc_map_item(f_effects_cb.isChecked(),
-                CONTROLLER_PORT_NAME_DICT[
-                    "Ray-V"][str(f_rayv.currentText())].port,
-                CONTROLLER_PORT_NAME_DICT[
-                    "Way-V"][str(f_wayv.currentText())].port,
-                CONTROLLER_PORT_NAME_DICT[
-                    "Euphoria"][str(f_euphoria.currentText())].port,
-                CONTROLLER_PORT_NAME_DICT[
-                    "Modulex"][str(f_modulex.currentText())].port))
-            pydaw_save_cc_map(self.current_map_name, f_map)
-            self.open_map(self.current_map_name)
-            PROJECT.this_pydaw_osc.pydaw_load_cc_map(self.current_map_name)
-            f_window.close()
-
-        def cc_cancel_handler():
-            f_map = pydaw_get_cc_map(self.current_map_name)
-            try:
-                f_map.map.pop(self.cc_spinbox.value())
-                pydaw_save_cc_map(self.current_map_name, f_map)
-                self.open_map(self.current_map_name)
-                PROJECT.this_pydaw_osc.pydaw_load_cc_map(self.current_map_name)
-                self.cc_spinbox = None
-            except KeyError:
-                pass
-            f_window.close()
-
-        def window_close_event(a_val=None):
-            PROJECT.this_pydaw_osc.pydaw_midi_learn(False)
-
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.closeEvent = window_close_event
-        f_window.setWindowTitle(_("Map CC to Control(s)"))
-        f_window.setMinimumWidth(240)
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-        f_layout.addWidget(QtGui.QLabel(
-        _("Move your MIDI controller to set the CC number,\n"
-        "you must select a MIDI controller and record arm a track first.\n\n"
-        "Checking the 'Effects tracks only?' box will cause the controller "
-        "to only\nmodify Modulex and all instrument controls will be "
-        "ignored.")), 0, 1)
-        self.cc_spinbox = QtGui.QSpinBox()
-        self.cc_spinbox.setRange(1, 127)
-        if x is not None:
-            self.cc_spinbox.setValue(int(self.cc_table.item(x, 0).text()))
-        f_layout.addWidget(QtGui.QLabel("CC"), 1, 0)
-        f_layout.addWidget(self.cc_spinbox, 1, 1)
-        f_effects_cb = QtGui.QCheckBox(_("Effects tracks only?"))
-        f_layout.addWidget(f_effects_cb, 2, 1)
-        if x is not None and str(self.cc_table.item(x, 1).text()) == "True":
-            f_effects_cb.setChecked(True)
-
-        f_euphoria = QtGui.QComboBox()
-        f_list = list(CONTROLLER_PORT_NAME_DICT["Euphoria"].keys())
-        f_list.sort()
-        f_euphoria.addItems(f_list)
-        f_layout.addWidget(QtGui.QLabel("Euphoria"), 3, 0)
-        f_layout.addWidget(f_euphoria, 3, 1)
-        if x is not None:
-            f_euphoria.setCurrentIndex(
-                f_euphoria.findText(str(self.cc_table.item(x, 2).text())))
-
-        f_modulex = QtGui.QComboBox()
-        f_modulex.setMinimumWidth(300)
-        f_list = list(CONTROLLER_PORT_NAME_DICT["Modulex"].keys())
-        f_list.sort()
-        f_modulex.addItems(f_list)
-        f_layout.addWidget(QtGui.QLabel("Modulex"), 4, 0)
-        f_layout.addWidget(f_modulex, 4, 1)
-        if x is not None:
-            f_modulex.setCurrentIndex(
-                f_modulex.findText(str(self.cc_table.item(x, 3).text())))
-
-        f_rayv = QtGui.QComboBox()
-        f_list = list(CONTROLLER_PORT_NAME_DICT["Ray-V"].keys())
-        f_list.sort()
-        f_rayv.addItems(f_list)
-        f_layout.addWidget(QtGui.QLabel("Ray-V"), 5, 0)
-        f_layout.addWidget(f_rayv, 5, 1)
-        if x is not None:
-            f_rayv.setCurrentIndex(
-                f_rayv.findText(str(self.cc_table.item(x, 4).text())))
-
-        f_wayv = QtGui.QComboBox()
-        f_list = list(CONTROLLER_PORT_NAME_DICT["Way-V"].keys())
-        f_list.sort()
-        f_wayv.addItems(f_list)
-        f_layout.addWidget(QtGui.QLabel("Way-V"), 6, 0)
-        f_layout.addWidget(f_wayv, 6, 1)
-        if x is not None:
-            f_wayv.setCurrentIndex(
-                f_wayv.findText(str(self.cc_table.item(x, 5).text())))
-
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
-        f_layout.addLayout(f_ok_cancel_layout, 7, 1)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_ok_cancel_layout.addWidget(f_ok_button)
-        f_ok_button.clicked.connect(cc_ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Clear"))
-        f_ok_cancel_layout.addWidget(f_cancel_button)
-        f_cancel_button.clicked.connect(cc_cancel_handler)
-        PROJECT.this_pydaw_osc.pydaw_midi_learn(True)
-        f_window.exec_()
-
-    def __init__(self):
-        self.cc_spinbox = None
-        self.ignore_combobox = False
-        f_local_dir = global_pydaw_home
-        if not os.path.isdir(f_local_dir):
-            os.mkdir(f_local_dir)
-        if not os.path.isfile("{}/default".format(pydaw_util.CC_MAP_FOLDER)):
-            pydaw_save_cc_map("default", pydaw_cc_map())
-        self.current_map_name = "default"
-        self.cc_maps_list = os.listdir(pydaw_util.CC_MAP_FOLDER)
-        self.cc_maps_list.sort()
-        self.groupbox = QtGui.QGroupBox(_("Controllers"))
-        self.groupbox.setFixedWidth(930)
-        f_vlayout = QtGui.QVBoxLayout(self.groupbox)
-        f_button_layout = QtGui.QHBoxLayout()
-        f_vlayout.addLayout(f_button_layout)
-        f_button_spacer = QtGui.QSpacerItem(
-            10, 10, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        f_button_layout.addItem(f_button_spacer)
-        f_new_cc_button = QtGui.QPushButton(_("New CC"))
-        f_new_cc_button.pressed.connect(self.on_new_cc)
-        f_button_layout.addWidget(f_new_cc_button)
-        self.map_combobox = QtGui.QComboBox()
-        self.map_combobox.setMinimumWidth(240)
-        self.map_combobox.addItems(self.cc_maps_list)
-        self.map_combobox.currentIndexChanged.connect(self.on_open)
-        f_button_layout.addWidget(self.map_combobox)
-        f_new_button = QtGui.QPushButton(_("New Map"))
-        f_new_button.pressed.connect(self.on_new)
-        f_button_layout.addWidget(f_new_button)
-        f_save_as_button = QtGui.QPushButton(_("Save As"))
-        f_save_as_button.pressed.connect(self.on_save_as)
-        f_button_layout.addWidget(f_save_as_button)
-        self.cc_table = QtGui.QTableWidget(0, 6)
-        self.cc_table.setVerticalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
-        self.cc_table.verticalHeader().setVisible(False)
-        self.cc_table.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.cc_table.setHorizontalHeaderLabels(
-            ["CC", "Effects Only?", "Euphoria", "Modulex", "Ray-V", "Way-V"])
-        self.cc_table.cellClicked.connect(self.on_click)
-        self.cc_table.setSortingEnabled(True)
-        self.cc_table.sortByColumn(0)
-        f_vlayout.addWidget(self.cc_table)
-        self.open_map("default")
-
-    def open_map(self, a_map_name):
-        f_map = pydaw_get_cc_map(a_map_name)
-        self.cc_table.clearContents()
-        self.cc_table.setSortingEnabled(False)
-        self.cc_table.setRowCount(len(f_map.map))
-        f_row_pos = 0
-        for k, v in list(f_map.map.items()):
-            f_num = str(k).zfill(3)
-            self.cc_table.setItem(f_row_pos, 0, QtGui.QTableWidgetItem(f_num))
-            self.cc_table.setItem(
-                f_row_pos, 1,
-                QtGui.QTableWidgetItem(str(int_to_bool(v.effects_only))))
-            self.cc_table.setItem(
-                f_row_pos, 2,
-                QtGui.QTableWidgetItem(
-                    CONTROLLER_PORT_NUM_DICT[
-                    "Euphoria"][v.euphoria_port].name))
-            self.cc_table.setItem(
-                f_row_pos, 3,
-                QtGui.QTableWidgetItem(
-                CONTROLLER_PORT_NUM_DICT["Modulex"][v.modulex_port].name))
-            self.cc_table.setItem(
-                f_row_pos, 4,
-                QtGui.QTableWidgetItem(
-                    CONTROLLER_PORT_NUM_DICT["Ray-V"][v.rayv_port].name))
-            self.cc_table.setItem(
-                f_row_pos, 5,
-                QtGui.QTableWidgetItem(
-                    CONTROLLER_PORT_NUM_DICT["Way-V"][v.wayv_port].name))
-            f_row_pos += 1
-        self.cc_table.setSortingEnabled(True)
-        self.cc_table.resizeColumnsToContents()
 
 
 class pydaw_wave_editor_widget:
