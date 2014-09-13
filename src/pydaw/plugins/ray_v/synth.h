@@ -139,7 +139,6 @@ typedef struct {
     float fs;
     t_rayv_mono_modules * mono_modules;
 
-    int event_pos;
     int i_run_poly_voice;
     int i_iterator;
 

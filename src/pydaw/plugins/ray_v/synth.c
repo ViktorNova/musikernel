@@ -299,6 +299,211 @@ static void v_rayv_set_port_value(PYFX_Handle Instance,
     plugin_data->port_table[a_port] = a_value;
 }
 
+static void v_rayv_process_midi_event(
+    t_rayv * plugin_data, t_pydaw_seq_event * a_event, int f_poly_mode)
+{
+    int f_min_note = (int)*plugin_data->min_note;
+    int f_max_note = (int)*plugin_data->max_note;
+
+    if (a_event->type == PYDAW_EVENT_NOTEON)
+    {
+        if (a_event->velocity > 0)
+        {
+            if(a_event->note > f_max_note ||
+                a_event->note < f_min_note)
+            {
+                return;
+            }
+            int f_voice = i_pick_voice(plugin_data->voices,
+                     a_event->note,
+                     plugin_data->sampleNo,
+                     a_event->tick);
+
+            plugin_data->data[f_voice]->amp =
+                    f_db_to_linear_fast(
+                    //-20db to 0db, + master volume (0 to -60)
+                    ((a_event->velocity * 0.094488)
+                    - 12.0f + (*(plugin_data->master_vol))));
+            v_svf_velocity_mod(plugin_data->data[f_voice]->svf_filter,
+                    a_event->velocity);
+
+            plugin_data->data[f_voice]->note_f =
+                    (float)a_event->note;
+            plugin_data->data[f_voice]->note =
+                    a_event->note;
+
+            plugin_data->data[f_voice]->filter_keytrk =
+                    (*plugin_data->filter_keytrk) * 0.01f *
+                    (plugin_data->data[f_voice]->note_f);
+
+            plugin_data->data[f_voice]->target_pitch =
+                    (plugin_data->data[f_voice]->note_f);
+
+            if(plugin_data->sv_last_note < 0.0f)
+            {
+                plugin_data->data[f_voice]->last_pitch =
+                        (plugin_data->data[f_voice]->note_f);
+            }
+            else
+            {
+                plugin_data->data[f_voice]->last_pitch =
+                        (plugin_data->sv_last_note);
+            }
+
+            plugin_data->data[f_voice]->osc1_pitch_adjust =
+                    (*plugin_data->osc1pitch) +
+                    ((*plugin_data->osc1tune) * 0.01f);
+            plugin_data->data[f_voice]->osc2_pitch_adjust =
+                    (*plugin_data->osc2pitch) +
+                    ((*plugin_data->osc2tune) * 0.01f);
+
+            v_rmp_retrigger_glide_t(plugin_data->data[f_voice]->glide_env,
+                    (*(plugin_data->master_glide) * 0.01f),
+                    (plugin_data->data[f_voice]->last_pitch),
+                    (plugin_data->data[f_voice]->target_pitch));
+
+            plugin_data->data[f_voice]->osc1_linamp =
+                    f_db_to_linear_fast(*(plugin_data->osc1vol));
+            plugin_data->data[f_voice]->osc2_linamp =
+                    f_db_to_linear_fast(*(plugin_data->osc2vol));
+            plugin_data->data[f_voice]->noise_linamp =
+                    f_db_to_linear_fast(*(plugin_data->noise_amp));
+
+            plugin_data->data[f_voice]->unison_spread =
+                    (*plugin_data->master_uni_spread) * 0.01f;
+
+            v_adsr_retrigger(plugin_data->data[f_voice]->adsr_amp);
+            v_adsr_retrigger(plugin_data->data[f_voice]->adsr_filter);
+
+            v_lfs_sync(plugin_data->data[f_voice]->lfo1,
+                    *plugin_data->lfo_phase * 0.01f,
+                    *plugin_data->lfo_type);
+
+            float f_attack = *(plugin_data->attack) * .01;
+            f_attack = (f_attack) * (f_attack);
+            float f_decay = *(plugin_data->decay) * .01;
+            f_decay = (f_decay) * (f_decay);
+            float f_release = *(plugin_data->release) * .01;
+            f_release = (f_release) * (f_release);
+
+            v_adsr_set_adsr_db(plugin_data->data[f_voice]->adsr_amp,
+                    (f_attack), (f_decay), *(plugin_data->sustain),
+                    (f_release));
+
+            float f_attack_f = *(plugin_data->attack_f) * .01;
+            f_attack_f = (f_attack_f) * (f_attack_f);
+            float f_decay_f = *(plugin_data->decay_f) * .01;
+            f_decay_f = (f_decay_f) * (f_decay_f);
+            float f_release_f = *(plugin_data->release_f) * .01;
+            f_release_f = (f_release_f) * (f_release_f);
+
+            v_adsr_set_adsr(plugin_data->data[f_voice]->adsr_filter,
+                    (f_attack_f), (f_decay_f),
+                    *(plugin_data->sustain_f) * 0.01f, (f_release_f));
+
+            v_rmp_retrigger_curve((plugin_data->data[f_voice]->pitch_env),
+                    *(plugin_data->pitch_env_time) * 0.01f,
+                    *(plugin_data->pitch_env_amt),
+                    *(plugin_data->ramp_curve) * 0.01f);
+
+            v_clp_set_in_gain(plugin_data->data[f_voice]->clipper1,
+                    *plugin_data->dist);
+
+            v_svf_set_res(plugin_data->data[f_voice]->svf_filter,
+                    *plugin_data->res);
+
+            plugin_data->data[f_voice]->noise_amp =
+                    f_db_to_linear(*(plugin_data->noise_amp));
+
+            v_axf_set_xfade(plugin_data->data[f_voice]->dist_dry_wet,
+                    *(plugin_data->dist_wet) * 0.01f);
+
+            plugin_data->data[f_voice]->hard_sync =
+                    (int)(*plugin_data->sync_hard);
+
+            v_osc_set_simple_osc_unison_type(
+                    plugin_data->data[f_voice]->osc_unison1,
+                    (int)(*plugin_data->osc1type));
+            v_osc_set_simple_osc_unison_type(
+                    plugin_data->data[f_voice]->osc_unison2,
+                    (int)(*plugin_data->osc2type));
+
+            v_svf_reset(plugin_data->data[f_voice]->svf_filter);
+
+            if(f_poly_mode == 0)
+            {
+                v_osc_note_on_sync_phases(
+                        plugin_data->data[f_voice]->osc_unison1);
+                v_osc_note_on_sync_phases(
+                        plugin_data->data[f_voice]->osc_unison2);
+            }
+
+            v_osc_set_uni_voice_count(
+                    plugin_data->data[f_voice]->osc_unison1,
+                    *plugin_data->master_uni_voice);
+
+            if(plugin_data->data[f_voice]->hard_sync)
+            {
+                v_osc_set_uni_voice_count(
+                        plugin_data->data[f_voice]->osc_unison2, 1);
+            }
+            else
+            {
+                v_osc_set_uni_voice_count(
+                        plugin_data->data[f_voice]->osc_unison2,
+                        *plugin_data->master_uni_voice);
+            }
+
+            plugin_data->data[f_voice]->adsr_prefx =
+                    (int)*plugin_data->adsr_prefx;
+
+            plugin_data->sv_last_note =
+                    (plugin_data->data[f_voice]->note_f);
+        }
+        /*0 velocity, the same as note-off*/
+        else
+        {
+            v_voc_note_off(plugin_data->voices,
+                    a_event->note,
+                    (plugin_data->sampleNo),
+                    (a_event->tick));
+        }
+    }
+    else if (a_event->type == PYDAW_EVENT_NOTEOFF)
+    {
+        v_voc_note_off(plugin_data->voices,
+                a_event->note,
+                (plugin_data->sampleNo),
+                (a_event->tick));
+    }
+    else if (a_event->type == PYDAW_EVENT_CONTROLLER)
+    {
+        assert(a_event->port >= RAYV_ATTACK &&
+                a_event->port < RAYV_COUNT);
+
+        plugin_data->midi_event_types[plugin_data->midi_event_count] =
+                PYDAW_EVENT_CONTROLLER;
+        plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
+                a_event->tick;
+        plugin_data->midi_event_values[plugin_data->midi_event_count] =
+                a_event->value;
+        plugin_data->midi_event_ports[plugin_data->midi_event_count] =
+                a_event->port;
+        plugin_data->midi_event_count++;
+
+    }
+    else if (a_event->type == PYDAW_EVENT_PITCHBEND)
+    {
+        plugin_data->midi_event_types[plugin_data->midi_event_count] =
+                PYDAW_EVENT_PITCHBEND;
+        plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
+                a_event->tick;
+        plugin_data->midi_event_values[plugin_data->midi_event_count] =
+                0.00012207 * a_event->value;
+        plugin_data->midi_event_count++;
+    }
+}
+
 static void v_run_rayv(
         PYFX_Handle instance, int sample_count,
         t_pydaw_seq_event *events, int event_count,
@@ -309,8 +514,9 @@ static void v_run_rayv(
     plugin_data->i_run_poly_voice = 0;
     plugin_data->midi_event_count = 0;
 
-    int midi_event_pos = 0;
     int f_poly_mode = (int)(*plugin_data->mono_mode);
+
+    int midi_event_pos = 0;
 
     if(f_poly_mode == 2 && plugin_data->voices->poly_mode != 2)
     {
@@ -319,214 +525,16 @@ static void v_run_rayv(
 
     plugin_data->voices->poly_mode = f_poly_mode;
 
-    int f_min_note = (int)*plugin_data->min_note;
-    int f_max_note = (int)*plugin_data->max_note;
+    int f_i = 0;
 
-    for(plugin_data->event_pos = 0; (plugin_data->event_pos) < event_count;
-            plugin_data->event_pos = (plugin_data->event_pos) + 1)
+    while(f_i < event_count)
     {
-        if (events[(plugin_data->event_pos)].type == PYDAW_EVENT_NOTEON)
-        {
-            if (events[(plugin_data->event_pos)].velocity > 0)
-            {
-                if(events[(plugin_data->event_pos)].note > f_max_note ||
-                    events[(plugin_data->event_pos)].note < f_min_note)
-                {
-                    continue;
-                }
-                int f_voice = i_pick_voice(plugin_data->voices,
-                         events[(plugin_data->event_pos)].note,
-                         plugin_data->sampleNo,
-                         events[(plugin_data->event_pos)].tick);
-
-                plugin_data->data[f_voice]->amp =
-                        f_db_to_linear_fast(
-                        //-20db to 0db, + master volume (0 to -60)
-                        ((events[(plugin_data->event_pos)].velocity * 0.094488)
-                        - 12.0f + (*(plugin_data->master_vol))));
-                v_svf_velocity_mod(plugin_data->data[f_voice]->svf_filter,
-                        events[(plugin_data->event_pos)].velocity);
-
-                plugin_data->data[f_voice]->note_f =
-                        (float)events[(plugin_data->event_pos)].note;
-                plugin_data->data[f_voice]->note =
-                        events[(plugin_data->event_pos)].note;
-
-                plugin_data->data[f_voice]->filter_keytrk =
-                        (*plugin_data->filter_keytrk) * 0.01f *
-                        (plugin_data->data[f_voice]->note_f);
-
-                plugin_data->data[f_voice]->target_pitch =
-                        (plugin_data->data[f_voice]->note_f);
-
-                if(plugin_data->sv_last_note < 0.0f)
-                {
-                    plugin_data->data[f_voice]->last_pitch =
-                            (plugin_data->data[f_voice]->note_f);
-                }
-                else
-                {
-                    plugin_data->data[f_voice]->last_pitch =
-                            (plugin_data->sv_last_note);
-                }
-
-                plugin_data->data[f_voice]->osc1_pitch_adjust =
-                        (*plugin_data->osc1pitch) +
-                        ((*plugin_data->osc1tune) * 0.01f);
-                plugin_data->data[f_voice]->osc2_pitch_adjust =
-                        (*plugin_data->osc2pitch) +
-                        ((*plugin_data->osc2tune) * 0.01f);
-
-                v_rmp_retrigger_glide_t(plugin_data->data[f_voice]->glide_env,
-                        (*(plugin_data->master_glide) * 0.01f),
-                        (plugin_data->data[f_voice]->last_pitch),
-                        (plugin_data->data[f_voice]->target_pitch));
-
-                plugin_data->data[f_voice]->osc1_linamp =
-                        f_db_to_linear_fast(*(plugin_data->osc1vol));
-                plugin_data->data[f_voice]->osc2_linamp =
-                        f_db_to_linear_fast(*(plugin_data->osc2vol));
-                plugin_data->data[f_voice]->noise_linamp =
-                        f_db_to_linear_fast(*(plugin_data->noise_amp));
-
-                plugin_data->data[f_voice]->unison_spread =
-                        (*plugin_data->master_uni_spread) * 0.01f;
-
-                v_adsr_retrigger(plugin_data->data[f_voice]->adsr_amp);
-                v_adsr_retrigger(plugin_data->data[f_voice]->adsr_filter);
-
-                v_lfs_sync(plugin_data->data[f_voice]->lfo1,
-                        *plugin_data->lfo_phase * 0.01f,
-                        *plugin_data->lfo_type);
-
-                float f_attack = *(plugin_data->attack) * .01;
-                f_attack = (f_attack) * (f_attack);
-                float f_decay = *(plugin_data->decay) * .01;
-                f_decay = (f_decay) * (f_decay);
-                float f_release = *(plugin_data->release) * .01;
-                f_release = (f_release) * (f_release);
-
-                v_adsr_set_adsr_db(plugin_data->data[f_voice]->adsr_amp,
-                        (f_attack), (f_decay), *(plugin_data->sustain),
-                        (f_release));
-
-                float f_attack_f = *(plugin_data->attack_f) * .01;
-                f_attack_f = (f_attack_f) * (f_attack_f);
-                float f_decay_f = *(plugin_data->decay_f) * .01;
-                f_decay_f = (f_decay_f) * (f_decay_f);
-                float f_release_f = *(plugin_data->release_f) * .01;
-                f_release_f = (f_release_f) * (f_release_f);
-
-                v_adsr_set_adsr(plugin_data->data[f_voice]->adsr_filter,
-                        (f_attack_f), (f_decay_f),
-                        *(plugin_data->sustain_f) * 0.01f, (f_release_f));
-
-                v_rmp_retrigger_curve((plugin_data->data[f_voice]->pitch_env),
-                        *(plugin_data->pitch_env_time) * 0.01f,
-                        *(plugin_data->pitch_env_amt),
-                        *(plugin_data->ramp_curve) * 0.01f);
-
-                v_clp_set_in_gain(plugin_data->data[f_voice]->clipper1,
-                        *plugin_data->dist);
-
-                v_svf_set_res(plugin_data->data[f_voice]->svf_filter,
-                        *plugin_data->res);
-
-                plugin_data->data[f_voice]->noise_amp =
-                        f_db_to_linear(*(plugin_data->noise_amp));
-
-                v_axf_set_xfade(plugin_data->data[f_voice]->dist_dry_wet,
-                        *(plugin_data->dist_wet) * 0.01f);
-
-                plugin_data->data[f_voice]->hard_sync =
-                        (int)(*plugin_data->sync_hard);
-
-                v_osc_set_simple_osc_unison_type(
-                        plugin_data->data[f_voice]->osc_unison1,
-                        (int)(*plugin_data->osc1type));
-                v_osc_set_simple_osc_unison_type(
-                        plugin_data->data[f_voice]->osc_unison2,
-                        (int)(*plugin_data->osc2type));
-
-                v_svf_reset(plugin_data->data[f_voice]->svf_filter);
-
-                if(f_poly_mode == 0)
-                {
-                    v_osc_note_on_sync_phases(
-                            plugin_data->data[f_voice]->osc_unison1);
-                    v_osc_note_on_sync_phases(
-                            plugin_data->data[f_voice]->osc_unison2);
-                }
-
-                v_osc_set_uni_voice_count(
-                        plugin_data->data[f_voice]->osc_unison1,
-                        *plugin_data->master_uni_voice);
-
-                if(plugin_data->data[f_voice]->hard_sync)
-                {
-                    v_osc_set_uni_voice_count(
-                            plugin_data->data[f_voice]->osc_unison2, 1);
-                }
-                else
-                {
-                    v_osc_set_uni_voice_count(
-                            plugin_data->data[f_voice]->osc_unison2,
-                            *plugin_data->master_uni_voice);
-                }
-
-                plugin_data->data[f_voice]->adsr_prefx =
-                        (int)*plugin_data->adsr_prefx;
-
-                plugin_data->sv_last_note =
-                        (plugin_data->data[f_voice]->note_f);
-            }
-            /*0 velocity, the same as note-off*/
-            else
-            {
-                v_voc_note_off(plugin_data->voices,
-                        events[(plugin_data->event_pos)].note,
-                        (plugin_data->sampleNo),
-                        (events[(plugin_data->event_pos)].tick));
-            }
-        }
-        else if (events[(plugin_data->event_pos)].type == PYDAW_EVENT_NOTEOFF)
-        {
-            v_voc_note_off(plugin_data->voices,
-                    events[(plugin_data->event_pos)].note,
-                    (plugin_data->sampleNo),
-                    (events[(plugin_data->event_pos)].tick));
-        }
-        else if (events[plugin_data->event_pos].type == PYDAW_EVENT_CONTROLLER)
-        {
-            assert(events[plugin_data->event_pos].port >= RAYV_ATTACK &&
-                    events[plugin_data->event_pos].port < RAYV_COUNT);
-
-            plugin_data->midi_event_types[plugin_data->midi_event_count] =
-                    PYDAW_EVENT_CONTROLLER;
-            plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
-                    events[plugin_data->event_pos].tick;
-            plugin_data->midi_event_values[plugin_data->midi_event_count] =
-                    events[plugin_data->event_pos].value;
-            plugin_data->midi_event_ports[plugin_data->midi_event_count] =
-                    events[plugin_data->event_pos].port;
-            plugin_data->midi_event_count++;
-
-        }
-        else if (events[(plugin_data->event_pos)].type == PYDAW_EVENT_PITCHBEND)
-        {
-            plugin_data->midi_event_types[plugin_data->midi_event_count] =
-                    PYDAW_EVENT_PITCHBEND;
-            plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
-                    events[plugin_data->event_pos].tick;
-            plugin_data->midi_event_values[plugin_data->midi_event_count] =
-                    0.00012207 * events[plugin_data->event_pos].value;
-            plugin_data->midi_event_count++;
-        }
-
+        v_rayv_process_midi_event(plugin_data, &events[f_i], f_poly_mode);
         assert(plugin_data->midi_event_count < 200);
+        f_i++;
     }
 
-    int f_i = 0;
+    f_i = 0;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 

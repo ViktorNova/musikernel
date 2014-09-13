@@ -590,7 +590,6 @@ typedef struct
     float fs;
     t_wayv_mono_modules * mono_modules;
 
-    int event_pos;
     int i_run_poly_voice;
     int i_iterator;
 

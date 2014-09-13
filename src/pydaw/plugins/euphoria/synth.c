@@ -871,6 +871,354 @@ static inline void v_euphoria_slow_index(t_euphoria* plugin_data)
     }
 }
 
+static void v_euphoria_process_midi_event(
+    t_euphoria * plugin_data, t_pydaw_seq_event * a_event)
+{
+
+    int f_note = 60;
+    int f_min_note = (int)*plugin_data->min_note;
+    int f_max_note = (int)*plugin_data->max_note;
+
+    if (a_event->type == PYDAW_EVENT_NOTEON)
+    {
+        f_note = a_event->note;
+
+        if (a_event->velocity > 0)
+        {
+            if(a_event->note > f_max_note ||
+                a_event->note < f_min_note)
+            {
+                return;
+            }
+            int f_voice_num = i_pick_voice(plugin_data->voices, f_note, (plugin_data->sampleNo), a_event->tick);
+            plugin_data->velocities[f_voice_num] = a_event->velocity;
+
+            plugin_data->data[f_voice_num]->keyboard_track = ((float)(a_event->note)) * 0.007874016f;
+            plugin_data->data[f_voice_num]->velocity_track = ((float)(a_event->velocity)) * 0.007874016f;
+
+            plugin_data->sample_indexes_count[f_voice_num] = 0;
+
+            //Figure out which samples to play and stash all relevant values
+            int i = 0;
+            while(i  < (plugin_data->loaded_samples_count))
+            {
+                if((f_note >= ((int)(*(plugin_data->low_note[(plugin_data->loaded_samples[i])])))) &&
+                (f_note <= ((int)(*(plugin_data->high_note[(plugin_data->loaded_samples[i])])))) &&
+                (plugin_data->velocities[f_voice_num] <=
+                    ((int)(*(plugin_data->sample_vel_high[(plugin_data->loaded_samples[i])])))) &&
+                (plugin_data->velocities[f_voice_num] >=
+                        ((int)(*(plugin_data->sample_vel_low[(plugin_data->loaded_samples[i])])))))
+                {
+                    plugin_data->sample_indexes[f_voice_num][(plugin_data->sample_indexes_count[f_voice_num])] = (plugin_data->loaded_samples[i]);
+                    plugin_data->sample_indexes_count[f_voice_num] = (plugin_data->sample_indexes_count[f_voice_num]) + 1;
+
+                    plugin_data->sample_mfx_groups_index[(plugin_data->loaded_samples[i])] =
+                            (int)(*(plugin_data->sample_mfx_groups[(plugin_data->loaded_samples[i])]));
+
+                    plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])] = (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
+                            ((plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length) *
+                            ((*(plugin_data->sampleStarts[(plugin_data->loaded_samples[i])])) * .001)));
+
+                    plugin_data->sampleLoopStartPos[(plugin_data->loaded_samples[i])] = (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
+                            ((plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length) *
+                            ((*(plugin_data->sampleLoopStarts[(plugin_data->loaded_samples[i])])) * .001)));
+
+                    /* If loop mode is enabled for this sample, set the sample end to be the same as the
+                       loop end.  Then, in the main loop, we'll recalculate sample_end to be the real sample end once
+                       the note_off event is fired.  Doing it this way greatly reduces the need for extra if-then-else logic
+                       in the main loop */
+                    if(((int)(*(plugin_data->sampleLoopModes[(plugin_data->loaded_samples[i])]))) == 0)
+                    {
+                        plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])] = (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
+                                ((int)(((float)((plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length) - 5)) *
+                                ((*(plugin_data->sampleEnds[(plugin_data->loaded_samples[i])])) * .001))));
+                    }
+                    else
+                    {
+                        plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])] = (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
+                                ((int)(((float)((plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length) - 5)) *
+                                ((*(plugin_data->sampleLoopEnds[(plugin_data->loaded_samples[i])])) * .001))));
+                    }
+
+                    if((plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]) >
+                            ((float)((plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length))))
+                    {
+                        plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])] =
+                                (float)(plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length);
+                    }
+
+                    //get the fade in values
+                    plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
+                            (int)((*plugin_data->sampleFadeInEnds[(plugin_data->loaded_samples[i])]) * 0.001f *
+                            (float)(plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length));
+
+                    if(plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] <
+                            (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]))
+                    {
+                        plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
+                            (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]);
+                    }
+                    else if(plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] >
+                            (plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]))
+                    {
+                        plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
+                            (plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]);
+                    }
+
+                    if(plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] >
+                            (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]))
+                    {
+                            plugin_data->data[f_voice_num]->sample_fade_in_inc[(plugin_data->loaded_samples[i])] = 1.0f /
+                                (plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] -
+                                    (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]));
+                    }
+                    else
+                    {
+                        plugin_data->data[f_voice_num]->sample_fade_in_inc[(plugin_data->loaded_samples[i])] = 1.0f;
+                    }
+
+                    //get the fade out values
+                    plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
+                            (int)((*plugin_data->sampleFadeOutStarts[(plugin_data->loaded_samples[i])]) * 0.001f *
+                            (float)(plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length));
+
+                    if(plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] <
+                            (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]))
+                    {
+                        plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
+                            (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]);
+                    }
+                    else if(plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] >
+                            (plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]))
+                    {
+                        plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
+                            (plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]);
+                    }
+
+                    if(plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] <
+                            (plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]))
+                    {
+                            plugin_data->data[f_voice_num]->sample_fade_out_dec[(plugin_data->loaded_samples[i])] = 1.0f /
+                                ((plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]) -
+                                plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])]);
+                    }
+                    else
+                    {
+                        plugin_data->data[f_voice_num]->sample_fade_out_dec[(plugin_data->loaded_samples[i])] = 1.0f;
+                    }
+
+
+                    //end fade stuff
+
+                    plugin_data->adjusted_base_pitch[(plugin_data->loaded_samples[i])] =
+                            (*(plugin_data->basePitch[(plugin_data->loaded_samples[i])]))
+                            - (*(plugin_data->sample_pitch[(plugin_data->loaded_samples[i])])) -
+                            ((*(plugin_data->sample_tune[(plugin_data->loaded_samples[i])])) * .01f);
+
+                    v_ifh_retrigger(plugin_data->sample_read_heads[f_voice_num][(plugin_data->loaded_samples[i])],
+                            (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]));// 0.0f;
+
+                    plugin_data->vel_sens_output[f_voice_num][(plugin_data->loaded_samples[i])] =
+                            (1.0f -
+                            (((float)(a_event->velocity) -
+                            (*(plugin_data->sample_vel_low[(plugin_data->loaded_samples[i])])))
+                            /
+                            ((float)(*(plugin_data->sample_vel_high[(plugin_data->loaded_samples[i])]) -
+                            (*(plugin_data->sample_vel_low[(plugin_data->loaded_samples[i])]))))))
+                            * (*(plugin_data->sample_vel_sens[(plugin_data->loaded_samples[i])])) * -1.0f;
+
+                    plugin_data->sample_amp[(plugin_data->loaded_samples[i])] = f_db_to_linear(
+                        (*(plugin_data->sample_vol[(plugin_data->loaded_samples[i])])) +
+                        (plugin_data->vel_sens_output[f_voice_num][(plugin_data->loaded_samples[i])]));
+
+                    switch((int)(*(plugin_data->sample_interpolation_mode[(plugin_data->loaded_samples[i])])))
+                    {
+                        case 0:
+                            interpolation_modes[(plugin_data->loaded_samples[i])] = run_sampler_interpolation_sinc;
+                            ratio_function_ptrs[(plugin_data->loaded_samples[i])] = calculate_ratio_sinc;
+                            break;
+                        case 1:
+                            interpolation_modes[(plugin_data->loaded_samples[i])] = run_sampler_interpolation_linear;
+                            ratio_function_ptrs[(plugin_data->loaded_samples[i])] = calculate_ratio_linear;
+                            break;
+                        case 2:
+                            interpolation_modes[(plugin_data->loaded_samples[i])] = run_sampler_interpolation_none;
+                            ratio_function_ptrs[(plugin_data->loaded_samples[i])] = calculate_ratio_none;
+                            break;
+                        default:
+                            printf("Error, invalid interpolation mode %i\n",
+                                    ((int)(*(plugin_data->sample_interpolation_mode[(plugin_data->loaded_samples[i])]))));
+                    }
+                }
+                i++;
+            }
+
+            plugin_data->active_polyfx_count[f_voice_num] = 0;
+            //Determine which PolyFX have been enabled
+            plugin_data->i_dst = 0;
+            while((plugin_data->i_dst) < EUPHORIA_MODULAR_POLYFX_COUNT)
+            {
+                int f_pfx_combobox_index =
+                    (int)(*(plugin_data->fx_combobox[0][(plugin_data->i_dst)]));
+                plugin_data->data[f_voice_num]->fx_func_ptr[(plugin_data->i_dst)] =
+                        g_mf3_get_function_pointer(f_pfx_combobox_index);
+                plugin_data->data[f_voice_num]->fx_reset_ptr[(plugin_data->i_dst)] =
+                        g_mf3_get_reset_function_pointer(f_pfx_combobox_index);
+
+                plugin_data->data[f_voice_num]->fx_reset_ptr[(plugin_data->i_dst)](
+                    plugin_data->data[f_voice_num]->multieffect[(plugin_data->i_dst)]);
+
+                if(f_pfx_combobox_index != 0)
+                {
+                    plugin_data->active_polyfx[f_voice_num][(plugin_data->active_polyfx_count[f_voice_num])] = (plugin_data->i_dst);
+                    plugin_data->active_polyfx_count[f_voice_num] = (plugin_data->active_polyfx_count[f_voice_num]) + 1;
+                }
+                plugin_data->i_dst += 1;
+            }
+
+            //Calculate an index of which mod_matrix controls to process.  This saves expensive iterations and if/then logic in the main loop
+            plugin_data->i_fx_grps = 0;
+            while((plugin_data->i_fx_grps) < EUPHORIA_EFFECTS_GROUPS_COUNT)
+            {
+                plugin_data->i_dst = 0;
+                while((plugin_data->i_dst) < (plugin_data->active_polyfx_count[f_voice_num]))
+                {
+                    plugin_data->polyfx_mod_counts[f_voice_num][
+                        (plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])] = 0;
+
+                    plugin_data->i_src = 0;
+                    while((plugin_data->i_src) < EUPHORIA_MODULATOR_COUNT)
+                    {
+                        plugin_data->i_ctrl = 0;
+                        while((plugin_data->i_ctrl) < EUPHORIA_CONTROLS_PER_MOD_EFFECT)
+                        {
+                            if((*(plugin_data->polyfx_mod_matrix[(plugin_data->i_fx_grps)][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])][(plugin_data->i_src)][(plugin_data->i_ctrl)])) != 0)
+                            {
+                                plugin_data->polyfx_mod_ctrl_indexes[f_voice_num][
+                                    (plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])][
+                                    (plugin_data->polyfx_mod_counts[f_voice_num][
+                                    (plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])])] = (plugin_data->i_ctrl);
+                                plugin_data->polyfx_mod_src_index[f_voice_num][
+                                    (plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])][(plugin_data->polyfx_mod_counts[f_voice_num][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])])] = (plugin_data->i_src);
+                                plugin_data->polyfx_mod_matrix_values[f_voice_num][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])][(plugin_data->polyfx_mod_counts[f_voice_num][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])])] =
+                                        (*(plugin_data->polyfx_mod_matrix[(plugin_data->i_fx_grps)][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])][(plugin_data->i_src)][(plugin_data->i_ctrl)])) * .01;
+
+                                plugin_data->polyfx_mod_counts[f_voice_num][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])] = (plugin_data->polyfx_mod_counts[f_voice_num][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])]) + 1;
+                            }
+                            plugin_data->i_ctrl += 1;
+                        }
+                        plugin_data->i_src += 1;
+                    }
+                    plugin_data->i_dst += 1;
+                }
+                plugin_data->i_fx_grps += 1;
+            }
+
+            plugin_data->data[f_voice_num]->noise_index =
+                    (plugin_data->mono_modules->noise_current_index);
+            plugin_data->mono_modules->noise_current_index =
+                    (plugin_data->mono_modules->noise_current_index) + 1;
+
+            if((plugin_data->mono_modules->noise_current_index) >=
+                    EUPHORIA_NOISE_COUNT)
+            {
+                plugin_data->mono_modules->noise_current_index = 0;
+            }
+
+            plugin_data->amp =
+                    f_db_to_linear_fast(*(plugin_data->master_vol));
+
+            plugin_data->data[f_voice_num]->note_f = (float)f_note;
+
+            plugin_data->data[f_voice_num]->target_pitch =
+                    (plugin_data->data[f_voice_num]->note_f);
+
+            if(plugin_data->sv_last_note < 0.0f)
+            {
+                plugin_data->data[f_voice_num]->last_pitch =
+                    (plugin_data->data[f_voice_num]->note_f);
+            }
+            else
+            {
+                plugin_data->data[f_voice_num]->last_pitch =
+                        (plugin_data->sv_last_note);
+            }
+
+            v_rmp_retrigger_glide_t(
+                    plugin_data->data[f_voice_num]->glide_env,
+                    (*(plugin_data->master_glide) * .01),
+                    (plugin_data->data[f_voice_num]->last_pitch),
+                    (plugin_data->data[f_voice_num]->target_pitch));
+
+            /*Retrigger ADSR envelopes and LFO*/
+            v_adsr_retrigger(plugin_data->data[f_voice_num]->adsr_amp);
+            v_adsr_retrigger(plugin_data->data[f_voice_num]->adsr_filter);
+            v_lfs_sync(plugin_data->data[f_voice_num]->lfo1, 0.0f,
+                    *(plugin_data->lfo_type));
+
+            float f_attack_a = (*(plugin_data->attack) * .01);
+            f_attack_a *= f_attack_a;
+            float f_decay_a = (*(plugin_data->decay) * .01);
+            f_decay_a *= f_decay_a;
+            float f_release_a = (*(plugin_data->release) * .01);
+            f_release_a *= f_release_a;
+            v_adsr_set_adsr_db(plugin_data->data[f_voice_num]->adsr_amp,
+                    f_attack_a, f_decay_a, (*(plugin_data->sustain)),
+                    f_release_a);
+
+            float f_attack_f = (*(plugin_data->attack_f) * .01);
+            f_attack_f *= f_attack_f;
+            float f_decay_f = (*(plugin_data->decay_f) * .01);
+            f_decay_f *= f_decay_f;
+            float f_release_f = (*(plugin_data->release_f) * .01);
+            f_release_f *= f_release_f;
+            v_adsr_set_adsr(plugin_data->data[f_voice_num]->adsr_filter,
+                    f_attack_f, f_decay_f,
+                    (*(plugin_data->sustain_f) * .01), f_release_f);
+
+            /*Retrigger the pitch envelope*/
+            v_rmp_retrigger((plugin_data->data[f_voice_num]->ramp_env),
+                    (*(plugin_data->pitch_env_time) * .01), 1.0f);
+
+            /*Set the last_note property, so the next note can
+             * glide from it if glide is turned on*/
+            plugin_data->sv_last_note =
+                    (plugin_data->data[f_voice_num]->note_f);
+        }
+        else
+        {
+            v_voc_note_off(plugin_data->voices, a_event->note,
+                    plugin_data->sampleNo, a_event->tick);
+        }
+    }
+    else if (a_event->type == PYDAW_EVENT_NOTEOFF )
+    {
+        f_note = a_event->note;
+        v_voc_note_off(plugin_data->voices, a_event->note,
+                plugin_data->sampleNo, a_event->tick);
+    }
+    else if (a_event->type == PYDAW_EVENT_CONTROLLER)
+    {
+        assert(a_event->port >= EUPHORIA_FIRST_CONTROL_PORT &&
+                a_event->port < EUPHORIA_PORT_COUNT);
+
+        plugin_data->midi_event_types[plugin_data->midi_event_count] = PYDAW_EVENT_CONTROLLER;
+        plugin_data->midi_event_ticks[plugin_data->midi_event_count] = a_event->tick;
+        plugin_data->midi_event_ports[plugin_data->midi_event_count] = a_event->port;
+        plugin_data->midi_event_values[plugin_data->midi_event_count] = a_event->value;
+        plugin_data->midi_event_count++;
+    }
+    else if (a_event->type == PYDAW_EVENT_PITCHBEND)
+    {
+        plugin_data->midi_event_types[plugin_data->midi_event_count] = PYDAW_EVENT_PITCHBEND;
+        plugin_data->midi_event_ticks[plugin_data->midi_event_count] = a_event->tick;
+        plugin_data->midi_event_values[plugin_data->midi_event_count] =
+                0.00012207 * a_event->value;
+        plugin_data->midi_event_count++;
+    }
+}
+
+
 static void v_run_lms_euphoria(
         PYFX_Handle instance, int sample_count,
         t_pydaw_seq_event *events, int event_count,
@@ -890,353 +1238,9 @@ static void v_run_lms_euphoria(
         v_euphoria_slow_index(plugin_data);
     }
 
-    int f_note = 60;
-
-    int f_min_note = (int)*plugin_data->min_note;
-    int f_max_note = (int)*plugin_data->max_note;
-
     while (event_pos < event_count) // && pos >= events[event_pos].time.tick)
     {
-        /*Note-on event*/
-        if (events[event_pos].type == PYDAW_EVENT_NOTEON)
-        {
-            f_note = events[event_pos].note;
-
-            if (events[event_pos].velocity > 0)
-            {
-                if(events[event_pos].note > f_max_note ||
-                    events[event_pos].note < f_min_note)
-                {
-                    event_pos++;
-                    continue;
-                }
-                int f_voice_num = i_pick_voice(plugin_data->voices, f_note, (plugin_data->sampleNo), events[event_pos].tick);
-                plugin_data->velocities[f_voice_num] = events[event_pos].velocity;
-
-                plugin_data->data[f_voice_num]->keyboard_track = ((float)(events[(event_pos)].note)) * 0.007874016f;
-                plugin_data->data[f_voice_num]->velocity_track = ((float)(events[(event_pos)].velocity)) * 0.007874016f;
-
-                plugin_data->sample_indexes_count[f_voice_num] = 0;
-
-                //Figure out which samples to play and stash all relevant values
-                i = 0;
-                while(i  < (plugin_data->loaded_samples_count))
-                {
-                    if((f_note >= ((int)(*(plugin_data->low_note[(plugin_data->loaded_samples[i])])))) &&
-                    (f_note <= ((int)(*(plugin_data->high_note[(plugin_data->loaded_samples[i])])))) &&
-                    (plugin_data->velocities[f_voice_num] <=
-                        ((int)(*(plugin_data->sample_vel_high[(plugin_data->loaded_samples[i])])))) &&
-                    (plugin_data->velocities[f_voice_num] >=
-                            ((int)(*(plugin_data->sample_vel_low[(plugin_data->loaded_samples[i])])))))
-                    {
-                        plugin_data->sample_indexes[f_voice_num][(plugin_data->sample_indexes_count[f_voice_num])] = (plugin_data->loaded_samples[i]);
-                        plugin_data->sample_indexes_count[f_voice_num] = (plugin_data->sample_indexes_count[f_voice_num]) + 1;
-
-                        plugin_data->sample_mfx_groups_index[(plugin_data->loaded_samples[i])] =
-                                (int)(*(plugin_data->sample_mfx_groups[(plugin_data->loaded_samples[i])]));
-
-                        plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])] = (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
-                                ((plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length) *
-                                ((*(plugin_data->sampleStarts[(plugin_data->loaded_samples[i])])) * .001)));
-
-                        plugin_data->sampleLoopStartPos[(plugin_data->loaded_samples[i])] = (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
-                                ((plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length) *
-                                ((*(plugin_data->sampleLoopStarts[(plugin_data->loaded_samples[i])])) * .001)));
-
-                        /* If loop mode is enabled for this sample, set the sample end to be the same as the
-                           loop end.  Then, in the main loop, we'll recalculate sample_end to be the real sample end once
-                           the note_off event is fired.  Doing it this way greatly reduces the need for extra if-then-else logic
-                           in the main loop */
-                        if(((int)(*(plugin_data->sampleLoopModes[(plugin_data->loaded_samples[i])]))) == 0)
-                        {
-                            plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])] = (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
-                                    ((int)(((float)((plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length) - 5)) *
-                                    ((*(plugin_data->sampleEnds[(plugin_data->loaded_samples[i])])) * .001))));
-                        }
-                        else
-                        {
-                            plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])] = (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
-                                    ((int)(((float)((plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length) - 5)) *
-                                    ((*(plugin_data->sampleLoopEnds[(plugin_data->loaded_samples[i])])) * .001))));
-                        }
-
-                        if((plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]) >
-                                ((float)((plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length))))
-                        {
-                            plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])] =
-                                    (float)(plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length);
-                        }
-
-                        //get the fade in values
-                        plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
-                                (int)((*plugin_data->sampleFadeInEnds[(plugin_data->loaded_samples[i])]) * 0.001f *
-                                (float)(plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length));
-
-                        if(plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] <
-                                (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]))
-                        {
-                            plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
-                                (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]);
-                        }
-                        else if(plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] >
-                                (plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]))
-                        {
-                            plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
-                                (plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]);
-                        }
-
-                        if(plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] >
-                                (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]))
-                        {
-                                plugin_data->data[f_voice_num]->sample_fade_in_inc[(plugin_data->loaded_samples[i])] = 1.0f /
-                                    (plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] -
-                                        (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]));
-                        }
-                        else
-                        {
-                            plugin_data->data[f_voice_num]->sample_fade_in_inc[(plugin_data->loaded_samples[i])] = 1.0f;
-                        }
-
-                        //get the fade out values
-                        plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
-                                (int)((*plugin_data->sampleFadeOutStarts[(plugin_data->loaded_samples[i])]) * 0.001f *
-                                (float)(plugin_data->wavpool_items[(plugin_data->loaded_samples[i])]->length));
-
-                        if(plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] <
-                                (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]))
-                        {
-                            plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
-                                (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]);
-                        }
-                        else if(plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] >
-                                (plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]))
-                        {
-                            plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
-                                (plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]);
-                        }
-
-                        if(plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] <
-                                (plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]))
-                        {
-                                plugin_data->data[f_voice_num]->sample_fade_out_dec[(plugin_data->loaded_samples[i])] = 1.0f /
-                                    ((plugin_data->sampleEndPos[(plugin_data->loaded_samples[i])]) -
-                                    plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])]);
-                        }
-                        else
-                        {
-                            plugin_data->data[f_voice_num]->sample_fade_out_dec[(plugin_data->loaded_samples[i])] = 1.0f;
-                        }
-
-
-                        //end fade stuff
-
-                        plugin_data->adjusted_base_pitch[(plugin_data->loaded_samples[i])] =
-                                (*(plugin_data->basePitch[(plugin_data->loaded_samples[i])]))
-                                - (*(plugin_data->sample_pitch[(plugin_data->loaded_samples[i])])) -
-                                ((*(plugin_data->sample_tune[(plugin_data->loaded_samples[i])])) * .01f);
-
-                        v_ifh_retrigger(plugin_data->sample_read_heads[f_voice_num][(plugin_data->loaded_samples[i])],
-                                (plugin_data->sampleStartPos[(plugin_data->loaded_samples[i])]));// 0.0f;
-
-                        plugin_data->vel_sens_output[f_voice_num][(plugin_data->loaded_samples[i])] =
-                                (1.0f -
-                                (((float)(events[event_pos].velocity) -
-                                (*(plugin_data->sample_vel_low[(plugin_data->loaded_samples[i])])))
-                                /
-                                ((float)(*(plugin_data->sample_vel_high[(plugin_data->loaded_samples[i])]) -
-                                (*(plugin_data->sample_vel_low[(plugin_data->loaded_samples[i])]))))))
-                                * (*(plugin_data->sample_vel_sens[(plugin_data->loaded_samples[i])])) * -1.0f;
-
-                        plugin_data->sample_amp[(plugin_data->loaded_samples[i])] = f_db_to_linear(
-                            (*(plugin_data->sample_vol[(plugin_data->loaded_samples[i])])) +
-                            (plugin_data->vel_sens_output[f_voice_num][(plugin_data->loaded_samples[i])]));
-
-                        switch((int)(*(plugin_data->sample_interpolation_mode[(plugin_data->loaded_samples[i])])))
-                        {
-                            case 0:
-                                interpolation_modes[(plugin_data->loaded_samples[i])] = run_sampler_interpolation_sinc;
-                                ratio_function_ptrs[(plugin_data->loaded_samples[i])] = calculate_ratio_sinc;
-                                break;
-                            case 1:
-                                interpolation_modes[(plugin_data->loaded_samples[i])] = run_sampler_interpolation_linear;
-                                ratio_function_ptrs[(plugin_data->loaded_samples[i])] = calculate_ratio_linear;
-                                break;
-                            case 2:
-                                interpolation_modes[(plugin_data->loaded_samples[i])] = run_sampler_interpolation_none;
-                                ratio_function_ptrs[(plugin_data->loaded_samples[i])] = calculate_ratio_none;
-                                break;
-                            default:
-                                printf("Error, invalid interpolation mode %i\n",
-                                        ((int)(*(plugin_data->sample_interpolation_mode[(plugin_data->loaded_samples[i])]))));
-                        }
-                    }
-                    i++;
-                }
-
-                plugin_data->active_polyfx_count[f_voice_num] = 0;
-                //Determine which PolyFX have been enabled
-                plugin_data->i_dst = 0;
-                while((plugin_data->i_dst) < EUPHORIA_MODULAR_POLYFX_COUNT)
-                {
-                    int f_pfx_combobox_index =
-                        (int)(*(plugin_data->fx_combobox[0][(plugin_data->i_dst)]));
-                    plugin_data->data[f_voice_num]->fx_func_ptr[(plugin_data->i_dst)] =
-                            g_mf3_get_function_pointer(f_pfx_combobox_index);
-                    plugin_data->data[f_voice_num]->fx_reset_ptr[(plugin_data->i_dst)] =
-                            g_mf3_get_reset_function_pointer(f_pfx_combobox_index);
-
-                    plugin_data->data[f_voice_num]->fx_reset_ptr[(plugin_data->i_dst)](
-                        plugin_data->data[f_voice_num]->multieffect[(plugin_data->i_dst)]);
-
-                    if(f_pfx_combobox_index != 0)
-                    {
-                        plugin_data->active_polyfx[f_voice_num][(plugin_data->active_polyfx_count[f_voice_num])] = (plugin_data->i_dst);
-                        plugin_data->active_polyfx_count[f_voice_num] = (plugin_data->active_polyfx_count[f_voice_num]) + 1;
-                    }
-                    plugin_data->i_dst += 1;
-                }
-
-                //Calculate an index of which mod_matrix controls to process.  This saves expensive iterations and if/then logic in the main loop
-                plugin_data->i_fx_grps = 0;
-                while((plugin_data->i_fx_grps) < EUPHORIA_EFFECTS_GROUPS_COUNT)
-                {
-                    plugin_data->i_dst = 0;
-                    while((plugin_data->i_dst) < (plugin_data->active_polyfx_count[f_voice_num]))
-                    {
-                        plugin_data->polyfx_mod_counts[f_voice_num][
-                            (plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])] = 0;
-
-                        plugin_data->i_src = 0;
-                        while((plugin_data->i_src) < EUPHORIA_MODULATOR_COUNT)
-                        {
-                            plugin_data->i_ctrl = 0;
-                            while((plugin_data->i_ctrl) < EUPHORIA_CONTROLS_PER_MOD_EFFECT)
-                            {
-                                if((*(plugin_data->polyfx_mod_matrix[(plugin_data->i_fx_grps)][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])][(plugin_data->i_src)][(plugin_data->i_ctrl)])) != 0)
-                                {
-                                    plugin_data->polyfx_mod_ctrl_indexes[f_voice_num][
-                                        (plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])][
-                                        (plugin_data->polyfx_mod_counts[f_voice_num][
-                                        (plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])])] = (plugin_data->i_ctrl);
-                                    plugin_data->polyfx_mod_src_index[f_voice_num][
-                                        (plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])][(plugin_data->polyfx_mod_counts[f_voice_num][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])])] = (plugin_data->i_src);
-                                    plugin_data->polyfx_mod_matrix_values[f_voice_num][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])][(plugin_data->polyfx_mod_counts[f_voice_num][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])])] =
-                                            (*(plugin_data->polyfx_mod_matrix[(plugin_data->i_fx_grps)][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])][(plugin_data->i_src)][(plugin_data->i_ctrl)])) * .01;
-
-                                    plugin_data->polyfx_mod_counts[f_voice_num][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])] = (plugin_data->polyfx_mod_counts[f_voice_num][(plugin_data->active_polyfx[f_voice_num][(plugin_data->i_dst)])]) + 1;
-                                }
-                                plugin_data->i_ctrl += 1;
-                            }
-                            plugin_data->i_src += 1;
-                        }
-                        plugin_data->i_dst += 1;
-                    }
-                    plugin_data->i_fx_grps += 1;
-                }
-
-                plugin_data->data[f_voice_num]->noise_index =
-                        (plugin_data->mono_modules->noise_current_index);
-                plugin_data->mono_modules->noise_current_index =
-                        (plugin_data->mono_modules->noise_current_index) + 1;
-
-                if((plugin_data->mono_modules->noise_current_index) >=
-                        EUPHORIA_NOISE_COUNT)
-                {
-                    plugin_data->mono_modules->noise_current_index = 0;
-                }
-
-                plugin_data->amp =
-                        f_db_to_linear_fast(*(plugin_data->master_vol));
-
-                plugin_data->data[f_voice_num]->note_f = (float)f_note;
-
-                plugin_data->data[f_voice_num]->target_pitch =
-                        (plugin_data->data[f_voice_num]->note_f);
-
-                if(plugin_data->sv_last_note < 0.0f)
-                {
-                    plugin_data->data[f_voice_num]->last_pitch =
-                        (plugin_data->data[f_voice_num]->note_f);
-                }
-                else
-                {
-                    plugin_data->data[f_voice_num]->last_pitch =
-                            (plugin_data->sv_last_note);
-                }
-
-                v_rmp_retrigger_glide_t(
-                        plugin_data->data[f_voice_num]->glide_env,
-                        (*(plugin_data->master_glide) * .01),
-                        (plugin_data->data[f_voice_num]->last_pitch),
-                        (plugin_data->data[f_voice_num]->target_pitch));
-
-                /*Retrigger ADSR envelopes and LFO*/
-                v_adsr_retrigger(plugin_data->data[f_voice_num]->adsr_amp);
-                v_adsr_retrigger(plugin_data->data[f_voice_num]->adsr_filter);
-                v_lfs_sync(plugin_data->data[f_voice_num]->lfo1, 0.0f,
-                        *(plugin_data->lfo_type));
-
-                float f_attack_a = (*(plugin_data->attack) * .01);
-                f_attack_a *= f_attack_a;
-                float f_decay_a = (*(plugin_data->decay) * .01);
-                f_decay_a *= f_decay_a;
-                float f_release_a = (*(plugin_data->release) * .01);
-                f_release_a *= f_release_a;
-                v_adsr_set_adsr_db(plugin_data->data[f_voice_num]->adsr_amp,
-                        f_attack_a, f_decay_a, (*(plugin_data->sustain)),
-                        f_release_a);
-
-                float f_attack_f = (*(plugin_data->attack_f) * .01);
-                f_attack_f *= f_attack_f;
-                float f_decay_f = (*(plugin_data->decay_f) * .01);
-                f_decay_f *= f_decay_f;
-                float f_release_f = (*(plugin_data->release_f) * .01);
-                f_release_f *= f_release_f;
-                v_adsr_set_adsr(plugin_data->data[f_voice_num]->adsr_filter,
-                        f_attack_f, f_decay_f,
-                        (*(plugin_data->sustain_f) * .01), f_release_f);
-
-                /*Retrigger the pitch envelope*/
-                v_rmp_retrigger((plugin_data->data[f_voice_num]->ramp_env),
-                        (*(plugin_data->pitch_env_time) * .01), 1.0f);
-
-                /*Set the last_note property, so the next note can
-                 * glide from it if glide is turned on*/
-                plugin_data->sv_last_note =
-                        (plugin_data->data[f_voice_num]->note_f);
-            }
-            else
-            {
-                v_voc_note_off(plugin_data->voices, events[event_pos].note,
-                        plugin_data->sampleNo, events[event_pos].tick);
-            }
-        }
-        else if (events[event_pos].type == PYDAW_EVENT_NOTEOFF )
-        {
-            f_note = events[event_pos].note;
-            v_voc_note_off(plugin_data->voices, events[event_pos].note,
-                    plugin_data->sampleNo, events[event_pos].tick);
-        }
-        else if (events[event_pos].type == PYDAW_EVENT_CONTROLLER)
-        {
-            assert(events[event_pos].port >= EUPHORIA_FIRST_CONTROL_PORT &&
-                    events[event_pos].port < EUPHORIA_PORT_COUNT);
-
-            plugin_data->midi_event_types[plugin_data->midi_event_count] = PYDAW_EVENT_CONTROLLER;
-            plugin_data->midi_event_ticks[plugin_data->midi_event_count] = events[event_pos].tick;
-            plugin_data->midi_event_ports[plugin_data->midi_event_count] = events[event_pos].port;
-            plugin_data->midi_event_values[plugin_data->midi_event_count] = events[event_pos].value;
-            plugin_data->midi_event_count++;
-        }
-        else if (events[event_pos].type == PYDAW_EVENT_PITCHBEND)
-        {
-            plugin_data->midi_event_types[plugin_data->midi_event_count] = PYDAW_EVENT_PITCHBEND;
-            plugin_data->midi_event_ticks[plugin_data->midi_event_count] = events[event_pos].tick;
-            plugin_data->midi_event_values[plugin_data->midi_event_count] =
-                    0.00012207 * events[event_pos].value;
-            plugin_data->midi_event_count++;
-        }
-
+        v_euphoria_process_midi_event(plugin_data, &events[event_pos]);
         event_pos++;
     }
 
