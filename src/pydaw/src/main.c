@@ -1616,7 +1616,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_LOAD_CC_MAP))
     {
-        v_pydaw_load_cc_map(self, a_value);
+        assert(0);  //TODO:  Implement CC map
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_LOAD_AB_OPEN))
     {
