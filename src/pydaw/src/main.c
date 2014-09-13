@@ -110,7 +110,10 @@ GNU General Public License for more details.
 #define PYDAW_CONFIGURE_KEY_CONFIGURE_PLUGIN "co"
 #define PYDAW_CONFIGURE_KEY_GLUE_AUDIO_ITEMS "ga"
 #define PYDAW_CONFIGURE_KEY_EXIT "exit"
+
 #define PYDAW_CONFIGURE_KEY_MIDI_LEARN "ml"
+#define PYDAW_CONFIGURE_KEY_MIDI_DEVICE "md"
+
 #define PYDAW_CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD "wr"
 #define PYDAW_CONFIGURE_KEY_MASTER_VOL "mvol"
 #define PYDAW_CONFIGURE_KEY_KILL_ENGINE "abort"
@@ -1732,6 +1735,8 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
         v_pydaw_offline_render(self, f_region_index, f_start_bar,
                 f_region_index, f_end_bar, f_path, 1);
 
+        v_free_split_line(f_val_arr);
+
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD))
     {
@@ -1782,6 +1787,20 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
         int f_is_midi_learn = atoi(a_value);
         assert(f_is_midi_learn == 0 || f_is_midi_learn == 1);
         pydaw_data->midi_learn = f_is_midi_learn;
+    }
+    else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_MIDI_DEVICE))
+    {
+        t_pydaw_line_split * f_val_arr = g_split_line('|', a_value);
+        int f_on = atoi(f_val_arr->str_arr[0]);
+        int f_device = atoi(f_val_arr->str_arr[1]);
+        int f_output = atoi(f_val_arr->str_arr[2]);
+        v_free_split_line(f_val_arr);
+
+        pthread_spin_lock(&self->main_lock);
+
+        v_pydaw_set_midi_device(pydaw_data, f_on, f_device, f_output);
+
+        pthread_spin_unlock(&self->main_lock);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_WE_EXPORT))
     {

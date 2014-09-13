@@ -7998,7 +7998,7 @@ class midi_device:
     def __init__(self, a_name, a_index, a_layout):
         self.index = int(a_index)
         self.record_checkbox = QtGui.QCheckBox()
-        self.record_checkbox.toggled.connect(self.on_rec)
+        self.record_checkbox.toggled.connect(self.device_changed)
         f_index = int(a_index) + 1
         a_layout.addWidget(self.record_checkbox, f_index, 0)
         a_layout.addWidget(QtGui.QLabel(a_name), f_index, 1)
@@ -8006,20 +8006,16 @@ class midi_device:
         self.track_combobox.setMinimumWidth(180)
         self.track_combobox.addItems(TRACK_NAMES)
         AUDIO_TRACK_COMBOBOXES.append(self.track_combobox)
-        self.track_combobox.currentIndexChanged.connect(self.on_track_changed)
+        self.track_combobox.currentIndexChanged.connect(self.device_changed)
         a_layout.addWidget(self.track_combobox, f_index, 2)
 
-    def on_rec(self, value):
-        raise NotImplementedError()  # needs a major rework
-        if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_track_rec(
-                self.track_number,
-                self.record_radiobutton.isChecked())
-            global LAST_REC_ARMED_TRACK
-            LAST_REC_ARMED_TRACK = self.track_number
+    def device_changed(self, a_val=None):
+        if SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES:
+            return
+        PROJECT.this_pydaw_osc.pydaw_midi_device(
+            self.record_checkbox.isChecked(), self.index,
+            self.track_combobox.currentIndex())
 
-    def on_track_changed(self, a_val=None):
-        raise NotImplementedError()
 
 class midi_devices_dialog:
     def __init__(self):

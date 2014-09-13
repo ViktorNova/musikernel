@@ -104,6 +104,28 @@ extern "C" {
 
 typedef struct
 {
+    int output_track;
+    int on;
+}t_pydaw_midi_routing;
+
+typedef struct
+{
+    t_pydaw_midi_routing routes[32];
+}t_pydaw_midi_routing_list;
+
+typedef struct
+{
+    // TODO:  Event buffer here
+}t_pydaw_midi_device;
+
+typedef struct
+{
+    int count;
+    t_pydaw_midi_device devices[32];
+}t_pydaw_midi_device_list;
+
+typedef struct
+{
     t_pydaw_seq_event * events[PYDAW_MAX_EVENTS_PER_ITEM_COUNT];
     int event_count;
     //Used to avoid reading the same event twice in an unsorted item.
@@ -195,6 +217,7 @@ typedef struct
 
 typedef struct
 {
+    int status __attribute__((aligned(16)));
     int solo;
     int mute;
     t_pydaw_seq_event * event_buffer;
@@ -217,7 +240,8 @@ typedef struct
     long note_offs[PYDAW_MIDI_NOTE_COUNT];
     int item_event_index;
     char * osc_cursor_message;
-    int status __attribute__((aligned(16)));
+    int extern_midi_count;
+    t_pydaw_seq_event * extern_midi;
 }t_pytrack;
 
 float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
@@ -290,7 +314,6 @@ typedef struct
     int default_region_length_bars;
     int default_region_length_beats;
     int default_bar_length;
-    t_pydaw_audio_item * audio_items_running[512];
 
     //Main-loop variables, prefixed with ml_
     float ml_sample_period_inc;
@@ -350,6 +373,8 @@ typedef struct
     pthread_spinlock_t ui_spinlock;
     int wave_editor_cursor_count;
     t_pydaw_plugin * plugin_pool[MAX_PLUGIN_POOL_COUNT];
+    t_pydaw_midi_device_list * midi_devices;
+    t_pydaw_midi_routing_list midi_routing;
 }t_pydaw_data;
 
 typedef struct
@@ -437,6 +462,8 @@ inline void v_queue_osc_message(char * a_key, char * a_val);
 
 void v_pydaw_process_atm(
     t_pydaw_data * self, int f_track_num, int f_index, int sample_count);
+
+void v_pydaw_set_midi_device(t_pydaw_data*, int, int, int);
 
 #ifdef	__cplusplus
 }
@@ -5039,6 +5066,31 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
     }
 
     return f_result;
+}
+
+void v_pydaw_set_midi_device(
+    t_pydaw_data *self, int a_on, int a_device, int a_output)
+{
+    /* Interim logic to get a minimum viable product working
+     * TODO:  Make it modular and able to support multiple devices
+     */
+    t_pydaw_midi_routing_list * f_list = &self->midi_routing;
+    t_pydaw_midi_routing * f_route = &f_list->routes[a_device];
+    t_pytrack * f_track_old = self->track_pool_all[f_route->output_track];
+    t_pytrack * f_track_new = self->track_pool_all[a_output];
+
+    if(!f_route->on ||
+        f_route->output_track != a_output)
+    {
+        f_track_old->extern_midi = 0;
+        f_track_old->extern_midi_count = 0;
+    }
+
+    if(f_route->on)
+    {
+        f_track_new->extern_midi = self->events;
+        f_track_new->extern_midi_count = 0;
+    }
 }
 
 #endif	/* PYDAW_H */

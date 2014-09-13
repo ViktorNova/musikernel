@@ -246,6 +246,11 @@ class pydaw_osc:
     def pydaw_midi_learn(self, a_is_on):
         self.send_configure("ml", bool_to_int(a_is_on))
 
+    def pydaw_midi_device(self, a_is_on, a_device_num, a_track_num):
+        self.send_configure(
+            "md", "|".join(str(x) for x in
+            (bool_to_int(a_is_on), a_device_num, a_track_num)))
+
     def pydaw_reload_wavpool_item(self, a_uid):
         self.send_configure("wr", str(a_uid))
 
