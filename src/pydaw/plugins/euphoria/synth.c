@@ -34,7 +34,8 @@ GNU General Public License for more details.
 static fp_get_wavpool_item_from_host wavpool_get_func;
 
 static void v_run_lms_euphoria(
-    PYFX_Handle, int, t_pydaw_seq_event*, int, t_pydaw_seq_event*, int);
+    PYFX_Handle, int, t_pydaw_seq_event*, int, t_pydaw_seq_event*, int,
+    t_pydaw_seq_event*, int);
 
 static inline void v_euphoria_slow_index(t_euphoria*);
 
@@ -1222,10 +1223,11 @@ static void v_euphoria_process_midi_event(
 static void v_run_lms_euphoria(
         PYFX_Handle instance, int sample_count,
         t_pydaw_seq_event *events, int event_count,
-        t_pydaw_seq_event *atm_events, int atm_event_count)
+        t_pydaw_seq_event *atm_events, int atm_event_count,
+        t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_euphoria *plugin_data = (t_euphoria *) instance;
-    int event_pos = 0;
+    int f_i = 0;
     int midi_event_pos = 0;
     int i, i2, i3;
 
@@ -1238,21 +1240,29 @@ static void v_run_lms_euphoria(
         v_euphoria_slow_index(plugin_data);
     }
 
-    while (event_pos < event_count) // && pos >= events[event_pos].time.tick)
+    while (f_i < event_count) // && pos >= events[f_i].time.tick)
     {
-        v_euphoria_process_midi_event(plugin_data, &events[event_pos]);
-        event_pos++;
+        v_euphoria_process_midi_event(plugin_data, &events[f_i]);
+        f_i++;
     }
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 
-    int f_i = 0;
+    f_i = 0;
 
     while(f_i < atm_event_count)
     {
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
+        f_i++;
+    }
+
+    f_i = 0;
+
+    while (f_i < ext_event_count) // && pos >= events[f_i].time.tick)
+    {
+        v_euphoria_process_midi_event(plugin_data, &ext_events[f_i]);
         f_i++;
     }
 

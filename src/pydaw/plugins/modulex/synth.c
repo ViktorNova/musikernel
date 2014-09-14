@@ -43,7 +43,8 @@ GNU General Public License for more details.
 int MODULEX_AMORITIZER = 0;
 
 static void v_modulex_run(
-    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int);
+    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
+    t_pydaw_seq_event *, int);
 
 PYFX_Descriptor *modulex_PYFX_descriptor(int index);
 
@@ -337,7 +338,7 @@ static void v_modulex_process_midi_event(
 {
     int f_gate_note = (int)*plugin_data->gate_note;
     int f_glitch_note = (int)*plugin_data->glitch_note;
-    
+
     if (a_event->type == PYDAW_EVENT_CONTROLLER)
     {
         assert(a_event->port < MODULEX_COUNT &&
@@ -436,7 +437,8 @@ static void v_modulex_process_midi_event(
 static void v_modulex_run(
         PYFX_Handle instance, int sample_count,
         t_pydaw_seq_event *events, int event_count,
-        t_pydaw_seq_event *atm_events, int atm_event_count)
+        t_pydaw_seq_event *atm_events, int atm_event_count,
+        t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_modulex *plugin_data = (t_modulex*)instance;
 
@@ -462,6 +464,14 @@ static void v_modulex_run(
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
+        f_i++;
+    }
+
+    f_i = 0;
+
+    while(f_i < ext_event_count)
+    {
+        v_modulex_process_midi_event(plugin_data, &ext_events[f_i]);
         f_i++;
     }
 

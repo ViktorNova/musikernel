@@ -30,7 +30,8 @@ GNU General Public License for more details.
 #include "../../src/pydaw_files.h"
 
 static void v_run_wayv(
-    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int);
+    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
+    t_pydaw_seq_event *, int);
 
 static void v_run_wayv_voice(
         t_wayv *, t_voc_single_voice, t_wayv_poly_voice *,
@@ -1097,7 +1098,8 @@ static void v_wayv_process_midi_event(
 static void v_run_wayv(
         PYFX_Handle instance, int sample_count,
         t_pydaw_seq_event *events, int event_count,
-        t_pydaw_seq_event *atm_events, int atm_event_count)
+        t_pydaw_seq_event *atm_events, int atm_event_count,
+        t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_wayv *plugin_data = (t_wayv *) instance;
 
@@ -1132,6 +1134,14 @@ static void v_run_wayv(
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
+        f_i++;
+    }
+
+    f_i = 0;
+    
+    while(f_i < ext_event_count)
+    {
+        v_wayv_process_midi_event(plugin_data, &ext_events[f_i], f_poly_mode);
         f_i++;
     }
 

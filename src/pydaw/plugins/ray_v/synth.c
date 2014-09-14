@@ -32,7 +32,8 @@ GNU General Public License for more details.
 
 
 static void v_run_rayv(
-    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int);
+    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
+    t_pydaw_seq_event *, int);
 
 static void v_run_rayv_voice(t_rayv *p, t_voc_single_voice a_poly_voice,
         t_rayv_poly_voice *d, PYFX_Data *out0, PYFX_Data *out1, int a_i);
@@ -507,7 +508,8 @@ static void v_rayv_process_midi_event(
 static void v_run_rayv(
         PYFX_Handle instance, int sample_count,
         t_pydaw_seq_event *events, int event_count,
-        t_pydaw_seq_event *atm_events, int atm_event_count)
+        t_pydaw_seq_event *atm_events, int atm_event_count,
+        t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_rayv *plugin_data = (t_rayv *) instance;
 
@@ -546,13 +548,22 @@ static void v_run_rayv(
         f_i++;
     }
 
-    plugin_data->i_iterator = 0;
+    f_i = 0;
 
-    while((plugin_data->i_iterator) < sample_count)
+    while(f_i < ext_event_count)
+    {
+        v_rayv_process_midi_event(plugin_data, &ext_events[f_i], f_poly_mode);
+        assert(plugin_data->midi_event_count < 200);
+        f_i++;
+    }
+
+    f_i = 0;
+
+    while((f_i) < sample_count)
     {
         while(midi_event_pos < plugin_data->midi_event_count &&
             plugin_data->midi_event_ticks[midi_event_pos] ==
-                plugin_data->i_iterator)
+                f_i)
         {
             if(plugin_data->midi_event_types[midi_event_pos] ==
                     PYDAW_EVENT_PITCHBEND)
@@ -571,7 +582,7 @@ static void v_run_rayv(
         }
 
         v_plugin_event_queue_atm_set(
-            &plugin_data->atm_queue, plugin_data->i_iterator,
+            &plugin_data->atm_queue, f_i,
             plugin_data->port_table);
 
         v_sml_run(plugin_data->mono_modules->lfo_smoother,
@@ -588,12 +599,9 @@ static void v_run_rayv(
                     adsr_amp->stage) != ADSR_STAGE_OFF)
             {
                 v_run_rayv_voice(plugin_data,
-                        plugin_data->voices->voices[(plugin_data->i_run_poly_voice)],
-                        plugin_data->data[(plugin_data->i_run_poly_voice)],
-                        plugin_data->output0,
-                        plugin_data->output1,
-                        plugin_data->i_iterator
-                        );
+                    plugin_data->voices->voices[(plugin_data->i_run_poly_voice)],
+                    plugin_data->data[(plugin_data->i_run_poly_voice)],
+                    plugin_data->output0, plugin_data->output1, f_i);
             }
             else
             {
@@ -603,7 +611,7 @@ static void v_run_rayv(
             plugin_data->i_run_poly_voice = (plugin_data->i_run_poly_voice) + 1;
         }
 
-        plugin_data->i_iterator = (plugin_data->i_iterator) + 1;
+        f_i++;
         plugin_data->sampleNo++;
     }
 

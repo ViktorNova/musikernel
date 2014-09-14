@@ -1631,7 +1631,8 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
             f_plugin->descriptor->run_synth(
                 f_plugin->PYFX_handle, self->sample_count,
                 f_track->event_buffer, f_track->period_event_index,
-                f_plugin->atm_buffer, f_plugin->atm_count);
+                f_plugin->atm_buffer, f_plugin->atm_count,
+                f_track->extern_midi, f_track->extern_midi_count);
         }
         f_i++;
     }
@@ -2542,7 +2543,8 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
             f_plugin->descriptor->run_synth(
                 f_plugin->PYFX_handle, sample_count,
                 f_track->event_buffer, f_track->period_event_index,
-                f_plugin->atm_buffer, f_plugin->atm_count);
+                f_plugin->atm_buffer, f_plugin->atm_count,
+                f_track->extern_midi, f_track->extern_midi_count);
         }
         f_i++;
     }
@@ -2681,7 +2683,9 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
                 f_plugin->PYFX_handle, sample_count,
                     f_master_track->event_buffer,
                     f_master_track->period_event_index,
-                    f_plugin->atm_buffer, f_plugin->atm_count);
+                    f_plugin->atm_buffer, f_plugin->atm_count,
+                    f_master_track->extern_midi,
+                    f_master_track->extern_midi_count);
         }
         f_i++;
     }
@@ -3644,10 +3648,13 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
 {
     int f_i = 0;
 
-    t_pytrack * f_result = (t_pytrack*)malloc(sizeof(t_pytrack));
+    t_pytrack * f_result;
+    lmalloc((void**)&f_result, sizeof(t_pytrack));
 
     f_result->track_num = a_track_num;
     f_result->channels = 2;
+    f_result->extern_midi = 0;
+    f_result->extern_midi_count = 0;
 
     pthread_spin_init(&f_result->lock, 0);
 
