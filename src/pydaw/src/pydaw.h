@@ -1808,8 +1808,7 @@ inline void v_pydaw_process_atm(
                     float f_val = f_cc_to_ctrl_val(
                         f_plugin->descriptor, f_point->port, f_point->val);
                     v_pydaw_ev_clear(f_buff_ev);
-                    v_pydaw_ev_set_controller(f_buff_ev, 0, 0, f_val);
-                    f_buff_ev->port = f_point->port;
+                    v_pydaw_ev_set_atm(f_buff_ev, f_point->port, f_val);
                     f_buff_ev->tick = f_note_sample_offset;
                     v_pydaw_set_control_from_cc(
                         f_plugin, f_point->port, f_buff_ev, self,

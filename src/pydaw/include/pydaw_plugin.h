@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #define PYDAW_EVENT_NOTEOFF    1
 #define PYDAW_EVENT_PITCHBEND  2
 #define PYDAW_EVENT_CONTROLLER 3
+#define PYDAW_EVENT_AUTOMATION 4
 
 #ifdef __cplusplus
 extern "C" {
@@ -297,6 +298,15 @@ inline void v_pydaw_ev_set_controller(t_pydaw_seq_event* a_event,
     a_event->type = PYDAW_EVENT_CONTROLLER;
     a_event->channel = a_channel;
     a_event->param = a_cc_num;
+    a_event->value = a_value;
+}
+
+inline void v_pydaw_ev_set_atm(t_pydaw_seq_event* a_event,
+        int a_port_num, int a_value)
+{
+    a_event->type = PYDAW_EVENT_AUTOMATION;
+    a_event->channel = 0;
+    a_event->port = a_port_num;
     a_event->value = a_value;
 }
 

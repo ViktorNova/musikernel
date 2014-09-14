@@ -8256,6 +8256,15 @@ class seq_track:
         self.action_widget.setDefaultWidget(self.menu_widget)
         self.button_menu.addAction(self.action_widget)
 
+        self.ccs_combobox = QtGui.QComboBox()
+        self.ccs_combobox.addItems([str(x) for x in range(1, 128)])
+        self.ccs_radio_button = QtGui.QRadioButton("A")
+        self.menu_gridlayout.addWidget(QtGui.QLabel(_("CC:")), 8, 20)
+        self.menu_gridlayout.addWidget(self.ccs_combobox, 8, 21)
+        self.menu_gridlayout.addWidget(self.ccs_radio_button, 8, 22)
+        self.ccs_combobox.currentIndexChanged.connect(self.ccs_changed)
+        self.ccs_radio_button.clicked.connect(self.ccs_changed)
+
         self.control_combobox = QtGui.QComboBox()
         self.control_combobox.setMinimumWidth(240)
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("Automation:")), 9, 20)
@@ -8270,6 +8279,10 @@ class seq_track:
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("In Use:")), 10, 20)
         self.menu_gridlayout.addWidget(self.ccs_in_use_combobox, 10, 21)
         self.update_in_use_combobox()
+
+    def ccs_changed(self, a_val=None):
+        if self.ccs_radio_button.isChecked():
+            self.control_combobox.clear()
 
     def plugin_changed(self, a_val=None):
         self.control_combobox.clear()
