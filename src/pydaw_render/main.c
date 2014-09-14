@@ -76,6 +76,25 @@ int main(int argc, char** argv)
     pydaw_data->sample_count = f_buffer_size;
     v_pydaw_offline_render_prep(pydaw_data);
 
+    /*
+    v_pydaw_set_midi_device(pydaw_data, 1, 0, 5);
+    v_set_playback_mode(pydaw_data, 1, 0, 0, 0);
+
+    t_pydaw_seq_event f_events[2];
+    v_pydaw_ev_set_noteon(&f_events[0], 0, 60, 100);
+    f_events[0].tick = 2;
+    v_pydaw_ev_set_noteoff(&f_events[1], 0, 60, 100);
+    f_events[1].tick = 200;
+
+    f_i = 0;
+    while(f_i < 20)
+    {
+        v_pydaw_run_main_loop(
+            pydaw_data, 512, f_events, 2, 512 * (f_i + 1),
+            f_engine->output0, f_engine->output1, 0);
+    }
+    */
+
     v_pydaw_offline_render(pydaw_data, f_start_region, f_start_bar,
             f_end_region, f_end_bar, f_output_file, 0);
 
