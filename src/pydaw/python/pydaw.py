@@ -7986,14 +7986,6 @@ class item_list_editor:
         self.pitchbend_table_widget.resizeColumnsToContents()
 
 
-LAST_REC_ARMED_TRACK = None
-
-def global_set_record_armed_track():
-    if LAST_REC_ARMED_TRACK is None:
-        return
-    REGION_EDITOR.tracks[
-        LAST_REC_ARMED_TRACK].record_radiobutton.setChecked(True)
-
 class midi_device:
     def __init__(self, a_name, a_index, a_layout):
         self.index = int(a_index)
@@ -8497,6 +8489,7 @@ class transport_widget:
 
         self.midi_devices = midi_devices_dialog()
         self.playback_vlayout.addLayout(self.midi_devices.layout)
+        self.active_devices = []
 
         self.menu_button = QtGui.QPushButton(_("Menu"))
         self.grid_layout1.addWidget(self.menu_button, 1, 50)
@@ -8700,8 +8693,8 @@ class transport_widget:
                 return
             PROJECT.save_recorded_items(
                 f_file_name, MREC_EVENTS, self.overdub_checkbox.isChecked(),
-                LAST_REC_ARMED_TRACK, self.tempo_spinbox.value(),
-                pydaw_util.SAMPLE_RATE)
+                self.active_devices[0].track_combobox.currentIndex(),
+                self.tempo_spinbox.value(), pydaw_util.SAMPLE_RATE)
             global_ui_refresh_callback()
             f_window.close()
 
@@ -8734,7 +8727,9 @@ class transport_widget:
             return
         if self.is_recording:
             return
-        if LAST_REC_ARMED_TRACK is None:
+        self.active_devices = [x for x in self.midi_devices.devices
+            if x.record_checkbox.isChecked()]
+        if not self.active_devices:
             QtGui.QMessageBox.warning(
                 self.group_box, _("Error"),
                 _("No track record-armed"))
@@ -10691,7 +10686,7 @@ def global_ui_refresh_callback(a_restore_all=False):
     """ Use this to re-open all existing items/regions/song in
         their editors when the files have been changed externally
     """
-    REGION_EDITOR.open_tracks()
+    TRACK_PANEL.open_tracks()
     f_regions_dict = PROJECT.get_regions_dict()
     global CURRENT_REGION
     if CURRENT_REGION is not None and \
@@ -10708,7 +10703,6 @@ def global_ui_refresh_callback(a_restore_all=False):
     TRANSPORT.open_transport()
     PROJECT.this_pydaw_osc.pydaw_open_song(
         PROJECT.project_folder, a_restore_all)
-    global_set_record_armed_track()
 
 def set_window_title():
     MAIN_WINDOW.setWindowTitle('MusiKernel | EDM-Next - {}/{}.{}'.format(
