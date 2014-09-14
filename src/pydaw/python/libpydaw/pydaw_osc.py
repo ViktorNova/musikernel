@@ -150,11 +150,6 @@ class pydaw_osc:
     def pydaw_save_tracks(self):
         self.send_configure("st", "")
 
-    def pydaw_set_track_rec(self, a_track_num, a_bool):
-        self.send_configure(
-            "tr", "|".join(str(x) for x in
-            (a_track_num, bool_to_int(a_bool))))
-
     def pydaw_save_atm_region(self, a_region_uid):
         self.send_configure("sa", str(a_region_uid))
 

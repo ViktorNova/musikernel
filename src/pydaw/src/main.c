@@ -82,7 +82,6 @@ GNU General Public License for more details.
 #define PYDAW_CONFIGURE_KEY_MUTE "mute"
 #define PYDAW_CONFIGURE_KEY_CHANGE_INSTRUMENT "ci"
 #define PYDAW_CONFIGURE_KEY_SHOW_PLUGIN_UI "su"
-#define PYDAW_CONFIGURE_KEY_REC_ARM_TRACK "tr"
 #define PYDAW_CONFIGURE_KEY_SHOW_FX_UI "fx"
 
 #define PYDAW_CONFIGURE_KEY_PREVIEW_SAMPLE "preview"
@@ -1528,29 +1527,6 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
         self->track_pool_all[f_track_num]->mute = f_mode;
         //self->track_pool_all[f_track_num]->period_event_index = 0;
 
-        pthread_spin_unlock(&self->main_lock);
-        g_free_1d_char_array(f_val_arr);
-    }
-    else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_REC_ARM_TRACK))
-    {
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
-                PYDAW_TINY_STRING);
-        int f_track_num = atoi(f_val_arr->array[0]);
-        int f_mode = atoi(f_val_arr->array[1]);
-        assert(f_mode == 0 || f_mode == 1);
-
-        pthread_spin_lock(&self->main_lock);
-        if(f_mode)
-        {
-            self->record_armed_track =
-                self->track_pool_all[f_track_num];
-            self->record_armed_track_index_all = f_track_num;
-        }
-        else
-        {
-            self->record_armed_track = 0;
-            self->record_armed_track_index_all = -1;
-        }
         pthread_spin_unlock(&self->main_lock);
         g_free_1d_char_array(f_val_arr);
     }

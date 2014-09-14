@@ -253,8 +253,6 @@ typedef struct
     float tempo;
     pthread_spinlock_t main_lock;
     t_pysong * pysong;
-    t_pytrack * record_armed_track;
-    int record_armed_track_index_all;  //index within track_pool_all
     //contains a reference to all track types, in order:  MIDI, Bus, Audio
     t_pytrack * track_pool_all[PYDAW_TRACK_COUNT_ALL];
     t_pydaw_routing_graph * routing_graph;
@@ -421,7 +419,7 @@ inline void v_pydaw_update_ports(t_pydaw_plugin * a_plugin);
 void * v_pydaw_worker_thread(void*);
 void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
 inline void v_pydaw_process_external_midi(t_pydaw_data * pydaw_data,
-        int sample_count, t_pydaw_seq_event *events, int event_count);
+        t_pytrack * a_track, int sample_count);
 inline void v_pydaw_run_main_loop(t_pydaw_data * pydaw_data, int sample_count,
         t_pydaw_seq_event *events, int event_count, long f_next_current_sample,
         PYFX_Data *output0, PYFX_Data *output1, PYFX_Data **a_input_buffers);
@@ -1590,11 +1588,7 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
         v_pydaw_process_midi(self, a_global_track_num, self->sample_count);
     }
 
-    if(self->record_armed_track_index_all == a_global_track_num)
-    {
-        v_pydaw_process_external_midi(self, self->sample_count,
-            self->events, self->event_count);
-    }
+    v_pydaw_process_external_midi(self, f_track, self->sample_count);
 
     v_pydaw_process_note_offs(self, a_global_track_num);
 
@@ -1733,7 +1727,7 @@ inline void v_pydaw_process_atm(
     f_plugin->atm_count = 0;
 
     if((!self->overdub_mode) && (self->playback_mode == 2) &&
-        (self->record_armed_track_index_all == f_track_num))
+        (f_track->extern_midi))
     {
         return;
     }
@@ -1877,7 +1871,7 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
     float f_track_beats_offset = 0.0f;
 
     if((!self->overdub_mode) && (self->playback_mode == 2) &&
-            (self->record_armed_track_index_all == f_i))
+        (f_track->extern_midi))
     {
 
     }
@@ -2160,194 +2154,131 @@ inline void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
 }
 
 inline void v_pydaw_process_external_midi(t_pydaw_data * self,
-        int sample_count, t_pydaw_seq_event *events, int event_count)
+        t_pytrack * a_track, int sample_count)
 {
-    assert(event_count < 200);
-
-    if(self->record_armed_track)
+    if(!a_track->extern_midi)
     {
-        t_pytrack * f_track = self->record_armed_track;
-        int f_i2 = 0;
+        a_track->extern_midi_count = 0;
+        return;
+    }
 
-        if(self->playback_mode == 0)
+    a_track->extern_midi_count = self->event_count;
+    t_pydaw_seq_event * events = a_track->extern_midi;
+
+    assert(a_track->extern_midi_count < 200);
+
+    int f_i2 = 0;
+
+    char * f_osc_msg = a_track->osc_cursor_message;
+
+    while(f_i2 < a_track->extern_midi_count)
+    {
+        if(events[f_i2].tick >= sample_count)
         {
-            f_track->period_event_index = 0;
+            //Otherwise the event will be missed
+            events[f_i2].tick = sample_count - 1;
         }
 
-        t_pydaw_seq_event * f_event;
-        char * f_osc_msg = f_track->osc_cursor_message;
-
-        while(f_i2 < event_count)
+        if(events[f_i2].type == PYDAW_EVENT_NOTEON)
         {
-            if(events[f_i2].tick >= sample_count)
+            if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
-                //Otherwise the event will be missed
-                events[f_i2].tick = sample_count - 1;
+                float f_beat = self->ml_current_period_beats +
+                    f_pydaw_samples_to_beat_count(events[f_i2].tick,
+                        self->tempo, self->sample_rate);
+
+                sprintf(
+                    f_osc_msg,
+                    "on|%i|%i|%f|%i|%i|%ld", self->current_region,
+                    self->current_bar, f_beat, events[f_i2].note,
+                    events[f_i2].velocity,
+                    self->current_sample + events[f_i2].tick);
+                v_queue_osc_message("mrec", f_osc_msg);
             }
 
-            f_event =
-                &f_track->event_buffer[f_track->period_event_index];
+            sprintf(f_osc_msg, "1|%i", events[f_i2].note);
+            v_queue_osc_message("ne", f_osc_msg);
 
-            if(events[f_i2].type == PYDAW_EVENT_NOTEON)
-            {
-                v_pydaw_ev_clear(f_event);
-                v_pydaw_ev_set_noteon(f_event, 0,
-                            events[f_i2].note, events[f_i2].velocity);
-                f_event->tick = (events[f_i2].tick);
-                f_track->period_event_index
-                    += 1;
-
-                if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
-                {
-                    float f_beat = self->ml_current_period_beats +
-                        f_pydaw_samples_to_beat_count(events[f_i2].tick,
-                            self->tempo, self->sample_rate);
-
-                    sprintf(
-                        f_osc_msg,
-                        "on|%i|%i|%f|%i|%i|%ld", self->current_region,
-                        self->current_bar, f_beat, events[f_i2].note,
-                        events[f_i2].velocity,
-                        self->current_sample + events[f_i2].tick);
-                    v_queue_osc_message("mrec",
-                        f_osc_msg);
-                }
-
-                sprintf(f_osc_msg, "1|%i", events[f_i2].note);
-                v_queue_osc_message("ne", f_osc_msg);
-
-            }
-            else if(events[f_i2].type == PYDAW_EVENT_NOTEOFF)
-            {
-                v_pydaw_ev_clear(f_event);
-                v_pydaw_ev_set_noteoff(f_event, 0, events[f_i2].note, 0);
-                f_event->tick = (events[f_i2].tick);
-
-                f_track->period_event_index += 1;
-
-                if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
-                {
-                    float f_beat = self->ml_current_period_beats +
-                        f_pydaw_samples_to_beat_count(events[f_i2].tick,
-                            self->tempo, self->sample_rate);
-
-                    sprintf(
-                        f_osc_msg,
-                        "off|%i|%i|%f|%i|%ld", self->current_region,
-                        self->current_bar, f_beat, events[f_i2].note,
-                        self->current_sample + events[f_i2].tick);
-                    v_queue_osc_message("mrec",
-                        f_osc_msg);
-                }
-
-                sprintf(f_osc_msg, "0|%i", events[f_i2].note);
-                v_queue_osc_message("ne", f_osc_msg);
-            }
-            else if(events[f_i2].type == PYDAW_EVENT_PITCHBEND)
-            {
-                v_pydaw_ev_clear(f_event);
-                v_pydaw_ev_set_pitchbend(f_event, 0, events[f_i2].value);
-                f_track->period_event_index += 1;
-
-                if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
-                {
-                    float f_beat = self->ml_current_period_beats +
-                        f_pydaw_samples_to_beat_count(events[f_i2].tick,
-                            self->tempo, self->sample_rate);
-
-                    sprintf(
-                        f_osc_msg,
-                        "pb|%i|%i|%f|%f", self->current_region,
-                        self->current_bar, f_beat, events[f_i2].value);
-                    v_queue_osc_message("mrec",
-                        f_osc_msg);
-                }
-            }
-            else if(events[f_i2].type == PYDAW_EVENT_CONTROLLER)
-            {
-                int controller = events[f_i2].param;
-
-                if(self->midi_learn)
-                {
-                    sprintf(f_osc_msg, "%i", controller);
-                    v_queue_osc_message("ml", f_osc_msg);
-                }
-
-                float f_start =
-                    ((self->playback_cursor) +
-                    ((((float)(events[f_i2].tick))/((float)sample_count))
-                    * (self->playback_inc))) * 4.0f;
-
-                int controlIn = -9999;   // TODO
-
-                if (controlIn > 0)
-                {
-                    v_pydaw_ev_clear(f_event);
-                    v_pydaw_ev_set_controller(
-                        f_event, 0, 0, events[f_i2].value);
-                    f_event->start = f_start;
-                    f_event->port = controlIn;
-                    f_event->tick = (events[f_i2].tick);
-
-                    v_pydaw_set_control_from_cc(
-                        f_track->plugins[0], controlIn, f_event, self, 0,
-                        self->record_armed_track_index_all);
-
-                    f_track->period_event_index += 1;
-
-                    if(self->playback_mode ==
-                            PYDAW_PLAYBACK_MODE_REC)
-                    {
-                        float f_beat =
-                            self->ml_current_period_beats +
-                            f_pydaw_samples_to_beat_count(
-                                events[f_i2].tick, self->tempo,
-                                self->sample_rate);
-
-                        sprintf(f_osc_msg,
-                            "cc|%i|%i|%f|-1|%i|%f",
-                            self->current_region,
-                            self->current_bar, f_beat,
-                            controlIn, events[f_i2].value);
-                        v_queue_osc_message("mrec", f_osc_msg);
-                    }
-                }
-            }
-
-            assert(f_track->period_event_index < 200);
-
-            f_i2++;
         }
-
-
-        while(1)
+        else if(events[f_i2].type == PYDAW_EVENT_NOTEOFF)
         {
-            int f_no_changes = 1;
-            int f_i = 0;
+            a_track->period_event_index += 1;
 
-            while(f_i < (f_track->period_event_index) - 1)
+            if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
-                if((f_track->event_buffer[(f_i)].tick)
-                        >
-                    (f_track->event_buffer[(f_i + 1)].tick))
-                {
-                    t_pydaw_seq_event f_greater =
-                        f_track->event_buffer[(f_i)];
-                    t_pydaw_seq_event f_lesser =
-                        f_track->event_buffer[(f_i + 1)];
-                    f_track->event_buffer[(f_i)] = f_lesser;
-                    f_track->event_buffer[(f_i + 1)] = f_greater;
-                    f_no_changes = 0;
-                }
+                float f_beat = self->ml_current_period_beats +
+                    f_pydaw_samples_to_beat_count(events[f_i2].tick,
+                        self->tempo, self->sample_rate);
 
-                f_i++;
+                sprintf(
+                    f_osc_msg,
+                    "off|%i|%i|%f|%i|%ld", self->current_region,
+                    self->current_bar, f_beat, events[f_i2].note,
+                    self->current_sample + events[f_i2].tick);
+                v_queue_osc_message("mrec", f_osc_msg);
             }
 
-            if(f_no_changes)
+            sprintf(f_osc_msg, "0|%i", events[f_i2].note);
+            v_queue_osc_message("ne", f_osc_msg);
+        }
+        else if(events[f_i2].type == PYDAW_EVENT_PITCHBEND)
+        {
+            if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
-                break;
+                float f_beat = self->ml_current_period_beats +
+                    f_pydaw_samples_to_beat_count(events[f_i2].tick,
+                        self->tempo, self->sample_rate);
+
+                sprintf(
+                    f_osc_msg,
+                    "pb|%i|%i|%f|%f", self->current_region,
+                    self->current_bar, f_beat, events[f_i2].value);
+                v_queue_osc_message("mrec", f_osc_msg);
             }
         }
+        else if(events[f_i2].type == PYDAW_EVENT_CONTROLLER)
+        {
+            int controller = events[f_i2].param;
+
+            if(self->midi_learn)
+            {
+                sprintf(f_osc_msg, "%i", controller);
+                v_queue_osc_message("ml", f_osc_msg);
+            }
+
+            float f_start =
+                ((self->playback_cursor) +
+                ((((float)(events[f_i2].tick)) / ((float)sample_count))
+                * (self->playback_inc))) * 4.0f;
+
+            int controlIn = -9999;   // TODO
+
+            if (controlIn > 0)
+            {
+                v_pydaw_set_control_from_cc(
+                    a_track->plugins[0], controlIn, &events[f_i2], self, 0,
+                    a_track->track_num);
+
+                a_track->period_event_index += 1;
+
+                if(self->playback_mode ==
+                        PYDAW_PLAYBACK_MODE_REC)
+                {
+                    float f_beat =
+                        self->ml_current_period_beats +
+                        f_pydaw_samples_to_beat_count(
+                            events[f_i2].tick, self->tempo, self->sample_rate);
+
+                    sprintf(f_osc_msg,
+                        "cc|%i|%i|%f|-1|%i|%f",
+                        self->current_region,
+                        self->current_bar, f_beat,
+                        controlIn, events[f_i2].value);
+                    v_queue_osc_message("mrec", f_osc_msg);
+                }
+            }
+        }
+        f_i2++;
     }
 }
 
@@ -2639,15 +2570,12 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         v_pydaw_process_midi(self, 0, self->sample_count);
     }
 
-    if(self->record_armed_track_index_all == 0)
-    {
-        v_pydaw_process_external_midi(self, self->sample_count,
-                self->events, self->event_count);
-    }
+    t_pytrack * f_master_track = self->track_pool_all[0];
+
+    v_pydaw_process_external_midi(self, f_master_track, self->sample_count);
 
     v_pydaw_process_note_offs(pydaw_data, 0);
 
-    t_pytrack * f_master_track = self->track_pool_all[0];
     float ** f_master_buff = f_master_track->buffers;
 
     v_pydaw_audio_items_run(self, self->sample_count,
@@ -3784,8 +3712,6 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
     f_result->default_bar_length = 4;
 
     f_result->input_buffers_active = 0;
-    f_result->record_armed_track = 0;
-    f_result->record_armed_track_index_all = -1;
 
     f_result->wav_pool = g_wav_pool_get(a_sr);
     f_result->ab_wav_item = 0;
@@ -3940,9 +3866,6 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
     char f_file_name[1024];
     sprintf(f_file_name, "%s/projects/edmnext/default.pytracks",
         self->project_folder);
-
-    self->record_armed_track = 0;
-    self->record_armed_track_index_all = -1;
 
     if(i_pydaw_file_exists(f_file_name))
     {
