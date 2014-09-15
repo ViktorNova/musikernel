@@ -7485,6 +7485,9 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
 
     CC_EDITOR_WIDGET.update_ccs_in_use(list(f_cc_set))
 
+    if a_items is not None:
+        CC_EDITOR_WIDGET.set_cc_num(sorted(f_cc_set)[0])
+
     ITEM_EDITOR.tab_changed()
     if ITEM_EDITOR.items:
         ITEM_EDITOR.open_item_list()
@@ -7849,7 +7852,7 @@ class item_list_editor:
         f_window.exec_()
 
     def tab_changed(self, a_val=None):
-        f_list = [PIANO_ROLL_EDITOR, PB_EDITOR]
+        f_list = [PIANO_ROLL_EDITOR, CC_EDITOR, PB_EDITOR]
         f_index = self.tab_widget.currentIndex()
         if f_index == 0:
             global_set_piano_roll_zoom()
