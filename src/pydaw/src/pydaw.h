@@ -3057,7 +3057,7 @@ t_pydaw_seq_event * g_pycc_get(int a_cc_num, float a_cc_val, float a_start)
     t_pydaw_seq_event * f_result =
         (t_pydaw_seq_event*)malloc(sizeof(t_pydaw_seq_event));
     f_result->type = PYDAW_EVENT_CONTROLLER;
-    f_result->port = a_cc_num;
+    f_result->param = a_cc_num;
     f_result->value = a_cc_val;
     f_result->start = a_start;
 

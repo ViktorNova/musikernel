@@ -180,6 +180,7 @@ typedef struct {
     float * port_table;
     int plugin_uid;
     t_plugin_cc_map cc_map;
+    PYFX_Descriptor * descriptor;
 } t_euphoria __attribute__((aligned(16)));
 
 

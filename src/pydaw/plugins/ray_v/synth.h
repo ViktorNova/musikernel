@@ -140,7 +140,7 @@ typedef struct {
     t_rayv_mono_modules * mono_modules;
 
     int i_run_poly_voice;
-    
+
     float sv_pitch_bend_value;
     float sv_last_note;  //For glide
 
@@ -152,6 +152,7 @@ typedef struct {
     t_plugin_event_queue atm_queue;
     float * port_table;
     t_plugin_cc_map cc_map;
+    PYFX_Descriptor * descriptor;
 } t_rayv;
 
 

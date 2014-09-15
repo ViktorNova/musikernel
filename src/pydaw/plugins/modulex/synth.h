@@ -178,6 +178,7 @@ typedef struct
 
     float * port_table;
     t_plugin_cc_map cc_map;
+    PYFX_Descriptor * descriptor;
 } t_modulex;
 
 #ifdef	__cplusplus

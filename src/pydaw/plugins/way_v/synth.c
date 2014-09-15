@@ -638,8 +638,11 @@ static PYFX_Handle g_wayv_instantiate(PYFX_Descriptor * descriptor,
             int s_rate, fp_get_wavpool_item_from_host a_host_wavpool_func,
             int a_plugin_uid, fp_queue_message a_queue_func)
 {
-    t_wayv *plugin_data = (t_wayv *) malloc(sizeof(t_wayv));
+    t_wayv *plugin_data;
+    lmalloc((void**)&plugin_data, sizeof(t_wayv));
+
     plugin_data->fs = s_rate;
+    plugin_data->descriptor = descriptor;
 
     plugin_data->mono_modules = v_wayv_mono_init(plugin_data->fs);
 
@@ -1069,16 +1072,14 @@ static void v_wayv_process_midi_event(
     }
     else if (a_event->type == PYDAW_EVENT_CONTROLLER)
     {
-        assert(a_event->port >=
-                WAYV_FIRST_CONTROL_PORT &&
-                a_event->port < WAYV_COUNT);
+        assert(a_event->param >= 1 && a_event->param < 128);
 
         plugin_data->midi_event_types[plugin_data->midi_event_count] =
                 PYDAW_EVENT_CONTROLLER;
         plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
                 a_event->tick;
         plugin_data->midi_event_ports[plugin_data->midi_event_count] =
-                a_event->port;
+                a_event->param;
         plugin_data->midi_event_values[plugin_data->midi_event_count] =
                 a_event->value;
         plugin_data->midi_event_count++;
@@ -1138,7 +1139,7 @@ static void v_run_wayv(
     }
 
     f_i = 0;
-    
+
     while(f_i < ext_event_count)
     {
         v_wayv_process_midi_event(plugin_data, &ext_events[f_i], f_poly_mode);
@@ -1160,8 +1161,11 @@ static void v_run_wayv(
             }
             else if(plugin_data->midi_event_types[midi_event_pos] == PYDAW_EVENT_CONTROLLER)
             {
-                plugin_data->port_table[plugin_data->midi_event_ports[midi_event_pos]] =
-                        plugin_data->midi_event_values[midi_event_pos];
+                v_cc_map_translate(
+                    &plugin_data->cc_map, plugin_data->descriptor,
+                    plugin_data->port_table,
+                    plugin_data->midi_event_ports[midi_event_pos],
+                    plugin_data->midi_event_values[midi_event_pos]);
             }
 
             midi_event_pos++;

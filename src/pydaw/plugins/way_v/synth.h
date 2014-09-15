@@ -609,6 +609,7 @@ typedef struct
     t_plugin_event_queue atm_queue;
     float * port_table;
     t_plugin_cc_map cc_map;
+    PYFX_Descriptor * descriptor;
 } t_wayv;
 
 

@@ -477,11 +477,9 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
     wavpool_get_func = a_host_wavpool_func;
     t_euphoria *plugin_data;
 
-    if(posix_memalign((void**)&plugin_data, 16, sizeof(t_euphoria)) != 0)
-    {
-        return NULL;
-    }
+    lmalloc((void**)&plugin_data, sizeof(t_euphoria));
 
+    plugin_data->descriptor = descriptor;
     plugin_data->voices = g_voc_get_voices(EUPHORIA_POLYPHONY,
             EUPHORIA_POLYPHONY_THRESH);
 
@@ -1200,12 +1198,11 @@ static void v_euphoria_process_midi_event(
     }
     else if (a_event->type == PYDAW_EVENT_CONTROLLER)
     {
-        assert(a_event->port >= EUPHORIA_FIRST_CONTROL_PORT &&
-                a_event->port < EUPHORIA_PORT_COUNT);
+        assert(a_event->param >= 1 && a_event->param < 128);
 
         plugin_data->midi_event_types[plugin_data->midi_event_count] = PYDAW_EVENT_CONTROLLER;
         plugin_data->midi_event_ticks[plugin_data->midi_event_count] = a_event->tick;
-        plugin_data->midi_event_ports[plugin_data->midi_event_count] = a_event->port;
+        plugin_data->midi_event_ports[plugin_data->midi_event_count] = a_event->param;
         plugin_data->midi_event_values[plugin_data->midi_event_count] = a_event->value;
         plugin_data->midi_event_count++;
     }
@@ -1290,8 +1287,11 @@ static void v_run_lms_euphoria(
             }
             else if(plugin_data->midi_event_types[midi_event_pos] == PYDAW_EVENT_CONTROLLER)
             {
-                plugin_data->port_table[plugin_data->midi_event_ports[midi_event_pos]] =
-                        plugin_data->midi_event_values[midi_event_pos];
+                v_cc_map_translate(
+                    &plugin_data->cc_map, plugin_data->descriptor,
+                    plugin_data->port_table,
+                    plugin_data->midi_event_ports[midi_event_pos],
+                    plugin_data->midi_event_values[midi_event_pos]);
             }
 
             midi_event_pos++;
