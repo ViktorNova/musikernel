@@ -7541,6 +7541,8 @@ class item_list_editor:
         self.piano_roll_tab = QtGui.QGroupBox()
         self.tab_widget.addTab(self.piano_roll_tab, _("Piano Roll"))
         self.notes_tab = QtGui.QGroupBox()
+        self.cc_tab = QtGui.QGroupBox()
+        self.tab_widget.addTab(self.cc_tab, _("CC"))
 
         self.pitchbend_tab = QtGui.QGroupBox()
         self.tab_widget.addTab(self.pitchbend_tab, _("Pitchbend"))
@@ -7550,6 +7552,9 @@ class item_list_editor:
 
         self.notes_groupbox = QtGui.QGroupBox(_("Notes"))
         self.notes_vlayout = QtGui.QVBoxLayout(self.notes_groupbox)
+
+        self.cc_vlayout = QtGui.QVBoxLayout()
+        self.cc_tab.setLayout(self.cc_vlayout)
 
         self.editing_hboxlayout.addWidget(QtGui.QLabel(_("Viewing Item:")))
         self.item_name_combobox = QtGui.QComboBox()
@@ -7593,7 +7598,7 @@ class item_list_editor:
         self.ccs_table_widget = QtGui.QTableWidget()
         self.ccs_table_widget.setVerticalScrollMode(
             QtGui.QAbstractItemView.ScrollPerPixel)
-        self.ccs_table_widget.setColumnCount(4)
+        self.ccs_table_widget.setColumnCount(3)
         self.ccs_table_widget.setRowCount(256)
         self.ccs_table_widget.setSortingEnabled(True)
         self.ccs_table_widget.sortItems(0)
@@ -7604,6 +7609,9 @@ class item_list_editor:
         self.ccs_table_widget.resizeColumnsToContents()
         self.ccs_vlayout.addWidget(self.ccs_table_widget)
         self.notes_hlayout.addWidget(self.ccs_groupbox)
+
+        self.cc_vlayout.addWidget(CC_EDITOR_WIDGET.widget)
+
         self.pb_hlayout = QtGui.QHBoxLayout()
         self.pitchbend_tab.setLayout(self.pb_hlayout)
         self.pb_groupbox = QtGui.QGroupBox(_("Pitchbend"))
@@ -7905,7 +7913,7 @@ class item_list_editor:
         self.notes_table_widget.setHorizontalHeaderLabels(
             [_('Start'), _('Length'), _('Note'), _('Note#'), _('Velocity')])
         self.ccs_table_widget.setHorizontalHeaderLabels(
-            [_('Start'), _('Plugin'), _('Control'), _('Value')])
+            [_('Start'), _('Control'), _('Value')])
         self.pitchbend_table_widget.setHorizontalHeaderLabels(
             [_('Start'), _('Value')])
 
@@ -7959,17 +7967,12 @@ class item_list_editor:
         self.ccs_table_widget.setSortingEnabled(False)
         f_i = 0
         for cc in self.item.ccs:
-            f_plugin_name = PLUGIN_NAMES[PLUGIN_INDEXES[int(cc.plugin_index)]]
-            f_port_name = CONTROLLER_PORT_NUM_DICT[f_plugin_name][
-                int(cc.cc_num)].name
             self.ccs_table_widget.setItem(
                 f_i, 0, QtGui.QTableWidgetItem(str(cc.start)))
             self.ccs_table_widget.setItem(
-                f_i, 1, QtGui.QTableWidgetItem(f_plugin_name))
+                f_i, 1, QtGui.QTableWidgetItem(cc.cc_num))
             self.ccs_table_widget.setItem(
-                f_i, 2, QtGui.QTableWidgetItem(f_port_name))
-            self.ccs_table_widget.setItem(
-                f_i, 3, QtGui.QTableWidgetItem(str(cc.cc_val)))
+                f_i, 2, QtGui.QTableWidgetItem(str(cc.cc_val)))
             f_i = f_i + 1
         self.ccs_table_widget.setSortingEnabled(True)
         self.pitchbend_table_widget.setSortingEnabled(False)
@@ -10784,6 +10787,8 @@ APP.setWindowIcon(
     pydaw_util.global_pydaw_install_prefix, global_pydaw_version_string)))
 
 PB_EDITOR = automation_viewer(a_is_cc=False)
+CC_EDITOR = automation_viewer()
+CC_EDITOR_WIDGET = automation_viewer_widget(CC_EDITOR)
 
 WAVE_EDITOR = pydaw_wave_editor_widget()
 

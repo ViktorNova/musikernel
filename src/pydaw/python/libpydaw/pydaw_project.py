@@ -2189,15 +2189,10 @@ class pydaw_item:
         return f_result
 
     def __str__(self):
-        f_result = ""
-        f_list = self.notes + self.ccs + self.pitchbends
-        f_list.sort()
-
-        for f_event in f_list:
-            f_result += str(f_event)
-
-        f_result += pydaw_terminating_char
-        return f_result
+        f_result = [str(x) for x in
+            sorted(self.notes + self.ccs + self.pitchbends)]
+        f_result.append(pydaw_terminating_char)
+        return "\n".join(f_result)
 
 class pydaw_abstract_midi_event:
     """ Allows inheriting classes to be sorted by .start variable
@@ -2251,8 +2246,8 @@ class pydaw_note(pydaw_abstract_midi_event):
         return pydaw_note.from_arr(f_arr[1:])
 
     def __str__(self):
-        return "{}\n".format("|".join(map(proj_file_str,
-            ("n", self.start, self.length, self.note_num, self.velocity))))
+        return "|".join(str(x) for x in
+            ("n", self.start, self.length, self.note_num, self.velocity))
 
 
 class pydaw_cc(pydaw_abstract_midi_event):
@@ -2270,7 +2265,7 @@ class pydaw_cc(pydaw_abstract_midi_event):
 
     def __str__(self):
         return "|".join(str(x) for x in
-            ("c", self.start, self.cc_num, self.cc_val, "\n"))
+            ("c", self.start, self.cc_num, self.cc_val))
 
     @staticmethod
     def from_arr(a_arr):
@@ -2299,8 +2294,7 @@ class pydaw_pitchbend(pydaw_abstract_midi_event):
         self.pb_val = pydaw_clip_value(float(a_val), -1.0, 1.0, True)
 
     def __str__(self):
-        return "{}\n".format(
-            "|".join(map(proj_file_str, ("p", self.start, self.pb_val))))
+        return "|".join(str(x) for x in ("p", self.start, self.pb_val))
 
     @staticmethod
     def from_arr(a_arr):
