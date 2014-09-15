@@ -1277,26 +1277,26 @@ inline void v_queue_osc_message(char * a_key, char * a_val)
     }
 }
 
-void v_pydaw_set_control_from_cc(t_pydaw_plugin *instance, int controlIn,
+void v_pydaw_set_control_from_atm(t_pydaw_plugin *instance, int controlIn,
         t_pydaw_seq_event *event, t_pydaw_data * self,
         int a_plugin_uid, int a_track_num)
 {
     t_pytrack * f_track = self->track_pool_all[a_track_num];
-    float f_lb = instance->descriptor->
-        PortRangeHints[controlIn].LowerBound;
-    float f_ub = instance->descriptor->
-        PortRangeHints[controlIn].UpperBound;
+    float f_lb = instance->descriptor->PortRangeHints[controlIn].LowerBound;
+    float f_ub = instance->descriptor->PortRangeHints[controlIn].UpperBound;
     float f_diff = f_ub - f_lb;
     event->value = (event->value * 0.0078125f * f_diff) + f_lb;
     //this may or may not already be set.  TODO:  simplify
     event->port = controlIn;
     if(!self->is_offline_rendering)
     {
-        sprintf(f_track->osc_cursor_message, "%i|%i|%f",
-                a_plugin_uid, controlIn, event->value);
+        sprintf(
+            f_track->osc_cursor_message, "%i|%i|%f",
+            a_plugin_uid, controlIn, event->value);
         v_queue_osc_message("pc", f_track->osc_cursor_message);
     }
 }
+
 
 inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
 {
@@ -1810,7 +1810,7 @@ inline void v_pydaw_process_atm(
                     v_pydaw_ev_clear(f_buff_ev);
                     v_pydaw_ev_set_atm(f_buff_ev, f_point->port, f_val);
                     f_buff_ev->tick = f_note_sample_offset;
-                    v_pydaw_set_control_from_cc(
+                    v_pydaw_set_control_from_atm(
                         f_plugin, f_point->port, f_buff_ev, self,
                         f_plugin->pool_uid, f_track_num);
                     f_plugin->atm_count += 1;
@@ -1883,12 +1883,12 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
                     f_current_track_region]->item_indexes[
                         f_i][f_current_track_bar] != -1))
             {
-                t_pyitem f_current_item =
-                    *(self->item_pool[(self->pysong->regions[
+                t_pyitem * f_current_item =
+                    self->item_pool[(self->pysong->regions[
                         f_current_track_region]->item_indexes[
-                            f_i][f_current_track_bar])]);
+                            f_i][f_current_track_bar])];
 
-                if((f_track->item_event_index) >= (f_current_item.event_count))
+                if((f_track->item_event_index) >= (f_current_item->event_count))
                 {
                     if(f_track_next_period_beats >= 4.0f)
                     {
@@ -1924,7 +1924,7 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
                 }
 
                 t_pydaw_seq_event * f_event =
-                    f_current_item.events[f_track->item_event_index];
+                    f_current_item->events[f_track->item_event_index];
 
                 if((f_event->start >= f_track_current_period_beats) &&
                     (f_event->start < f_track_next_period_beats))
@@ -1979,87 +1979,30 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
                     }
                     else if(f_event->type == PYDAW_EVENT_CONTROLLER)
                     {
-                        int controller = f_event->port;
-                        if (controller > 0)
-                        {
-                            int controlIn;
-                            if(0) // f_track->instrument_count)
-                            {
-                                t_pydaw_seq_event * f_buff_ev =
-                                    &f_track->event_buffer[
-                                        f_track->period_event_index];
-                                controlIn = controller;
-                                if (controlIn >= 0)
-                                {
-                                    int f_note_sample_offset = 0;
-                                    float f_note_start_diff =
-                                        ((f_event->start) -
-                                        f_track_current_period_beats) +
-                                        f_track_beats_offset;
-                                    float f_note_start_frac =
-                                        f_note_start_diff /
-                                        (self->
-                                         ml_sample_period_inc_beats);
-                                    f_note_sample_offset =
-                                        (int)(f_note_start_frac *
-                                        ((float)sample_count));
+                        int controller = f_event->param;
 
-                                    v_pydaw_ev_clear(f_buff_ev);
+                        t_pydaw_seq_event * f_buff_ev =
+                            &f_track->event_buffer[f_track->period_event_index];
 
-                                    v_pydaw_ev_set_controller(f_buff_ev, 0,
-                                            0, f_event->value);
+                        int f_note_sample_offset = 0;
 
-                                    f_buff_ev->port = f_event->port;
+                        float f_note_start_diff =
+                            ((f_event->start) - f_track_current_period_beats) +
+                            f_track_beats_offset;
+                        float f_note_start_frac =
+                            f_note_start_diff /
+                            (self->ml_sample_period_inc_beats);
+                        f_note_sample_offset =
+                            (int)(f_note_start_frac * ((float)sample_count));
 
-                                    f_buff_ev->tick = f_note_sample_offset;
+                        v_pydaw_ev_clear(f_buff_ev);
 
-                                    /*
-                                    v_pydaw_set_control_from_cc(
-                                        f_track->instruments[0], controlIn,
-                                        f_buff_ev, self, 1, f_i);
-                                    */
-                                    f_track->period_event_index += 1;
-                                }
-                            }
-                            else if(0) // f_event->plugin_index == -1) TODO
-                            {
-                                controlIn = controller;
-                                if (controlIn >= 0)
-                                {
-                                    int f_note_sample_offset = 0;
-                                    float f_note_start_diff =
-                                        ((f_event->start) -
-                                        f_track_current_period_beats) +
-                                        f_track_beats_offset;
-                                    float f_note_start_frac =
-                                        f_note_start_diff /
-                                        (self->
-                                         ml_sample_period_inc_beats);
-                                    f_note_sample_offset =
-                                        (int)(f_note_start_frac *
-                                        ((float)sample_count));
+                        v_pydaw_ev_set_controller(
+                            f_buff_ev, 0, controller, f_event->value);
 
-                                    t_pydaw_seq_event * f_buff_ev =
-                                        &f_track->event_buffer[
-                                        (f_track->period_event_index)];
+                        f_buff_ev->tick = f_note_sample_offset;
 
-                                    v_pydaw_ev_clear(f_buff_ev);
-
-                                    v_pydaw_ev_set_controller(f_buff_ev, 0,
-                                            0, f_event->value);
-
-                                    f_buff_ev->port = f_event->port;
-
-                                    f_buff_ev->tick = f_note_sample_offset;
-
-                                    v_pydaw_set_control_from_cc(
-                                        f_track->plugins[0], controlIn,
-                                        f_buff_ev, self, 0, f_i);
-
-                                    f_track->period_event_index += 1;
-                                }
-                            }
-                        }
+                        f_track->period_event_index += 1;
                     }
                     else if(f_event->type == PYDAW_EVENT_PITCHBEND)
                     {
@@ -2250,31 +2193,20 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
                 ((((float)(events[f_i2].tick)) / ((float)sample_count))
                 * (self->playback_inc))) * 4.0f;
 
-            int controlIn = -9999;   // TODO
+            a_track->period_event_index += 1;
 
-            if (controlIn > 0)
+            if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
-                v_pydaw_set_control_from_cc(
-                    a_track->plugins[0], controlIn, &events[f_i2], self, 0,
-                    a_track->track_num);
+                float f_beat =
+                    self->ml_current_period_beats +
+                    f_pydaw_samples_to_beat_count(
+                        events[f_i2].tick, self->tempo, self->sample_rate);
 
-                a_track->period_event_index += 1;
-
-                if(self->playback_mode ==
-                        PYDAW_PLAYBACK_MODE_REC)
-                {
-                    float f_beat =
-                        self->ml_current_period_beats +
-                        f_pydaw_samples_to_beat_count(
-                            events[f_i2].tick, self->tempo, self->sample_rate);
-
-                    sprintf(f_osc_msg,
-                        "cc|%i|%i|%f|-1|%i|%f",
-                        self->current_region,
-                        self->current_bar, f_beat,
-                        controlIn, events[f_i2].value);
-                    v_queue_osc_message("mrec", f_osc_msg);
-                }
+                sprintf(f_osc_msg,
+                    "cc|%i|%i|%f|-1|%i|%f",
+                    self->current_region, self->current_bar, f_beat,
+                    controller, events[f_i2].value);
+                v_queue_osc_message("mrec", f_osc_msg);
             }
         }
         f_i2++;
@@ -3487,7 +3419,8 @@ t_pyregion * g_pyregion_get(t_pydaw_data* self, int a_uid)
 
 void g_pyitem_get(t_pydaw_data* self, int a_uid)
 {
-    t_pyitem * f_result = (t_pyitem*)malloc(sizeof(t_pyitem));
+    t_pyitem * f_result;
+    lmalloc((void**)&f_result, sizeof(t_pyitem));
 
     f_result->event_count = 0;
     f_result->uid = a_uid;
@@ -3527,7 +3460,6 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
         }
         else if(!strcmp(f_type, "c")) //cc
         {
-            //this is really port number, will refactor later...
             char * f_cc_num = c_iterate_2d_char_array(f_current_string);
             char * f_cc_val = c_iterate_2d_char_array(f_current_string);
 
