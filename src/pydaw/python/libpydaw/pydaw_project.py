@@ -2247,18 +2247,19 @@ class pydaw_note(pydaw_abstract_midi_event):
 
     def __str__(self):
         return "|".join(str(x) for x in
-            ("n", self.start, self.length, self.note_num, self.velocity))
+            ("n", round(self.start, 6), round(self.length, 6),
+             self.note_num, self.velocity))
 
 
 class pydaw_cc(pydaw_abstract_midi_event):
+    def __init__(self, a_start, a_cc_num, a_cc_val):
+        self.start = float(a_start)
+        self.cc_num = int(a_cc_num)
+        self.cc_val = float(a_cc_val)
+
     def __eq__(self, other):
         return ((self.start == other.start) and
         (self.cc_num == other.cc_num) and (self.cc_val == other.cc_val))
-
-    def __init__(self, a_start, a_port_num, a_cc_val):
-        self.start = float(a_start)
-        self.cc_num = int(a_port_num)
-        self.cc_val = float(a_cc_val)
 
     def set_val(self, a_val):
         self.cc_val = pydaw_clip_value(float(a_val), 0.0, 127.0, True)

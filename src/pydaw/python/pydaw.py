@@ -7485,7 +7485,7 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
 
     CC_EDITOR_WIDGET.update_ccs_in_use(list(f_cc_set))
 
-    if a_items is not None:
+    if a_items is not None and f_cc_set:
         CC_EDITOR_WIDGET.set_cc_num(sorted(f_cc_set)[0])
 
     ITEM_EDITOR.tab_changed()
@@ -7924,8 +7924,8 @@ class item_list_editor:
             self.item_name_combobox.currentIndex()]
         self.item = PROJECT.get_item_by_name(self.item_name)
         self.notes_table_widget.setSortingEnabled(False)
-        f_i = 0
-        for note in self.item.notes:
+
+        for note, f_i in zip(self.item.notes, range(len(self.item.notes))):
             f_note_str = note_num_to_string(note.note_num)
             self.notes_table_widget.setItem(
                 f_i, 0, QtGui.QTableWidgetItem(str(note.start)))
@@ -7937,27 +7937,25 @@ class item_list_editor:
                 f_i, 3, QtGui.QTableWidgetItem(str(note.note_num)))
             self.notes_table_widget.setItem(
                 f_i, 4, QtGui.QTableWidgetItem(str(note.velocity)))
-            f_i = f_i + 1
         self.notes_table_widget.setSortingEnabled(True)
         self.ccs_table_widget.setSortingEnabled(False)
-        f_i = 0
-        for cc in self.item.ccs:
+
+        for cc, f_i in zip(self.item.ccs, range(len(self.item.ccs))):
             self.ccs_table_widget.setItem(
                 f_i, 0, QtGui.QTableWidgetItem(str(cc.start)))
             self.ccs_table_widget.setItem(
-                f_i, 1, QtGui.QTableWidgetItem(cc.cc_num))
+                f_i, 1, QtGui.QTableWidgetItem(str(cc.cc_num)))
             self.ccs_table_widget.setItem(
                 f_i, 2, QtGui.QTableWidgetItem(str(cc.cc_val)))
-            f_i = f_i + 1
         self.ccs_table_widget.setSortingEnabled(True)
         self.pitchbend_table_widget.setSortingEnabled(False)
-        f_i = 0
-        for pb in self.item.pitchbends:
+
+        for pb, f_i in zip(
+        self.item.pitchbends, range(len(self.item.pitchbends))):
             self.pitchbend_table_widget.setItem(
                 f_i, 0, QtGui.QTableWidgetItem(str(pb.start)))
             self.pitchbend_table_widget.setItem(
                 f_i, 1, QtGui.QTableWidgetItem(str(pb.pb_val)))
-            f_i = f_i + 1
         self.pitchbend_table_widget.setSortingEnabled(True)
         self.notes_table_widget.resizeColumnsToContents()
         self.ccs_table_widget.resizeColumnsToContents()
