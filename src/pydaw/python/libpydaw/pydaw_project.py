@@ -1879,6 +1879,11 @@ def pydaw_velocity_mod(a_items, a_amt, a_line=False, a_end_amt=127,
 
 
 class pydaw_item:
+    def __init__(self):
+        self.notes = []
+        self.ccs = []
+        self.pitchbends = []
+
     def add_note(self, a_note, a_check=True):
         if a_check:
             for note in self.notes:
@@ -2183,11 +2188,6 @@ class pydaw_item:
                     f_result.add_pb(pydaw_pitchbend.from_arr(f_event_arr[1:]))
         return f_result
 
-    def __init__(self):
-        self.notes = []
-        self.ccs = []
-        self.pitchbends = []
-
     def __str__(self):
         f_result = ""
         f_list = self.notes + self.ccs + self.pitchbends
@@ -2206,6 +2206,14 @@ class pydaw_abstract_midi_event:
         return self.start < other.start
 
 class pydaw_note(pydaw_abstract_midi_event):
+    def __init__(self, a_start, a_length, a_note_number, a_velocity):
+        self.start = float(a_start)
+        self.length = float(a_length)
+        self.velocity = int(a_velocity)
+        self.note_num = int(a_note_number)
+        self.is_selected = False
+        self.set_end()
+
     def __eq__(self, other):
         return(
             (self.start == other.start) and \
@@ -2223,14 +2231,6 @@ class pydaw_note(pydaw_abstract_midi_event):
 
     def set_end(self):
         self.end = self.length + self.start
-
-    def __init__(self, a_start, a_length, a_note_number, a_velocity):
-        self.start = float(a_start)
-        self.length = float(a_length)
-        self.velocity = int(a_velocity)
-        self.note_num = int(a_note_number)
-        self.is_selected = False
-        self.set_end()
 
     def overlaps(self, other):
         if self.note_num == other.note_num:
@@ -2255,14 +2255,45 @@ class pydaw_note(pydaw_abstract_midi_event):
             ("n", self.start, self.length, self.note_num, self.velocity))))
 
 
-class pydaw_pitchbend(pydaw_abstract_midi_event):
+class pydaw_cc(pydaw_abstract_midi_event):
     def __eq__(self, other):
-        #TODO:  get rid of the pb_val comparison?
-        return ((self.start == other.start) and (self.pb_val == other.pb_val))
+        return ((self.start == other.start) and
+        (self.cc_num == other.cc_num) and (self.cc_val == other.cc_val))
 
+    def __init__(self, a_start, a_port_num, a_cc_val):
+        self.start = float(a_start)
+        self.cc_num = int(a_port_num)
+        self.cc_val = float(a_cc_val)
+
+    def set_val(self, a_val):
+        self.cc_val = pydaw_clip_value(float(a_val), 0.0, 127.0, True)
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("c", self.start, self.cc_num, self.cc_val, "\n"))
+
+    @staticmethod
+    def from_arr(a_arr):
+        f_result = pydaw_cc(*a_arr)
+        return f_result
+
+    @staticmethod
+    def from_str(a_str):
+        f_arr = a_str.split("|")
+        return pydaw_cc.from_arr(f_arr[1:])
+
+    def clone(self):
+        return pydaw_cc.from_str(str(self))
+
+
+class pydaw_pitchbend(pydaw_abstract_midi_event):
     def __init__(self, a_start, a_pb_val):
         self.start = float(a_start)
         self.pb_val = float(a_pb_val)
+
+    def __eq__(self, other):
+        #TODO:  get rid of the pb_val comparison?
+        return ((self.start == other.start) and (self.pb_val == other.pb_val))
 
     def set_val(self, a_val):
         self.pb_val = pydaw_clip_value(float(a_val), -1.0, 1.0, True)
