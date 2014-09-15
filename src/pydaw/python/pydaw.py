@@ -6800,7 +6800,6 @@ class automation_viewer(QtGui.QGraphicsView):
         self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
         self.cc_num = 1
         self.last_scale = 1.0
-        self.plugin_index = 0
         self.last_x_scale = 1.0
         AUTOMATION_EDITORS.append(self)
         self.selection_enabled = True
@@ -6856,7 +6855,6 @@ class automation_viewer(QtGui.QGraphicsView):
                 if f_index < ITEM_EDITING_COUNT:
                     f_item2 = f_item.clone()
                     if self.is_cc:
-                        f_item2.plugin_index = self.plugin_index
                         f_item2.cc_num = self.cc_num
                         ITEM_EDITOR.items[f_index].add_cc(f_item2)
                     else:
@@ -7030,9 +7028,8 @@ class automation_viewer(QtGui.QGraphicsView):
         self.total_height = AUTOMATION_RULER_WIDTH + \
             self.viewer_height - AUTOMATION_POINT_RADIUS
 
-    def set_cc_num(self, a_plugin_index, a_port_num):
-        self.plugin_index = PLUGIN_NUMBERS[int(a_plugin_index)]
-        self.cc_num = a_port_num
+    def set_cc_num(self, a_cc_num):
+        self.cc_num = a_cc_num
         self.clear_drawn_items()
         self.draw_item()
 
@@ -7054,8 +7051,7 @@ class automation_viewer(QtGui.QGraphicsView):
         for f_item in ITEM_EDITOR.items:
             if self.is_cc:
                 for f_cc in f_item.ccs:
-                    if f_cc.cc_num == self.cc_num and \
-                    f_cc.plugin_index == self.plugin_index:
+                    if f_cc.cc_num == self.cc_num:
                         self.draw_point(f_cc, f_item_index)
             else:
                 for f_pb in f_item.pitchbends:
@@ -7102,60 +7098,37 @@ class automation_viewer(QtGui.QGraphicsView):
         self.setUpdatesEnabled(True)
         self.update()
 
-global_last_ipb_value = 18  #For the 'add point' dialog to remember settings
+LAST_IPB_VALUE = 18  #For the 'add point' dialog to remember settings
 
 class automation_viewer_widget:
-    def plugin_changed(self, a_val=None):
-        self.control_combobox.clear()
-        self.control_combobox.addItems(
-            CC_NAMES[str(self.plugin_combobox.currentText())])
-        self.automation_viewer.draw_item()
-
     def control_changed(self, a_val=None):
         self.set_cc_num()
         self.ccs_in_use_combobox.setCurrentIndex(0)
 
     def set_cc_num(self, a_val=None):
-        f_port_name = str(self.control_combobox.currentText())
-        if f_port_name != "":
-            f_num = CONTROLLER_PORT_NAME_DICT[
-                str(self.plugin_combobox.currentText())][f_port_name].port
-            self.automation_viewer.set_cc_num(
-                self.plugin_combobox.currentIndex(), f_num)
+        f_cc_num = int(str(self.control_combobox.currentText()))
+        self.automation_viewer.set_cc_num(f_cc_num)
 
     def ccs_in_use_combobox_changed(self, a_val=None):
         if not self.suppress_ccs_in_use:
             f_str = str(self.ccs_in_use_combobox.currentText())
             if f_str != "":
-                f_arr = f_str.split("|")
-                self.plugin_combobox.setCurrentIndex(
-                    self.plugin_combobox.findText(f_arr[0]))
                 self.control_combobox.setCurrentIndex(
-                    self.control_combobox.findText(f_arr[1]))
+                    self.control_combobox.findText(f_str))
 
     def update_ccs_in_use(self, a_ccs):
         self.suppress_ccs_in_use = True
         self.ccs_in_use_combobox.clear()
         self.ccs_in_use_combobox.addItem("")
-        for f_cc in a_ccs:
-            f_key_split = f_cc.split("|")
-            f_plugin_name = PLUGIN_NAMES[
-                PLUGIN_INDEXES[int(f_key_split[0])]]
-            f_map = CONTROLLER_PORT_NUM_DICT[
-                f_plugin_name][int(f_key_split[1])]
-            self.ccs_in_use_combobox.addItem(
-                "{}|{}".format(f_plugin_name, f_map.name))
+        for f_cc in sorted(a_ccs):
+            self.ccs_in_use_combobox.addItem(str(f_cc))
         self.suppress_ccs_in_use = False
 
     def smooth_pressed(self):
         if self.is_cc:
-            f_map = CONTROLLER_PORT_NAME_DICT[
-                str(self.plugin_combobox.currentText())]\
-                [str(self.control_combobox.currentText())]
+            f_cc_num = int(str(self.control_combobox.currentText()))
             pydaw_smooth_automation_points(
-                ITEM_EDITOR.items, self.is_cc,
-                PLUGIN_NUMBERS[self.plugin_combobox.currentIndex()],
-                f_map.port)
+                ITEM_EDITOR.items, self.is_cc, f_cc_num)
         else:
             pydaw_smooth_automation_points(ITEM_EDITOR.items, self.is_cc)
         self.automation_viewer.selected_str = []
@@ -7173,16 +7146,10 @@ class automation_viewer_widget:
         if a_is_cc:
             self.hlayout2 = QtGui.QHBoxLayout()
             self.vlayout.addLayout(self.hlayout2)
-            self.plugin_combobox = QtGui.QComboBox()
-            self.plugin_combobox.setMinimumWidth(120)
-            self.plugin_combobox.addItems(PLUGIN_NAMES)
-            self.hlayout2.addWidget(QtGui.QLabel(_("Plugin")))
-            self.hlayout2.addWidget(self.plugin_combobox)
-            self.plugin_combobox.currentIndexChanged.connect(
-                self.plugin_changed)
             self.control_combobox = QtGui.QComboBox()
+            self.control_combobox.addItems([str(x) for x in range(1, 128)])
             self.control_combobox.setMinimumWidth(240)
-            self.hlayout2.addWidget(QtGui.QLabel(_("Control")))
+            self.hlayout2.addWidget(QtGui.QLabel(_("CC")))
             self.hlayout2.addWidget(self.control_combobox)
             self.hlayout2.addItem(
                 QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding))
@@ -7265,10 +7232,9 @@ class automation_viewer_widget:
             f_bar = f_bar_spinbox.value() - 1
             f_item = ITEM_EDITOR.items[f_bar]
 
-            f_cc = pydaw_cc(f_pos_spinbox.value() - 1.0,
-                            self.automation_viewer.plugin_index,
-                            self.automation_viewer.cc_num,
-                            f_value_spinbox.value())
+            f_cc = pydaw_cc(
+                f_pos_spinbox.value() - 1.0, self.automation_viewer.cc_num,
+                f_value_spinbox.value())
             f_item.add_cc(f_cc)
 
             PROJECT.save_item(ITEM_EDITOR.item_names[f_bar],
@@ -7350,8 +7316,8 @@ class automation_viewer_widget:
             f_pb = pydaw_pitchbend(f_pos_spinbox.value() - 1.0, f_value)
             f_item.add_pb(f_pb)
 
-            global global_last_ipb_value
-            global_last_ipb_value = f_ipb_spinbox.value()
+            global LAST_IPB_VALUE
+            LAST_IPB_VALUE = f_ipb_spinbox.value()
 
             PROJECT.save_item(
                 ITEM_EDITOR.item_names[f_bar], ITEM_EDITOR.items[f_bar])
@@ -7406,7 +7372,7 @@ class automation_viewer_widget:
         f_ipb_spinbox.setToolTip(
             _("Set this to the same setting that your instrument plugin uses"))
         f_ipb_spinbox.setRange(2, 36)
-        f_ipb_spinbox.setValue(global_last_ipb_value)
+        f_ipb_spinbox.setValue(LAST_IPB_VALUE)
         f_layout.addWidget(f_ipb_spinbox, 10, 1)
         f_ipb_spinbox.valueChanged.connect(ipb_changed)
 
@@ -7506,12 +7472,18 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
             OPEN_ITEM_UIDS.append(
                 f_items_dict.get_uid_by_name(f_item_name))
 
+    CC_EDITOR.clear_drawn_items()
     PB_EDITOR.clear_drawn_items()
     ITEM_EDITOR.items = []
+    f_cc_set = set()
 
     for f_item_uid in OPEN_ITEM_UIDS:
         f_item = PROJECT.get_item_by_uid(f_item_uid)
         ITEM_EDITOR.items.append(f_item)
+        for cc in f_item.ccs:
+            f_cc_set.add(cc.cc_num)
+
+    CC_EDITOR_WIDGET.update_ccs_in_use(list(f_cc_set))
 
     ITEM_EDITOR.tab_changed()
     if ITEM_EDITOR.items:
@@ -10810,7 +10782,7 @@ PIANO_ROLL_EDITOR_WIDGET = piano_roll_editor_widget()
 ITEM_EDITOR = item_list_editor()
 AUDIO_SEQ = audio_items_viewer()
 
-MIDI_EDITORS = (PIANO_ROLL_EDITOR, PB_EDITOR)
+MIDI_EDITORS = (PIANO_ROLL_EDITOR, CC_EDITOR, PB_EDITOR)
 
 def global_check_device():
     f_device_dialog = pydaw_device_dialog.pydaw_device_dialog(

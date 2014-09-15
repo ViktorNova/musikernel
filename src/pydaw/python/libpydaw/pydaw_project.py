@@ -2265,7 +2265,7 @@ class pydaw_cc(pydaw_abstract_midi_event):
 
     def __str__(self):
         return "|".join(str(x) for x in
-            ("c", self.start, self.cc_num, self.cc_val))
+            ("c", round(self.start, 6), self.cc_num, round(self.cc_val, 6)))
 
     @staticmethod
     def from_arr(a_arr):
@@ -2294,7 +2294,8 @@ class pydaw_pitchbend(pydaw_abstract_midi_event):
         self.pb_val = pydaw_clip_value(float(a_val), -1.0, 1.0, True)
 
     def __str__(self):
-        return "|".join(str(x) for x in ("p", self.start, self.pb_val))
+        return "|".join(str(x) for x in
+            ("p", self.start, round(self.pb_val, 6)))
 
     @staticmethod
     def from_arr(a_arr):
