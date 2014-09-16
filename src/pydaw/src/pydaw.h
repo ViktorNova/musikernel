@@ -2184,6 +2184,7 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
 
             if(self->midi_learn)
             {
+                self->midi_learn = 0;
                 sprintf(f_osc_msg, "%i", controller);
                 v_queue_osc_message("ml", f_osc_msg);
             }

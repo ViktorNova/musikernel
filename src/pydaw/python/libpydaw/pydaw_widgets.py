@@ -259,6 +259,10 @@ class pydaw_abstract_ui_control:
             a_preset_mgr.add_control(self)
         self.default_value = a_default_value
         self.ratio_callback = None
+        self.midi_learn_callback = None
+
+    def set_midi_learn(self, a_callback):
+        self.midi_learn_callback = a_callback
 
     def reset_default_value(self):
         if self.default_value is not None:
@@ -502,8 +506,15 @@ class pydaw_abstract_ui_control:
         f_value = round(((f_max - f_min) * f_frac) + f_min)
         self.set_value(f_value)
 
+    def midi_learn(self):
+        self.midi_learn_callback(self)
+
     def contextMenuEvent(self, a_event):
         f_menu = QtGui.QMenu(self.control)
+        if self.midi_learn_callback:
+            f_ml_action = f_menu.addAction(_("MIDI Learn"))
+            f_ml_action.triggered.connect(self.midi_learn)
+            f_menu.addSeparator()
         f_reset_action = f_menu.addAction(_("Reset to Default Value"))
         f_reset_action.triggered.connect(self.reset_default_value)
         f_set_value_action = f_menu.addAction(_("Set Raw Controller Value..."))
@@ -3986,13 +3997,15 @@ class pydaw_per_audio_item_fx_widget:
 
 class pydaw_abstract_plugin_ui:
     def __init__(self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
-                 a_configure_callback, a_folder, a_can_resize=False):
+                 a_configure_callback, a_folder, a_midi_learn_callback,
+                 a_can_resize=False):
         self.plugin_uid = int(a_plugin_uid)
         self.folder = str(a_folder)
         self.can_resize = a_can_resize
         self.pydaw_project = a_project
         self.val_callback = a_val_callback
         self.configure_callback = a_configure_callback
+        self.midi_learn_callback = a_midi_learn_callback
         self.widget = QtGui.QScrollArea()
         self.widget.setObjectName("plugin_ui")
         self.widget.setMinimumSize(500, 500)
@@ -4016,6 +4029,13 @@ class pydaw_abstract_plugin_ui:
         self.save_file_on_exit = True
         self.is_quitting = False
         self._plugin_name = None
+
+    def set_midi_learn(self, a_port_map):
+        for f_port in (int(x) for x in a_port_map.values()):
+            self.port_dict[f_port].set_midi_learn(self.midi_learn)
+
+    def midi_learn(self, a_ctrl):
+        self.midi_learn_callback(a_ctrl)
 
     def get_plugin_name(self):
         return self._plugin_name
@@ -4142,10 +4162,10 @@ class pydaw_abstract_plugin_ui:
 class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
     def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name, a_stylesheet,
-                 a_configure_callback):
+                 a_configure_callback, a_midi_learn_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_val_callback, a_project,
-            a_plugin_uid, a_stylesheet, a_configure_callback, a_folder)
+            self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
+            a_configure_callback, a_folder, a_midi_learn_callback)
         self._plugin_name = "MODULEX"
         self.set_window_title(a_track_name)
         self.is_instrument = False
@@ -4371,6 +4391,7 @@ class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
             0, self.port_dict)
 
         self.open_plugin_file()
+        self.set_midi_learn(pydaw_ports.MODULEX_PORT_MAP)
 
     def open_plugin_file(self):
         pydaw_abstract_plugin_ui.open_plugin_file(self)
@@ -4428,10 +4449,10 @@ class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
 class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
     def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name,
-                 a_stylesheet, a_configure_callback):
+                 a_stylesheet, a_configure_callback, a_midi_learn_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_val_callback, a_project,
-            a_plugin_uid, a_stylesheet, a_configure_callback, a_folder)
+            self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
+            a_configure_callback, a_folder, a_midi_learn_callback)
         self._plugin_name = "RAYV"
         self.set_window_title(a_track_name)
         self.is_instrument = True
@@ -4597,6 +4618,7 @@ class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.lfo_cutoff.add_to_grid_layout(self.lfo.layout, 10)
 
         self.open_plugin_file()
+        self.set_midi_learn(pydaw_ports.RAYV_PORT_MAP)
 
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
@@ -4608,10 +4630,10 @@ class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
 class pydaw_wayv_plugin_ui(pydaw_abstract_plugin_ui):
     def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name, a_stylesheet,
-                 a_configure_callback):
+                 a_configure_callback, a_midi_learn_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_val_callback, a_project,
-            a_plugin_uid, a_stylesheet, a_configure_callback, a_folder)
+            self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
+            a_configure_callback, a_folder, a_midi_learn_callback)
         self._plugin_name = "WAYV"
         self.set_window_title(a_track_name)
         self.is_instrument = True
@@ -5141,6 +5163,7 @@ class pydaw_wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.tab_widget.addTab(self.additive_osc.widget, "Additive")
 
         self.open_plugin_file()
+        self.set_midi_learn(pydaw_ports.WAYV_PORT_MAP)
 
     def open_plugin_file(self):
         pydaw_abstract_plugin_ui.open_plugin_file(self)
@@ -5258,11 +5281,11 @@ EUPHORIA_INSTRUMENT_CLIPBOARD = None
 class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
     def __init__(self, a_val_callback,
                  a_project, a_folder, a_plugin_uid, a_track_name,
-                 a_stylesheet, a_configure_callback):
+                 a_stylesheet, a_configure_callback, a_midi_learn_callback):
         pydaw_abstract_plugin_ui.__init__(
-            self, a_val_callback,
-            a_project, a_plugin_uid, a_stylesheet,
-            a_configure_callback, a_folder, a_can_resize=True)
+            self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
+            a_configure_callback, a_folder, a_midi_learn_callback,
+            a_can_resize=True)
         self.set_window_title(a_track_name)
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(
@@ -6111,6 +6134,7 @@ class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             alignment=QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
 
         self.open_plugin_file()
+        self.set_midi_learn(pydaw_ports.EUPHORIA_PORT_MAP)
 
     def eq6_val_callback(self, a_port, a_val):
         f_eq_num = a_port // 3

@@ -1760,9 +1760,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_MIDI_LEARN))
     {
-        int f_is_midi_learn = atoi(a_value);
-        assert(f_is_midi_learn == 0 || f_is_midi_learn == 1);
-        pydaw_data->midi_learn = f_is_midi_learn;
+        pydaw_data->midi_learn = 1;
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_MIDI_DEVICE))
     {
