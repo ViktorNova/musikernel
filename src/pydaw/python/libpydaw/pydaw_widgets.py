@@ -590,6 +590,8 @@ class pydaw_null_control:
     def control_value_changed(self, a_value):
         self.val_callback(self.port_num, self.value)
 
+    def set_midi_learn(self, a_ignored):
+        pass
 
 class pydaw_knob_control(pydaw_abstract_ui_control):
     def __init__(self, a_size, a_label, a_port_num,
