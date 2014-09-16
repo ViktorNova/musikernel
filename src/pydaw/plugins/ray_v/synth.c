@@ -512,7 +512,6 @@ static void v_run_rayv(
 {
     t_rayv *plugin_data = (t_rayv *) instance;
 
-    plugin_data->i_run_poly_voice = 0;
     plugin_data->midi_event_count = 0;
 
     int f_poly_mode = (int)(*plugin_data->mono_mode);
@@ -557,6 +556,7 @@ static void v_run_rayv(
     }
 
     f_i = 0;
+    int f_i2;
 
     while((f_i) < sample_count)
     {
@@ -594,23 +594,22 @@ static void v_run_rayv(
         v_sml_run(plugin_data->mono_modules->pitchbend_smoother,
                 (plugin_data->sv_pitch_bend_value));
 
-        plugin_data->i_run_poly_voice = 0;
-        while ((plugin_data->i_run_poly_voice) < RAYV_POLYPHONY)
+        f_i2 = 0;
+        while (f_i2 < RAYV_POLYPHONY)
         {
-            if((plugin_data->data[(plugin_data->i_run_poly_voice)]->
-                    adsr_amp->stage) != ADSR_STAGE_OFF)
+            if((plugin_data->data[f_i2]->adsr_amp->stage) != ADSR_STAGE_OFF)
             {
                 v_run_rayv_voice(plugin_data,
-                    plugin_data->voices->voices[(plugin_data->i_run_poly_voice)],
-                    plugin_data->data[(plugin_data->i_run_poly_voice)],
+                    plugin_data->voices->voices[f_i2],
+                    plugin_data->data[f_i2],
                     plugin_data->output0, plugin_data->output1, f_i);
             }
             else
             {
-                plugin_data->voices->voices[(plugin_data->i_run_poly_voice)].n_state = note_state_off;
+                plugin_data->voices->voices[f_i2].n_state = note_state_off;
             }
 
-            plugin_data->i_run_poly_voice = (plugin_data->i_run_poly_voice) + 1;
+            f_i2++;
         }
 
         f_i++;

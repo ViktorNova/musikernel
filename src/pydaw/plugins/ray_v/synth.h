@@ -139,8 +139,6 @@ typedef struct {
     float fs;
     t_rayv_mono_modules * mono_modules;
 
-    int i_run_poly_voice;
-
     float sv_pitch_bend_value;
     float sv_last_note;  //For glide
 
