@@ -1037,9 +1037,6 @@ EUPHORIA_PORT_MAP = {
     "FX3 Knob0": "30",
     "FX3 Knob1": "31",
     "FX3 Knob2": "32",
-    #This one is kept for compatibility because it was once in here incorrectly
-    #TODO:  Delete at PyDAWv5
-    "zzDeprecated ignore": "83",
 }
 
 _euphoria_port_mins = (EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MIN,
