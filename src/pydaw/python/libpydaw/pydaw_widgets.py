@@ -3998,7 +3998,7 @@ class pydaw_per_audio_item_fx_widget:
 class pydaw_abstract_plugin_ui:
     def __init__(self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
                  a_configure_callback, a_folder, a_midi_learn_callback,
-                 a_can_resize=False):
+                 a_cc_map_callback, a_can_resize=False):
         self.plugin_uid = int(a_plugin_uid)
         self.folder = str(a_folder)
         self.can_resize = a_can_resize
@@ -4006,6 +4006,7 @@ class pydaw_abstract_plugin_ui:
         self.val_callback = a_val_callback
         self.configure_callback = a_configure_callback
         self.midi_learn_callback = a_midi_learn_callback
+        self.cc_map_callback = a_cc_map_callback
         self.widget = QtGui.QScrollArea()
         self.widget.setObjectName("plugin_ui")
         self.widget.setMinimumSize(500, 500)
@@ -4051,9 +4052,11 @@ class pydaw_abstract_plugin_ui:
                 "{}").format(a_cc_num,
                 [self.reverse_port_map[x] for x in f_result]))
         else:
-            print("TODO")
-            assert(False)
-            #self.set_cc_map(str(self.cc_map[a_cc_num]))
+            self.set_cc_map(a_cc_num)
+
+    def set_cc_map(self, a_cc_num):
+        f_str = str(self.cc_map[a_cc_num])
+        self.cc_map_callback(self.plugin_uid, f_str[2:])
 
     def get_plugin_name(self):
         return self._plugin_name
@@ -4180,10 +4183,12 @@ class pydaw_abstract_plugin_ui:
 class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
     def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name, a_stylesheet,
-                 a_configure_callback, a_midi_learn_callback):
+                 a_configure_callback, a_midi_learn_callback,
+                 a_cc_map_callback):
         pydaw_abstract_plugin_ui.__init__(
             self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
-            a_configure_callback, a_folder, a_midi_learn_callback)
+            a_configure_callback, a_folder, a_midi_learn_callback,
+            a_cc_map_callback)
         self._plugin_name = "MODULEX"
         self.set_window_title(a_track_name)
         self.is_instrument = False
@@ -4467,10 +4472,12 @@ class pydaw_modulex_plugin_ui(pydaw_abstract_plugin_ui):
 class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
     def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name,
-                 a_stylesheet, a_configure_callback, a_midi_learn_callback):
+                 a_stylesheet, a_configure_callback, a_midi_learn_callback,
+                 a_cc_map_callback):
         pydaw_abstract_plugin_ui.__init__(
             self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
-            a_configure_callback, a_folder, a_midi_learn_callback)
+            a_configure_callback, a_folder, a_midi_learn_callback,
+            a_cc_map_callback)
         self._plugin_name = "RAYV"
         self.set_window_title(a_track_name)
         self.is_instrument = True
@@ -4648,10 +4655,12 @@ class pydaw_rayv_plugin_ui(pydaw_abstract_plugin_ui):
 class pydaw_wayv_plugin_ui(pydaw_abstract_plugin_ui):
     def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name, a_stylesheet,
-                 a_configure_callback, a_midi_learn_callback):
+                 a_configure_callback, a_midi_learn_callback,
+                 a_cc_map_callback):
         pydaw_abstract_plugin_ui.__init__(
             self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
-            a_configure_callback, a_folder, a_midi_learn_callback)
+            a_configure_callback, a_folder, a_midi_learn_callback,
+            a_cc_map_callback)
         self._plugin_name = "WAYV"
         self.set_window_title(a_track_name)
         self.is_instrument = True
@@ -5299,11 +5308,12 @@ EUPHORIA_INSTRUMENT_CLIPBOARD = None
 class pydaw_euphoria_plugin_ui(pydaw_abstract_plugin_ui):
     def __init__(self, a_val_callback,
                  a_project, a_folder, a_plugin_uid, a_track_name,
-                 a_stylesheet, a_configure_callback, a_midi_learn_callback):
+                 a_stylesheet, a_configure_callback, a_midi_learn_callback,
+                 a_cc_map_callback):
         pydaw_abstract_plugin_ui.__init__(
             self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
             a_configure_callback, a_folder, a_midi_learn_callback,
-            a_can_resize=True)
+            a_cc_map_callback, a_can_resize=True)
         self.set_window_title(a_track_name)
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(

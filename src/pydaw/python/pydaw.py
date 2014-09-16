@@ -8865,7 +8865,8 @@ def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title):
             PROJECT, PROJECT.plugin_pool_folder, a_plugin_uid,
             a_title, MAIN_WINDOW.styleSheet(),
             PROJECT.this_pydaw_osc.pydaw_configure_plugin,
-            midi_learn_callback)
+            midi_learn_callback,
+            PROJECT.this_pydaw_osc.pydaw_load_cc_map)
         pydaw_center_widget_on_screen(f_plugin.widget)
         f_plugin.show_widget()
         PLUGIN_UI_DICT[a_plugin_uid] = f_plugin

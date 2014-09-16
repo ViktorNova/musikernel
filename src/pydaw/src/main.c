@@ -92,7 +92,6 @@ GNU General Public License for more details.
 
 #define PYDAW_CONFIGURE_KEY_UPDATE_AUDIO_INPUTS "ua"
 #define PYDAW_CONFIGURE_KEY_SET_OVERDUB_MODE "od"
-#define PYDAW_CONFIGURE_KEY_LOAD_CC_MAP "cm"
 
 #define PYDAW_CONFIGURE_KEY_LOAD_AB_OPEN "abo"
 #define PYDAW_CONFIGURE_KEY_LOAD_AB_SET "abs"
@@ -111,6 +110,7 @@ GNU General Public License for more details.
 #define PYDAW_CONFIGURE_KEY_EXIT "exit"
 
 #define PYDAW_CONFIGURE_KEY_MIDI_LEARN "ml"
+#define PYDAW_CONFIGURE_KEY_LOAD_CC_MAP "cm"
 #define PYDAW_CONFIGURE_KEY_MIDI_DEVICE "md"
 
 #define PYDAW_CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD "wr"
@@ -1595,7 +1595,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_LOAD_CC_MAP))
     {
-        assert(0);  //TODO:  Implement CC map
+        printf("Load CC map not implemented\n");
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_LOAD_AB_OPEN))
     {

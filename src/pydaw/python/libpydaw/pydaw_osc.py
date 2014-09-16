@@ -176,8 +176,9 @@ class pydaw_osc:
         """ a_is_on should be a bool """
         self.send_configure("od", bool_to_int(a_is_on))
 
-    def pydaw_load_cc_map(self, a_name):
-        self.send_configure("cm", str(a_name))
+    def pydaw_load_cc_map(self, a_plugin_uid, a_str):
+        self.send_configure(
+            "cm", "|".join(str(x) for x in (a_plugin_uid, a_str)))
 
     def pydaw_ab_open(self, a_file):
         self.send_configure("abo", str(a_file))
