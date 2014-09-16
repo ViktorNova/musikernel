@@ -4945,10 +4945,15 @@ void v_pydaw_set_midi_device(
     f_route->on = a_on;
     f_route->output_track = a_output;
 
+    f_track_new->extern_midi_count = 0;
+
     if(f_route->on)
     {
         f_track_new->extern_midi = self->events;
-        f_track_new->extern_midi_count = 0;
+    }
+    else
+    {
+        f_track_new->extern_midi = 0;
     }
 }
 
