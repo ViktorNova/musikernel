@@ -1805,7 +1805,7 @@ inline void v_pydaw_process_atm(
 
                 if(f_plugin->uid == f_point->plugin)
                 {
-                    float f_val = f_cc_to_ctrl_val(
+                    float f_val = f_atm_to_ctrl_val(
                         f_plugin->descriptor, f_point->port, f_point->val);
                     v_pydaw_ev_clear(f_buff_ev);
                     v_pydaw_ev_set_atm(f_buff_ev, f_point->port, f_val);

@@ -170,7 +170,15 @@ typedef struct
 
 typedef struct
 {
-    int map[128];
+    int count;
+    int ports[5];
+    float lows[5];
+    float highs[5];
+}t_cc_mapping;
+
+typedef struct
+{
+    t_cc_mapping map[128];
 }t_plugin_cc_map;
 
 void v_plugin_event_queue_add(t_plugin_event_queue*, int, int, float, int);
@@ -178,6 +186,7 @@ void v_plugin_event_queue_reset(t_plugin_event_queue*);
 int v_plugin_event_queue_iter(t_plugin_event_queue*, int);
 void v_plugin_event_queue_atm_set(t_plugin_event_queue*, int, float*);
 inline float f_cc_to_ctrl_val(PYFX_Descriptor*, int, float);
+void v_cc_mapping_init(t_cc_mapping*);
 void v_cc_map_init(t_plugin_cc_map*);
 void v_cc_map_translate(t_plugin_cc_map*, PYFX_Descriptor*, float*, int, float);
 
@@ -185,12 +194,25 @@ void v_cc_map_translate(t_plugin_cc_map*, PYFX_Descriptor*, float*, int, float);
 }
 #endif
 
-void v_cc_map_init(t_plugin_cc_map * a_map)
+void v_cc_mapping_init(t_cc_mapping* self)
+{
+    self->count = 0;
+}
+
+void v_cc_mapping_set(t_cc_mapping* self, int a_port, float a_low, float a_high)
+{
+    self->ports[self->count] = a_port;
+    self->lows[self->count] = a_low;
+    self->highs[self->count] = a_high;
+    self->count++;
+}
+
+void v_cc_map_init(t_plugin_cc_map * self)
 {
     int f_i = 0;
     while(f_i < 128)
     {
-        a_map->map[f_i] = -1;
+        v_cc_mapping_init(&self->map[f_i]);
         f_i++;
     }
 }
@@ -198,14 +220,23 @@ void v_cc_map_init(t_plugin_cc_map * a_map)
 void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
     float *a_port_table, int a_cc, float a_value)
 {
-    if(self->map[a_cc] != -1)
+    int f_i = 0;
+    a_value *= 0.007874f;  // a_val / 127.0f
+
+    while(f_i < self->map[a_cc].count)
     {
-        a_port_table[self->map[a_cc]] =
-            f_cc_to_ctrl_val(desc, self->map[a_cc], a_value);
+        int f_port = self->map[a_cc].ports[f_i];
+        PYFX_PortRangeHint f_range = desc->PortRangeHints[f_port];
+        float f_diff = f_range.UpperBound - f_range.LowerBound;
+        float f_min = f_diff * self->map[a_cc].lows[f_i];
+        float f_max = f_diff * self->map[a_cc].highs[f_i];
+        a_port_table[f_port] = (a_value * (f_max - f_min)) +
+            f_min + f_range.LowerBound;
+        f_i++;
     }
 }
 
-inline float f_cc_to_ctrl_val(PYFX_Descriptor *self, int a_port, float a_val)
+inline float f_atm_to_ctrl_val(PYFX_Descriptor *self, int a_port, float a_val)
 {
     PYFX_PortRangeHint f_range = self->PortRangeHints[a_port];
     a_val *= 0.007874f;  // a_val / 127.0f
@@ -418,9 +449,31 @@ void pydaw_generic_file_loader(PYFX_Handle Instance,
         else if(f_key[0] == 'm')
         {
             char * f_cc_str = c_iterate_2d_char_array(f_2d_array);
-            char * f_port_str =
-                c_iterate_2d_char_array_to_next_line(f_2d_array);
-            a_cc_map->map[atoi(f_cc_str)] = atoi(f_port_str);
+            int f_cc = atoi(f_cc_str);
+            free(f_cc_str);
+
+            char * f_count_str = c_iterate_2d_char_array(f_2d_array);
+            int f_count = atoi(f_count_str);
+            free(f_count_str);
+
+            int f_i = 0;
+            while(f_i < f_count)
+            {
+                char * f_port_str =
+                    c_iterate_2d_char_array_to_next_line(f_2d_array);
+                char * f_low_str =
+                    c_iterate_2d_char_array_to_next_line(f_2d_array);
+                char * f_high_str =
+                    c_iterate_2d_char_array_to_next_line(f_2d_array);
+
+                v_cc_mapping_set(&a_cc_map->map[f_cc], atoi(f_port_str),
+                    atof(f_low_str), atof(f_high_str));
+
+                free(f_port_str);
+                free(f_low_str);
+                free(f_high_str);
+                f_i++;
+            }
         }
         else
         {
