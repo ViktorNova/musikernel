@@ -58,8 +58,8 @@ class pydaw_plugin_file:
                 f_items2 = f_items[1].split("|", 1)
                 self.configure_dict[(f_items2[0])] = f_items2[1]
             elif f_items[0] == 'm':
-                f_cc, f_val = (int(x) for x in f_items[1].split("|", 1))
-                self.cc_map[f_cc] = f_val
+                f_cc, f_val = f_items[1].split("|", 1)
+                self.cc_map[int(f_cc)] = cc_mapping.from_str(f_items[1])
             else:
                 self.port_dict[int(f_items[0])] = int(float(f_items[1]))
 
@@ -87,7 +87,7 @@ class pydaw_plugin_file:
             f_result.append("|".join(str(x) for x in ("c", k, v)))
         for k in sorted(self.cc_map):
             v = self.cc_map[k]
-            f_result.append("|".join(str(x) for x in ("m", k, v)))
+            f_result.append(str(v))
         for k in sorted(self.port_dict):
             v = self.port_dict[k]
             f_result.append("|".join(str(int(x)) for x in (k, v.get_value())))
@@ -4031,11 +4031,29 @@ class pydaw_abstract_plugin_ui:
         self._plugin_name = None
 
     def set_midi_learn(self, a_port_map):
+        self.port_map = a_port_map
+        self.reverse_port_map = {int(v):k for k, v in self.port_map.items()}
         for f_port in (int(x) for x in a_port_map.values()):
             self.port_dict[f_port].set_midi_learn(self.midi_learn)
 
     def midi_learn(self, a_ctrl):
-        self.midi_learn_callback(a_ctrl)
+        self.midi_learn_callback(self, a_ctrl)
+
+    def update_cc_map(self, a_cc_num, a_ctrl):
+        a_cc_num = int(a_cc_num)
+        if not a_cc_num in self.cc_map:
+            self.cc_map[a_cc_num] = cc_mapping(a_cc_num)
+        f_result = self.cc_map[a_cc_num].set_port(a_ctrl.port_num)
+        if f_result:
+            QtGui.QMessageBox.warning(
+                self.widget, _("Error"), _("CCs can only be assigned to 5 "
+                "controls at a time, CC {} is already assigned to "
+                "{}").format(a_cc_num,
+                [self.reverse_port_map[x] for x in f_result]))
+        else:
+            print("TODO")
+            assert(False)
+            #self.set_cc_map(str(self.cc_map[a_cc_num]))
 
     def get_plugin_name(self):
         return self._plugin_name

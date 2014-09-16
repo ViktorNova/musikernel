@@ -8876,9 +8876,9 @@ def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title):
 
 MIDI_LEARN_CONTROL = None
 
-def midi_learn_callback(a_control):
+def midi_learn_callback(a_plugin, a_control):
     global MIDI_LEARN_CONTROL
-    MIDI_LEARN_CONTROL = a_control
+    MIDI_LEARN_CONTROL = (a_plugin, a_control)
     PROJECT.this_pydaw_osc.pydaw_midi_learn()
 
 def global_close_plugin_ui(a_track_num):
@@ -9959,7 +9959,8 @@ class pydaw_main_window(QtGui.QMainWindow):
                 f_state, f_note = a_val.split("|")
                 PIANO_ROLL_EDITOR.highlight_keys(f_state, f_note)
             elif a_key == "ml":
-                print(MIDI_LEARN_CONTROL)
+                MIDI_LEARN_CONTROL[0].update_cc_map(
+                    a_val, MIDI_LEARN_CONTROL[1])
             elif a_key == "wec":
                 if IS_PLAYING:
                     WAVE_EDITOR.set_playback_cursor(float(a_val))
