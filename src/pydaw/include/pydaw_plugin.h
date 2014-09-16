@@ -121,17 +121,14 @@ typedef struct _PYFX_Descriptor {
 
     void (*set_port_value)(PYFX_Handle Instance, int a_port, float a_value);
 
+    void (*set_cc_map)(PYFX_Handle Instance, char * a_msg);
+
     /* When a panic message is sent, do whatever it takes to fix any stuck
      notes. */
     void (*panic)(PYFX_Handle Instance);
 
-    /**
-     * PYINST_API_Version
-     *
-     * This member indicates the DSSI API level used by this plugin.
-     * If we're lucky, this will never be needed.  For now all plugins
-     * must set it to 1.
-     */
+    //For now all plugins must set it to 1.
+
     int PYINST_API_Version;
 
     void (*configure)(PYFX_Handle Instance, char *Key, char *Value,
@@ -459,12 +456,9 @@ void pydaw_generic_file_loader(PYFX_Handle Instance,
             int f_i = 0;
             while(f_i < f_count)
             {
-                char * f_port_str =
-                    c_iterate_2d_char_array_to_next_line(f_2d_array);
-                char * f_low_str =
-                    c_iterate_2d_char_array_to_next_line(f_2d_array);
-                char * f_high_str =
-                    c_iterate_2d_char_array_to_next_line(f_2d_array);
+                char * f_port_str = c_iterate_2d_char_array(f_2d_array);
+                char * f_low_str = c_iterate_2d_char_array(f_2d_array);
+                char * f_high_str = c_iterate_2d_char_array(f_2d_array);
 
                 v_cc_mapping_set(&a_cc_map->map[f_cc], atoi(f_port_str),
                     atof(f_low_str), atof(f_high_str));
