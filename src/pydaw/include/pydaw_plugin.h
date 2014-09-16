@@ -186,6 +186,7 @@ inline float f_cc_to_ctrl_val(PYFX_Descriptor*, int, float);
 void v_cc_mapping_init(t_cc_mapping*);
 void v_cc_map_init(t_plugin_cc_map*);
 void v_cc_map_translate(t_plugin_cc_map*, PYFX_Descriptor*, float*, int, float);
+void v_generic_cc_map_set(t_plugin_cc_map*, char*);
 
 #ifdef __cplusplus
 }
@@ -223,22 +224,22 @@ void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
     while(f_i < self->map[a_cc].count)
     {
         int f_port = self->map[a_cc].ports[f_i];
-        PYFX_PortRangeHint f_range = desc->PortRangeHints[f_port];
-        float f_diff = f_range.UpperBound - f_range.LowerBound;
+        PYFX_PortRangeHint * f_range = &desc->PortRangeHints[f_port];
+        float f_diff = f_range->UpperBound - f_range->LowerBound;
         float f_min = f_diff * self->map[a_cc].lows[f_i];
         float f_max = f_diff * self->map[a_cc].highs[f_i];
         a_port_table[f_port] = (a_value * (f_max - f_min)) +
-            f_min + f_range.LowerBound;
+            f_min + f_range->LowerBound;
         f_i++;
     }
 }
 
 inline float f_atm_to_ctrl_val(PYFX_Descriptor *self, int a_port, float a_val)
 {
-    PYFX_PortRangeHint f_range = self->PortRangeHints[a_port];
+    PYFX_PortRangeHint * f_range = &self->PortRangeHints[a_port];
     a_val *= 0.007874f;  // a_val / 127.0f
-    return (a_val * (f_range.UpperBound - f_range.LowerBound)) +
-        f_range.LowerBound;
+    return (a_val * (f_range->UpperBound - f_range->LowerBound)) +
+        f_range->LowerBound;
 }
 
 inline void v_plugin_event_queue_add(
@@ -414,6 +415,35 @@ float * g_pydaw_get_port_table(PYFX_Handle * handle,
     }
 
     return pluginControlIns;
+}
+
+void v_generic_cc_map_set(t_plugin_cc_map * a_cc_map, char * a_str)
+{
+    t_2d_char_array * f_2d_array = g_get_2d_array(PYDAW_SMALL_STRING);
+    f_2d_array->array = a_str;
+    char * f_cc_str = c_iterate_2d_char_array(f_2d_array);
+    int f_cc = atoi(f_cc_str);
+    free(f_cc_str);
+
+    char * f_count_str = c_iterate_2d_char_array(f_2d_array);
+    int f_count = atoi(f_count_str);
+    free(f_count_str);
+
+    int f_i = 0;
+    while(f_i < f_count)
+    {
+        char * f_port_str = c_iterate_2d_char_array(f_2d_array);
+        char * f_low_str = c_iterate_2d_char_array(f_2d_array);
+        char * f_high_str = c_iterate_2d_char_array(f_2d_array);
+
+        v_cc_mapping_set(&a_cc_map->map[f_cc], atoi(f_port_str),
+            atof(f_low_str), atof(f_high_str));
+
+        free(f_port_str);
+        free(f_low_str);
+        free(f_high_str);
+        f_i++;
+    }
 }
 
 void pydaw_generic_file_loader(PYFX_Handle Instance,

@@ -63,6 +63,12 @@ static void v_rayv_or_prep(PYFX_Handle instance)
     }
 }
 
+static void v_rayv_set_cc_map(PYFX_Handle instance, char * a_msg)
+{
+    t_rayv *plugin = (t_rayv *)instance;
+    v_generic_cc_map_set(&plugin->cc_map, a_msg);
+}
+
 static void rayvPanic(PYFX_Handle instance)
 {
     t_rayv *plugin = (t_rayv *)instance;
@@ -278,6 +284,7 @@ static PYFX_Handle g_rayv_instantiate(PYFX_Descriptor * descriptor,
 
     plugin_data->port_table = g_pydaw_get_port_table(
         (void**)plugin_data, descriptor);
+    plugin_data->descriptor = descriptor;
 
     v_cc_map_init(&plugin_data->cc_map);
 
@@ -809,6 +816,7 @@ PYFX_Descriptor *rayv_PYFX_descriptor(int index)
     f_result->panic = rayvPanic;
     f_result->load = v_rayv_load;
     f_result->set_port_value = v_rayv_set_port_value;
+    f_result->set_cc_map = v_rayv_set_cc_map;
 
     f_result->PYINST_API_Version = 1;
     f_result->configure = NULL;

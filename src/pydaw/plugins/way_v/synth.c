@@ -44,6 +44,12 @@ static void v_cleanup_wayv(PYFX_Handle instance)
     free(instance);
 }
 
+static void v_wayv_set_cc_map(PYFX_Handle instance, char * a_msg)
+{
+    t_wayv *plugin = (t_wayv *)instance;
+    v_generic_cc_map_set(&plugin->cc_map, a_msg);
+}
+
 static void v_wayv_or_prep(PYFX_Handle instance)
 {
     t_wayv *plugin = (t_wayv *)instance;
@@ -1887,6 +1893,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     f_result->panic = wayvPanic;
     f_result->load = v_wayv_load;
     f_result->set_port_value = v_wayv_set_port_value;
+    f_result->set_cc_map = v_wayv_set_cc_map;
 
     f_result->PYINST_API_Version = 1;
     f_result->configure = v_wayv_configure;

@@ -54,6 +54,12 @@ static void v_modulex_cleanup(PYFX_Handle instance)
     free(instance);
 }
 
+static void v_modulex_set_cc_map(PYFX_Handle instance, char * a_msg)
+{
+    t_modulex *plugin = (t_modulex *)instance;
+    v_generic_cc_map_set(&plugin->cc_map, a_msg);
+}
+
 static void v_modulex_panic(PYFX_Handle instance)
 {
     t_modulex *plugin = (t_modulex*)instance;
@@ -835,6 +841,7 @@ PYFX_Descriptor *modulex_PYFX_descriptor(int index)
     f_result->panic = v_modulex_panic;
     f_result->load = v_modulex_load;
     f_result->set_port_value = v_modulex_set_port_value;
+    f_result->set_cc_map = v_modulex_set_cc_map;
 
     f_result->PYINST_API_Version = 1;
     f_result->configure = NULL;

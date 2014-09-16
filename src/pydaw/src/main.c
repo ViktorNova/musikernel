@@ -1595,7 +1595,13 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_LOAD_CC_MAP))
     {
-        printf("Load CC map not implemented\n");
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
+                PYDAW_SMALL_STRING);
+        int f_plugin_uid = atoi(f_val_arr->array[0]);
+        pydaw_data->plugin_pool[f_plugin_uid]->descriptor->set_cc_map(
+            pydaw_data->plugin_pool[f_plugin_uid]->PYFX_handle,
+            f_val_arr->array[1]);
+        g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_LOAD_AB_OPEN))
     {
