@@ -1595,7 +1595,7 @@ void v_pydaw_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, PYDAW_CONFIGURE_KEY_LOAD_CC_MAP))
     {
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
+        t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 2,
                 PYDAW_SMALL_STRING);
         int f_plugin_uid = atoi(f_val_arr->array[0]);
         pydaw_data->plugin_pool[f_plugin_uid]->descriptor->set_cc_map(

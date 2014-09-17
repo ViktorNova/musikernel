@@ -109,6 +109,14 @@ class cc_mapping:
             self.ports[a_port] = (float(a_low), float(a_high))
             return None
 
+    def remove_port(self, a_port):
+        a_port = int(a_port)
+        if a_port in self.ports:
+            self.ports.pop(a_port)
+            return True
+        else:
+            return False
+
     @staticmethod
     def from_str(a_str):
         f_cc_num, f_count, f_list = a_str.split("|", 2)
@@ -509,11 +517,16 @@ class pydaw_abstract_ui_control:
     def midi_learn(self):
         self.midi_learn_callback(self)
 
+    def midi_forget(self):
+        self.midi_learn_callback(self, True)
+
     def contextMenuEvent(self, a_event):
         f_menu = QtGui.QMenu(self.control)
         if self.midi_learn_callback:
             f_ml_action = f_menu.addAction(_("MIDI Learn"))
             f_ml_action.triggered.connect(self.midi_learn)
+            f_ml_action = f_menu.addAction(_("MIDI Forget"))
+            f_ml_action.triggered.connect(self.midi_forget)
             f_menu.addSeparator()
         f_reset_action = f_menu.addAction(_("Reset to Default Value"))
         f_reset_action.triggered.connect(self.reset_default_value)
@@ -4039,8 +4052,18 @@ class pydaw_abstract_plugin_ui:
         for f_port in (int(x) for x in a_port_map.values()):
             self.port_dict[f_port].set_midi_learn(self.midi_learn)
 
-    def midi_learn(self, a_ctrl):
-        self.midi_learn_callback(self, a_ctrl)
+    def midi_learn(self, a_ctrl, a_forget=False):
+        if a_forget:
+            f_to_pop = []
+            for k, v in self.cc_map.items():
+                if v.remove_port(a_ctrl.port_num):
+                    self.set_cc_map(k)
+                    if not v.ports:
+                        f_to_pop.append(k)
+            for k in f_to_pop:
+                self.cc_map.pop(k)
+        else:
+            self.midi_learn_callback(self, a_ctrl)
 
     def update_cc_map(self, a_cc_num, a_ctrl):
         a_cc_num = int(a_cc_num)

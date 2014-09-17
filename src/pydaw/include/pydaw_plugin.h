@@ -428,6 +428,7 @@ void v_generic_cc_map_set(t_plugin_cc_map * a_cc_map, char * a_str)
     char * f_count_str = c_iterate_2d_char_array(f_2d_array);
     int f_count = atoi(f_count_str);
     free(f_count_str);
+    a_cc_map->map[f_cc].count = f_count;
 
     int f_i = 0;
     while(f_i < f_count)
