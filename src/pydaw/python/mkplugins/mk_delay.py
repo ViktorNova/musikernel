@@ -55,16 +55,7 @@ class mkdelay_plugin_ui(pydaw_abstract_plugin_ui):
         self.set_window_title(a_track_name)
         self.is_instrument = False
 
-        self.preset_manager = pydaw_preset_manager_widget(
-            self.get_plugin_name())
-        self.presets_hlayout = QtGui.QHBoxLayout()
-        self.presets_hlayout.addWidget(self.preset_manager.group_box)
-        self.presets_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        self.layout.addLayout(self.presets_hlayout)
-        self.spectrum_enabled = None
         self.tab_widget = QtGui.QTabWidget()
-        self.tab_widget.currentChanged.connect(self.tab_changed)
         self.layout.addWidget(self.tab_widget)
         self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
@@ -76,6 +67,7 @@ class mkdelay_plugin_ui(pydaw_abstract_plugin_ui):
         self.delay_vlayout.addLayout(self.delay_hlayout)
 
         f_knob_size = 48
+        self.preset_manager = None
 
         delay_groupbox = QtGui.QGroupBox(_("Delay"))
         delay_groupbox.setObjectName("plugin_groupbox")
