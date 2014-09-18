@@ -219,9 +219,25 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/strings.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/strings.pyo
 
+/usr/lib/{0}/pydaw/python/mkplugins/__init__.py
+/usr/lib/{0}/pydaw/python/mkplugins/__init__.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/__init__.pyo
+/usr/lib/{0}/pydaw/python/mkplugins/euphoria.py
+/usr/lib/{0}/pydaw/python/mkplugins/euphoria.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/euphoria.pyo
+/usr/lib/{0}/pydaw/python/mkplugins/modulex.py
+/usr/lib/{0}/pydaw/python/mkplugins/modulex.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/modulex.pyo
+/usr/lib/{0}/pydaw/python/mkplugins/rayv.py
+/usr/lib/{0}/pydaw/python/mkplugins/rayv.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/rayv.pyo
+/usr/lib/{0}/pydaw/python/mkplugins/wayv.py
+/usr/lib/{0}/pydaw/python/mkplugins/wayv.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/wayv.pyo
+
 %doc
 
-""".format(global_pydaw_version_string, global_version_fedora, 
+""".format(global_pydaw_version_string, global_version_fedora,
     global_tarball_url, f_native)
 
 f_spec_file = open(global_spec_file, "w")
@@ -235,7 +251,7 @@ os.system("rpmbuild -ba {}".format(global_spec_file))
 
 #Restore the ~/.rpmmacros file to it's original state.
 if global_macro_text is not None:
-    with  open("{}/.rpmmacros".format(global_home), 
+    with  open("{}/.rpmmacros".format(global_home),
     "w") as global_rpmmacros_file:
         global_rpmmacros_file.write(global_macro_text)
 
