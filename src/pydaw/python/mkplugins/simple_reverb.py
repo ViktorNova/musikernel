@@ -19,76 +19,28 @@ from libpydaw.translate import _
 
 #Modulex
 
-MODULEX_INPUT0 = 0
-MODULEX_INPUT1 = 1
-MODULEX_OUTPUT0 = 2
-MODULEX_OUTPUT1 = 3
-MODULEX_FIRST_CONTROL_PORT = 4
-MODULEX_FX0_KNOB0 = 4
-MODULEX_FX0_KNOB1 = 5
-MODULEX_FX0_KNOB2 = 6
-MODULEX_FX0_COMBOBOX = 7
-MODULEX_FX1_KNOB0 = 8
-MODULEX_FX1_KNOB1 = 9
-MODULEX_FX1_KNOB2 = 10
-MODULEX_FX1_COMBOBOX = 11
-MODULEX_FX2_KNOB0 = 12
-MODULEX_FX2_KNOB1 = 13
-MODULEX_FX2_KNOB2 = 14
-MODULEX_FX2_COMBOBOX = 15
-MODULEX_FX3_KNOB0 = 16
-MODULEX_FX3_KNOB1 = 17
-MODULEX_FX3_KNOB2 = 18
-MODULEX_FX3_COMBOBOX = 19
-MODULEX_FX4_KNOB0 = 20
-MODULEX_FX4_KNOB1 = 21
-MODULEX_FX4_KNOB2 = 22
-MODULEX_FX4_COMBOBOX = 23
-MODULEX_FX5_KNOB0 = 24
-MODULEX_FX5_KNOB1 = 25
-MODULEX_FX5_KNOB2 = 26
-MODULEX_FX5_COMBOBOX = 27
-MODULEX_FX6_KNOB0 = 28
-MODULEX_FX6_KNOB1 = 29
-MODULEX_FX6_KNOB2 = 30
-MODULEX_FX6_COMBOBOX = 31
-MODULEX_FX7_KNOB0 = 32
-MODULEX_FX7_KNOB1 = 33
-MODULEX_FX7_KNOB2 = 34
-MODULEX_FX7_COMBOBOX = 35
+SREVERB_INPUT0 = 0
+SREVERB_INPUT1 = 1
+SREVERB_OUTPUT0 = 2
+SREVERB_OUTPUT1 = 3
+SREVERB_FIRST_CONTROL_PORT = 4
+SREVERB_REVERB_TIME = 4
+SREVERB_REVERB_WET = 5
+SREVERB_REVERB_COLOR = 6
+SREVERB_REVERB_DRY = 7
+SREVERB_REVERB_PRE_DELAY = 8
 
 
 
-MODULEX_PORT_MAP = {
-    "FX0 Knob0": MODULEX_FX0_KNOB0,
-    "FX0 Knob1": MODULEX_FX0_KNOB1,
-    "FX0 Knob2": MODULEX_FX0_KNOB2,
-    "FX1 Knob0": MODULEX_FX1_KNOB0,
-    "FX1 Knob1": MODULEX_FX1_KNOB1,
-    "FX1 Knob2": MODULEX_FX1_KNOB2,
-    "FX2 Knob0": MODULEX_FX2_KNOB0,
-    "FX2 Knob1": MODULEX_FX2_KNOB1,
-    "FX2 Knob2": MODULEX_FX2_KNOB2,
-    "FX3 Knob0": MODULEX_FX3_KNOB0,
-    "FX3 Knob1": MODULEX_FX3_KNOB1,
-    "FX3 Knob2": MODULEX_FX3_KNOB2,
-    "FX4 Knob0": MODULEX_FX4_KNOB0,
-    "FX4 Knob1": MODULEX_FX4_KNOB1,
-    "FX4 Knob2": MODULEX_FX4_KNOB2,
-    "FX5 Knob0": MODULEX_FX5_KNOB0,
-    "FX5 Knob1": MODULEX_FX5_KNOB1,
-    "FX5 Knob2": MODULEX_FX5_KNOB2,
-    "FX6 Knob0": MODULEX_FX6_KNOB0,
-    "FX6 Knob1": MODULEX_FX6_KNOB1,
-    "FX6 Knob2": MODULEX_FX6_KNOB2,
-    "FX7 Knob0": MODULEX_FX7_KNOB0,
-    "FX7 Knob1": MODULEX_FX7_KNOB1,
-    "FX7 Knob2": MODULEX_FX7_KNOB2,
+SREVERB_PORT_MAP = {
+    "Reverb Wet": SREVERB_REVERB_WET,
+    "Reverb Dry": SREVERB_REVERB_DRY,
+    "Reverb Color": SREVERB_REVERB_COLOR,
 }
 
 
 
-class modulex_plugin_ui(pydaw_abstract_plugin_ui):
+class sreverb_plugin_ui(pydaw_abstract_plugin_ui):
     def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name, a_stylesheet,
                  a_configure_callback, a_midi_learn_callback,
@@ -97,7 +49,7 @@ class modulex_plugin_ui(pydaw_abstract_plugin_ui):
             self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
             a_configure_callback, a_folder, a_midi_learn_callback,
             a_cc_map_callback)
-        self._plugin_name = "MODULEX"
+        self._plugin_name = "SREVERB"
         self.set_window_title(a_track_name)
         self.is_instrument = False
 
@@ -129,32 +81,64 @@ class modulex_plugin_ui(pydaw_abstract_plugin_ui):
 
         f_knob_size = 48
 
-        f_port = 4
-        f_column = 0
-        f_row = 0
-        for f_i in range(8):
-            f_effect = pydaw_modulex_single(
-                "FX{}".format(f_i), f_port,
-                self.plugin_rel_callback, self.plugin_val_callback,
-                self.port_dict, self.preset_manager, a_knob_size=f_knob_size)
-            self.effects.append(f_effect)
-            self.fx_layout.addWidget(f_effect.group_box, f_row, f_column)
-            f_column += 1
-            if f_column > 1:
-                f_column = 0
-                f_row += 1
-            f_port += 4
+        self.reverb_groupbox = QtGui.QGroupBox(_("Reverb"))
+        self.reverb_groupbox.setObjectName("plugin_groupbox")
+        self.reverb_groupbox_gridlayout = QtGui.QGridLayout(
+            self.reverb_groupbox)
+        self.reverb_hlayout = QtGui.QHBoxLayout()
+        self.delay_vlayout.addLayout(self.reverb_hlayout)
+        self.reverb_hlayout.addWidget(self.reverb_groupbox)
+        self.reverb_hlayout.addItem(
+            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+
+        self.reverb_time_knob = pydaw_knob_control(
+            f_knob_size, _("Time"), SREVERB_REVERB_TIME,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            0, 100, 50, KC_DECIMAL, self.port_dict, self.preset_manager)
+        self.reverb_time_knob.add_to_grid_layout(
+            self.reverb_groupbox_gridlayout, 3)
+
+        self.reverb_dry_knob = pydaw_knob_control(
+            f_knob_size, _("Dry"), SREVERB_REVERB_DRY,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            0, 100, 100, KC_DECIMAL, self.port_dict, self.preset_manager)
+        self.reverb_dry_knob.add_to_grid_layout(
+            self.reverb_groupbox_gridlayout, 9)
+
+        self.reverb_wet_knob = pydaw_knob_control(
+            f_knob_size, _("Wet"), SREVERB_REVERB_WET,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            0, 100, 0, KC_DECIMAL, self.port_dict, self.preset_manager)
+        self.reverb_wet_knob.add_to_grid_layout(
+            self.reverb_groupbox_gridlayout, 10)
+
+        self.reverb_color_knob = pydaw_knob_control(
+            f_knob_size, _("Color"), SREVERB_REVERB_COLOR,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            0, 100, 50, KC_DECIMAL, self.port_dict, self.preset_manager)
+        self.reverb_color_knob.add_to_grid_layout(
+            self.reverb_groupbox_gridlayout, 15)
+
+        self.reverb_predelay_knob = pydaw_knob_control(
+            f_knob_size, _("PreDelay"), SREVERB_REVERB_PRE_DELAY,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            0, 100, 1, KC_TIME_DECIMAL, self.port_dict, self.preset_manager)
+        self.reverb_predelay_knob.add_to_grid_layout(
+            self.reverb_groupbox_gridlayout, 21)
+
+        self.delay_spacer_layout = QtGui.QVBoxLayout()
+        self.delay_vlayout.addLayout(self.delay_spacer_layout)
+        self.delay_spacer_layout.addItem(
+            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
 
         self.open_plugin_file()
-        self.set_midi_learn(MODULEX_PORT_MAP)
+        self.set_midi_learn(SREVERB_PORT_MAP)
 
     def open_plugin_file(self):
         pydaw_abstract_plugin_ui.open_plugin_file(self)
-        self.eq6.update_viewer()
 
     def save_plugin_file(self):
         # Don't allow the spectrum analyzer to run at startup
-        self.spectrum_enabled.set_value(0)
         pydaw_abstract_plugin_ui.save_plugin_file(self)
 
     def set_window_title(self, a_track_name):
@@ -167,7 +151,6 @@ class modulex_plugin_ui(pydaw_abstract_plugin_ui):
 
     def raise_widget(self):
         pydaw_abstract_plugin_ui.raise_widget(self)
-        self.tab_changed()
 
     def ui_message(self, a_name, a_value):
         pydaw_abstract_plugin_ui.ui_message(a_name, a_value)

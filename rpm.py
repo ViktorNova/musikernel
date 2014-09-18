@@ -128,7 +128,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_gradients.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_history.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_osc.py
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_ports.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_project.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_util.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_widgets.py
@@ -192,8 +191,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_osc.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_paulstretch.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_paulstretch.pyo
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_ports.pyc
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_ports.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_project.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_project.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_util.pyc
@@ -234,6 +231,23 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/mkplugins/wayv.py
 /usr/lib/{0}/pydaw/python/mkplugins/wayv.pyc
 /usr/lib/{0}/pydaw/python/mkplugins/wayv.pyo
+
+/usr/lib/{0}/pydaw/python/mkplugins/mk_delay.py
+/usr/lib/{0}/pydaw/python/mkplugins/mk_delay.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/mk_delay.pyo
+/usr/lib/{0}/pydaw/python/mkplugins/mk_eq.py
+/usr/lib/{0}/pydaw/python/mkplugins/mk_eq.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/mk_eq.pyo
+/usr/lib/{0}/pydaw/python/mkplugins/simple_fader.py
+/usr/lib/{0}/pydaw/python/mkplugins/simple_fader.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/simple_fader.pyo
+/usr/lib/{0}/pydaw/python/mkplugins/simple_reverb.py
+/usr/lib/{0}/pydaw/python/mkplugins/simple_reverb.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/simple_reverb.pyo
+/usr/lib/{0}/pydaw/python/mkplugins/trigger_fx.py
+/usr/lib/{0}/pydaw/python/mkplugins/trigger_fx.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/trigger_fx.pyo
+
 
 %doc
 

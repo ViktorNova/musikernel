@@ -8011,8 +8011,7 @@ class plugin_settings:
         self.plugin_combobox = QtGui.QComboBox()
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
-        self.plugin_combobox.addItems(
-            ["None", "Euphoria", "Ray-V", "Way-V", "Modulex"])
+        self.plugin_combobox.addItems(["None"] + PLUGIN_NAMES)
         self.plugin_combobox.currentIndexChanged.connect(
             self.on_plugin_change)
         a_layout.addWidget(self.plugin_combobox, a_index + 1, 0)
@@ -8866,7 +8865,12 @@ PLUGIN_UI_TYPES = {
     1:mkplugins.euphoria.euphoria_plugin_ui,
     2:mkplugins.rayv.rayv_plugin_ui,
     3:mkplugins.wayv.wayv_plugin_ui,
-    4:mkplugins.modulex.modulex_plugin_ui
+    4:mkplugins.modulex.modulex_plugin_ui,
+    5:mkplugins.mk_delay.mkdelay_plugin_ui,
+    6:mkplugins.mk_eq.mkeq_plugin_ui,
+    7:mkplugins.simple_fader.sfader_plugin_ui,
+    8:mkplugins.simple_reverb.sreverb_plugin_ui,
+    9:mkplugins.trigger_fx.triggerfx_plugin_ui
 }
 
 def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title):
@@ -10044,14 +10048,19 @@ def global_update_peak_meters(a_val):
         else:
             print("{} not in ALL_PEAK_METERS".format(f_index))
 
-PLUGIN_NAMES = ["Euphoria", "Way-V", "Ray-V", "Modulex"]
-PLUGIN_NUMBERS = [1, 3, 2, 4]
-PLUGIN_INDEXES = {1:0, 3:1, 2:2, 4:3}
-CC_NAMES = {"Euphoria":[], "Way-V":[], "Ray-V":[], "Modulex":[]}
+PLUGIN_NAMES = ["Euphoria", "Ray-V", "Way-V", "Modulex", "MK Delay",
+    "MK EQ", "Simple Fader", "Simple Reverb", "TriggerFX"]
+CC_NAMES = {"Euphoria":[], "Way-V":[], "Ray-V":[], "Modulex":[], "MK Delay":[],
+    "MK EQ":[], "Simple Fader":[], "Simple Reverb":[], "TriggerFX":[]
+}
 CONTROLLER_PORT_NAME_DICT = {
-    "Euphoria":{}, "Way-V":{}, "Ray-V":{}, "Modulex":{}}
+    "Euphoria":{}, "Way-V":{}, "Ray-V":{}, "Modulex":{}, "MK Delay":{},
+    "MK EQ":{}, "Simple Fader":{}, "Simple Reverb":{}, "TriggerFX":{}
+}
 CONTROLLER_PORT_NUM_DICT = {
-    "Euphoria":{}, "Way-V":{}, "Ray-V":{}, "Modulex":{}}
+    "Euphoria":{}, "Way-V":{}, "Ray-V":{}, "Modulex":{}, "MK Delay":{},
+    "MK EQ":{}, "Simple Fader":{}, "Simple Reverb":{}, "TriggerFX":{}
+}
 
 class pydaw_controller_map_item:
     def __init__(self, a_name, a_port):
@@ -10059,10 +10068,17 @@ class pydaw_controller_map_item:
         self.port = int(a_port)
 
 def pydaw_load_controller_maps():
-    f_portmap_dict = {"Euphoria":pydaw_ports.EUPHORIA_PORT_MAP,
-    "Way-V":pydaw_ports.WAYV_PORT_MAP,
-    "Ray-V":pydaw_ports.RAYV_PORT_MAP,
-    "Modulex":pydaw_ports.MODULEX_PORT_MAP}
+    f_portmap_dict = {
+        "Euphoria":mkplugins.euphoria.EUPHORIA_PORT_MAP,
+        "Way-V":mkplugins.wayv.WAYV_PORT_MAP,
+        "Ray-V":mkplugins.rayv.RAYV_PORT_MAP,
+        "Modulex":mkplugins.modulex.MODULEX_PORT_MAP,
+        "MK Delay":mkplugins.mk_delay.MKDELAY_PORT_MAP,
+        "MK EQ":mkplugins.mk_eq.MKEQ_PORT_MAP,
+        "Simple Fader":mkplugins.simple_fader.SFADER_PORT_MAP,
+        "Simple Reverb":mkplugins.simple_reverb.SREVERB_PORT_MAP,
+        "TriggerFX":mkplugins.trigger_fx.TRIGGERFX_PORT_MAP
+    }
     for k, v in f_portmap_dict.items():
         for k2, v2 in v.items():
             f_map = pydaw_controller_map_item(k2, v2)

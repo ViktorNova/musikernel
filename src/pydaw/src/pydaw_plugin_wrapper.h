@@ -28,6 +28,12 @@ extern "C" {
 #include "../plugins/way_v/synth.c"
 #include "../plugins/ray_v/synth.c"
 
+#include "../plugins/mk_delay/synth.c"
+#include "../plugins/mk_eq/synth.c"
+#include "../plugins/simple_fader/synth.c"
+#include "../plugins/simple_reverb/synth.c"
+#include "../plugins/trigger_fx/synth.c"
+
 
 typedef struct
 {
@@ -73,6 +79,26 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
         case 4:
             f_result->descfn =
                     (PYFX_Descriptor_Function)modulex_PYFX_descriptor;
+            break;
+        case 5:
+            f_result->descfn =
+                    (PYFX_Descriptor_Function)mkdelay_PYFX_descriptor;
+            break;
+        case 6:
+            f_result->descfn =
+                    (PYFX_Descriptor_Function)mkeq_PYFX_descriptor;
+            break;
+        case 7:
+            f_result->descfn =
+                    (PYFX_Descriptor_Function)sfader_PYFX_descriptor;
+            break;
+        case 8:
+            f_result->descfn =
+                    (PYFX_Descriptor_Function)sreverb_PYFX_descriptor;
+            break;
+        case 9:
+            f_result->descfn =
+                    (PYFX_Descriptor_Function)triggerfx_PYFX_descriptor;
             break;
         default:
             assert(0);

@@ -19,76 +19,37 @@ from libpydaw.translate import _
 
 #Modulex
 
-MODULEX_INPUT0 = 0
-MODULEX_INPUT1 = 1
-MODULEX_OUTPUT0 = 2
-MODULEX_OUTPUT1 = 3
-MODULEX_FIRST_CONTROL_PORT = 4
-MODULEX_FX0_KNOB0 = 4
-MODULEX_FX0_KNOB1 = 5
-MODULEX_FX0_KNOB2 = 6
-MODULEX_FX0_COMBOBOX = 7
-MODULEX_FX1_KNOB0 = 8
-MODULEX_FX1_KNOB1 = 9
-MODULEX_FX1_KNOB2 = 10
-MODULEX_FX1_COMBOBOX = 11
-MODULEX_FX2_KNOB0 = 12
-MODULEX_FX2_KNOB1 = 13
-MODULEX_FX2_KNOB2 = 14
-MODULEX_FX2_COMBOBOX = 15
-MODULEX_FX3_KNOB0 = 16
-MODULEX_FX3_KNOB1 = 17
-MODULEX_FX3_KNOB2 = 18
-MODULEX_FX3_COMBOBOX = 19
-MODULEX_FX4_KNOB0 = 20
-MODULEX_FX4_KNOB1 = 21
-MODULEX_FX4_KNOB2 = 22
-MODULEX_FX4_COMBOBOX = 23
-MODULEX_FX5_KNOB0 = 24
-MODULEX_FX5_KNOB1 = 25
-MODULEX_FX5_KNOB2 = 26
-MODULEX_FX5_COMBOBOX = 27
-MODULEX_FX6_KNOB0 = 28
-MODULEX_FX6_KNOB1 = 29
-MODULEX_FX6_KNOB2 = 30
-MODULEX_FX6_COMBOBOX = 31
-MODULEX_FX7_KNOB0 = 32
-MODULEX_FX7_KNOB1 = 33
-MODULEX_FX7_KNOB2 = 34
-MODULEX_FX7_COMBOBOX = 35
+MKEQ_INPUT0 = 0
+MKEQ_INPUT1 = 1
+MKEQ_OUTPUT0 = 2
+MKEQ_OUTPUT1 = 3
+MKEQ_FIRST_CONTROL_PORT = 4
+MKEQ_EQ1_FREQ = 4
+MKEQ_EQ1_RES = 5
+MKEQ_EQ1_GAIN = 6
+MKEQ_EQ2_FREQ = 7
+MKEQ_EQ2_RES = 8
+MKEQ_EQ2_GAIN = 9
+MKEQ_EQ3_FREQ = 10
+MKEQ_EQ3_RES = 11
+MKEQ_EQ3_GAIN = 12
+MKEQ_EQ4_FREQ = 13
+MKEQ_EQ4_RES = 14
+MKEQ_EQ4_GAIN = 15
+MKEQ_EQ5_FREQ = 16
+MKEQ_EQ5_RES = 17
+MKEQ_EQ5_GAIN = 18
+MKEQ_EQ6_FREQ = 19
+MKEQ_EQ6_RES = 20
+MKEQ_EQ6_GAIN = 21
+MKEQ_SPECTRUM_ENABLED = 22
 
-
-
-MODULEX_PORT_MAP = {
-    "FX0 Knob0": MODULEX_FX0_KNOB0,
-    "FX0 Knob1": MODULEX_FX0_KNOB1,
-    "FX0 Knob2": MODULEX_FX0_KNOB2,
-    "FX1 Knob0": MODULEX_FX1_KNOB0,
-    "FX1 Knob1": MODULEX_FX1_KNOB1,
-    "FX1 Knob2": MODULEX_FX1_KNOB2,
-    "FX2 Knob0": MODULEX_FX2_KNOB0,
-    "FX2 Knob1": MODULEX_FX2_KNOB1,
-    "FX2 Knob2": MODULEX_FX2_KNOB2,
-    "FX3 Knob0": MODULEX_FX3_KNOB0,
-    "FX3 Knob1": MODULEX_FX3_KNOB1,
-    "FX3 Knob2": MODULEX_FX3_KNOB2,
-    "FX4 Knob0": MODULEX_FX4_KNOB0,
-    "FX4 Knob1": MODULEX_FX4_KNOB1,
-    "FX4 Knob2": MODULEX_FX4_KNOB2,
-    "FX5 Knob0": MODULEX_FX5_KNOB0,
-    "FX5 Knob1": MODULEX_FX5_KNOB1,
-    "FX5 Knob2": MODULEX_FX5_KNOB2,
-    "FX6 Knob0": MODULEX_FX6_KNOB0,
-    "FX6 Knob1": MODULEX_FX6_KNOB1,
-    "FX6 Knob2": MODULEX_FX6_KNOB2,
-    "FX7 Knob0": MODULEX_FX7_KNOB0,
-    "FX7 Knob1": MODULEX_FX7_KNOB1,
-    "FX7 Knob2": MODULEX_FX7_KNOB2,
+MKEQ_PORT_MAP = {
 }
 
 
 
-class modulex_plugin_ui(pydaw_abstract_plugin_ui):
+class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
     def __init__(self, a_val_callback, a_project,
                  a_folder, a_plugin_uid, a_track_name, a_stylesheet,
                  a_configure_callback, a_midi_learn_callback,
@@ -97,7 +58,7 @@ class modulex_plugin_ui(pydaw_abstract_plugin_ui):
             self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
             a_configure_callback, a_folder, a_midi_learn_callback,
             a_cc_map_callback)
-        self._plugin_name = "MODULEX"
+        self._plugin_name = "MKEQ"
         self.set_window_title(a_track_name)
         self.is_instrument = False
 
@@ -129,24 +90,21 @@ class modulex_plugin_ui(pydaw_abstract_plugin_ui):
 
         f_knob_size = 48
 
-        f_port = 4
-        f_column = 0
-        f_row = 0
-        for f_i in range(8):
-            f_effect = pydaw_modulex_single(
-                "FX{}".format(f_i), f_port,
-                self.plugin_rel_callback, self.plugin_val_callback,
-                self.port_dict, self.preset_manager, a_knob_size=f_knob_size)
-            self.effects.append(f_effect)
-            self.fx_layout.addWidget(f_effect.group_box, f_row, f_column)
-            f_column += 1
-            if f_column > 1:
-                f_column = 0
-                f_row += 1
-            f_port += 4
+        self.eq6 = eq6_widget(
+            MKEQ_EQ_ON,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            self.port_dict, a_preset_mgr=self.preset_manager,
+            a_size=f_knob_size)
+
+        self.tab_widget.addTab(self.eq6.widget, _("EQ/Spectrum"))
+
+        self.spectrum_enabled = pydaw_null_control(
+            MKEQ_SPECTRUM_ENABLED,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            0, self.port_dict)
 
         self.open_plugin_file()
-        self.set_midi_learn(MODULEX_PORT_MAP)
+        self.set_midi_learn(MKEQ_PORT_MAP)
 
     def open_plugin_file(self):
         pydaw_abstract_plugin_ui.open_plugin_file(self)
@@ -163,13 +121,30 @@ class modulex_plugin_ui(pydaw_abstract_plugin_ui):
             "MusiKernel Modulex - {}".format(self.track_name))
 
     def widget_close_event(self, a_event):
+        print("Disabling spectrum")
+        self.plugin_val_callback(
+            MKEQ_SPECTRUM_ENABLED, 0.0)
         pydaw_abstract_plugin_ui.widget_close_event(self, a_event)
 
     def raise_widget(self):
         pydaw_abstract_plugin_ui.raise_widget(self)
         self.tab_changed()
 
-    def ui_message(self, a_name, a_value):
-        pydaw_abstract_plugin_ui.ui_message(a_name, a_value)
+    def tab_changed(self, a_val=None):
+        if not self.spectrum_enabled:
+            return
+        if self.tab_widget.currentIndex() == 2:
+            print("Enabling spectrum")
+            self.plugin_val_callback(
+                MKEQ_SPECTRUM_ENABLED, 1.0)
+        else:
+            print("Disabling spectrum")
+            self.plugin_val_callback(
+                MKEQ_SPECTRUM_ENABLED, 0.0)
 
+    def ui_message(self, a_name, a_value):
+        if a_name == "spectrum":
+            self.eq6.set_spectrum(a_value)
+        else:
+            pydaw_abstract_plugin_ui.ui_message(a_name, a_value)
 

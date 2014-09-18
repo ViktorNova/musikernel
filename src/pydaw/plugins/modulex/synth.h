@@ -61,58 +61,11 @@ extern "C" {
 #define MODULEX_FX7_KNOB1  33
 #define MODULEX_FX7_KNOB2  34
 #define MODULEX_FX7_COMBOBOX 35
-#define MODULEX_DELAY_TIME  36
-#define MODULEX_FEEDBACK  37
-#define MODULEX_DRY  38
-#define MODULEX_WET  39
-#define MODULEX_DUCK  40
-#define MODULEX_CUTOFF  41
-#define MODULEX_STEREO 42
 
-#define MODULEX_VOL_SLIDER 43
-
-#define MODULEX_REVERB_TIME 44
-#define MODULEX_REVERB_WET 45
-#define MODULEX_REVERB_COLOR 46
-
-#define MODULEX_EQ_ON 47
-#define MODULEX_EQ1_FREQ 48
-#define MODULEX_EQ1_RES 49
-#define MODULEX_EQ1_GAIN 50
-#define MODULEX_EQ1_FREQ 48
-#define MODULEX_EQ1_RES 49
-#define MODULEX_EQ1_GAIN 50
-#define MODULEX_EQ2_FREQ 51
-#define MODULEX_EQ2_RES 52
-#define MODULEX_EQ2_GAIN 53
-#define MODULEX_EQ3_FREQ 54
-#define MODULEX_EQ3_RES 55
-#define MODULEX_EQ3_GAIN 56
-#define MODULEX_EQ4_FREQ 57
-#define MODULEX_EQ4_RES 58
-#define MODULEX_EQ4_GAIN 59
-#define MODULEX_EQ5_FREQ 60
-#define MODULEX_EQ5_RES 61
-#define MODULEX_EQ5_GAIN 62
-#define MODULEX_EQ6_FREQ 63
-#define MODULEX_EQ6_RES 64
-#define MODULEX_EQ6_GAIN 65
-#define MODULEX_SPECTRUM_ENABLED 66
-#define MODULEX_GATE_NOTE 67
-#define MODULEX_GATE_MODE 68
-#define MODULEX_GATE_WET 69
-#define MODULEX_GATE_PITCH 70
-#define MODULEX_GLITCH_ON 71
-#define MODULEX_GLITCH_NOTE 72
-#define MODULEX_GLITCH_TIME 73
-#define MODULEX_REVERB_DRY 74
-#define MODULEX_GLITCH_PB 75
-#define MODULEX_REVERB_PRE_DELAY 76
-
-#define MODULEX_LAST_CONTROL_PORT 76
+#define MODULEX_LAST_CONTROL_PORT 35
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define MODULEX_COUNT 77
+#define MODULEX_COUNT 36
 
 typedef struct
 {
@@ -124,41 +77,7 @@ typedef struct
     PYFX_Data *fx_knob2[8];
     PYFX_Data *fx_combobox[8];
 
-    PYFX_Data *delay_time;
-    PYFX_Data *feedback;
-    PYFX_Data *dry;
-    PYFX_Data *wet;
-    PYFX_Data *duck;
-    PYFX_Data *cutoff;
-    PYFX_Data *stereo;
-
-    PYFX_Data *vol_slider;
-
-    PYFX_Data *reverb_time;
-    PYFX_Data *reverb_dry;
-    PYFX_Data *reverb_wet;
-    PYFX_Data *reverb_color;
-    PYFX_Data *reverb_predelay;
-
-    PYFX_Data *eq_on;
-
-    PYFX_Data *eq_freq[6];
-    PYFX_Data *eq_res[6];
-    PYFX_Data *eq_gain[6];
-    PYFX_Data *spectrum_analyzer_on;
-
-    PYFX_Data *gate_note;
-    PYFX_Data *gate_mode;
-    PYFX_Data *gate_wet;
-    PYFX_Data *gate_pitch;
-
-    PYFX_Data *glitch_on;
-    PYFX_Data *glitch_note;
-    PYFX_Data *glitch_time;
-    PYFX_Data *glitch_pb;
-
     float fs;
-    float sv_pitch_bend_value;
     t_modulex_mono_modules * mono_modules;
 
     int i_mono_out;

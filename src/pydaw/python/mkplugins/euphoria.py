@@ -15,6 +15,321 @@ GNU General Public License for more details.
 
 from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
+import time
+import os
+
+#Euphoria
+EUPHORIA_FILES_STRING_DELIMITER = '|'
+EUPHORIA_MAX_SAMPLE_COUNT = 100
+
+#Total number of LFOs, ADSRs, other envelopes, etc...
+#Used for the PolyFX mod matrix
+EUPHORIA_MODULATOR_COUNT = 4
+#How many modular PolyFX
+EUPHORIA_MODULAR_POLYFX_COUNT = 4
+#How many ports per PolyFX, 3 knobs and a combobox
+EUPHORIA_PORTS_PER_MOD_EFFECT = 4
+#How many knobs per PolyFX, 3 knobs
+EUPHORIA_CONTROLS_PER_MOD_EFFECT = 3
+EUPHORIA_EFFECTS_GROUPS_COUNT = 1
+#The number of mono_fx groups
+EUPHORIA_MONO_FX_GROUPS_COUNT = EUPHORIA_MAX_SAMPLE_COUNT
+EUPHORIA_MONO_FX_COUNT = 4
+EUPHORIA_OUTPUT_LEFT = 0
+EUPHORIA_OUTPUT_RIGHT = 1
+EUPHORIA_FIRST_CONTROL_PORT = 2
+EUPHORIA_SELECTED_SAMPLE = 2
+EUPHORIA_ATTACK = 3
+EUPHORIA_DECAY = 4
+EUPHORIA_SUSTAIN = 5
+EUPHORIA_RELEASE = 6
+EUPHORIA_FILTER_ATTACK = 7
+EUPHORIA_FILTER_DECAY = 8
+EUPHORIA_FILTER_SUSTAIN = 9
+EUPHORIA_FILTER_RELEASE = 10
+EUPHORIA_LFO_PITCH = 11
+EUPHORIA_MASTER_VOLUME = 12
+EUPHORIA_MASTER_GLIDE = 13
+EUPHORIA_MASTER_PITCHBEND_AMT = 14
+EUPHORIA_PITCH_ENV_TIME = 15
+EUPHORIA_LFO_FREQ = 16
+EUPHORIA_LFO_TYPE = 17
+#From Modulex
+EUPHORIA_FX0_KNOB0 = 18
+EUPHORIA_FX0_KNOB1 = 19
+EUPHORIA_FX0_KNOB2 = 20
+EUPHORIA_FX0_COMBOBOX = 21
+EUPHORIA_FX1_KNOB0 = 22
+EUPHORIA_FX1_KNOB1 = 23
+EUPHORIA_FX1_KNOB2 = 24
+EUPHORIA_FX1_COMBOBOX = 25
+EUPHORIA_FX2_KNOB0 = 26
+EUPHORIA_FX2_KNOB1 = 27
+EUPHORIA_FX2_KNOB2 = 28
+EUPHORIA_FX2_COMBOBOX = 29
+EUPHORIA_FX3_KNOB0 = 30
+EUPHORIA_FX3_KNOB1 = 31
+EUPHORIA_FX3_KNOB2 = 32
+EUPHORIA_FX3_COMBOBOX = 33
+#PolyFX Mod Matrix
+EUPHORIA_PFXMATRIX_FIRST_PORT = 34
+EUPHORIA_PFXMATRIX_GRP0DST0SRC0CTRL0 = 34
+EUPHORIA_PFXMATRIX_GRP0DST0SRC0CTRL1 = 35
+EUPHORIA_PFXMATRIX_GRP0DST0SRC0CTRL2 = 36
+EUPHORIA_PFXMATRIX_GRP0DST0SRC1CTRL0 = 37
+EUPHORIA_PFXMATRIX_GRP0DST0SRC1CTRL1 = 38
+EUPHORIA_PFXMATRIX_GRP0DST0SRC1CTRL2 = 39
+EUPHORIA_PFXMATRIX_GRP0DST0SRC2CTRL0 = 40
+EUPHORIA_PFXMATRIX_GRP0DST0SRC2CTRL1 = 41
+EUPHORIA_PFXMATRIX_GRP0DST0SRC2CTRL2 = 42
+EUPHORIA_PFXMATRIX_GRP0DST0SRC3CTRL0 = 43
+EUPHORIA_PFXMATRIX_GRP0DST0SRC3CTRL1 = 44
+EUPHORIA_PFXMATRIX_GRP0DST0SRC3CTRL2 = 45
+EUPHORIA_PFXMATRIX_GRP0DST1SRC0CTRL0 = 46
+EUPHORIA_PFXMATRIX_GRP0DST1SRC0CTRL1 = 47
+EUPHORIA_PFXMATRIX_GRP0DST1SRC0CTRL2 = 48
+EUPHORIA_PFXMATRIX_GRP0DST1SRC1CTRL0 = 49
+EUPHORIA_PFXMATRIX_GRP0DST1SRC1CTRL1 = 50
+EUPHORIA_PFXMATRIX_GRP0DST1SRC1CTRL2 = 51
+EUPHORIA_PFXMATRIX_GRP0DST1SRC2CTRL0 = 52
+EUPHORIA_PFXMATRIX_GRP0DST1SRC2CTRL1 = 53
+EUPHORIA_PFXMATRIX_GRP0DST1SRC2CTRL2 = 54
+EUPHORIA_PFXMATRIX_GRP0DST1SRC3CTRL0 = 55
+EUPHORIA_PFXMATRIX_GRP0DST1SRC3CTRL1 = 56
+EUPHORIA_PFXMATRIX_GRP0DST1SRC3CTRL2 = 57
+EUPHORIA_PFXMATRIX_GRP0DST2SRC0CTRL0 = 58
+EUPHORIA_PFXMATRIX_GRP0DST2SRC0CTRL1 = 59
+EUPHORIA_PFXMATRIX_GRP0DST2SRC0CTRL2 = 60
+EUPHORIA_PFXMATRIX_GRP0DST2SRC1CTRL0 = 61
+EUPHORIA_PFXMATRIX_GRP0DST2SRC1CTRL1 = 62
+EUPHORIA_PFXMATRIX_GRP0DST2SRC1CTRL2 = 63
+EUPHORIA_PFXMATRIX_GRP0DST2SRC2CTRL0 = 64
+EUPHORIA_PFXMATRIX_GRP0DST2SRC2CTRL1 = 65
+EUPHORIA_PFXMATRIX_GRP0DST2SRC2CTRL2 = 66
+EUPHORIA_PFXMATRIX_GRP0DST2SRC3CTRL0 = 67
+EUPHORIA_PFXMATRIX_GRP0DST2SRC3CTRL1 = 68
+EUPHORIA_PFXMATRIX_GRP0DST2SRC3CTRL2 = 69
+EUPHORIA_PFXMATRIX_GRP0DST3SRC0CTRL0 = 70
+EUPHORIA_PFXMATRIX_GRP0DST3SRC0CTRL1 = 71
+EUPHORIA_PFXMATRIX_GRP0DST3SRC0CTRL2 = 72
+EUPHORIA_PFXMATRIX_GRP0DST3SRC1CTRL0 = 73
+EUPHORIA_PFXMATRIX_GRP0DST3SRC1CTRL1 = 74
+EUPHORIA_PFXMATRIX_GRP0DST3SRC1CTRL2 = 75
+EUPHORIA_PFXMATRIX_GRP0DST3SRC2CTRL0 = 76
+EUPHORIA_PFXMATRIX_GRP0DST3SRC2CTRL1 = 77
+EUPHORIA_PFXMATRIX_GRP0DST3SRC2CTRL2 = 78
+EUPHORIA_PFXMATRIX_GRP0DST3SRC3CTRL0 = 79
+EUPHORIA_PFXMATRIX_GRP0DST3SRC3CTRL1 = 80
+EUPHORIA_PFXMATRIX_GRP0DST3SRC3CTRL2 = 81
+
+EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL0 = 82
+EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL1 = 83
+EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL2 = 84
+EUPHORIA_PFXMATRIX_GRP0DST1SRC4CTRL0 = 85
+EUPHORIA_PFXMATRIX_GRP0DST1SRC4CTRL1 = 86
+EUPHORIA_PFXMATRIX_GRP0DST1SRC4CTRL2 = 87
+EUPHORIA_PFXMATRIX_GRP0DST2SRC4CTRL0 = 88
+EUPHORIA_PFXMATRIX_GRP0DST2SRC4CTRL1 = 89
+EUPHORIA_PFXMATRIX_GRP0DST2SRC4CTRL2 = 90
+EUPHORIA_PFXMATRIX_GRP0DST3SRC4CTRL0 = 91
+EUPHORIA_PFXMATRIX_GRP0DST3SRC4CTRL1 = 92
+EUPHORIA_PFXMATRIX_GRP0DST3SRC4CTRL2 = 93
+
+EUPHORIA_PFXMATRIX_GRP0DST0SRC5CTRL0 = 94
+EUPHORIA_PFXMATRIX_GRP0DST0SRC5CTRL1 = 95
+EUPHORIA_PFXMATRIX_GRP0DST0SRC5CTRL2 = 96
+EUPHORIA_PFXMATRIX_GRP0DST1SRC5CTRL0 = 97
+EUPHORIA_PFXMATRIX_GRP0DST1SRC5CTRL1 = 98
+EUPHORIA_PFXMATRIX_GRP0DST1SRC5CTRL2 = 99
+EUPHORIA_PFXMATRIX_GRP0DST2SRC5CTRL0 = 100
+EUPHORIA_PFXMATRIX_GRP0DST2SRC5CTRL1 = 101
+EUPHORIA_PFXMATRIX_GRP0DST2SRC5CTRL2 = 102
+EUPHORIA_PFXMATRIX_GRP0DST3SRC5CTRL0 = 103
+EUPHORIA_PFXMATRIX_GRP0DST3SRC5CTRL1 = 104
+EUPHORIA_PFXMATRIX_GRP0DST3SRC5CTRL2 = 105
+
+#End PolyFX Mod Matrix
+
+# This is the last control port, + 1, for zero-based iteration
+EUPHORIA_LAST_REGULAR_CONTROL_PORT = 106
+# The first port to use when enumerating the ports for mod_matrix controls.
+# All of the mod_matrix ports should be sequential,
+# * any additional ports should prepend self port number
+EUPHORIA_FIRST_SAMPLE_TABLE_PORT = 106
+#The range of ports for sample pitch
+EUPHORIA_SAMPLE_PITCH_PORT_RANGE_MIN = EUPHORIA_FIRST_SAMPLE_TABLE_PORT
+EUPHORIA_SAMPLE_PITCH_PORT_RANGE_MAX = \
+    (EUPHORIA_SAMPLE_PITCH_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+#The range of ports for the low note to play a sample on
+EUPHORIA_PLAY_PITCH_LOW_PORT_RANGE_MIN = EUPHORIA_SAMPLE_PITCH_PORT_RANGE_MAX
+EUPHORIA_PLAY_PITCH_LOW_PORT_RANGE_MAX = \
+    (EUPHORIA_PLAY_PITCH_LOW_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+#The range of ports for the high note to play a sample on
+EUPHORIA_PLAY_PITCH_HIGH_PORT_RANGE_MIN = EUPHORIA_PLAY_PITCH_LOW_PORT_RANGE_MAX
+EUPHORIA_PLAY_PITCH_HIGH_PORT_RANGE_MAX = \
+    (EUPHORIA_PLAY_PITCH_HIGH_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+#The range of ports for sample volume
+EUPHORIA_SAMPLE_VOLUME_PORT_RANGE_MIN = EUPHORIA_PLAY_PITCH_HIGH_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_VOLUME_PORT_RANGE_MAX = \
+    (EUPHORIA_SAMPLE_VOLUME_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_SAMPLE_START_PORT_RANGE_MIN = EUPHORIA_SAMPLE_VOLUME_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_START_PORT_RANGE_MAX = \
+    (EUPHORIA_SAMPLE_START_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_SAMPLE_END_PORT_RANGE_MIN = EUPHORIA_SAMPLE_START_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_END_PORT_RANGE_MAX = \
+    (EUPHORIA_SAMPLE_END_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_SAMPLE_VEL_SENS_PORT_RANGE_MIN = EUPHORIA_SAMPLE_END_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_VEL_SENS_PORT_RANGE_MAX = \
+    (EUPHORIA_SAMPLE_VEL_SENS_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_SAMPLE_VEL_LOW_PORT_RANGE_MIN = EUPHORIA_SAMPLE_VEL_SENS_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_VEL_LOW_PORT_RANGE_MAX = \
+    (EUPHORIA_SAMPLE_VEL_LOW_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_SAMPLE_VEL_HIGH_PORT_RANGE_MIN = EUPHORIA_SAMPLE_VEL_LOW_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_VEL_HIGH_PORT_RANGE_MAX = \
+    (EUPHORIA_SAMPLE_VEL_HIGH_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_PITCH_PORT_RANGE_MIN = EUPHORIA_SAMPLE_VEL_HIGH_PORT_RANGE_MAX
+EUPHORIA_PITCH_PORT_RANGE_MAX = (EUPHORIA_PITCH_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_TUNE_PORT_RANGE_MIN = EUPHORIA_PITCH_PORT_RANGE_MAX
+EUPHORIA_TUNE_PORT_RANGE_MAX = (EUPHORIA_TUNE_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_SAMPLE_INTERPOLATION_MODE_PORT_RANGE_MIN = EUPHORIA_TUNE_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_INTERPOLATION_MODE_PORT_RANGE_MAX = \
+(EUPHORIA_SAMPLE_INTERPOLATION_MODE_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_SAMPLE_LOOP_START_PORT_RANGE_MIN = EUPHORIA_SAMPLE_INTERPOLATION_MODE_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_LOOP_START_PORT_RANGE_MAX = \
+    (EUPHORIA_SAMPLE_LOOP_START_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_SAMPLE_LOOP_END_PORT_RANGE_MIN = EUPHORIA_SAMPLE_LOOP_START_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_LOOP_END_PORT_RANGE_MAX = \
+    (EUPHORIA_SAMPLE_LOOP_END_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+EUPHORIA_SAMPLE_LOOP_MODE_PORT_RANGE_MIN = EUPHORIA_SAMPLE_LOOP_END_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_LOOP_MODE_PORT_RANGE_MAX = \
+    (EUPHORIA_SAMPLE_LOOP_MODE_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+#MonoFX0
+EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MIN = EUPHORIA_SAMPLE_LOOP_MODE_PORT_RANGE_MAX
+EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX0_KNOB1_PORT_RANGE_MIN = EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MAX
+EUPHORIA_MONO_FX0_KNOB1_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX0_KNOB1_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX0_KNOB2_PORT_RANGE_MIN = EUPHORIA_MONO_FX0_KNOB1_PORT_RANGE_MAX
+EUPHORIA_MONO_FX0_KNOB2_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX0_KNOB2_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX0_COMBOBOX_PORT_RANGE_MIN = EUPHORIA_MONO_FX0_KNOB2_PORT_RANGE_MAX
+EUPHORIA_MONO_FX0_COMBOBOX_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX0_COMBOBOX_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+#MonoFX1
+EUPHORIA_MONO_FX1_KNOB0_PORT_RANGE_MIN = EUPHORIA_MONO_FX0_COMBOBOX_PORT_RANGE_MAX
+EUPHORIA_MONO_FX1_KNOB0_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX1_KNOB0_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX1_KNOB1_PORT_RANGE_MIN = EUPHORIA_MONO_FX1_KNOB0_PORT_RANGE_MAX
+EUPHORIA_MONO_FX1_KNOB1_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX1_KNOB1_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX1_KNOB2_PORT_RANGE_MIN = EUPHORIA_MONO_FX1_KNOB1_PORT_RANGE_MAX
+EUPHORIA_MONO_FX1_KNOB2_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX1_KNOB2_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX1_COMBOBOX_PORT_RANGE_MIN = EUPHORIA_MONO_FX1_KNOB2_PORT_RANGE_MAX
+EUPHORIA_MONO_FX1_COMBOBOX_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX1_COMBOBOX_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+#MonoFX2
+EUPHORIA_MONO_FX2_KNOB0_PORT_RANGE_MIN = EUPHORIA_MONO_FX1_COMBOBOX_PORT_RANGE_MAX
+EUPHORIA_MONO_FX2_KNOB0_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX2_KNOB0_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX2_KNOB1_PORT_RANGE_MIN = EUPHORIA_MONO_FX2_KNOB0_PORT_RANGE_MAX
+EUPHORIA_MONO_FX2_KNOB1_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX2_KNOB1_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX2_KNOB2_PORT_RANGE_MIN = EUPHORIA_MONO_FX2_KNOB1_PORT_RANGE_MAX
+EUPHORIA_MONO_FX2_KNOB2_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX2_KNOB2_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX2_COMBOBOX_PORT_RANGE_MIN = EUPHORIA_MONO_FX2_KNOB2_PORT_RANGE_MAX
+EUPHORIA_MONO_FX2_COMBOBOX_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX2_COMBOBOX_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+#MonoFX3
+EUPHORIA_MONO_FX3_KNOB0_PORT_RANGE_MIN = EUPHORIA_MONO_FX2_COMBOBOX_PORT_RANGE_MAX
+EUPHORIA_MONO_FX3_KNOB0_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX3_KNOB0_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX3_KNOB1_PORT_RANGE_MIN = EUPHORIA_MONO_FX3_KNOB0_PORT_RANGE_MAX
+EUPHORIA_MONO_FX3_KNOB1_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX3_KNOB1_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX3_KNOB2_PORT_RANGE_MIN = EUPHORIA_MONO_FX3_KNOB1_PORT_RANGE_MAX
+EUPHORIA_MONO_FX3_KNOB2_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX3_KNOB2_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+EUPHORIA_MONO_FX3_COMBOBOX_PORT_RANGE_MIN = EUPHORIA_MONO_FX3_KNOB2_PORT_RANGE_MAX
+EUPHORIA_MONO_FX3_COMBOBOX_PORT_RANGE_MAX = \
+    (EUPHORIA_MONO_FX3_COMBOBOX_PORT_RANGE_MIN + EUPHORIA_MONO_FX_GROUPS_COUNT)
+#Sample FX Group
+EUPHORIA_SAMPLE_MONO_FX_GROUP_PORT_RANGE_MIN = EUPHORIA_MONO_FX3_COMBOBOX_PORT_RANGE_MAX
+EUPHORIA_SAMPLE_MONO_FX_GROUP_PORT_RANGE_MAX = \
+(EUPHORIA_SAMPLE_MONO_FX_GROUP_PORT_RANGE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+#Noise amp
+EUPHORIA_NOISE_AMP_MIN = EUPHORIA_SAMPLE_MONO_FX_GROUP_PORT_RANGE_MAX
+EUPHORIA_NOISE_AMP_MAX = (EUPHORIA_NOISE_AMP_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+#Noise type
+EUPHORIA_NOISE_TYPE_MIN = EUPHORIA_NOISE_AMP_MAX
+EUPHORIA_NOISE_TYPE_MAX = (EUPHORIA_NOISE_TYPE_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+
+#sample fade-in
+EUPHORIA_SAMPLE_FADE_IN_MIN = EUPHORIA_NOISE_TYPE_MAX
+EUPHORIA_SAMPLE_FADE_IN_MAX = (EUPHORIA_SAMPLE_FADE_IN_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+
+#sample fade-out
+EUPHORIA_SAMPLE_FADE_OUT_MIN = EUPHORIA_SAMPLE_FADE_IN_MAX
+EUPHORIA_SAMPLE_FADE_OUT_MAX = (EUPHORIA_SAMPLE_FADE_OUT_MIN + EUPHORIA_MAX_SAMPLE_COUNT)
+
+EUPHORIA_FIRST_EQ_PORT = EUPHORIA_SAMPLE_FADE_OUT_MAX
+
+# Stacked as:
+# 100 *
+#     [freq, bw, gain] * 6
+
+EUPHORIA_LAST_EQ_PORT = (EUPHORIA_FIRST_EQ_PORT + (18 * 100))
+
+EUPHORIA_LFO_PITCH_FINE = EUPHORIA_LAST_EQ_PORT
+EUPHORIA_MIN_NOTE = EUPHORIA_LFO_PITCH_FINE + 1
+EUPHORIA_MAX_NOTE = EUPHORIA_MIN_NOTE + 1
+
+
+
+EUPHORIA_PORT_MAP = {
+    "Master Attack": "3",
+    "Master Decay": "4",
+    "Master Sustain": "5",
+    "Master Release": "6",
+    "ADSR2 Attack": "7",
+    "ADSR2 Decay": "8",
+    "ADSR2 Sustain": "9",
+    "ADSR2 Release": "10",
+    "LFO Pitch": "11",
+    "LFO Pitch Fine": EUPHORIA_LFO_PITCH_FINE,
+    "Master Glide": "13",
+    "Pitch Env Time": "15",
+    "LFO Freq": "16",
+    "FX0 Knob0": "18",
+    "FX0 Knob1": "19",
+    "FX0 Knob2": "20",
+    "FX1 Knob0": "22",
+    "FX1 Knob1": "23",
+    "FX1 Knob2": "24",
+    "FX2 Knob0": "26",
+    "FX2 Knob1": "27",
+    "FX2 Knob2": "28",
+    "FX3 Knob0": "30",
+    "FX3 Knob1": "31",
+    "FX3 Knob2": "32",
+}
+
+_euphoria_port_mins = (EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MIN,
+                       EUPHORIA_MONO_FX1_KNOB0_PORT_RANGE_MIN,
+                       EUPHORIA_MONO_FX2_KNOB0_PORT_RANGE_MIN,
+                       EUPHORIA_MONO_FX3_KNOB0_PORT_RANGE_MIN)
+
+for f_fx in range(4):
+    f_port_iter = _euphoria_port_mins[f_fx]
+    for f_knob in range(3):
+        for f_group in range(1, EUPHORIA_MAX_SAMPLE_COUNT + 1):
+            f_group_str = str(f_group).zfill(3)
+            f_label = "Mono FX{} Knob{} Group {}".format(f_fx, f_knob, f_group_str)
+            EUPHORIA_PORT_MAP[f_label] = f_port_iter
+            f_port_iter += 1
+
 
 
 
@@ -73,12 +388,12 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.noise_types_list = [_("Off"), _("White"), _("Pink")]
 
         self.selected_sample_port = pydaw_null_control(
-            pydaw_ports.EUPHORIA_SELECTED_SAMPLE,
+            EUPHORIA_SELECTED_SAMPLE,
             self.plugin_rel_callback, self.plugin_val_callback,
             0, self.port_dict)
 
         self.sample_table = QtGui.QTableWidget(
-            pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT, len(f_sample_table_columns))
+            EUPHORIA_MAX_SAMPLE_COUNT, len(f_sample_table_columns))
         self.sample_table.setAlternatingRowColors(True)
         self.sample_table.setHorizontalScrollMode(
             QtGui.QAbstractItemView.ScrollPerPixel)
@@ -90,15 +405,15 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             QtGui.QHeaderView.Fixed)
 
         self.selected_radiobuttons = []
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_radiobutton = QtGui.QRadioButton(self.sample_table)
             self.selected_radiobuttons.append(f_radiobutton)
             self.sample_table.setCellWidget(f_i, 0, f_radiobutton)
             f_radiobutton.clicked.connect(self.selectionChanged)
 
         self.sample_base_pitches = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_PITCH_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_PITCH_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_sample_pitch = pydaw_note_selector_widget(
                 f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -107,8 +422,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.sample_base_pitches.append(f_sample_pitch)
 
         self.sample_low_notes = []
-        f_port_start = pydaw_ports.EUPHORIA_PLAY_PITCH_LOW_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_PLAY_PITCH_LOW_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_low_pitch = pydaw_note_selector_widget(
                 f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -117,8 +432,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.sample_low_notes.append(f_low_pitch)
 
         self.sample_high_notes = []
-        f_port_start = pydaw_ports.EUPHORIA_PLAY_PITCH_HIGH_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_PLAY_PITCH_HIGH_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_high_pitch = pydaw_note_selector_widget(
                 f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -127,8 +442,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.sample_high_notes.append(f_high_pitch)
 
         self.sample_vols = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_VOLUME_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_VOLUME_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_sample_vol = pydaw_spinbox_control(
                 None, f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -137,8 +452,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.sample_vols.append(f_sample_vol)
 
         self.sample_vel_sens = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_VEL_SENS_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_VEL_SENS_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_vel_sens = pydaw_spinbox_control(
                 None, f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -147,8 +462,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.sample_vel_sens.append(f_vel_sens)
 
         self.sample_low_vels = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_VEL_LOW_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_VEL_LOW_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_vel_low = pydaw_spinbox_control(
                 None, f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -157,8 +472,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.sample_low_vels.append(f_vel_low)
 
         self.sample_high_vels = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_VEL_HIGH_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_VEL_HIGH_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_vel_high = pydaw_spinbox_control(
                 None, f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -167,8 +482,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.sample_high_vels.append(f_vel_high)
 
         self.sample_pitches = []
-        f_port_start = pydaw_ports.EUPHORIA_PITCH_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_PITCH_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_sample_pitch = pydaw_spinbox_control(
                 None, f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -177,8 +492,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.sample_pitches.append(f_sample_pitch)
 
         self.sample_tunes = []
-        f_port_start = pydaw_ports.EUPHORIA_TUNE_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_TUNE_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_sample_tune = pydaw_spinbox_control(
                 None, f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -188,8 +503,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.sample_modes = []
         f_port_start = \
-            pydaw_ports.EUPHORIA_SAMPLE_INTERPOLATION_MODE_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+            EUPHORIA_SAMPLE_INTERPOLATION_MODE_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_sample_mode = pydaw_combobox_control(
                 120, None, f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -198,8 +513,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.sample_modes.append(f_sample_mode)
 
         self.noise_types = []
-        f_port_start = pydaw_ports.EUPHORIA_NOISE_TYPE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_NOISE_TYPE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_noise_type = pydaw_combobox_control(
                 75, None, f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -208,8 +523,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.noise_types.append(f_noise_type)
 
         self.noise_amps = []
-        f_port_start = pydaw_ports.EUPHORIA_NOISE_AMP_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_NOISE_AMP_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_noise_amp = pydaw_spinbox_control(
                 None, f_port_start + f_i,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -218,56 +533,56 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.noise_amps.append(f_noise_amp)
 
         self.sample_starts = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_START_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_START_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_sample_start = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 0, self.port_dict)
             self.sample_starts.append(f_sample_start)
 
         self.sample_ends = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_END_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_END_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_sample_end = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 1000, self.port_dict)
             self.sample_ends.append(f_sample_end)
 
         self.loop_starts = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_LOOP_START_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_LOOP_START_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_loop_start = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 0, self.port_dict)
             self.loop_starts.append(f_loop_start)
 
         self.loop_modes = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_LOOP_MODE_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_LOOP_MODE_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_loop_mode = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 0, self.port_dict)
             self.loop_modes.append(f_loop_mode)
 
         self.loop_ends = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_LOOP_END_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_LOOP_END_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_loop_end = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 1000, self.port_dict)
             self.loop_ends.append(f_loop_end)
 
         self.fade_in_ends = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_FADE_IN_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_FADE_IN_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_fade_in = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 0, self.port_dict)
             self.fade_in_ends.append(f_fade_in)
 
         self.fade_out_starts = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_FADE_OUT_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_FADE_OUT_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_fade_out = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 1000, self.port_dict)
@@ -275,136 +590,136 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
         #MonoFX0
         self.monofx0knob0_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx0knob0_ctrls.append(f_ctrl)
 
         self.monofx0knob1_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX0_KNOB1_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX0_KNOB1_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx0knob1_ctrls.append(f_ctrl)
 
         self.monofx0knob2_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX0_KNOB2_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX0_KNOB2_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx0knob2_ctrls.append(f_ctrl)
 
         self.monofx0comboboxes = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX0_COMBOBOX_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX0_COMBOBOX_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 0, self.port_dict)
             self.monofx0comboboxes.append(f_ctrl)
         #MonoFX1
         self.monofx1knob0_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX1_KNOB0_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX1_KNOB0_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx1knob0_ctrls.append(f_ctrl)
 
         self.monofx1knob1_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX1_KNOB1_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX1_KNOB1_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx1knob1_ctrls.append(f_ctrl)
 
         self.monofx1knob2_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX1_KNOB2_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX1_KNOB2_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx1knob2_ctrls.append(f_ctrl)
 
         self.monofx1comboboxes = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX1_COMBOBOX_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX1_COMBOBOX_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 0, self.port_dict)
             self.monofx1comboboxes.append(f_ctrl)
         #MonoFX2
         self.monofx2knob0_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX2_KNOB0_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX2_KNOB0_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx2knob0_ctrls.append(f_ctrl)
 
         self.monofx2knob1_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX2_KNOB1_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX2_KNOB1_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx2knob1_ctrls.append(f_ctrl)
 
         self.monofx2knob2_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX2_KNOB2_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX2_KNOB2_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx2knob2_ctrls.append(f_ctrl)
 
         self.monofx2comboboxes = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX2_COMBOBOX_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX2_COMBOBOX_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 0, self.port_dict)
             self.monofx2comboboxes.append(f_ctrl)
         #MonoFX3
         self.monofx3knob0_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX3_KNOB0_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX3_KNOB0_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx3knob0_ctrls.append(f_ctrl)
 
         self.monofx3knob1_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX3_KNOB1_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX3_KNOB1_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx3knob1_ctrls.append(f_ctrl)
 
         self.monofx3knob2_ctrls = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX3_KNOB2_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX3_KNOB2_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 64, self.port_dict)
             self.monofx3knob2_ctrls.append(f_ctrl)
 
         self.monofx3comboboxes = []
-        f_port_start = pydaw_ports.EUPHORIA_MONO_FX3_COMBOBOX_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_MONO_FX3_COMBOBOX_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_ctrl = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 0, self.port_dict)
             self.monofx3comboboxes.append(f_ctrl)
 
         self.monofx_groups = []
-        f_port_start = pydaw_ports.EUPHORIA_SAMPLE_MONO_FX_GROUP_PORT_RANGE_MIN
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_SAMPLE_MONO_FX_GROUP_PORT_RANGE_MIN
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_monofx_group = pydaw_null_control(
                 f_port_start + f_i, self.plugin_rel_callback,
                 self.plugin_val_callback, 0, self.port_dict)
@@ -419,8 +734,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.monofx3knob1_ctrls, self.monofx3knob2_ctrls)
 
         self.eq_ports = []
-        f_port_start = pydaw_ports.EUPHORIA_FIRST_EQ_PORT
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        f_port_start = EUPHORIA_FIRST_EQ_PORT
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_group_list = []
             self.eq_ports.append(f_group_list)
             for f_i2 in range(6):
@@ -623,7 +938,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             hasHeightForWidth())
         self.selected_sample_index_combobox.setSizePolicy(sizePolicy1)
         self.selected_sample_index_combobox.setMinimumWidth(320)
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             self.selected_sample_index_combobox.addItem("")
         self.selected_sample_index_combobox.currentIndexChanged.connect(
             self.viewSampleSelectedIndexChanged)
@@ -688,24 +1003,24 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.hlayout0 = QtGui.QHBoxLayout()
         self.main_layout.addLayout(self.hlayout0)
         self.fx0 = pydaw_modulex_single(
-            _("FX0"), pydaw_ports.EUPHORIA_FX0_KNOB0,
+            _("FX0"), EUPHORIA_FX0_KNOB0,
             self.plugin_rel_callback, self.plugin_val_callback, self.port_dict,
             a_knob_size=f_knob_size)
         self.hlayout0.addWidget(self.fx0.group_box)
         self.fx1 = pydaw_modulex_single(
-            _("FX1"), pydaw_ports.EUPHORIA_FX1_KNOB0,
+            _("FX1"), EUPHORIA_FX1_KNOB0,
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, a_knob_size=f_knob_size)
         self.hlayout0.addWidget(self.fx1.group_box)
         self.hlayout1 = QtGui.QHBoxLayout()
         self.main_layout.addLayout(self.hlayout1)
         self.fx2 = pydaw_modulex_single(
-            _("FX2"), pydaw_ports.EUPHORIA_FX2_KNOB0,
+            _("FX2"), EUPHORIA_FX2_KNOB0,
             self.plugin_rel_callback, self.plugin_val_callback, self.port_dict,
             a_knob_size=f_knob_size)
         self.hlayout1.addWidget(self.fx2.group_box)
         self.fx3 = pydaw_modulex_single(
-            _("FX3"), pydaw_ports.EUPHORIA_FX3_KNOB0,
+            _("FX3"), EUPHORIA_FX3_KNOB0,
             self.plugin_rel_callback, self.plugin_val_callback, self.port_dict,
             a_knob_size=f_knob_size)
         self.hlayout1.addWidget(self.fx3.group_box)
@@ -725,7 +1040,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.mod_matrix.setVerticalHeaderLabels(
             [_("ADSR 1"), _("ADSR 2"), _("Ramp Env"),
              _("LFO"), _("Pitch"), _("Velocity")])
-        f_port_num = pydaw_ports.EUPHORIA_PFXMATRIX_FIRST_PORT
+        f_port_num = EUPHORIA_PFXMATRIX_FIRST_PORT
 
         for f_i_dst in range(4):
             for f_i_src in range(4):
@@ -739,7 +1054,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     f_port_num += 1
 
         #The new pitch and velocity tracking controls
-        f_port_num = pydaw_ports.EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL0
+        f_port_num = EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL0
 
         for f_i_src in range(4, 6):
             for f_i_dst in range(4):
@@ -759,9 +1074,9 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.main_layout.addLayout(self.hlayout2)
 
         self.adsr_amp = pydaw_adsr_widget(
-            f_knob_size, True, pydaw_ports.EUPHORIA_ATTACK,
-            pydaw_ports.EUPHORIA_DECAY, pydaw_ports.EUPHORIA_SUSTAIN,
-            pydaw_ports.EUPHORIA_RELEASE, _("ADSR Amp"),
+            f_knob_size, True, EUPHORIA_ATTACK,
+            EUPHORIA_DECAY, EUPHORIA_SUSTAIN,
+            EUPHORIA_RELEASE, _("ADSR Amp"),
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, a_attack_default=0, a_knob_type=KC_LOG_TIME)
         #overriding the default for self, because we want a
@@ -769,36 +1084,36 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.adsr_amp.release_knob.control.setMinimum(5)
         self.hlayout2.addWidget(self.adsr_amp.groupbox)
         self.adsr_filter = pydaw_adsr_widget(
-            f_knob_size, False, pydaw_ports.EUPHORIA_FILTER_ATTACK,
-            pydaw_ports.EUPHORIA_FILTER_DECAY,
-            pydaw_ports.EUPHORIA_FILTER_SUSTAIN,
-            pydaw_ports.EUPHORIA_FILTER_RELEASE,
+            f_knob_size, False, EUPHORIA_FILTER_ATTACK,
+            EUPHORIA_FILTER_DECAY,
+            EUPHORIA_FILTER_SUSTAIN,
+            EUPHORIA_FILTER_RELEASE,
             _("ADSR 2"), self.plugin_rel_callback,
             self.plugin_val_callback, self.port_dict, a_knob_type=KC_LOG_TIME)
         self.hlayout2.addWidget(self.adsr_filter.groupbox)
         self.pitch_env = pydaw_ramp_env_widget(
             f_knob_size, self.plugin_rel_callback,
             self.plugin_val_callback, self.port_dict,
-            pydaw_ports.EUPHORIA_PITCH_ENV_TIME, None, _("Ramp Env"))
+            EUPHORIA_PITCH_ENV_TIME, None, _("Ramp Env"))
 
         self.hlayout2.addWidget(self.pitch_env.groupbox)
 
         self.lfo = pydaw_lfo_widget(
             f_knob_size, self.plugin_rel_callback,
             self.plugin_val_callback, self.port_dict,
-            pydaw_ports.EUPHORIA_LFO_FREQ,
-            pydaw_ports.EUPHORIA_LFO_TYPE, f_lfo_types, _("LFO"))
+            EUPHORIA_LFO_FREQ,
+            EUPHORIA_LFO_TYPE, f_lfo_types, _("LFO"))
         self.hlayout2.addWidget(self.lfo.groupbox)
 
         self.lfo_pitch = pydaw_knob_control(
-            f_knob_size, _("Pitch"), pydaw_ports.EUPHORIA_LFO_PITCH,
+            f_knob_size, _("Pitch"), EUPHORIA_LFO_PITCH,
             self.plugin_rel_callback, self.plugin_val_callback,
             -36, 36, 0, KC_INTEGER, self.port_dict)
         self.lfo_pitch.add_to_grid_layout(self.lfo.layout, 7)
 
         self.lfo_pitch_fine = pydaw_knob_control(
             f_knob_size, _("Fine"),
-            pydaw_ports.EUPHORIA_LFO_PITCH_FINE,
+            EUPHORIA_LFO_PITCH_FINE,
             self.plugin_rel_callback, self.plugin_val_callback,
             -100, 100, 0, KC_DECIMAL, self.port_dict)
         self.lfo_pitch_fine.add_to_grid_layout(self.lfo.layout, 8)
@@ -809,9 +1124,9 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.mono_fx_tab_selected_sample = QtGui.QComboBox(self.mono_fx_tab)
         self.mono_fx_tab_selected_sample.setMinimumWidth(330)
         self.mono_fx_tab_selected_group = QtGui.QComboBox(self.mono_fx_tab)
-        for f_i in range(1, pydaw_ports.EUPHORIA_MONO_FX_GROUPS_COUNT):
+        for f_i in range(1, EUPHORIA_MONO_FX_GROUPS_COUNT):
             self.mono_fx_tab_selected_group.addItem(str(f_i))
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             self.mono_fx_tab_selected_sample.addItem("")
         self.mono_fx_tab_selected_group.currentIndexChanged.connect(
             self.sample_selected_monofx_groupChanged)
@@ -871,12 +1186,12 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.master = pydaw_master_widget(
             f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
-            pydaw_ports.EUPHORIA_MASTER_VOLUME,
-            pydaw_ports.EUPHORIA_MASTER_GLIDE,
-            pydaw_ports.EUPHORIA_MASTER_PITCHBEND_AMT,
+            EUPHORIA_MASTER_VOLUME,
+            EUPHORIA_MASTER_GLIDE,
+            EUPHORIA_MASTER_PITCHBEND_AMT,
             self.port_dict, _("Master"),
-            a_min_note_port=pydaw_ports.EUPHORIA_MIN_NOTE,
-            a_max_note_port=pydaw_ports.EUPHORIA_MAX_NOTE)
+            a_min_note_port=EUPHORIA_MIN_NOTE,
+            a_max_note_port=EUPHORIA_MAX_NOTE)
         self.monofx_sub_tab_fx_layout.addWidget(self.master.group_box)
         self.master.vol_knob.control.setRange(-24, 24)
 
@@ -890,7 +1205,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             alignment=QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
 
         self.open_plugin_file()
-        self.set_midi_learn(pydaw_ports.EUPHORIA_PORT_MAP)
+        self.set_midi_learn(EUPHORIA_PORT_MAP)
 
     def eq6_val_callback(self, a_port, a_val):
         f_eq_num = a_port // 3
@@ -974,7 +1289,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         f_lists = (
             self.sample_starts, self.sample_ends,
             self.fade_in_ends, self.fade_out_starts)
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             for f_i2 in range(len(f_vals)):
                 f_lists[f_i2][f_i].set_value(f_vals[f_i2], True)
 
@@ -983,7 +1298,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                   self.sample_graph.loop_end_marker.value,
                   self.loop_mode_combobox.currentIndex())
         f_lists = (self.loop_starts, self.loop_ends, self.loop_modes)
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             for f_i2 in range(len(f_vals)):
                 f_lists[f_i2][f_i].set_value(f_vals[f_i2], True)
 
@@ -1054,7 +1369,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         pydaw_abstract_plugin_ui.open_plugin_file(self)
         self.sample_table.resizeColumnsToContents()
         f_combobox_items = []
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_item = self.sample_table.item(f_i, SMP_TB_FILE_PATH_INDEX)
             if f_item is None or str(f_item.text()) == "":
                 f_combobox_items.append("")
@@ -1191,7 +1506,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         f_window.exec_()
 
     def clearAllSamples(self):
-        for i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             self.set_selected_sample_combobox_item(i, "")
             self.sample_graph.clear_drawn_items()
             f_item = QtGui.QTableWidgetItem()
@@ -1203,7 +1518,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.file_selector.set_file((""))
 
     def mapAllSamplesToOneMonoFXgroup(self):
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             self.monofx_groups[f_i].set_value(f_i, True)
         self.mono_fx_tab_selected_sample.setCurrentIndex(1)
         self.mono_fx_tab_selected_sample.setCurrentIndex(0)
@@ -1212,7 +1527,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         f_current_note = 36
         i_white_notes = 0
         f_white_notes = [2, 2, 1, 2, 2, 2, 1]
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             self.sample_base_pitches[f_i].set_value(f_current_note, True)
             self.sample_high_notes[f_i].set_value(f_current_note, True)
             self.sample_low_notes[f_i].set_value(f_current_note, True)
@@ -1269,7 +1584,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
 
     def find_selected_radio_button(self):
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             if self.selected_radiobuttons[f_i].isChecked():
                 self.selected_row_index = f_i
                 return
@@ -1298,7 +1613,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                         SMP_TB_FILE_PATH_INDEX, f_item)
                     f_sample_index_to_load += 1
                     if(f_sample_index_to_load >=
-                    pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+                    EUPHORIA_MAX_SAMPLE_COUNT):
                         break
 
             self.generate_files_string()
@@ -1308,15 +1623,15 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
     def generate_files_string(self, a_index=-1):
         self.files_string = ""
-        for f_i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_item = self.sample_table.item(f_i, SMP_TB_FILE_PATH_INDEX)
             if f_item is not None and str(f_item.text()).strip() != "":
                 f_uid = self.pydaw_project.get_wav_uid_by_name(
                     str(f_item.text()))
                 self.files_string += str(f_uid)
-            if f_i < pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT - 1:
+            if f_i < EUPHORIA_MAX_SAMPLE_COUNT - 1:
                 self.files_string += \
-                    pydaw_ports.EUPHORIA_FILES_STRING_DELIMITER
+                    EUPHORIA_FILES_STRING_DELIMITER
 
     def clearFile(self):
         self.find_selected_radio_button()
@@ -1609,7 +1924,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         f_dir = str(a_dir)
         f_result = ""
         self.find_selected_radio_button()
-        for i in range(pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT):
+        for i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_current_file_path = self.sample_table.item(
                 i, SMP_TB_FILE_PATH_INDEX)
             if f_current_file_path is None:
@@ -1799,13 +2114,13 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
             for f_index, f_sample in zip(
             range(len(f_sfz.samples)), f_sfz.samples):
-                if f_index >= pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT:
+                if f_index >= EUPHORIA_MAX_SAMPLE_COUNT:
                     QtGui.QMessageBox.warning(
                         self.widget, _("Error"),
                         _("Sample count {} exceeds maximum of {}, not "
                         "loading all samples").format(
                         len(f_sfz.samples),
-                        pydaw_ports.EUPHORIA_MAX_SAMPLE_COUNT))
+                        EUPHORIA_MAX_SAMPLE_COUNT))
                     return
                 if "sample" in f_sample.dict:
                     f_sample_file = f_sample.dict["sample"].replace("\\", "/")

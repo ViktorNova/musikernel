@@ -15,6 +15,536 @@ GNU General Public License for more details.
 
 from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
+import sys
+
+#Total number of LFOs, ADSRs, other envelopes, etc...
+#Used for the PolyFX mod matrix
+WAYV_MODULATOR_COUNT = 4
+#How many modular PolyFX
+WAYV_MODULAR_POLYFX_COUNT = 4
+#How many ports per PolyFX, 3 knobs and a combobox
+WAYV_PORTS_PER_MOD_EFFECT = 4
+#How many knobs per PolyFX, 3 knobs
+WAYV_CONTROLS_PER_MOD_EFFECT = 3
+WAYV_EFFECTS_GROUPS_COUNT = 1
+WAYV_OUTPUT0 = 0
+WAYV_OUTPUT1 = 1
+WAYV_FIRST_CONTROL_PORT = 2
+WAYV_ATTACK_MAIN = 2
+WAYV_DECAY_MAIN = 3
+WAYV_SUSTAIN_MAIN = 4
+WAYV_RELEASE_MAIN = 5
+WAYV_NOISE_AMP = 6
+WAYV_OSC1_TYPE = 7
+WAYV_OSC1_PITCH = 8
+WAYV_OSC1_TUNE = 9
+WAYV_OSC1_VOLUME = 10
+WAYV_OSC2_TYPE = 11
+WAYV_OSC2_PITCH = 12
+WAYV_OSC2_TUNE = 13
+WAYV_OSC2_VOLUME = 14
+WAYV_MASTER_VOLUME = 15
+WAYV_OSC1_UNISON_VOICES = 16
+WAYV_OSC1_UNISON_SPREAD = 17
+WAYV_MASTER_GLIDE = 18
+WAYV_MASTER_PITCHBEND_AMT = 19
+WAYV_ATTACK1 = 20
+WAYV_DECAY1 = 21
+WAYV_SUSTAIN1 = 22
+WAYV_RELEASE1 = 23
+WAYV_ATTACK2 = 24
+WAYV_DECAY2 = 25
+WAYV_SUSTAIN2 = 26
+WAYV_RELEASE2 = 27
+WAYV_ATTACK_PFX1 = 28
+WAYV_DECAY_PFX1 = 29
+WAYV_SUSTAIN_PFX1 = 30
+WAYV_RELEASE_PFX1 = 31
+WAYV_ATTACK_PFX2 = 32
+WAYV_DECAY_PFX2 = 33
+WAYV_SUSTAIN_PFX2 = 34
+WAYV_RELEASE_PFX2 = 35
+WAYV_NOISE_TYPE = 36
+WAYV_RAMP_ENV_TIME = 37
+WAYV_LFO_FREQ = 38
+WAYV_LFO_TYPE = 39
+WAYV_FX0_KNOB0 = 40
+WAYV_FX0_KNOB1 = 41
+WAYV_FX0_KNOB2 = 42
+WAYV_FX0_COMBOBOX = 43
+WAYV_FX1_KNOB0 = 44
+WAYV_FX1_KNOB1 = 45
+WAYV_FX1_KNOB2 = 46
+WAYV_FX1_COMBOBOX = 47
+WAYV_FX2_KNOB0 = 48
+WAYV_FX2_KNOB1 = 49
+WAYV_FX2_KNOB2 = 50
+WAYV_FX2_COMBOBOX = 51
+WAYV_FX3_KNOB0 = 52
+WAYV_FX3_KNOB1 = 53
+WAYV_FX3_KNOB2 = 54
+WAYV_FX3_COMBOBOX = 55
+#PolyFX Mod Matrix
+WAVV_PFXMATRIX_FIRST_PORT = 56
+WAVV_PFXMATRIX_GRP0DST0SRC0CTRL0 = 56
+WAVV_PFXMATRIX_GRP0DST0SRC0CTRL1 = 57
+WAVV_PFXMATRIX_GRP0DST0SRC0CTRL2 = 58
+WAVV_PFXMATRIX_GRP0DST0SRC1CTRL0 = 59
+WAVV_PFXMATRIX_GRP0DST0SRC1CTRL1 = 60
+WAVV_PFXMATRIX_GRP0DST0SRC1CTRL2 = 61
+WAVV_PFXMATRIX_GRP0DST0SRC2CTRL0 = 62
+WAVV_PFXMATRIX_GRP0DST0SRC2CTRL1 = 63
+WAVV_PFXMATRIX_GRP0DST0SRC2CTRL2 = 64
+WAVV_PFXMATRIX_GRP0DST0SRC3CTRL0 = 65
+WAVV_PFXMATRIX_GRP0DST0SRC3CTRL1 = 66
+WAVV_PFXMATRIX_GRP0DST0SRC3CTRL2 = 67
+WAVV_PFXMATRIX_GRP0DST1SRC0CTRL0 = 68
+WAVV_PFXMATRIX_GRP0DST1SRC0CTRL1 = 69
+WAVV_PFXMATRIX_GRP0DST1SRC0CTRL2 = 70
+WAVV_PFXMATRIX_GRP0DST1SRC1CTRL0 = 71
+WAVV_PFXMATRIX_GRP0DST1SRC1CTRL1 = 72
+WAVV_PFXMATRIX_GRP0DST1SRC1CTRL2 = 73
+WAVV_PFXMATRIX_GRP0DST1SRC2CTRL0 = 74
+WAVV_PFXMATRIX_GRP0DST1SRC2CTRL1 = 75
+WAVV_PFXMATRIX_GRP0DST1SRC2CTRL2 = 76
+WAVV_PFXMATRIX_GRP0DST1SRC3CTRL0 = 77
+WAVV_PFXMATRIX_GRP0DST1SRC3CTRL1 = 78
+WAVV_PFXMATRIX_GRP0DST1SRC3CTRL2 = 79
+WAVV_PFXMATRIX_GRP0DST2SRC0CTRL0 = 80
+WAVV_PFXMATRIX_GRP0DST2SRC0CTRL1 = 81
+WAVV_PFXMATRIX_GRP0DST2SRC0CTRL2 = 82
+WAVV_PFXMATRIX_GRP0DST2SRC1CTRL0 = 83
+WAVV_PFXMATRIX_GRP0DST2SRC1CTRL1 = 84
+WAVV_PFXMATRIX_GRP0DST2SRC1CTRL2 = 85
+WAVV_PFXMATRIX_GRP0DST2SRC2CTRL0 = 86
+WAVV_PFXMATRIX_GRP0DST2SRC2CTRL1 = 87
+WAVV_PFXMATRIX_GRP0DST2SRC2CTRL2 = 88
+WAVV_PFXMATRIX_GRP0DST2SRC3CTRL0 = 89
+WAVV_PFXMATRIX_GRP0DST2SRC3CTRL1 = 90
+WAVV_PFXMATRIX_GRP0DST2SRC3CTRL2 = 91
+WAVV_PFXMATRIX_GRP0DST3SRC0CTRL0 = 92
+WAVV_PFXMATRIX_GRP0DST3SRC0CTRL1 = 93
+WAVV_PFXMATRIX_GRP0DST3SRC0CTRL2 = 94
+WAVV_PFXMATRIX_GRP0DST3SRC1CTRL0 = 95
+WAVV_PFXMATRIX_GRP0DST3SRC1CTRL1 = 96
+WAVV_PFXMATRIX_GRP0DST3SRC1CTRL2 = 97
+WAVV_PFXMATRIX_GRP0DST3SRC2CTRL0 = 98
+WAVV_PFXMATRIX_GRP0DST3SRC2CTRL1 = 99
+WAVV_PFXMATRIX_GRP0DST3SRC2CTRL2 = 100
+WAVV_PFXMATRIX_GRP0DST3SRC3CTRL0 = 101
+WAVV_PFXMATRIX_GRP0DST3SRC3CTRL1 = 102
+WAVV_PFXMATRIX_GRP0DST3SRC3CTRL2 = 103
+#End PolyFX Mod Matrix
+WAYV_ADSR1_CHECKBOX = 105
+WAYV_ADSR2_CHECKBOX = 106
+WAYV_LFO_AMP = 107
+WAYV_LFO_PITCH = 108
+WAYV_PITCH_ENV_AMT = 109
+WAYV_OSC2_UNISON_VOICES = 110
+WAYV_OSC2_UNISON_SPREAD = 111
+WAYV_LFO_AMOUNT = 112
+WAYV_OSC3_TYPE = 113
+WAYV_OSC3_PITCH = 114
+WAYV_OSC3_TUNE = 115
+WAYV_OSC3_VOLUME = 116
+WAYV_OSC3_UNISON_VOICES = 117
+WAYV_OSC3_UNISON_SPREAD = 118
+WAYV_OSC1_FM1 = 119
+WAYV_OSC1_FM2 = 120
+WAYV_OSC1_FM3 = 121
+WAYV_OSC2_FM1 = 122
+WAYV_OSC2_FM2 = 123
+WAYV_OSC2_FM3 = 124
+WAYV_OSC3_FM1 = 125
+WAYV_OSC3_FM2 = 126
+WAYV_OSC3_FM3 = 127
+WAYV_ATTACK3 = 128
+WAYV_DECAY3 = 129
+WAYV_SUSTAIN3 = 130
+WAYV_RELEASE3 = 131
+WAYV_ADSR3_CHECKBOX = 132
+
+WAVV_PFXMATRIX_GRP0DST0SRC4CTRL0 = 133
+WAVV_PFXMATRIX_GRP0DST0SRC4CTRL1 = 134
+WAVV_PFXMATRIX_GRP0DST0SRC4CTRL2 = 135
+WAVV_PFXMATRIX_GRP0DST1SRC4CTRL0 = 136
+WAVV_PFXMATRIX_GRP0DST1SRC4CTRL1 = 137
+WAVV_PFXMATRIX_GRP0DST1SRC4CTRL2 = 138
+WAVV_PFXMATRIX_GRP0DST2SRC4CTRL0 = 139
+WAVV_PFXMATRIX_GRP0DST2SRC4CTRL1 = 140
+WAVV_PFXMATRIX_GRP0DST2SRC4CTRL2 = 141
+WAVV_PFXMATRIX_GRP0DST3SRC4CTRL0 = 142
+WAVV_PFXMATRIX_GRP0DST3SRC4CTRL1 = 143
+WAVV_PFXMATRIX_GRP0DST3SRC4CTRL2 = 144
+
+WAVV_PFXMATRIX_GRP0DST0SRC5CTRL0 = 145
+WAVV_PFXMATRIX_GRP0DST0SRC5CTRL1 = 146
+WAVV_PFXMATRIX_GRP0DST0SRC5CTRL2 = 147
+WAVV_PFXMATRIX_GRP0DST1SRC5CTRL0 = 148
+WAVV_PFXMATRIX_GRP0DST1SRC5CTRL1 = 149
+WAVV_PFXMATRIX_GRP0DST1SRC5CTRL2 = 150
+WAVV_PFXMATRIX_GRP0DST2SRC5CTRL0 = 151
+WAVV_PFXMATRIX_GRP0DST2SRC5CTRL1 = 152
+WAVV_PFXMATRIX_GRP0DST2SRC5CTRL2 = 153
+WAVV_PFXMATRIX_GRP0DST3SRC5CTRL0 = 154
+WAVV_PFXMATRIX_GRP0DST3SRC5CTRL1 = 155
+WAVV_PFXMATRIX_GRP0DST3SRC5CTRL2 = 156
+WAYV_PERC_ENV_TIME1 = 157
+WAYV_PERC_ENV_PITCH1 = 158
+WAYV_PERC_ENV_TIME2 = 159
+WAYV_PERC_ENV_PITCH2 = 160
+WAYV_PERC_ENV_ON = 161
+WAYV_RAMP_CURVE = 162
+WAYV_MONO_MODE = 163
+
+WAYV_OSC4_TYPE = 164
+WAYV_OSC4_PITCH = 165
+WAYV_OSC4_TUNE = 166
+WAYV_OSC4_VOLUME = 167
+WAYV_OSC4_UNISON_VOICES = 168
+WAYV_OSC4_UNISON_SPREAD = 169
+WAYV_OSC1_FM4 = 170
+WAYV_OSC2_FM4 = 171
+WAYV_OSC3_FM4 = 172
+WAYV_OSC4_FM1 = 173
+WAYV_OSC4_FM2 = 174
+WAYV_OSC4_FM3 = 175
+WAYV_OSC4_FM4 = 176
+WAYV_ATTACK4 = 177
+WAYV_DECAY4 =  178
+WAYV_SUSTAIN4 = 179
+WAYV_RELEASE4 = 180
+WAYV_ADSR4_CHECKBOX = 181
+
+WAYV_FM_MACRO1 = 182
+WAYV_FM_MACRO1_OSC1_FM1 = 183
+WAYV_FM_MACRO1_OSC1_FM2 = 184
+WAYV_FM_MACRO1_OSC1_FM3 = 185
+WAYV_FM_MACRO1_OSC1_FM4 = 186
+WAYV_FM_MACRO1_OSC2_FM1 = 187
+WAYV_FM_MACRO1_OSC2_FM2 = 188
+WAYV_FM_MACRO1_OSC2_FM3 = 189
+WAYV_FM_MACRO1_OSC2_FM4 = 190
+WAYV_FM_MACRO1_OSC3_FM1 = 191
+WAYV_FM_MACRO1_OSC3_FM2 = 192
+WAYV_FM_MACRO1_OSC3_FM3 = 193
+WAYV_FM_MACRO1_OSC3_FM4 = 194
+WAYV_FM_MACRO1_OSC4_FM1 = 195
+WAYV_FM_MACRO1_OSC4_FM2 = 196
+WAYV_FM_MACRO1_OSC4_FM3 = 197
+WAYV_FM_MACRO1_OSC4_FM4 = 198
+
+WAYV_FM_MACRO2 = 199
+WAYV_FM_MACRO2_OSC1_FM1 = 200
+WAYV_FM_MACRO2_OSC1_FM2 = 201
+WAYV_FM_MACRO2_OSC1_FM3 = 202
+WAYV_FM_MACRO2_OSC1_FM4 = 203
+WAYV_FM_MACRO2_OSC2_FM1 = 204
+WAYV_FM_MACRO2_OSC2_FM2 = 205
+WAYV_FM_MACRO2_OSC2_FM3 = 206
+WAYV_FM_MACRO2_OSC2_FM4 = 207
+WAYV_FM_MACRO2_OSC3_FM1 = 208
+WAYV_FM_MACRO2_OSC3_FM2 = 209
+WAYV_FM_MACRO2_OSC3_FM3 = 210
+WAYV_FM_MACRO2_OSC3_FM4 = 211
+WAYV_FM_MACRO2_OSC4_FM1 = 212
+WAYV_FM_MACRO2_OSC4_FM2 = 213
+WAYV_FM_MACRO2_OSC4_FM3 = 214
+WAYV_FM_MACRO2_OSC4_FM4 = 215
+
+WAYV_LFO_PHASE = 216
+
+WAYV_FM_MACRO1_OSC1_VOL = 217
+WAYV_FM_MACRO1_OSC2_VOL = 218
+WAYV_FM_MACRO1_OSC3_VOL = 219
+WAYV_FM_MACRO1_OSC4_VOL = 220
+
+WAYV_FM_MACRO2_OSC1_VOL = 221
+WAYV_FM_MACRO2_OSC2_VOL = 222
+WAYV_FM_MACRO2_OSC3_VOL = 223
+WAYV_FM_MACRO2_OSC4_VOL = 224
+WAYV_LFO_PITCH_FINE = 225
+WAYV_ADSR_PREFX = 226
+
+WAYV_ADSR1_DELAY = 227
+WAYV_ADSR2_DELAY = 228
+WAYV_ADSR3_DELAY = 229
+WAYV_ADSR4_DELAY = 230
+
+WAYV_ADSR1_HOLD = 231
+WAYV_ADSR2_HOLD = 232
+WAYV_ADSR3_HOLD = 233
+WAYV_ADSR4_HOLD = 234
+
+WAYV_PFX_ADSR_DELAY = 235
+WAYV_PFX_ADSR_F_DELAY = 236
+WAYV_PFX_ADSR_HOLD = 237
+WAYV_PFX_ADSR_F_HOLD = 238
+WAYV_HOLD_MAIN  = 239
+
+WAYV_DELAY_NOISE = 240
+WAYV_ATTACK_NOISE = 241
+WAYV_HOLD_NOISE = 242
+WAYV_DECAY_NOISE = 243
+WAYV_SUSTAIN_NOISE = 244
+WAYV_RELEASE_NOISE = 245
+WAYV_ADSR_NOISE_ON = 246
+
+WAYV_DELAY_LFO = 247
+WAYV_ATTACK_LFO = 248
+WAYV_HOLD_LFO = 249
+WAYV_DECAY_LFO = 250
+WAYV_SUSTAIN_LFO = 251
+WAYV_RELEASE_LFO = 252
+WAYV_ADSR_LFO_ON = 253
+
+
+WAYV_OSC5_TYPE = 254
+WAYV_OSC5_PITCH = 255
+WAYV_OSC5_TUNE = 256
+WAYV_OSC5_VOLUME = 257
+WAYV_OSC5_UNISON_VOICES = 258
+WAYV_OSC5_UNISON_SPREAD = 259
+WAYV_OSC1_FM5 = 260
+WAYV_OSC2_FM5 = 261
+WAYV_OSC3_FM5 = 262
+WAYV_OSC4_FM5 = 263
+WAYV_OSC5_FM5 = 264
+WAYV_OSC6_FM5 = 265
+WAYV_ADSR5_DELAY = 266
+WAYV_ATTACK5 = 267
+WAYV_ADSR5_HOLD = 268
+WAYV_DECAY5 = 269
+WAYV_SUSTAIN5 = 270
+WAYV_RELEASE5 = 271
+WAYV_ADSR5_CHECKBOX = 272
+
+WAYV_OSC6_TYPE = 273
+WAYV_OSC6_PITCH = 274
+WAYV_OSC6_TUNE = 275
+WAYV_OSC6_VOLUME = 276
+WAYV_OSC6_UNISON_VOICES = 277
+WAYV_OSC6_UNISON_SPREAD = 278
+WAYV_OSC1_FM6 = 279
+WAYV_OSC2_FM6 = 280
+WAYV_OSC3_FM6 = 281
+WAYV_OSC4_FM6 = 282
+WAYV_OSC5_FM6 = 283
+WAYV_OSC6_FM6 = 284
+WAYV_ADSR6_DELAY = 285
+WAYV_ATTACK6 = 286
+WAYV_ADSR6_HOLD = 287
+WAYV_DECAY6 = 288
+WAYV_SUSTAIN6 = 289
+WAYV_RELEASE6 = 290
+WAYV_ADSR6_CHECKBOX = 291
+
+
+WAYV_FM_MACRO1_OSC1_FM5 = 292
+WAYV_FM_MACRO1_OSC2_FM5 = 293
+WAYV_FM_MACRO1_OSC3_FM5 = 294
+WAYV_FM_MACRO1_OSC4_FM5 = 295
+WAYV_FM_MACRO1_OSC5_FM5 = 296
+WAYV_FM_MACRO1_OSC6_FM5 = 297
+
+WAYV_FM_MACRO1_OSC1_FM6 = 298
+WAYV_FM_MACRO1_OSC2_FM6 = 299
+WAYV_FM_MACRO1_OSC3_FM6 = 300
+WAYV_FM_MACRO1_OSC4_FM6 = 301
+WAYV_FM_MACRO1_OSC5_FM6 = 302
+WAYV_FM_MACRO1_OSC6_FM6 = 303
+
+WAYV_FM_MACRO1_OSC5_FM1 = 304
+WAYV_FM_MACRO1_OSC5_FM2 = 305
+WAYV_FM_MACRO1_OSC5_FM3 = 306
+WAYV_FM_MACRO1_OSC5_FM4 = 307
+
+WAYV_FM_MACRO1_OSC6_FM1 = 308
+WAYV_FM_MACRO1_OSC6_FM2 = 309
+WAYV_FM_MACRO1_OSC6_FM3 = 310
+WAYV_FM_MACRO1_OSC6_FM4 = 311
+
+WAYV_FM_MACRO1_OSC5_VOL = 312
+WAYV_FM_MACRO1_OSC6_VOL = 313
+
+WAYV_FM_MACRO2_OSC1_FM5 = 314
+WAYV_FM_MACRO2_OSC2_FM5 = 315
+WAYV_FM_MACRO2_OSC3_FM5 = 316
+WAYV_FM_MACRO2_OSC4_FM5 = 317
+WAYV_FM_MACRO2_OSC5_FM5 = 318
+WAYV_FM_MACRO2_OSC6_FM5 = 319
+
+WAYV_FM_MACRO2_OSC1_FM6 = 320
+WAYV_FM_MACRO2_OSC2_FM6 = 321
+WAYV_FM_MACRO2_OSC3_FM6 = 322
+WAYV_FM_MACRO2_OSC4_FM6 = 323
+WAYV_FM_MACRO2_OSC5_FM6 = 324
+WAYV_FM_MACRO2_OSC6_FM6 = 325
+
+WAYV_FM_MACRO2_OSC5_FM1 = 326
+WAYV_FM_MACRO2_OSC5_FM2 = 327
+WAYV_FM_MACRO2_OSC5_FM3 = 328
+WAYV_FM_MACRO2_OSC5_FM4 = 329
+
+WAYV_FM_MACRO2_OSC6_FM1 = 330
+WAYV_FM_MACRO2_OSC6_FM2 = 331
+WAYV_FM_MACRO2_OSC6_FM3 = 332
+WAYV_FM_MACRO2_OSC6_FM4 = 333
+
+WAYV_FM_MACRO2_OSC5_VOL = 334
+WAYV_FM_MACRO2_OSC6_VOL = 335
+
+WAYV_OSC5_FM1 = 336
+WAYV_OSC5_FM2 = 337
+WAYV_OSC5_FM3 = 338
+WAYV_OSC5_FM4 = 339
+
+WAYV_OSC6_FM1 = 340
+WAYV_OSC6_FM2 = 341
+WAYV_OSC6_FM3 = 342
+WAYV_OSC6_FM4 = 343
+WAYV_NOISE_PREFX = 344
+
+WAVV_PFXMATRIX_GRP0DST0SRC6CTRL0 = 345
+WAVV_PFXMATRIX_GRP0DST0SRC6CTRL1 = 346
+WAVV_PFXMATRIX_GRP0DST0SRC6CTRL2 = 347
+WAVV_PFXMATRIX_GRP0DST1SRC6CTRL0 = 348
+WAVV_PFXMATRIX_GRP0DST1SRC6CTRL1 = 349
+WAVV_PFXMATRIX_GRP0DST1SRC6CTRL2 = 350
+WAVV_PFXMATRIX_GRP0DST2SRC6CTRL0 = 351
+WAVV_PFXMATRIX_GRP0DST2SRC6CTRL1 = 352
+WAVV_PFXMATRIX_GRP0DST2SRC6CTRL2 = 353
+WAVV_PFXMATRIX_GRP0DST3SRC6CTRL0 = 354
+WAVV_PFXMATRIX_GRP0DST3SRC6CTRL1 = 355
+WAVV_PFXMATRIX_GRP0DST3SRC6CTRL2 = 356
+
+WAVV_PFXMATRIX_GRP0DST0SRC7CTRL0 = 357
+WAVV_PFXMATRIX_GRP0DST0SRC7CTRL1 = 358
+WAVV_PFXMATRIX_GRP0DST0SRC7CTRL2 = 359
+WAVV_PFXMATRIX_GRP0DST1SRC7CTRL0 = 360
+WAVV_PFXMATRIX_GRP0DST1SRC7CTRL1 = 361
+WAVV_PFXMATRIX_GRP0DST1SRC7CTRL2 = 362
+WAVV_PFXMATRIX_GRP0DST2SRC7CTRL0 = 363
+WAVV_PFXMATRIX_GRP0DST2SRC7CTRL1 = 364
+WAVV_PFXMATRIX_GRP0DST2SRC7CTRL2 = 365
+WAVV_PFXMATRIX_GRP0DST3SRC7CTRL0 = 366
+WAVV_PFXMATRIX_GRP0DST3SRC7CTRL1 = 367
+WAVV_PFXMATRIX_GRP0DST3SRC7CTRL2 = 368
+
+WAYV_MIN_NOTE = 369
+WAYV_MAX_NOTE = 370
+
+
+WAYV_PORT_MAP = {
+    "Master Attack": WAYV_ATTACK_MAIN,
+    "Master Hold": WAYV_HOLD_MAIN,
+    "Master Decay": WAYV_DECAY_MAIN,
+    "Master Sustain": WAYV_SUSTAIN_MAIN,
+    "Master Release": WAYV_RELEASE_MAIN,
+    "Noise Amp": WAYV_OSC1_TYPE,
+    "Master Glide": 18,
+    "Osc1 Attack": WAYV_ATTACK1,
+    "Osc1 Decay": WAYV_DECAY1,
+    "Osc1 Sustain": WAYV_SUSTAIN1,
+    "Osc1 Release": WAYV_RELEASE1,
+    "Osc2 Attack": WAYV_ATTACK2,
+    "Osc2 Decay": WAYV_DECAY2,
+    "Osc2 Sustain": WAYV_SUSTAIN2,
+    "Osc2 Release": WAYV_RELEASE2,
+    "PFX ADSR1 Attack": 28,
+    "PFX ADSR1 Decay": 29,
+    "PFX ADSR1 Sustain": "30",
+    "PFX ADSR1 Release": "31",
+    "PFX ADSR2 Attack": "32",
+    "PFX ADSR2 Decay": "33",
+    "PFX ADSR2 Sustain": "34",
+    "PFX ADSR2 Release": "35",
+    "Pitch Env Time": "37",
+    "LFO Freq": "38",
+    "FX0 Knob0": "40",
+    "FX0 Knob1": "41",
+    "FX0 Knob2": "42",
+    "FX1 Knob0": "44",
+    "FX1 Knob1": "45",
+    "FX1 Knob2": "46",
+    "FX2 Knob0": "48",
+    "FX2 Knob1": "49",
+    "FX2 Knob2": "50",
+    "FX3 Knob0": "52",
+    "FX3 Knob1": "53",
+    "FX3 Knob2": "54",
+    "LFO Amp": "107",
+    "LFO Pitch": "108",
+    "LFO Pitch Fine": WAYV_LFO_PITCH_FINE,
+    "Pitch Env Amt": "109",
+    "LFO Amount": "112",
+    "Osc1 FM1": WAYV_OSC1_FM1,
+    "Osc1 FM2": WAYV_OSC1_FM2,
+    "Osc1 FM3": WAYV_OSC1_FM3,
+    "Osc1 FM4": WAYV_OSC1_FM4,
+    "Osc1 FM5": WAYV_OSC1_FM5,
+    "Osc1 FM6": WAYV_OSC1_FM6,
+    "Osc2 FM1": WAYV_OSC2_FM1,
+    "Osc2 FM2": WAYV_OSC2_FM2,
+    "Osc2 FM3": WAYV_OSC2_FM3,
+    "Osc2 FM4": WAYV_OSC2_FM4,
+    "Osc2 FM5": WAYV_OSC2_FM5,
+    "Osc2 FM6": WAYV_OSC2_FM6,
+    "Osc3 FM1": WAYV_OSC3_FM1,
+    "Osc3 FM2": WAYV_OSC3_FM2,
+    "Osc3 FM3": WAYV_OSC3_FM3,
+    "Osc3 FM4": WAYV_OSC3_FM4,
+    "Osc3 FM5": WAYV_OSC3_FM5,
+    "Osc3 FM6": WAYV_OSC3_FM6,
+    "Osc4 FM1": WAYV_OSC4_FM1,
+    "Osc4 FM2": WAYV_OSC4_FM2,
+    "Osc4 FM3": WAYV_OSC4_FM3,
+    "Osc4 FM4": WAYV_OSC4_FM4,
+    "Osc4 FM5": WAYV_OSC4_FM5,
+    "Osc4 FM6": WAYV_OSC4_FM6,
+    "Osc5 FM1": WAYV_OSC5_FM1,
+    "Osc5 FM2": WAYV_OSC5_FM2,
+    "Osc5 FM3": WAYV_OSC5_FM3,
+    "Osc5 FM4": WAYV_OSC5_FM4,
+    "Osc5 FM5": WAYV_OSC5_FM5,
+    "Osc5 FM6": WAYV_OSC5_FM6,
+    "Osc6 FM1": WAYV_OSC6_FM1,
+    "Osc6 FM2": WAYV_OSC6_FM2,
+    "Osc6 FM3": WAYV_OSC6_FM3,
+    "Osc6 FM4": WAYV_OSC6_FM4,
+    "Osc6 FM5": WAYV_OSC6_FM5,
+    "Osc6 FM6": WAYV_OSC6_FM6,
+    "Osc3 Attack": WAYV_ATTACK3,
+    "Osc3 Decay": WAYV_DECAY3,
+    "Osc3 Sustain": WAYV_SUSTAIN3,
+    "Osc3 Release": WAYV_RELEASE3,
+    "FM Macro 1": WAYV_FM_MACRO1,
+    "FM Macro 2": WAYV_FM_MACRO2,
+    "Osc4 Attack": WAYV_ATTACK4,
+    "Osc4 Decay": WAYV_DECAY4,
+    "Osc4 Sustain": WAYV_SUSTAIN4,
+    "Osc4 Release": WAYV_RELEASE4,
+    "Osc5 Attack": WAYV_ATTACK5,
+    "Osc5 Decay": WAYV_DECAY5,
+    "Osc5 Sustain": WAYV_SUSTAIN5,
+    "Osc5 Release": WAYV_RELEASE5,
+    "Osc6 Attack": WAYV_ATTACK6,
+    "Osc6 Decay": WAYV_DECAY6,
+    "Osc6 Sustain": WAYV_SUSTAIN6,
+    "Osc6 Release": WAYV_RELEASE6,
+    "Osc1 Delay": WAYV_ADSR1_DELAY,
+    "Osc2 Delay": WAYV_ADSR2_DELAY,
+    "Osc3 Delay": WAYV_ADSR3_DELAY,
+    "Osc4 Delay": WAYV_ADSR4_DELAY,
+    "Osc5 Delay": WAYV_ADSR5_DELAY,
+    "Osc6 Delay": WAYV_ADSR6_DELAY,
+    "Osc1 Hold": WAYV_ADSR1_HOLD,
+    "Osc2 Hold": WAYV_ADSR2_HOLD,
+    "Osc3 Hold": WAYV_ADSR3_HOLD,
+    "Osc4 Hold": WAYV_ADSR4_HOLD,
+    "Osc5 Hold": WAYV_ADSR5_HOLD,
+    "Osc6 Hold": WAYV_ADSR6_HOLD,
+}
 
 
 class wayv_plugin_ui(pydaw_abstract_plugin_ui):
@@ -92,10 +622,11 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.oscillator_layout.addLayout(f_hlayout1)
             f_osc1 = pydaw_osc_widget(
                 f_knob_size,
-                getattr(pydaw_ports, "WAYV_OSC{}_PITCH".format(f_i)),
-                getattr(pydaw_ports, "WAYV_OSC{}_TUNE".format(f_i)),
-                getattr(pydaw_ports, "WAYV_OSC{}_VOLUME".format(f_i)),
-                getattr(pydaw_ports, "WAYV_OSC{}_TYPE".format(f_i)),
+                getattr(sys.modules[__name__], "WAYV_OSC{}_PITCH".format(f_i)),
+                getattr(sys.modules[__name__], "WAYV_OSC{}_TUNE".format(f_i)),
+                getattr(sys.modules[__name__],
+                        "WAYV_OSC{}_VOLUME".format(f_i)),
+                getattr(sys.modules[__name__], "WAYV_OSC{}_TYPE".format(f_i)),
                 f_osc_types,
                 self.plugin_rel_callback, self.plugin_val_callback,
                 _("Oscillator {}".format(f_i)),
@@ -310,31 +841,31 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.modulation_vlayout.addLayout(self.hlayout_master)
         self.master = pydaw_master_widget(
             f_knob_size, self.plugin_rel_callback,
-            self.plugin_val_callback, pydaw_ports.WAYV_MASTER_VOLUME,
-            pydaw_ports.WAYV_MASTER_GLIDE,
-            pydaw_ports.WAYV_MASTER_PITCHBEND_AMT,
+            self.plugin_val_callback, WAYV_MASTER_VOLUME,
+            WAYV_MASTER_GLIDE,
+            WAYV_MASTER_PITCHBEND_AMT,
             self.port_dict, a_preset_mgr=self.preset_manager,
-            a_poly_port=pydaw_ports.WAYV_MONO_MODE,
-            a_min_note_port=pydaw_ports.WAYV_MIN_NOTE,
-            a_max_note_port=pydaw_ports.WAYV_MAX_NOTE)
+            a_poly_port=WAYV_MONO_MODE,
+            a_min_note_port=WAYV_MIN_NOTE,
+            a_max_note_port=WAYV_MAX_NOTE)
 
         self.hlayout_master.addWidget(self.master.group_box)
 
         self.adsr_amp_main = pydaw_adsr_widget(
-            f_knob_size, True, pydaw_ports.WAYV_ATTACK_MAIN,
-            pydaw_ports.WAYV_DECAY_MAIN, pydaw_ports.WAYV_SUSTAIN_MAIN,
-            pydaw_ports.WAYV_RELEASE_MAIN, _("AHDSR Master"),
+            f_knob_size, True, WAYV_ATTACK_MAIN,
+            WAYV_DECAY_MAIN, WAYV_SUSTAIN_MAIN,
+            WAYV_RELEASE_MAIN, _("AHDSR Master"),
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager,
-            a_prefx_port=pydaw_ports.WAYV_ADSR_PREFX,
-            a_knob_type=KC_LOG_TIME, a_hold_port=pydaw_ports.WAYV_HOLD_MAIN)
+            a_prefx_port=WAYV_ADSR_PREFX,
+            a_knob_type=KC_LOG_TIME, a_hold_port=WAYV_HOLD_MAIN)
         self.hlayout_master.addWidget(self.adsr_amp_main.groupbox)
 
         self.perc_env = pydaw_perc_env_widget(
             f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
-            self.port_dict, pydaw_ports.WAYV_PERC_ENV_TIME1,
-            pydaw_ports.WAYV_PERC_ENV_PITCH1, pydaw_ports.WAYV_PERC_ENV_TIME2,
-            pydaw_ports.WAYV_PERC_ENV_PITCH2, pydaw_ports.WAYV_PERC_ENV_ON,
+            self.port_dict, WAYV_PERC_ENV_TIME1,
+            WAYV_PERC_ENV_PITCH1, WAYV_PERC_ENV_TIME2,
+            WAYV_PERC_ENV_PITCH2, WAYV_PERC_ENV_ON,
             a_preset_mgr=self.preset_manager)
 
         self.hlayout_master2 = QtGui.QHBoxLayout()
@@ -342,16 +873,16 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.hlayout_master2.addWidget(self.perc_env.groupbox)
 
         self.adsr_noise = pydaw_adsr_widget(
-            f_knob_size, True, pydaw_ports.WAYV_ATTACK_NOISE,
-            pydaw_ports.WAYV_DECAY_NOISE, pydaw_ports.WAYV_SUSTAIN_NOISE,
-            pydaw_ports.WAYV_RELEASE_NOISE, _("DAHDSR Noise"),
+            f_knob_size, True, WAYV_ATTACK_NOISE,
+            WAYV_DECAY_NOISE, WAYV_SUSTAIN_NOISE,
+            WAYV_RELEASE_NOISE, _("DAHDSR Noise"),
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager,
-            a_knob_type=KC_LOG_TIME, a_hold_port=pydaw_ports.WAYV_HOLD_NOISE,
-            a_delay_port=pydaw_ports.WAYV_DELAY_NOISE)
+            a_knob_type=KC_LOG_TIME, a_hold_port=WAYV_HOLD_NOISE,
+            a_delay_port=WAYV_DELAY_NOISE)
         self.hlayout_master2.addWidget(self.adsr_noise.groupbox)
         self.adsr_noise_on = pydaw_checkbox_control(
-            "On", pydaw_ports.WAYV_ADSR_NOISE_ON,
+            "On", WAYV_ADSR_NOISE_ON,
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager)
         self.adsr_noise_on.add_to_grid_layout(self.adsr_noise.layout, 21)
@@ -361,13 +892,13 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.groupbox_noise_layout = QtGui.QGridLayout(self.groupbox_noise)
         self.hlayout_master2.addWidget(self.groupbox_noise)
         self.noise_amp = pydaw_knob_control(
-            f_knob_size, _("Vol"), pydaw_ports.WAYV_NOISE_AMP,
+            f_knob_size, _("Vol"), WAYV_NOISE_AMP,
             self.plugin_rel_callback, self.plugin_val_callback,
             -60, 0, -30, KC_INTEGER, self.port_dict, self.preset_manager)
         self.noise_amp.add_to_grid_layout(self.groupbox_noise_layout, 0)
 
         self.noise_type = pydaw_combobox_control(
-            87, _("Type"), pydaw_ports.WAYV_NOISE_TYPE,
+            87, _("Type"), WAYV_NOISE_TYPE,
             self.plugin_rel_callback, self.plugin_val_callback,
             [_("Off"), _("White"), _("Pink")], self.port_dict,
              a_preset_mgr=self.preset_manager)
@@ -375,7 +906,7 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.noise_type.add_to_grid_layout(self.groupbox_noise_layout, 1)
 
         self.noise_prefx = pydaw_checkbox_control(
-            "PreFX", pydaw_ports.WAYV_NOISE_PREFX,
+            "PreFX", WAYV_NOISE_PREFX,
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, a_preset_mgr=self.preset_manager, a_default=1)
         self.noise_prefx.add_to_grid_layout(self.groupbox_noise_layout, 6)
@@ -400,22 +931,22 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.main_layout.addLayout(self.hlayout6)
         #From Modulex
         self.fx0 = pydaw_modulex_single(
-            _("FX0"), pydaw_ports.WAYV_FX0_KNOB0,
+            _("FX0"), WAYV_FX0_KNOB0,
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager, a_knob_size=f_knob_size)
         self.hlayout5.addWidget(self.fx0.group_box)
         self.fx1 = pydaw_modulex_single(
-            _("FX1"), pydaw_ports.WAYV_FX1_KNOB0,
+            _("FX1"), WAYV_FX1_KNOB0,
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager, a_knob_size=f_knob_size)
         self.hlayout5.addWidget(self.fx1.group_box)
         self.fx2 = pydaw_modulex_single(
-            _("FX2"), pydaw_ports.WAYV_FX2_KNOB0,
+            _("FX2"), WAYV_FX2_KNOB0,
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager, a_knob_size=f_knob_size)
         self.hlayout6.addWidget(self.fx2.group_box)
         self.fx3 = pydaw_modulex_single(
-            _("FX3"), pydaw_ports.WAYV_FX3_KNOB0,
+            _("FX3"), WAYV_FX3_KNOB0,
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager, a_knob_size=f_knob_size)
         self.hlayout6.addWidget(self.fx3.group_box)
@@ -465,33 +996,33 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.adsr_amp = pydaw_adsr_widget(
             f_knob_size, True,
-            pydaw_ports.WAYV_ATTACK_PFX1, pydaw_ports.WAYV_DECAY_PFX1,
-            pydaw_ports.WAYV_SUSTAIN_PFX1, pydaw_ports.WAYV_RELEASE_PFX1,
+            WAYV_ATTACK_PFX1, WAYV_DECAY_PFX1,
+            WAYV_SUSTAIN_PFX1, WAYV_RELEASE_PFX1,
             _("DAHDSR 1"), self.plugin_rel_callback,
             self.plugin_val_callback, self.port_dict, self.preset_manager,
             a_knob_type=KC_LOG_TIME,
-            a_delay_port=pydaw_ports.WAYV_PFX_ADSR_DELAY,
-            a_hold_port=pydaw_ports.WAYV_PFX_ADSR_HOLD)
+            a_delay_port=WAYV_PFX_ADSR_DELAY,
+            a_hold_port=WAYV_PFX_ADSR_HOLD)
 
         self.hlayout7.addWidget(self.adsr_amp.groupbox)
 
         self.adsr_filter = pydaw_adsr_widget(
-            f_knob_size, False, pydaw_ports.WAYV_ATTACK_PFX2,
-            pydaw_ports.WAYV_DECAY_PFX2, pydaw_ports.WAYV_SUSTAIN_PFX2,
-            pydaw_ports.WAYV_RELEASE_PFX2, _("DAHDSR 2"),
+            f_knob_size, False, WAYV_ATTACK_PFX2,
+            WAYV_DECAY_PFX2, WAYV_SUSTAIN_PFX2,
+            WAYV_RELEASE_PFX2, _("DAHDSR 2"),
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager,
             a_knob_type=KC_LOG_TIME,
-            a_delay_port=pydaw_ports.WAYV_PFX_ADSR_F_DELAY,
-            a_hold_port=pydaw_ports.WAYV_PFX_ADSR_F_HOLD)
+            a_delay_port=WAYV_PFX_ADSR_F_DELAY,
+            a_hold_port=WAYV_PFX_ADSR_F_HOLD)
         self.hlayout7.addWidget(self.adsr_filter.groupbox)
 
         self.pitch_env = pydaw_ramp_env_widget(
             f_knob_size,
             self.plugin_rel_callback, self.plugin_val_callback,
-            self.port_dict, pydaw_ports.WAYV_RAMP_ENV_TIME,
-            pydaw_ports.WAYV_PITCH_ENV_AMT, _("Ramp Env"),
-            self.preset_manager, pydaw_ports.WAYV_RAMP_CURVE)
+            self.port_dict, WAYV_RAMP_ENV_TIME,
+            WAYV_PITCH_ENV_AMT, _("Ramp Env"),
+            self.preset_manager, WAYV_RAMP_CURVE)
         self.pitch_env.amt_knob.name_label.setText(_("Pitch"))
         self.pitch_env.amt_knob.control.setRange(-60, 60)
         self.hlayout7.addWidget(self.pitch_env.groupbox)
@@ -500,49 +1031,49 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.lfo = pydaw_lfo_widget(
             f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
-            self.port_dict, pydaw_ports.WAYV_LFO_FREQ,
-            pydaw_ports.WAYV_LFO_TYPE, f_lfo_types,
-            _("LFO"), self.preset_manager, pydaw_ports.WAYV_LFO_PHASE)
+            self.port_dict, WAYV_LFO_FREQ,
+            WAYV_LFO_TYPE, f_lfo_types,
+            _("LFO"), self.preset_manager, WAYV_LFO_PHASE)
 
         self.lfo_hlayout = QtGui.QHBoxLayout()
         self.modulation_vlayout.addLayout(self.lfo_hlayout)
         self.lfo_hlayout.addWidget(self.lfo.groupbox)
 
         self.lfo_amount = pydaw_knob_control(
-            f_knob_size, _("Amount"), pydaw_ports.WAYV_LFO_AMOUNT,
+            f_knob_size, _("Amount"), WAYV_LFO_AMOUNT,
             self.plugin_rel_callback, self.plugin_val_callback,
             0, 100, 100, KC_DECIMAL, self.port_dict, self.preset_manager)
         self.lfo_amount.add_to_grid_layout(self.lfo.layout, 7)
 
         self.lfo_amp = pydaw_knob_control(
-            f_knob_size, _("Amp"), pydaw_ports.WAYV_LFO_AMP,
+            f_knob_size, _("Amp"), WAYV_LFO_AMP,
             self.plugin_rel_callback, self.plugin_val_callback,
             -24, 24, 0, KC_INTEGER, self.port_dict, self.preset_manager)
         self.lfo_amp.add_to_grid_layout(self.lfo.layout, 8)
 
         self.lfo_pitch = pydaw_knob_control(
-            f_knob_size, _("Pitch"), pydaw_ports.WAYV_LFO_PITCH,
+            f_knob_size, _("Pitch"), WAYV_LFO_PITCH,
             self.plugin_rel_callback, self.plugin_val_callback,
             -36, 36, 0, KC_INTEGER, self.port_dict, self.preset_manager)
         self.lfo_pitch.add_to_grid_layout(self.lfo.layout, 9)
 
         self.lfo_pitch_fine = pydaw_knob_control(
-            f_knob_size, _("Fine"), pydaw_ports.WAYV_LFO_PITCH_FINE,
+            f_knob_size, _("Fine"), WAYV_LFO_PITCH_FINE,
             self.plugin_rel_callback, self.plugin_val_callback,
             -100, 100, 0, KC_DECIMAL, self.port_dict, self.preset_manager)
         self.lfo_pitch_fine.add_to_grid_layout(self.lfo.layout, 10)
 
         self.adsr_lfo = pydaw_adsr_widget(
-            f_knob_size, False, pydaw_ports.WAYV_ATTACK_LFO,
-            pydaw_ports.WAYV_DECAY_LFO, pydaw_ports.WAYV_SUSTAIN_LFO,
-            pydaw_ports.WAYV_RELEASE_LFO, _("DAHDSR LFO"),
+            f_knob_size, False, WAYV_ATTACK_LFO,
+            WAYV_DECAY_LFO, WAYV_SUSTAIN_LFO,
+            WAYV_RELEASE_LFO, _("DAHDSR LFO"),
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager,
-            a_knob_type=KC_LOG_TIME, a_hold_port=pydaw_ports.WAYV_HOLD_LFO,
-            a_delay_port=pydaw_ports.WAYV_DELAY_LFO)
+            a_knob_type=KC_LOG_TIME, a_hold_port=WAYV_HOLD_LFO,
+            a_delay_port=WAYV_DELAY_LFO)
         self.lfo_hlayout.addWidget(self.adsr_lfo.groupbox)
         self.adsr_lfo_on = pydaw_checkbox_control(
-            "On", pydaw_ports.WAYV_ADSR_LFO_ON,
+            "On", WAYV_ADSR_LFO_ON,
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager)
         self.adsr_lfo_on.add_to_grid_layout(self.adsr_lfo.layout, 21)
@@ -555,7 +1086,7 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.tab_widget.addTab(self.additive_osc.widget, "Additive")
 
         self.open_plugin_file()
-        self.set_midi_learn(pydaw_ports.WAYV_PORT_MAP)
+        self.set_midi_learn(WAYV_PORT_MAP)
 
     def open_plugin_file(self):
         pydaw_abstract_plugin_ui.open_plugin_file(self)
