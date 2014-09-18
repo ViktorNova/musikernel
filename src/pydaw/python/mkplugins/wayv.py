@@ -635,12 +635,14 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             f_osc1.pitch_knob.control.setRange(-72, 72)
             f_osc1_uni_voices = pydaw_knob_control(
                 f_knob_size, _("Unison"),
-                getattr(pydaw_ports, "WAYV_OSC{}_UNISON_VOICES".format(f_i)),
+                getattr(
+                    sys.modules[__name__],
+                    "WAYV_OSC{}_UNISON_VOICES".format(f_i)),
                 self.plugin_rel_callback, self.plugin_val_callback,
                 1, 7, 1, KC_INTEGER, self.port_dict, self.preset_manager)
             f_osc1_uni_voices.add_to_grid_layout(f_osc1.grid_layout, 4)
             f_osc1_uni_spread = pydaw_knob_control(
-                f_knob_size, _("Spread"), getattr(pydaw_ports,
+                f_knob_size, _("Spread"), getattr(sys.modules[__name__],
                 "WAYV_OSC{}_UNISON_SPREAD".format(f_i)),
                 self.plugin_rel_callback, self.plugin_val_callback,
                 0, 100, 50, KC_DECIMAL, self.port_dict, self.preset_manager)
@@ -650,23 +652,23 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
 
             f_adsr_amp1 = pydaw_adsr_widget(
                 f_knob_size, True,
-                getattr(pydaw_ports, "WAYV_ATTACK{}".format(f_i)),
-                getattr(pydaw_ports, "WAYV_DECAY{}".format(f_i)),
-                getattr(pydaw_ports, "WAYV_SUSTAIN{}".format(f_i)),
-                getattr(pydaw_ports, "WAYV_RELEASE{}".format(f_i)),
+                getattr(sys.modules[__name__], "WAYV_ATTACK{}".format(f_i)),
+                getattr(sys.modules[__name__], "WAYV_DECAY{}".format(f_i)),
+                getattr(sys.modules[__name__], "WAYV_SUSTAIN{}".format(f_i)),
+                getattr(sys.modules[__name__], "WAYV_RELEASE{}".format(f_i)),
                 _("DAHDSR Osc{}".format(f_i)),
                 self.plugin_rel_callback,
                 self.plugin_val_callback,
                 self.port_dict, self.preset_manager,
                 a_knob_type=KC_LOG_TIME,
                 a_delay_port=
-                getattr(pydaw_ports, "WAYV_ADSR{}_DELAY".format(f_i)),
+                getattr(sys.modules[__name__], "WAYV_ADSR{}_DELAY".format(f_i)),
                 a_hold_port=
-                getattr(pydaw_ports, "WAYV_ADSR{}_HOLD".format(f_i)))
+                getattr(sys.modules[__name__], "WAYV_ADSR{}_HOLD".format(f_i)))
             f_hlayout1.addWidget(f_adsr_amp1.groupbox)
 
             f_adsr_amp1_checkbox = pydaw_checkbox_control(
-                _("On"), getattr(pydaw_ports,
+                _("On"), getattr(sys.modules[__name__],
                 "WAYV_ADSR{}_CHECKBOX".format(f_i)),
                 self.plugin_rel_callback, self.plugin_val_callback,
                 self.port_dict, self.preset_manager)
@@ -709,7 +711,8 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         for f_i in range(6):
             for f_i2 in range(6):
                 f_port = getattr(
-                    pydaw_ports, "WAYV_OSC{}_FM{}".format(f_i2 + 1, f_i + 1))
+                    sys.modules[__name__],
+                    "WAYV_OSC{}_FM{}".format(f_i2 + 1, f_i + 1))
                 f_spinbox = pydaw_spinbox_control(
                     None, f_port,
                     self.plugin_rel_callback, self.plugin_val_callback,
@@ -768,7 +771,8 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.fm_vlayout.addLayout(self.fm_macro_matrix_hlayout)
 
         for f_i in range(2):
-            f_port = getattr(pydaw_ports, "WAYV_FM_MACRO{}".format(f_i + 1))
+            f_port = getattr(
+                sys.modules[__name__], "WAYV_FM_MACRO{}".format(f_i + 1))
             f_macro = pydaw_knob_control(
                 f_knob_size, _("Macro{}".format(f_i + 1)), f_port,
                 self.plugin_rel_callback, self.plugin_val_callback,
@@ -807,7 +811,8 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             for f_i2 in range(6):
                 for f_i3 in range(6):
                     f_port = getattr(
-                        pydaw_ports, "WAYV_FM_MACRO{}_OSC{}_FM{}".format(
+                        sys.modules[__name__],
+                        "WAYV_FM_MACRO{}_OSC{}_FM{}".format(
                             f_i + 1, f_i3 + 1, f_i2 + 1))
                     f_spinbox = pydaw_spinbox_control(
                         None, f_port,
@@ -819,7 +824,7 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
                     self.fm_macro_spinboxes[f_i].append(f_spinbox)
 
                 f_port = getattr(
-                    pydaw_ports, "WAYV_FM_MACRO{}_OSC{}_VOL".format(
+                    sys.modules[__name__], "WAYV_FM_MACRO{}_OSC{}_VOL".format(
                     f_i + 1, f_i2 + 1))
                 f_spinbox = pydaw_spinbox_control(
                     None, f_port,
@@ -976,7 +981,7 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
                 for f_i_ctrl in range(3):
                     f_ctrl = pydaw_spinbox_control(
                         None,
-                        getattr(pydaw_ports, "WAVV_PFXMATRIX_"
+                        getattr(sys.modules[__name__], "WAVV_PFXMATRIX_"
                         "GRP0DST{}SRC{}CTRL{}".format(
                         f_i_dst, f_i_src, f_i_ctrl)),
                         self.plugin_rel_callback, self.plugin_val_callback,
