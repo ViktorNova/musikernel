@@ -24,7 +24,7 @@ SFADER_FIRST_CONTROL_PORT = 4
 SFADER_VOL_SLIDER = 4
 
 SFADER_PORT_MAP = {
-    "Volume Slider": "43",
+    "Volume Slider": SFADER_VOL_SLIDER,
 }
 
 class sfader_plugin_ui(pydaw_abstract_plugin_ui):
@@ -40,16 +40,7 @@ class sfader_plugin_ui(pydaw_abstract_plugin_ui):
         self.set_window_title(a_track_name)
         self.is_instrument = False
 
-        self.preset_manager = pydaw_preset_manager_widget(
-            self.get_plugin_name())
-        self.presets_hlayout = QtGui.QHBoxLayout()
-        self.presets_hlayout.addWidget(self.preset_manager.group_box)
-        self.presets_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        self.layout.addLayout(self.presets_hlayout)
-        self.spectrum_enabled = None
         self.tab_widget = QtGui.QTabWidget()
-        self.tab_widget.currentChanged.connect(self.tab_changed)
         self.layout.addWidget(self.tab_widget)
         self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
@@ -66,6 +57,7 @@ class sfader_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             -50, 0, 0, KC_INTEGER, self.port_dict)
         self.volume_slider.add_to_grid_layout(self.volume_gridlayout, 0)
+        self.volume_slider.control.setMinimumHeight(300)
 
         self.open_plugin_file()
         self.set_midi_learn(SFADER_PORT_MAP)
