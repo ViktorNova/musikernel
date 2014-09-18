@@ -24,7 +24,7 @@ import datetime
 from PyQt4 import QtGui, QtCore
 from libpydaw import *
 import libpydaw.liblo as liblo
-
+import mkplugins
 
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
@@ -8863,10 +8863,10 @@ class transport_widget:
 PLUGIN_UI_DICT = {}
 
 PLUGIN_UI_TYPES = {
-    1:pydaw_widgets.pydaw_euphoria_plugin_ui,
-    2:pydaw_widgets.pydaw_rayv_plugin_ui,
-    3:pydaw_widgets.pydaw_wayv_plugin_ui,
-    4:pydaw_widgets.pydaw_modulex_plugin_ui
+    1:mkplugins.euphoria.euphoria_plugin_ui,
+    2:mkplugins.rayv.rayv_plugin_ui,
+    3:mkplugins.wayv.wayv_plugin_ui,
+    4:mkplugins.modulex.modulex_plugin_ui
 }
 
 def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title):
