@@ -86,6 +86,7 @@ class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.open_plugin_file()
         self.set_midi_learn(MKEQ_PORT_MAP)
+        self.enable_spectrum(True)
 
     def open_plugin_file(self):
         pydaw_abstract_plugin_ui.open_plugin_file(self)
@@ -102,9 +103,7 @@ class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
             "MusiKernel Modulex - {}".format(self.track_name))
 
     def widget_close_event(self, a_event):
-        print("Disabling spectrum")
-        self.plugin_val_callback(
-            MKEQ_SPECTRUM_ENABLED, 0.0)
+        self.enable_spectrum(False)
         pydaw_abstract_plugin_ui.widget_close_event(self, a_event)
 
     def raise_widget(self):
@@ -112,9 +111,10 @@ class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
         self.tab_changed()
 
     def tab_changed(self, a_val=None):
-        if not self.spectrum_enabled:
-            return
-        if self.tab_widget.currentIndex() == 2:
+        self.enable_spectrum(self.tab_widget.currentIndex() == 0)
+
+    def enable_spectrum(self, a_enabled):
+        if a_enabled:
             print("Enabling spectrum")
             self.plugin_val_callback(
                 MKEQ_SPECTRUM_ENABLED, 1.0)
