@@ -8018,7 +8018,7 @@ class plugin_settings:
             self.on_plugin_change)
         a_layout.addWidget(self.plugin_combobox, a_index + 1, 0)
         self.ui_button = QtGui.QPushButton("UI")
-        self.ui_button.pressed.connect(self.on_show_ui)
+        self.ui_button.released.connect(self.on_show_ui)
         self.ui_button.setObjectName("uibutton")
         self.ui_button.setFixedWidth(24)
         a_layout.addWidget(self.ui_button, a_index + 1, 1)
@@ -8089,6 +8089,7 @@ class track_send:
         self.vol_label = QtGui.QLabel("0.0dB")
         self.vol_label.setMinimumWidth(60)
         a_layout.addWidget(self.vol_label, a_index + 1, 22)
+        self.last_value = 0
         self.suppress_osc = False
 
     def on_bus_changed(self, a_value=0):
@@ -8099,8 +8100,19 @@ class track_send:
             f_graph = PROJECT.get_routing_graph()
             if not self.track_num in f_graph.graph:
                 f_graph.graph[self.track_num] = {}
+            f_feedback = f_graph.check_for_feedback(
+                self.bus_combobox.currentIndex() - 1, self.track_num)
+            if f_feedback:
+                QtGui.QMessageBox.warning(
+                    self.bus_combobox, _("Error"),
+                    _("Can't set the route, it would create a feedback loop"))
+                self.suppress_osc = True
+                self.bus_combobox.setCurrentIndex(self.last_value)
+                self.suppress_osc = False
+                return
             f_graph.graph[self.track_num][self.index] = self.get_value()
             PROJECT.save_routing_graph(f_graph)
+            self.last_value = self.bus_combobox.currentIndex()
 
     def get_vol(self):
         return round(self.vol_slider.value() * 0.1, 1)

@@ -2392,6 +2392,11 @@ class pydaw_routing_graph:
                     paths.append(newpath)
         return paths
 
+    def check_for_feedback(self, a_new, a_old):
+        f_paths = self.find_all_paths(a_new)
+        print(f_paths)
+        return a_old in [x for y in f_paths for x in y]
+
     def sort_all_paths(self):
         f_result = {}
         for f_path in self.graph:
