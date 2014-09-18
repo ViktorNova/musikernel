@@ -94,7 +94,8 @@ $(PYDAW_VERSION)-engine: $(C_OBJS)
 
 install:
 	rm -rf python/*.pyc python/libpydaw/*.pyc python/*~ \
-	python/libpydaw/*~ python/core python/*/__pycache__
+	python/libpydaw/*~ python/core python/*/__pycache__ \
+	python/mkplugins/__pycache__
 	install -d $(DESTDIR)$(PREFIX)/bin
 	install -m 755 $(PYDAW_VERSION) $(DESTDIR)$(PREFIX)/bin
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
