@@ -505,18 +505,17 @@ class song_editor:
 
 
 def global_update_hidden_rows(a_val=None):
-    return  #TODO
-#    REGION_EDITOR.table_widget.setUpdatesEnabled(False)
+    return # TODO
+#    REGION_EDITOR.setUpdatesEnabled(False)
 #    if CURRENT_REGION and REGION_SETTINGS.hide_inactive:
-#        f_active = [x.track_num for x in CURRENT_REGION.items]
-#        for f_i in range(REGION_EDITOR.table_widget.rowCount()):
-#            REGION_EDITOR.table_widget.setRowHidden(
-#                f_i, f_i not in f_active)
+#        f_active = {x.track_num for x in CURRENT_REGION.items}
+#        for k, v in TRACK_PANEL.tracks.items():
+#            v.group_box.setHidden(k not in f_active)
 #    else:
-#        for f_i in range(REGION_EDITOR.table_widget.rowCount()):
-#            REGION_EDITOR.table_widget.setRowHidden(f_i, False)
-#    REGION_EDITOR.table_widget.setUpdatesEnabled(True)
-#    REGION_EDITOR.table_widget.update()
+#        for v in TRACK_PANEL.tracks.values():
+#            v.group_box.setHidden(False)
+#    REGION_EDITOR.setUpdatesEnabled(True)
+#    REGION_EDITOR.update()
 
 
 CURRENT_REGION = None
@@ -553,12 +552,12 @@ class region_settings:
         self.split_action.triggered.connect(self.on_split)
         self.menu.addSeparator()
         self.hide_inactive = False
-        self.toggle_hide_action = self.menu.addAction(
-            _("Hide Inactive Instruments"))
-        self.toggle_hide_action.setCheckable(True)
-        self.toggle_hide_action.triggered.connect(self.toggle_hide_inactive)
-        self.toggle_hide_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+H"))
+#        self.toggle_hide_action = self.menu.addAction(
+#            _("Hide Inactive Instruments"))
+#        self.toggle_hide_action.setCheckable(True)
+#        self.toggle_hide_action.triggered.connect(self.toggle_hide_inactive)
+#        self.toggle_hide_action.setShortcut(
+#            QtGui.QKeySequence.fromString("CTRL+H"))
         self.menu.addSeparator()
         self.unsolo_action = self.menu.addAction(_("Un-Solo All"))
         self.unsolo_action.triggered.connect(self.unsolo_all)
@@ -1339,7 +1338,7 @@ class region_editor(QtGui.QGraphicsView):
     def show_cell_dialog(self):
         if REGION_EDITOR_MODE != 0:
             return
-        if not self.current_coord:
+        if not self.current_coord or not CURRENT_REGION:
             return
         x, y = self.current_coord[:2]
         def note_ok_handler():
