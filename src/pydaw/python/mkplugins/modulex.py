@@ -110,7 +110,6 @@ class modulex_plugin_ui(pydaw_abstract_plugin_ui):
         self.layout.addLayout(self.presets_hlayout)
         self.spectrum_enabled = None
         self.tab_widget = QtGui.QTabWidget()
-        self.tab_widget.currentChanged.connect(self.tab_changed)
         self.layout.addWidget(self.tab_widget)
         self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
@@ -119,13 +118,6 @@ class modulex_plugin_ui(pydaw_abstract_plugin_ui):
         self.fx_layout = QtGui.QGridLayout()
         self.fx_hlayout = QtGui.QHBoxLayout(self.fx_tab)
         self.fx_hlayout.addLayout(self.fx_layout)
-
-        self.misc_tab = QtGui.QWidget()
-        self.tab_widget.addTab(self.misc_tab, _("Misc."))
-        self.delay_vlayout = QtGui.QVBoxLayout()
-        self.misc_tab.setLayout(self.delay_vlayout)
-        self.delay_hlayout = QtGui.QHBoxLayout()
-        self.delay_vlayout.addLayout(self.delay_hlayout)
 
         f_knob_size = 48
 
@@ -150,11 +142,8 @@ class modulex_plugin_ui(pydaw_abstract_plugin_ui):
 
     def open_plugin_file(self):
         pydaw_abstract_plugin_ui.open_plugin_file(self)
-        self.eq6.update_viewer()
 
     def save_plugin_file(self):
-        # Don't allow the spectrum analyzer to run at startup
-        self.spectrum_enabled.set_value(0)
         pydaw_abstract_plugin_ui.save_plugin_file(self)
 
     def set_window_title(self, a_track_name):
@@ -167,7 +156,6 @@ class modulex_plugin_ui(pydaw_abstract_plugin_ui):
 
     def raise_widget(self):
         pydaw_abstract_plugin_ui.raise_widget(self)
-        self.tab_changed()
 
     def ui_message(self, a_name, a_value):
         pydaw_abstract_plugin_ui.ui_message(a_name, a_value)
