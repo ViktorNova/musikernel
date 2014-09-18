@@ -111,6 +111,8 @@ static PYFX_Handle g_sreverb_instantiate(PYFX_Descriptor * descriptor,
     plugin_data->plugin_uid = a_plugin_uid;
     plugin_data->queue_func = a_queue_func;
 
+    plugin_data->mono_modules = v_sreverb_mono_init(s_rate, a_plugin_uid);
+
     plugin_data->port_table = g_pydaw_get_port_table(
         (void**)plugin_data, descriptor);
 
