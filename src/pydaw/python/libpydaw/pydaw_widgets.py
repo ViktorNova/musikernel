@@ -2354,11 +2354,6 @@ class eq6_widget:
         self.vlayout.addLayout(self.combobox_hlayout)
         self.vlayout.addWidget(self.eq_viewer)
         if a_vlayout:
-            self.combobox = pydaw_combobox_control(
-                120, None, a_first_port, a_rel_callback, a_val_callback,
-                [_("Off"), _("Pre-FX"), _("Post-FX")],
-                 a_port_dict, 0, a_preset_mgr)
-            self.combobox_hlayout.addWidget(self.combobox.control)
             f_col_width = 3
             self.widget.setLayout(self.vlayout)
             self.vlayout.addLayout(self.grid_layout)
@@ -2391,8 +2386,6 @@ class eq6_widget:
         self.eqs = []
 
         f_port = a_first_port
-        if a_vlayout:
-            f_port += 1
         f_default_value = 24
 
         f_x = 0

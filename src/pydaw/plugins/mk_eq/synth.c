@@ -240,7 +240,7 @@ static void v_mkeq_run(
 
         while(f_i2 < MKEQ_EQ_COUNT)
         {
-            if(*plugin_data->eq_gain[f_i] != 0.0f)
+            if(*plugin_data->eq_gain[f_i2] != 0.0f)
             {
                 v_pkq_calc_coeffs(plugin_data->mono_modules->eqs[f_i2],
                         *plugin_data->eq_freq[f_i2],

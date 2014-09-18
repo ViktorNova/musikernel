@@ -62,36 +62,17 @@ class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
         self.set_window_title(a_track_name)
         self.is_instrument = False
 
-        self.preset_manager = pydaw_preset_manager_widget(
-            self.get_plugin_name())
-        self.presets_hlayout = QtGui.QHBoxLayout()
-        self.presets_hlayout.addWidget(self.preset_manager.group_box)
-        self.presets_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        self.layout.addLayout(self.presets_hlayout)
+        self.preset_manager = None
         self.spectrum_enabled = None
         self.tab_widget = QtGui.QTabWidget()
         self.tab_widget.currentChanged.connect(self.tab_changed)
         self.layout.addWidget(self.tab_widget)
         self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
-        self.fx_tab = QtGui.QWidget()
-        self.tab_widget.addTab(self.fx_tab, _("Effects"))
-        self.fx_layout = QtGui.QGridLayout()
-        self.fx_hlayout = QtGui.QHBoxLayout(self.fx_tab)
-        self.fx_hlayout.addLayout(self.fx_layout)
-
-        self.misc_tab = QtGui.QWidget()
-        self.tab_widget.addTab(self.misc_tab, _("Misc."))
-        self.delay_vlayout = QtGui.QVBoxLayout()
-        self.misc_tab.setLayout(self.delay_vlayout)
-        self.delay_hlayout = QtGui.QHBoxLayout()
-        self.delay_vlayout.addLayout(self.delay_hlayout)
-
         f_knob_size = 48
 
         self.eq6 = eq6_widget(
-            MKEQ_EQ_ON,
+            MKEQ_EQ1_FREQ,
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, a_preset_mgr=self.preset_manager,
             a_size=f_knob_size)
