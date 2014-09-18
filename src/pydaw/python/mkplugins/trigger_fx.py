@@ -17,8 +17,6 @@ from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
 
 
-#Modulex
-
 TRIGGERFX_INPUT0 = 0
 TRIGGERFX_INPUT1 = 1
 TRIGGERFX_OUTPUT0 = 2
@@ -54,24 +52,10 @@ class triggerfx_plugin_ui(pydaw_abstract_plugin_ui):
         self.set_window_title(a_track_name)
         self.is_instrument = False
 
-        self.preset_manager = pydaw_preset_manager_widget(
-            self.get_plugin_name())
-        self.presets_hlayout = QtGui.QHBoxLayout()
-        self.presets_hlayout.addWidget(self.preset_manager.group_box)
-        self.presets_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        self.layout.addLayout(self.presets_hlayout)
-        self.spectrum_enabled = None
+        self.preset_manager = None
         self.tab_widget = QtGui.QTabWidget()
-        self.tab_widget.currentChanged.connect(self.tab_changed)
         self.layout.addWidget(self.tab_widget)
         self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
-
-        self.fx_tab = QtGui.QWidget()
-        self.tab_widget.addTab(self.fx_tab, _("Effects"))
-        self.fx_layout = QtGui.QGridLayout()
-        self.fx_hlayout = QtGui.QHBoxLayout(self.fx_tab)
-        self.fx_hlayout.addLayout(self.fx_layout)
 
         self.misc_tab = QtGui.QWidget()
         self.tab_widget.addTab(self.misc_tab, _("Misc."))
@@ -163,12 +147,9 @@ class triggerfx_plugin_ui(pydaw_abstract_plugin_ui):
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(
-            "MusiKernel Modulex - {}".format(self.track_name))
+            "MusiKernel TriggerFX - {}".format(self.track_name))
 
     def widget_close_event(self, a_event):
-        print("Disabling spectrum")
-        self.plugin_val_callback(
-            TRIGGERFX_SPECTRUM_ENABLED, 0.0)
         pydaw_abstract_plugin_ui.widget_close_event(self, a_event)
 
     def raise_widget(self):
@@ -176,5 +157,4 @@ class triggerfx_plugin_ui(pydaw_abstract_plugin_ui):
 
     def ui_message(self, a_name, a_value):
         pydaw_abstract_plugin_ui.ui_message(a_name, a_value)
-
 
