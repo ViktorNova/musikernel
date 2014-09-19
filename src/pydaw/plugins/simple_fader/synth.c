@@ -217,7 +217,7 @@ static void v_sfader_run(
             plugin_data->port_table);
 
         v_sml_run(plugin_data->mono_modules->volume_smoother,
-            (*plugin_data->vol_slider));
+            (*plugin_data->vol_slider * 0.01f));
 
         if(plugin_data->mono_modules->volume_smoother->last_value != 0.0f ||
         (*plugin_data->vol_slider != 0.0f))
@@ -245,7 +245,7 @@ PYFX_Descriptor *sfader_PYFX_descriptor(int index)
     PYFX_Descriptor *f_result =
             pydaw_get_pyfx_descriptor(123456, "Modulex", SFADER_COUNT);
 
-    pydaw_set_pyfx_port(f_result, SFADER_VOL_SLIDER, 0.0f, -50.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, SFADER_VOL_SLIDER, 0.0f, -5000.0f, 0.0f);
 
     f_result->cleanup = v_sfader_cleanup;
     f_result->connect_port = v_sfader_connect_port;
