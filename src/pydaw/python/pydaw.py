@@ -8012,6 +8012,8 @@ class plugin_settings:
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
         self.plugin_combobox.addItems(["None"] + PLUGIN_NAMES)
+        self.plugin_combobox.insertSeparator(
+            self.plugin_combobox.findText("Modulex"))
         self.plugin_combobox.currentIndexChanged.connect(
             self.on_plugin_change)
         a_layout.addWidget(self.plugin_combobox, a_index + 1, 0)
@@ -8029,35 +8031,42 @@ class plugin_settings:
     def automation_check_changed(self):
         if self.automation_radiobutton.isChecked():
             self.automation_callback(
-                self.index, self.plugin_combobox.currentIndex(),
+                self.index, self.get_plugin_uid(),
                 self.plugin_combobox.currentText())
 
     def set_value(self, a_val):
         self.suppress_osc = True
-        self.plugin_combobox.setCurrentIndex(a_val.plugin_index)
+        f_name = PLUGIN_UIDS_REVERSE[a_val.plugin_index]
+        self.plugin_combobox.setCurrentIndex(
+            self.plugin_combobox.findText(f_name))
         self.plugin_uid = a_val.plugin_uid
         self.suppress_osc = False
 
+    def get_plugin_uid(self):
+        f_text = str(self.plugin_combobox.currentText())
+        return PLUGIN_UIDS[f_text]
+
     def get_value(self):
         return pydaw_track_plugin(
-            self.index, self.plugin_combobox.currentIndex(), self.plugin_uid)
+            self.index, self.get_plugin_uid(), self.plugin_uid)
 
     def on_plugin_change(self, a_val):
         if self.suppress_osc:
             return
-        if a_val == 0:
+        f_index = self.get_plugin_uid()
+        if f_index == 0:
             self.plugin_uid = -1
         else:
             self.plugin_uid = PROJECT.get_next_plugin_uid()
         PROJECT.this_pydaw_osc.pydaw_set_plugin_index(
-            self.track_num, self.index, a_val, self.plugin_uid)
+            self.track_num, self.index, f_index, self.plugin_uid)
         self.save_callback()
 
     def wheel_event(self, a_event=None):
         pass
 
     def on_show_ui(self):
-        f_index = self.plugin_combobox.currentIndex()
+        f_index = self.get_plugin_uid()
         if f_index == 0 or self.plugin_uid == -1:
             return
         global_open_plugin_ui(
@@ -10048,19 +10057,18 @@ def global_update_peak_meters(a_val):
         else:
             print("{} not in ALL_PEAK_METERS".format(f_index))
 
-PLUGIN_NAMES = ["Euphoria", "Ray-V", "Way-V", "Modulex", "MK Delay",
-    "MK EQ", "Simple Fader", "Simple Reverb", "TriggerFX"]
-CC_NAMES = {"Euphoria":[], "Way-V":[], "Ray-V":[], "Modulex":[], "MK Delay":[],
-    "MK EQ":[], "Simple Fader":[], "Simple Reverb":[], "TriggerFX":[]
-}
-CONTROLLER_PORT_NAME_DICT = {
-    "Euphoria":{}, "Way-V":{}, "Ray-V":{}, "Modulex":{}, "MK Delay":{},
-    "MK EQ":{}, "Simple Fader":{}, "Simple Reverb":{}, "TriggerFX":{}
-}
-CONTROLLER_PORT_NUM_DICT = {
-    "Euphoria":{}, "Way-V":{}, "Ray-V":{}, "Modulex":{}, "MK Delay":{},
-    "MK EQ":{}, "Simple Fader":{}, "Simple Reverb":{}, "TriggerFX":{}
-}
+PLUGIN_NAMES = [
+    "Euphoria", "Ray-V", "Way-V", "Modulex", "MK Delay",
+    "MK EQ", "Simple Fader", "Simple Reverb", "TriggerFX"
+    ]
+PLUGIN_UIDS = {
+    "None":0, "Euphoria":1, "Ray-V":2, "Way-V":3, "Modulex":4, "MK Delay":5,
+    "MK EQ":6, "Simple Fader":7, "Simple Reverb":8, "TriggerFX":9
+    }
+PLUGIN_UIDS_REVERSE = {v:k for k, v in PLUGIN_UIDS.items()}
+CC_NAMES = {x:[] for x in PLUGIN_NAMES}
+CONTROLLER_PORT_NAME_DICT = {x:{} for x in PLUGIN_NAMES}
+CONTROLLER_PORT_NUM_DICT = {x:{} for x in PLUGIN_NAMES}
 
 class pydaw_controller_map_item:
     def __init__(self, a_name, a_port):
