@@ -915,8 +915,6 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.path_item = QtGui.QGraphicsPathItem(a_path)
         self.path_item.setParentItem(self)
         self.path_item.setPos(0.0, 0.0)
-        self.path_item.setBrush(QtCore.Qt.white)
-        self.path_item.setPen(QtCore.Qt.white)
         self.path_item.setZValue(2000.0)
         self.setZValue(1001.0)
         self.track_num = int(a_track)
@@ -946,10 +944,14 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         if self.isSelected():
             self.setBrush(pydaw_selected_gradient)
             self.label.setBrush(QtCore.Qt.black)
+            self.path_item.setBrush(QtCore.Qt.black)
+            self.path_item.setPen(QtCore.Qt.black)
         else:
             self.label.setBrush(QtCore.Qt.white)
             f_index = self.track_num % len(pydaw_track_gradients)
             self.setBrush(pydaw_track_gradients[f_index])
+            self.path_item.setBrush(QtCore.Qt.white)
+            self.path_item.setPen(QtCore.Qt.white)
 
     def get_selected_string(self):
         return "|".join(str(x) for x in (self.track_num, self.bar, self.name))
@@ -9452,7 +9454,9 @@ class pydaw_main_window(QtGui.QMainWindow):
         f_index = self.main_tabwidget.currentIndex()
         if not IS_PLAYING and f_index != 2:
             WAVE_EDITOR.enabled_checkbox.setChecked(False)
-        if f_index == 1:
+        if f_index == 0 and not IS_PLAYING:
+            REGION_EDITOR.open_region()
+        elif f_index == 1:
             ITEM_EDITOR.tab_changed()
 
     def on_collapse_splitters(self):
