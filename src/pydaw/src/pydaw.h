@@ -411,7 +411,8 @@ void v_save_pysong_to_disk(t_pydaw_data * self);
 void v_save_pyitem_to_disk(t_pydaw_data * self, int a_index);
 void v_save_pyregion_to_disk(t_pydaw_data * self, int a_region_num);
 void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
-        int a_index, int a_plugin_index, int a_plugin_uid, int a_lock);
+        int a_index, int a_plugin_index, int a_plugin_uid,
+        int a_power, int a_lock);
 void v_pydaw_update_track_send(t_pydaw_data * self, int a_lock);
 void v_pydaw_update_send_vol(t_pydaw_data * self, int a_track_num,
         int a_index, float a_vol);
@@ -1611,7 +1612,7 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
     while(f_i < MAX_PLUGIN_COUNT)
     {
         f_plugin = f_track->plugins[f_i];
-        if(f_plugin)
+        if(f_plugin && f_plugin->power)
         {
             v_pydaw_process_atm(
                 self, a_global_track_num, f_i, self->sample_count);
@@ -3761,11 +3762,11 @@ void v_pydaw_open_track(t_pydaw_data * self, int a_index)
                 free(f_mute_str);
                 //int f_solo = atoi(f_solo_str);
                 free(f_solo_str);
-                //int f_power = atoi(f_power_str);
+                int f_power = atoi(f_power_str);
                 free(f_power_str);
 
                 v_pydaw_set_plugin_index(self, a_index, f_index,
-                    f_plugin_index, f_plugin_uid, 0);
+                    f_plugin_index, f_plugin_uid, f_power, 0);
                 //TODO:  Mute, solo and power
             }
             else
@@ -4699,7 +4700,8 @@ void v_pydaw_set_preview_file(t_pydaw_data * self, const char * a_file)
 
 
 void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
-        int a_index, int a_plugin_index, int a_plugin_uid, int a_lock)
+        int a_index, int a_plugin_index, int a_plugin_uid,
+        int a_power, int a_lock)
 {
     t_pytrack * f_track = self->track_pool_all[a_track_num];
     t_pydaw_plugin * f_plugin = 0;
@@ -4733,6 +4735,10 @@ void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
         }
     }
 
+    if(f_plugin)
+    {
+        f_plugin->power = a_power;
+    }
 
     if(a_lock)
     {

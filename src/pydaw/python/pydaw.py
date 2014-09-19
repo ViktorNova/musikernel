@@ -8035,11 +8035,14 @@ class plugin_settings:
         self.ui_button.setObjectName("uibutton")
         self.ui_button.setFixedWidth(24)
         a_layout.addWidget(self.ui_button, a_index + 1, 1)
-        self.automation_radiobutton = QtGui.QRadioButton("A")
-        a_layout.addWidget(
-            self.automation_radiobutton, a_index + 1, 2)
+        self.automation_radiobutton = QtGui.QRadioButton("")
+        a_layout.addWidget(self.automation_radiobutton, a_index + 1, 2)
         self.automation_radiobutton.clicked.connect(
             self.automation_check_changed)
+        self.power_checkbox = QtGui.QCheckBox("")
+        self.power_checkbox.setChecked(True)
+        a_layout.addWidget(self.power_checkbox, a_index + 1, 3)
+        self.power_checkbox.clicked.connect(self.on_plugin_change)
 
     def automation_check_changed(self):
         if self.automation_radiobutton.isChecked():
@@ -8053,6 +8056,7 @@ class plugin_settings:
         self.plugin_combobox.setCurrentIndex(
             self.plugin_combobox.findText(f_name))
         self.plugin_uid = a_val.plugin_uid
+        self.power_checkbox.setChecked(a_val.power == 1)
         self.suppress_osc = False
 
     def get_plugin_uid(self):
@@ -8061,7 +8065,8 @@ class plugin_settings:
 
     def get_value(self):
         return pydaw_track_plugin(
-            self.index, self.get_plugin_uid(), self.plugin_uid)
+            self.index, self.get_plugin_uid(), self.plugin_uid,
+            a_power=1 if self.power_checkbox.isChecked() else 0)
 
     def on_plugin_change(self, a_val):
         if self.suppress_osc:
@@ -8069,10 +8074,11 @@ class plugin_settings:
         f_index = self.get_plugin_uid()
         if f_index == 0:
             self.plugin_uid = -1
-        else:
+        elif self.plugin_uid == -1:
             self.plugin_uid = PROJECT.get_next_plugin_uid()
-        PROJECT.this_pydaw_osc.pydaw_set_plugin_index(
-            self.track_num, self.index, f_index, self.plugin_uid)
+        PROJECT.this_pydaw_osc.pydaw_set_plugin(
+            self.track_num, self.index, f_index,
+            self.plugin_uid, self.power_checkbox.isChecked())
         self.save_callback()
 
     def wheel_event(self, a_event=None):
@@ -8242,8 +8248,9 @@ class seq_track:
         self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
         self.menu_gridlayout = QtGui.QGridLayout()
         self.menu_hlayout.addLayout(self.menu_gridlayout)
-        self.menu_gridlayout.addWidget(
-            QtGui.QLabel(_("Plugins")), 0, 0)
+        self.menu_gridlayout.addWidget(QtGui.QLabel(_("Plugins")), 0, 0)
+        self.menu_gridlayout.addWidget(QtGui.QLabel(_("A")), 0, 2)
+        self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 3)
         self.plugins = []
         for f_i in range(10):
             f_plugin = plugin_settings(
