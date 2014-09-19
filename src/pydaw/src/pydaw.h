@@ -875,6 +875,9 @@ void * v_pydaw_osc_send_thread(void* a_arg)
     f_tmp2[0] = '\0';
     f_msg[0] = '\0';
 
+    int f_track_index;
+    t_pkm_peak_meter * f_pkm;
+
     while(!self->audio_recording_quit_notifier)
     {
         f_i = 0;
@@ -882,20 +885,17 @@ void * v_pydaw_osc_send_thread(void* a_arg)
         f_tmp1[0] = '\0';
         f_tmp2[0] = '\0';
 
-        while(f_i < PYDAW_TRACK_COUNT_ALL)
+        f_pkm = self->track_pool_all[0]->peak_meter;
+        sprintf(f_tmp2, "%i:%f:%f", 0, f_pkm->value[0], f_pkm->value[1]);
+        v_pkm_reset(f_pkm);
+
+        while(f_i < self->routing_graph->track_pool_sorted_count)
         {
-            t_pkm_peak_meter * f_pkm =
-                self->track_pool_all[f_i]->peak_meter;
-            if(f_i == 0)
-            {
-                sprintf(f_tmp1, "%i:%f:%f",
-                    f_i, f_pkm->value[0], f_pkm->value[1]);
-            }
-            else
-            {
-                sprintf(f_tmp1, "|%i:%f:%f",
-                    f_i, f_pkm->value[0], f_pkm->value[1]);
-            }
+            f_track_index = self->routing_graph->track_pool_sorted[f_i];
+            f_pkm = self->track_pool_all[f_track_index]->peak_meter;
+
+            sprintf(f_tmp1, "|%i:%f:%f",
+                f_track_index, f_pkm->value[0], f_pkm->value[1]);
 
             v_pkm_reset(f_pkm);
 
@@ -914,8 +914,7 @@ void * v_pydaw_osc_send_thread(void* a_arg)
             if(self->is_ab_ing)
             {
                 float f_frac =
-                (float)(self->ab_audio_item->
-                sample_read_head->whole_number) /
+                (float)(self->ab_audio_item->sample_read_head->whole_number) /
                 (float)(self->ab_audio_item->wav_pool_item->length);
 
                 sprintf(f_msg, "%f", f_frac);
@@ -926,8 +925,7 @@ void * v_pydaw_osc_send_thread(void* a_arg)
                 if(!self->is_offline_rendering)
                 {
                     sprintf(f_msg, "%i|%i|%f", self->ml_next_region,
-                            self->ml_next_bar,
-                            self->ml_next_beat);
+                        self->ml_next_bar, self->ml_next_beat);
                     v_queue_osc_message("cur", f_msg);
                 }
             }
@@ -1643,7 +1641,7 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
 
     while(f_i < self->routing_graph->track_pool_sorted_count)
     {
-       f_track_index = self->routing_graph->track_pool_sorted[f_i];
+        f_track_index = self->routing_graph->track_pool_sorted[f_i];
         f_track = self->track_pool_all[f_track_index];
 
         if(f_track->status != STATUS_NOT_PROCESSED)
