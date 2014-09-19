@@ -900,7 +900,7 @@ def region_editor_set_delete_mode(a_enabled):
 
 
 class region_editor_item(QtGui.QGraphicsRectItem):
-    def __init__(self, a_track, a_bar, a_name):
+    def __init__(self, a_track, a_bar, a_name, a_path):
         self.bar_width = (REGION_EDITOR_GRID_WIDTH /
             pydaw_get_current_region_length())
         QtGui.QGraphicsRectItem.__init__(
@@ -912,6 +912,12 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         else:
             self.setEnabled(False)
             self.setOpacity(0.6)
+        self.path_item = QtGui.QGraphicsPathItem(a_path)
+        self.path_item.setParentItem(self)
+        self.path_item.setPos(0.0, 0.0)
+        self.path_item.setBrush(QtCore.Qt.white)
+        self.path_item.setPen(QtCore.Qt.white)
+        self.path_item.setZValue(2000.0)
         self.setZValue(1001.0)
         self.track_num = int(a_track)
         self.bar = int(a_bar)
@@ -1145,6 +1151,7 @@ class region_editor(QtGui.QGraphicsView):
         self.selected_point_strings = set([])
         self.clipboard = []
         self.automation_points = []
+        self.painter_path_cache = {}
 
         self.atm_select_pos_x = None
         self.atm_select_track = None
@@ -1822,6 +1829,7 @@ class region_editor(QtGui.QGraphicsView):
         self.px_per_beat = self.px_per_bar / 4.0
 
         self.region_items = {}
+        self.painter_path_cache = {}
         self.automation_points = []
         self.scene.clear()
         self.update_note_height()
@@ -1841,7 +1849,15 @@ class region_editor(QtGui.QGraphicsView):
         self.scene.clearSelection()
 
     def draw_item(self, a_track, a_bar, a_name, a_selected=False):
-        f_item = region_editor_item(a_track, a_bar, a_name)
+        if a_name in self.painter_path_cache:
+            f_path = self.painter_path_cache[a_name]
+        else:
+            f_item_obj = PROJECT.get_item_by_name(a_name)
+            f_path = f_item_obj.painter_path(
+                REGION_EDITOR_GRID_WIDTH / pydaw_get_current_region_length(),
+                REGION_EDITOR_TRACK_HEIGHT)
+            self.painter_path_cache[a_name] = f_path
+        f_item = region_editor_item(a_track, a_bar, a_name, f_path)
         self.scene.addItem(f_item)
         if a_selected:
             f_item.setSelected(True)

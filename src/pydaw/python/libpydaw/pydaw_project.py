@@ -101,7 +101,7 @@ class pydaw_project:
             a_folder, a_file, a_text, f_old, f_existed)
         self.history_files.append(f_history_file)
         #TODO:  debug/verbose mode this output...
-        print((str(f_history_file)))
+        print(str(f_history_file))
 
     def commit(self, a_message):
         """ Commit the project history """
@@ -1883,6 +1883,17 @@ class pydaw_item:
         self.notes = []
         self.ccs = []
         self.pitchbends = []
+
+    def painter_path(self, a_width, a_height):
+        f_result = QtGui.QPainterPath()
+        f_note_height = float(a_height) / 128.0
+        f_beat_width = a_width * 0.25
+        for f_note in self.notes:
+            f_y_pos = a_height - (f_note_height * float(f_note.note_num))
+            f_x_pos = f_note.start * f_beat_width
+            f_width = f_note.length * f_beat_width
+            f_result.addRect(f_x_pos, f_y_pos, f_width, f_note_height)
+        return f_result
 
     def add_note(self, a_note, a_check=True):
         if a_check:
