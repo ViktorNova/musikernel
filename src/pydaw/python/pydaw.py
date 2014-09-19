@@ -4524,13 +4524,13 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         self.snap_combobox.setFixedWidth(105)
         self.snap_combobox.addItems(
             [_("None"), _("Bar"), _("Beat"), "1/8th", "1/12th", "1/16th"])
-        self.controls_grid_layout.addWidget(QtGui.QLabel(_("Snap:")), 0, 0)
-        self.controls_grid_layout.addWidget(self.snap_combobox, 0, 1)
+        self.controls_grid_layout.addWidget(QtGui.QLabel(_("Snap:")), 0, 9)
+        self.controls_grid_layout.addWidget(self.snap_combobox, 0, 10)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
         self.snap_combobox.setCurrentIndex(2)
 
         self.menu_button = QtGui.QPushButton(_("Menu"))
-        self.controls_grid_layout.addWidget(self.menu_button, 0, 10)
+        self.controls_grid_layout.addWidget(self.menu_button, 0, 3)
         self.action_menu = QtGui.QMenu(self.widget)
         self.menu_button.setMenu(self.action_menu)
         self.copy_action = self.action_menu.addAction(_("Copy"))
@@ -7161,19 +7161,15 @@ class automation_viewer_widget:
         self.hlayout = QtGui.QHBoxLayout()
 
         if a_is_cc:
-            self.hlayout2 = QtGui.QHBoxLayout()
-            self.vlayout.addLayout(self.hlayout2)
             self.control_combobox = QtGui.QComboBox()
             self.control_combobox.addItems([str(x) for x in range(1, 128)])
-            self.control_combobox.setMinimumWidth(240)
-            self.hlayout2.addWidget(QtGui.QLabel(_("CC")))
-            self.hlayout2.addWidget(self.control_combobox)
-            self.hlayout2.addItem(
-                QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding))
+            self.control_combobox.setMinimumWidth(90)
+            self.hlayout.addWidget(QtGui.QLabel(_("CC")))
+            self.hlayout.addWidget(self.control_combobox)
             self.control_combobox.currentIndexChanged.connect(
                 self.control_changed)
             self.ccs_in_use_combobox = QtGui.QComboBox()
-            self.ccs_in_use_combobox.setMinimumWidth(300)
+            self.ccs_in_use_combobox.setMinimumWidth(90)
             self.suppress_ccs_in_use = False
             self.ccs_in_use_combobox.currentIndexChanged.connect(
                 self.ccs_in_use_combobox_changed)
