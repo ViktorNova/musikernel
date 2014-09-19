@@ -2196,7 +2196,7 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
                         events[f_i2].tick, self->tempo, self->sample_rate);
 
                 sprintf(f_osc_msg,
-                    "cc|%i|%i|%f|-1|%i|%f",
+                    "cc|%i|%i|%f|%i|%f",
                     self->current_region, self->current_bar, f_beat,
                     controller, events[f_i2].value);
                 v_queue_osc_message("mrec", f_osc_msg);

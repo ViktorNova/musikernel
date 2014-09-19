@@ -8591,7 +8591,7 @@ class transport_widget:
             f_region_name != CURRENT_REGION_NAME) or CURRENT_REGION is None:
                 REGION_SETTINGS.open_region(f_region_name)
         else:
-            REGION_EDITOR.clear_items()
+            REGION_EDITOR.clear_drawn_items()
             AUDIO_SEQ.clear_drawn_items()
         if not a_start:
             REGION_EDITOR.clearSelection()
