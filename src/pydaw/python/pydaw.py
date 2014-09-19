@@ -8026,8 +8026,7 @@ class plugin_settings:
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
         self.plugin_combobox.addItems(["None"] + PLUGIN_NAMES)
-        self.plugin_combobox.insertSeparator(
-            self.plugin_combobox.findText("Modulex"))
+        self.plugin_combobox.insertSeparator(PLUGIN_INSTRUMENT_COUNT + 1)
         self.plugin_combobox.currentIndexChanged.connect(
             self.on_plugin_change)
         a_layout.addWidget(self.plugin_combobox, a_index + 1, 0)
@@ -10073,9 +10072,11 @@ def global_update_peak_meters(a_val):
         else:
             print("{} not in ALL_PEAK_METERS".format(f_index))
 
+PLUGIN_INSTRUMENT_COUNT = 3  # For inserting the split line into the menu
+
 PLUGIN_NAMES = [
-    "Euphoria", "Ray-V", "Way-V", "Modulex", "MK Delay",
-    "MK EQ", "Simple Fader", "Simple Reverb", "TriggerFX"
+    "Euphoria", "Ray-V", "Way-V", "MK Delay", "MK EQ",
+    "Modulex", "Simple Fader", "Simple Reverb", "TriggerFX"
     ]
 PLUGIN_UIDS = {
     "None":0, "Euphoria":1, "Ray-V":2, "Way-V":3, "Modulex":4, "MK Delay":5,
