@@ -64,9 +64,7 @@ class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.preset_manager = None
         self.spectrum_enabled = None
-        self.tab_widget = QtGui.QTabWidget()
-        self.tab_widget.currentChanged.connect(self.tab_changed)
-        self.layout.addWidget(self.tab_widget)
+
         self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
         f_knob_size = 48
@@ -77,7 +75,7 @@ class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
             self.port_dict, a_preset_mgr=self.preset_manager,
             a_size=f_knob_size)
 
-        self.tab_widget.addTab(self.eq6.widget, _("EQ/Spectrum"))
+        self.layout.addWidget(self.eq6.widget)
 
         self.spectrum_enabled = pydaw_null_control(
             MKEQ_SPECTRUM_ENABLED,
@@ -108,10 +106,7 @@ class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
 
     def raise_widget(self):
         pydaw_abstract_plugin_ui.raise_widget(self)
-        self.tab_changed()
-
-    def tab_changed(self, a_val=None):
-        self.enable_spectrum(self.tab_widget.currentIndex() == 0)
+        self.enable_spectrum(True)
 
     def enable_spectrum(self, a_enabled):
         if a_enabled:
