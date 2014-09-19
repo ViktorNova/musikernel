@@ -1277,22 +1277,17 @@ inline void v_queue_osc_message(char * a_key, char * a_val)
     }
 }
 
-void v_pydaw_set_control_from_atm(t_pydaw_plugin *instance, int controlIn,
+void v_pydaw_set_control_from_atm(
         t_pydaw_seq_event *event, t_pydaw_data * self,
         int a_plugin_uid, int a_track_num)
 {
     t_pytrack * f_track = self->track_pool_all[a_track_num];
-    float f_lb = instance->descriptor->PortRangeHints[controlIn].LowerBound;
-    float f_ub = instance->descriptor->PortRangeHints[controlIn].UpperBound;
-    float f_diff = f_ub - f_lb;
-    event->value = (event->value * 0.0078125f * f_diff) + f_lb;
-    //this may or may not already be set.  TODO:  simplify
-    event->port = controlIn;
+
     if(!self->is_offline_rendering)
     {
         sprintf(
             f_track->osc_cursor_message, "%i|%i|%f",
-            a_plugin_uid, controlIn, event->value);
+            a_plugin_uid, event->port, event->value);
         v_queue_osc_message("pc", f_track->osc_cursor_message);
     }
 }
@@ -1811,8 +1806,7 @@ inline void v_pydaw_process_atm(
                     v_pydaw_ev_set_atm(f_buff_ev, f_point->port, f_val);
                     f_buff_ev->tick = f_note_sample_offset;
                     v_pydaw_set_control_from_atm(
-                        f_plugin, f_point->port, f_buff_ev, self,
-                        f_plugin->pool_uid, f_track_num);
+                        f_buff_ev, self, f_plugin->pool_uid, f_track_num);
                     f_plugin->atm_count += 1;
                 }
                 f_plugin->atm_pos += 1;
