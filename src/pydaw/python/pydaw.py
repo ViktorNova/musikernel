@@ -637,11 +637,11 @@ class region_settings:
         global_update_hidden_rows()
 
     def unsolo_all(self):
-        for f_track in TRACK_PANEL.tracks:
+        for f_track in TRACK_PANEL.tracks.values():
             f_track.solo_checkbox.setChecked(False)
 
     def unmute_all(self):
-        for f_track in TRACK_PANEL.tracks:
+        for f_track in TRACK_PANEL.tracks.values():
             f_track.mute_checkbox.setChecked(False)
 
 
