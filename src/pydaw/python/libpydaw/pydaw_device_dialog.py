@@ -266,6 +266,7 @@ class pydaw_device_dialog:
         f_result_dict = {}
         f_name_to_index = {}
         f_audio_device_names = []
+        f_midi_device_names = []
 
         for i in range(f_count):
             f_dev = self.pyaudio.Pa_GetDeviceInfo(i)
@@ -286,6 +287,7 @@ class pydaw_device_dialog:
                 f_midi_device.contents.output, f_midi_device.contents.opened))
             if f_midi_device.contents.input == 1:
                 f_midi_in_device_combobox.addItem(f_midi_device_name)
+                f_midi_device_names.append(f_midi_device_name)
 
         def latency_changed(a_self=None, a_val=None):
             f_sample_rate = float(str(f_samplerate_combobox.currentText()))
@@ -404,10 +406,11 @@ class pydaw_device_dialog:
             if int(pydaw_util.global_device_val_dict["performance"]) == 1:
                 f_governor_checkbox.setChecked(True)
 
-        if "midiInDevice" in pydaw_util.global_device_val_dict:
+        if pydaw_util.MIDI_IN_DEVICES and \
+        pydaw_util.MIDI_IN_DEVICES[0] in f_midi_device_names:
             f_midi_in_device_combobox.setCurrentIndex(
-            f_midi_in_device_combobox.findText(
-                pydaw_util.global_device_val_dict["midiInDevice"]))
+                f_midi_in_device_combobox.findText(
+                pydaw_util.MIDI_IN_DEVICES[0]))
 
         if "audioEngine" in pydaw_util.global_device_val_dict:
             f_audio_engine_combobox.setCurrentIndex(
