@@ -247,12 +247,9 @@ class pydaw_device_dialog:
             "engine crashes on startup."))
         f_window_layout.addWidget(f_governor_checkbox, 6, 1)
 
-        f_window_layout.addWidget(QtGui.QLabel(_("MIDI In Device:")), 7, 0)
-        f_midi_in_device_combobox = QtGui.QComboBox()
-        f_midi_in_device_combobox.addItem("None")
-        f_window_layout.addWidget(f_midi_in_device_combobox, 7, 1)
+        f_window_layout.addWidget(QtGui.QLabel(_("MIDI In Devices:")), 7, 0)
         f_ok_cancel_layout = QtGui.QHBoxLayout()
-        f_window_layout.addLayout(f_ok_cancel_layout, 10, 1)
+        f_window_layout.addLayout(f_ok_cancel_layout, 50, 1)
         f_ok_button = QtGui.QPushButton(_("OK"))
         f_ok_cancel_layout.addWidget(f_ok_button)
         f_cancel_button = QtGui.QPushButton(_("Cancel"))
@@ -266,7 +263,6 @@ class pydaw_device_dialog:
         f_result_dict = {}
         f_name_to_index = {}
         f_audio_device_names = []
-        f_midi_device_names = []
 
         for i in range(f_count):
             f_dev = self.pyaudio.Pa_GetDeviceInfo(i)
@@ -278,6 +274,9 @@ class pydaw_device_dialog:
             f_audio_device_names.append(f_dev_name)
 
         print("\n")
+        f_midi_in_pos = 7
+        self.midi_in_checkboxes = {}
+
         for loop in range(self.pypm.Pm_CountDevices()):
             f_midi_device = self.pypm.Pm_GetDeviceInfo(loop)
             f_midi_device_name = f_midi_device.contents.name.decode("utf-8")
@@ -286,8 +285,10 @@ class pydaw_device_dialog:
                 loop, f_midi_device_name, f_midi_device.contents.input,
                 f_midi_device.contents.output, f_midi_device.contents.opened))
             if f_midi_device.contents.input == 1:
-                f_midi_in_device_combobox.addItem(f_midi_device_name)
-                f_midi_device_names.append(f_midi_device_name)
+                f_checkbox = QtGui.QCheckBox(f_midi_device_name)
+                f_window_layout.addWidget(f_checkbox, f_midi_in_pos, 1)
+                f_midi_in_pos += 1
+                self.midi_in_checkboxes[f_midi_device_name] = f_checkbox
 
         def latency_changed(a_self=None, a_val=None):
             f_sample_rate = float(str(f_samplerate_combobox.currentText()))
@@ -310,7 +311,8 @@ class pydaw_device_dialog:
             f_buffer_size = int(str(f_buffer_size_combobox.currentText()))
             f_samplerate = int(str(f_samplerate_combobox.currentText()))
             f_worker_threads = f_worker_threads_combobox.currentIndex()
-            f_midi_in_device = str(f_midi_in_device_combobox.currentText())
+            f_midi_in_devices = sorted(str(k)
+                for k, v in self.midi_in_checkboxes.items() if v.isChecked())
             f_audio_engine = f_audio_engine_combobox.currentIndex()
             if f_thread_affinity_checkbox.isChecked():
                 f_thread_affinity = 1
@@ -344,7 +346,8 @@ class pydaw_device_dialog:
                 f_file.write("threads|{}\n".format(f_worker_threads))
                 f_file.write("threadAffinity|{}\n".format(f_thread_affinity))
                 f_file.write("performance|{}\n".format(f_performance))
-                f_file.write("midiInDevice|{}\n".format(f_midi_in_device))
+                for f_midi_in_device in f_midi_in_devices:
+                    f_file.write("midiInDevice|{}\n".format(f_midi_in_device))
 
                 f_file.write("\\")
                 f_file.close()
@@ -406,11 +409,9 @@ class pydaw_device_dialog:
             if int(pydaw_util.global_device_val_dict["performance"]) == 1:
                 f_governor_checkbox.setChecked(True)
 
-        if pydaw_util.MIDI_IN_DEVICES and \
-        pydaw_util.MIDI_IN_DEVICES[0] in f_midi_device_names:
-            f_midi_in_device_combobox.setCurrentIndex(
-                f_midi_in_device_combobox.findText(
-                pydaw_util.MIDI_IN_DEVICES[0]))
+        for f_device_name in pydaw_util.MIDI_IN_DEVICES:
+            if f_device_name in self.midi_in_checkboxes:
+                self.midi_in_checkboxes[f_device_name].setChecked(True)
 
         if "audioEngine" in pydaw_util.global_device_val_dict:
             f_audio_engine_combobox.setCurrentIndex(
