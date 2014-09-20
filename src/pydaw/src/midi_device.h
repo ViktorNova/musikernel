@@ -14,9 +14,12 @@ GNU General Public License for more details.
 #ifndef MIDI_DEVICE_H
 #define	MIDI_DEVICE_H
 
+#include <sys/time.h>
+#include <time.h>
 #include <portmidi.h>
 
 #define MIDI_EVENT_BUFFER_SIZE 1024
+#define MIDI_CONTROLLER_COUNT 128
 
 //low-level MIDI stuff
 #define MIDI_NOTE_OFF       0x80

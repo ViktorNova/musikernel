@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     v_pydaw_constructor();
 
     PYFX_Descriptor * f_ldesc = PYFX_descriptor(0);
-    PYFX_Handle f_handle =  g_pydaw_instantiate(f_ldesc, f_sample_rate);
+    PYFX_Handle f_handle =  g_pydaw_instantiate(f_ldesc, f_sample_rate, 0);
 
     v_pydaw_activate(f_handle, f_thread_count, 0, f_project_dir);
     t_pydaw_engine * f_engine = (t_pydaw_engine*)f_handle;

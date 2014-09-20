@@ -48,8 +48,6 @@ struct _d3h_plugin_t {
 
 typedef struct _d3h_instance_t d3h_instance_t;
 
-#define MIDI_CONTROLLER_COUNT 128
-
 struct _d3h_instance_t
 {
     d3h_plugin_t    *plugin;

@@ -3551,8 +3551,6 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
 
     f_result->status = STATUS_NOT_PROCESSED;
 
-
-
     return f_result;
 }
 
