@@ -3085,7 +3085,7 @@ void g_pysong_get(t_pydaw_data* self, int a_lock)
     }
 
     char f_full_path[2048];
-    sprintf(f_full_path, "%s/projects/edmnext/default.pysong",
+    sprintf(f_full_path, "%s/projects/edmnext/song.txt",
         self->project_folder);
 
     if(i_pydaw_file_exists(f_full_path))
@@ -3789,7 +3789,7 @@ void v_pydaw_open_track(t_pydaw_data * self, int a_index)
 void v_pydaw_open_tracks(t_pydaw_data * self)
 {
     char f_file_name[1024];
-    sprintf(f_file_name, "%s/projects/edmnext/default.pytracks",
+    sprintf(f_file_name, "%s/projects/edmnext/tracks.txt",
         self->project_folder);
 
     if(i_pydaw_file_exists(f_file_name))
@@ -3872,7 +3872,7 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
     sprintf(self->samples_folder, "%s/audio/samples",
         self->project_folder);  //No trailing slash on this one
     sprintf(self->wav_pool->samples_folder, "%s", self->samples_folder);
-    sprintf(self->wav_pool_file, "%s/audio/default.pywavs",
+    sprintf(self->wav_pool_file, "%s/audio/wavs.txt",
         self->project_folder);
     sprintf(self->per_audio_item_fx_folder,
         "%s/projects/edmnext/audio_per_item_fx/", self->project_folder);
@@ -3893,7 +3893,7 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
 
     char f_song_file[1024];
     sprintf(f_song_file,
-        "%s/projects/edmnext/default.pysong", self->project_folder);
+        "%s/projects/edmnext/song.txt", self->project_folder);
 
     struct stat f_proj_stat;
     stat((self->project_folder), &f_proj_stat);
@@ -3912,7 +3912,7 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
 
     //TODO:  This should be moved to a separate function
     char f_transport_file[1024];
-    sprintf(f_transport_file, "%s/projects/edmnext/default.pytransport",
+    sprintf(f_transport_file, "%s/projects/edmnext/transport.txt",
             self->project_folder);
 
     if(i_pydaw_file_exists(f_transport_file))
@@ -4212,7 +4212,7 @@ void v_set_tempo(t_pydaw_data * self, float a_tempo)
 void v_pydaw_update_audio_inputs(t_pydaw_data * self)
 {
     char f_inputs_file[1024];
-    sprintf(f_inputs_file, "%s/projects/edmnext/default.pyinput",
+    sprintf(f_inputs_file, "%s/projects/edmnext/input.txt",
         self->project_folder);
 
     if(i_pydaw_file_exists(f_inputs_file))
