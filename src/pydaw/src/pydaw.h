@@ -3867,7 +3867,8 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
     sprintf(self->audio_folder, "%s/audio/files", self->project_folder);
     sprintf(self->audio_tmp_folder, "%s/audio/files/tmp/",
         self->project_folder);
-    sprintf(self->plugins_folder, "%s/projects/plugins/", self->project_folder);
+    sprintf(self->plugins_folder, "%s/projects/edmnext/plugins/",
+        self->project_folder);
     sprintf(self->samples_folder, "%s/audio/samples",
         self->project_folder);  //No trailing slash on this one
     sprintf(self->wav_pool->samples_folder, "%s", self->samples_folder);
@@ -3875,7 +3876,8 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
         self->project_folder);
     sprintf(self->per_audio_item_fx_folder,
         "%s/projects/edmnext/audio_per_item_fx/", self->project_folder);
-    sprintf(self->tracks_folder, "%s/projects/tracks", self->project_folder);
+    sprintf(self->tracks_folder, "%s/projects/edmnext/tracks",
+        self->project_folder);
 
     int f_i = 0;
 
