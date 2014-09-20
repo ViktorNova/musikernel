@@ -140,7 +140,8 @@ static int insTotal, outsTotal;
 static float **pluginInputBuffers, **pluginOutputBuffers;
 
 static int controlInsTotal, controlOutsTotal;
-t_midi_device MIDI_DEVICE  __attribute__((aligned(16)));
+//t_midi_device MIDI_DEVICE  __attribute__((aligned(16)));
+t_midi_device_list * MIDI_DEVICES;
 //static char * osc_path_tmp = "osc.udp://localhost:19271/dssi/pydaw";
 lo_server_thread serverThread;
 
@@ -201,7 +202,13 @@ void v_pydaw_set_cpu_governor()
 
 static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
 {
-    midiPoll(&MIDI_DEVICE);
+    int f_i = 0;
+    while(f_i < MIDI_DEVICES->count)
+    {
+        midiPoll(&MIDI_DEVICES->devices[f_i]);
+        f_i++;
+    }
+
 }
 
 int THREAD_AFFINITY = 0;
@@ -517,7 +524,8 @@ int main(int argc, char **argv)
     /* Instantiate plugins */
 
     plugin = this_instance->plugin;
-    instanceHandles = g_pydaw_instantiate(plugin->descriptor, sample_rate);
+    instanceHandles = g_pydaw_instantiate(plugin->descriptor, sample_rate,
+        MIDI_DEVICES);
     if (!instanceHandles)
     {
         printf("\nError: Failed to instantiate PyDAW\n");
@@ -635,6 +643,31 @@ int main(int argc, char **argv)
                 {
                     sprintf(f_midi_device_name, "%s", f_value_char);
                     printf("midiInDevice: %s\n", f_value_char);
+                    int f_device_result = midiDeviceInit(
+                        &MIDI_DEVICES->devices[MIDI_DEVICES->count],
+                        f_midi_device_name);
+
+                    if(f_device_result == 1)
+                    {
+                        f_failure_count++;
+                        sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
+                            "Error: did not find MIDI device:",
+                            f_midi_device_name);
+                        system(f_cmd_buffer);
+                        continue;
+                    }
+                    else if(f_device_result == 2)
+                    {
+                        f_failure_count++;
+                        sprintf(f_cmd_buffer, "%s \"%s %s, %s\"",
+                            f_show_dialog_cmd, "Error opening MIDI device: ",
+                            f_midi_device_name, Pm_GetErrorText(f_midi_err));
+                        system(f_cmd_buffer);
+                        continue;
+                    }
+
+                    MIDI_DEVICES->count++;
+                    f_with_midi = 1;
                 }
                 else
                 {
@@ -644,30 +677,6 @@ int main(int argc, char **argv)
             }
 
             g_free_2d_char_array(f_current_string);
-
-            int f_device_result = midiDeviceInit(
-                &MIDI_DEVICE, f_midi_device_name);
-
-            if(f_device_result == 1)
-            {
-                f_failure_count++;
-                sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
-                        "Error: did not find MIDI device:",
-                        f_midi_device_name);
-                system(f_cmd_buffer);
-                continue;
-            }
-            else if(f_device_result == 2)
-            {
-                f_failure_count++;
-                sprintf(f_cmd_buffer, "%s \"%s %s, %s\"", f_show_dialog_cmd,
-                        "Error opening MIDI device: ",
-                        f_midi_device_name, Pm_GetErrorText(f_midi_err));
-                system(f_cmd_buffer);
-                continue;
-            }
-
-            f_with_midi = 1;
 
         }
         else
@@ -700,8 +709,7 @@ int main(int argc, char **argv)
         inputParameters.channelCount = 0;
         inputParameters.sampleFormat = PA_SAMPLE_TYPE;
         inputParameters.suggestedLatency =
-                Pa_GetDeviceInfo(inputParameters.device )->
-                defaultLowInputLatency;
+            Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
         inputParameters.hostApiSpecificStreamInfo = NULL;
 
         if (outputParameters.device == paNoDevice)
@@ -715,8 +723,7 @@ int main(int argc, char **argv)
         outputParameters.channelCount = 2; /* stereo output */
         outputParameters.sampleFormat = PA_SAMPLE_TYPE;
         outputParameters.suggestedLatency =
-                Pa_GetDeviceInfo(outputParameters.device )->
-                defaultLowOutputLatency;
+            Pa_GetDeviceInfo(outputParameters.device )->defaultLowOutputLatency;
         outputParameters.hostApiSpecificStreamInfo = NULL;
 
         int f_i = 0;
@@ -873,7 +880,12 @@ int main(int argc, char **argv)
         timer_delete(timerid);
     }
 
-    midiDeviceClose(&MIDI_DEVICE);
+    int f_i = 0;
+    while(f_i < MIDI_DEVICES->count)
+    {
+        midiDeviceClose(&MIDI_DEVICES->devices[f_i]);
+        f_i++;
+    }
 
     if(!PYDAW_NO_HARDWARE)
     {

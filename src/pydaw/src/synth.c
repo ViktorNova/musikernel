@@ -26,6 +26,7 @@ GNU General Public License for more details.
 #include "../libmodsynth/lib/amp.h"
 #include "pydaw.h"
 #include "synth.h"
+#include "midi_device.h"
 
 
 
@@ -69,14 +70,16 @@ static void v_pydaw_connect_port(PYFX_Handle instance, int port,
     }
 }
 
-static PYFX_Handle g_pydaw_instantiate(PYFX_Descriptor * descriptor, int s_rate)
+static PYFX_Handle g_pydaw_instantiate(
+    PYFX_Descriptor * descriptor, int s_rate,
+    t_midi_device_list * a_midi_devices)
 {
     t_pydaw_engine *plugin_data =
             (t_pydaw_engine *) malloc(sizeof(t_pydaw_engine));
     plugin_data->input_arr =
             (PYFX_Data**)malloc(sizeof(PYFX_Data*) * PYDAW_INPUT_COUNT);
 
-    pydaw_data = g_pydaw_data_get(s_rate);
+    pydaw_data = g_pydaw_data_get(s_rate, a_midi_devices);
 
     plugin_data->fs = s_rate;
 

@@ -385,7 +385,7 @@ t_pydaw_seq_event * g_pycc_get(int, float, float);
 t_pydaw_seq_event * g_pypitchbend_get(float a_start, float a_value);
 t_pydaw_seq_event * g_pynote_get(int a_note, int a_vel, float a_start,
                                  float a_length);
-t_pydaw_data * g_pydaw_data_get(float);
+t_pydaw_data * g_pydaw_data_get(float, t_midi_device_list*);
 int i_get_region_index_from_name(t_pydaw_data *, int);
 void v_open_project(t_pydaw_data*, const char*, int);
 void v_set_tempo(t_pydaw_data*,float);
@@ -3563,7 +3563,7 @@ void pydaw_osc_error(int num, const char *msg, const char *path)
 	    num, path, msg);
 }
 
-t_pydaw_data * g_pydaw_data_get(float a_sr)
+t_pydaw_data * g_pydaw_data_get(float a_sr, t_midi_device_list * a_midi_devices)
 {
     t_pydaw_data * f_result = (t_pydaw_data*)malloc(sizeof(t_pydaw_data));
 
@@ -3572,6 +3572,7 @@ t_pydaw_data * g_pydaw_data_get(float a_sr)
 
     pthread_spin_init(&f_result->ui_spinlock, 0);
 
+    f_result->midi_devices = a_midi_devices;
     f_result->midi_learn = 0;
     f_result->sample_rate = a_sr;
     f_result->current_sample = 0;
