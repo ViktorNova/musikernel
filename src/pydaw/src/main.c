@@ -141,7 +141,7 @@ static float **pluginInputBuffers, **pluginOutputBuffers;
 
 static int controlInsTotal, controlOutsTotal;
 //t_midi_device MIDI_DEVICE  __attribute__((aligned(16)));
-t_midi_device_list * MIDI_DEVICES;
+t_midi_device_list MIDI_DEVICES;
 //static char * osc_path_tmp = "osc.udp://localhost:19271/dssi/pydaw";
 lo_server_thread serverThread;
 
@@ -203,9 +203,9 @@ void v_pydaw_set_cpu_governor()
 static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
 {
     int f_i = 0;
-    while(f_i < MIDI_DEVICES->count)
+    while(f_i < MIDI_DEVICES.count)
     {
-        midiPoll(&MIDI_DEVICES->devices[f_i]);
+        midiPoll(&MIDI_DEVICES.devices[f_i]);
         f_i++;
     }
 
@@ -520,17 +520,13 @@ int main(int argc, char **argv)
         ++out;
     }
 
+    MIDI_DEVICES.count = 0;
 
     /* Instantiate plugins */
 
     plugin = this_instance->plugin;
     instanceHandles = g_pydaw_instantiate(plugin->descriptor, sample_rate,
-        MIDI_DEVICES);
-    if (!instanceHandles)
-    {
-        printf("\nError: Failed to instantiate PyDAW\n");
-        return 1;
-    }
+        &MIDI_DEVICES);
 
     /* Create OSC thread */
 
@@ -644,29 +640,29 @@ int main(int argc, char **argv)
                     sprintf(f_midi_device_name, "%s", f_value_char);
                     printf("midiInDevice: %s\n", f_value_char);
                     int f_device_result = midiDeviceInit(
-                        &MIDI_DEVICES->devices[MIDI_DEVICES->count],
+                        &MIDI_DEVICES.devices[MIDI_DEVICES.count],
                         f_midi_device_name);
 
                     if(f_device_result == 1)
                     {
-                        f_failure_count++;
+                        /*f_failure_count++;
                         sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
                             "Error: did not find MIDI device:",
                             f_midi_device_name);
                         system(f_cmd_buffer);
-                        continue;
+                        continue;*/
                     }
                     else if(f_device_result == 2)
                     {
-                        f_failure_count++;
+                        /*f_failure_count++;
                         sprintf(f_cmd_buffer, "%s \"%s %s, %s\"",
                             f_show_dialog_cmd, "Error opening MIDI device: ",
                             f_midi_device_name, Pm_GetErrorText(f_midi_err));
                         system(f_cmd_buffer);
-                        continue;
+                        continue;*/
                     }
 
-                    MIDI_DEVICES->count++;
+                    MIDI_DEVICES.count++;
                     f_with_midi = 1;
                 }
                 else
@@ -881,9 +877,9 @@ int main(int argc, char **argv)
     }
 
     int f_i = 0;
-    while(f_i < MIDI_DEVICES->count)
+    while(f_i < MIDI_DEVICES.count)
     {
-        midiDeviceClose(&MIDI_DEVICES->devices[f_i]);
+        midiDeviceClose(&MIDI_DEVICES.devices[f_i]);
         f_i++;
     }
 
