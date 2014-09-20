@@ -116,17 +116,6 @@ typedef struct
 
 typedef struct
 {
-    // TODO:  Event buffer here
-}t_pydaw_midi_device;
-
-typedef struct
-{
-    int count;
-    t_pydaw_midi_device devices[32];
-}t_pydaw_midi_device_list;
-
-typedef struct
-{
     t_pydaw_seq_event * events[PYDAW_MAX_EVENTS_PER_ITEM_COUNT];
     int event_count;
     //Used to avoid reading the same event twice in an unsorted item.
@@ -370,7 +359,7 @@ typedef struct
     pthread_spinlock_t ui_spinlock;
     int wave_editor_cursor_count;
     t_pydaw_plugin * plugin_pool[MAX_PLUGIN_POOL_COUNT];
-    t_pydaw_midi_device_list * midi_devices;
+    t_midi_device_list * midi_devices;
     t_pydaw_midi_routing_list midi_routing;
 }t_pydaw_data;
 

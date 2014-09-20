@@ -42,6 +42,12 @@ typedef struct
     int midiEventWriteIndex;
 }t_midi_device;
 
+typedef struct
+{
+    int count;
+    t_midi_device devices[8];
+}t_midi_device_list;
+
 #ifdef	__cplusplus
 }
 #endif
