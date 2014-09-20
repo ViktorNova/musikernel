@@ -8056,11 +8056,17 @@ class plugin_settings:
         f_copy_action.triggered.connect(self.copy)
         f_paste_action = self.menu.addAction(_("Paste"))
         f_paste_action.triggered.connect(self.paste)
+        self.menu.addSeparator()
+        f_clear_action = self.menu.addAction(_("Clear"))
+        f_clear_action.triggered.connect(self.clear)
 
-    def cut(self):
-        global PLUGIN_SETTINGS_CUT
-        PLUGIN_SETTINGS_CUT = True
-        self.copy()
+#    def cut(self):
+#        global PLUGIN_SETTINGS_CUT
+#        PLUGIN_SETTINGS_CUT = True
+#        self.copy()
+#        self.clear()
+
+    def clear(self):
         self.set_value(pydaw_track_plugin(self.index, 0, -1))
         self.on_plugin_change()
 
