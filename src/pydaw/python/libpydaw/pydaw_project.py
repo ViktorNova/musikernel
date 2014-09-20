@@ -58,6 +58,7 @@ pydaw_folder_tracks = "projects/edmnext/tracks"
 
 pydaw_file_plugin_uid = "projects/edmnext/plugin_uid.txt"
 pydaw_file_routing_graph = "projects/edmnext/routing.txt"
+pydaw_file_midi_routing = "projects/edmnext/midi_routing.txt"
 pydaw_file_pyregions = "projects/edmnext/regions.txt"
 pydaw_file_pyitems = "projects/edmnext/items.txt"
 pydaw_file_pysong = "projects/edmnext/song.txt"
@@ -235,6 +236,8 @@ class pydaw_project:
             self.project_folder, pydaw_file_plugin_uid)
         self.routing_graph_file = "{}/{}".format(
             self.project_folder, pydaw_file_routing_graph)
+        self.midi_routing_file = "{}/{}".format(
+            self.project_folder, pydaw_file_midi_routing)
 
         pydaw_clear_sample_graph_cache()
 
@@ -396,6 +399,17 @@ class pydaw_project:
     def save_routing_graph(self, a_graph):
         self.save_file("", pydaw_file_routing_graph, str(a_graph))
         self.this_pydaw_osc.pydaw_update_track_send()
+
+    def get_midi_routing(self):
+        if os.path.isfile(self.midi_routing_file):
+            with open(self.midi_routing_file) as f_handle:
+                return pydaw_midi_routings.from_str(f_handle.read())
+        else:
+            return pydaw_midi_routings()
+
+    def save_midi_routing(self, a_routing):
+        self.save_file("", pydaw_file_midi_routing, str(a_routing))
+        self.commit("Update MIDI routing")
 
     def get_wavs_dict(self):
         try:
@@ -2801,6 +2815,33 @@ class pydaw_audio_input_track:
     def __str__(self):
         return "{}|{}|{}\n".format(self.vol, self.output, self.input)
 
+class pydaw_midi_route:
+    def __init__(self, a_on, a_track_num, a_device_name):
+        self.on = int(a_on)
+        self.track_num = int(a_track_num)
+        self.device_name = str(a_device_name)
+
+    def __str__(self):
+        return "|".join(
+            str(x) for x in (self.on, self.track_num, self.device_name))
+
+class pydaw_midi_routings:
+    def __init__(self, a_routings=[]):
+        self.routings = a_routings
+
+    def __str__(self):
+        return "\n".join(str(x) for x in self.routings + ["\\"])
+
+    @staticmethod
+    def from_str(a_str):
+        f_routings = []
+        for f_line in a_str.split("\n"):
+            if f_line == "\\":
+                break
+            f_routings.append(pydaw_midi_route(*f_line.split("|", 2)))
+        return pydaw_midi_routings(f_routings)
+
+
 class pydaw_transport:
     def __init__(self, a_bpm=128):
         self.bpm = a_bpm
@@ -2814,46 +2855,6 @@ class pydaw_transport:
         f_arr = f_str.split("|")
         return pydaw_transport(f_arr[0])
 
-class pydaw_cc_map_item:
-    def __init__(self, a_effects_only=False, a_rayv_port=0, a_wayv_port=0,
-                 a_euphoria_port=0, a_modulex_port=0):
-        self.effects_only = bool_to_int(a_effects_only)
-        self.rayv_port = int(a_rayv_port)
-        self.wayv_port = int(a_wayv_port)
-        self.euphoria_port = int(a_euphoria_port)
-        self.modulex_port = int(a_modulex_port)
-
-    def __str__(self):
-        return "{}\n".format("|".join(map(proj_file_str,
-            (self.effects_only, self.rayv_port, self.wayv_port,
-            self.euphoria_port, self.modulex_port))))
-
-class pydaw_cc_map:
-    def __init__(self):
-        self.map = {}
-
-    def add_item(self, a_cc, a_item):
-        self.map[int(a_cc)] = a_item
-
-    def __str__(self):
-        f_result = ""
-        for k, v in list(self.map.items()):
-            f_result += "{}|{}".format(k, v)
-        f_result += pydaw_terminating_char
-        return f_result
-
-    @staticmethod
-    def from_str(a_str):
-        f_result = pydaw_cc_map()
-        f_arr = a_str.split("\n")
-        for f_line in f_arr:
-            if f_line == pydaw_terminating_char:
-                break
-            f_line_arr = f_line.split("|")
-            f_result.map[int(f_line_arr[0])] = pydaw_cc_map_item(
-                int_to_bool(f_line_arr[1]), f_line_arr[2], f_line_arr[3],
-                f_line_arr[4], f_line_arr[5])
-        return f_result
 
 #From old sample_graph..py
 pydaw_audio_item_scene_height = 1200.0

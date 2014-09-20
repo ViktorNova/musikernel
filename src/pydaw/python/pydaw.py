@@ -7976,8 +7976,10 @@ class item_list_editor:
 
 
 class midi_device:
-    def __init__(self, a_name, a_index, a_layout):
+    def __init__(self, a_name, a_index, a_layout, a_save_callback):
+        self.name = str(a_name)
         self.index = int(a_index)
+        self.save_callback = a_save_callback
         self.record_checkbox = QtGui.QCheckBox()
         self.record_checkbox.toggled.connect(self.device_changed)
         f_index = int(a_index) + 1
@@ -7996,7 +7998,16 @@ class midi_device:
         PROJECT.this_pydaw_osc.pydaw_midi_device(
             self.record_checkbox.isChecked(), self.index,
             self.track_combobox.currentIndex())
+        self.save_callback()
 
+    def get_routing(self):
+        return pydaw_midi_route(
+            1 if self.record_checkbox.isChecked() else 0,
+            self.track_combobox.currentIndex(), self.name)
+
+    def set_routing(self, a_routing):
+        self.track_combobox.setCurrentIndex(a_routing.track_num)
+        self.record_checkbox.setChecked(a_routing.on)
 
 class midi_devices_dialog:
     def __init__(self):
@@ -8007,9 +8018,28 @@ class midi_devices_dialog:
         self.layout.addWidget(QtGui.QLabel(_("MIDI Device")), 0, 1)
         self.layout.addWidget(QtGui.QLabel(_("Output")), 0, 2)
         self.devices = []
+        self.devices_dict = {}
         for f_name, f_i in zip(
         pydaw_util.MIDI_IN_DEVICES, range(len(pydaw_util.MIDI_IN_DEVICES))):
-            self.devices.append(midi_device(f_name, f_i, self.layout))
+            f_device = midi_device(
+                f_name, f_i, self.layout, self.save_callback)
+            self.devices.append(f_device)
+            self.devices_dict[f_name] = f_device
+
+    def get_routings(self):
+        return pydaw_midi_routings([x.get_routing() for x in self.devices])
+
+    def save_callback(self):
+        PROJECT.save_midi_routing(self.get_routings())
+
+    def on_ready(self):
+        self.set_routings()
+
+    def set_routings(self):
+        f_routings = PROJECT.get_midi_routing()
+        for f_routing in f_routings.routings:
+            if f_routing.device_name in self.devices_dict:
+                self.devices_dict[f_routing.device_name].set_routing(f_routing)
 
 PLUGIN_SETTINGS_COPY_OBJ = None
 PLUGIN_SETTINGS_CUT = False
@@ -8544,8 +8574,7 @@ class transport_widget:
         self.overdub_checkbox.clicked.connect(self.on_overdub_changed)
         self.playback_vlayout.addWidget(self.overdub_checkbox)
 
-        self.midi_devices = midi_devices_dialog()
-        self.playback_vlayout.addLayout(self.midi_devices.layout)
+        self.playback_vlayout.addLayout(MIDI_DEVICES_DIALOG.layout)
         self.active_devices = []
 
         self.menu_button = QtGui.QPushButton(_("Menu"))
@@ -8784,7 +8813,7 @@ class transport_widget:
             return
         if self.is_recording:
             return
-        self.active_devices = [x for x in self.midi_devices.devices
+        self.active_devices = [x for x in MIDI_DEVICES_DIALOG.devices
             if x.record_checkbox.isChecked()]
         if not self.active_devices:
             QtGui.QMessageBox.warning(
@@ -10054,7 +10083,7 @@ class pydaw_main_window(QtGui.QMainWindow):
                 if IS_PLAYING:
                     WAVE_EDITOR.set_playback_cursor(float(a_val))
             elif a_key == "ready":
-                for f_widget in (TRANSPORT,):
+                for f_widget in (TRANSPORT, MIDI_DEVICES_DIALOG):
                     f_widget.on_ready()
         #This prevents multiple events from moving the same control,
         #only the last goes through
@@ -11034,6 +11063,7 @@ def open_pydaw_engine(a_project_path):
     print(f_cmd)
     PYDAW_SUBPROCESS = subprocess.Popen([f_cmd], shell=True)
 
+MIDI_DEVICES_DIALOG = midi_devices_dialog()
 TRANSPORT = transport_widget()
 AUDIO_SEQ_WIDGET = audio_items_viewer_widget()
 
