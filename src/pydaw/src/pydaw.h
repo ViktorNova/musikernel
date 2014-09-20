@@ -87,6 +87,7 @@ GNU General Public License for more details.
 #include "pydaw_audio_util.h"
 #include "synth.h"
 #include <lo/lo.h>
+#include "midi_device.h"
 
 #ifdef SCHED_DEADLINE
 

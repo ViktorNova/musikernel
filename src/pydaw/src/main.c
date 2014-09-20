@@ -201,7 +201,7 @@ void v_pydaw_set_cpu_governor()
 
 static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
 {
-    assert(0);
+    midiPoll(&MIDI_DEVICE);
 }
 
 int THREAD_AFFINITY = 0;
@@ -873,11 +873,11 @@ int main(int argc, char **argv)
         timer_delete(timerid);
     }
 
-    assert(0);  // TODO:  close the MIDI devices
+    midiDeviceClose(&MIDI_DEVICE);
 
     if(!PYDAW_NO_HARDWARE)
     {
-        err = Pa_CloseStream( stream );
+        err = Pa_CloseStream(stream);
         Pa_Terminate();
         Pm_Terminate();
     }
