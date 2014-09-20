@@ -28,7 +28,6 @@ GNU General Public License for more details.
 #include "pydaw_files.h"
 #include "../include/pydaw_plugin.h"
 #include <portaudio.h>
-#include <portmidi.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -67,6 +66,7 @@ GNU General Public License for more details.
 
 #include "main.h"
 #include "synth.c"
+#include "midi_device.h"
 
 #define PYDAW_CONFIGURE_KEY_SS "ss"
 #define PYDAW_CONFIGURE_KEY_OS "os"
@@ -122,14 +122,6 @@ GNU General Public License for more details.
 #define PYDAW_CONFIGURE_KEY_UPDATE_SEND "ts"
 #define PYDAW_CONFIGURE_KEY_SEND_VOL "sv"
 
-//low-level MIDI stuff
-#define MIDI_NOTE_OFF       0x80
-#define MIDI_NOTE_ON        0x90
-#define MIDI_CC             0xB0
-#define MIDI_PITCH_BEND     0xE0
-#define MIDI_EOX            0xF7
-
-
 #define CLOCKID CLOCK_REALTIME
 #define SIG SIGRTMIN
 
@@ -143,14 +135,12 @@ static float sample_rate;
 static d3h_instance_t *this_instance;
 
 static PYFX_Handle    instanceHandles;
-static t_pydaw_seq_event *instanceEventBuffers;
-static int    instanceEventCounts;
 
 static int insTotal, outsTotal;
 static float **pluginInputBuffers, **pluginOutputBuffers;
 
 static int controlInsTotal, controlOutsTotal;
-
+t_midi_device MIDI_DEVICE  __attribute__((aligned(16)));
 //static char * osc_path_tmp = "osc.udp://localhost:19271/dssi/pydaw";
 lo_server_thread serverThread;
 
@@ -158,17 +148,8 @@ static sigset_t _signals;
 
 int exiting = 0;
 
-#define EVENT_BUFFER_SIZE 1024
-static t_pydaw_seq_event midiEventBuffer[EVENT_BUFFER_SIZE]; /* ring buffer */
-
 int PYDAW_NO_HARDWARE = 0;
-
-PmStream *f_midi_stream;
 PmError f_midi_err;
-static PmEvent portMidiBuffer[EVENT_BUFFER_SIZE];
-
-static int midiEventReadIndex __attribute__((aligned(16))) = 0;
-static int midiEventWriteIndex __attribute__((aligned(16))) = 0;
 
 void osc_error(int num, const char *m, const char *path);
 
@@ -218,188 +199,9 @@ void v_pydaw_set_cpu_governor()
 #endif
 
 
-void midiReceive(unsigned char status, unsigned char control, char value)
-{
-    unsigned char channel = status & 0x0F;
-    unsigned char opCode = status & 0xF0;
-    if (opCode >= 0xF0)
-    {
-        opCode = status;
-    }
-
-    //int twoBytes = 1;
-    struct timeval tv;
-
-    if (midiEventReadIndex == midiEventWriteIndex + 1)
-    {
-        printf("Warning: MIDI event buffer overflow!  "
-                "ignoring incoming event\n");
-        return;
-    }
-
-    switch (opCode)
-    {
-        case MIDI_PITCH_BEND:
-        {
-            //twoBytes = 0;
-            int f_pb_val = ((value << 7) | control) - 8192;
-            v_pydaw_ev_set_pitchbend(&midiEventBuffer[midiEventWriteIndex],
-                    channel, f_pb_val);
-            midiEventWriteIndex++;
-            //printf("MIDI PITCHBEND status %i ch %i, value %i\n",
-            //      status, channel+1, f_pb_val);
-        }
-            break;
-        case MIDI_NOTE_OFF:
-            v_pydaw_ev_set_noteoff(&midiEventBuffer[midiEventWriteIndex],
-                    channel, control, value);
-            midiEventWriteIndex++;
-            /*printf("MIDI NOTE_OFF status %i (ch %i, opcode %i), ctrl %i, "
-                    "val %i\n", status, channel+1, (status & 255)>>4, control,
-                    value);*/
-            break;
-        case MIDI_NOTE_ON:
-            if(value == 0)
-            {
-                v_pydaw_ev_set_noteoff(&midiEventBuffer[midiEventWriteIndex],
-                        channel, control, value);
-            }
-            else
-            {
-                v_pydaw_ev_set_noteon(&midiEventBuffer[midiEventWriteIndex],
-                        channel, control, value);
-            }
-            midiEventWriteIndex++;
-            /*printf("MIDI NOTE_ON status %i (ch %i, opcode %i), ctrl %i, "
-                    "val %i\n", status, channel+1, (status & 255)>>4, control,
-                    value);*/
-            break;
-        //case MIDI_AFTERTOUCH:
-        case MIDI_CC:
-            v_pydaw_ev_set_controller(&midiEventBuffer[midiEventWriteIndex],
-                    channel, control, value);
-            midiEventWriteIndex++;
-            /*printf("MIDI CC status %i (ch %i, opcode %i), ctrl %i, "
-                    "val %i\n", status, channel+1, (status & 255)>>4, control,
-                    value);*/
-            break;
-        default:
-            //twoBytes = 0;
-            /*message = QString("MIDI status 0x%1")
-                 .arg(QString::number(status, 16).toUpper());*/
-            break;
-    }
-
-    /* At this point we change the event timestamp so that its
-   real-time field contains the actual time at which it was
-   received and processed (i.e. now).  Then in the audio
-   callback we use that to calculate frame offset. */
-
-    gettimeofday(&tv, NULL);
-    midiEventBuffer[midiEventWriteIndex].tv_sec = tv.tv_sec;
-    midiEventBuffer[midiEventWriteIndex].tv_nsec = tv.tv_usec * 1000L;
-
-    if(midiEventWriteIndex >= EVENT_BUFFER_SIZE)
-    {
-        midiEventWriteIndex = 0;
-    }
-}
-
 static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
 {
-    PmError f_poll_result;
-    int f_bInSysex = 0;
-    unsigned char status;
-    //int f_cReceiveMsg_index = 0;
-    int i;
-
-    f_poll_result = Pm_Poll(f_midi_stream);
-    if(f_poll_result < 0)
-    {
-        printf("Portmidi error %s\n", Pm_GetErrorText(f_poll_result));
-    }
-    else if(f_poll_result > 0)
-    {
-        int numEvents = Pm_Read(f_midi_stream, portMidiBuffer,
-                EVENT_BUFFER_SIZE);
-
-        if (numEvents < 0)
-        {
-            printf("PortMidi error: %s\n", Pm_GetErrorText((PmError)numEvents));
-        }
-        else if(numEvents > 0)
-        {
-            for (i = 0; i < numEvents; i++)
-            {
-                status = Pm_MessageStatus(portMidiBuffer[i].message);
-
-                if ((status & 0xF8) == 0xF8) {
-                    // Handle real-time MIDI messages at any time
-                    midiReceive(status, 0, 0);
-                }
-
-                reprocessMessage:
-
-                if (!f_bInSysex) {
-                    if (status == 0xF0) {
-                        f_bInSysex = 1;
-                        status = 0;
-                    } else {
-                        //unsigned char channel = status & 0x0F;
-                        unsigned char note = Pm_MessageData1(
-                                portMidiBuffer[i].message);
-                        unsigned char velocity = Pm_MessageData2(
-                                portMidiBuffer[i].message);
-                        midiReceive(status, note, velocity);
-                    }
-                }
-
-                if(f_bInSysex)
-                {
-                    // Abort (drop) the current System Exclusive message if a
-                    //  non-realtime status byte was received
-                    if (status > 0x7F && status < 0xF7)
-                    {
-                        f_bInSysex = 0;
-                        //f_cReceiveMsg_index = 0;
-                        printf("Buggy MIDI device: SysEx interrupted!\n");
-                        goto reprocessMessage;    // Don't lose the new message
-                    }
-
-                    // Collect bytes from PmMessage
-                    int data = 0;
-                    int shift;
-                    for (shift = 0; shift < 32 && (data != MIDI_EOX);
-                            shift += 8)
-                    {
-                        if ((data & 0xF8) == 0xF8)
-                        {
-                            // Handle real-time messages at any time
-                            midiReceive(data, 0, 0);
-                        }
-                        else
-                        {
-                            //m_cReceiveMsg[m_cReceiveMsg_index++] = data =
-                            //    (portMidiBuffer[i].message >> shift) & 0xFF;
-                        }
-                    }
-
-                    // End System Exclusive message if the EOX byte was received
-                    if (data == MIDI_EOX)
-                    {
-                        f_bInSysex = 0;
-                        printf("Dropping MIDI message in if "
-                                "(data == MIDI_EOX)\n");
-                        //const char* buffer =
-                                //reinterpret_cast<const char*>(m_cReceiveMsg);
-                        //receive(QByteArray::fromRawData(buffer,
-                        //        m_cReceiveMsg_index));
-                        //f_cReceiveMsg_index = 0;
-                    } //if (data == MIDI_EOX)
-                } //if(f_bInSysex)
-            } //for (i = 0; i < numEvents; i++)
-        } //else if(numEvents > 0)
-    } //else if(f_poll_result > 0)
+    assert(0);
 }
 
 int THREAD_AFFINITY = 0;
@@ -413,10 +215,8 @@ static int portaudioCallback( const void *inputBuffer,
                               void *userData )
 {
     unsigned int i;
-    int outCount;
     //int inCount;
-    struct timeval tv, evtv, diff;
-    long framediff;
+    int outCount;
 
     float *out = (float*)outputBuffer;
 
@@ -437,123 +237,11 @@ static int portaudioCallback( const void *inputBuffer,
         THREAD_AFFINITY_SET = 1;
     }
 
-    gettimeofday(&tv, NULL);
-
-    /* Not especially pretty or efficient */
-
-    instanceEventCounts = 0;
-
-    while(midiEventReadIndex != midiEventWriteIndex)
-    {
-	t_pydaw_seq_event *ev = &midiEventBuffer[midiEventReadIndex];
-
-        /*
-        if (!v_pydaw_ev_is_channel_type(ev))
-        {
-            midiEventReadIndex++
-            //discard non-channel oriented messages
-            continue;
-        }
-        */
-        i = 0; //instance->number;
-
-        /* Stop processing incoming MIDI if an instance's event buffer is
-         * full. */
-	if (instanceEventCounts == EVENT_BUFFER_SIZE)
-            break;
-
-	/* Each event has a real-time timestamp indicating when it was
-	 * received (set by midi_callback).  We need to calculate the
-	 * difference between then and the start of the audio callback
-	 * (held in tv), and use that to assign a frame offset, to
-	 * avoid jitter.  We should stop processing when we reach any
-	 * event received after the start of the audio callback. */
-
-	evtv.tv_sec = ev->tv_sec;
-	evtv.tv_usec = ev->tv_nsec / 1000;
-
-	if (evtv.tv_sec > tv.tv_sec ||
-	    (evtv.tv_sec == tv.tv_sec && evtv.tv_usec > tv.tv_usec))
-        {
-	    break;
-	}
-
-	diff.tv_sec = tv.tv_sec - evtv.tv_sec;
-	if (tv.tv_usec < evtv.tv_usec)
-        {
-	    --diff.tv_sec;
-	    diff.tv_usec = tv.tv_usec + 1000000 - evtv.tv_usec;
-	}
-        else
-        {
-	    diff.tv_usec = tv.tv_usec - evtv.tv_usec;
-	}
-
-	framediff =
-	    diff.tv_sec * sample_rate +
-	    ((diff.tv_usec / 1000) * sample_rate) / 1000 +
-	    ((diff.tv_usec - 1000 * (diff.tv_usec / 1000)) * sample_rate)
-            / 1000000;
-
-	if (framediff >= framesPerBuffer) framediff = framesPerBuffer - 1;
-	else if (framediff < 0) framediff = 0;
-
-	ev->tick = framesPerBuffer - framediff - 1;
-        int f_max_tick = framesPerBuffer - 1;
-
-        if(ev->tick < 0)
-        {
-            ev->tick = 0;
-        }
-        else if(ev->tick > f_max_tick)
-        {
-            ev->tick = f_max_tick;
-        }
-
-	if (ev->type == PYDAW_EVENT_CONTROLLER)
-        {
-	    int controller = ev->param;
-
-	    if (controller == 0)
-            {
-                // bank select MSB
-
-	    }
-            else if (controller == 32)
-            {
-                // bank select LSB
-	    }
-            else if (controller > 0 && controller < MIDI_CONTROLLER_COUNT)
-            {
-                instanceEventBuffers[instanceEventCounts] = *ev;
-                instanceEventCounts++;
-	    }
-            else
-            {
-                assert(0);
-            }
-	}
-        else
-        {
-            instanceEventBuffers[instanceEventCounts] = *ev;
-            instanceEventCounts++;
-	}
-
-        midiEventReadIndex++;
-        if(midiEventReadIndex >= EVENT_BUFFER_SIZE)
-        {
-            midiEventReadIndex = 0;
-        }
-    }
-
     i = 0;
     outCount = 0;
     outCount += this_instance->plugin->outs;
 
-    assert(instanceEventCounts < EVENT_BUFFER_SIZE);
-
-    v_pydaw_run(instanceHandles, framesPerBuffer, instanceEventBuffers,
-            instanceEventCounts);
+    v_pydaw_run(instanceHandles, framesPerBuffer);
 
     for( i=0; i < framesPerBuffer; i++ )
     {
@@ -753,11 +441,6 @@ int main(int argc, char **argv)
 
     instanceHandles = (PYFX_Handle *)malloc(sizeof(PYFX_Handle));
 
-    instanceEventCounts = 0;
-
-    instanceEventBuffers = (t_pydaw_seq_event *)malloc(
-            EVENT_BUFFER_SIZE * sizeof(t_pydaw_seq_event));
-
     sample_rate = 44100.0f;
 
 
@@ -773,8 +456,6 @@ int main(int argc, char **argv)
     /*Initialize Portmidi*/
     f_midi_err = Pm_Initialize();
     int f_with_midi = 0;
-    PmDeviceID f_device_id = pmNoDevice;
-
 
     char f_midi_device_name[1024];
     sprintf(f_midi_device_name, "None");
@@ -964,49 +645,30 @@ int main(int argc, char **argv)
 
             g_free_2d_char_array(f_current_string);
 
+            int f_device_result = midiDeviceInit(
+                &MIDI_DEVICE, f_midi_device_name);
 
-            if(strcmp(f_midi_device_name, "None"))
+            if(f_device_result == 1)
             {
-                f_device_id = pmNoDevice;
-                int f_i = 0;
-                while(f_i < Pm_CountDevices())
-                {
-                    const PmDeviceInfo * f_device = Pm_GetDeviceInfo(f_i);
-                    if(f_device->input && !strcmp(f_device->name,
-                            f_midi_device_name))
-                    {
-                        f_device_id = f_i;
-                        break;
-                    }
-                    f_i++;
-                }
-
-                if(f_device_id == pmNoDevice)
-                {
-                    f_failure_count++;
-                    sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
-                            "Error: did not find MIDI device:",
-                            f_midi_device_name);
-                    system(f_cmd_buffer);
-                    continue;
-                }
-
-                printf("Opening MIDI device ID: %i\n", f_device_id);
-                f_midi_err = Pm_OpenInput(&f_midi_stream, f_device_id, NULL,
-                        EVENT_BUFFER_SIZE, NULL, NULL);
-
-                if(f_midi_err != pmNoError)
-                {
-                    f_failure_count++;
-                    sprintf(f_cmd_buffer, "%s \"%s %s, %s\"", f_show_dialog_cmd,
-                            "Error opening MIDI device: ",
-                            f_midi_device_name, Pm_GetErrorText(f_midi_err));
-                    system(f_cmd_buffer);
-                    continue;
-                }
-
-                f_with_midi = 1;
+                f_failure_count++;
+                sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
+                        "Error: did not find MIDI device:",
+                        f_midi_device_name);
+                system(f_cmd_buffer);
+                continue;
             }
+            else if(f_device_result == 2)
+            {
+                f_failure_count++;
+                sprintf(f_cmd_buffer, "%s \"%s %s, %s\"", f_show_dialog_cmd,
+                        "Error opening MIDI device: ",
+                        f_midi_device_name, Pm_GetErrorText(f_midi_err));
+                system(f_cmd_buffer);
+                continue;
+            }
+
+            f_with_midi = 1;
+
         }
         else
         {
@@ -1209,8 +871,9 @@ int main(int argc, char **argv)
     if(f_with_midi)
     {
         timer_delete(timerid);
-        f_midi_err = Pm_Close(f_midi_stream);
     }
+
+    assert(0);  // TODO:  close the MIDI devices
 
     if(!PYDAW_NO_HARDWARE)
     {

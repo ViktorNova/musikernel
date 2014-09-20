@@ -31,8 +31,7 @@ GNU General Public License for more details.
 
 static PYFX_Descriptor *LMSLDescriptor = NULL;
 
-void v_pydaw_run(PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event *events, int event_count);
+void v_pydaw_run(PYFX_Handle instance, int sample_count);
 
 PYFX_Descriptor *PYFX_descriptor(int index)
 {
@@ -93,8 +92,7 @@ void v_pydaw_activate(PYFX_Handle instance, int a_thread_count,
             a_set_thread_affinity);
 }
 
-void v_pydaw_run(PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event *events, int event_count)
+void v_pydaw_run(PYFX_Handle instance, int sample_count)
 {
     t_pydaw_engine *plugin_data = (t_pydaw_engine *) instance;
 
@@ -106,8 +104,7 @@ void v_pydaw_run(PYFX_Handle instance, int sample_count,
         long f_next_current_sample =
             ((pydaw_data->current_sample) + sample_count);
         v_pydaw_run_main_loop(
-                pydaw_data, sample_count, events, event_count,
-                f_next_current_sample,
+                pydaw_data, sample_count, f_next_current_sample,
                 plugin_data->output0, plugin_data->output1,
                 plugin_data->input_arr);
         pydaw_data->current_sample = f_next_current_sample;

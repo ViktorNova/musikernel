@@ -365,8 +365,6 @@ typedef struct
     pthread_t osc_queue_thread;
     int f_region_length_bars;
     long f_next_current_sample;
-    t_pydaw_seq_event * events;
-    int event_count;
     //Threads must hold this to write OSC messages
     pthread_spinlock_t ui_spinlock;
     int wave_editor_cursor_count;
@@ -422,8 +420,8 @@ void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
 inline void v_pydaw_process_external_midi(t_pydaw_data * pydaw_data,
         t_pytrack * a_track, int sample_count);
 inline void v_pydaw_run_main_loop(t_pydaw_data * pydaw_data, int sample_count,
-        t_pydaw_seq_event *events, int event_count, long f_next_current_sample,
-        PYFX_Data *output0, PYFX_Data *output1, PYFX_Data **a_input_buffers);
+        long f_next_current_sample, PYFX_Data *output0, PYFX_Data *output1,
+        PYFX_Data **a_input_buffers);
 void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         int a_start_bar, int a_end_region, int a_end_bar, char * a_file_out,
         int a_is_audio_glue);
@@ -2097,7 +2095,8 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
         return;
     }
 
-    a_track->extern_midi_count = self->event_count;
+    assert(0);  //TODO:  assign events and count...
+    a_track->extern_midi_count = 0;  //self->event_count;
     t_pydaw_seq_event * events = a_track->extern_midi;
 
     assert(a_track->extern_midi_count < 200);
@@ -2419,14 +2418,12 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
 
 
 inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
-        t_pydaw_seq_event *events, int event_count, long f_next_current_sample,
-        PYFX_Data *output0, PYFX_Data *output1, PYFX_Data **a_input_buffers)
+        long f_next_current_sample, PYFX_Data *output0, PYFX_Data *output1,
+        PYFX_Data **a_input_buffers)
 {
     self->sample_count = sample_count;
     self->input_buffers = a_input_buffers;
     self->f_next_current_sample = f_next_current_sample;
-    self->events = events;
-    self->event_count = event_count;
 
     if((self->playback_mode) > 0)
     {
@@ -2567,8 +2564,8 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
 }
 
 inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
-        t_pydaw_seq_event *events, int event_count, long f_next_current_sample,
-        PYFX_Data *output0, PYFX_Data *output1, PYFX_Data **a_input_buffers)
+        long f_next_current_sample, PYFX_Data *output0, PYFX_Data *output1,
+        PYFX_Data **a_input_buffers)
 {
     if(self->is_ab_ing)
     {
@@ -2577,7 +2574,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
     else
     {
         v_pydaw_run_engine(
-            self, sample_count, events, event_count, f_next_current_sample,
+            self, sample_count, f_next_current_sample,
             output0, output1, a_input_buffers);
     }
 
@@ -4445,8 +4442,8 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         }
         else
         {
-            v_pydaw_run_main_loop(self, f_block_size, NULL, 0,
-                    f_next_sample_block, f_buffer0, f_buffer1, 0);
+            v_pydaw_run_main_loop(self, f_block_size,
+                f_next_sample_block, f_buffer0, f_buffer1, 0);
         }
 
         self->current_sample = f_next_sample_block;
@@ -4949,7 +4946,8 @@ void v_pydaw_set_midi_device(
 
     if(f_route->on)
     {
-        f_track_new->extern_midi = self->events;
+        assert(0);  //TODO:  set events and/or device
+        f_track_new->extern_midi = 0; //self->events;
     }
     else
     {
