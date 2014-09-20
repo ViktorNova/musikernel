@@ -736,8 +736,8 @@ class pydaw_project:
                 "\n####\n####\n".format(a_uid))
             return a_uid
 
-    def save_recorded_items(self, a_item_name, a_mrec_list,
-                            a_overdub, a_track_num, a_tempo, a_sr):
+    def save_recorded_items(
+            self, a_item_name, a_mrec_list, a_overdub, a_tempo, a_sr):
         # TODO:  Ensure that the user can't switch MIDI device/track during
         # recording, but can during playback...
         f_mrec_items = [x.split("|") for x in a_mrec_list]
@@ -763,16 +763,16 @@ class pydaw_project:
                         return f_item.item_uid
             return None
 
-        def new_take():
+        def new_take(a_track_num):
             self.rec_take = []
             f_length = f_current_region.get_length()
             for f_i in range(f_length):
                 if a_overdub:
                     copy_item(f_i)
                 else:
-                    new_item(f_i)
+                    new_item(f_i, a_track_num)
 
-        def new_item(a_bar):
+        def new_item(a_bar, a_track_num):
             f_name = self.get_next_default_item_name(f_item_name)
             f_uid = self.create_empty_item(f_name)
             f_item = self.get_item_by_uid(f_uid)
@@ -781,7 +781,7 @@ class pydaw_project:
             f_current_region.add_item_ref_by_uid(
                 a_track_num, a_bar, f_uid)
 
-        def copy_item(a_bar):
+        def copy_item(a_bar, a_track_num):
             f_uid = get_item(a_track_num, a_bar)
             if f_uid is not None:
                 f_old_name = f_items_dict.get_name_by_uid(f_uid)
@@ -794,7 +794,7 @@ class pydaw_project:
                 f_current_region.add_item_ref_by_uid(
                     a_track_num, a_bar, f_uid)
             else:
-                new_item(a_bar)
+                new_item(a_bar, a_track_num)
 
         def set_note_length(f_note_num):
             f_note = f_note_tracker[f_note_num]
@@ -804,7 +804,7 @@ class pydaw_project:
             print(f_note_tracker.pop(f_note_num))
 
         for f_event in f_mrec_items:
-            f_type, f_region, f_bar, f_beat = f_event[:4]
+            f_type, f_region, f_bar, f_beat, f_track = f_event[:5]
             f_region = int(f_region)
             f_bar = int(f_bar)
             f_beat = float(f_beat)
@@ -828,13 +828,13 @@ class pydaw_project:
             f_last_region != f_region or \
             f_last_bar != f_bar:
                 if f_is_looping or f_region != f_last_region:
-                    new_take()
+                    new_take(f_track)
                 self.rec_item = self.rec_take[f_bar]
                 f_last_region = f_region
                 f_last_bar = f_bar
 
             if f_type == "on":
-                f_note_num, f_velocity, f_tick = (int(x) for x in f_event[4:])
+                f_note_num, f_velocity, f_tick = (int(x) for x in f_event[5:])
                 print("New note: {} {} {}".format(f_bar, f_beat, f_note_num))
                 f_note = pydaw_note(f_beat, 1.0, f_note_num, f_velocity)
                 f_note.start_sample = f_tick
@@ -843,13 +843,13 @@ class pydaw_project:
                 f_note_tracker[f_note_num] = f_note
                 self.rec_item.add_note(f_note, a_check=False)
             elif f_type == "off":
-                f_note_num, f_tick = (int(x) for x in f_event[4:])
+                f_note_num, f_tick = (int(x) for x in f_event[5:])
                 if f_note_num in f_note_tracker:
                     set_note_length(f_note_num)
                 else:
                     print("Error:  note event not in note tracker")
             elif f_type == "cc":
-                f_port, f_val = f_event[4:]
+                f_port, f_val = f_event[5:]
                 f_port = int(f_port)
                 f_val = float(f_val)
                 f_cc = pydaw_cc(f_beat, f_port, f_val)

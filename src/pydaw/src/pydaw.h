@@ -2114,8 +2114,9 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
 
                 sprintf(
                     f_osc_msg,
-                    "on|%i|%i|%f|%i|%i|%ld", self->current_region,
-                    self->current_bar, f_beat, events[f_i2].note,
+                    "on|%i|%i|%f|%i|%i|%i|%ld", self->current_region,
+                    self->current_bar, f_beat, a_track->track_num,
+                    events[f_i2].note,
                     events[f_i2].velocity,
                     self->current_sample + events[f_i2].tick);
                 v_queue_osc_message("mrec", f_osc_msg);
@@ -2137,8 +2138,9 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
 
                 sprintf(
                     f_osc_msg,
-                    "off|%i|%i|%f|%i|%ld", self->current_region,
-                    self->current_bar, f_beat, events[f_i2].note,
+                    "off|%i|%i|%f|%i|%i|%ld", self->current_region,
+                    self->current_bar, f_beat, a_track->track_num,
+                    events[f_i2].note,
                     self->current_sample + events[f_i2].tick);
                 v_queue_osc_message("mrec", f_osc_msg);
             }
@@ -2156,8 +2158,9 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
 
                 sprintf(
                     f_osc_msg,
-                    "pb|%i|%i|%f|%f", self->current_region,
-                    self->current_bar, f_beat, events[f_i2].value);
+                    "pb|%i|%i|%f|%i|%f", self->current_region,
+                    self->current_bar, f_beat,
+                    a_track->track_num, events[f_i2].value);
                 v_queue_osc_message("mrec", f_osc_msg);
             }
         }
@@ -2187,9 +2190,9 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
                         events[f_i2].tick, self->tempo, self->sample_rate);
 
                 sprintf(f_osc_msg,
-                    "cc|%i|%i|%f|%i|%f",
+                    "cc|%i|%i|%f|%i|%i|%f",
                     self->current_region, self->current_bar, f_beat,
-                    controller, events[f_i2].value);
+                    a_track->track_num, controller, events[f_i2].value);
                 v_queue_osc_message("mrec", f_osc_msg);
             }
         }
@@ -2294,7 +2297,7 @@ inline void v_pydaw_finish_time_params(t_pydaw_data * self,
             {
                 float f_beat = self->ml_current_period_beats;
 
-                sprintf(self->osc_cursor_message, "loop|%i|%i|%f",
+                sprintf(self->osc_cursor_message, "loop|%i|%i|%f|-1",
                     self->current_region, self->current_bar, f_beat);
                 v_queue_osc_message("mrec", self->osc_cursor_message);
             }

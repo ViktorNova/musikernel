@@ -8779,7 +8779,6 @@ class transport_widget:
                 return
             PROJECT.save_recorded_items(
                 f_file_name, MREC_EVENTS, self.overdub_checkbox.isChecked(),
-                self.active_devices[0].track_combobox.currentIndex(),
                 self.tempo_spinbox.value(), pydaw_util.SAMPLE_RATE)
             global_ui_refresh_callback()
             f_window.close()
