@@ -8011,6 +8011,9 @@ class midi_devices_dialog:
         pydaw_util.MIDI_IN_DEVICES, range(len(pydaw_util.MIDI_IN_DEVICES))):
             self.devices.append(midi_device(f_name, f_i, self.layout))
 
+PLUGIN_SETTINGS_COPY_OBJ = None
+PLUGIN_SETTINGS_CUT = False
+
 class plugin_settings:
     def __init__(self, a_index, a_track_num,
                  a_layout, a_save_callback, a_name_callback,
@@ -8043,6 +8046,39 @@ class plugin_settings:
         self.power_checkbox.setChecked(True)
         a_layout.addWidget(self.power_checkbox, a_index + 1, 3)
         self.power_checkbox.clicked.connect(self.on_plugin_change)
+        self.menu_button = QtGui.QPushButton(_("Menu"))
+        a_layout.addWidget(self.menu_button, a_index + 1, 4)
+        self.menu = QtGui.QMenu()
+        self.menu_button.setMenu(self.menu)
+        f_cut_action = self.menu.addAction(_("Cut"))
+        f_cut_action.triggered.connect(self.cut)
+        f_copy_action = self.menu.addAction(_("Copy"))
+        f_copy_action.triggered.connect(self.copy)
+        f_paste_action = self.menu.addAction(_("Paste"))
+        f_paste_action.triggered.connect(self.paste)
+
+    def cut(self):
+        global PLUGIN_SETTINGS_CUT
+        PLUGIN_SETTINGS_CUT = True
+        self.copy()
+        self.set_value(pydaw_track_plugin(self.index, 0, -1))
+        self.on_plugin_change()
+
+    def copy(self):
+        global PLUGIN_SETTINGS_COPY_OBJ
+        PLUGIN_SETTINGS_COPY_OBJ = self.get_value()
+
+    def paste(self):
+        if PLUGIN_SETTINGS_COPY_OBJ is None:
+            return
+        self.set_value(PLUGIN_SETTINGS_COPY_OBJ)
+        global PLUGIN_SETTINGS_CUT
+        if not PLUGIN_SETTINGS_CUT:
+            self.plugin_uid = PROJECT.get_next_plugin_uid()
+            PROJECT.copy_plugin(
+                PLUGIN_SETTINGS_COPY_OBJ.plugin_uid, self.plugin_uid)
+        PLUGIN_SETTINGS_CUT = False
+        self.on_plugin_change()
 
     def automation_check_changed(self):
         if self.automation_radiobutton.isChecked():
@@ -8068,7 +8104,7 @@ class plugin_settings:
             self.index, self.get_plugin_uid(), self.plugin_uid,
             a_power=1 if self.power_checkbox.isChecked() else 0)
 
-    def on_plugin_change(self, a_val):
+    def on_plugin_change(self, a_val=None):
         if self.suppress_osc:
             return
         f_index = self.get_plugin_uid()

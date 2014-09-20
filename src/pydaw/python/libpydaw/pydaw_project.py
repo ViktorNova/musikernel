@@ -884,6 +884,16 @@ class pydaw_project:
         else:
             return None
 
+    def copy_plugin(self, a_old, a_new):
+        f_old_path = "{}/{}".format(self.plugin_pool_folder, a_old)
+        if os.path.exists(f_old_path):
+            with open(f_old_path) as file_handle:
+                self.save_file(
+                    pydaw_folder_plugins, a_new, file_handle.read())
+                self.commit("Copy plugin UID {} to {}".format(a_old, a_new))
+        else:
+            print("{} does not exist, not copying".format(f_old_path))
+
     def get_audio_region_string(self, a_region_uid):
         f_file = open(
             "{}/{}".format(self.regions_audio_folder, a_region_uid), "r")
