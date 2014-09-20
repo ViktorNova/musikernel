@@ -313,6 +313,12 @@ class pydaw_device_dialog:
             f_worker_threads = f_worker_threads_combobox.currentIndex()
             f_midi_in_devices = sorted(str(k)
                 for k, v in self.midi_in_checkboxes.items() if v.isChecked())
+            if len(f_midi_in_devices) >= 8:
+                QtGui.QMessageBox.warning(
+                    f_window, _("Error"),
+                    _("Using more than 8 MIDI devices is not supported, "
+                    "please de-select some devices"))
+                return
             f_audio_engine = f_audio_engine_combobox.currentIndex()
             if f_thread_affinity_checkbox.isChecked():
                 f_thread_affinity = 1

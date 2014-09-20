@@ -4934,7 +4934,7 @@ void v_pydaw_set_midi_device(
     f_route->on = a_on;
     f_route->output_track = a_output;
 
-    if(f_route->on)
+    if(f_route->on && self->midi_devices->devices[a_device].loaded)
     {
         f_track_new->midi_device = &self->midi_devices->devices[a_device];
         f_track_new->extern_midi =

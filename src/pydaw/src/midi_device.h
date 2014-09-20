@@ -34,6 +34,7 @@ extern "C" {
 
 typedef struct
 {
+    int loaded;
     PmStream *f_midi_stream;
     PmError f_midi_err;
     PmDeviceID f_device_id;
@@ -43,6 +44,7 @@ typedef struct
     t_pydaw_seq_event midiEventBuffer[MIDI_EVENT_BUFFER_SIZE];
     int midiEventReadIndex;
     int midiEventWriteIndex;
+    char name[256];
 }t_midi_device;
 
 typedef struct
@@ -58,7 +60,10 @@ typedef struct
 int midiDeviceInit(t_midi_device * self, char * f_midi_device_name)
 {
     self->instanceEventCounts = 0;
+    self->loaded = 0;
     self->f_device_id = pmNoDevice;
+    self->name[0] = '\0';
+    sprintf(self->name, "%s", f_midi_device_name);
 
     self->instanceEventBuffers = (t_pydaw_seq_event*)malloc(
         MIDI_EVENT_BUFFER_SIZE * sizeof(t_pydaw_seq_event));
@@ -93,6 +98,8 @@ int midiDeviceInit(t_midi_device * self, char * f_midi_device_name)
             return 2;
         }
     }
+
+    self->loaded = 1;
 
     return 0;
 }
