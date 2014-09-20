@@ -230,8 +230,9 @@ typedef struct
     long note_offs[PYDAW_MIDI_NOTE_COUNT];
     int item_event_index;
     char * osc_cursor_message;
-    int extern_midi_count;
+    int * extern_midi_count;
     t_pydaw_seq_event * extern_midi;
+    t_midi_device * midi_device;
 }t_pytrack;
 
 float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
@@ -456,7 +457,7 @@ void v_pydaw_set_midi_device(t_pydaw_data*, int, int, int);
 }
 #endif
 
-
+int ZERO = 0;
 t_pydaw_data * pydaw_data;
 
 
@@ -1608,7 +1609,7 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
                 f_plugin->PYFX_handle, self->sample_count,
                 f_track->event_buffer, f_track->period_event_index,
                 f_plugin->atm_buffer, f_plugin->atm_count,
-                f_track->extern_midi, f_track->extern_midi_count);
+                f_track->extern_midi, *f_track->extern_midi_count);
         }
         f_i++;
     }
@@ -2079,23 +2080,23 @@ inline void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
 inline void v_pydaw_process_external_midi(t_pydaw_data * self,
         t_pytrack * a_track, int sample_count)
 {
-    if(!a_track->extern_midi)
+    if(!a_track->midi_device)
     {
-        a_track->extern_midi_count = 0;
         return;
     }
 
-    assert(0);  //TODO:  assign events and count...
-    a_track->extern_midi_count = 0;  //self->event_count;
+    midiDeviceRead(a_track->midi_device, self->sample_rate, self->sample_count);
+
+    int f_extern_midi_count = *a_track->extern_midi_count;
     t_pydaw_seq_event * events = a_track->extern_midi;
 
-    assert(a_track->extern_midi_count < 200);
+    assert(f_extern_midi_count < 200);
 
     int f_i2 = 0;
 
     char * f_osc_msg = a_track->osc_cursor_message;
 
-    while(f_i2 < a_track->extern_midi_count)
+    while(f_i2 < f_extern_midi_count)
     {
         if(events[f_i2].tick >= sample_count)
         {
@@ -2389,7 +2390,7 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
                 f_plugin->PYFX_handle, sample_count,
                 f_track->event_buffer, f_track->period_event_index,
                 f_plugin->atm_buffer, f_plugin->atm_count,
-                f_track->extern_midi, f_track->extern_midi_count);
+                f_track->extern_midi, *f_track->extern_midi_count);
         }
         f_i++;
     }
@@ -2525,7 +2526,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
                     f_master_track->period_event_index,
                     f_plugin->atm_buffer, f_plugin->atm_count,
                     f_master_track->extern_midi,
-                    f_master_track->extern_midi_count);
+                    *f_master_track->extern_midi_count);
         }
         f_i++;
     }
@@ -3494,7 +3495,8 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     f_result->track_num = a_track_num;
     f_result->channels = 2;
     f_result->extern_midi = 0;
-    f_result->extern_midi_count = 0;
+    f_result->extern_midi_count = &ZERO;
+    f_result->midi_device = 0;
 
     pthread_spin_init(&f_result->lock, 0);
 
@@ -4925,22 +4927,26 @@ void v_pydaw_set_midi_device(
         f_route->output_track != a_output)
     {
         f_track_old->extern_midi = 0;
-        f_track_old->extern_midi_count = 0;
+        f_track_old->extern_midi_count = &ZERO;
+        f_track_old->midi_device = 0;
     }
 
     f_route->on = a_on;
     f_route->output_track = a_output;
 
-    f_track_new->extern_midi_count = 0;
-
     if(f_route->on)
     {
-        assert(0);  //TODO:  set events and/or device
-        f_track_new->extern_midi = 0; //self->events;
+        f_track_new->midi_device = &self->midi_devices->devices[a_device];
+        f_track_new->extern_midi =
+            self->midi_devices->devices[a_device].instanceEventBuffers;
+        f_track_new->extern_midi_count =
+            &self->midi_devices->devices[a_device].instanceEventCounts;
     }
     else
     {
         f_track_new->extern_midi = 0;
+        f_track_new->extern_midi_count = &ZERO;
+        f_track_new->midi_device = 0;
     }
 }
 

@@ -60,8 +60,8 @@ int midiDeviceInit(t_midi_device * self, char * f_midi_device_name)
     self->instanceEventCounts = 0;
     self->f_device_id = pmNoDevice;
 
-    self->instanceEventBuffers = (t_pydaw_seq_event *)malloc(
-            MIDI_EVENT_BUFFER_SIZE * sizeof(t_pydaw_seq_event));
+    self->instanceEventBuffers = (t_pydaw_seq_event*)malloc(
+        MIDI_EVENT_BUFFER_SIZE * sizeof(t_pydaw_seq_event));
 
     if(strcmp(f_midi_device_name, "None"))
     {
@@ -99,8 +99,7 @@ int midiDeviceInit(t_midi_device * self, char * f_midi_device_name)
 
 void midiDeviceClose(t_midi_device * self)
 {
-    PmError f_midi_err;
-    f_midi_err = Pm_Close(self->f_midi_stream);
+    Pm_Close(self->f_midi_stream);
 }
 
 void midiReceive(
@@ -302,7 +301,6 @@ void midiDeviceRead(t_midi_device * self, float sample_rate,
 {
     struct timeval tv, evtv, diff;
     long framediff;
-    int i;
 
     gettimeofday(&tv, NULL);
 
@@ -321,7 +319,6 @@ void midiDeviceRead(t_midi_device * self, float sample_rate,
             continue;
         }
         */
-        i = 0; //instance->number;
 
         /* Stop processing incoming MIDI if an instance's event buffer is
          * full. */

@@ -643,8 +643,13 @@ int main(int argc, char **argv)
                         &MIDI_DEVICES.devices[MIDI_DEVICES.count],
                         f_midi_device_name);
 
-                    if(f_device_result == 1)
+                    if(f_device_result == 0)
                     {
+                        printf("Succeeded\n");
+                    }
+                    else if(f_device_result == 1)
+                    {
+                        printf("Error, did not find MIDI device\n");
                         /*f_failure_count++;
                         sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
                             "Error: did not find MIDI device:",
@@ -654,6 +659,7 @@ int main(int argc, char **argv)
                     }
                     else if(f_device_result == 2)
                     {
+                        printf("Error, opening MIDI device\n");
                         /*f_failure_count++;
                         sprintf(f_cmd_buffer, "%s \"%s %s, %s\"",
                             f_show_dialog_cmd, "Error opening MIDI device: ",
