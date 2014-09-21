@@ -2536,7 +2536,7 @@ class routing_graph_widget(QtGui.QGraphicsView):
             for f_conn in [x[1] for x in a_graph.find_all_paths(k)]:
                 if f_conn not in f_connections:
                     f_connections.append(f_conn)
-            for f_conn, f_wire_index in zip(f_connections, range(5)):
+            for f_conn, f_wire_index in zip(f_connections, range(4)):
                 f_src_x = f_x + ROUTING_GRAPH_NODE_WIDTH
                 f_y_wire_offset = (f_wire_index *
                     ROUTING_GRAPH_WIRE_WIDTH) + ROUTING_GRAPH_WIRE_WIDTH_DIV2
