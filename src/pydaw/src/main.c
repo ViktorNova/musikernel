@@ -888,7 +888,10 @@ int main(int argc, char **argv)
     int f_i = 0;
     while(f_i < MIDI_DEVICES.count)
     {
-        midiDeviceClose(&MIDI_DEVICES.devices[f_i]);
+        if(MIDI_DEVICES.devices[f_i].loaded)
+        {
+            midiDeviceClose(&MIDI_DEVICES.devices[f_i]);
+        }
         f_i++;
     }
 
