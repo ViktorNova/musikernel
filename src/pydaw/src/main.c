@@ -205,7 +205,10 @@ static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
     int f_i = 0;
     while(f_i < MIDI_DEVICES.count)
     {
-        midiPoll(&MIDI_DEVICES.devices[f_i]);
+        if(MIDI_DEVICES.devices[f_i].loaded)
+        {
+            midiPoll(&MIDI_DEVICES.devices[f_i]);
+        }
         f_i++;
     }
 
