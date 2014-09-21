@@ -2566,7 +2566,7 @@ class mixer_channel:
         self.vlayout.addWidget(self.name_label, -1, QtCore.Qt.AlignTop)
         self.grid_layout = QtGui.QGridLayout()
         self.vlayout.addLayout(self.grid_layout, 1)
-        self.peak_meter = peak_meter(36, True)
+        self.peak_meter = peak_meter(30, True)
         self.grid_layout.addWidget(self.peak_meter.widget, 0, 0)
 
     def set_name(self, a_name):
