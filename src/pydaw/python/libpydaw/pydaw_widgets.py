@@ -2471,11 +2471,77 @@ class morph_eq(eq6_widget):
     def eq_num_changed(self, a_val=None):
         self.eq_index = self.eq_num_spinbox.value() - 1
 
-    def val_callback_wrapper(self, ):
+    def val_callback_wrapper(self):
         pass
 
-    def rel_callback_wrapper(self, ):
+    def rel_callback_wrapper(self):
         pass
+
+
+ROUTING_GRAPH_NODE_WIDTH = 81.0
+ROUTING_GRAPH_NODE_WIDTH_DIV2 = ROUTING_GRAPH_NODE_WIDTH * 0.5
+ROUTING_GRAPH_NODE_HEIGHT = 30.0
+ROUTING_GRAPH_NODE_HEIGHT_DIV2 = ROUTING_GRAPH_NODE_HEIGHT * 0.5
+ROUTING_GRAPH_WIRE_WIDTH = ROUTING_GRAPH_NODE_HEIGHT / 5.0  # max connections
+ROUTING_GRAPH_WIRE_PEN = QtGui.QPen(QtCore.Qt.white, ROUTING_GRAPH_WIRE_WIDTH)
+ROUTING_GRAPH_WIRE_INPUT = (
+    (ROUTING_GRAPH_NODE_WIDTH * 0.5) - (ROUTING_GRAPH_NODE_WIDTH * 0.5))
+
+class routing_graph_node(QtGui.QGraphicsRectItem):
+    def __init__(self, a_text):
+        QtGui.QGraphicsRectItem.__init__(
+            self, 0, 0, ROUTING_GRAPH_NODE_WIDTH, ROUTING_GRAPH_NODE_HEIGHT)
+        self.setBrush(QtCore.Qt.yellow)
+        self.setPen(QtCore.Qt.white)
+        self.text = QtGui.QGraphicsSimpleTextItem(a_text, self)
+        self.text.setPos(3.0, 3.0)
+
+
+class routing_graph_widget(QtGui.QGraphicsView):
+    def __init__(self):
+        QtGui.QGraphicsView.__init__(self)
+        self.scene = QtGui.QGraphicsScene(self)
+        self.setScene(self.scene)
+        self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
+
+    # do a TRACK_PANEL.get_all_track_names() method
+    def draw_graph(self, a_graph, a_track_names):
+        self.setUpdatesEnabled(False)
+        self.scene.clear()
+        f_sorted = a_graph.sort_all_paths()
+        f_sorted.append(0)
+        f_sorted_reverse = {
+            k:f_i for k, f_i in zip(f_sorted, range(len(f_sorted)))}
+        for k, f_i in zip(f_sorted, range(len(f_sorted))):
+            f_node_item = routing_graph_node(a_track_names[k])
+            self.scene.addItem(f_node_item)
+            f_x = ROUTING_GRAPH_NODE_WIDTH * f_i
+            f_y = ROUTING_GRAPH_NODE_HEIGHT * f_i
+            f_node_item.setPos(f_x, f_y)
+            for f_conn, f_wire_index in zip(
+            (x[0] for x in a_graph.find_all_paths(k)), range(5)):
+                f_src_x = f_x + ROUTING_GRAPH_NODE_WIDTH
+                f_y_wire_offset = (f_wire_index * ROUTING_GRAPH_WIRE_WIDTH)
+                f_src_y = f_y + f_y_wire_offset
+                f_dest_pos = f_sorted_reverse[f_conn]
+                f_wire_width = ((f_dest_pos - f_i - 1) *
+                    ROUTING_GRAPH_NODE_WIDTH) + ROUTING_GRAPH_WIRE_INPUT
+                f_v_wire_x = f_src_x + f_wire_width
+                self.scene.addLine(   # horizontal wire
+                    f_src_x, f_src_y, f_v_wire_x, f_src_y,
+                    ROUTING_GRAPH_WIRE_PEN)
+                f_wire_height = ((f_dest_pos - f_i) *
+                    ROUTING_GRAPH_NODE_HEIGHT) - f_y_wire_offset
+                self.scene.addLine(   # vertical wire
+                    f_src_x, f_src_y, f_src_x, f_src_y + f_wire_height,
+                    ROUTING_GRAPH_WIRE_PEN)
+            print(locals())
+
+        self.setUpdatesEnabled(True)
+        self.update()
+
+
+
 
 # Custom oscillator widgets
 

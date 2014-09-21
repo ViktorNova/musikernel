@@ -1031,6 +1031,11 @@ class tracks_widget:
         self.automation_dict = {
             x:(None, None) for x in range(REGION_EDITOR_TRACK_COUNT)}
 
+    def get_track_names(self):
+        return [
+            self.tracks[k].track_name_lineedit.text()
+            for k in sorted(self.tracks)]
+
     def get_atm_params(self, a_track_num):
         f_track = self.tracks[int(a_track_num)]
         return (
@@ -8210,6 +8215,8 @@ class track_send:
                 return
             f_graph.graph[self.track_num][self.index] = self.get_value()
             PROJECT.save_routing_graph(f_graph)
+            ROUTING_GRAPH_WIDGET.draw_graph(
+                f_graph, TRACK_PANEL.get_track_names())
             self.last_value = self.bus_combobox.currentIndex()
 
     def get_vol(self):
@@ -9025,6 +9032,240 @@ def global_save_all_plugin_state():
 
 
 class pydaw_main_window(QtGui.QMainWindow):
+    def __init__(self):
+        QtGui.QMainWindow.__init__(self)
+        #self.setMinimumSize(1100, 600)
+        self.setObjectName("mainwindow")
+
+        APP.setStyleSheet(global_stylesheet)
+        self.first_offline_render = True
+        self.last_offline_dir = global_home
+        self.last_ac_dir = global_home
+        self.copy_to_clipboard_checked = True
+        self.last_midi_dir = None
+
+        self.central_widget = QtGui.QScrollArea()
+        self.central_widget.setObjectName("plugin_ui")
+        self.central_widget.setMinimumSize(500, 500)
+        self.widget = QtGui.QWidget()
+        self.widget.setObjectName("plugin_ui")
+        self.setCentralWidget(self.central_widget)
+        self.central_widget.setWidget(self.widget)
+        self.central_widget.setWidgetResizable(True)
+        self.central_widget.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAsNeeded)
+        self.central_widget.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAsNeeded)
+
+        self.main_layout = QtGui.QVBoxLayout()
+        self.main_layout.setMargin(2)
+        self.widget.setLayout(self.main_layout)
+        self.transport_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+        self.main_layout.addWidget(self.transport_splitter)
+
+        self.spacebar_action = QtGui.QAction(self)
+        self.addAction(self.spacebar_action)
+        self.spacebar_action.triggered.connect(self.on_spacebar)
+        self.spacebar_action.setShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key_Space))
+
+        #The menus
+        self.menu_bar = QtGui.QMenu(self)
+        # Dirty hack, rather than moving the methods to the transport
+        TRANSPORT.menu_button.setMenu(self.menu_bar)
+        self.menu_file = self.menu_bar.addMenu(_("File"))
+
+        self.new_action = self.menu_file.addAction(_("New..."))
+        self.new_action.triggered.connect(self.on_new)
+        self.new_action.setShortcut(QtGui.QKeySequence.New)
+
+        self.open_action = self.menu_file.addAction(_("Open..."))
+        self.open_action.triggered.connect(self.on_open)
+        self.open_action.setShortcut(QtGui.QKeySequence.Open)
+
+        self.save_as_action = self.menu_file.addAction(
+            _("Save As...(projects are automatically saved, "
+            "this creates a copy)"))
+        self.save_as_action.triggered.connect(self.on_save_as)
+        self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
+        self.menu_file.addSeparator()
+
+        self.offline_render_action = self.menu_file.addAction(
+            _("Offline Render..."))
+        self.offline_render_action.triggered.connect(self.on_offline_render)
+
+        self.audio_device_action = self.menu_file.addAction(
+            _("Hardware Settings..."))
+        self.audio_device_action.triggered.connect(
+            self.on_change_audio_settings)
+        self.menu_file.addSeparator()
+
+        self.kill_engine_action = self.menu_file.addAction(
+            _("Kill Audio Engine"))
+        self.kill_engine_action.triggered.connect(self.on_kill_engine)
+        self.menu_file.addSeparator()
+
+        self.quit_action = self.menu_file.addAction(_("Quit"))
+        self.quit_action.triggered.connect(self.close)
+        self.quit_action.setShortcut(QtGui.QKeySequence.Quit)
+
+        self.menu_edit = self.menu_bar.addMenu(_("Edit"))
+
+        self.undo_action = self.menu_edit.addAction(_("Undo"))
+        self.undo_action.triggered.connect(self.on_undo)
+        self.undo_action.setShortcut(QtGui.QKeySequence.Undo)
+
+        self.redo_action = self.menu_edit.addAction(_("Redo"))
+        self.redo_action.triggered.connect(self.on_redo)
+        self.redo_action.setShortcut(QtGui.QKeySequence.Redo)
+
+        self.menu_edit.addSeparator()
+
+        self.undo_history_action = self.menu_edit.addAction(
+            _("Undo History..."))
+        self.undo_history_action.triggered.connect(self.on_undo_history)
+
+        self.verify_history_action = self.menu_edit.addAction(
+            _("Verify History DB..."))
+        self.verify_history_action.triggered.connect(self.on_verify_history)
+
+        self.menu_appearance = self.menu_bar.addMenu(_("Appearance"))
+
+        self.collapse_splitters_action = self.menu_appearance.addAction(
+            _("Collapse Transport and Song Editor"))
+        self.collapse_splitters_action.triggered.connect(
+            self.on_collapse_splitters)
+        self.collapse_splitters_action.setShortcut(
+            QtGui.QKeySequence("CTRL+Up"))
+
+        self.restore_splitters_action = self.menu_appearance.addAction(
+            _("Restore Transport and Song Editor"))
+        self.restore_splitters_action.triggered.connect(
+            self.on_restore_splitters)
+        self.restore_splitters_action.setShortcut(
+            QtGui.QKeySequence("CTRL+Down"))
+
+        self.menu_appearance.addSeparator()
+
+        self.open_theme_action = self.menu_appearance.addAction(
+            _("Open Theme..."))
+        self.open_theme_action.triggered.connect(self.on_open_theme)
+
+        self.menu_tools = self.menu_bar.addMenu(_("Tools"))
+
+        self.ac_action = self.menu_tools.addAction(_("MP3 Converter..."))
+        self.ac_action.triggered.connect(self.mp3_converter_dialog)
+
+        self.ac_action = self.menu_tools.addAction(_("Ogg Converter..."))
+        self.ac_action.triggered.connect(self.ogg_converter_dialog)
+
+        self.menu_help = self.menu_bar.addMenu(_("Help"))
+
+        self.version_action = self.menu_help.addAction(_("Version Info..."))
+        self.version_action.triggered.connect(self.on_version)
+
+        self.menu_bar.addSeparator()
+
+        self.tooltips_action = self.menu_bar.addAction(_("Show Tooltips"))
+        self.tooltips_action.setCheckable(True)
+        self.tooltips_action.setChecked(TOOLTIPS_ENABLED)
+        self.tooltips_action.triggered.connect(self.set_tooltips_enabled)
+
+        self.loop_mode_action = QtGui.QAction(self)
+        self.addAction(self.loop_mode_action)
+        self.loop_mode_action.setShortcut(
+            QtGui.QKeySequence.fromString("CTRL+L"))
+        self.loop_mode_action.triggered.connect(TRANSPORT.toggle_loop_mode)
+
+        self.panic_action = QtGui.QAction(self)
+        self.addAction(self.panic_action)
+        self.panic_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+P"))
+        self.panic_action.triggered.connect(TRANSPORT.on_panic)
+
+        self.transport_widget = QtGui.QWidget()
+        self.transport_hlayout = QtGui.QHBoxLayout(self.transport_widget)
+        self.transport_hlayout.setMargin(2)
+        self.transport_splitter.addWidget(self.transport_widget)
+        self.transport_widget.setSizePolicy(
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+
+        self.transport_hlayout.addWidget(
+            TRANSPORT.group_box, alignment=QtCore.Qt.AlignLeft)
+        #The tabs
+        self.main_tabwidget = QtGui.QTabWidget()
+        self.transport_splitter.addWidget(self.main_tabwidget)
+
+        self.regions_tab_widget = QtGui.QTabWidget()
+        self.song_region_tab = QtGui.QWidget()
+        self.song_region_vlayout = QtGui.QVBoxLayout()
+        self.song_region_vlayout.setMargin(3)
+        self.song_region_tab.setLayout(self.song_region_vlayout)
+        self.song_region_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+        self.song_region_splitter.addWidget(self.song_region_tab)
+        self.main_tabwidget.addTab(self.song_region_splitter, _("Song/Region"))
+
+        self.song_region_vlayout.addWidget(SONG_EDITOR.table_widget)
+        self.song_region_vlayout.addLayout(REGION_SETTINGS.hlayout0)
+
+        self.song_region_splitter.addWidget(self.regions_tab_widget)
+        self.midi_scroll_area = QtGui.QScrollArea()
+        self.midi_scroll_area.setWidgetResizable(True)
+        self.midi_scroll_widget = QtGui.QWidget()
+        self.midi_scroll_widget.setContentsMargins(0, 0, 0, 0)
+        self.midi_hlayout = QtGui.QHBoxLayout(self.midi_scroll_widget)
+        self.midi_hlayout.setContentsMargins(0, 0, 0, 0)
+        self.midi_scroll_area.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOn)
+        self.midi_scroll_area.setWidget(self.midi_scroll_widget)
+        self.midi_hlayout.addWidget(TRACK_PANEL.tracks_widget)
+        self.midi_hlayout.addWidget(REGION_EDITOR)
+
+        self.regions_tab_widget.addTab(self.midi_scroll_area, _("MIDI"))
+        self.midi_scroll_area.scrollContentsBy = self.midi_scrollContentsBy
+
+        self.regions_tab_widget.addTab(AUDIO_SEQ_WIDGET.hsplitter, _("Audio"))
+
+        self.first_audio_tab_click = True
+        self.regions_tab_widget.currentChanged.connect(
+            self.regions_tab_changed)
+
+        self.main_tabwidget.addTab(ITEM_EDITOR.widget, _("MIDI Items"))
+
+        self.automation_tab = QtGui.QWidget()
+        self.automation_tab.setObjectName("plugin_ui")
+
+        self.main_tabwidget.addTab(WAVE_EDITOR.widget, _("Wave Editor"))
+
+        self.main_tabwidget.addTab(ROUTING_GRAPH_WIDGET, _("Routing"))
+
+        self.notes_tab = QtGui.QTextEdit(self)
+        self.notes_tab.setAcceptRichText(False)
+        self.notes_tab.leaveEvent = self.on_edit_notes
+        self.main_tabwidget.addTab(self.notes_tab, _("Project Notes"))
+        self.main_tabwidget.currentChanged.connect(self.tab_changed)
+
+        try:
+            self.osc_server = liblo.Server(30321)
+        except liblo.ServerError as err:
+            print("Error creating OSC server: {}".format(err))
+            self.osc_server = None
+        if self.osc_server is not None:
+            print(self.osc_server.get_url())
+            self.osc_server.add_method(
+                "musikernel/ui_configure", 's', self.configure_callback)
+            self.osc_server.add_method(None, None, self.osc_fallback)
+            self.osc_timer = QtCore.QTimer(self)
+            self.osc_timer.setSingleShot(False)
+            self.osc_timer.timeout.connect(self.osc_time_callback)
+            self.osc_timer.start(0)
+        if global_pydaw_with_audio:
+            self.subprocess_timer = QtCore.QTimer(self)
+            self.subprocess_timer.timeout.connect(self.subprocess_monitor)
+            self.subprocess_timer.setSingleShot(False)
+            self.subprocess_timer.start(1000)
+        self.show()
+        self.ignore_close_event = True
+
     def check_for_empty_directory(self, a_file):
         """ Return true if directory is empty, show error message and
             return False if not
@@ -9791,238 +10032,6 @@ class pydaw_main_window(QtGui.QMainWindow):
             self.first_audio_tab_click = False
             pydaw_set_audio_seq_zoom(1.0, 1.0)
             global_open_audio_items(a_reload=False)
-
-    def __init__(self):
-        QtGui.QMainWindow.__init__(self)
-        #self.setMinimumSize(1100, 600)
-        self.setObjectName("mainwindow")
-
-        APP.setStyleSheet(global_stylesheet)
-        self.first_offline_render = True
-        self.last_offline_dir = global_home
-        self.last_ac_dir = global_home
-        self.copy_to_clipboard_checked = True
-        self.last_midi_dir = None
-
-        self.central_widget = QtGui.QScrollArea()
-        self.central_widget.setObjectName("plugin_ui")
-        self.central_widget.setMinimumSize(500, 500)
-        self.widget = QtGui.QWidget()
-        self.widget.setObjectName("plugin_ui")
-        self.setCentralWidget(self.central_widget)
-        self.central_widget.setWidget(self.widget)
-        self.central_widget.setWidgetResizable(True)
-        self.central_widget.setHorizontalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAsNeeded)
-        self.central_widget.setVerticalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAsNeeded)
-
-        self.main_layout = QtGui.QVBoxLayout()
-        self.main_layout.setMargin(2)
-        self.widget.setLayout(self.main_layout)
-        self.transport_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.main_layout.addWidget(self.transport_splitter)
-
-        self.spacebar_action = QtGui.QAction(self)
-        self.addAction(self.spacebar_action)
-        self.spacebar_action.triggered.connect(self.on_spacebar)
-        self.spacebar_action.setShortcut(
-            QtGui.QKeySequence(QtCore.Qt.Key_Space))
-
-        #The menus
-        self.menu_bar = QtGui.QMenu(self)
-        # Dirty hack, rather than moving the methods to the transport
-        TRANSPORT.menu_button.setMenu(self.menu_bar)
-        self.menu_file = self.menu_bar.addMenu(_("File"))
-
-        self.new_action = self.menu_file.addAction(_("New..."))
-        self.new_action.triggered.connect(self.on_new)
-        self.new_action.setShortcut(QtGui.QKeySequence.New)
-
-        self.open_action = self.menu_file.addAction(_("Open..."))
-        self.open_action.triggered.connect(self.on_open)
-        self.open_action.setShortcut(QtGui.QKeySequence.Open)
-
-        self.save_as_action = self.menu_file.addAction(
-            _("Save As...(projects are automatically saved, "
-            "this creates a copy)"))
-        self.save_as_action.triggered.connect(self.on_save_as)
-        self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
-        self.menu_file.addSeparator()
-
-        self.offline_render_action = self.menu_file.addAction(
-            _("Offline Render..."))
-        self.offline_render_action.triggered.connect(self.on_offline_render)
-
-        self.audio_device_action = self.menu_file.addAction(
-            _("Hardware Settings..."))
-        self.audio_device_action.triggered.connect(
-            self.on_change_audio_settings)
-        self.menu_file.addSeparator()
-
-        self.kill_engine_action = self.menu_file.addAction(
-            _("Kill Audio Engine"))
-        self.kill_engine_action.triggered.connect(self.on_kill_engine)
-        self.menu_file.addSeparator()
-
-        self.quit_action = self.menu_file.addAction(_("Quit"))
-        self.quit_action.triggered.connect(self.close)
-        self.quit_action.setShortcut(QtGui.QKeySequence.Quit)
-
-        self.menu_edit = self.menu_bar.addMenu(_("Edit"))
-
-        self.undo_action = self.menu_edit.addAction(_("Undo"))
-        self.undo_action.triggered.connect(self.on_undo)
-        self.undo_action.setShortcut(QtGui.QKeySequence.Undo)
-
-        self.redo_action = self.menu_edit.addAction(_("Redo"))
-        self.redo_action.triggered.connect(self.on_redo)
-        self.redo_action.setShortcut(QtGui.QKeySequence.Redo)
-
-        self.menu_edit.addSeparator()
-
-        self.undo_history_action = self.menu_edit.addAction(
-            _("Undo History..."))
-        self.undo_history_action.triggered.connect(self.on_undo_history)
-
-        self.verify_history_action = self.menu_edit.addAction(
-            _("Verify History DB..."))
-        self.verify_history_action.triggered.connect(self.on_verify_history)
-
-        self.menu_appearance = self.menu_bar.addMenu(_("Appearance"))
-
-        self.collapse_splitters_action = self.menu_appearance.addAction(
-            _("Collapse Transport and Song Editor"))
-        self.collapse_splitters_action.triggered.connect(
-            self.on_collapse_splitters)
-        self.collapse_splitters_action.setShortcut(
-            QtGui.QKeySequence("CTRL+Up"))
-
-        self.restore_splitters_action = self.menu_appearance.addAction(
-            _("Restore Transport and Song Editor"))
-        self.restore_splitters_action.triggered.connect(
-            self.on_restore_splitters)
-        self.restore_splitters_action.setShortcut(
-            QtGui.QKeySequence("CTRL+Down"))
-
-        self.menu_appearance.addSeparator()
-
-        self.open_theme_action = self.menu_appearance.addAction(
-            _("Open Theme..."))
-        self.open_theme_action.triggered.connect(self.on_open_theme)
-
-        self.menu_tools = self.menu_bar.addMenu(_("Tools"))
-
-        self.ac_action = self.menu_tools.addAction(_("MP3 Converter..."))
-        self.ac_action.triggered.connect(self.mp3_converter_dialog)
-
-        self.ac_action = self.menu_tools.addAction(_("Ogg Converter..."))
-        self.ac_action.triggered.connect(self.ogg_converter_dialog)
-
-        self.menu_help = self.menu_bar.addMenu(_("Help"))
-
-        self.version_action = self.menu_help.addAction(_("Version Info..."))
-        self.version_action.triggered.connect(self.on_version)
-
-        self.menu_bar.addSeparator()
-
-        self.tooltips_action = self.menu_bar.addAction(_("Show Tooltips"))
-        self.tooltips_action.setCheckable(True)
-        self.tooltips_action.setChecked(TOOLTIPS_ENABLED)
-        self.tooltips_action.triggered.connect(self.set_tooltips_enabled)
-
-        self.loop_mode_action = QtGui.QAction(self)
-        self.addAction(self.loop_mode_action)
-        self.loop_mode_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+L"))
-        self.loop_mode_action.triggered.connect(TRANSPORT.toggle_loop_mode)
-
-        self.panic_action = QtGui.QAction(self)
-        self.addAction(self.panic_action)
-        self.panic_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+P"))
-        self.panic_action.triggered.connect(TRANSPORT.on_panic)
-
-        self.transport_widget = QtGui.QWidget()
-        self.transport_hlayout = QtGui.QHBoxLayout(self.transport_widget)
-        self.transport_hlayout.setMargin(2)
-        self.transport_splitter.addWidget(self.transport_widget)
-        self.transport_widget.setSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-
-        self.transport_hlayout.addWidget(
-            TRANSPORT.group_box, alignment=QtCore.Qt.AlignLeft)
-        #The tabs
-        self.main_tabwidget = QtGui.QTabWidget()
-        self.transport_splitter.addWidget(self.main_tabwidget)
-
-        self.regions_tab_widget = QtGui.QTabWidget()
-        self.song_region_tab = QtGui.QWidget()
-        self.song_region_vlayout = QtGui.QVBoxLayout()
-        self.song_region_vlayout.setMargin(3)
-        self.song_region_tab.setLayout(self.song_region_vlayout)
-        self.song_region_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.song_region_splitter.addWidget(self.song_region_tab)
-        self.main_tabwidget.addTab(self.song_region_splitter, _("Song/Region"))
-
-        self.song_region_vlayout.addWidget(SONG_EDITOR.table_widget)
-        self.song_region_vlayout.addLayout(REGION_SETTINGS.hlayout0)
-
-        self.song_region_splitter.addWidget(self.regions_tab_widget)
-        self.midi_scroll_area = QtGui.QScrollArea()
-        self.midi_scroll_area.setWidgetResizable(True)
-        self.midi_scroll_widget = QtGui.QWidget()
-        self.midi_scroll_widget.setContentsMargins(0, 0, 0, 0)
-        self.midi_hlayout = QtGui.QHBoxLayout(self.midi_scroll_widget)
-        self.midi_hlayout.setContentsMargins(0, 0, 0, 0)
-        self.midi_scroll_area.setVerticalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAlwaysOn)
-        self.midi_scroll_area.setWidget(self.midi_scroll_widget)
-        self.midi_hlayout.addWidget(TRACK_PANEL.tracks_widget)
-        self.midi_hlayout.addWidget(REGION_EDITOR)
-
-        self.regions_tab_widget.addTab(self.midi_scroll_area, _("MIDI"))
-        self.midi_scroll_area.scrollContentsBy = self.midi_scrollContentsBy
-
-        self.regions_tab_widget.addTab(AUDIO_SEQ_WIDGET.hsplitter, _("Audio"))
-
-        self.first_audio_tab_click = True
-        self.regions_tab_widget.currentChanged.connect(
-            self.regions_tab_changed)
-
-        self.main_tabwidget.addTab(ITEM_EDITOR.widget, _("MIDI Items"))
-
-        self.automation_tab = QtGui.QWidget()
-        self.automation_tab.setObjectName("plugin_ui")
-
-        self.main_tabwidget.addTab(WAVE_EDITOR.widget, _("Wave Editor"))
-
-        self.notes_tab = QtGui.QTextEdit(self)
-        self.notes_tab.setAcceptRichText(False)
-        self.notes_tab.leaveEvent = self.on_edit_notes
-        self.main_tabwidget.addTab(self.notes_tab, _("Project Notes"))
-        self.main_tabwidget.currentChanged.connect(self.tab_changed)
-
-        try:
-            self.osc_server = liblo.Server(30321)
-        except liblo.ServerError as err:
-            print("Error creating OSC server: {}".format(err))
-            self.osc_server = None
-        if self.osc_server is not None:
-            print(self.osc_server.get_url())
-            self.osc_server.add_method(
-                "musikernel/ui_configure", 's', self.configure_callback)
-            self.osc_server.add_method(None, None, self.osc_fallback)
-            self.osc_timer = QtCore.QTimer(self)
-            self.osc_timer.setSingleShot(False)
-            self.osc_timer.timeout.connect(self.osc_time_callback)
-            self.osc_timer.start(0)
-        if global_pydaw_with_audio:
-            self.subprocess_timer = QtCore.QTimer(self)
-            self.subprocess_timer.timeout.connect(self.subprocess_monitor)
-            self.subprocess_timer.setSingleShot(False)
-            self.subprocess_timer.start(1000)
-        self.show()
-        self.ignore_close_event = True
 
     def midi_scrollContentsBy(self, x, y):
         QtGui.QScrollArea.scrollContentsBy(self.midi_scroll_area, x, y)
@@ -10863,6 +10872,8 @@ def global_open_project(a_project_file, a_wait=True):
     MAIN_WINDOW.notes_tab.setText(PROJECT.get_notes())
     WAVE_EDITOR.open_project()
     global_update_region_time()
+    ROUTING_GRAPH_WIDGET.draw_graph(
+        PROJECT.get_routing_graph(), TRACK_PANEL.get_track_names())
 
 def global_new_project(a_project_file, a_wait=True):
     global_close_all()
@@ -11077,7 +11088,7 @@ def open_pydaw_engine(a_project_path):
 MIDI_DEVICES_DIALOG = midi_devices_dialog()
 TRANSPORT = transport_widget()
 AUDIO_SEQ_WIDGET = audio_items_viewer_widget()
-
+ROUTING_GRAPH_WIDGET = pydaw_widgets.routing_graph_widget()
 
 TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
 
