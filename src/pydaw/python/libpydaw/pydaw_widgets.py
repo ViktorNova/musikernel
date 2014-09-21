@@ -2573,10 +2573,14 @@ class mixer_channel:
         self.name_label.setText(a_name)
 
     def add_plugin(self, a_index, a_plugin_widget):
-        pass
+        if a_index in self.sends:
+            self.remove_plugin(a_index)
+        self.sends[a_index] = a_plugin_widget
+        self.grid_layout.addWidget(a_plugin_widget, 0, a_index + 1)
 
     def remove_plugin(self, a_index):
-        pass
+        if a_index in self.sends:
+            self.grid_layout.removeWidget(self.sends.pop(a_index))
 
 class mixer_widget:
     def __init__(self, a_track_count):
@@ -2595,6 +2599,12 @@ class mixer_widget:
     def update_track_names(self, a_track_names_dict):
         for k, v in a_track_names_dict.items():
             self.tracks[k].set_name(v)
+
+    def set_plugin_widget(self, a_track_index, a_send_index, a_plugin_widget):
+        self.tracks[a_track_index].add_plugin(a_send_index, a_plugin_widget)
+
+    def remove_plugin_widget(self, a_track_index, a_send_index):
+        self.tracks[a_track_index].remove_plugin(a_send_index)
 
 
 # Custom oscillator widgets
