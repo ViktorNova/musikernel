@@ -1784,7 +1784,7 @@ PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
     f_result->set_port_value = v_euphoria_set_port_value;
     f_result->set_cc_map = v_euphoria_set_cc_map;
 
-    f_result->PYINST_API_Version = 1;
+    f_result->API_Version = 1;
     f_result->configure = v_euphoria_configure;
     f_result->run_replacing = v_run_lms_euphoria;
     f_result->offline_render_prep = NULL;

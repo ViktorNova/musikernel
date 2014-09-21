@@ -817,7 +817,7 @@ PYFX_Descriptor *rayv_PYFX_descriptor(int index)
     f_result->set_port_value = v_rayv_set_port_value;
     f_result->set_cc_map = v_rayv_set_cc_map;
 
-    f_result->PYINST_API_Version = 1;
+    f_result->API_Version = 1;
     f_result->configure = NULL;
     f_result->run_replacing = v_run_rayv;
     f_result->offline_render_prep = v_rayv_or_prep;

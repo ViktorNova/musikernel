@@ -435,7 +435,7 @@ PYFX_Descriptor *triggerfx_PYFX_descriptor(int index)
     f_result->set_port_value = v_triggerfx_set_port_value;
     f_result->set_cc_map = v_triggerfx_set_cc_map;
 
-    f_result->PYINST_API_Version = 1;
+    f_result->API_Version = 1;
     f_result->configure = NULL;
     f_result->run_replacing = v_triggerfx_run;
     f_result->on_stop = v_triggerfx_on_stop;

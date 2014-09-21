@@ -122,7 +122,7 @@ typedef struct _PYFX_Descriptor {
 
     //For now all plugins must set it to 1.
 
-    int PYINST_API_Version;
+    int API_Version;
 
     void (*configure)(PYFX_Handle Instance, char *Key, char *Value,
         pthread_spinlock_t * a_spinlock);

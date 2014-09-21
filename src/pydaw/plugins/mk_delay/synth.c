@@ -269,7 +269,7 @@ PYFX_Descriptor *mkdelay_PYFX_descriptor(int index)
     f_result->set_port_value = v_mkdelay_set_port_value;
     f_result->set_cc_map = v_mkdelay_set_cc_map;
 
-    f_result->PYINST_API_Version = 1;
+    f_result->API_Version = 1;
     f_result->configure = NULL;
     f_result->run_replacing = v_mkdelay_run;
     f_result->on_stop = v_mkdelay_on_stop;
