@@ -820,7 +820,7 @@ PYFX_Descriptor *rayv_PYFX_descriptor(int index)
 
     f_result->PYINST_API_Version = 1;
     f_result->configure = NULL;
-    f_result->run_synth = v_run_rayv;
+    f_result->run_replacing = v_run_rayv;
     f_result->offline_render_prep = v_rayv_or_prep;
     f_result->on_stop = v_rayv_on_stop;
 

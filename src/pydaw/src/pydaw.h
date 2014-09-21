@@ -1619,7 +1619,7 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
         {
             v_pydaw_process_atm(
                 self, a_global_track_num, f_i, self->sample_count);
-            f_plugin->descriptor->run_synth(
+            f_plugin->descriptor->run_replacing(
                 f_plugin->PYFX_handle, self->sample_count,
                 f_track->event_buffer, f_track->period_event_index,
                 f_plugin->atm_buffer, f_plugin->atm_count,
@@ -2397,7 +2397,7 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
         f_plugin = f_track->plugins[f_i];
         if(f_plugin)
         {
-            f_plugin->descriptor->run_synth(
+            f_plugin->descriptor->run_replacing(
                 f_plugin->PYFX_handle, sample_count,
                 f_track->event_buffer, f_track->period_event_index,
                 f_plugin->atm_buffer, f_plugin->atm_count,
@@ -2531,7 +2531,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         {
             v_pydaw_process_atm(
                 self, 0, f_i, sample_count);
-            f_plugin->descriptor->run_synth(
+            f_plugin->descriptor->run_replacing(
                 f_plugin->PYFX_handle, sample_count,
                     f_master_track->event_buffer,
                     f_master_track->period_event_index,

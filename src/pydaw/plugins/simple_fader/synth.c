@@ -55,31 +55,19 @@ static void v_sfader_set_cc_map(PYFX_Handle instance, char * a_msg)
 
 static void v_sfader_panic(PYFX_Handle instance)
 {
-    t_sfader *plugin = (t_sfader*)instance;
+    //t_sfader *plugin = (t_sfader*)instance;
 }
 
 static void v_sfader_on_stop(PYFX_Handle instance)
 {
-    t_sfader *plugin = (t_sfader*)instance;
+    //t_sfader *plugin = (t_sfader*)instance;
 }
 
 static void v_sfader_connect_buffer(PYFX_Handle instance, int a_index,
         float * DataLocation)
 {
     t_sfader *plugin = (t_sfader*)instance;
-
-    switch(a_index)
-    {
-        case 0:
-            plugin->output0 = DataLocation;
-            break;
-        case 1:
-            plugin->output1 = DataLocation;
-            break;
-        default:
-            assert(0);
-            break;
-    }
+    plugin->buffers[a_index] = DataLocation;
 }
 
 static void v_sfader_connect_port(PYFX_Handle instance, int port,
@@ -101,6 +89,7 @@ static PYFX_Handle g_sfader_instantiate(PYFX_Descriptor * descriptor,
 {
     t_sfader *plugin_data;
     lmalloc((void**)&plugin_data, sizeof(t_sfader));
+    lmalloc((void**)&plugin_data->buffers, sizeof(float*) * 2);
 
     plugin_data->descriptor = descriptor;
     plugin_data->fs = s_rate;
@@ -154,8 +143,9 @@ static void v_sfader_process_midi_event(
     }
 }
 
-static void v_sfader_run(
+static void v_sfader_run_mixing(
         PYFX_Handle instance, int sample_count,
+        float ** output_buffers, int output_count,
         t_pydaw_seq_event *events, int event_count,
         t_pydaw_seq_event *atm_events, int atm_event_count,
         t_pydaw_seq_event *ext_events, int ext_event_count)
@@ -227,17 +217,26 @@ static void v_sfader_run(
                 f_db_to_linear_fast(
                 (plugin_data->mono_modules->volume_smoother->last_value));
 
-            plugin_data->output0[f_i] *=
-                    (plugin_data->mono_modules->vol_linear);
-            plugin_data->output1[f_i] *=
-                    (plugin_data->mono_modules->vol_linear);
-
-
+            output_buffers[0][f_i] *= (plugin_data->mono_modules->vol_linear);
+            output_buffers[1][f_i] *= (plugin_data->mono_modules->vol_linear);
         }
 
         f_i++;
     }
 
+}
+
+static void v_sfader_run(
+        PYFX_Handle instance, int sample_count,
+        t_pydaw_seq_event *events, int event_count,
+        t_pydaw_seq_event *atm_events, int atm_event_count,
+        t_pydaw_seq_event *ext_events, int ext_event_count)
+{
+    t_sfader *plugin_data = (t_sfader*)instance;
+    v_sfader_run_mixing(
+        instance, sample_count, plugin_data->buffers, 2,
+        events, event_count, atm_events, atm_event_count,
+        ext_events, ext_event_count);
 }
 
 PYFX_Descriptor *sfader_PYFX_descriptor(int index)
@@ -258,7 +257,7 @@ PYFX_Descriptor *sfader_PYFX_descriptor(int index)
 
     f_result->PYINST_API_Version = 1;
     f_result->configure = NULL;
-    f_result->run_synth = v_sfader_run;
+    f_result->run_replacing = v_sfader_run;
     f_result->on_stop = v_sfader_on_stop;
     f_result->offline_render_prep = NULL;
 

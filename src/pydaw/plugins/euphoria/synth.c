@@ -1787,7 +1787,7 @@ PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
 
     f_result->PYINST_API_Version = 1;
     f_result->configure = v_euphoria_configure;
-    f_result->run_synth = v_run_lms_euphoria;
+    f_result->run_replacing = v_run_lms_euphoria;
     f_result->offline_render_prep = NULL;
     f_result->on_stop = v_euphoria_on_stop;
 

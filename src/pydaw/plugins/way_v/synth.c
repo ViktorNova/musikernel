@@ -1897,7 +1897,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
 
     f_result->PYINST_API_Version = 1;
     f_result->configure = v_wayv_configure;
-    f_result->run_synth = v_run_wayv;
+    f_result->run_replacing = v_run_wayv;
     f_result->offline_render_prep = v_wayv_or_prep;
     f_result->on_stop = v_wayv_on_stop;
 

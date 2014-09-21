@@ -134,8 +134,19 @@ typedef struct _PYFX_Descriptor {
     void (*configure)(PYFX_Handle Instance, char *Key, char *Value,
         pthread_spinlock_t * a_spinlock);
 
-    void (*run_synth)(
+    // Plugins NOT part of a send channel will always call this
+    void (*run_replacing)(
         PYFX_Handle Instance, int SampleCount,
+        t_pydaw_seq_event *Events, int EventCount,
+        t_pydaw_seq_event *AtmEvents, int AtmEventCount,
+        t_pydaw_seq_event *ExtEvents, int ExtEventCount);
+
+    // Plugins that ARE part of a send channel will always call this,
+    // any plugin that isn't a fader/channel type plugin do not need
+    // to implement or set this
+    void (*run_mixing)(
+        PYFX_Handle Instance, int SampleCount,
+        float ** output_buffers, int output_count,
         t_pydaw_seq_event *Events, int EventCount,
         t_pydaw_seq_event *AtmEvents, int AtmEventCount,
         t_pydaw_seq_event *ExtEvents, int ExtEventCount);
