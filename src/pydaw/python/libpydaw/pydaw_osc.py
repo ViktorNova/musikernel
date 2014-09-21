@@ -134,7 +134,7 @@ class pydaw_osc:
             (a_track_num, bool_to_int(a_bool))))
 
     def pydaw_set_plugin(
-        self, a_track_num, a_index, a_plugin_index, a_uid, a_on):
+    self, a_track_num, a_index, a_plugin_index, a_uid, a_on):
         self.send_configure(
             "pi", "|".join(str(x) for x in
             (a_track_num, a_index, a_plugin_index, a_uid, bool_to_int(a_on))))

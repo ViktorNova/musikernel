@@ -42,6 +42,7 @@ GNU General Public License for more details.
 
 #define MAX_PLUGIN_COUNT 10
 #define MAX_ROUTING_COUNT 4
+#define MAX_PLUGIN_TOTAL_COUNT (MAX_PLUGIN_COUNT + MAX_ROUTING_COUNT)
 
 #define PYDAW_MAX_ITEM_COUNT 5000
 #define PYDAW_MAX_REGION_COUNT 300
@@ -157,7 +158,7 @@ typedef struct
 
 typedef struct
 {
-    t_pydaw_atm_plugin plugins[MAX_PLUGIN_COUNT];
+    t_pydaw_atm_plugin plugins[MAX_PLUGIN_TOTAL_COUNT];
 }t_pydaw_atm_track;
 
 typedef struct
@@ -212,7 +213,7 @@ typedef struct
     int mute;
     t_pydaw_seq_event * event_buffer;
     int period_event_index;
-    t_pydaw_plugin * plugins[MAX_PLUGIN_COUNT];
+    t_pydaw_plugin * plugins[MAX_PLUGIN_TOTAL_COUNT];
     int track_num;
     //Only for busses, the count of plugins writing to the buffer
     int bus_count;
@@ -573,7 +574,7 @@ void v_pydaw_panic(t_pydaw_data * self)
         f_track = self->track_pool_all[f_i];
 
         f_i2 = 0;
-        while(f_i2 < MAX_PLUGIN_COUNT)
+        while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
         {
             f_plugin = f_track->plugins[f_i2];
             if(f_plugin && f_plugin->descriptor->panic)
@@ -3179,7 +3180,7 @@ t_pydaw_atm_region * g_atm_region_get(t_pydaw_data * self, int a_uid)
         while(f_i < PYDAW_TRACK_COUNT_ALL)
         {
             int f_i2 = 0;
-            while(f_i2 < MAX_PLUGIN_COUNT)
+            while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
             {
                 f_result->tracks[f_i].plugins[f_i2].point_count = 0;
                 f_result->tracks[f_i].plugins[f_i2].points = 0;
@@ -3289,7 +3290,7 @@ void v_atm_region_free(t_pydaw_atm_region * self)
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
         int f_i2 = 0;
-        while(f_i2 < MAX_PLUGIN_COUNT)
+        while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
         {
             if(self->tracks[f_i].plugins[f_i2].point_count)
             {
@@ -3538,7 +3539,7 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     }
 
     f_i = 0;
-    while(f_i < MAX_PLUGIN_COUNT)
+    while(f_i < MAX_PLUGIN_TOTAL_COUNT)
     {
         f_result->plugins[f_i] = 0;
         f_i++;
@@ -4025,7 +4026,7 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
 
                 f_track->period_event_index = 0;
 
-                while(f_i2 < MAX_PLUGIN_COUNT)
+                while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
                 {
                     f_plugin = f_track->plugins[f_i2];
                     if(f_plugin)
@@ -4168,7 +4169,7 @@ void v_set_playback_cursor(t_pydaw_data * self, int a_region, int a_bar)
 
     f_i = 0;
 
-    while(f_i < MAX_PLUGIN_COUNT)
+    while(f_i < MAX_PLUGIN_TOTAL_COUNT)
     {
         if(self->plugin_pool[f_i])
         {
@@ -4328,7 +4329,7 @@ void v_pydaw_offline_render_prep(t_pydaw_data * self)
     {
         f_track = self->track_pool_all[f_i];
         int f_i2 = 0;
-        while(f_i2 < MAX_PLUGIN_COUNT)
+        while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
         {
             f_plugin = f_track->plugins[f_i2];
             if(f_plugin && f_plugin->descriptor->offline_render_prep)
