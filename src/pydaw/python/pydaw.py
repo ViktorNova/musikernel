@@ -8258,7 +8258,10 @@ class seq_track:
         self.main_vlayout = QtGui.QVBoxLayout()
         self.main_hlayout.addLayout(self.main_vlayout)
         self.peak_meter = pydaw_widgets.peak_meter()
-        ALL_PEAK_METERS[a_track_num] = self.peak_meter
+        if a_track_num in ALL_PEAK_METERS:
+            ALL_PEAK_METERS[a_track_num].append(self.peak_meter)
+        else:
+            ALL_PEAK_METERS[a_track_num] = [self.peak_meter]
         self.main_hlayout.addWidget(self.peak_meter.widget)
         self.group_box.setLayout(self.main_hlayout)
         self.track_name_lineedit = QtGui.QLineEdit()
@@ -10153,7 +10156,8 @@ def global_update_peak_meters(a_val):
         f_list = f_val.split(":")
         f_index = int(f_list[0])
         if f_index in ALL_PEAK_METERS:
-            ALL_PEAK_METERS[f_index].set_value(f_list[1:])
+            for f_pkm in ALL_PEAK_METERS[f_index]:
+                f_pkm.set_value(f_list[1:])
         else:
             print("{} not in ALL_PEAK_METERS".format(f_index))
 
@@ -10933,6 +10937,12 @@ PIANO_ROLL_EDITOR_WIDGET = piano_roll_editor_widget()
 ITEM_EDITOR = item_list_editor()
 AUDIO_SEQ = audio_items_viewer()
 MIXER_WIDGET = pydaw_widgets.mixer_widget(TRACK_COUNT_ALL)
+
+def get_mixer_peak_meters():
+    for k, v in MIXER_WIDGET.tracks.items():
+        ALL_PEAK_METERS[k].append(v.peak_meter)
+
+get_mixer_peak_meters()
 
 MIDI_EDITORS = (PIANO_ROLL_EDITOR, CC_EDITOR, PB_EDITOR)
 
