@@ -2483,9 +2483,11 @@ ROUTING_GRAPH_NODE_WIDTH_DIV2 = ROUTING_GRAPH_NODE_WIDTH * 0.5
 ROUTING_GRAPH_NODE_HEIGHT = 30.0
 ROUTING_GRAPH_NODE_HEIGHT_DIV2 = ROUTING_GRAPH_NODE_HEIGHT * 0.5
 ROUTING_GRAPH_WIRE_WIDTH = ROUTING_GRAPH_NODE_HEIGHT / 5.0  # max connections
-ROUTING_GRAPH_WIRE_PEN = QtGui.QPen(QtCore.Qt.white, ROUTING_GRAPH_WIRE_WIDTH)
+ROUTING_GRAPH_WIRE_WIDTH_DIV2 = ROUTING_GRAPH_WIRE_WIDTH * 0.5
+ROUTING_GRAPH_WIRE_PEN = QtGui.QPen(
+    EQ_GRADIENT, ROUTING_GRAPH_WIRE_WIDTH_DIV2)
 ROUTING_GRAPH_WIRE_INPUT = (
-    (ROUTING_GRAPH_NODE_WIDTH * 0.5) - (ROUTING_GRAPH_NODE_WIDTH * 0.5))
+    (ROUTING_GRAPH_NODE_WIDTH * 0.5) - (ROUTING_GRAPH_WIRE_WIDTH * 0.5))
 
 class routing_graph_node(QtGui.QGraphicsRectItem):
     def __init__(self, a_text):
@@ -2518,10 +2520,13 @@ class routing_graph_widget(QtGui.QGraphicsView):
             f_x = ROUTING_GRAPH_NODE_WIDTH * f_i
             f_y = ROUTING_GRAPH_NODE_HEIGHT * f_i
             f_node_item.setPos(f_x, f_y)
+            if k == 0:
+                continue
             for f_conn, f_wire_index in zip(
-            (x[0] for x in a_graph.find_all_paths(k)), range(5)):
+            (x[1] for x in a_graph.find_all_paths(k)), range(5)):
                 f_src_x = f_x + ROUTING_GRAPH_NODE_WIDTH
-                f_y_wire_offset = (f_wire_index * ROUTING_GRAPH_WIRE_WIDTH)
+                f_y_wire_offset = (f_wire_index *
+                    ROUTING_GRAPH_WIRE_WIDTH) + ROUTING_GRAPH_WIRE_WIDTH_DIV2
                 f_src_y = f_y + f_y_wire_offset
                 f_dest_pos = f_sorted_reverse[f_conn]
                 f_wire_width = ((f_dest_pos - f_i - 1) *
@@ -2533,7 +2538,7 @@ class routing_graph_widget(QtGui.QGraphicsView):
                 f_wire_height = ((f_dest_pos - f_i) *
                     ROUTING_GRAPH_NODE_HEIGHT) - f_y_wire_offset
                 self.scene.addLine(   # vertical wire
-                    f_src_x, f_src_y, f_src_x, f_src_y + f_wire_height,
+                    f_v_wire_x, f_src_y, f_v_wire_x, f_src_y + f_wire_height,
                     ROUTING_GRAPH_WIRE_PEN)
             print(locals())
 
