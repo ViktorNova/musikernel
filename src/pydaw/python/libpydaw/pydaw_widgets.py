@@ -4168,6 +4168,19 @@ class pydaw_abstract_plugin_ui:
             print("pydaw_abstract_plugin_ui.set_control_val():  "
                 "Did not have port {}".format(f_port))
 
+    def set_cc_val(self, a_cc, a_val):
+        a_cc = int(a_cc)
+        if a_cc in self.cc_map:
+            a_val = float(a_val) * 0.007874016 # / 127.0
+            for f_port, f_tuple in self.cc_map[a_cc].ports.items():
+                f_low, f_high = f_tuple
+                f_frac = (a_val * (f_high - f_low)) + f_low
+                f_ctrl = self.port_dict[f_port]
+                f_min = float(f_ctrl.control.minimum())
+                f_max = float(f_ctrl.control.maximum())
+                f_val = int(f_frac * (f_max - f_min) + f_min)
+                f_ctrl.set_value(f_val, True)
+
     def configure_plugin(self, a_key, a_message):
         """ Override this function to allow str|str key/value pair
             messages to be sent to the back-end

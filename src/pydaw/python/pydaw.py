@@ -8302,6 +8302,7 @@ class seq_track:
             self.mute_checkbox.stateChanged.connect(self.on_mute)
             self.mute_checkbox.setObjectName("mute_checkbox")
             self.hlayout3.addWidget(self.mute_checkbox)
+        self.plugins = []
         self.automation_plugin_name = "None"
         self.port_num = None
         self.ccs_in_use_combobox = None
@@ -8323,7 +8324,6 @@ class seq_track:
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("Plugins")), 0, 0)
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("A")), 0, 2)
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 3)
-        self.plugins = []
         for f_i in range(10):
             f_plugin = plugin_settings(
                 f_i, self.track_number, self.menu_gridlayout,
@@ -8357,6 +8357,9 @@ class seq_track:
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("In Use:")), 10, 20)
         self.menu_gridlayout.addWidget(self.ccs_in_use_combobox, 10, 21)
         self.update_in_use_combobox()
+
+    def get_plugin_uids(self):
+        return [x.plugin_uid for x in self.plugins if x.plugin_uid != -1]
 
     def plugin_changed(self, a_val=None):
         self.control_combobox.clear()
@@ -10052,6 +10055,7 @@ class pydaw_main_window(QtGui.QMainWindow):
     def configure_callback(self, path, arr):
         f_pc_dict = {}
         f_ui_dict = {}
+        f_cc_dict = {}
         for f_line in arr[0].split("\n"):
             if f_line == "":
                 break
@@ -10067,6 +10071,9 @@ class pydaw_main_window(QtGui.QMainWindow):
                         f_editor.set_playback_pos(f_bar, f_beat)
             elif a_key == "peak":
                 global_update_peak_meters(a_val)
+            elif a_key == "cc":
+                f_track_num, f_cc, f_val = a_val.split("|")
+                f_cc_dict[(f_track_num, f_cc)] = f_val
             elif a_key == "ui":
                 f_plugin_uid, f_name, f_val = a_val.split("|", 2)
                 f_ui_dict[(f_plugin_uid, f_name)] = f_val
@@ -10096,7 +10103,12 @@ class pydaw_main_window(QtGui.QMainWindow):
             if f_plugin_uid in PLUGIN_UI_DICT:
                 PLUGIN_UI_DICT[f_plugin_uid].set_control_val(
                     f_port, float(f_val))
-
+        for k, f_val in f_cc_dict.items():
+            f_track_num, f_cc = (int(x) for x in k)
+            for f_plugin_uid in \
+            TRACK_PANEL.tracks[f_track_num].get_plugin_uids():
+                if f_plugin_uid in PLUGIN_UI_DICT:
+                    PLUGIN_UI_DICT[f_plugin_uid].set_cc_val(f_cc, f_val)
 
     def closeEvent(self, event):
         if self.ignore_close_event:
