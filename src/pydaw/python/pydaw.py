@@ -1677,6 +1677,9 @@ class region_editor(QtGui.QGraphicsView):
                         f_item.setSelected(False)
 
     def sceneMousePressEvent(self, a_event):
+        if CURRENT_REGION is None:
+            self.warn_no_region_selected()
+            return
         self.current_coord = self.get_item_coord(a_event.scenePos())
         if a_event.button() == QtCore.Qt.RightButton:
             if self.current_coord:
@@ -10897,6 +10900,7 @@ def global_new_project(a_project_file, a_wait=True):
     MAIN_WINDOW.notes_tab.setText("")
     WAVE_EDITOR.open_project()
     global_update_region_time()
+    ROUTING_GRAPH_WIDGET.scene.clear()
 
 PROJECT = pydaw_project(global_pydaw_with_audio)
 
