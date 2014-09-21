@@ -9223,6 +9223,7 @@ class pydaw_main_window(QtGui.QMainWindow):
         self.main_tabwidget.addTab(WAVE_EDITOR.widget, _("Wave Editor"))
 
         self.main_tabwidget.addTab(ROUTING_GRAPH_WIDGET, _("Routing"))
+        self.main_tabwidget.addTab(MIXER_WIDGET.widget, _("Mixer"))
 
         self.notes_tab = QtGui.QTextEdit(self)
         self.notes_tab.setAcceptRichText(False)
@@ -10931,6 +10932,7 @@ PIANO_ROLL_EDITOR = piano_roll_editor()
 PIANO_ROLL_EDITOR_WIDGET = piano_roll_editor_widget()
 ITEM_EDITOR = item_list_editor()
 AUDIO_SEQ = audio_items_viewer()
+MIXER_WIDGET = pydaw_widgets.mixer_widget(TRACK_COUNT_ALL)
 
 MIDI_EDITORS = (PIANO_ROLL_EDITOR, CC_EDITOR, PB_EDITOR)
 

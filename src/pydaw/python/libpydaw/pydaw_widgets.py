@@ -2545,19 +2545,56 @@ class routing_graph_widget(QtGui.QGraphicsView):
                 f_wire_width = ((f_dest_pos - f_i - 1) *
                     ROUTING_GRAPH_NODE_WIDTH) + ROUTING_GRAPH_WIRE_INPUT
                 f_v_wire_x = f_src_x + f_wire_width
-                self.scene.addLine(   # horizontal wire
+                self.scene.addLine( # horizontal wire
                     f_src_x, f_src_y, f_v_wire_x, f_src_y,
                     f_wire_pen)
                 f_wire_height = ((f_dest_pos - f_i) *
                     ROUTING_GRAPH_NODE_HEIGHT) - f_y_wire_offset
-                self.scene.addLine(   # vertical wire
+                self.scene.addLine( # vertical wire
                     f_v_wire_x, f_src_y, f_v_wire_x, f_src_y + f_wire_height,
                     f_wire_pen)
 
         self.setUpdatesEnabled(True)
         self.update()
 
+class mixer_channel:
+    def __init__(self, a_name):
+        self.widget = QtGui.QWidget()
+        self.vlayout = QtGui.QVBoxLayout(self.widget)
+        self.sends = {}
+        self.name_label = QtGui.QLabel(a_name)
+        self.vlayout.addWidget(self.name_label, -1, QtCore.Qt.AlignTop)
+        self.grid_layout = QtGui.QGridLayout()
+        self.vlayout.addLayout(self.grid_layout, 1)
+        self.peak_meter = peak_meter(36, True)
+        self.grid_layout.addWidget(self.peak_meter.widget, 0, 0)
 
+    def set_name(self, a_name):
+        self.name_label.setText(a_name)
+
+    def add_plugin(self, a_index, a_plugin_widget):
+        pass
+
+    def remove_plugin(self, a_index):
+        pass
+
+class mixer_widget:
+    def __init__(self, a_track_count):
+        self.widget = QtGui.QScrollArea()
+        self.widget.setWidgetResizable(True)
+        self.main_widget = QtGui.QWidget()
+        self.main_widget.setObjectName("plugin_ui")
+        self.widget.setWidget(self.main_widget)
+        self.tracks = {}
+        self.grid_layout = QtGui.QGridLayout(self.main_widget)
+        for f_i in range(a_track_count):
+            f_channel = mixer_channel("track{}".format(f_i))
+            self.tracks[f_i] = f_channel
+            self.grid_layout.addWidget(f_channel.widget, 0, f_i)
+
+    def update_track_names(self, a_track_names_dict):
+        for k, v in a_track_names_dict.items():
+            self.tracks[k].set_name(v)
 
 
 # Custom oscillator widgets
