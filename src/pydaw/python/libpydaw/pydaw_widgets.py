@@ -2484,8 +2484,6 @@ ROUTING_GRAPH_NODE_HEIGHT = 30.0
 ROUTING_GRAPH_NODE_HEIGHT_DIV2 = ROUTING_GRAPH_NODE_HEIGHT * 0.5
 ROUTING_GRAPH_WIRE_WIDTH = ROUTING_GRAPH_NODE_HEIGHT / 5.0  # max connections
 ROUTING_GRAPH_WIRE_WIDTH_DIV2 = ROUTING_GRAPH_WIRE_WIDTH * 0.5
-ROUTING_GRAPH_WIRE_PEN = QtGui.QPen(
-    EQ_GRADIENT, ROUTING_GRAPH_WIRE_WIDTH_DIV2)
 ROUTING_GRAPH_WIRE_INPUT = (
     (ROUTING_GRAPH_NODE_WIDTH * 0.5) - (ROUTING_GRAPH_WIRE_WIDTH * 0.5))
 ROUTING_GRAPH_NODE_GRADIENT = QtGui.QLinearGradient(
@@ -2514,6 +2512,12 @@ class routing_graph_widget(QtGui.QGraphicsView):
 
     # do a TRACK_PANEL.get_all_track_names() method
     def draw_graph(self, a_graph, a_track_names):
+        f_wire_gradient = QtGui.QLinearGradient(
+            0.0, 0.0, self.width(), self.height())
+        f_wire_gradient.setColorAt(0.0, QtGui.QColor(250, 250, 255))
+        f_wire_gradient.setColorAt(1.0, QtGui.QColor(210, 210, 222))
+        f_wire_pen = QtGui.QPen(
+            f_wire_gradient, ROUTING_GRAPH_WIRE_WIDTH_DIV2)
         self.setUpdatesEnabled(False)
         self.scene.clear()
         f_sorted = a_graph.sort_all_paths()
@@ -2540,12 +2544,12 @@ class routing_graph_widget(QtGui.QGraphicsView):
                 f_v_wire_x = f_src_x + f_wire_width
                 self.scene.addLine(   # horizontal wire
                     f_src_x, f_src_y, f_v_wire_x, f_src_y,
-                    ROUTING_GRAPH_WIRE_PEN)
+                    f_wire_pen)
                 f_wire_height = ((f_dest_pos - f_i) *
                     ROUTING_GRAPH_NODE_HEIGHT) - f_y_wire_offset
                 self.scene.addLine(   # vertical wire
                     f_v_wire_x, f_src_y, f_v_wire_x, f_src_y + f_wire_height,
-                    ROUTING_GRAPH_WIRE_PEN)
+                    f_wire_pen)
 
         self.setUpdatesEnabled(True)
         self.update()
