@@ -142,11 +142,6 @@ class pydaw_osc:
     def pydaw_update_track_send(self):
         self.send_configure("ts", "")
 
-    def pydaw_send_vol(self, a_track_num, a_index, a_vol):
-        self.send_configure(
-            "sv", "|".join(str(x) for x in
-            (a_track_num, a_index, a_vol)))
-
     def pydaw_save_tracks(self):
         self.send_configure("st", "")
 

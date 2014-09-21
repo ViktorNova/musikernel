@@ -2487,19 +2487,20 @@ class pydaw_routing_graph:
             f_result.set_node(k, v)
         return f_result
 
-# This is the initial implementation, this should be one per channel to
-# one destination channel
-# EDIT:  Or that may not be efficient...
+
 class pydaw_track_send:
-    def __init__(self, a_track_num, a_index, a_output, a_vol):
+    def __init__(self, a_track_num, a_index, a_output,
+                 a_plugin=0, a_plugin_uid=-1):
         self.track_num = int(a_track_num)
         self.index = int(a_index)
         self.output = int(a_output)
-        self.vol = float(a_vol)
+        self.plugin = int(a_plugin)
+        self.plugin_uid = int(a_plugin_uid)
 
     def __str__(self):
         return "|".join(str(x) for x in
-            ("s", self.track_num, self.index, self.output, self.vol))
+            ("s", self.track_num, self.index, self.output,
+             self.plugin, self.plugin_uid))
 
     def __lt__(self, other):
         return self.index < other.index

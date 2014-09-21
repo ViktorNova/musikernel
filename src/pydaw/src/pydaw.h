@@ -192,8 +192,8 @@ typedef struct
 typedef struct
 {
     int output;
-    float volume;
-    float volume_lin;
+    int plugin;
+    int plugin_uid;
     int active;
 }
 t_pytrack_routing;
@@ -375,7 +375,7 @@ t_pytrack * g_pytrack_get(int, float);
 t_pytrack_routing * g_pytrack_routing_get();
 t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data *);
 void v_pytrack_routing_graph_free(t_pydaw_routing_graph*);
-void v_pytrack_routing_set(t_pytrack_routing *, int, float);
+void v_pytrack_routing_set(t_pytrack_routing *, int, int, int);
 void v_pytrack_routing_free(t_pytrack_routing *);
 t_pyregion * g_pyregion_get(t_pydaw_data*, const int);
 t_pydaw_atm_region * g_atm_region_get(t_pydaw_data*, int);
@@ -403,8 +403,6 @@ void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
         int a_index, int a_plugin_index, int a_plugin_uid,
         int a_power, int a_lock);
 void v_pydaw_update_track_send(t_pydaw_data * self, int a_lock);
-void v_pydaw_update_send_vol(t_pydaw_data * self, int a_track_num,
-        int a_index, float a_vol);
 inline void v_pydaw_update_ports(t_pydaw_plugin * a_plugin);
 void * v_pydaw_worker_thread(void*);
 void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
@@ -1405,8 +1403,10 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         {
             while(f_i2 < self->sample_count)
             {
-                f_buff[0][f_i2] += f_track_buff[0][f_i2] * f_route->volume_lin;
-                f_buff[1][f_i2] += f_track_buff[1][f_i2] * f_route->volume_lin;
+                f_buff[0][f_i2] += f_track_buff[0][f_i2];
+                // * f_route->volume_lin;
+                f_buff[1][f_i2] += f_track_buff[1][f_i2];
+                // * f_route->volume_lin;
                 f_i2++;
             }
         }
@@ -1416,11 +1416,11 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
             {
                 f_rmp_run_ramp(a_track->fade_env);
                 f_buff[0][f_i2] +=
-                    f_track_buff[0][f_i2] * (1.0f - a_track->fade_env->output)
-                    * f_route->volume_lin;
+                    f_track_buff[0][f_i2] * (1.0f - a_track->fade_env->output);
+                    //* f_route->volume_lin;
                 f_buff[1][f_i2] +=
-                    f_track_buff[1][f_i2] * (1.0f - a_track->fade_env->output)
-                    * f_route->volume_lin;
+                    f_track_buff[1][f_i2] * (1.0f - a_track->fade_env->output);
+                    //* f_route->volume_lin;
                 f_i2++;
             }
 
@@ -1435,11 +1435,11 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
             {
                 f_rmp_run_ramp(a_track->fade_env);
                 f_buff[0][f_i2] +=
-                    f_track_buff[0][f_i2] * a_track->fade_env->output
-                    * f_route->volume_lin;
+                    f_track_buff[0][f_i2] * a_track->fade_env->output;
+                    //* f_route->volume_lin;
                 f_buff[1][f_i2] +=
-                    f_track_buff[1][f_i2] * a_track->fade_env->output
-                    * f_route->volume_lin;
+                    f_track_buff[1][f_i2] * a_track->fade_env->output;
+                    //* f_route->volume_lin;
                 f_i2++;
             }
 
@@ -4778,27 +4778,6 @@ void v_pydaw_update_track_send(t_pydaw_data * self, int a_lock)
     }
 }
 
-void v_pydaw_update_send_vol(t_pydaw_data * self, int a_track_num,
-        int a_index, float a_vol)
-{
-    t_pytrack_routing * f_route =
-        &self->routing_graph->routes[a_track_num][a_index];
-
-    if(!f_route->active)
-    {
-        return;
-    }
-
-    float f_vol_lin = f_db_to_linear(a_vol);
-
-    pthread_spin_lock(&self->main_lock);
-
-    f_route->volume = a_vol;
-    f_route->volume_lin = f_vol_lin;
-
-    pthread_spin_unlock(&self->main_lock);
-}
-
 t_pytrack_routing * g_pytrack_routing_get()
 {
     t_pytrack_routing * f_result;
@@ -4806,11 +4785,12 @@ t_pytrack_routing * g_pytrack_routing_get()
     return f_result;
 }
 
-void v_pytrack_routing_set(t_pytrack_routing * self, int a_output, float a_vol)
+void v_pytrack_routing_set(t_pytrack_routing * self, int a_output,
+        int a_plugin, int a_plugin_uid)
 {
     self->output = a_output;
-    self->volume = a_vol;
-    self->volume_lin = f_db_to_linear(a_vol);
+    self->plugin = a_plugin;
+    self->plugin_uid = a_plugin_uid;
     if(a_output >= 0)
     {
         self->active = 1;
@@ -4896,13 +4876,17 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
                 int f_output = atoi(f_output_str);
                 free(f_output_str);
 
-                char * f_vol_str = c_iterate_2d_char_array(f_2d_array);
-                float f_vol = atof(f_vol_str);
-                free(f_vol_str);
+                char * f_plugin_str = c_iterate_2d_char_array(f_2d_array);
+                int f_plugin = atoi(f_plugin_str);
+                free(f_plugin_str);
+
+                char * f_plugin_uid_str = c_iterate_2d_char_array(f_2d_array);
+                int f_plugin_uid = atoi(f_plugin_uid_str);
+                free(f_plugin_uid_str);
 
                 v_pytrack_routing_set(
                     &f_result->routes[f_track_num][f_index],
-                    f_output, f_vol);
+                    f_output, f_plugin, f_plugin_uid);
             }
             else if(f_identifier_str[0] == 'c')
             {

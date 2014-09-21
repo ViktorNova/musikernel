@@ -8187,16 +8187,10 @@ class track_send:
         self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
         self.update_names()
         a_layout.addWidget(self.bus_combobox, a_index + 1, 20)
-        self.vol_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
-        a_layout.addWidget(self.vol_slider, a_index + 1, 21)
-        self.vol_slider.setMinimumWidth(300)
-        self.vol_slider.setRange(-400, 120)
-        self.vol_slider.setValue(0)
-        self.vol_slider.valueChanged.connect(self.on_vol_changed)
-        self.vol_slider.sliderReleased.connect(self.on_vol_released)
-        self.vol_label = QtGui.QLabel("0.0dB")
-        self.vol_label.setMinimumWidth(60)
-        a_layout.addWidget(self.vol_label, a_index + 1, 22)
+        self.plugin_combobox = QtGui.QComboBox()
+        self.plugin_combobox.setMinimumWidth(180)
+        self.plugin_combobox.addItems(MIXER_PLUGIN_NAMES)
+        a_layout.addWidget(self.plugin_combobox, a_index + 1, 21)
         self.last_value = 0
         self.suppress_osc = False
 
@@ -8224,19 +8218,6 @@ class track_send:
                 f_graph, TRACK_PANEL.get_track_names())
             self.last_value = self.bus_combobox.currentIndex()
 
-    def get_vol(self):
-        return round(self.vol_slider.value() * 0.1, 1)
-
-    def set_vol(self, a_val):
-        self.vol_slider.setValue(int(a_val * 10.0))
-
-    def on_vol_changed(self, a_val):
-        f_val = self.get_vol()
-        self.vol_label.setText("{}dB".format(f_val))
-        if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_send_vol(
-                self.track_num, self.index, self.get_vol())
-
     def on_vol_released(self):
         self.update_engine()
 
@@ -8246,12 +8227,10 @@ class track_send:
     def get_value(self):
         return pydaw_track_send(
             self.track_num, self.index,
-            self.bus_combobox.currentIndex() - 1,
-            round(self.get_vol()))
+            self.bus_combobox.currentIndex() - 1)
 
     def set_value(self, a_val):
         self.suppress_osc = True
-        self.set_vol(a_val.vol)
         self.bus_combobox.setCurrentIndex(a_val.output + 1)
         self.suppress_osc = False
 
@@ -8346,6 +8325,8 @@ class seq_track:
         if self.track_number != 0:
             self.menu_gridlayout.addWidget(
                 QtGui.QLabel(_("Sends")), 0, 20)
+            self.menu_gridlayout.addWidget(
+                QtGui.QLabel(_("Mixer Plugin")), 0, 21)
             for f_i in range(4):
                 f_send = track_send(
                     f_i, self.track_number, self.menu_gridlayout,
@@ -10185,6 +10166,7 @@ PLUGIN_UIDS = {
     "None":0, "Euphoria":1, "Ray-V":2, "Way-V":3, "Modulex":4, "MK Delay":5,
     "MK EQ":6, "Simple Fader":7, "Simple Reverb":8, "TriggerFX":9
     }
+MIXER_PLUGIN_NAMES = ["None", "Simple Fader"]
 PLUGIN_UIDS_REVERSE = {v:k for k, v in PLUGIN_UIDS.items()}
 CC_NAMES = {x:[] for x in PLUGIN_NAMES}
 CONTROLLER_PORT_NAME_DICT = {x:{} for x in PLUGIN_NAMES}
