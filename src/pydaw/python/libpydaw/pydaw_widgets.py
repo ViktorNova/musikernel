@@ -2532,8 +2532,11 @@ class routing_graph_widget(QtGui.QGraphicsView):
             f_node_item.setPos(f_x, f_y)
             if k == 0:
                 continue
-            for f_conn, f_wire_index in zip(
-            (x[1] for x in a_graph.find_all_paths(k)), range(5)):
+            f_connections = []
+            for f_conn in [x[1] for x in a_graph.find_all_paths(k)]:
+                if f_conn not in f_connections:
+                    f_connections.append(f_conn)
+            for f_conn, f_wire_index in zip(f_connections, range(5)):
                 f_src_x = f_x + ROUTING_GRAPH_NODE_WIDTH
                 f_y_wire_offset = (f_wire_index *
                     ROUTING_GRAPH_WIRE_WIDTH) + ROUTING_GRAPH_WIRE_WIDTH_DIV2
