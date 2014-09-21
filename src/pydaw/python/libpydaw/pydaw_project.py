@@ -764,7 +764,9 @@ class pydaw_project:
             return None
 
         def new_take(a_track_num):
-            self.rec_take = []
+            self.rec_take = {}
+
+        def copy_take(a_track_num):
             f_length = f_current_region.get_length()
             for f_i in range(f_length):
                 if a_overdub:
@@ -777,7 +779,9 @@ class pydaw_project:
             f_uid = self.create_empty_item(f_name)
             f_item = self.get_item_by_uid(f_uid)
             f_items_to_save[f_uid] = f_item
-            self.rec_take.append(f_item)
+            if a_track_num not in self.rec_take:
+                self.rec_take[a_track_num] = {}
+            self.rec_take[a_track_num][a_bar] = f_item
             f_current_region.add_item_ref_by_uid(
                 a_track_num, a_bar, f_uid)
 
@@ -790,24 +794,26 @@ class pydaw_project:
                 f_uid = self.copy_item(f_old_name, f_name)
                 f_item = self.get_item_by_uid(f_uid)
                 f_items_to_save[f_uid] = f_item
-                self.rec_take.append(f_item)
+                self.rec_take[a_track_num][a_bar] = f_item
                 f_current_region.add_item_ref_by_uid(
                     a_track_num, a_bar, f_uid)
             else:
                 new_item(a_bar, a_track_num)
 
-        def set_note_length(f_note_num):
-            f_note = f_note_tracker[f_note_num]
+        def set_note_length(a_track_num, f_note_num):
+            f_note = f_note_tracker[a_track_num][f_note_num]
             f_sample_count = f_tick - f_note.start_sample
             f_seconds = float(f_sample_count) / float(a_sr)
             f_note.length = f_seconds * f_beats_per_second
-            print(f_note_tracker.pop(f_note_num))
+            print(f_note_tracker[a_track_num].pop(f_note_num))
 
         for f_event in f_mrec_items:
             f_type, f_region, f_bar, f_beat, f_track = f_event[:5]
-            f_region = int(f_region)
-            f_bar = int(f_bar)
+            f_region, f_bar, f_track = (
+                int(x) for x in (f_region, f_bar, f_track))
             f_beat = float(f_beat)
+            if not f_track in f_note_tracker:
+                f_note_tracker[f_track] = {}
             if f_region in f_song.regions:
                 if f_region not in f_regions_to_save:
                     f_regions_to_save[f_region] = self.get_region_by_uid(
@@ -829,23 +835,26 @@ class pydaw_project:
             f_last_bar != f_bar:
                 if f_is_looping or f_region != f_last_region:
                     new_take(f_track)
-                self.rec_item = self.rec_take[f_bar]
+                if not f_track in self.rec_take:
+                    copy_take(f_track)
                 f_last_region = f_region
                 f_last_bar = f_bar
+
+            self.rec_item = self.rec_take[f_track][f_bar]
 
             if f_type == "on":
                 f_note_num, f_velocity, f_tick = (int(x) for x in f_event[5:])
                 print("New note: {} {} {}".format(f_bar, f_beat, f_note_num))
                 f_note = pydaw_note(f_beat, 1.0, f_note_num, f_velocity)
                 f_note.start_sample = f_tick
-                if f_note_num in f_note_tracker:
-                    set_note_length(f_note_num)
-                f_note_tracker[f_note_num] = f_note
+                if f_note_num in f_note_tracker[f_track]:
+                    set_note_length(f_track, f_note_num)
+                f_note_tracker[f_track][f_note_num] = f_note
                 self.rec_item.add_note(f_note, a_check=False)
             elif f_type == "off":
                 f_note_num, f_tick = (int(x) for x in f_event[5:])
-                if f_note_num in f_note_tracker:
-                    set_note_length(f_note_num)
+                if f_note_num in f_note_tracker[f_track]:
+                    set_note_length(f_track, f_note_num)
                 else:
                     print("Error:  note event not in note tracker")
             elif f_type == "cc":
