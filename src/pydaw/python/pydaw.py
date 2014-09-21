@@ -8129,7 +8129,7 @@ class plugin_settings:
     def automation_check_changed(self):
         if self.automation_radiobutton.isChecked():
             self.automation_callback(
-                self.index, self.get_plugin_uid(),
+                self.index, get_plugin_uid_by_name(self.plugin_combobox.currentText()),
                 self.plugin_combobox.currentText())
 
     def set_value(self, a_val):
@@ -8141,19 +8141,15 @@ class plugin_settings:
         self.power_checkbox.setChecked(a_val.power == 1)
         self.suppress_osc = False
 
-    def get_plugin_uid(self):
-        f_text = str(self.plugin_combobox.currentText())
-        return PLUGIN_UIDS[f_text]
-
     def get_value(self):
         return pydaw_track_plugin(
-            self.index, self.get_plugin_uid(), self.plugin_uid,
+            self.index, get_plugin_uid_by_name(self.plugin_combobox.currentText()), self.plugin_uid,
             a_power=1 if self.power_checkbox.isChecked() else 0)
 
     def on_plugin_change(self, a_val=None):
         if self.suppress_osc:
             return
-        f_index = self.get_plugin_uid()
+        f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
         if f_index == 0:
             self.plugin_uid = -1
         elif self.plugin_uid == -1:
@@ -8167,7 +8163,7 @@ class plugin_settings:
         pass
 
     def on_show_ui(self):
-        f_index = self.get_plugin_uid()
+        f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
         if f_index == 0 or self.plugin_uid == -1:
             return
         global_open_plugin_ui(
@@ -8191,11 +8187,39 @@ class track_send:
         self.plugin_combobox.setMinimumWidth(180)
         self.plugin_combobox.addItems(MIXER_PLUGIN_NAMES)
         a_layout.addWidget(self.plugin_combobox, a_index + 1, 21)
+        self.plugin_combobox.currentIndexChanged.connect(
+            self.on_plugin_changed)
         self.last_value = 0
+        self.plugin_uid = -1
         self.suppress_osc = False
 
     def on_bus_changed(self, a_value=0):
         self.update_engine()
+
+    def on_plugin_changed(self, a_val=None):
+        if self.suppress_osc:
+            return
+        f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
+        if f_index == 0:
+            self.plugin_uid = -1
+        elif self.plugin_uid == -1:
+            self.plugin_uid = PROJECT.get_next_plugin_uid()
+        PROJECT.this_pydaw_osc.pydaw_set_plugin(
+            self.track_num, self.index + 10, f_index,
+            self.plugin_uid, True) #self.power_checkbox.isChecked())
+        self.save_callback()
+        if self.plugin_uid == -1:
+            MIXER_WIDGET.remove_plugin_widget(self.track_num, self.index)
+        else:
+            f_plugin_ui = global_open_plugin_ui(
+                self.plugin_uid, f_index,
+                "Track:  {}".format(self.track_num), False)
+            MIXER_WIDGET.set_plugin_widget(
+                self.track_num, self.index,
+                self.bus_combobox.currentIndex() - 1, f_plugin_ui.widget)
+            MIXER_WIDGET.update_track_names(
+                {f_i:x for f_i, x in zip(
+                range(len(TRACK_NAMES)), TRACK_NAMES)})
 
     def update_engine(self):
         if not self.suppress_osc:
@@ -8232,6 +8256,7 @@ class track_send:
     def set_value(self, a_val):
         self.suppress_osc = True
         self.bus_combobox.setCurrentIndex(a_val.output + 1)
+        self.plugin_combobox.setCurrentIndex(a_val.plugin)
         self.suppress_osc = False
 
     def update_names(self):
@@ -8971,7 +8996,8 @@ PLUGIN_UI_TYPES = {
     9:mkplugins.trigger_fx.triggerfx_plugin_ui
 }
 
-def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title):
+def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title,
+                          a_show=True):
     if not a_plugin_uid in PLUGIN_UI_DICT:
         f_plugin = PLUGIN_UI_TYPES[a_plugin_type](
             PROJECT.this_pydaw_osc.pydaw_update_plugin_control,
@@ -8981,9 +9007,13 @@ def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title):
             midi_learn_callback,
             PROJECT.this_pydaw_osc.pydaw_load_cc_map)
         pydaw_center_widget_on_screen(f_plugin.widget)
-        f_plugin.show_widget()
         PLUGIN_UI_DICT[a_plugin_uid] = f_plugin
+        if a_show:
+            f_plugin.show_widget()
+        else:
+            return f_plugin
     else:
+        assert(not a_show)
         if PLUGIN_UI_DICT[a_plugin_uid].widget.isHidden():
             PLUGIN_UI_DICT[a_plugin_uid].widget.show()
         PLUGIN_UI_DICT[a_plugin_uid].raise_widget()
@@ -10176,6 +10206,9 @@ PLUGIN_UIDS_REVERSE = {v:k for k, v in PLUGIN_UIDS.items()}
 CC_NAMES = {x:[] for x in PLUGIN_NAMES}
 CONTROLLER_PORT_NAME_DICT = {x:{} for x in PLUGIN_NAMES}
 CONTROLLER_PORT_NUM_DICT = {x:{} for x in PLUGIN_NAMES}
+
+def get_plugin_uid_by_name(a_name):
+    return PLUGIN_UIDS[str(a_name)]
 
 class pydaw_controller_map_item:
     def __init__(self, a_name, a_port):

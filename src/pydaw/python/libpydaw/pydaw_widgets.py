@@ -2562,25 +2562,34 @@ class mixer_channel:
         self.widget = QtGui.QWidget()
         self.vlayout = QtGui.QVBoxLayout(self.widget)
         self.sends = {}
+        self.outputs = {}
+        self.output_labels = {}
         self.name_label = QtGui.QLabel(a_name)
         self.vlayout.addWidget(self.name_label, -1, QtCore.Qt.AlignTop)
         self.grid_layout = QtGui.QGridLayout()
         self.vlayout.addLayout(self.grid_layout, 1)
         self.peak_meter = peak_meter(30, True)
-        self.grid_layout.addWidget(self.peak_meter.widget, 0, 0)
+        self.grid_layout.addWidget(self.peak_meter.widget, 1, 0)
 
-    def set_name(self, a_name):
+    def set_name(self, a_name, a_dict):
         self.name_label.setText(a_name)
+        for k in self.outputs:
+            self.output_labels[k].setText(a_dict[self.outputs[k]])
 
-    def add_plugin(self, a_index, a_plugin_widget):
+    def add_plugin(self, a_index, a_plugin_widget, a_output):
         if a_index in self.sends:
             self.remove_plugin(a_index)
         self.sends[a_index] = a_plugin_widget
-        self.grid_layout.addWidget(a_plugin_widget, 0, a_index + 1)
+        self.outputs[a_index] = a_output
+        f_label = QtGui.QLabel(str(a_output))
+        self.output_labels[a_index] = f_label
+        self.grid_layout.addWidget(f_label, 0, a_index + 1)
+        self.grid_layout.addWidget(a_plugin_widget, 1, a_index + 1)
 
     def remove_plugin(self, a_index):
         if a_index in self.sends:
             self.grid_layout.removeWidget(self.sends.pop(a_index))
+            self.grid_layout.removeWidget(self.output_labels.pop(a_index))
 
 class mixer_widget:
     def __init__(self, a_track_count):
@@ -2598,10 +2607,12 @@ class mixer_widget:
 
     def update_track_names(self, a_track_names_dict):
         for k, v in a_track_names_dict.items():
-            self.tracks[k].set_name(v)
+            self.tracks[k].set_name(v, a_track_names_dict)
 
-    def set_plugin_widget(self, a_track_index, a_send_index, a_plugin_widget):
-        self.tracks[a_track_index].add_plugin(a_send_index, a_plugin_widget)
+    def set_plugin_widget(self, a_track_index, a_send_index, a_output,
+                          a_plugin_widget):
+        self.tracks[a_track_index].add_plugin(
+            a_send_index, a_plugin_widget, a_output)
 
     def remove_plugin_widget(self, a_track_index, a_send_index):
         self.tracks[a_track_index].remove_plugin(a_send_index)
