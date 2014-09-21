@@ -61,7 +61,7 @@ static void v_mkdelay_panic(PYFX_Handle instance)
 
 static void v_mkdelay_on_stop(PYFX_Handle instance)
 {
-    t_mkdelay *plugin = (t_mkdelay*)instance;
+    //t_mkdelay *plugin = (t_mkdelay*)instance;
 }
 
 static void v_mkdelay_connect_buffer(PYFX_Handle instance, int a_index,
@@ -249,8 +249,7 @@ static void v_mkdelay_run(
 
 PYFX_Descriptor *mkdelay_PYFX_descriptor(int index)
 {
-    PYFX_Descriptor *f_result =
-            pydaw_get_pyfx_descriptor(123456, "Modulex", MKDELAY_COUNT);
+    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(MKDELAY_COUNT);
 
     pydaw_set_pyfx_port(f_result, MKDELAY_DELAY_TIME, 50.0f, 10.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, MKDELAY_FEEDBACK, -12.0f, -15.0f, 0.0f);

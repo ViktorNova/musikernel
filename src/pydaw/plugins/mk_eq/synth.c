@@ -56,12 +56,12 @@ static void v_mkeq_set_cc_map(PYFX_Handle instance, char * a_msg)
 
 static void v_mkeq_panic(PYFX_Handle instance)
 {
-    t_mkeq *plugin = (t_mkeq*)instance;
+    //t_mkeq *plugin = (t_mkeq*)instance;
 }
 
 static void v_mkeq_on_stop(PYFX_Handle instance)
 {
-    t_mkeq *plugin = (t_mkeq*)instance;
+    //t_mkeq *plugin = (t_mkeq*)instance;
 }
 
 static void v_mkeq_connect_buffer(PYFX_Handle instance, int a_index,
@@ -276,8 +276,7 @@ static void v_mkeq_run(
 
 PYFX_Descriptor *mkeq_PYFX_descriptor(int index)
 {
-    PYFX_Descriptor *f_result =
-            pydaw_get_pyfx_descriptor(123456, "Modulex", MKEQ_COUNT);
+    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(MKEQ_COUNT);
 
 
     pydaw_set_pyfx_port(f_result, MKEQ_EQ1_FREQ, 24.0f, 4.0f, 123.0f);

@@ -761,8 +761,7 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
 
 PYFX_Descriptor *rayv_PYFX_descriptor(int index)
 {
-    PYFX_Descriptor *f_result =
-            pydaw_get_pyfx_descriptor(54546565, "Ray-V", RAYV_COUNT);
+    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(RAYV_COUNT);
 
     pydaw_set_pyfx_port(f_result, RAYV_ATTACK, 10.0f, 0.0f, 200.0f);
     pydaw_set_pyfx_port(f_result, RAYV_DECAY, 10.0f, 10.0f, 200.0f);

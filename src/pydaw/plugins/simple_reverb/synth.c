@@ -55,12 +55,12 @@ static void v_sreverb_set_cc_map(PYFX_Handle instance, char * a_msg)
 
 static void v_sreverb_panic(PYFX_Handle instance)
 {
-    t_sreverb *plugin = (t_sreverb*)instance;
+    //t_sreverb *plugin = (t_sreverb*)instance;
 }
 
 static void v_sreverb_on_stop(PYFX_Handle instance)
 {
-    t_sreverb *plugin = (t_sreverb*)instance;
+    //t_sreverb *plugin = (t_sreverb*)instance;
 }
 
 static void v_sreverb_connect_buffer(PYFX_Handle instance, int a_index,
@@ -249,8 +249,7 @@ static void v_sreverb_run(
 
 PYFX_Descriptor *sreverb_PYFX_descriptor(int index)
 {
-    PYFX_Descriptor *f_result =
-            pydaw_get_pyfx_descriptor(123456, "Modulex", SREVERB_COUNT);
+    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(SREVERB_COUNT);
 
     pydaw_set_pyfx_port(f_result, SREVERB_REVERB_TIME, 50.0f, 0.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, SREVERB_REVERB_WET, -12.0f, -50.0f, 0.0f);

@@ -1484,8 +1484,7 @@ void v_euphoria_configure(PYFX_Handle instance, char *key,
 
 PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
 {
-    PYFX_Descriptor *f_result =
-        pydaw_get_pyfx_descriptor(99883366, "Euphoria", EUPHORIA_PORT_COUNT);
+    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(EUPHORIA_PORT_COUNT);
 
     pydaw_set_pyfx_port(f_result, EUPHORIA_SELECTED_SAMPLE, 0.0f, 0, (EUPHORIA_MAX_SAMPLE_COUNT - 1));
     pydaw_set_pyfx_port(f_result, EUPHORIA_ATTACK, 0.0f, 0.0f, 200.0f);

@@ -57,12 +57,12 @@ static void v_modulex_set_cc_map(PYFX_Handle instance, char * a_msg)
 
 static void v_modulex_panic(PYFX_Handle instance)
 {
-    t_modulex *plugin = (t_modulex*)instance;
+    //t_modulex *plugin = (t_modulex*)instance;
 }
 
 static void v_modulex_on_stop(PYFX_Handle instance)
 {
-    t_modulex *plugin = (t_modulex*)instance;
+    //t_modulex *plugin = (t_modulex*)instance;
 }
 
 static void v_modulex_connect_buffer(PYFX_Handle instance, int a_index,
@@ -364,8 +364,7 @@ static void v_modulex_run(
 
 PYFX_Descriptor *modulex_PYFX_descriptor(int index)
 {
-    PYFX_Descriptor *f_result =
-            pydaw_get_pyfx_descriptor(123456, "Modulex", MODULEX_COUNT);
+    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(MODULEX_COUNT);
 
     pydaw_set_pyfx_port(f_result, MODULEX_FX0_KNOB0, 64.0f, 0.0f, 127.0f);
     pydaw_set_pyfx_port(f_result, MODULEX_FX0_KNOB1, 64.0f, 0.0f, 127.0f);

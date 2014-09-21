@@ -241,8 +241,7 @@ static void v_sfader_run(
 
 PYFX_Descriptor *sfader_PYFX_descriptor(int index)
 {
-    PYFX_Descriptor *f_result =
-            pydaw_get_pyfx_descriptor(123456, "Modulex", SFADER_COUNT);
+    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(SFADER_COUNT);
 
     pydaw_set_pyfx_port(f_result, SFADER_VOL_SLIDER, 0.0f, -5000.0f, 0.0f);
 

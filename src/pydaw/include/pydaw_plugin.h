@@ -85,13 +85,6 @@ typedef t_wav_pool_item * (*fp_get_wavpool_item_from_host)(int);
    buffers and workspaces and to run it. */
 
 typedef struct _PYFX_Descriptor {
-
-    unsigned long UniqueID;
-
-    char * Name;
-
-    char * Maker;
-
     int PortCount;
 
     PYFX_PortDescriptor * PortDescriptors;
@@ -350,15 +343,11 @@ inline void v_pydaw_ev_set_atm(t_pydaw_seq_event* a_event,
     a_event->value = a_value;
 }
 
-PYFX_Descriptor * pydaw_get_pyfx_descriptor(int a_uid, char * a_name,
-        int a_port_count)
+PYFX_Descriptor * pydaw_get_pyfx_descriptor(int a_port_count)
 {
     PYFX_Descriptor *f_result =
             (PYFX_Descriptor*)malloc(sizeof(PYFX_Descriptor));
 
-    f_result->UniqueID = a_uid;
-    f_result->Name = a_name;
-    f_result->Maker = "PyDAW Team";
     f_result->PortCount = a_port_count;
 
     f_result->PortDescriptors =

@@ -414,8 +414,7 @@ static void v_triggerfx_run(
 
 PYFX_Descriptor *triggerfx_PYFX_descriptor(int index)
 {
-    PYFX_Descriptor *f_result =
-            pydaw_get_pyfx_descriptor(123456, "Modulex", TRIGGERFX_COUNT);
+    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(TRIGGERFX_COUNT);
 
     pydaw_set_pyfx_port(f_result, TRIGGERFX_GATE_NOTE, 120.0f, 0.0f, 120.0f);
     pydaw_set_pyfx_port(f_result, TRIGGERFX_GATE_MODE, 0.0f, 0.0f, 2.0f);

@@ -1614,8 +1614,7 @@ void v_wayv_configure(PYFX_Handle instance, char *key,
 
 PYFX_Descriptor *wayv_PYFX_descriptor(int index)
 {
-    PYFX_Descriptor *f_result =
-            pydaw_get_pyfx_descriptor(987564, "Way-V", WAYV_COUNT);
+    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(WAYV_COUNT);
 
     pydaw_set_pyfx_port(f_result, WAYV_ATTACK_MAIN, 10.0f, 0.0f, 200.0f);
     pydaw_set_pyfx_port(f_result, WAYV_DECAY_MAIN, 50.0f, 10.0f, 200.0f);
