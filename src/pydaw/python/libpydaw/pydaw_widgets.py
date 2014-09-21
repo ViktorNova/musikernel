@@ -2478,7 +2478,7 @@ class morph_eq(eq6_widget):
         pass
 
 
-ROUTING_GRAPH_NODE_WIDTH = 81.0
+ROUTING_GRAPH_NODE_WIDTH = 100.0
 ROUTING_GRAPH_NODE_WIDTH_DIV2 = ROUTING_GRAPH_NODE_WIDTH * 0.5
 ROUTING_GRAPH_NODE_HEIGHT = 30.0
 ROUTING_GRAPH_NODE_HEIGHT_DIV2 = ROUTING_GRAPH_NODE_HEIGHT * 0.5
@@ -2488,13 +2488,19 @@ ROUTING_GRAPH_WIRE_PEN = QtGui.QPen(
     EQ_GRADIENT, ROUTING_GRAPH_WIRE_WIDTH_DIV2)
 ROUTING_GRAPH_WIRE_INPUT = (
     (ROUTING_GRAPH_NODE_WIDTH * 0.5) - (ROUTING_GRAPH_WIRE_WIDTH * 0.5))
+ROUTING_GRAPH_NODE_GRADIENT = QtGui.QLinearGradient(
+    0.0, 0.0, 0.0, ROUTING_GRAPH_NODE_HEIGHT)
+ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.0, QtGui.QColor(255, 255, 0))
+ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.1, QtGui.QColor(231, 231, 0))
+ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.8, QtGui.QColor(180, 180, 0))
+ROUTING_GRAPH_NODE_GRADIENT.setColorAt(1.0, QtGui.QColor(150, 150, 90))
 
 class routing_graph_node(QtGui.QGraphicsRectItem):
     def __init__(self, a_text):
         QtGui.QGraphicsRectItem.__init__(
             self, 0, 0, ROUTING_GRAPH_NODE_WIDTH, ROUTING_GRAPH_NODE_HEIGHT)
-        self.setBrush(QtCore.Qt.yellow)
-        self.setPen(QtCore.Qt.white)
+        self.setBrush(ROUTING_GRAPH_NODE_GRADIENT)
+        self.setPen(QtCore.Qt.black)
         self.text = QtGui.QGraphicsSimpleTextItem(a_text, self)
         self.text.setPos(3.0, 3.0)
 
@@ -2540,7 +2546,6 @@ class routing_graph_widget(QtGui.QGraphicsView):
                 self.scene.addLine(   # vertical wire
                     f_v_wire_x, f_src_y, f_v_wire_x, f_src_y + f_wire_height,
                     ROUTING_GRAPH_WIRE_PEN)
-            print(locals())
 
         self.setUpdatesEnabled(True)
         self.update()

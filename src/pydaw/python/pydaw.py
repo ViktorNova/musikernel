@@ -2353,6 +2353,8 @@ def global_update_track_comboboxes(a_index=None, a_value=None):
         f_cbox.setCurrentIndex(f_current_index)
 
     SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES = False
+    ROUTING_GRAPH_WIDGET.draw_graph(
+        PROJECT.get_routing_graph(), TRACK_PANEL.get_track_names())
 
 
 #TODO:  Clean these up...
