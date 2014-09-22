@@ -8089,6 +8089,8 @@ def global_open_mixer():
             if f_track_index in f_plugins and \
             f_send_plugin_index in f_plugins[f_track_index]:
                 f_plugin_obj = f_plugins[f_track_index][f_send_plugin_index]
+                if f_plugin_obj.plugin_index == 0:  # None
+                    continue
                 f_plugin_ui = global_open_plugin_ui(
                     f_plugin_obj.plugin_uid, f_plugin_obj.plugin_index,
                     "Track:  {}".format(f_track_index), False)
