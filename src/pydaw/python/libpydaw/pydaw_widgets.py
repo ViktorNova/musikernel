@@ -2595,7 +2595,6 @@ class mixer_channel:
 
     def remove_plugin(self, a_index):
         if a_index in self.sends:
-            self.sends.pop(a_index)
             self.grid_layout.removeWidget(self.sends.pop(a_index).widget)
             self.grid_layout.removeWidget(self.output_labels.pop(a_index))
 
