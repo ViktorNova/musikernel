@@ -56,6 +56,9 @@ class sfader_plugin_ui(pydaw_abstract_plugin_ui):
         self.open_plugin_file()
         self.set_midi_learn(SFADER_PORT_MAP)
 
+    def plugin_rel_callback(self, a_val1=None, a_val2=None):
+        self.save_plugin_file()
+
     def open_plugin_file(self):
         pydaw_abstract_plugin_ui.open_plugin_file(self)
 
@@ -65,10 +68,10 @@ class sfader_plugin_ui(pydaw_abstract_plugin_ui):
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(
-            "MusiKernel Modulex - {}".format(self.track_name))
+            "Fader - {}".format(self.track_name))
 
     def widget_close_event(self, a_event):
-        pydaw_abstract_plugin_ui.widget_close_event(self, a_event)
+        a_event.accept()
 
     def raise_widget(self):
         pydaw_abstract_plugin_ui.raise_widget(self)
