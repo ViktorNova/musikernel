@@ -143,17 +143,15 @@ static void v_sfader_process_midi_event(
     }
 }
 
-static void v_sfader_run_mixing(
-        PYFX_Handle instance, int sample_count,
-        float ** output_buffers, int output_count,
-        t_pydaw_seq_event *events, int event_count,
-        t_pydaw_seq_event *atm_events, int atm_event_count,
-        t_pydaw_seq_event *ext_events, int ext_event_count)
+
+static void v_sfader_process_midi(
+    PYFX_Handle instance,
+    t_pydaw_seq_event *events, int event_count,
+    t_pydaw_seq_event *atm_events, int atm_event_count,
+    t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_sfader *plugin_data = (t_sfader*)instance;
-
     int event_pos = 0;
-    int midi_event_pos = 0;
     plugin_data->midi_event_count = 0;
 
     while (event_pos < event_count)
@@ -181,14 +179,28 @@ static void v_sfader_run_mixing(
         v_sfader_process_midi_event(plugin_data, &ext_events[f_i]);
         f_i++;
     }
+}
 
-    f_i = 0;
 
-    while((f_i) < sample_count)
+static void v_sfader_run_mixing(
+        PYFX_Handle instance, int sample_count,
+        float ** output_buffers, int output_count,
+        t_pydaw_seq_event *events, int event_count,
+        t_pydaw_seq_event *atm_events, int atm_event_count,
+        t_pydaw_seq_event *ext_events, int ext_event_count)
+{
+    t_sfader *plugin_data = (t_sfader*)instance;
+
+    v_sfader_process_midi(instance, events, event_count,
+        atm_events, atm_event_count, ext_events, ext_event_count);
+
+    int midi_event_pos = 0;
+    int f_i = 0;
+
+    while(f_i < sample_count)
     {
         while(midi_event_pos < plugin_data->midi_event_count &&
-                plugin_data->midi_event_ticks[midi_event_pos] ==
-                f_i)
+            plugin_data->midi_event_ticks[midi_event_pos] == f_i)
         {
             if(plugin_data->midi_event_types[midi_event_pos] ==
                     PYDAW_EVENT_CONTROLLER)
@@ -203,23 +215,19 @@ static void v_sfader_run_mixing(
         }
 
         v_plugin_event_queue_atm_set(
-            &plugin_data->atm_queue, f_i,
-            plugin_data->port_table);
+            &plugin_data->atm_queue, f_i, plugin_data->port_table);
 
         v_sml_run(plugin_data->mono_modules->volume_smoother,
             (*plugin_data->vol_slider * 0.01f));
 
-        if(plugin_data->mono_modules->volume_smoother->last_value != 0.0f ||
-        (*plugin_data->vol_slider != 0.0f))
-        {
+        plugin_data->mono_modules->vol_linear =
+            f_db_to_linear_fast(
+            (plugin_data->mono_modules->volume_smoother->last_value));
 
-            plugin_data->mono_modules->vol_linear =
-                f_db_to_linear_fast(
-                (plugin_data->mono_modules->volume_smoother->last_value));
-
-            output_buffers[0][f_i] *= (plugin_data->mono_modules->vol_linear);
-            output_buffers[1][f_i] *= (plugin_data->mono_modules->vol_linear);
-        }
+        output_buffers[0][f_i] += plugin_data->buffers[0][f_i] *
+            (plugin_data->mono_modules->vol_linear);
+        output_buffers[1][f_i] += plugin_data->buffers[1][f_i] *
+            (plugin_data->mono_modules->vol_linear);
 
         f_i++;
     }
@@ -233,10 +241,49 @@ static void v_sfader_run(
         t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_sfader *plugin_data = (t_sfader*)instance;
-    v_sfader_run_mixing(
-        instance, sample_count, plugin_data->buffers, 2,
-        events, event_count, atm_events, atm_event_count,
-        ext_events, ext_event_count);
+    v_sfader_process_midi(instance, events, event_count,
+        atm_events, atm_event_count, ext_events, ext_event_count);
+
+    int midi_event_pos = 0;
+    int f_i = 0;
+
+    while(f_i < sample_count)
+    {
+        while(midi_event_pos < plugin_data->midi_event_count &&
+            plugin_data->midi_event_ticks[midi_event_pos] == f_i)
+        {
+            if(plugin_data->midi_event_types[midi_event_pos] ==
+                    PYDAW_EVENT_CONTROLLER)
+            {
+                v_cc_map_translate(
+                    &plugin_data->cc_map, plugin_data->descriptor,
+                    plugin_data->port_table,
+                    plugin_data->midi_event_ports[midi_event_pos],
+                    plugin_data->midi_event_values[midi_event_pos]);
+            }
+            midi_event_pos++;
+        }
+
+        v_plugin_event_queue_atm_set(
+            &plugin_data->atm_queue, f_i, plugin_data->port_table);
+
+        v_sml_run(plugin_data->mono_modules->volume_smoother,
+            (*plugin_data->vol_slider * 0.01f));
+
+        if(plugin_data->mono_modules->volume_smoother->last_value != 0.0f ||
+            (*plugin_data->vol_slider != 0.0f))
+        {
+            plugin_data->mono_modules->vol_linear =
+                f_db_to_linear_fast(
+                (plugin_data->mono_modules->volume_smoother->last_value));
+
+            plugin_data->buffers[0][f_i] *=
+                (plugin_data->mono_modules->vol_linear);
+            plugin_data->buffers[1][f_i] *=
+                (plugin_data->mono_modules->vol_linear);
+        }
+        f_i++;
+    }
 }
 
 PYFX_Descriptor *sfader_PYFX_descriptor(int index)
@@ -257,13 +304,12 @@ PYFX_Descriptor *sfader_PYFX_descriptor(int index)
     f_result->API_Version = 1;
     f_result->configure = NULL;
     f_result->run_replacing = v_sfader_run;
+    f_result->run_mixing = v_sfader_run_mixing;
     f_result->on_stop = v_sfader_on_stop;
     f_result->offline_render_prep = NULL;
 
     return f_result;
 }
-
-
 
 
 /*

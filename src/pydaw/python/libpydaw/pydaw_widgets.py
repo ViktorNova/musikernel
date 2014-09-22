@@ -2589,6 +2589,8 @@ class mixer_channel:
         f_label = QtGui.QLabel(str(a_output))
         self.output_labels[a_index] = f_label
         self.grid_layout.addWidget(f_label, 0, a_index + 1)
+        a_plugin.widget.setSizePolicy(
+            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Expanding)
         self.grid_layout.addWidget(a_plugin.widget, 1, a_index + 1)
 
     def remove_plugin(self, a_index):

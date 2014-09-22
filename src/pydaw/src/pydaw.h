@@ -1337,6 +1337,7 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
     int f_bus_num;
     t_pytrack * f_bus;
     t_pytrack_routing * f_route;
+    t_pydaw_plugin * f_plugin = 0;
     float ** f_buff;
     float ** f_track_buff = a_track->buffers;
 
@@ -1371,12 +1372,49 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         }
     }
 
+    int f_i2 = 0;
+
+    if(a_track->fade_state == FADE_STATE_OFF)
+    {
+
+    }
+    else if(a_track->fade_state == FADE_STATE_FADING)
+    {
+        while(f_i2 < self->sample_count)
+        {
+            f_rmp_run_ramp(a_track->fade_env);
+
+            f_track_buff[0][f_i2] *= (1.0f - a_track->fade_env->output);
+            f_track_buff[1][f_i2] *= (1.0f - a_track->fade_env->output);
+            f_i2++;
+        }
+
+        if(a_track->fade_env->output >= 1.0f)
+        {
+            a_track->fade_state = FADE_STATE_FADED;
+        }
+    }
+    else if(a_track->fade_state == FADE_STATE_RETURNING)
+    {
+        while(f_i2 < self->sample_count)
+        {
+            f_rmp_run_ramp(a_track->fade_env);
+            f_track_buff[0][f_i2] *= a_track->fade_env->output;
+            f_track_buff[1][f_i2] *= a_track->fade_env->output;
+            f_i2++;
+        }
+
+        if(a_track->fade_env->output >= 1.0f)
+        {
+            a_track->fade_state = FADE_STATE_OFF;
+        }
+    }
+
+
     int f_i3 = 0;
 
     while(f_i3 < MAX_ROUTING_COUNT)
     {
-        int f_i2 = 0;
-
         f_route = &self->routing_graph->routes[a_track->track_num][f_i3];
 
         if(!f_route->active)
@@ -1393,58 +1431,43 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
             continue;
         }
 
+        int f_plugin_index = MAX_PLUGIN_COUNT + f_i3;
+
+        if(a_track->plugins[f_plugin_index])
+        {
+            f_plugin = a_track->plugins[f_plugin_index];
+        }
+        else
+        {
+            f_plugin = 0;
+        }
+
         f_bus = self->track_pool_all[f_bus_num];
         f_buff = f_bus->buffers;
 
         pthread_spin_lock(&f_bus->lock);
 
-        if(a_track->fade_state == FADE_STATE_OFF)
+        if(f_plugin)
         {
+            v_pydaw_process_atm(
+                self, a_track->track_num, f_plugin_index,
+                self->sample_count);
+            f_plugin->descriptor->run_mixing(
+                f_plugin->PYFX_handle, self->sample_count,
+                f_buff, 2, a_track->event_buffer,
+                a_track->period_event_index,
+                f_plugin->atm_buffer, f_plugin->atm_count,
+                a_track->extern_midi,
+                *a_track->extern_midi_count);
+        }
+        else
+        {
+            f_i2 = 0;
             while(f_i2 < self->sample_count)
             {
                 f_buff[0][f_i2] += f_track_buff[0][f_i2];
-                // * f_route->volume_lin;
                 f_buff[1][f_i2] += f_track_buff[1][f_i2];
-                // * f_route->volume_lin;
                 f_i2++;
-            }
-        }
-        else if(a_track->fade_state == FADE_STATE_FADING)
-        {
-            while(f_i2 < self->sample_count)
-            {
-                f_rmp_run_ramp(a_track->fade_env);
-                f_buff[0][f_i2] +=
-                    f_track_buff[0][f_i2] * (1.0f - a_track->fade_env->output);
-                    //* f_route->volume_lin;
-                f_buff[1][f_i2] +=
-                    f_track_buff[1][f_i2] * (1.0f - a_track->fade_env->output);
-                    //* f_route->volume_lin;
-                f_i2++;
-            }
-
-            if(a_track->fade_env->output >= 1.0f)
-            {
-                a_track->fade_state = FADE_STATE_FADED;
-            }
-        }
-        else if(a_track->fade_state == FADE_STATE_RETURNING)
-        {
-            while(f_i2 < self->sample_count)
-            {
-                f_rmp_run_ramp(a_track->fade_env);
-                f_buff[0][f_i2] +=
-                    f_track_buff[0][f_i2] * a_track->fade_env->output;
-                    //* f_route->volume_lin;
-                f_buff[1][f_i2] +=
-                    f_track_buff[1][f_i2] * a_track->fade_env->output;
-                    //* f_route->volume_lin;
-                f_i2++;
-            }
-
-            if(a_track->fade_env->output >= 1.0f)
-            {
-                a_track->fade_state = FADE_STATE_OFF;
             }
         }
 
