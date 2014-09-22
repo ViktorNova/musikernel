@@ -2576,15 +2576,15 @@ class mixer_channel:
         for k in self.outputs:
             self.output_labels[k].setText(a_dict[self.outputs[k]])
 
-    def add_plugin(self, a_index, a_plugin_widget, a_output):
+    def add_plugin(self, a_index, a_plugin, a_output):
         if a_index in self.sends:
             self.remove_plugin(a_index)
-        self.sends[a_index] = a_plugin_widget
+        self.sends[a_index] = a_plugin
         self.outputs[a_index] = a_output
         f_label = QtGui.QLabel(str(a_output))
         self.output_labels[a_index] = f_label
         self.grid_layout.addWidget(f_label, 0, a_index + 1)
-        self.grid_layout.addWidget(a_plugin_widget, 1, a_index + 1)
+        self.grid_layout.addWidget(a_plugin.widget, 1, a_index + 1)
 
     def remove_plugin(self, a_index):
         if a_index in self.sends:
@@ -2610,9 +2610,9 @@ class mixer_widget:
             self.tracks[k].set_name(v, a_track_names_dict)
 
     def set_plugin_widget(self, a_track_index, a_send_index, a_output,
-                          a_plugin_widget):
+                          a_plugin):
         self.tracks[a_track_index].add_plugin(
-            a_send_index, a_plugin_widget, a_output)
+            a_send_index, a_plugin, a_output)
 
     def remove_plugin_widget(self, a_track_index, a_send_index):
         self.tracks[a_track_index].remove_plugin(a_send_index)

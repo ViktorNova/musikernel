@@ -8208,15 +8208,20 @@ class track_send:
             self.track_num, self.index + 10, f_index,
             self.plugin_uid, True) #self.power_checkbox.isChecked())
         self.save_callback()
+        self.update_mixer()
+
+    def update_mixer(self):
         if self.plugin_uid == -1:
             MIXER_WIDGET.remove_plugin_widget(self.track_num, self.index)
         else:
+            f_index = get_plugin_uid_by_name(
+                self.plugin_combobox.currentText())
             f_plugin_ui = global_open_plugin_ui(
                 self.plugin_uid, f_index,
                 "Track:  {}".format(self.track_num), False)
             MIXER_WIDGET.set_plugin_widget(
                 self.track_num, self.index,
-                self.bus_combobox.currentIndex() - 1, f_plugin_ui.widget)
+                self.bus_combobox.currentIndex() - 1, f_plugin_ui)
             MIXER_WIDGET.update_track_names(
                 {f_i:x for f_i, x in zip(
                 range(len(TRACK_NAMES)), TRACK_NAMES)})
@@ -8256,7 +8261,11 @@ class track_send:
     def set_value(self, a_val):
         self.suppress_osc = True
         self.bus_combobox.setCurrentIndex(a_val.output + 1)
-        self.plugin_combobox.setCurrentIndex(a_val.plugin)
+        self.plugin_uid = a_val.plugin_uid
+        f_name = PLUGIN_UIDS_REVERSE[a_val.plugin_index]
+        self.plugin_combobox.setCurrentIndex(
+            self.plugin_combobox.findText(f_name))
+        self.update_mixer()
         self.suppress_osc = False
 
     def update_names(self):
