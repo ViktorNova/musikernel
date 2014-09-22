@@ -8164,7 +8164,9 @@ class plugin_settings:
 
     def get_value(self):
         return pydaw_track_plugin(
-            self.index, get_plugin_uid_by_name(self.plugin_combobox.currentText()), self.plugin_uid,
+            self.index, get_plugin_uid_by_name(
+                self.plugin_combobox.currentText()),
+            self.plugin_uid,
             a_power=1 if self.power_checkbox.isChecked() else 0)
 
     def on_plugin_change(self, a_val=None):
@@ -9025,7 +9027,8 @@ def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title,
         else:
             return f_plugin
     else:
-        assert(not a_show)
+        if not a_show:
+            return PLUGIN_UI_DICT[a_plugin_uid]
         if PLUGIN_UI_DICT[a_plugin_uid].widget.isHidden():
             PLUGIN_UI_DICT[a_plugin_uid].widget.show()
         PLUGIN_UI_DICT[a_plugin_uid].raise_widget()

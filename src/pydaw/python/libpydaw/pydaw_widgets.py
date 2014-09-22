@@ -2577,6 +2577,7 @@ class mixer_channel:
             self.output_labels[k].setText(a_dict[self.outputs[k]])
 
     def add_plugin(self, a_index, a_plugin, a_output):
+        assert(a_index != -1)
         if a_index in self.sends:
             self.remove_plugin(a_index)
         self.sends[a_index] = a_plugin
@@ -2588,7 +2589,7 @@ class mixer_channel:
 
     def remove_plugin(self, a_index):
         if a_index in self.sends:
-            self.grid_layout.removeWidget(self.sends.pop(a_index))
+            self.grid_layout.removeWidget(self.sends.pop(a_index).widget)
             self.grid_layout.removeWidget(self.output_labels.pop(a_index))
 
 class mixer_widget:
