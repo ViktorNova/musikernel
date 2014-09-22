@@ -193,8 +193,6 @@ typedef struct
 typedef struct
 {
     int output;
-    int plugin;
-    int plugin_uid;
     int active;
 }
 t_pytrack_routing;
@@ -376,7 +374,7 @@ t_pytrack * g_pytrack_get(int, float);
 t_pytrack_routing * g_pytrack_routing_get();
 t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data *);
 void v_pytrack_routing_graph_free(t_pydaw_routing_graph*);
-void v_pytrack_routing_set(t_pytrack_routing *, int, int, int);
+void v_pytrack_routing_set(t_pytrack_routing *, int);
 void v_pytrack_routing_free(t_pytrack_routing *);
 t_pyregion * g_pyregion_get(t_pydaw_data*, const int);
 t_pydaw_atm_region * g_atm_region_get(t_pydaw_data*, int);
@@ -4786,12 +4784,10 @@ t_pytrack_routing * g_pytrack_routing_get()
     return f_result;
 }
 
-void v_pytrack_routing_set(t_pytrack_routing * self, int a_output,
-        int a_plugin, int a_plugin_uid)
+void v_pytrack_routing_set(t_pytrack_routing * self, int a_output)
 {
     self->output = a_output;
-    self->plugin = a_plugin;
-    self->plugin_uid = a_plugin_uid;
+
     if(a_output >= 0)
     {
         self->active = 1;
@@ -4877,17 +4873,8 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
                 int f_output = atoi(f_output_str);
                 free(f_output_str);
 
-                char * f_plugin_str = c_iterate_2d_char_array(f_2d_array);
-                int f_plugin = atoi(f_plugin_str);
-                free(f_plugin_str);
-
-                char * f_plugin_uid_str = c_iterate_2d_char_array(f_2d_array);
-                int f_plugin_uid = atoi(f_plugin_uid_str);
-                free(f_plugin_uid_str);
-
                 v_pytrack_routing_set(
-                    &f_result->routes[f_track_num][f_index],
-                    f_output, f_plugin, f_plugin_uid);
+                    &f_result->routes[f_track_num][f_index], f_output);
             }
             else if(f_identifier_str[0] == 'c')
             {
