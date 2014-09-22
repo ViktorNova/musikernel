@@ -8073,6 +8073,32 @@ def get_plugin_uid_by_name(a_name):
 PLUGIN_SETTINGS_COPY_OBJ = None
 PLUGIN_SETTINGS_CUT = False
 
+def global_open_mixer():
+    f_graph = PROJECT.get_routing_graph()
+    f_track_names = {
+        f_i:x for f_i, x in zip(range(len(TRACK_NAMES)), TRACK_NAMES)}
+    f_plugins = {}
+    for k in f_track_names:
+        f_track_plugins = PROJECT.get_track_plugins(k)
+        if f_track_plugins:
+            f_plugins[k] = {x.index:x for x in f_track_plugins.plugins}
+    MIXER_WIDGET.clear()
+    for f_track_index, f_send_dict in f_graph.graph.items():
+        for k, f_send in f_send_dict.items():
+            f_send_plugin_index = k + 10
+            if f_track_index in f_plugins and \
+            f_send_plugin_index in f_plugins[f_track_index]:
+                f_plugin_obj = f_plugins[f_track_index][f_send_plugin_index]
+                f_plugin_ui = global_open_plugin_ui(
+                    f_plugin_obj.plugin_uid, f_plugin_obj.plugin_index,
+                    "Track:  {}".format(f_track_index), False)
+                MIXER_WIDGET.set_plugin_widget(
+                    f_track_index, k, f_send.output, f_plugin_ui)
+    MIXER_WIDGET.update_track_names(
+        {f_i:x for f_i, x in zip(
+        range(len(TRACK_NAMES)), TRACK_NAMES)})
+
+
 class plugin_settings:
     def __init__(self, a_index, a_track_num,
                  a_layout, a_save_callback, a_name_callback,
@@ -8182,23 +8208,7 @@ class plugin_settings:
             self.plugin_uid, self.power_checkbox.isChecked())
         self.save_callback()
         if self.is_mixer:
-            self.update_mixer()
-
-    def update_mixer(self):
-        if self.plugin_uid == -1:
-            MIXER_WIDGET.remove_plugin_widget(self.track_num, self.index)
-        else:
-            f_index = get_plugin_uid_by_name(
-                self.plugin_combobox.currentText())
-            f_plugin_ui = global_open_plugin_ui(
-                self.plugin_uid, f_index,
-                "Track:  {}".format(self.track_num), False)
-            MIXER_WIDGET.set_plugin_widget(
-                self.track_num, self.index,
-                self.send.bus_combobox.currentIndex() - 1, f_plugin_ui)
-            MIXER_WIDGET.update_track_names(
-                {f_i:x for f_i, x in zip(
-                range(len(TRACK_NAMES)), TRACK_NAMES)})
+            global_open_mixer()
 
     def wheel_event(self, a_event=None):
         pass
@@ -10895,6 +10905,7 @@ def global_open_project(a_project_file, a_wait=True):
     global_update_region_time()
     ROUTING_GRAPH_WIDGET.draw_graph(
         PROJECT.get_routing_graph(), TRACK_PANEL.get_track_names())
+    global_open_mixer()
 
 def global_new_project(a_project_file, a_wait=True):
     global_close_all()
@@ -10917,6 +10928,7 @@ def global_new_project(a_project_file, a_wait=True):
     WAVE_EDITOR.open_project()
     global_update_region_time()
     ROUTING_GRAPH_WIDGET.scene.clear()
+    global_open_mixer()
 
 PROJECT = pydaw_project(global_pydaw_with_audio)
 

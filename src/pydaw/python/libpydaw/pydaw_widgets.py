@@ -2571,6 +2571,10 @@ class mixer_channel:
         self.peak_meter = peak_meter(30, True)
         self.grid_layout.addWidget(self.peak_meter.widget, 1, 0)
 
+    def clear(self):
+        for k in self.sends.copy():
+            self.remove_plugin(k)
+
     def set_name(self, a_name, a_dict):
         self.name_label.setText(a_name)
         for k in self.outputs:
@@ -2617,6 +2621,10 @@ class mixer_widget:
 
     def remove_plugin_widget(self, a_track_index, a_send_index):
         self.tracks[a_track_index].remove_plugin(a_send_index)
+
+    def clear(self):
+        for v in self.tracks.values():
+            v.clear()
 
 
 # Custom oscillator widgets
