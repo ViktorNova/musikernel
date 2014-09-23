@@ -2478,9 +2478,9 @@ class morph_eq(eq6_widget):
         pass
 
 
-ROUTING_GRAPH_NODE_WIDTH = 100.0
+ROUTING_GRAPH_NODE_WIDTH = 54.0
 ROUTING_GRAPH_NODE_WIDTH_DIV2 = ROUTING_GRAPH_NODE_WIDTH * 0.5
-ROUTING_GRAPH_NODE_HEIGHT = 30.0
+ROUTING_GRAPH_NODE_HEIGHT = 21.0
 ROUTING_GRAPH_NODE_HEIGHT_DIV2 = ROUTING_GRAPH_NODE_HEIGHT * 0.5
 ROUTING_GRAPH_WIRE_WIDTH = ROUTING_GRAPH_NODE_HEIGHT / 5.0  # max connections
 ROUTING_GRAPH_WIRE_WIDTH_DIV2 = ROUTING_GRAPH_WIRE_WIDTH * 0.5
@@ -2493,14 +2493,26 @@ ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.1, QtGui.QColor(231, 231, 0))
 ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.8, QtGui.QColor(180, 180, 0))
 ROUTING_GRAPH_NODE_GRADIENT.setColorAt(1.0, QtGui.QColor(150, 150, 90))
 
+ROUTING_GRAPH_SELECTED_GRADIENT = QtGui.QLinearGradient(
+    0.0, 0.0, 0.0, ROUTING_GRAPH_NODE_HEIGHT)
+ROUTING_GRAPH_SELECTED_GRADIENT.setColorAt(0.0, QtGui.QColor(255, 160, 160))
+ROUTING_GRAPH_SELECTED_GRADIENT.setColorAt(0.1, QtGui.QColor(231, 160, 160))
+ROUTING_GRAPH_SELECTED_GRADIENT.setColorAt(0.8, QtGui.QColor(180, 160, 180))
+ROUTING_GRAPH_SELECTED_GRADIENT.setColorAt(1.0, QtGui.QColor(150, 140, 150))
+
+
 class routing_graph_node(QtGui.QGraphicsRectItem):
     def __init__(self, a_text):
         QtGui.QGraphicsRectItem.__init__(
             self, 0, 0, ROUTING_GRAPH_NODE_WIDTH, ROUTING_GRAPH_NODE_HEIGHT)
-        self.setBrush(ROUTING_GRAPH_NODE_GRADIENT)
-        self.setPen(QtCore.Qt.black)
         self.text = QtGui.QGraphicsSimpleTextItem(a_text, self)
         self.text.setPos(3.0, 3.0)
+        self.setPen(QtCore.Qt.black)
+        self.set_brush()
+
+    def set_brush(self, a_highlighted=False):
+        self.setBrush(ROUTING_GRAPH_SELECTED_GRADIENT if a_highlighted
+            else ROUTING_GRAPH_NODE_GRADIENT)
 
 
 class routing_graph_widget(QtGui.QGraphicsView):
@@ -2509,9 +2521,30 @@ class routing_graph_widget(QtGui.QGraphicsView):
         self.scene = QtGui.QGraphicsScene(self)
         self.setScene(self.scene)
         self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
+        self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        self.node_dict = {}
+        self.setMouseTracking(True)
+        self.graph_height = ROUTING_GRAPH_NODE_HEIGHT * 32.0
+        self.graph_width = ROUTING_GRAPH_NODE_WIDTH * 32.0
 
-    # do a TRACK_PANEL.get_all_track_names() method
+    def backgroundHoverEvent(self, a_event):
+        QtGui.QGraphicsRectItem.hoverMoveEvent(self.background_item, a_event)
+        f_pos = a_event.scenePos()
+        f_x = int(f_pos.x() // ROUTING_GRAPH_NODE_WIDTH)
+        f_y = int(f_pos.y() // ROUTING_GRAPH_NODE_HEIGHT)
+        if f_x == f_y or f_y == 0:
+            return
+        for k, v in self.node_dict.items():
+            v.set_brush(k in (f_x, f_y))
+
+    def backgroundHoverLeaveEvent(self, a_event):
+        for v in self.node_dict.values():
+            v.set_brush(False)
+
     def draw_graph(self, a_graph, a_track_names):
+        self.graph_height = ROUTING_GRAPH_NODE_HEIGHT * len(a_track_names)
+        self.graph_width = ROUTING_GRAPH_NODE_WIDTH * len(a_track_names)
+        self.node_dict = {}
         f_wire_gradient = QtGui.QLinearGradient(
             0.0, 0.0, self.width(), self.height())
         f_wire_gradient.setColorAt(0.0, QtGui.QColor(250, 250, 255))
@@ -2520,39 +2553,58 @@ class routing_graph_widget(QtGui.QGraphicsView):
             f_wire_gradient, ROUTING_GRAPH_WIRE_WIDTH_DIV2)
         self.setUpdatesEnabled(False)
         self.scene.clear()
-        f_sorted = a_graph.sort_all_paths()
-        f_sorted.append(0)
-        f_sorted_reverse = {
-            k:f_i for k, f_i in zip(f_sorted, range(len(f_sorted)))}
-        for k, f_i in zip(f_sorted, range(len(f_sorted))):
-            f_node_item = routing_graph_node(a_track_names[k])
+        self.background_item = QtGui.QGraphicsRectItem(
+            0.0, 0.0, self.graph_width, self.graph_height)
+        self.background_item.setBrush(QtCore.Qt.transparent)
+        self.background_item.setPen(QtGui.QPen(QtCore.Qt.black))
+        self.scene.addItem(self.background_item)
+        self.background_item.hoverMoveEvent = self.backgroundHoverEvent
+        self.background_item.hoverLeaveEvent = self.backgroundHoverLeaveEvent
+        self.background_item.setAcceptHoverEvents(True)
+        for k, f_i in zip(a_track_names, range(len(a_track_names))):
+            f_node_item = routing_graph_node(k)
+            self.node_dict[f_i] = f_node_item
             self.scene.addItem(f_node_item)
             f_x = ROUTING_GRAPH_NODE_WIDTH * f_i
             f_y = ROUTING_GRAPH_NODE_HEIGHT * f_i
             f_node_item.setPos(f_x, f_y)
-            if k == 0:
+            if f_i == 0 or f_i not in a_graph.graph:
                 continue
-            f_connections = []
-            for f_conn in [x[1] for x in a_graph.find_all_paths(k)]:
-                if f_conn not in f_connections:
-                    f_connections.append(f_conn)
-            for f_conn, f_wire_index in zip(f_connections, range(4)):
-                f_src_x = f_x + ROUTING_GRAPH_NODE_WIDTH
-                f_y_wire_offset = (f_wire_index *
-                    ROUTING_GRAPH_WIRE_WIDTH) + ROUTING_GRAPH_WIRE_WIDTH_DIV2
-                f_src_y = f_y + f_y_wire_offset
-                f_dest_pos = f_sorted_reverse[f_conn]
-                f_wire_width = ((f_dest_pos - f_i - 1) *
-                    ROUTING_GRAPH_NODE_WIDTH) + ROUTING_GRAPH_WIRE_INPUT
-                f_v_wire_x = f_src_x + f_wire_width
-                self.scene.addLine( # horizontal wire
-                    f_src_x, f_src_y, f_v_wire_x, f_src_y,
-                    f_wire_pen)
-                f_wire_height = ((f_dest_pos - f_i) *
-                    ROUTING_GRAPH_NODE_HEIGHT) - f_y_wire_offset
-                self.scene.addLine( # vertical wire
-                    f_v_wire_x, f_src_y, f_v_wire_x, f_src_y + f_wire_height,
-                    f_wire_pen)
+            f_connections = [(x.output, x.index)
+                for x in a_graph.graph[f_i].values()]
+            for f_dest_pos, f_wire_index in f_connections:
+                if f_dest_pos > f_i:
+                    f_src_x = f_x + ROUTING_GRAPH_NODE_WIDTH
+                    f_y_wire_offset = (f_wire_index *
+                        ROUTING_GRAPH_WIRE_WIDTH) + \
+                        ROUTING_GRAPH_WIRE_WIDTH_DIV2
+                    f_src_y = f_y + f_y_wire_offset
+                    f_wire_width = ((f_dest_pos - f_i - 1) *
+                        ROUTING_GRAPH_NODE_WIDTH) + ROUTING_GRAPH_WIRE_INPUT
+                    f_v_wire_x = f_src_x + f_wire_width
+                    f_wire_height = ((f_dest_pos - f_i) *
+                        ROUTING_GRAPH_NODE_HEIGHT) - f_y_wire_offset
+                    f_dest_y = f_src_y + f_wire_height
+                    self.scene.addLine( # horizontal wire
+                        f_src_x, f_src_y, f_v_wire_x, f_src_y, f_wire_pen)
+                    self.scene.addLine( # vertical wire
+                        f_v_wire_x, f_src_y, f_v_wire_x, f_dest_y, f_wire_pen)
+                else:
+                    f_src_x = f_x
+                    f_y_wire_offset = (f_wire_index *
+                        ROUTING_GRAPH_WIRE_WIDTH) + \
+                        ROUTING_GRAPH_WIRE_WIDTH_DIV2
+                    f_src_y = f_y + f_y_wire_offset
+                    f_wire_width = ((f_i - f_dest_pos - 1) *
+                        ROUTING_GRAPH_NODE_WIDTH) + ROUTING_GRAPH_WIRE_INPUT
+                    f_v_wire_x = f_src_x - f_wire_width
+                    f_wire_height = ((f_i - f_dest_pos - 1) *
+                        ROUTING_GRAPH_NODE_HEIGHT) + f_y_wire_offset
+                    f_dest_y = f_src_y - f_wire_height
+                    self.scene.addLine( # horizontal wire
+                        f_v_wire_x, f_src_y, f_src_x, f_src_y, f_wire_pen)
+                    self.scene.addLine( # vertical wire
+                        f_v_wire_x, f_dest_y, f_v_wire_x, f_src_y, f_wire_pen)
 
         self.setUpdatesEnabled(True)
         self.update()
