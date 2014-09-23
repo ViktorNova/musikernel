@@ -2346,8 +2346,8 @@ def global_tablewidget_to_region():
 def global_update_track_comboboxes(a_index=None, a_value=None):
     if not a_index is None and not a_value is None:
         TRACK_NAMES[int(a_index)] = str(a_value)
-    global SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES
-    SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES = True
+    global SUPPRESS_TRACK_COMBOBOX_CHANGES
+    SUPPRESS_TRACK_COMBOBOX_CHANGES = True
     for f_cbox in AUDIO_TRACK_COMBOBOXES:
         f_current_index = f_cbox.currentIndex()
         f_cbox.clear()
@@ -2355,7 +2355,7 @@ def global_update_track_comboboxes(a_index=None, a_value=None):
         f_cbox.addItems(TRACK_NAMES)
         f_cbox.setCurrentIndex(f_current_index)
 
-    SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES = False
+    SUPPRESS_TRACK_COMBOBOX_CHANGES = False
     ROUTING_GRAPH_WIDGET.draw_graph(
         PROJECT.get_routing_graph(), TRACK_PANEL.get_track_names())
 
@@ -8003,7 +8003,7 @@ class midi_device:
         a_layout.addWidget(self.track_combobox, f_index, 2)
 
     def device_changed(self, a_val=None):
-        if SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES:
+        if SUPPRESS_TRACK_COMBOBOX_CHANGES:
             return
         PROJECT.this_pydaw_osc.pydaw_midi_device(
             self.record_checkbox.isChecked(), self.index,
@@ -10949,7 +10949,7 @@ CRISPNESS_SETTINGS = [
 TRACK_NAMES = ["Master" if x == 0 else "track{}".format(x)
     for x in range(TRACK_COUNT_ALL)]
 
-SUPPRESS_AUDIO_TRACK_COMBOBOX_CHANGES = False
+SUPPRESS_TRACK_COMBOBOX_CHANGES = False
 AUDIO_TRACK_COMBOBOXES = []
 
 APP.setWindowIcon(
