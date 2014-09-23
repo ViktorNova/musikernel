@@ -219,7 +219,7 @@ void v_cc_map_init(t_plugin_cc_map * self)
     }
 }
 
-void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
+inline void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
     float *a_port_table, int a_cc, float a_value)
 {
     int f_i = 0;
