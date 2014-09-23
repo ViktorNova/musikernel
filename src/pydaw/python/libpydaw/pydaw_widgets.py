@@ -2572,8 +2572,10 @@ class mixer_channel:
         self.grid_layout.addWidget(self.peak_meter.widget, 1, 0)
 
     def clear(self):
-        for k in self.sends.copy():
-            self.remove_plugin(k)
+        for i in reversed(range(1, self.grid_layout.count())):
+            self.grid_layout.itemAt(i).widget().setParent(None)
+#        for k in self.sends.copy():
+#            self.remove_plugin(k)
 
     def set_name(self, a_name, a_dict):
         self.name_label.setText(a_name)
