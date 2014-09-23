@@ -8132,11 +8132,12 @@ class plugin_settings:
             self.ui_button.setObjectName("uibutton")
             self.ui_button.setFixedWidth(24)
             a_layout.addWidget(self.ui_button, a_index + 1, 1 + a_offset)
-        self.automation_radiobutton = QtGui.QRadioButton("")
-        a_layout.addWidget(
-            self.automation_radiobutton, a_index + 1, 2 + a_offset)
-        self.automation_radiobutton.clicked.connect(
-            self.automation_check_changed)
+        if a_automation_callback is not None:
+            self.automation_radiobutton = QtGui.QRadioButton("")
+            a_layout.addWidget(
+                self.automation_radiobutton, a_index + 1, 2 + a_offset)
+            self.automation_radiobutton.clicked.connect(
+                self.automation_check_changed)
         self.power_checkbox = QtGui.QCheckBox("")
         self.power_checkbox.setChecked(True)
         a_layout.addWidget(self.power_checkbox, a_index + 1, 3 + a_offset)
@@ -10315,8 +10316,30 @@ class pydaw_wave_editor_widget:
         self.file_hlayout.addWidget(self.history_button)
 
         self.fx_button = QtGui.QPushButton(_("Effects"))
-        self.fx_button.pressed.connect(self.on_show_fx)
         self.file_hlayout.addWidget(self.fx_button)
+
+        ###############################
+
+        self.fx_menu = QtGui.QMenu()
+        self.fx_button.setMenu(self.fx_menu)
+        self.track_number = 32
+        self.plugins = []
+        self.menu_widget = QtGui.QWidget()
+        self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
+        self.menu_gridlayout = QtGui.QGridLayout()
+        self.menu_hlayout.addLayout(self.menu_gridlayout)
+        self.menu_gridlayout.addWidget(QtGui.QLabel(_("Plugins")), 0, 0)
+        self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 3)
+        for f_i in range(10):
+            f_plugin = plugin_settings(
+                f_i, self.track_number, self.menu_gridlayout,
+                self.save_callback, self.name_callback, None)
+            self.plugins.append(f_plugin)
+        self.action_widget = QtGui.QWidgetAction(self.fx_menu)
+        self.action_widget.setDefaultWidget(self.menu_widget)
+        self.fx_menu.addAction(self.action_widget)
+
+        ###############################
 
         self.menu_info = QtGui.QMenu()
         self.menu_info_button = QtGui.QPushButton(_("Info"))
@@ -10394,6 +10417,17 @@ class pydaw_wave_editor_widget:
             self.sample_graph, self.vol_slider, self.menu_button,
             self.enabled_checkbox, self.bookmark_button, self.fade_in_start,
             self.fade_out_end)
+
+    def save_callback(self):
+        f_result = pydaw_track_plugins(
+            [x.get_value() for x in self.plugins])
+        PROJECT.save_track_plugins(self.track_number, f_result)
+        PROJECT.commit(
+            "Update track plugins for '{}', {}".format(
+            self.name_callback(), self.track_number))
+
+    def name_callback(self):
+        return "Wave Editor"
 
     def copy_audio_item(self):
         if self.graph_object is None:
@@ -10673,9 +10707,6 @@ class pydaw_wave_editor_widget:
 
     def on_reload(self):
         pass
-
-    def on_show_fx(self):
-        global_open_fx_ui(0, None, 4, _("Wave Editor"))
 
     def enabled_changed(self, a_val=None):
         PROJECT.this_pydaw_osc.pydaw_ab_set(
