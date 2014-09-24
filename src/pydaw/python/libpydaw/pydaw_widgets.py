@@ -2541,13 +2541,7 @@ class routing_graph_widget(QtGui.QGraphicsView):
             print((f_x, f_y))
             if f_x == f_y or f_y == 0:
                 return
-            if f_x < f_y:
-                print("lt")
-                f_src, f_dest = f_y, f_x
-            else:
-                print("gt")
-                f_src, f_dest = f_x, f_y
-            self.toggle_callback(f_src, f_dest)
+            self.toggle_callback(f_y, f_x)
 
     def backgroundHoverEvent(self, a_event):
         QtGui.QGraphicsRectItem.hoverMoveEvent(self.background_item, a_event)

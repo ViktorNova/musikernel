@@ -8262,8 +8262,6 @@ class track_send:
                 return
             f_graph.graph[self.track_num][self.index] = self.get_value()
             PROJECT.save_routing_graph(f_graph)
-            ROUTING_GRAPH_WIDGET.draw_graph(
-                f_graph, TRACK_PANEL.get_track_names())
             self.last_value = self.bus_combobox.currentIndex()
 
     def wheel_event(self, a_event=None):
@@ -9823,6 +9821,9 @@ class pydaw_main_window(QtGui.QMainWindow):
             REGION_EDITOR.open_region()
         elif f_index == 1:
             ITEM_EDITOR.tab_changed()
+        elif f_index == 3:
+            ROUTING_GRAPH_WIDGET.draw_graph(
+                PROJECT.get_routing_graph(), TRACK_NAMES)
 
     def on_collapse_splitters(self):
         self.song_region_splitter.setSizes([0, 9999])

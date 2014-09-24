@@ -2455,7 +2455,6 @@ class pydaw_routing_graph:
                 return _("All available sends already in use for "
                     "track {}".format(a_src))
             if not a_src in self.graph:
-                print("src not in graph")
                 f_i = 0
                 self.graph[a_src] = {}
             else:
