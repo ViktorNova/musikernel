@@ -2467,6 +2467,14 @@ class pydaw_routing_graph:
             self.set_node(a_src, self.graph[a_src])
         return None
 
+    def set_default_output(self, a_track_num, a_output=0):
+        if not a_track_num in self.graph or \
+        not self.graph[a_track_num]:
+            f_send = pydaw_track_send(a_track_num, 0, a_output)
+            self.set_node(a_track_num, {0:f_send})
+            return True
+        else:
+            return False
 
     def sort_all_paths(self):
         f_result = {}

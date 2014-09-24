@@ -8498,8 +8498,12 @@ class seq_track:
         PROJECT.commit(
             "Update track plugins for '{}', {}".format(
             self.name_callback(), self.track_number))
-        if not all(x.bus_combobox.currentIndex() for x in self.sends):
-            self.sends[0].bus_combobox.setCurrentIndex(1)
+        f_graph = PROJECT.get_routing_graph()
+        if f_graph.set_default_output(self.track_number):
+            PROJECT.save_routing_graph(f_graph)
+            PROJECT.commit(_("Set default output "
+                "for track {}".format(self.track_number)))
+            self.open_plugins()
 
     def name_callback(self):
         return str(self.track_name_lineedit.text())
