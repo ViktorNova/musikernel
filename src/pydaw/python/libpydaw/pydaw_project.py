@@ -18,6 +18,7 @@ import traceback
 import subprocess
 
 from libpydaw.pydaw_util import *
+from libpydaw.translate import _
 
 from libpydaw.pydaw_osc import pydaw_osc
 import wavefile
