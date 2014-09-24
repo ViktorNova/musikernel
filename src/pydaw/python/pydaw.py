@@ -8373,6 +8373,7 @@ class seq_track:
         for f_send in self.sends:
             f_send.update_names()
         self.open_plugins()
+        self.update_in_use_combobox()
 
     def create_menu(self):
         self.menu_created = True
@@ -8425,7 +8426,6 @@ class seq_track:
             self.ccs_in_use_combobox_changed)
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("In Use:")), 10, 20)
         self.menu_gridlayout.addWidget(self.ccs_in_use_combobox, 10, 21)
-        self.update_in_use_combobox()
 
     def get_plugin_uids(self):
         return [x.plugin_uid for x in self.plugins if x.plugin_uid != -1]
