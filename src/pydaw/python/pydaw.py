@@ -980,15 +980,37 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             return
         if a_event.modifiers() == QtCore.Qt.ShiftModifier:
             region_editor_set_delete_mode(True)
+        else:
+            f_region_length = pydaw_get_current_region_length()
+            f_selected = REGION_EDITOR.get_selected_items()
+            f_max_x = max(x.bar for x in f_selected)
+            f_min_x = min(x.bar for x in f_selected)
+            f_max_y = max(x.track_num for x in f_selected)
+            f_min_y = min(x.track_num for x in f_selected)
+            self.max_x = f_region_length - f_max_x - 1
+            self.min_x = -f_min_x
+            self.max_y = TRACK_COUNT_ALL - f_max_y
+            self.min_y = -f_min_y
+            for f_item in f_selected:
+                f_item.orig_track_num = f_item.track_num
+                f_item.orig_bar = f_item.bar
 
     def mouseMoveEvent(self, a_event):
         QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
         if self.isEnabled():
+            f_pos = a_event.scenePos()
+            f_coord = REGION_EDITOR.get_item_coord(f_pos)
+            if not f_coord:
+                for f_item in REGION_EDITOR.get_selected_items():
+                    f_item.set_pos()
+                return
+            f_x = pydaw_clip_value(
+                f_coord[1] - self.orig_bar, self.min_x, self.max_x)
+            f_y = pydaw_clip_value(
+                f_coord[0] - self.orig_track_num, self.min_y, self.max_y)
             for f_item in REGION_EDITOR.get_selected_items():
-                f_pos = f_item.scenePos()
-                f_coord = REGION_EDITOR.get_item_coord(f_pos)
-                if f_coord:
-                    f_item.track_num, f_item.bar = f_coord[:2]
+                f_item.track_num = f_item.orig_track_num + f_y
+                f_item.bar = f_item.orig_bar + f_x
                 f_item.set_pos()
 
     def mouseReleaseEvent(self, a_event):
