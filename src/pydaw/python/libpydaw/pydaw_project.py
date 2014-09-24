@@ -2423,23 +2423,22 @@ class pydaw_routing_graph:
     def set_node(self, a_index, a_dict):
         self.graph[int(a_index)] = a_dict
 
-    def find_all_paths(self, start, path=[]):
+    def find_all_paths(self, start, end=0, path=[]):
         path = path + [start]
-        if start == 0:
+        if start == end:
             return [path]
         if not start in self.graph:
             return []
         paths = []
         for node in (x.output for x in sorted(self.graph[start].values())):
             if node not in path:
-                newpaths = self.find_all_paths(node, path)
+                newpaths = self.find_all_paths(node, end, path)
                 for newpath in newpaths:
                     paths.append(newpath)
         return paths
 
     def check_for_feedback(self, a_new, a_old):
-        f_paths = self.find_all_paths(a_new)
-        return a_old in [x for y in f_paths for x in y]
+        return self.find_all_paths(a_old, a_new)
 
     def toggle(self, a_src, a_dest):
         f_connected = a_src in self.graph and a_dest in [
@@ -2449,7 +2448,7 @@ class pydaw_routing_graph:
                 if v.output == a_dest:
                     self.graph[a_src].pop(k)
         else:
-            if self.check_for_feedback(a_dest, a_src):
+            if self.check_for_feedback(a_src, a_dest):
                 return _("Can't make connection, it would create "
                     "a feedback loop")
             if a_src in self.graph and len(self.graph[a_src]) >= 4:
@@ -2479,7 +2478,7 @@ class pydaw_routing_graph:
     def sort_all_paths(self):
         f_result = {}
         for f_path in self.graph:
-            f_paths = self.find_all_paths(f_path)
+            f_paths = self.find_all_paths(f_path, 0)
             if f_paths:
                 f_result[f_path] = max(len(x) for x in f_paths)
             else:
