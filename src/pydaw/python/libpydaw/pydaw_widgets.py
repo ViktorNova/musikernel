@@ -2538,7 +2538,6 @@ class routing_graph_widget(QtGui.QGraphicsView):
         QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
         if self.toggle_callback:
             f_x, f_y = self.get_coords(a_event.pos())
-            print((f_x, f_y))
             if f_x == f_y or f_y == 0:
                 return
             self.toggle_callback(f_y, f_x)
