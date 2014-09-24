@@ -2516,22 +2516,42 @@ class routing_graph_node(QtGui.QGraphicsRectItem):
 
 
 class routing_graph_widget(QtGui.QGraphicsView):
-    def __init__(self):
+    def __init__(self, a_toggle_callback=None):
         QtGui.QGraphicsView.__init__(self)
         self.scene = QtGui.QGraphicsScene(self)
         self.setScene(self.scene)
         self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
+        self.scene.mousePressEvent = self.sceneMousePressEvent
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.node_dict = {}
         self.setMouseTracking(True)
         self.graph_height = ROUTING_GRAPH_NODE_HEIGHT * 32.0
         self.graph_width = ROUTING_GRAPH_NODE_WIDTH * 32.0
+        self.toggle_callback = a_toggle_callback
+
+    def get_coords(self, a_pos):
+        f_x = int(a_pos.x() // ROUTING_GRAPH_NODE_WIDTH)
+        f_y = int(a_pos.y() // ROUTING_GRAPH_NODE_HEIGHT)
+        return (f_x, f_y)
+
+    def sceneMousePressEvent(self, a_event):
+        QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
+        if self.toggle_callback:
+            f_x, f_y = self.get_coords(a_event.pos())
+            print((f_x, f_y))
+            if f_x == f_y or f_y == 0:
+                return
+            if f_x < f_y:
+                print("lt")
+                f_src, f_dest = f_y, f_x
+            else:
+                print("gt")
+                f_src, f_dest = f_x, f_y
+            self.toggle_callback(f_src, f_dest)
 
     def backgroundHoverEvent(self, a_event):
         QtGui.QGraphicsRectItem.hoverMoveEvent(self.background_item, a_event)
-        f_pos = a_event.scenePos()
-        f_x = int(f_pos.x() // ROUTING_GRAPH_NODE_WIDTH)
-        f_y = int(f_pos.y() // ROUTING_GRAPH_NODE_HEIGHT)
+        f_x, f_y = self.get_coords(a_event.scenePos())
         if f_x == f_y or f_y == 0:
             return
         for k, v in self.node_dict.items():

@@ -11163,7 +11163,19 @@ def open_pydaw_engine(a_project_path):
 MIDI_DEVICES_DIALOG = midi_devices_dialog()
 TRANSPORT = transport_widget()
 AUDIO_SEQ_WIDGET = audio_items_viewer_widget()
-ROUTING_GRAPH_WIDGET = pydaw_widgets.routing_graph_widget()
+
+def routing_graph_toggle_callback(a_src, a_dest):
+    f_graph = PROJECT.get_routing_graph()
+    f_result = f_graph.toggle(a_src, a_dest)
+    if f_result:
+        QtGui.QMessageBox.warning(MAIN_WINDOW, _("Error"), f_result)
+    else:
+        PROJECT.save_routing_graph(f_graph)
+        ROUTING_GRAPH_WIDGET.draw_graph(f_graph, TRACK_NAMES)
+        PROJECT.commit(_("Update routing"))
+
+ROUTING_GRAPH_WIDGET = pydaw_widgets.routing_graph_widget(
+    routing_graph_toggle_callback)
 
 TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
 

@@ -2438,8 +2438,35 @@ class pydaw_routing_graph:
 
     def check_for_feedback(self, a_new, a_old):
         f_paths = self.find_all_paths(a_new)
-        print(f_paths)
         return a_old in [x for y in f_paths for x in y]
+
+    def toggle(self, a_src, a_dest):
+        f_connected = a_src in self.graph and a_dest in [
+            x.output for x in self.graph[a_src].values()]
+        if f_connected:
+            for k, v in self.graph[a_src].copy().items():
+                if v.output == a_dest:
+                    self.graph[a_src].pop(k)
+        else:
+            if self.check_for_feedback(a_dest, a_src):
+                return _("Can't make connection, it would create "
+                    "a feedback loop")
+            if a_src in self.graph and len(self.graph[a_src]) >= 4:
+                return _("All available sends already in use for "
+                    "track {}".format(a_src))
+            if not a_src in self.graph:
+                print("src not in graph")
+                f_i = 0
+                self.graph[a_src] = {}
+            else:
+                for f_i in range(4):
+                    if f_i not in self.graph[a_src]:
+                        break
+            f_result = pydaw_track_send(a_src, f_i, a_dest)
+            self.graph[a_src][f_i] = f_result
+            self.set_node(a_src, self.graph[a_src])
+        return None
+
 
     def sort_all_paths(self):
         f_result = {}
