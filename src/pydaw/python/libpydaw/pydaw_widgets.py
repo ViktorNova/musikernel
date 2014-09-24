@@ -2521,7 +2521,6 @@ class routing_graph_widget(QtGui.QGraphicsView):
         self.scene = QtGui.QGraphicsScene(self)
         self.setScene(self.scene)
         self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
-        self.scene.mousePressEvent = self.sceneMousePressEvent
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.node_dict = {}
         self.setMouseTracking(True)
@@ -2534,10 +2533,10 @@ class routing_graph_widget(QtGui.QGraphicsView):
         f_y = int(a_pos.y() // ROUTING_GRAPH_NODE_HEIGHT)
         return (f_x, f_y)
 
-    def sceneMousePressEvent(self, a_event):
-        QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
+    def backgroundMousePressEvent(self, a_event):
+        #QtGui.QGraphicsRectItem.mousePressEvent(self.background_item, a_event)
         if self.toggle_callback:
-            f_x, f_y = self.get_coords(a_event.pos())
+            f_x, f_y = self.get_coords(a_event.scenePos())
             if f_x == f_y or f_y == 0:
                 return
             self.toggle_callback(f_y, f_x)
@@ -2546,11 +2545,15 @@ class routing_graph_widget(QtGui.QGraphicsView):
         QtGui.QGraphicsRectItem.hoverMoveEvent(self.background_item, a_event)
         f_x, f_y = self.get_coords(a_event.scenePos())
         if f_x == f_y or f_y == 0:
+            self.clear_selection()
             return
         for k, v in self.node_dict.items():
             v.set_brush(k in (f_x, f_y))
 
     def backgroundHoverLeaveEvent(self, a_event):
+        self.clear_selection()
+
+    def clear_selection(self):
         for v in self.node_dict.values():
             v.set_brush(False)
 
@@ -2574,6 +2577,7 @@ class routing_graph_widget(QtGui.QGraphicsView):
         self.background_item.hoverMoveEvent = self.backgroundHoverEvent
         self.background_item.hoverLeaveEvent = self.backgroundHoverLeaveEvent
         self.background_item.setAcceptHoverEvents(True)
+        self.background_item.mousePressEvent = self.backgroundMousePressEvent
         for k, f_i in zip(a_track_names, range(len(a_track_names))):
             f_node_item = routing_graph_node(k)
             self.node_dict[f_i] = f_node_item
