@@ -8141,6 +8141,7 @@ class plugin_settings:
         if a_is_mixer:
             self.bus_index = a_index
             self.index += 10
+        self.plugin_index = None
         self.plugin_combobox = QtGui.QComboBox()
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
@@ -8227,12 +8228,14 @@ class plugin_settings:
         f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
         if f_index == 0:
             self.plugin_uid = -1
-        elif self.plugin_uid == -1:
+        elif self.plugin_uid == -1 or self.plugin_index != f_index:
             self.plugin_uid = PROJECT.get_next_plugin_uid()
+            self.plugin_index = f_index
         PROJECT.this_pydaw_osc.pydaw_set_plugin(
             self.track_num, self.index, f_index,
             self.plugin_uid, self.power_checkbox.isChecked())
         self.save_callback()
+        self.automation_check_changed()
         if self.is_mixer:
             global_open_mixer()
 
@@ -8526,6 +8529,7 @@ class seq_track:
             PROJECT.commit(_("Set default output "
                 "for track {}".format(self.track_number)))
             self.open_plugins()
+        self.plugin_changed()
 
     def name_callback(self):
         return str(self.track_name_lineedit.text())
