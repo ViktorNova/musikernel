@@ -1724,6 +1724,7 @@ PLUGIN_CONFIGURE_CLIPBOARD = None
 class pydaw_preset_manager_widget:
     def __init__(self, a_plugin_name, a_configure_dict=None,
                  a_reconfigure_callback=None):
+        self.suppress_change = False
         self.plugin_name = str(a_plugin_name)
         self.configure_dict = a_configure_dict
         self.reconfigure_callback = a_reconfigure_callback
@@ -1916,6 +1917,7 @@ class pydaw_preset_manager_widget:
 
         f_line_arr = f_line_arr[1:]
         self.presets_delimited = {}
+        self.program_combobox.clear()
         self.program_combobox.addItem("")
 
         for f_line in f_line_arr:
@@ -1952,12 +1954,18 @@ class pydaw_preset_manager_widget:
         f_result = "{}\n{}".format(self.plugin_name, f_presets)
         pydaw_util.pydaw_write_file_text(self.preset_path, f_result)
         self.load_presets()
+        self.suppress_change = True
+        self.program_combobox.setCurrentIndex(
+            self.program_combobox.findText(f_preset_name))
+        self.suppress_change = False
 
     def program_changed(self, a_val=None):
-        if not a_val:
+        if not a_val or self.suppress_change:
             return
-        f_preset = self.presets_delimited[
-            str(self.program_combobox.currentText())]
+        f_key = str(self.program_combobox.currentText())
+        if not f_key:
+            return
+        f_preset = self.presets_delimited[f_key]
         f_preset_dict = {}
         f_configure_dict = {}
         for f_kvp in f_preset:
