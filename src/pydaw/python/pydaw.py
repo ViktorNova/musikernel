@@ -8084,6 +8084,7 @@ PLUGIN_UIDS = {
     "None":0, "Euphoria":1, "Ray-V":2, "Way-V":3, "Modulex":4, "MK Delay":5,
     "MK EQ":6, "Simple Fader":7, "Simple Reverb":8, "TriggerFX":9
     }
+EFFECTS_PLUGIN_NAMES = ["None"] + PLUGIN_NAMES[PLUGIN_INSTRUMENT_COUNT:]
 MIXER_PLUGIN_NAMES = ["None", "Simple Fader"]
 PLUGIN_UIDS_REVERSE = {v:k for k, v in PLUGIN_UIDS.items()}
 CC_NAMES = {x:[] for x in PLUGIN_NAMES}
@@ -8124,38 +8125,27 @@ def global_open_mixer():
         range(len(TRACK_NAMES)), TRACK_NAMES)})
 
 
-class plugin_settings:
+class plugin_settings_base:
     def __init__(self, a_index, a_track_num,
                  a_layout, a_save_callback, a_name_callback,
-                 a_automation_callback, a_is_mixer=False, a_offset=0,
-                 a_plugin_list=["None"] + PLUGIN_NAMES, a_send=None):
+                 a_automation_callback, a_offset=0, a_send=None):
         self.suppress_osc = False
         self.save_callback = a_save_callback
         self.name_callback = a_name_callback
         self.automation_callback = a_automation_callback
-        self.is_mixer = a_is_mixer
         self.plugin_uid = -1
         self.track_num = a_track_num
         self.index = a_index
         self.send = a_send
-        if a_is_mixer:
-            self.bus_index = a_index
-            self.index += 10
         self.plugin_index = None
         self.plugin_combobox = QtGui.QComboBox()
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
-        self.plugin_combobox.addItems(a_plugin_list)
+        self.plugin_combobox.addItems(self.plugin_list)
         self.plugin_combobox.insertSeparator(PLUGIN_INSTRUMENT_COUNT + 1)
         self.plugin_combobox.currentIndexChanged.connect(
             self.on_plugin_change)
         a_layout.addWidget(self.plugin_combobox, a_index + 1, 0 + a_offset)
-        if not a_is_mixer:
-            self.ui_button = QtGui.QPushButton("UI")
-            self.ui_button.released.connect(self.on_show_ui)
-            self.ui_button.setObjectName("uibutton")
-            self.ui_button.setFixedWidth(24)
-            a_layout.addWidget(self.ui_button, a_index + 1, 1 + a_offset)
         if a_automation_callback is not None:
             self.automation_radiobutton = QtGui.QRadioButton("")
             a_layout.addWidget(
@@ -8166,18 +8156,6 @@ class plugin_settings:
         self.power_checkbox.setChecked(True)
         a_layout.addWidget(self.power_checkbox, a_index + 1, 3 + a_offset)
         self.power_checkbox.clicked.connect(self.on_plugin_change)
-        if not a_is_mixer:
-            self.menu_button = QtGui.QPushButton(_("Menu"))
-            a_layout.addWidget(self.menu_button, a_index + 1, 4 + a_offset)
-            self.menu = QtGui.QMenu()
-            self.menu_button.setMenu(self.menu)
-            f_copy_action = self.menu.addAction(_("Copy"))
-            f_copy_action.triggered.connect(self.copy)
-            f_paste_action = self.menu.addAction(_("Paste"))
-            f_paste_action.triggered.connect(self.paste)
-            self.menu.addSeparator()
-            f_clear_action = self.menu.addAction(_("Clear"))
-            f_clear_action.triggered.connect(self.clear)
 
     def clear(self):
         self.set_value(pydaw_track_plugin(self.index, 0, -1))
@@ -8236,8 +8214,6 @@ class plugin_settings:
             self.plugin_uid, self.power_checkbox.isChecked())
         self.save_callback()
         self.automation_check_changed()
-        if self.is_mixer:
-            global_open_mixer()
 
     def wheel_event(self, a_event=None):
         pass
@@ -8249,6 +8225,58 @@ class plugin_settings:
         global_open_plugin_ui(
             self.plugin_uid, f_index,
             "Track:  {}".format(self.name_callback()))
+
+class plugin_settings_main(plugin_settings_base):
+    def __init__(self, a_index, a_track_num,
+                 a_layout, a_save_callback, a_name_callback,
+                 a_automation_callback, a_offset=0, a_send=None):
+        self.plugin_list = ["None"] + PLUGIN_NAMES
+        plugin_settings_base.__init__(
+            self, a_index, a_track_num, a_layout,
+            a_save_callback, a_name_callback,
+            a_automation_callback, a_offset, a_send)
+        self.ui_button = QtGui.QPushButton("UI")
+        self.ui_button.released.connect(self.on_show_ui)
+        self.ui_button.setObjectName("uibutton")
+        self.ui_button.setFixedWidth(24)
+        a_layout.addWidget(self.ui_button, a_index + 1, 1 + a_offset)
+        self.menu_button = QtGui.QPushButton(_("Menu"))
+        a_layout.addWidget(self.menu_button, a_index + 1, 4 + a_offset)
+        self.menu = QtGui.QMenu()
+        self.menu_button.setMenu(self.menu)
+        f_copy_action = self.menu.addAction(_("Copy"))
+        f_copy_action.triggered.connect(self.copy)
+        f_paste_action = self.menu.addAction(_("Paste"))
+        f_paste_action.triggered.connect(self.paste)
+        self.menu.addSeparator()
+        f_clear_action = self.menu.addAction(_("Clear"))
+        f_clear_action.triggered.connect(self.clear)
+
+class plugin_settings_mixer(plugin_settings_base):
+    def __init__(self, a_index, a_track_num,
+                 a_layout, a_save_callback, a_name_callback,
+                 a_automation_callback, a_offset=0, a_send=None):
+        self.plugin_list = MIXER_PLUGIN_NAMES
+        plugin_settings_base.__init__(
+            self, a_index, a_track_num, a_layout,
+            a_save_callback, a_name_callback,
+            a_automation_callback, a_offset, a_send)
+        self.bus_index = a_index
+        self.index += 10
+
+    def on_plugin_change(self, a_val=None):
+        plugin_settings_base.on_plugin_change(self, a_val)
+        global_open_mixer()
+
+class plugin_settings_wave_editor(plugin_settings_base):
+    def __init__(self, a_index, a_track_num,
+                 a_layout, a_save_callback, a_name_callback,
+                 a_automation_callback, a_offset=0, a_send=None):
+        self.plugin_list = EFFECTS_PLUGIN_NAMES
+        plugin_settings_base.__init__(
+            self, a_index, a_track_num, a_layout,
+            a_save_callback, a_name_callback,
+            a_automation_callback, a_offset, a_send)
 
 
 class track_send:
@@ -8388,7 +8416,7 @@ class seq_track:
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("A")), 0, 2)
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 3)
         for f_i in range(10):
-            f_plugin = plugin_settings(
+            f_plugin = plugin_settings_main(
                 f_i, self.track_number, self.menu_gridlayout,
                 self.save_callback, self.name_callback,
                 self.automation_callback)
@@ -8406,11 +8434,10 @@ class seq_track:
                     f_i, self.track_number, self.menu_gridlayout,
                     self.save_callback)
                 self.sends.append(f_send)
-                f_plugin = plugin_settings(
+                f_plugin = plugin_settings_mixer(
                     f_i, self.track_number, self.menu_gridlayout,
                     self.save_callback, self.name_callback,
-                    self.automation_callback, a_is_mixer=True, a_offset=21,
-                    a_plugin_list=MIXER_PLUGIN_NAMES, a_send=f_send)
+                    self.automation_callback, a_offset=21, a_send=f_send)
                 self.plugins.append(f_plugin)
         self.action_widget = QtGui.QWidgetAction(self.button_menu)
         self.action_widget.setDefaultWidget(self.menu_widget)
@@ -10363,7 +10390,7 @@ class pydaw_wave_editor_widget:
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("Plugins")), 0, 0)
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 3)
         for f_i in range(10):
-            f_plugin = plugin_settings(
+            f_plugin = plugin_settings_wave_editor(
                 f_i, self.track_number, self.menu_gridlayout,
                 self.save_callback, self.name_callback, None)
             self.plugins.append(f_plugin)
