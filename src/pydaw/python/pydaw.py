@@ -8264,10 +8264,6 @@ class plugin_settings_mixer(plugin_settings_base):
         self.bus_index = a_index
         self.index += 10
 
-    def on_plugin_change(self, a_val=None):
-        plugin_settings_base.on_plugin_change(self, a_val)
-        global_open_mixer()
-
 class plugin_settings_wave_editor(plugin_settings_base):
     def __init__(self, a_index, a_track_num,
                  a_layout, a_save_callback, a_name_callback,
@@ -8331,8 +8327,7 @@ class track_send:
         self.suppress_osc = False
 
     def update_names(self):
-        f_index = pydaw_clip_min(self.bus_combobox.currentIndex(), 0)
-        # TODO^^^^^  Why does that do that?
+        f_index = self.bus_combobox.currentIndex()
         self.suppress_osc = True
         self.bus_combobox.clear()
         self.bus_combobox.addItems(["None"] + TRACK_NAMES)
@@ -8578,14 +8573,11 @@ class seq_track:
             return
         for f_plugin in f_plugins.plugins:
             self.plugins[f_plugin.index].set_value(f_plugin)
-
         f_graph = PROJECT.get_routing_graph()
         if self.track_number in f_graph.graph:
             f_sends = f_graph.graph[self.track_number]
             for f_i, f_send in f_sends.items():
                 self.sends[f_i].set_value(f_send)
-
-        self.suppress_osc = False
 
     def get_track(self):
         return pydaw_track(
@@ -9883,6 +9875,8 @@ class pydaw_main_window(QtGui.QMainWindow):
         elif f_index == 3:
             ROUTING_GRAPH_WIDGET.draw_graph(
                 PROJECT.get_routing_graph(), TRACK_NAMES)
+        elif f_index == 4:
+            global_open_mixer()
 
     def on_collapse_splitters(self):
         self.song_region_splitter.setSizes([0, 9999])
