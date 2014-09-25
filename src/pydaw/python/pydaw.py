@@ -8469,7 +8469,8 @@ class seq_track:
     def control_changed(self, a_val=None):
         self.set_cc_num()
         self.ccs_in_use_combobox.setCurrentIndex(0)
-        REGION_EDITOR.open_region()
+        if not IS_PLAYING:
+            REGION_EDITOR.open_region()
 
     def set_cc_num(self, a_val=None):
         f_port_name = str(self.control_combobox.currentText())
@@ -8541,7 +8542,8 @@ class seq_track:
         self.automation_plugin = int(a_plugin)
         self.automation_plugin_name = str(a_name)
         self.plugin_changed()
-        REGION_EDITOR.open_region()
+        if not IS_PLAYING:
+            REGION_EDITOR.open_region()
 
     def save_callback(self):
         f_result = pydaw_track_plugins(
