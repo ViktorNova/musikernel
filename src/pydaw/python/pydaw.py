@@ -8541,8 +8541,8 @@ class seq_track:
             REGION_EDITOR.open_region()
 
     def save_callback(self):
-        f_result = pydaw_track_plugins(
-            [x.get_value() for x in self.plugins])
+        f_result = pydaw_track_plugins()
+        f_result.plugins = [x.get_value() for x in self.plugins]
         PROJECT.save_track_plugins(self.track_number, f_result)
         PROJECT.commit(
             "Update track plugins for '{}', {}".format(
@@ -8572,6 +8572,8 @@ class seq_track:
         if f_plugins:
             for f_plugin in f_plugins.plugins:
                 self.plugins[f_plugin.index].set_value(f_plugin)
+        if not self.sends:  # master track, etc...
+            return
         f_graph = PROJECT.get_routing_graph()
         if self.track_number in f_graph.graph:
             f_sends = f_graph.graph[self.track_number]
@@ -10473,8 +10475,8 @@ class pydaw_wave_editor_widget:
             self.fade_out_end)
 
     def save_callback(self):
-        f_result = pydaw_track_plugins(
-            [x.get_value() for x in self.plugins])
+        f_result = pydaw_track_plugins()
+        f_result.plugins = [x.get_value() for x in self.plugins]
         PROJECT.save_track_plugins(self.track_number, f_result)
         PROJECT.commit(
             "Update track plugins for '{}', {}".format(

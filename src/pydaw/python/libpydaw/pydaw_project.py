@@ -904,7 +904,8 @@ class pydaw_project:
         f_path = "{}/{}".format(self.track_pool_folder, a_track_num)
         if os.path.isfile(f_path):
             with open(f_path) as f_handle:
-                return pydaw_track_plugins.from_str(f_handle.read())
+                f_str = f_handle.read()
+            return pydaw_track_plugins.from_str(f_str)
         else:
             return None
 
@@ -2536,8 +2537,8 @@ class pydaw_track_send:
         return self.index < other.index
 
 class pydaw_track_plugins:
-    def __init__(self, a_plugins=[]):
-        self.plugins = a_plugins
+    def __init__(self):
+        self.plugins = []
 
     def __str__(self):
         return "\n".join(str(x) for x in
