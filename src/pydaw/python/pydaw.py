@@ -8569,10 +8569,9 @@ class seq_track:
 
     def open_plugins(self):
         f_plugins = PROJECT.get_track_plugins(self.track_number)
-        if not f_plugins:
-            return
-        for f_plugin in f_plugins.plugins:
-            self.plugins[f_plugin.index].set_value(f_plugin)
+        if f_plugins:
+            for f_plugin in f_plugins.plugins:
+                self.plugins[f_plugin.index].set_value(f_plugin)
         f_graph = PROJECT.get_routing_graph()
         if self.track_number in f_graph.graph:
             f_sends = f_graph.graph[self.track_number]
