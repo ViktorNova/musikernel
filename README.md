@@ -2,6 +2,10 @@
 
 Backwards compatibility will be broken frequently and without warning or remorse until the project is declared to be in beta phase.  Expect bugs, and don't expect your projects to load next time you update your installation.
 
+If you choose to try it anyway, you may need to delete your settings and default project folder after doing an update/reinstall by running this command:
+
+rm -rf ~/musikernel
+
 #What is MusiKernel ?
 
 Without going into too much detail just yet, MusiKernel is DAWs, plugins, and a new approach to developing an audio software ecosystem.
