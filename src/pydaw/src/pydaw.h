@@ -1447,30 +1447,31 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 
         pthread_spin_lock(&f_bus->lock);
 
-        if(f_plugin)
+        if(a_track->fade_state != FADE_STATE_FADED)
         {
-            v_pydaw_process_atm(
-                self, a_track->track_num, f_plugin_index,
-                self->sample_count);
-            f_plugin->descriptor->run_mixing(
-                f_plugin->PYFX_handle, self->sample_count,
-                f_buff, 2, a_track->event_buffer,
-                a_track->period_event_index,
-                f_plugin->atm_buffer, f_plugin->atm_count,
-                a_track->extern_midi,
-                *a_track->extern_midi_count);
-        }
-        else
-        {
-            f_i2 = 0;
-            while(f_i2 < self->sample_count)
+            if(f_plugin)
             {
-                f_buff[0][f_i2] += f_track_buff[0][f_i2];
-                f_buff[1][f_i2] += f_track_buff[1][f_i2];
-                f_i2++;
+                v_pydaw_process_atm(
+                    self, a_track->track_num, f_plugin_index,
+                    self->sample_count);
+                f_plugin->descriptor->run_mixing(
+                    f_plugin->PYFX_handle, self->sample_count,
+                    f_buff, 2, a_track->event_buffer,
+                    a_track->period_event_index,
+                    f_plugin->atm_buffer, f_plugin->atm_count,
+                    a_track->extern_midi, *a_track->extern_midi_count);
+            }
+            else
+            {
+                f_i2 = 0;
+                while(f_i2 < self->sample_count)
+                {
+                    f_buff[0][f_i2] += f_track_buff[0][f_i2];
+                    f_buff[1][f_i2] += f_track_buff[1][f_i2];
+                    f_i2++;
+                }
             }
         }
-
         f_bus->bus_counter -= 1;
 
         pthread_spin_unlock(&f_bus->lock);
@@ -4185,6 +4186,11 @@ void v_set_playback_cursor(t_pydaw_data * self, int a_region, int a_bar)
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
         self->track_pool_all[f_i]->item_event_index = 0;
+        if((self->is_soloed && !self->track_pool_all[f_i]->solo) ||
+            (self->track_pool_all[f_i]->mute))
+        {
+            self->track_pool_all[f_i]->fade_state = FADE_STATE_FADED;
+        }
         f_i++;
     }
 
