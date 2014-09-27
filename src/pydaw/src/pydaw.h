@@ -1449,7 +1449,7 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 
         if(a_track->fade_state != FADE_STATE_FADED)
         {
-            if(f_plugin)
+            if(f_plugin && f_plugin->power)
             {
                 v_pydaw_process_atm(
                     self, a_track->track_num, f_plugin_index,
