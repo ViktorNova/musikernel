@@ -49,6 +49,7 @@ typedef struct
 
 typedef struct
 {
+    t_pydaw_plugin * plugin_pool[MAX_PLUGIN_POOL_COUNT];
     t_wav_pool * wav_pool;
     pthread_spinlock_t main_lock;
     int ab_mode;  //0 == off, 1 == on
@@ -63,6 +64,7 @@ typedef struct
     char * samples_folder;
     char * samplegraph_folder;
     char * wav_pool_file;
+    char * plugins_folder;
     float ** input_buffers;
     int input_buffers_active;
     t_wav_pool_item * preview_wav_item;
@@ -120,6 +122,7 @@ void g_musikernel_get(float a_sr)
     musikernel->audio_tmp_folder = (char*)malloc(sizeof(char) * 1024);
     musikernel->samples_folder = (char*)malloc(sizeof(char) * 1024);
     musikernel->wav_pool_file = (char*)malloc(sizeof(char) * 1024);
+    musikernel->plugins_folder = (char*)malloc(sizeof(char) * 1024);
     musikernel->sample_rate = a_sr;
     musikernel->input_buffers_active = 0;
 
@@ -161,7 +164,12 @@ void g_musikernel_get(float a_sr)
     musikernel->uiTarget = lo_address_new_from_url(
         "osc.udp://localhost:30321/");
 
-
+    f_i = 0;
+    while(f_i < MAX_PLUGIN_POOL_COUNT)
+    {
+        musikernel->plugin_pool[f_i] = 0;
+        f_i++;
+    }
 }
 
 inline void v_queue_osc_message(char * a_key, char * a_val)

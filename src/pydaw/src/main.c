@@ -79,9 +79,6 @@ GNU General Public License for more details.
 #define CONFIGURE_KEY_TEMPO "tempo"
 #define CONFIGURE_KEY_SOLO "solo"
 #define CONFIGURE_KEY_MUTE "mute"
-#define CONFIGURE_KEY_CHANGE_INSTRUMENT "ci"
-#define CONFIGURE_KEY_SHOW_PLUGIN_UI "su"
-#define CONFIGURE_KEY_SHOW_FX_UI "fx"
 
 #define CONFIGURE_KEY_PREVIEW_SAMPLE "preview"
 #define CONFIGURE_KEY_STOP_PREVIEW "spr"
@@ -894,7 +891,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         t_pydaw_plugin * f_instance;
         pthread_spin_lock(&musikernel->main_lock);
 
-        f_instance = self->plugin_pool[f_plugin_uid];
+        f_instance = musikernel->plugin_pool[f_plugin_uid];
 
         if(f_instance)
         {
@@ -916,7 +913,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         char * f_key = f_val_arr->array[1];
         char * f_message = f_val_arr->array[2];
 
-        t_pydaw_plugin * f_instance = self->plugin_pool[f_plugin_uid];
+        t_pydaw_plugin * f_instance = musikernel->plugin_pool[f_plugin_uid];
 
         if(f_instance)
         {
@@ -1120,37 +1117,23 @@ void v_parse_configure_message(t_pydaw_data* self,
     {
         v_pydaw_update_audio_inputs(self);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_CHANGE_INSTRUMENT))
-    {
-        //Ensure that a project isn't being loaded right now
-        pthread_spin_lock(&musikernel->main_lock);
-        pthread_spin_unlock(&musikernel->main_lock);
-
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
-                PYDAW_TINY_STRING);
-        assert(0);
-        //int f_track_num = atoi(f_val_arr->array[0]);
-        //int f_plugin_index = atoi(f_val_arr->array[1]);
-        //v_set_plugin_index(self,
-        //    self->track_pool[f_track_num], f_plugin_index, 1);
-        g_free_1d_char_array(f_val_arr);
-    }
     else if(!strcmp(a_key, CONFIGURE_KEY_PREVIEW_SAMPLE))
     {
         v_pydaw_set_preview_file(a_value);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_PLUGIN_INDEX))
     {
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 5,
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 6,
                 PYDAW_TINY_STRING);
-        int f_track_num = atoi(f_val_arr->array[0]);
-        int f_index = atoi(f_val_arr->array[1]);
-        int f_plugin_index = atoi(f_val_arr->array[2]);
-        int f_plugin_uid = atoi(f_val_arr->array[3]);
-        int f_power = atoi(f_val_arr->array[4]);
+        int f_host_index = atoi(f_val_arr->array[0]);
+        int f_track_num = atoi(f_val_arr->array[1]);
+        int f_index = atoi(f_val_arr->array[2]);
+        int f_plugin_index = atoi(f_val_arr->array[3]);
+        int f_plugin_uid = atoi(f_val_arr->array[4]);
+        int f_power = atoi(f_val_arr->array[5]);
 
         v_pydaw_set_plugin_index(
-            self, f_track_num, f_index,
+            f_host_index, f_track_num, f_index,
             f_plugin_index, f_plugin_uid, f_power, 1);
 
         g_free_1d_char_array(f_val_arr);
@@ -1172,8 +1155,8 @@ void v_parse_configure_message(t_pydaw_data* self,
         t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 2,
                 PYDAW_SMALL_STRING);
         int f_plugin_uid = atoi(f_val_arr->array[0]);
-        pydaw_data->plugin_pool[f_plugin_uid]->descriptor->set_cc_map(
-            pydaw_data->plugin_pool[f_plugin_uid]->PYFX_handle,
+        musikernel->plugin_pool[f_plugin_uid]->descriptor->set_cc_map(
+            musikernel->plugin_pool[f_plugin_uid]->PYFX_handle,
             f_val_arr->array[1]);
         g_free_1d_char_array(f_val_arr);
     }

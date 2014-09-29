@@ -218,7 +218,6 @@ typedef struct
     char * region_folder;
     char * region_audio_folder;
     char * region_atm_folder;
-    char * plugins_folder;
     char * tracks_folder;
 
     //only refers to the fractional position within the current bar.
@@ -280,7 +279,6 @@ typedef struct
     int midi_learn;  //0 to disable, 1 to enable sending CC events to the UI
     int f_region_length_bars;
     long f_next_current_sample;
-    t_pydaw_plugin * plugin_pool[MAX_PLUGIN_POOL_COUNT];
     t_midi_device_list * midi_devices;
     t_pydaw_midi_routing_list midi_routing;
 }t_pydaw_data;
@@ -318,7 +316,7 @@ int i_get_song_index_from_region_uid(t_pydaw_data*, int);
 void v_save_pysong_to_disk(t_pydaw_data * self);
 void v_save_pyitem_to_disk(t_pydaw_data * self, int a_index);
 void v_save_pyregion_to_disk(t_pydaw_data * self, int a_region_num);
-void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
+void v_pydaw_set_plugin_index(int a_host_index, int a_track_num,
         int a_index, int a_plugin_index, int a_plugin_uid,
         int a_power, int a_lock);
 void v_pydaw_update_track_send(t_pydaw_data * self, int a_lock);
@@ -3289,7 +3287,6 @@ t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
     f_result->loop_mode = 0;
     f_result->item_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->region_folder = (char*)malloc(sizeof(char) * 1024);
-    f_result->plugins_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->region_audio_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->region_atm_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->per_audio_item_fx_folder = (char*)malloc(sizeof(char) * 1024);
@@ -3346,13 +3343,6 @@ t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
         f_i++;
     }
 
-    f_i = 0;
-    while(f_i < MAX_PLUGIN_POOL_COUNT)
-    {
-        f_result->plugin_pool[f_i] = 0;
-        f_i++;
-    }
-
     return f_result;
 }
 
@@ -3401,7 +3391,7 @@ void v_pydaw_open_track(t_pydaw_data * self, int a_index)
                 int f_power = atoi(f_power_str);
                 free(f_power_str);
 
-                v_pydaw_set_plugin_index(self, a_index, f_index,
+                v_pydaw_set_plugin_index(0, a_index, f_index,
                     f_plugin_index, f_plugin_uid, f_power, 0);
                 //TODO:  Mute, solo and power
             }
@@ -3500,13 +3490,13 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
         musikernel->project_folder);
     sprintf(self->region_atm_folder, "%s/projects/edmnext/regions_atm/",
         musikernel->project_folder);
-    sprintf(self->plugins_folder, "%s/projects/edmnext/plugins/",
-        musikernel->project_folder);
     sprintf(self->per_audio_item_fx_folder,
         "%s/projects/edmnext/audio_per_item_fx/", musikernel->project_folder);
     sprintf(self->tracks_folder, "%s/projects/edmnext/tracks",
         musikernel->project_folder);
 
+    sprintf(musikernel->plugins_folder, "%s/projects/plugins/",
+        musikernel->project_folder);
     sprintf(musikernel->samples_folder, "%s/audio/samples",
         musikernel->project_folder);  //No trailing slash on this one
     sprintf(musikernel->wav_pool->samples_folder, "%s",
@@ -3801,9 +3791,9 @@ void v_set_playback_cursor(t_pydaw_data * self, int a_region, int a_bar)
 
     while(f_i < MAX_PLUGIN_TOTAL_COUNT)
     {
-        if(self->plugin_pool[f_i])
+        if(musikernel->plugin_pool[f_i])
         {
-            self->plugin_pool[f_i]->atm_pos = 0;
+            musikernel->plugin_pool[f_i]->atm_pos = 0;
         }
         f_i++;
     }
@@ -4192,30 +4182,42 @@ void v_pydaw_set_preview_file(const char * a_file)
 }
 
 
-void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
+void v_pydaw_set_plugin_index(int a_host_index, int a_track_num,
         int a_index, int a_plugin_index, int a_plugin_uid,
         int a_power, int a_lock)
 {
-    t_pytrack * f_track = self->track_pool[a_track_num];
+    t_pytrack ** f_track_pool;
+
+    if(a_host_index == 0)
+    {
+        f_track_pool = pydaw_data->track_pool;
+    }
+    else if(a_host_index == 1)
+    {
+        f_track_pool = wavenext->track_pool;
+    }
+
+    t_pytrack * f_track = f_track_pool[a_track_num];
     t_pydaw_plugin * f_plugin = 0;
 
     if(a_plugin_index)
     {
-        f_plugin = self->plugin_pool[a_plugin_uid];
+        f_plugin = musikernel->plugin_pool[a_plugin_uid];
 
         if(!f_plugin)
         {
             f_plugin = g_pydaw_plugin_get((int)(musikernel->sample_rate),
                     a_plugin_index, g_pydaw_wavpool_item_get,
                     a_plugin_uid, v_queue_osc_message);
-            self->plugin_pool[a_plugin_uid] = f_plugin;
+            musikernel->plugin_pool[a_plugin_uid] = f_plugin;
             f_plugin->descriptor->connect_buffer(
                 f_plugin->PYFX_handle, 0, f_track->buffers[0]);
             f_plugin->descriptor->connect_buffer(
                 f_plugin->PYFX_handle, 1, f_track->buffers[1]);
 
             char f_file_name[1024];
-            sprintf(f_file_name, "%s%i", self->plugins_folder, a_plugin_uid);
+            sprintf(f_file_name, "%s%i",
+                musikernel->plugins_folder, a_plugin_uid);
 
             if(i_pydaw_file_exists(f_file_name))
             {

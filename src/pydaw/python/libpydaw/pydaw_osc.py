@@ -113,17 +113,6 @@ class pydaw_osc:
     def pydaw_wn_playback(self, a_mode):
         self.send_configure("wnp", str(a_mode))
 
-    def pydaw_play(self, a_region_num="0", a_bar="0"):
-        self.send_configure(
-            "play", "|".join(str(x) for x in (a_region_num, a_bar)))
-
-    def pydaw_stop(self):
-        self.send_configure("stop", "")
-
-    def pydaw_rec(self, a_region_num=0, a_bar=0):
-        self.send_configure(
-            "rec", "|".join(str(x) for x in (a_region_num, a_bar)))
-
     def pydaw_set_loop_mode(self, a_mode):
         self.send_configure("loop", str(a_mode))
 
@@ -141,10 +130,11 @@ class pydaw_osc:
             (a_track_num, bool_to_int(a_bool))))
 
     def pydaw_set_plugin(
-    self, a_track_num, a_index, a_plugin_index, a_uid, a_on):
+    self, a_host_index, a_track_num, a_index, a_plugin_index, a_uid, a_on):
         self.send_configure(
             "pi", "|".join(str(x) for x in
-            (a_track_num, a_index, a_plugin_index, a_uid, bool_to_int(a_on))))
+            (a_host_index, a_track_num, a_index, a_plugin_index,
+             a_uid, bool_to_int(a_on))))
 
     def pydaw_update_track_send(self):
         self.send_configure("ts", "")

@@ -31,7 +31,7 @@ import scipy.signal
 from PyQt4 import QtGui, QtCore
 from libpydaw import pydaw_history
 
-TRACK_COUNT_ALL = 32  # TODO:  +1 for the wave editor???
+TRACK_COUNT_ALL = 32
 
 
 def proj_file_str(a_val):
@@ -54,8 +54,9 @@ pydaw_folder_samples = "audio/samples"
 pydaw_folder_timestretch = "audio/timestretch"
 pydaw_folder_glued = "audio/glued"
 pydaw_folder_user = "user"
-pydaw_folder_plugins = "projects/edmnext/plugins"
+pydaw_folder_plugins = "projects/plugins"
 pydaw_folder_tracks = "projects/edmnext/tracks"
+wavenext_folder_tracks = "projects/wavenext/tracks"
 
 pydaw_file_plugin_uid = "projects/edmnext/plugin_uid.txt"
 pydaw_file_routing_graph = "projects/edmnext/routing.txt"
@@ -217,6 +218,8 @@ class pydaw_project:
             self.project_folder, pydaw_folder_plugins)
         self.track_pool_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_tracks)
+        self.wn_track_pool_folder = "{}/{}".format(
+            self.project_folder, wavenext_folder_tracks)
         #files
         self.pyregions_file = "{}/{}".format(
             self.project_folder, pydaw_file_pyregions)
@@ -264,7 +267,7 @@ class pydaw_project:
             self.audio_tmp_folder, self.regions_audio_folder,
             self.timestretch_folder, self.glued_folder, self.user_folder,
             self.plugin_pool_folder, self.track_pool_folder,
-            self.regions_atm_folder]
+            self.wn_track_pool_folder, self.regions_atm_folder]
 
         for project_dir in project_folders:
             print(project_dir)
@@ -900,8 +903,14 @@ class pydaw_project:
     def get_tracks(self):
         return pydaw_tracks.from_str(self.get_tracks_string())
 
-    def get_track_plugins(self, a_track_num):
-        f_path = "{}/{}".format(self.track_pool_folder, a_track_num)
+    def get_track_plugins(self, a_host_index, a_track_num):
+        if a_host_index == 0:
+            f_folder = self.track_pool_folder
+        elif a_host_index == 1:
+            f_folder = self.wn_track_pool_folder
+        else:
+            assert(False)
+        f_path = "{}/{}".format(f_folder, a_track_num)
         if os.path.isfile(f_path):
             with open(f_path) as f_handle:
                 f_str = f_handle.read()
@@ -1209,9 +1218,15 @@ class pydaw_project:
             self.save_file("", pydaw_file_pytracks, str(a_tracks))
             #Is there a need for a configure message here?
 
-    def save_track_plugins(self, a_uid, a_track):
+    def save_track_plugins(self, a_host_index, a_uid, a_track):
+        if a_host_index == 0:
+            f_folder = pydaw_folder_tracks
+        elif a_host_index == 1:
+            f_folder = wavenext_folder_tracks
+        else:
+            assert(False)
         if not self.suppress_updates:
-            self.save_file(pydaw_folder_tracks, str(a_uid), str(a_track))
+            self.save_file(f_folder, str(a_uid), str(a_track))
 
     def save_audio_inputs(self, a_tracks):
         if not self.suppress_updates:

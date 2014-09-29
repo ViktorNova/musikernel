@@ -8103,7 +8103,7 @@ def global_open_mixer():
         f_i:x for f_i, x in zip(range(len(TRACK_NAMES)), TRACK_NAMES)}
     f_plugins = {}
     for k in f_track_names:
-        f_track_plugins = PROJECT.get_track_plugins(k)
+        f_track_plugins = PROJECT.get_track_plugins(0, k)
         if f_track_plugins:
             f_plugins[k] = {x.index:x for x in f_track_plugins.plugins}
     MIXER_WIDGET.clear()
@@ -8128,7 +8128,9 @@ def global_open_mixer():
 class plugin_settings_base:
     def __init__(self, a_index, a_track_num,
                  a_layout, a_save_callback, a_name_callback,
-                 a_automation_callback, a_offset=0, a_send=None):
+                 a_automation_callback, a_offset=0, a_send=None,
+                 a_host_index=0):
+        self.host_index = a_host_index
         self.suppress_osc = False
         self.save_callback = a_save_callback
         self.name_callback = a_name_callback
@@ -8146,6 +8148,11 @@ class plugin_settings_base:
         self.plugin_combobox.currentIndexChanged.connect(
             self.on_plugin_change)
         a_layout.addWidget(self.plugin_combobox, a_index + 1, 0 + a_offset)
+        self.ui_button = QtGui.QPushButton("UI")
+        self.ui_button.released.connect(self.on_show_ui)
+        self.ui_button.setObjectName("uibutton")
+        self.ui_button.setFixedWidth(24)
+        a_layout.addWidget(self.ui_button, a_index + 1, 1 + a_offset)
         if a_automation_callback is not None:
             self.automation_radiobutton = QtGui.QRadioButton("")
             a_layout.addWidget(
@@ -8210,10 +8217,11 @@ class plugin_settings_base:
             self.plugin_uid = PROJECT.get_next_plugin_uid()
             self.plugin_index = f_index
         PROJECT.this_pydaw_osc.pydaw_set_plugin(
-            self.track_num, self.index, f_index,
+            self.host_index, self.track_num, self.index, f_index,
             self.plugin_uid, self.power_checkbox.isChecked())
         self.save_callback()
-        self.automation_check_changed()
+        if self.automation_callback:
+            self.automation_check_changed()
 
     def wheel_event(self, a_event=None):
         pass
@@ -8235,11 +8243,6 @@ class plugin_settings_main(plugin_settings_base):
             self, a_index, a_track_num, a_layout,
             a_save_callback, a_name_callback,
             a_automation_callback, a_offset, a_send)
-        self.ui_button = QtGui.QPushButton("UI")
-        self.ui_button.released.connect(self.on_show_ui)
-        self.ui_button.setObjectName("uibutton")
-        self.ui_button.setFixedWidth(24)
-        a_layout.addWidget(self.ui_button, a_index + 1, 1 + a_offset)
         self.menu_button = QtGui.QPushButton(_("Menu"))
         a_layout.addWidget(self.menu_button, a_index + 1, 4 + a_offset)
         self.menu = QtGui.QMenu()
@@ -8272,7 +8275,7 @@ class plugin_settings_wave_editor(plugin_settings_base):
         plugin_settings_base.__init__(
             self, a_index, a_track_num, a_layout,
             a_save_callback, a_name_callback,
-            a_automation_callback, a_offset, a_send)
+            a_automation_callback, a_offset, a_send, a_host_index=1)
 
 
 class track_send:
@@ -8521,7 +8524,7 @@ class seq_track:
         PROJECT.commit(
             _("Set name for track {} to {}").format(self.track_number,
             self.track_name_lineedit.text()))
-        f_plugins = PROJECT.get_track_plugins(self.track_number)
+        f_plugins = PROJECT.get_track_plugins(0, self.track_number)
         if not f_plugins:
             return
         for f_plugin in f_plugins.plugins:
@@ -8543,7 +8546,7 @@ class seq_track:
     def save_callback(self):
         f_result = pydaw_track_plugins()
         f_result.plugins = [x.get_value() for x in self.plugins]
-        PROJECT.save_track_plugins(self.track_number, f_result)
+        PROJECT.save_track_plugins(0, self.track_number, f_result)
         PROJECT.commit(
             "Update track plugins for '{}', {}".format(
             self.name_callback(), self.track_number))
@@ -8568,7 +8571,7 @@ class seq_track:
         self.suppress_osc = False
 
     def open_plugins(self):
-        f_plugins = PROJECT.get_track_plugins(self.track_number)
+        f_plugins = PROJECT.get_track_plugins(0, self.track_number)
         if f_plugins:
             for f_plugin in f_plugins.plugins:
                 self.plugins[f_plugin.index].set_value(f_plugin)
@@ -10383,8 +10386,9 @@ class pydaw_wave_editor_widget:
         ###############################
 
         self.fx_menu = QtGui.QMenu()
+        self.fx_menu.aboutToShow.connect(self.open_plugins)
         self.fx_button.setMenu(self.fx_menu)
-        self.track_number = 32
+        self.track_number = 0
         self.plugins = []
         self.menu_widget = QtGui.QWidget()
         self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
@@ -10483,13 +10487,19 @@ class pydaw_wave_editor_widget:
     def save_callback(self):
         f_result = pydaw_track_plugins()
         f_result.plugins = [x.get_value() for x in self.plugins]
-        PROJECT.save_track_plugins(self.track_number, f_result)
+        PROJECT.save_track_plugins(1, self.track_number, f_result)
         PROJECT.commit(
             "Update track plugins for '{}', {}".format(
             self.name_callback(), self.track_number))
 
+    def open_plugins(self):
+        f_plugins = PROJECT.get_track_plugins(1, self.track_number)
+        if f_plugins:
+            for f_plugin in f_plugins.plugins:
+                self.plugins[f_plugin.index].set_value(f_plugin)
+
     def name_callback(self):
-        return "Wave Editor"
+        return "Wave-Next"
 
     def copy_audio_item(self):
         if self.graph_object is None:
