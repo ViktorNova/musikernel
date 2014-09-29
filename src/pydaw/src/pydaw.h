@@ -3346,11 +3346,18 @@ t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
     return f_result;
 }
 
-void v_pydaw_open_track(t_pydaw_data * self, int a_index)
+void v_pydaw_open_track(int a_host_index, int a_index)
 {
     char f_file_name[1024];
-    sprintf(f_file_name, "%s/%i",
-        self->tracks_folder, a_index);
+
+    if(a_host_index == 0)
+    {
+        sprintf(f_file_name, "%s/%i", pydaw_data->tracks_folder, a_index);
+    }
+    else if(a_host_index == 1)
+    {
+        sprintf(f_file_name, "%s/%i", wavenext->tracks_folder, a_index);
+    }
 
     if(i_pydaw_file_exists(f_file_name))
     {
@@ -3391,9 +3398,9 @@ void v_pydaw_open_track(t_pydaw_data * self, int a_index)
                 int f_power = atoi(f_power_str);
                 free(f_power_str);
 
-                v_pydaw_set_plugin_index(0, a_index, f_index,
+                v_pydaw_set_plugin_index(a_host_index, a_index, f_index,
                     f_plugin_index, f_plugin_uid, f_power, 0);
-                //TODO:  Mute, solo and power
+
             }
             else
             {
@@ -3454,7 +3461,7 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
             free(f_mute_str);
             assert(f_mute == 0 || f_mute == 1);
 
-            v_pydaw_open_track(self, f_track_index);
+            v_pydaw_open_track(0, f_track_index);
 
             self->track_pool[f_track_index]->solo = f_solo;
             self->track_pool[f_track_index]->mute = f_mute;
@@ -3470,10 +3477,13 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
         {
             self->track_pool[f_i]->solo = 0;
             self->track_pool[f_i]->mute = 0;
-            v_pydaw_open_track(self, f_i);
+            v_pydaw_open_track(0, f_i);
             f_i++;
         }
     }
+
+    //open wavenext's plugins if they exist
+    v_pydaw_open_track(1, 0);
 }
 
 void v_open_project(t_pydaw_data* self, const char* a_project_folder,
@@ -3493,6 +3503,9 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
     sprintf(self->per_audio_item_fx_folder,
         "%s/projects/edmnext/audio_per_item_fx/", musikernel->project_folder);
     sprintf(self->tracks_folder, "%s/projects/edmnext/tracks",
+        musikernel->project_folder);
+
+    sprintf(wavenext->tracks_folder, "%s/projects/wavenext/tracks",
         musikernel->project_folder);
 
     sprintf(musikernel->plugins_folder, "%s/projects/plugins/",

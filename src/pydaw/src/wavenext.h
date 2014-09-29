@@ -19,6 +19,7 @@ typedef struct
     t_wav_pool_item * ab_wav_item;
     t_pydaw_audio_item * ab_audio_item;
     t_pytrack * track_pool[1];
+    char * tracks_folder;
 }t_wavenext;
 
 void v_pydaw_set_ab_file(t_wavenext * self, const char * a_file);
@@ -37,6 +38,7 @@ void g_wavenext_get()
     lmalloc((void**)&wavenext, sizeof(t_wavenext));
     wavenext->ab_wav_item = 0;
     wavenext->ab_audio_item = g_pydaw_audio_item_get(musikernel->sample_rate);
+    wavenext->tracks_folder = (char*)malloc(sizeof(char) * 1024);
     int f_i = 0;
     while(f_i < 1)
     {
