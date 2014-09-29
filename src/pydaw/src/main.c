@@ -64,8 +64,7 @@ GNU General Public License for more details.
 
 #include <linux/sched.h>
 
-#include "main.h"
-#include "synth.c"
+#include "pydaw.h"
 #include "midi_device.h"
 
 #define CONFIGURE_KEY_SS "ss"
@@ -131,14 +130,8 @@ void v_parse_configure_message(t_pydaw_data*, const char*, const char*);
 
 static float sample_rate;
 
-static d3h_instance_t *this_instance;
+static float **pluginOutputBuffers;
 
-static PYFX_Handle    instanceHandles;
-
-static int insTotal, outsTotal;
-static float **pluginInputBuffers, **pluginOutputBuffers;
-
-static int controlInsTotal, controlOutsTotal;
 //t_midi_device MIDI_DEVICE  __attribute__((aligned(16)));
 t_midi_device_list MIDI_DEVICES;
 //static char * osc_path_tmp = "osc.udp://localhost:19271/dssi/pydaw";
@@ -224,8 +217,6 @@ static int portaudioCallback( const void *inputBuffer,
                               void *userData )
 {
     unsigned int i;
-    //int inCount;
-    int outCount;
 
     float *out = (float*)outputBuffer;
 
@@ -247,10 +238,8 @@ static int portaudioCallback( const void *inputBuffer,
     }
 
     i = 0;
-    outCount = 0;
-    outCount += this_instance->plugin->outs;
 
-    v_pydaw_run(instanceHandles, framesPerBuffer);
+    v_pydaw_run(pluginOutputBuffers, framesPerBuffer);
 
     for( i=0; i < framesPerBuffer; i++ )
     {
@@ -316,16 +305,10 @@ int main(int argc, char **argv)
         exit(9996);
     }
 
-    v_pydaw_constructor();
-
-    d3h_dll_t *dll;
-    d3h_plugin_t *plugin;
-
     int f_thread_count = 0;
     int f_thread_affinity = 0;
     int f_performance = 0;
     int j;
-    int in, out, controlIn, controlOut;
 
     //Stop trying to load the soundcard after 3 failed attempts
     int f_failure_count = 0;
@@ -415,40 +398,18 @@ int main(int argc, char **argv)
     sigaddset(&_signals, SIGUSR2);
     pthread_sigmask(SIG_BLOCK, &_signals, 0);
 
-    insTotal = outsTotal = controlInsTotal = controlOutsTotal = 0;
-
-    plugin = (d3h_plugin_t *)calloc(1, sizeof(d3h_plugin_t));
-    plugin->label = "pydaw";
-    dll = (d3h_dll_t *)calloc(1, sizeof(d3h_dll_t));
-    dll->name = "pydaw";
-    dll->descfn = (PYFX_Descriptor_Function)PYFX_descriptor;
     j = 0;
 
-    plugin->descriptor = PYFX_descriptor(0);
+    lmalloc((void**)&pluginOutputBuffers, 2 * sizeof(float*));
 
-    plugin->dll = dll;
-
-    /* Count number of i/o buffers and ports required */
-    plugin->ins = 0;
-    plugin->outs = 2;
-    plugin->controlIns = 0;
-    plugin->controlOuts = 0;
-
-    /* set up instances */
-
-    this_instance = (d3h_instance_t*)malloc(sizeof(d3h_instance_t));
-    this_instance->plugin = plugin;
-    this_instance->friendly_name = "pydaw";
-
-    insTotal += plugin->ins;
-    outsTotal += plugin->outs;
-    controlInsTotal += plugin->controlIns;
-    controlOutsTotal += plugin->controlOuts;
-
-    //pluginInputBuffers = (float **)malloc(insTotal * sizeof(float *));
-    pluginOutputBuffers = (float **)malloc(outsTotal * sizeof(float *));
-
-    instanceHandles = (PYFX_Handle *)malloc(sizeof(PYFX_Handle));
+    int f_i = 0;
+    while(f_i < 2)
+    {
+        buffer_alloc(
+            (void**)&pluginOutputBuffers[f_i],
+            sizeof(float) * FRAMES_PER_BUFFER);
+        f_i++;
+    }
 
     sample_rate = 44100.0f;
 
@@ -490,45 +451,11 @@ int main(int argc, char **argv)
 
     int f_frame_count = DEFAULT_FRAMES_PER_BUFFER;
 
-
-        in = 0;
-    out = 0;
-
-    for (j = 0; j < this_instance->plugin->ins; ++j)
-    {
-        lmalloc((void**)(&pluginInputBuffers[in]),
-            (sizeof(float) * FRAMES_PER_BUFFER));
-
-        int f_i = 0;
-        while(f_i < FRAMES_PER_BUFFER)
-        {
-            pluginInputBuffers[in][f_i] = 0.0f;
-            f_i++;
-        }
-        ++in;
-    }
-    for (j = 0; j < this_instance->plugin->outs; ++j)
-    {
-        buffer_alloc((void**)(&pluginOutputBuffers[out]),
-            (sizeof(float) * FRAMES_PER_BUFFER));
-
-        int f_i = 0;
-        while(f_i < FRAMES_PER_BUFFER)
-        {
-            pluginOutputBuffers[out][f_i] = 0.0f;
-            f_i++;
-        }
-
-        ++out;
-    }
-
     MIDI_DEVICES.count = 0;
 
     /* Instantiate plugins */
 
-    plugin = this_instance->plugin;
-    instanceHandles = g_pydaw_instantiate(plugin->descriptor, sample_rate,
-        &MIDI_DEVICES);
+    g_pydaw_instantiate(sample_rate, &MIDI_DEVICES);
 
     /* Create OSC thread */
 
@@ -536,23 +463,6 @@ int main(int argc, char **argv)
     lo_server_thread_add_method(serverThread, NULL, NULL, osc_message_handler,
             NULL);
     lo_server_thread_start(serverThread);
-
-    /* Connect and activate plugins */
-
-    in = out = controlIn = controlOut = 0;
-
-    plugin = this_instance->plugin;
-
-    for (j = 0; j < 2; j++)
-    {
-        v_pydaw_connect_port(instanceHandles, j, pluginOutputBuffers[out++]);
-    }
-
-    assert(in == insTotal);
-    assert(out == outsTotal);
-    assert(controlIn == controlInsTotal);
-    assert(controlOut == controlOutsTotal);
-
 
     while(1)
     {
@@ -730,7 +640,7 @@ int main(int argc, char **argv)
             Pa_GetDeviceInfo(outputParameters.device )->defaultLowOutputLatency;
         outputParameters.hostApiSpecificStreamInfo = NULL;
 
-        int f_i = 0;
+        f_i = 0;
         int f_found_index = 0;
         while(f_i < Pa_GetDeviceCount())
         {
@@ -782,8 +692,7 @@ int main(int argc, char **argv)
     signal(SIGQUIT, signalHandler);
     pthread_sigmask(SIG_UNBLOCK, &_signals, 0);
 
-    v_pydaw_activate(instanceHandles, f_thread_count, f_thread_affinity,
-            argv[2]);
+    v_pydaw_activate(f_thread_count, f_thread_affinity, argv[2]);
 
     v_queue_osc_message("ready", "");
 
@@ -884,7 +793,7 @@ int main(int argc, char **argv)
         timer_delete(timerid);
     }
 
-    int f_i = 0;
+    f_i = 0;
     while(f_i < MIDI_DEVICES.count)
     {
         if(MIDI_DEVICES.devices[f_i].loaded)
@@ -900,7 +809,6 @@ int main(int argc, char **argv)
         Pa_Terminate();
         Pm_Terminate();
     }
-    v_pydaw_cleanup(instanceHandles);
 
     v_pydaw_destructor();
 
@@ -926,7 +834,7 @@ void osc_error(int num, const char *msg, const char *path)
     printf("liblo server error %d in path %s: %s\n", num, path, msg);
 }
 
-int osc_configure_handler(d3h_instance_t *instance, lo_arg **argv)
+int osc_configure_handler(lo_arg **argv)
 {
     const char *key = (const char *)&argv[0]->s;
     const char *value = (const char *)&argv[1]->s;
@@ -958,7 +866,7 @@ int osc_message_handler(const char *path, const char *types, lo_arg **argv,
 {
     if(!strcmp(path, "/musikernel/configure") && !strcmp(types, "ss"))
     {
-        return osc_configure_handler(this_instance, argv);
+        return osc_configure_handler(argv);
     }
     else
     {

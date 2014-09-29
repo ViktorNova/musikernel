@@ -23,7 +23,7 @@ GNU General Public License for more details.
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../pydaw/src/synth.c"
+#include "../pydaw/src/pydaw.h"
 #include "../pydaw/include/pydaw_plugin.h"
 #include "../pydaw/libmodsynth/lib/lmalloc.h"
 #include <unistd.h>
@@ -54,22 +54,24 @@ int main(int argc, char** argv)
     int f_buffer_size = atoi(argv[8]);
     int f_thread_count = atoi(argv[9]);
 
-    v_pydaw_constructor();
+    g_pydaw_instantiate(f_sample_rate, 0);
+    float** f_output;
+    lmalloc((void**)&f_output, sizeof(float*) * 2);
 
-    PYFX_Descriptor * f_ldesc = PYFX_descriptor(0);
-    PYFX_Handle f_handle =  g_pydaw_instantiate(f_ldesc, f_sample_rate, 0);
-
-    v_pydaw_activate(f_handle, f_thread_count, 0, f_project_dir);
-    t_pydaw_engine * f_engine = (t_pydaw_engine*)f_handle;
-
-    buffer_alloc((void**)&f_engine->output0, sizeof(float) * f_buffer_size);
-    buffer_alloc((void**)&f_engine->output1, sizeof(float) * f_buffer_size);
+    v_pydaw_activate(f_thread_count, 0, f_project_dir);
 
     int f_i = 0;
+    while(f_i < 2)
+    {
+        buffer_alloc((void**)&f_output[f_i], sizeof(float) * f_buffer_size);
+        f_i++;
+    }
+    
+    f_i = 0;
     while(f_i < f_buffer_size)
     {
-        f_engine->output0[f_i] = 0.0f;
-        f_engine->output1[f_i] = 0.0f;
+        f_output[0][f_i] = 0.0f;
+        f_output[1][f_i] = 0.0f;
         f_i++;
     }
 

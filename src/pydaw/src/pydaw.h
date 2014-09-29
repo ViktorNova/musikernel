@@ -86,7 +86,6 @@ GNU General Public License for more details.
 #include "pydaw_audio_tracks.h"
 #include "pydaw_audio_inputs.h"
 #include "pydaw_audio_util.h"
-#include "synth.h"
 #include <lo/lo.h>
 #include "midi_device.h"
 
@@ -408,15 +407,14 @@ void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
 inline void v_pydaw_process_external_midi(t_pydaw_data * pydaw_data,
         t_pytrack * a_track, int sample_count);
 inline void v_pydaw_run_main_loop(t_pydaw_data * pydaw_data, int sample_count,
-        long f_next_current_sample, PYFX_Data *output0, PYFX_Data *output1,
-        PYFX_Data **a_input_buffers);
+        long f_next_current_sample, float **output, float **a_input_buffers);
 void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         int a_start_bar, int a_end_region, int a_end_bar, char * a_file_out,
         int a_is_audio_glue);
 void v_pydaw_print_benchmark(char * a_message, clock_t a_start);
 inline void v_pydaw_audio_items_run(t_pydaw_data * self,
-        int a_sample_count, float* a_output0,
-        float* a_output1, int a_audio_track_num, int a_is_audio_glue);
+        int a_sample_count, float** a_output,
+        int a_audio_track_num, int a_is_audio_glue);
 void v_pydaw_update_audio_inputs(t_pydaw_data * self);
 void * v_pydaw_audio_recording_thread(void* a_arg);
 inline float v_pydaw_count_beats(t_pydaw_data * self,
@@ -456,6 +454,109 @@ void v_pydaw_set_midi_device(t_pydaw_data*, int, int, int);
 
 int ZERO = 0;
 t_pydaw_data * pydaw_data;
+
+
+
+void g_pydaw_instantiate(int s_rate, t_midi_device_list * a_midi_devices)
+{
+    pydaw_data = g_pydaw_data_get(s_rate, a_midi_devices);
+}
+
+void v_pydaw_activate(int a_thread_count,
+        int a_set_thread_affinity, char * a_project_path)
+{
+    v_open_project(pydaw_data, a_project_path, 1);
+
+    v_pydaw_init_worker_threads(pydaw_data, a_thread_count,
+            a_set_thread_affinity);
+}
+
+void v_pydaw_run(float ** buffers, int sample_count)
+{
+    pthread_spin_lock(&pydaw_data->main_lock);
+
+    if(!pydaw_data->is_offline_rendering)
+    {
+        pydaw_data->input_buffers_active = 1;
+        long f_next_current_sample =
+            ((pydaw_data->current_sample) + sample_count);
+        v_pydaw_run_main_loop(
+                pydaw_data, sample_count, f_next_current_sample,
+                buffers, NULL);
+        pydaw_data->current_sample = f_next_current_sample;
+    }
+    else
+    {
+        /*Clear the output buffer*/
+        pydaw_data->input_buffers_active = 0;
+        int f_i = 0;
+
+        while(f_i < sample_count)
+        {
+            buffers[0][f_i] = 0.0f;
+            buffers[1][f_i] = 0.0f;
+            f_i++;
+        }
+    }
+
+    pthread_spin_unlock(&pydaw_data->main_lock);
+}
+
+void v_pydaw_destructor()
+{
+    if(pydaw_data)
+    {
+        pydaw_data->audio_recording_quit_notifier = 1;
+        lo_address_free(pydaw_data->uiTarget);
+
+        int f_i = 0;
+
+        char tmp_sndfile_name[2048];
+
+        while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
+        {
+            if(pydaw_data->audio_inputs[f_i]->sndfile)
+            {
+                sf_close(pydaw_data->audio_inputs[f_i]->sndfile);
+                sprintf(tmp_sndfile_name, "%s%i.wav",
+                        pydaw_data->audio_tmp_folder, f_i);
+                printf("Deleting %s\n", tmp_sndfile_name);
+                remove(tmp_sndfile_name);
+            }
+            f_i++;
+        }
+
+        f_i = 1;
+        while(f_i < pydaw_data->track_worker_thread_count)
+        {
+            //pthread_mutex_lock(&pydaw_data->track_block_mutexes[f_i]);
+            pydaw_data->track_thread_quit_notifier[f_i] = 1;
+            //pthread_mutex_unlock(&pydaw_data->track_block_mutexes[f_i]);
+            f_i++;
+        }
+
+        f_i = 1;
+        while(f_i < pydaw_data->track_worker_thread_count)
+        {
+            pthread_mutex_lock(&pydaw_data->track_block_mutexes[f_i]);
+            pthread_cond_broadcast(&pydaw_data->track_cond[f_i]);
+            pthread_mutex_unlock(&pydaw_data->track_block_mutexes[f_i]);
+            f_i++;
+        }
+
+        sleep(1);
+
+        f_i = 1;
+        while(f_i < pydaw_data->track_worker_thread_count)
+        {
+            //abort the application rather than hang indefinitely
+            assert(pydaw_data->track_thread_quit_notifier[f_i] == 2);
+            //pthread_mutex_lock(&pydaw_data->track_block_mutexes[f_i]);
+            //pthread_mutex_unlock(&pydaw_data->track_block_mutexes[f_i]);
+            f_i++;
+        }
+    }
+}
 
 
 inline float f_bpm_to_seconds_per_beat(float a_tempo)
@@ -1630,8 +1731,7 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
     }
 
     v_pydaw_audio_items_run(self, self->sample_count,
-        f_track->buffers[0], f_track->buffers[1],
-        a_global_track_num, 0);
+        f_track->buffers, a_global_track_num, 0);
 
     int f_i = 0;
 
@@ -2338,7 +2438,7 @@ inline void v_pydaw_finish_time_params(t_pydaw_data * self,
 
 
 inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
-        int sample_count, PYFX_Data *output0, PYFX_Data *output1)
+        int sample_count, float **output)
 {
     t_pydaw_plugin * f_plugin;
     int f_global_track_num = PYDAW_TRACK_COUNT_ALL - 1;
@@ -2350,8 +2450,8 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
         if((self->ab_audio_item->sample_read_head->whole_number) >=
             (self->ab_audio_item->sample_end_offset))
         {
-            output0[f_i] = 0.0f;
-            output1[f_i] = 0.0f;
+            output[0][f_i] = 0.0f;
+            output[1][f_i] = 0.0f;
         }
         else
         {
@@ -2369,12 +2469,12 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
                 (self->ab_audio_item->vol_linear) *
                 (self->ab_audio_item->fade_vol);
 
-                output0[f_i] = f_tmp_sample;
-                output1[f_i] = f_tmp_sample;
+                output[0][f_i] = f_tmp_sample;
+                output[1][f_i] = f_tmp_sample;
             }
             else if(self->ab_wav_item->channels > 1)
             {
-                output0[f_i] = f_cubic_interpolate_ptr_ifh(
+                output[0][f_i] = f_cubic_interpolate_ptr_ifh(
                 (self->ab_wav_item->samples[0]),
                 (self->ab_audio_item->sample_read_head->
                     whole_number),
@@ -2383,7 +2483,7 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
                 (self->ab_audio_item->vol_linear) *
                 (self->ab_audio_item->fade_vol);
 
-                output1[f_i] = f_cubic_interpolate_ptr_ifh(
+                output[1][f_i] = f_cubic_interpolate_ptr_ifh(
                 (self->ab_wav_item->samples[1]),
                 (self->ab_audio_item->sample_read_head->whole_number),
                 (self->ab_audio_item->sample_read_head->fraction)) *
@@ -2409,8 +2509,8 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
     f_i = 0;
     while(f_i < sample_count)
     {
-        f_buff[0][f_i] = output0[f_i];
-        f_buff[1][f_i] = output1[f_i];
+        f_buff[0][f_i] = output[0][f_i];
+        f_buff[1][f_i] = output[1][f_i];
         f_i++;
     }
 
@@ -2432,8 +2532,8 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
     f_i = 0;
     while(f_i < sample_count)
     {
-        output0[f_i] = f_buff[0][f_i];
-        output1[f_i] = f_buff[1][f_i];
+        output[0][f_i] = f_buff[0][f_i];
+        output[1][f_i] = f_buff[1][f_i];
         f_i++;
     }
 
@@ -2443,8 +2543,7 @@ inline void v_pydaw_run_wave_editor(t_pydaw_data * self,
 
 
 inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
-        long f_next_current_sample, PYFX_Data *output0, PYFX_Data *output1,
-        PYFX_Data **a_input_buffers)
+        long f_next_current_sample, float **output, float **a_input_buffers)
 {
     self->sample_count = sample_count;
     self->input_buffers = a_input_buffers;
@@ -2525,8 +2624,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
 
     float ** f_master_buff = f_master_track->buffers;
 
-    v_pydaw_audio_items_run(self, self->sample_count,
-        f_master_buff[0], f_master_buff[1], 0, 0);
+    v_pydaw_audio_items_run(self, self->sample_count, f_master_buff, 0, 0);
 
     t_pydaw_plugin * f_plugin;
 
@@ -2568,8 +2666,8 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
     f_i = 0;
     while(f_i < sample_count)
     {
-        output0[f_i] = f_master_buff[0][f_i];
-        output1[f_i] = f_master_buff[1][f_i];
+        output[0][f_i] = f_master_buff[0][f_i];
+        output[1][f_i] = f_master_buff[1][f_i];
         f_i++;
     }
 
@@ -2589,18 +2687,18 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
 }
 
 inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
-        long f_next_current_sample, PYFX_Data *output0, PYFX_Data *output1,
+        long f_next_current_sample, float ** a_buffers,
         PYFX_Data **a_input_buffers)
 {
     if(self->is_ab_ing)
     {
-        v_pydaw_run_wave_editor(self, sample_count, output0, output1);
+        v_pydaw_run_wave_editor(self, sample_count, a_buffers);
     }
     else
     {
         v_pydaw_run_engine(
             self, sample_count, f_next_current_sample,
-            output0, output1, a_input_buffers);
+            a_buffers, a_input_buffers);
     }
 
     if(self->is_previewing)
@@ -2627,12 +2725,12 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
                     (self->preview_amp_lin); // *
                     //(self->preview_audio_item->fade_vol);
 
-                    output0[f_i] = f_tmp_sample;
-                    output1[f_i] = f_tmp_sample;
+                    a_buffers[0][f_i] = f_tmp_sample;
+                    a_buffers[1][f_i] = f_tmp_sample;
                 }
                 else if(self->preview_wav_item->channels > 1)
                 {
-                    output0[f_i] = f_cubic_interpolate_ptr_ifh(
+                    a_buffers[0][f_i] = f_cubic_interpolate_ptr_ifh(
                     (self->preview_wav_item->samples[0]),
                     (self->preview_audio_item->sample_read_head->whole_number),
                     (self->preview_audio_item->sample_read_head->fraction)) *
@@ -2640,7 +2738,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
                     (self->preview_amp_lin); // *
                     //(self->preview_audio_item->fade_vol);
 
-                    output1[f_i] = f_cubic_interpolate_ptr_ifh(
+                    a_buffers[1][f_i] = f_cubic_interpolate_ptr_ifh(
                     (self->preview_wav_item->samples[1]),
                     (self->preview_audio_item->sample_read_head->whole_number),
                     (self->preview_audio_item->sample_read_head->fraction)) *
@@ -2653,7 +2751,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
                         self->preview_audio_item->ratio);
 
                 if((self->preview_audio_item->sample_read_head->whole_number)
-                    >=  (self->preview_max_sample_count))
+                    >= (self->preview_max_sample_count))
                 {
                     v_adsr_release(self->preview_audio_item->adsr);
                 }
@@ -2673,8 +2771,8 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
         int f_i = 0;
         while(f_i < sample_count)
         {
-            output0[f_i] *= MASTER_VOL;
-            output1[f_i] *= MASTER_VOL;
+            a_buffers[0][f_i] *= MASTER_VOL;
+            a_buffers[1][f_i] *= MASTER_VOL;
             f_i++;
         }
     }
@@ -2683,8 +2781,8 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
 
 
 inline void v_pydaw_audio_items_run(t_pydaw_data * self,
-        int a_sample_count, float* a_output0,
-        float* a_output1, int a_audio_track_num, int a_is_audio_glue)
+    int a_sample_count, float** a_output,
+    int a_audio_track_num, int a_is_audio_glue)
 {
     if(!a_is_audio_glue &&
       (!self->pysong->audio_items[self->current_region] ||
@@ -2945,8 +3043,8 @@ inline void v_pydaw_audio_items_run(t_pydaw_data * self,
                                 }
                             }
 
-                            a_output0[f_i2] += f_tmp_sample0;
-                            a_output1[f_i2] += f_tmp_sample1;
+                            a_output[0][f_i2] += f_tmp_sample0;
+                            a_output[1][f_i2] += f_tmp_sample1;
                         }
                         else if(f_audio_item->wav_pool_item->channels == 2)
                         {
@@ -2996,8 +3094,8 @@ inline void v_pydaw_audio_items_run(t_pydaw_data * self,
                                 }
                             }
 
-                            a_output0[f_i2] += f_tmp_sample0;
-                            a_output1[f_i2] += f_tmp_sample1;
+                            a_output[0][f_i2] += f_tmp_sample0;
+                            a_output[1][f_i2] += f_tmp_sample1;
 
                         }
                         else
@@ -4415,8 +4513,15 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
     float * f_output = (float*)malloc(sizeof(float) * (f_block_size * 2));
 
     long f_next_sample_block = 0;
-    float * f_buffer0 = (float*)malloc(sizeof(float) * f_block_size);
-    float * f_buffer1 = (float*)malloc(sizeof(float) * f_block_size);
+    float ** f_buffer;
+    lmalloc((void**)&f_buffer, sizeof(float*) * 2);
+
+    f_i = 0;
+    while(f_i < 2)
+    {
+        lmalloc((void**)&f_buffer[f_i], sizeof(float) * f_block_size);
+        f_i++;
+    }
 
     //We must set it back afterwards, or the UI will be wrong...
     int f_old_loop_mode = self->loop_mode;
@@ -4456,8 +4561,8 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
 
         while(f_i < f_block_size)
         {
-            f_buffer0[f_i] = 0.0f;
-            f_buffer1[f_i] = 0.0f;
+            f_buffer[0][f_i] = 0.0f;
+            f_buffer[1][f_i] = 0.0f;
             f_i++;
         }
 
@@ -4466,14 +4571,13 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         if(a_is_audio_glue)
         {
             v_pydaw_set_time_params(self, f_block_size);
-            v_pydaw_audio_items_run(self, f_block_size, f_buffer0,
-                    f_buffer1, -1, 1);
+            v_pydaw_audio_items_run(self, f_block_size, f_buffer, -1, 1);
             v_pydaw_finish_time_params(self, 999999);
         }
         else
         {
             v_pydaw_run_main_loop(self, f_block_size,
-                f_next_sample_block, f_buffer0, f_buffer1, 0);
+                f_next_sample_block, f_buffer, 0);
         }
 
         self->current_sample = f_next_sample_block;
@@ -4482,9 +4586,9 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         /*Interleave the samples...*/
         while(f_i < f_block_size)
         {
-            f_output[f_size] = f_buffer0[f_i];
+            f_output[f_size] = f_buffer[0][f_i];
             f_size++;
-            f_output[f_size] = f_buffer1[f_i];
+            f_output[f_size] = f_buffer[1][f_i];
             f_size++;
             f_i++;
         }
@@ -4503,8 +4607,9 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
 
     sf_close(f_sndfile);
 
-    free(f_buffer0);
-    free(f_buffer1);
+    free(f_buffer[0]);
+    free(f_buffer[1]);
+    free(f_buffer);
     free(f_output);
 
     char f_tmp_finished[1024];
@@ -4535,8 +4640,14 @@ void v_pydaw_we_export(t_pydaw_data * self, const char * a_file_out)
 
     float * f_output = (float*)malloc(sizeof(float) * (f_block_size * 2));
 
-    float * f_buffer0 = (float*)malloc(sizeof(float) * f_block_size);
-    float * f_buffer1 = (float*)malloc(sizeof(float) * f_block_size);
+    float ** f_buffer = (float**)malloc(sizeof(float) * 2);
+
+    int f_i = 0;
+    while(f_i < 2)
+    {
+        f_buffer[f_i] = (float*)malloc(sizeof(float) * f_block_size);
+        f_i++;
+    }
 
     int f_old_ab_mode = self->ab_mode;
     self->ab_mode = 1;
@@ -4566,21 +4677,20 @@ void v_pydaw_we_export(t_pydaw_data * self, const char * a_file_out)
 
         while(f_i < f_block_size)
         {
-            f_buffer0[f_i] = 0.0f;
-            f_buffer1[f_i] = 0.0f;
+            f_buffer[0][f_i] = 0.0f;
+            f_buffer[1][f_i] = 0.0f;
             f_i++;
         }
 
-        v_pydaw_run_wave_editor(self, f_block_size,
-                f_buffer0, f_buffer1);
+        v_pydaw_run_wave_editor(self, f_block_size, f_buffer);
 
         f_i = 0;
         /*Interleave the samples...*/
         while(f_i < f_block_size)
         {
-            f_output[f_size] = f_buffer0[f_i];
+            f_output[f_size] = f_buffer[0][f_i];
             f_size++;
-            f_output[f_size] = f_buffer1[f_i];
+            f_output[f_size] = f_buffer[1][f_i];
             f_size++;
             f_i++;
         }
@@ -4596,8 +4706,8 @@ void v_pydaw_we_export(t_pydaw_data * self, const char * a_file_out)
 
     sf_close(f_sndfile);
 
-    free(f_buffer0);
-    free(f_buffer1);
+    free(f_buffer[0]);
+    free(f_buffer[1]);
     free(f_output);
 
     char f_tmp_finished[1024];
