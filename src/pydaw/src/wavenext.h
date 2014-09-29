@@ -352,12 +352,11 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
             v_ifh_run(self->ab_audio_item->sample_read_head,
                     self->ab_audio_item->ratio);
 
-            assert(0);
-            /*if(self->playback_mode != PYDAW_PLAYBACK_MODE_PLAY &&
+            if(musikernel->playback_mode != PYDAW_PLAYBACK_MODE_PLAY &&
                 self->ab_audio_item->adsr->stage < ADSR_STAGE_RELEASE)
             {
                 v_adsr_release(self->ab_audio_item->adsr);
-            }*/
+            }
         }
         f_i++;
     }

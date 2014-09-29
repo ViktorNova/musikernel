@@ -8813,8 +8813,11 @@ class transport_widget:
         WAVE_EDITOR.on_play()
         self.menu_button.setEnabled(False)
         AUDIO_SEQ.set_playback_clipboard()
-        PROJECT.this_pydaw_osc.pydaw_play(
-            a_region_num=self.get_region_value(), a_bar=self.get_bar_value())
+        if WAVE_EDITOR.enabled_checkbox.isChecked():
+            PROJECT.this_pydaw_osc.pydaw_wn_playback(1)
+        else:
+            PROJECT.this_pydaw_osc.pydaw_en_playback(
+                1, self.get_region_value(), self.get_bar_value())
 
     def on_ready(self):
         self.master_vol_changed(self.master_vol_knob.value())
@@ -8828,7 +8831,10 @@ class transport_widget:
     def on_stop(self):
         if not self.is_playing and not self.is_recording:
             return
-        PROJECT.this_pydaw_osc.pydaw_stop()
+        if WAVE_EDITOR.enabled_checkbox.isChecked():
+            PROJECT.this_pydaw_osc.pydaw_wn_playback(0)
+        else:
+            PROJECT.this_pydaw_osc.pydaw_en_playback(0)
         global IS_PLAYING
         IS_PLAYING = False
         SONG_EDITOR.table_widget.setEnabled(True)
@@ -8950,8 +8956,8 @@ class transport_widget:
         self.last_region_num = self.get_region_value()
         self.start_region = self.get_region_value()
         self.last_bar = self.get_bar_value()
-        PROJECT.this_pydaw_osc.pydaw_rec(
-            a_region_num=self.get_region_value(),
+        PROJECT.this_pydaw_osc.pydaw_en_playback(
+            2, a_region_num=self.get_region_value(),
             a_bar=self.get_bar_value())
         self.trigger_audio_playback()
         AUDIO_SEQ.set_playback_clipboard()

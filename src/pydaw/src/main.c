@@ -73,9 +73,8 @@ GNU General Public License for more details.
 #define CONFIGURE_KEY_SI "si"
 #define CONFIGURE_KEY_SR "sr"
 #define CONFIGURE_KEY_SAVE_ATM "sa"
-#define CONFIGURE_KEY_PLAY "play"
-#define CONFIGURE_KEY_REC "rec"
-#define CONFIGURE_KEY_STOP "stop"
+#define CONFIGURE_KEY_EN_PLAYBACK "enp"
+#define CONFIGURE_KEY_WN_PLAYBACK "wnp"
 #define CONFIGURE_KEY_LOOP "loop"
 #define CONFIGURE_KEY_TEMPO "tempo"
 #define CONFIGURE_KEY_SOLO "solo"
@@ -943,27 +942,22 @@ void v_parse_configure_message(t_pydaw_data* self,
         v_paif_set_control(self, f_region_uid, f_item_index,
                 f_port_num, f_port_val);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_PLAY)) //Begin playback
+    else if(!strcmp(a_key, CONFIGURE_KEY_EN_PLAYBACK))
     {
-        t_1d_char_array * f_arr = c_split_str(a_value, '|', 2,
+        t_1d_char_array * f_arr = c_split_str(a_value, '|', 3,
                 PYDAW_SMALL_STRING);
-        int f_region = atoi(f_arr->array[0]);
-        int f_bar = atoi(f_arr->array[1]);
-        v_set_playback_mode(self, 1, f_region, f_bar, 1);
+        int f_mode = atoi(f_arr->array[0]);
+        assert(f_mode >= 0 && f_mode <= 2);
+        int f_region = atoi(f_arr->array[1]);
+        int f_bar = atoi(f_arr->array[2]);
+        v_set_playback_mode(self, f_mode, f_region, f_bar, 1);
         g_free_1d_char_array(f_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_REC)) //Begin recording
+    else if(!strcmp(a_key, CONFIGURE_KEY_WN_PLAYBACK))
     {
-        t_1d_char_array * f_arr = c_split_str(a_value, '|', 2,
-                PYDAW_SMALL_STRING);
-        int f_region = atoi(f_arr->array[0]);
-        int f_bar = atoi(f_arr->array[1]);
-        v_set_playback_mode(self, 2, f_region, f_bar, 1);
-        g_free_1d_char_array(f_arr);
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_STOP))
-    {
-        v_set_playback_mode(self, 0, -1, -1, 1);
+        int f_mode = atoi(a_value);
+        assert(f_mode >= 0 && f_mode <= 2);
+        v_wn_set_playback_mode(wavenext, f_mode, 1);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_SR))
     {

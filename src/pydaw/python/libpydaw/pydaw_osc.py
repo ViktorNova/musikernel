@@ -106,6 +106,13 @@ class pydaw_osc:
     def pydaw_save_region(self, a_name):
         self.send_configure("sr", str(a_name))
 
+    def pydaw_en_playback(self, a_mode, a_region_num="0", a_bar="0"):
+        self.send_configure(
+            "enp", "|".join(str(x) for x in (a_mode, a_region_num, a_bar)))
+
+    def pydaw_wn_playback(self, a_mode):
+        self.send_configure("wnp", str(a_mode))
+
     def pydaw_play(self, a_region_num="0", a_bar="0"):
         self.send_configure(
             "play", "|".join(str(x) for x in (a_region_num, a_bar)))
