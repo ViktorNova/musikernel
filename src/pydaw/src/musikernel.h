@@ -76,6 +76,16 @@ typedef struct
     pthread_t audio_recording_thread;
     int audio_recording_quit_notifier __attribute__((aligned(16)));
     int playback_mode;  //0 == Stop, 1 == Play, 2 == Rec
+    lo_server_thread serverThread;
+    char * osc_url;
+    lo_address uiTarget;
+    char * osc_cursor_message;
+    int osc_queue_index;
+    char osc_queue_keys[PYDAW_OSC_SEND_QUEUE_SIZE][12];
+    char osc_queue_vals[PYDAW_OSC_SEND_QUEUE_SIZE][PYDAW_OSC_MAX_MESSAGE_SIZE];
+    pthread_t osc_queue_thread;
+    //Threads must hold this to write OSC messages
+    pthread_spinlock_t ui_spinlock;
 }t_musikernel;
 
 void g_musikernel_get(float);
@@ -90,6 +100,12 @@ void * v_pydaw_audio_recording_thread(void* a_arg);
 
 t_musikernel * musikernel = NULL;
 int ZERO = 0;
+
+void pydaw_osc_error(int num, const char *msg, const char *path)
+{
+    fprintf(stderr, "PyDAW: liblo server error %d in path %s: %s\n",
+	    num, path, msg);
+}
 
 void g_musikernel_get(float a_sr)
 {
@@ -125,7 +141,53 @@ void g_musikernel_get(float a_sr)
         f_i++;
     }
 
+    /* Create OSC thread */
 
+    pthread_spin_init(&musikernel->ui_spinlock, 0);
+    musikernel->osc_queue_index = 0;
+    musikernel->osc_cursor_message = (char*)malloc(sizeof(char) * 1024);
+
+    char *tmp;
+
+    char osc_path_tmp[1024];
+
+    musikernel->serverThread = lo_server_thread_new(NULL, pydaw_osc_error);
+    snprintf(osc_path_tmp, 31, "/dssi/pydaw_plugins");
+    tmp = lo_server_thread_get_url(musikernel->serverThread);
+    musikernel->osc_url = (char *)malloc(strlen(tmp) + strlen(osc_path_tmp));
+    sprintf(musikernel->osc_url, "%s%s", tmp, osc_path_tmp + 1);
+    free(tmp);
+
+    musikernel->uiTarget = lo_address_new_from_url(
+        "osc.udp://localhost:30321/");
+
+
+}
+
+inline void v_queue_osc_message(char * a_key, char * a_val)
+{
+    if(musikernel->osc_queue_index >= PYDAW_OSC_SEND_QUEUE_SIZE)
+    {
+        printf("Dropping OSC event to prevent buffer overrun:\n%s|%s\n\n",
+                a_key, a_val);
+    }
+    else
+    {
+        pthread_spin_lock(&musikernel->ui_spinlock);
+        sprintf(musikernel->osc_queue_keys[musikernel->osc_queue_index],
+                "%s", a_key);
+        sprintf(musikernel->osc_queue_vals[musikernel->osc_queue_index],
+                "%s", a_val);
+        musikernel->osc_queue_index += 1;
+        pthread_spin_unlock(&musikernel->ui_spinlock);
+    }
+}
+
+void v_pydaw_activate_osc_thread(lo_method_handler osc_message_handler)
+{
+    lo_server_thread_add_method(musikernel->serverThread, NULL, NULL,
+            osc_message_handler, NULL);
+    lo_server_thread_start(musikernel->serverThread);
 }
 
 /* Create a clock_t with clock() when beginning some work,

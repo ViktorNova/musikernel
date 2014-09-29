@@ -232,9 +232,6 @@ typedef struct
     /*The sample number of the exact point in the song,
      * 0 == bar0/region0, 44100 == 1 second in at 44.1khz.*/
     long current_sample;
-    lo_server_thread serverThread;
-
-    char * osc_url;
     //The number of samples per beat, for calculating length
     float samples_per_beat;
 
@@ -278,19 +275,11 @@ typedef struct
      * the existing are being faded out.*/
     int suppress_new_audio_items;
     char * per_audio_item_fx_folder;
-    lo_address uiTarget;
-    char * osc_cursor_message;
     void * main_thread_args;
     int audio_glue_indexes[PYDAW_MAX_AUDIO_ITEM_COUNT];
     int midi_learn;  //0 to disable, 1 to enable sending CC events to the UI
-    int osc_queue_index;
-    char osc_queue_keys[PYDAW_OSC_SEND_QUEUE_SIZE][12];
-    char osc_queue_vals[PYDAW_OSC_SEND_QUEUE_SIZE][PYDAW_OSC_MAX_MESSAGE_SIZE];
-    pthread_t osc_queue_thread;
     int f_region_length_bars;
     long f_next_current_sample;
-    //Threads must hold this to write OSC messages
-    pthread_spinlock_t ui_spinlock;
     t_pydaw_plugin * plugin_pool[MAX_PLUGIN_POOL_COUNT];
     t_midi_device_list * midi_devices;
     t_pydaw_midi_routing_list midi_routing;
@@ -432,7 +421,7 @@ void v_pydaw_destructor()
     if(pydaw_data)
     {
         musikernel->audio_recording_quit_notifier = 1;
-        lo_address_free(pydaw_data->uiTarget);
+        lo_address_free(musikernel->uiTarget);
 
         int f_i = 0;
 
@@ -923,14 +912,14 @@ void * v_pydaw_osc_send_thread(void* a_arg)
             }
         }
 
-        if(self->osc_queue_index > 0)
+        if(musikernel->osc_queue_index > 0)
         {
             f_i = 0;
 
-            while(f_i < self->osc_queue_index)
+            while(f_i < musikernel->osc_queue_index)
             {
-                strcpy(osc_queue_keys[f_i], self->osc_queue_keys[f_i]);
-                strcpy(osc_queue_vals[f_i], self->osc_queue_vals[f_i]);
+                strcpy(osc_queue_keys[f_i], musikernel->osc_queue_keys[f_i]);
+                strcpy(osc_queue_vals[f_i], musikernel->osc_queue_vals[f_i]);
                 f_i++;
             }
 
@@ -938,15 +927,15 @@ void * v_pydaw_osc_send_thread(void* a_arg)
 
             //Now grab any that may have been written since the previous copy
 
-            while(f_i < self->osc_queue_index)
+            while(f_i < musikernel->osc_queue_index)
             {
-                strcpy(osc_queue_keys[f_i], self->osc_queue_keys[f_i]);
-                strcpy(osc_queue_vals[f_i], self->osc_queue_vals[f_i]);
+                strcpy(osc_queue_keys[f_i], musikernel->osc_queue_keys[f_i]);
+                strcpy(osc_queue_vals[f_i], musikernel->osc_queue_vals[f_i]);
                 f_i++;
             }
 
-            int f_index = self->osc_queue_index;
-            self->osc_queue_index = 0;
+            int f_index = musikernel->osc_queue_index;
+            musikernel->osc_queue_index = 0;
 
             pthread_spin_unlock(&musikernel->main_lock);
 
@@ -964,7 +953,8 @@ void * v_pydaw_osc_send_thread(void* a_arg)
 
             if(!musikernel->is_offline_rendering)
             {
-                lo_send(self->uiTarget, "musikernel/ui_configure", "s", f_tmp1);
+                lo_send(musikernel->uiTarget,
+                    "musikernel/ui_configure", "s", f_tmp1);
             }
         }
 
@@ -1243,29 +1233,12 @@ void v_pydaw_init_worker_threads(t_pydaw_data * self,
     /*pthread_create(&self->audio_recording_thread, &threadAttr,
         v_pydaw_audio_recording_thread, NULL);*/
 
-    pthread_create(&self->osc_queue_thread, &auxThreadAttr,
+    pthread_create(&musikernel->osc_queue_thread, &auxThreadAttr,
             v_pydaw_osc_send_thread, (void*)self);
     pthread_attr_destroy(&auxThreadAttr);
 }
 
-inline void v_queue_osc_message(char * a_key, char * a_val)
-{
-    if(pydaw_data->osc_queue_index >= PYDAW_OSC_SEND_QUEUE_SIZE)
-    {
-        printf("Dropping OSC event to prevent buffer overrun:\n%s|%s\n\n",
-                a_key, a_val);
-    }
-    else
-    {
-        pthread_spin_lock(&pydaw_data->ui_spinlock);
-        sprintf(pydaw_data->osc_queue_keys[pydaw_data->osc_queue_index],
-                "%s", a_key);
-        sprintf(pydaw_data->osc_queue_vals[pydaw_data->osc_queue_index],
-                "%s", a_val);
-        pydaw_data->osc_queue_index += 1;
-        pthread_spin_unlock(&pydaw_data->ui_spinlock);
-    }
-}
+
 
 void v_pydaw_set_control_from_atm(
         t_pydaw_seq_event *event, t_pydaw_data * self,
@@ -2214,9 +2187,9 @@ inline void v_pydaw_finish_time_params(t_pydaw_data * self,
             {
                 float f_beat = self->ml_current_period_beats;
 
-                sprintf(self->osc_cursor_message, "loop|%i|%i|%f|-1",
+                sprintf(musikernel->osc_cursor_message, "loop|%i|%i|%f|-1",
                     self->current_region, self->current_bar, f_beat);
-                v_queue_osc_message("mrec", self->osc_cursor_message);
+                v_queue_osc_message("mrec", musikernel->osc_cursor_message);
             }
         }
     }
@@ -3298,19 +3271,11 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
     self->item_pool[a_uid] = f_result;
 }
 
-void pydaw_osc_error(int num, const char *msg, const char *path)
-{
-    fprintf(stderr, "PyDAW: liblo server error %d in path %s: %s\n",
-	    num, path, msg);
-}
-
 t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
 {
     t_pydaw_data * f_result = (t_pydaw_data*)malloc(sizeof(t_pydaw_data));
 
     pthread_mutex_init(&musikernel->audio_inputs_mutex, NULL);
-
-    pthread_spin_init(&f_result->ui_spinlock, 0);
 
     f_result->midi_devices = a_midi_devices;
     f_result->midi_learn = 0;
@@ -3319,8 +3284,6 @@ t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
     f_result->current_region = 0;
     f_result->playback_cursor = 0.0f;
     f_result->playback_inc = 0.0f;
-
-    f_result->osc_queue_index = 0;
 
     f_result->overdub_mode = 0;
     f_result->loop_mode = 0;
@@ -3331,8 +3294,6 @@ t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
     f_result->region_atm_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->per_audio_item_fx_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->tracks_folder = (char*)malloc(sizeof(char) * 1024);
-
-    f_result->osc_cursor_message = (char*)malloc(sizeof(char) * 1024);
 
     f_result->pysong = NULL;
     f_result->is_soloed = 0;
@@ -3392,29 +3353,7 @@ t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
         f_i++;
     }
 
-    /* Create OSC thread */
-    char *tmp;
-
-    char osc_path_tmp[1024];
-
-    f_result->serverThread = lo_server_thread_new(NULL, pydaw_osc_error);
-    snprintf(osc_path_tmp, 31, "/dssi/pydaw_plugins");
-    tmp = lo_server_thread_get_url(f_result->serverThread);
-    f_result->osc_url = (char *)malloc(strlen(tmp) + strlen(osc_path_tmp));
-    sprintf(f_result->osc_url, "%s%s", tmp, osc_path_tmp + 1);
-    free(tmp);
-
-    f_result->uiTarget = lo_address_new_from_url("osc.udp://localhost:30321/");
-
     return f_result;
-}
-
-void v_pydaw_activate_osc_thread(t_pydaw_data * self,
-        lo_method_handler osc_message_handler)
-{
-    lo_server_thread_add_method(self->serverThread, NULL, NULL,
-            osc_message_handler, NULL);
-    lo_server_thread_start(self->serverThread);
 }
 
 void v_pydaw_open_track(t_pydaw_data * self, int a_index)
@@ -3755,7 +3694,7 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
             }
 
             v_set_playback_cursor(self, a_region, a_bar);
-            
+
             musikernel->playback_mode = a_mode;
 
             if(a_lock)
