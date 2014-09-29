@@ -210,7 +210,7 @@ typedef struct
     float tempo;
     t_pysong * pysong;
     //contains a reference to all track types, in order:  MIDI, Bus, Audio
-    t_pytrack * track_pool_all[PYDAW_TRACK_COUNT_ALL];
+    t_pytrack * track_pool[PYDAW_TRACK_COUNT_ALL];
     t_pydaw_routing_graph * routing_graph;
     int playback_mode;  //0 == Stop, 1 == Play, 2 == Rec
     int loop_mode;  //0 == Off, 1 == Bar, 2 == Region
@@ -567,7 +567,7 @@ void v_pydaw_zero_all_buffers(t_pydaw_data * self)
     float ** f_buff;
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        f_buff = self->track_pool_all[f_i]->buffers;
+        f_buff = self->track_pool[f_i]->buffers;
         v_pydaw_zero_buffer(f_buff, FRAMES_PER_BUFFER);
         f_i++;
     }
@@ -585,7 +585,7 @@ void v_pydaw_panic(t_pydaw_data * self)
 
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        f_track = self->track_pool_all[f_i];
+        f_track = self->track_pool[f_i];
 
         f_i2 = 0;
         while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
@@ -879,14 +879,14 @@ void * v_pydaw_osc_send_thread(void* a_arg)
         f_tmp1[0] = '\0';
         f_tmp2[0] = '\0';
 
-        f_pkm = self->track_pool_all[0]->peak_meter;
+        f_pkm = self->track_pool[0]->peak_meter;
         sprintf(f_tmp2, "%i:%f:%f", 0, f_pkm->value[0], f_pkm->value[1]);
         v_pkm_reset(f_pkm);
 
         while(f_i < self->routing_graph->track_pool_sorted_count)
         {
             f_track_index = self->routing_graph->track_pool_sorted[f_i];
-            f_pkm = self->track_pool_all[f_track_index]->peak_meter;
+            f_pkm = self->track_pool[f_track_index]->peak_meter;
 
             sprintf(f_tmp1, "|%i:%f:%f",
                 f_track_index, f_pkm->value[0], f_pkm->value[1]);
@@ -1273,7 +1273,7 @@ void v_pydaw_set_control_from_atm(
         t_pydaw_seq_event *event, t_pydaw_data * self,
         int a_plugin_uid, int a_track_num)
 {
-    t_pytrack * f_track = self->track_pool_all[a_track_num];
+    t_pytrack * f_track = self->track_pool[a_track_num];
 
     if(!musikernel->is_offline_rendering)
     {
@@ -1287,7 +1287,7 @@ void v_pydaw_set_control_from_atm(
 void v_pydaw_set_control_from_cc(
         t_pydaw_seq_event *event, t_pydaw_data * self, int a_track_num)
 {
-    t_pytrack * f_track = self->track_pool_all[a_track_num];
+    t_pytrack * f_track = self->track_pool[a_track_num];
 
     if(!musikernel->is_offline_rendering)
     {
@@ -1307,7 +1307,7 @@ inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
 
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        self->track_pool_all[f_i]->bus_count = 0;
+        self->track_pool[f_i]->bus_count = 0;
         f_i++;
     }
 
@@ -1322,7 +1322,7 @@ inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
             {
                 f_global_track_num =
                     self->routing_graph->routes[f_i][f_i2].output;
-                self->track_pool_all[f_global_track_num]->bus_count += 1;
+                self->track_pool[f_global_track_num]->bus_count += 1;
             }
             f_i2++;
         }
@@ -1333,8 +1333,8 @@ inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
 
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        self->track_pool_all[f_i]->bus_counter =
-            self->track_pool_all[f_i]->bus_count;
+        self->track_pool[f_i]->bus_counter =
+            self->track_pool[f_i]->bus_count;
         f_i++;
     }
 }
@@ -1449,7 +1449,7 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
             f_plugin = 0;
         }
 
-        f_bus = self->track_pool_all[f_bus_num];
+        f_bus = self->track_pool[f_bus_num];
         f_buff = f_bus->buffers;
 
         pthread_spin_lock(&f_bus->lock);
@@ -1607,7 +1607,7 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
 
 inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
 {
-    t_pytrack * f_track = self->track_pool_all[a_global_track_num];
+    t_pytrack * f_track = self->track_pool[a_global_track_num];
     t_pydaw_plugin * f_plugin;
 
     if(self->playback_mode > 0)
@@ -1675,7 +1675,7 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
     while(f_i < self->routing_graph->track_pool_sorted_count)
     {
         f_track_index = self->routing_graph->track_pool_sorted[f_i];
-        f_track = self->track_pool_all[f_track_index];
+        f_track = self->track_pool[f_track_index];
 
         if(f_track->status != STATUS_NOT_PROCESSED)
         {
@@ -1742,7 +1742,7 @@ void * v_pydaw_worker_thread(void* a_arg)
 inline void v_pydaw_process_atm(
     t_pydaw_data * self, int f_track_num, int f_index, int sample_count)
 {
-    t_pytrack * f_track = self->track_pool_all[f_track_num];
+    t_pytrack * f_track = self->track_pool[f_track_num];
     t_pydaw_plugin * f_plugin = f_track->plugins[f_index];
     int f_current_track_region = self->current_region;
     int f_current_track_bar = self->current_bar;
@@ -1884,7 +1884,7 @@ inline void v_pydaw_process_atm(
 inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
         int sample_count)
 {
-    t_pytrack * f_track = self->track_pool_all[f_i];
+    t_pytrack * f_track = self->track_pool[f_i];
     f_track->period_event_index = 0;
 
     int f_current_track_region = self->current_region;
@@ -2090,7 +2090,7 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
 
 inline void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
 {
-    t_pytrack * f_track = self->track_pool_all[f_i];
+    t_pytrack * f_track = self->track_pool[f_i];
 
     int f_i2 = 0;
 
@@ -2395,7 +2395,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
     int f_i = 0;
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        self->track_pool_all[f_i]->status = STATUS_NOT_PROCESSED;
+        self->track_pool[f_i]->status = STATUS_NOT_PROCESSED;
         f_i++;
     }
     //notify the worker threads
@@ -2418,7 +2418,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         v_pydaw_process_midi(self, 0, musikernel->sample_count);
     }
 
-    t_pytrack * f_master_track = self->track_pool_all[0];
+    t_pytrack * f_master_track = self->track_pool[0];
 
     v_pydaw_process_external_midi(self, f_master_track, musikernel->sample_count);
 
@@ -3485,7 +3485,7 @@ t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
 
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        f_result->track_pool_all[f_track_total] = g_pytrack_get(
+        f_result->track_pool[f_track_total] = g_pytrack_get(
             f_i, musikernel->sample_rate);
         f_i++;
         f_track_total++;
@@ -3649,8 +3649,8 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
             v_pydaw_open_track(self, f_track_index);
 
-            self->track_pool_all[f_track_index]->solo = f_solo;
-            self->track_pool_all[f_track_index]->mute = f_mute;
+            self->track_pool[f_track_index]->solo = f_solo;
+            self->track_pool[f_track_index]->mute = f_mute;
         }
 
         g_free_2d_char_array(f_2d_array);
@@ -3661,8 +3661,8 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
         while(f_i < PYDAW_TRACK_COUNT_ALL)
         {
-            self->track_pool_all[f_i]->solo = 0;
-            self->track_pool_all[f_i]->mute = 0;
+            self->track_pool[f_i]->solo = 0;
+            self->track_pool[f_i]->mute = 0;
             v_pydaw_open_track(self, f_i);
             f_i++;
         }
@@ -3843,7 +3843,7 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
             while(f_i < PYDAW_TRACK_COUNT_ALL)
             {
                 int f_i2 = 0;
-                f_track = self->track_pool_all[f_i];
+                f_track = self->track_pool[f_i];
 
                 f_track->period_event_index = 0;
 
@@ -3984,11 +3984,11 @@ void v_set_playback_cursor(t_pydaw_data * self, int a_region, int a_bar)
 
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        self->track_pool_all[f_i]->item_event_index = 0;
-        if((self->is_soloed && !self->track_pool_all[f_i]->solo) ||
-            (self->track_pool_all[f_i]->mute))
+        self->track_pool[f_i]->item_event_index = 0;
+        if((self->is_soloed && !self->track_pool[f_i]->solo) ||
+            (self->track_pool[f_i]->mute))
         {
-            self->track_pool_all[f_i]->fade_state = FADE_STATE_FADED;
+            self->track_pool[f_i]->fade_state = FADE_STATE_FADED;
         }
         f_i++;
     }
@@ -4012,7 +4012,7 @@ void v_pydaw_set_is_soloed(t_pydaw_data * self)
 
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        if(self->track_pool_all[f_i]->solo)
+        if(self->track_pool[f_i]->solo)
         {
             self->is_soloed = 1;
             break;
@@ -4153,7 +4153,7 @@ void v_pydaw_offline_render_prep(t_pydaw_data * self)
 
     while(f_i < PYDAW_TRACK_COUNT_ALL)
     {
-        f_track = self->track_pool_all[f_i];
+        f_track = self->track_pool[f_i];
         int f_i2 = 0;
         while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
         {
@@ -4392,7 +4392,7 @@ void v_pydaw_set_plugin_index(t_pydaw_data * self, int a_track_num,
         int a_index, int a_plugin_index, int a_plugin_uid,
         int a_power, int a_lock)
 {
-    t_pytrack * f_track = self->track_pool_all[a_track_num];
+    t_pytrack * f_track = self->track_pool[a_track_num];
     t_pydaw_plugin * f_plugin = 0;
 
     if(a_plugin_index)
@@ -4592,8 +4592,8 @@ void v_pydaw_set_midi_device(
      */
     t_pydaw_midi_routing_list * f_list = &self->midi_routing;
     t_pydaw_midi_routing * f_route = &f_list->routes[a_device];
-    t_pytrack * f_track_old = self->track_pool_all[f_route->output_track];
-    t_pytrack * f_track_new = self->track_pool_all[a_output];
+    t_pytrack * f_track_old = self->track_pool[f_route->output_track];
+    t_pytrack * f_track_new = self->track_pool[a_output];
 
     if(!f_route->on ||
         f_route->output_track != a_output)

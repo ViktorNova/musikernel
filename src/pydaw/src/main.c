@@ -1099,8 +1099,8 @@ void v_parse_configure_message(t_pydaw_data* self,
 
         pthread_spin_lock(&musikernel->main_lock);
 
-        self->track_pool_all[f_track_num]->solo = f_mode;
-        //self->track_pool_all[f_track_num]->period_event_index = 0;
+        self->track_pool[f_track_num]->solo = f_mode;
+        //self->track_pool[f_track_num]->period_event_index = 0;
 
         v_pydaw_set_is_soloed(self);
 
@@ -1116,8 +1116,8 @@ void v_parse_configure_message(t_pydaw_data* self,
         assert(f_mode == 0 || f_mode == 1);
         pthread_spin_lock(&musikernel->main_lock);
 
-        self->track_pool_all[f_track_num]->mute = f_mode;
-        //self->track_pool_all[f_track_num]->period_event_index = 0;
+        self->track_pool[f_track_num]->mute = f_mode;
+        //self->track_pool[f_track_num]->period_event_index = 0;
 
         pthread_spin_unlock(&musikernel->main_lock);
         g_free_1d_char_array(f_val_arr);
@@ -1138,7 +1138,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         //int f_track_num = atoi(f_val_arr->array[0]);
         //int f_plugin_index = atoi(f_val_arr->array[1]);
         //v_set_plugin_index(self,
-        //    self->track_pool_all[f_track_num], f_plugin_index, 1);
+        //    self->track_pool[f_track_num], f_plugin_index, 1);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_PREVIEW_SAMPLE))
