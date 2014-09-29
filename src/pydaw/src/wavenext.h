@@ -23,6 +23,8 @@ typedef struct
 
 void v_pydaw_set_ab_file(t_wavenext * self, const char * a_file);
 void v_pydaw_set_wave_editor_item(t_wavenext * self, const char * a_string);
+inline void v_pydaw_run_wave_editor(t_wavenext * self,
+    int sample_count, float **output);
 
 #ifdef	__cplusplus
 }
@@ -32,6 +34,7 @@ t_wavenext * wavenext;
 
 void g_wavenext_get()
 {
+    lmalloc((void**)&wavenext, sizeof(t_wavenext));
     wavenext->ab_wav_item = 0;
     wavenext->ab_audio_item = g_pydaw_audio_item_get(musikernel->sample_rate);
 }

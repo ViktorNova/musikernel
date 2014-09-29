@@ -80,6 +80,7 @@ typedef struct
 void g_musikernel_get(float);
 t_pytrack * g_pytrack_get(int, float);
 inline void v_pydaw_zero_buffer(float**, int);
+void v_pydaw_print_benchmark(char * a_message, clock_t a_start);
 
 #ifdef	__cplusplus
 }
@@ -122,6 +123,14 @@ void g_musikernel_get(float a_sr)
     }
 
 
+}
+
+/* Create a clock_t with clock() when beginning some work,
+ * and use this function to print the completion time*/
+inline void v_pydaw_print_benchmark(char * a_message, clock_t a_start)
+{
+    printf ( "\n\nCompleted %s in %f seconds\n", a_message,
+            ( (double)clock() - a_start ) / CLOCKS_PER_SEC );
 }
 
 inline void v_pydaw_zero_buffer(float ** a_buffers, int a_count)

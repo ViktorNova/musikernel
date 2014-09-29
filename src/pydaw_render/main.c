@@ -56,6 +56,8 @@ int main(int argc, char** argv)
 
     g_musikernel_get(f_sample_rate);
     g_pydaw_instantiate(0);
+    g_wavenext_get();
+
     float** f_output;
     lmalloc((void**)&f_output, sizeof(float*) * 2);
 

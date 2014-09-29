@@ -686,6 +686,7 @@ int main(int argc, char **argv)
     /* Instantiate hosts */
     g_musikernel_get(sample_rate);
     g_pydaw_instantiate(&MIDI_DEVICES);
+    g_wavenext_get();
 
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);

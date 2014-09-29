@@ -344,7 +344,6 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * pydaw_data, int sample_count,
 void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         int a_start_bar, int a_end_region, int a_end_bar, char * a_file_out,
         int a_is_audio_glue);
-void v_pydaw_print_benchmark(char * a_message, clock_t a_start);
 inline void v_pydaw_audio_items_run(t_pydaw_data * self,
         int a_sample_count, float** a_output,
         int a_audio_track_num, int a_is_audio_glue);
@@ -842,15 +841,6 @@ void v_paif_set_control(t_pydaw_data * self, int a_region_uid,
     pthread_spin_unlock(&musikernel->main_lock);
 
 }
-
-/* Create a clock_t with clock() when beginning some work,
- * and use this function to print the completion time*/
-void v_pydaw_print_benchmark(char * a_message, clock_t a_start)
-{
-    printf ( "\n\nCompleted %s in %f seconds\n", a_message,
-            ( (double)clock() - a_start ) / CLOCKS_PER_SEC );
-}
-
 
 void * v_pydaw_osc_send_thread(void* a_arg)
 {
