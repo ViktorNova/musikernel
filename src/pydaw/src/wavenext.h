@@ -45,6 +45,104 @@ void g_wavenext_get()
     }
 }
 
+void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
+{
+    switch(a_mode)
+    {
+        case 0: //stop
+        {
+            int f_i = 0;
+            t_pytrack * f_track;
+
+            if(a_lock)
+            {
+                pthread_spin_lock(&musikernel->main_lock);
+            }
+
+            musikernel->playback_mode = a_mode;
+
+            f_i = 0;
+
+            t_pydaw_plugin * f_plugin;
+
+            while(f_i < 1)
+            {
+                int f_i2 = 0;
+                f_track = self->track_pool[f_i];
+
+                f_track->period_event_index = 0;
+
+                while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
+                {
+                    f_plugin = f_track->plugins[f_i2];
+                    if(f_plugin)
+                    {
+                        f_plugin->descriptor->on_stop(f_plugin->PYFX_handle);
+                    }
+                    f_i2++;
+                }
+
+                f_track->item_event_index = 0;
+
+                f_i++;
+            }
+
+            if(a_lock)
+            {
+                pthread_spin_unlock(&musikernel->main_lock);
+            }
+
+        }
+            break;
+        case 1:  //play
+        {
+            if(a_lock)
+            {
+                pthread_spin_lock(&musikernel->main_lock);
+            }
+
+            if(wavenext->ab_wav_item)
+            {
+                musikernel->is_ab_ing = musikernel->ab_mode;
+                if(musikernel->is_ab_ing)
+                {
+                    v_ifh_retrigger(
+                        wavenext->ab_audio_item->sample_read_head,
+                        wavenext->ab_audio_item->sample_start_offset);
+                    v_adsr_retrigger(wavenext->ab_audio_item->adsr);
+                    v_svf_reset(wavenext->ab_audio_item->lp_filter);
+                }
+            }
+
+            musikernel->playback_mode = a_mode;
+
+            if(a_lock)
+            {
+                pthread_spin_unlock(&musikernel->main_lock);
+            }
+
+            break;
+        }
+        case 2:  //record
+            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            {
+                return;
+            }
+            if(a_lock)
+            {
+                pthread_spin_lock(&musikernel->main_lock);
+            }
+
+            musikernel->playback_mode = a_mode;
+
+            if(a_lock)
+            {
+                pthread_spin_unlock(&musikernel->main_lock);
+            }
+            break;
+    }
+}
+
 void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
 {
     pthread_spin_lock(&musikernel->main_lock);
@@ -70,9 +168,7 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
     int f_old_ab_mode = musikernel->ab_mode;
     musikernel->ab_mode = 1;
 
-    assert(0);
-    /*v_set_playback_mode(self, PYDAW_PLAYBACK_MODE_PLAY,
-            0, 0, 0);*/
+    v_wn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_PLAY, 0);
 
     printf("\nOpening SNDFILE with sample rate %f\n",
             musikernel->sample_rate);
@@ -120,8 +216,7 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
     v_pydaw_print_benchmark("v_pydaw_offline_render ", f_start);
     printf("f_size = %ld\n", f_size);
 
-    assert(0);
-    //v_set_playback_mode(self, PYDAW_PLAYBACK_MODE_OFF, 0, 0, 0);
+    v_wn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_OFF, 0);
 
     sf_close(f_sndfile);
 

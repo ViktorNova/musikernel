@@ -1211,7 +1211,7 @@ void v_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_SET_POS))
     {
-        if(self->playback_mode != 0)
+        if(musikernel->playback_mode != 0)
         {
             return;
         }

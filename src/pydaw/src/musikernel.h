@@ -75,12 +75,14 @@ typedef struct
     pthread_mutex_t audio_inputs_mutex;
     pthread_t audio_recording_thread;
     int audio_recording_quit_notifier __attribute__((aligned(16)));
+    int playback_mode;  //0 == Stop, 1 == Play, 2 == Rec
 }t_musikernel;
 
 void g_musikernel_get(float);
 t_pytrack * g_pytrack_get(int, float);
 inline void v_pydaw_zero_buffer(float**, int);
 void v_pydaw_print_benchmark(char * a_message, clock_t a_start);
+void * v_pydaw_audio_recording_thread(void* a_arg);
 
 #ifdef	__cplusplus
 }
@@ -112,6 +114,7 @@ void g_musikernel_get(float a_sr)
     musikernel->preview_amp_lin = 1.0f;
     musikernel->is_previewing = 0;
     musikernel->preview_max_sample_count = ((int)(a_sr)) * 30;
+    musikernel->playback_mode = 0;
 
     int f_i = 0;
     while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
@@ -214,6 +217,124 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     f_result->status = STATUS_NOT_PROCESSED;
 
     return f_result;
+}
+
+void * v_pydaw_audio_recording_thread(void* a_arg)
+{
+    char f_file_name[1024];
+
+    sleep(3);
+
+    while(1)
+    {
+        int f_flushed_buffer = 0;
+        int f_did_something = 0;
+
+        if(musikernel->audio_recording_quit_notifier)
+        {
+            printf("audio recording thread exiting...\n");
+            break;
+        }
+
+        pthread_mutex_lock(&musikernel->audio_inputs_mutex);
+
+        if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+        {
+            int f_i = 0;
+
+            while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
+            {
+                if((musikernel->audio_inputs[f_i]->rec) &&
+                    (musikernel->audio_inputs[f_i]->
+                        flush_last_buffer_pending))
+                {
+                    f_flushed_buffer = 1;
+                    printf("Flushing record buffer of %i frames\n",
+                            ((musikernel->audio_inputs[f_i]->
+                            buffer_iterator[(musikernel->
+                            audio_inputs[f_i]->buffer_to_flush)]) / 2));
+
+                    sf_writef_float(musikernel->audio_inputs[f_i]->sndfile,
+                            musikernel->audio_inputs[f_i]->
+                            rec_buffers[(musikernel->
+                            audio_inputs[f_i]->buffer_to_flush)],
+                            ((musikernel->audio_inputs[f_i]->
+                            buffer_iterator[(musikernel->audio_inputs[f_i]->
+                            buffer_to_flush)]) / 2) );
+
+                    musikernel->audio_inputs[f_i]->
+                            flush_last_buffer_pending = 0;
+                    musikernel->audio_inputs[f_i]->
+                            buffer_iterator[(musikernel->audio_inputs[f_i]->
+                            buffer_to_flush)] = 0;
+                }
+
+                f_i++;
+            }
+        }
+        else
+        {
+            int f_i = 0;
+
+            while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
+            {
+                /*I guess the main mutex keeps this concurrent, as the
+                 * set_playback_mode has to grab it before setting the
+                 * recording_stopped flag, which means we won't wind up with
+                 * half-a-buffer, even if this
+                 * thread uses lockless techniques while running
+                 * fast-and-loose with the data...
+                 * TODO:  verify that this is safe...*/
+                if(musikernel->audio_inputs[f_i]->recording_stopped)
+                {
+                    f_did_something = 1;
+                    sf_writef_float(musikernel->audio_inputs[f_i]->sndfile,
+                            musikernel->audio_inputs[f_i]->rec_buffers[
+                            (musikernel->audio_inputs[f_i]->current_buffer)],
+                            ((musikernel->audio_inputs[f_i]->
+                            buffer_iterator[(musikernel->audio_inputs[f_i]->
+                            current_buffer)]) / 2) );
+
+                    sf_close(musikernel->audio_inputs[f_i]->sndfile);
+                    musikernel->audio_inputs[f_i]->recording_stopped = 0;
+                    musikernel->audio_inputs[f_i]->sndfile = 0;
+                }
+                f_i++;
+            }
+
+            /*Re-create the sndfile if it no longer exists, that means the
+             * UI has moved it from the tmp folder...*/
+            f_i = 0;
+
+            while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
+            {
+                if(musikernel->audio_inputs[f_i]->rec)
+                {
+                    f_did_something = 1;
+
+                    sprintf(f_file_name, "%s%i.wav",
+                            musikernel->audio_tmp_folder, f_i);
+
+                    if(!i_pydaw_file_exists(f_file_name))
+                    {
+                        v_pydaw_audio_input_record_set(
+                                musikernel->audio_inputs[f_i], f_file_name);
+                    }
+                }
+                f_i++;
+            }
+
+        }
+
+        pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
+
+        if(!f_flushed_buffer || !f_did_something)
+        {
+            usleep(10000);
+        }
+    }
+
+    return (void*)1;
 }
 
 #endif	/* MUSIKERNEL_H */

@@ -212,7 +212,6 @@ typedef struct
     //contains a reference to all track types, in order:  MIDI, Bus, Audio
     t_pytrack * track_pool[PYDAW_TRACK_COUNT_ALL];
     t_pydaw_routing_graph * routing_graph;
-    int playback_mode;  //0 == Stop, 1 == Play, 2 == Rec
     int loop_mode;  //0 == Off, 1 == Bar, 2 == Region
     int overdub_mode;  //0 == Off, 1 == On
     char * item_folder;
@@ -348,7 +347,6 @@ inline void v_pydaw_audio_items_run(t_pydaw_data * self,
         int a_sample_count, float** a_output,
         int a_audio_track_num, int a_is_audio_glue);
 void v_pydaw_update_audio_inputs(t_pydaw_data * self);
-void * v_pydaw_audio_recording_thread(void* a_arg);
 inline float v_pydaw_count_beats(t_pydaw_data * self,
         int a_start_region, int a_start_bar, float a_start_beat,
         int a_end_region, int a_end_bar, float a_end_beat);
@@ -903,7 +901,7 @@ void * v_pydaw_osc_send_thread(void* a_arg)
         f_tmp1[0] = '\0';
         f_tmp2[0] = '\0';
 
-        if(self->playback_mode > 0)
+        if(musikernel->playback_mode > 0)
         {
             if(musikernel->is_ab_ing)
             {
@@ -1243,7 +1241,7 @@ void v_pydaw_init_worker_threads(t_pydaw_data * self,
     /*No longer recording audio in PyDAW, but keeping the code here for
      * when I bring it back...*/
     /*pthread_create(&self->audio_recording_thread, &threadAttr,
-        v_pydaw_audio_recording_thread, (void*)self);*/
+        v_pydaw_audio_recording_thread, NULL);*/
 
     pthread_create(&self->osc_queue_thread, &auxThreadAttr,
             v_pydaw_osc_send_thread, (void*)self);
@@ -1486,131 +1484,12 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
     }
 }
 
-void * v_pydaw_audio_recording_thread(void* a_arg)
-{
-    t_pydaw_data * self = (t_pydaw_data*)(a_arg);
-    char f_file_name[1024];
-
-    sleep(3);
-
-    while(1)
-    {
-        int f_flushed_buffer = 0;
-        int f_did_something = 0;
-
-        if(musikernel->audio_recording_quit_notifier)
-        {
-            printf("audio recording thread exiting...\n");
-            break;
-        }
-
-        pthread_mutex_lock(&musikernel->audio_inputs_mutex);
-
-        if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
-        {
-            int f_i = 0;
-
-            while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
-            {
-                if((musikernel->audio_inputs[f_i]->rec) &&
-                    (musikernel->audio_inputs[f_i]->
-                        flush_last_buffer_pending))
-                {
-                    f_flushed_buffer = 1;
-                    printf("Flushing record buffer of %i frames\n",
-                            ((musikernel->audio_inputs[f_i]->
-                            buffer_iterator[(musikernel->
-                            audio_inputs[f_i]->buffer_to_flush)]) / 2));
-
-                    sf_writef_float(musikernel->audio_inputs[f_i]->sndfile,
-                            musikernel->audio_inputs[f_i]->
-                            rec_buffers[(musikernel->
-                            audio_inputs[f_i]->buffer_to_flush)],
-                            ((musikernel->audio_inputs[f_i]->
-                            buffer_iterator[(musikernel->audio_inputs[f_i]->
-                            buffer_to_flush)]) / 2) );
-
-                    musikernel->audio_inputs[f_i]->
-                            flush_last_buffer_pending = 0;
-                    musikernel->audio_inputs[f_i]->
-                            buffer_iterator[(musikernel->audio_inputs[f_i]->
-                            buffer_to_flush)] = 0;
-                }
-
-                f_i++;
-            }
-        }
-        else
-        {
-            int f_i = 0;
-
-            while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
-            {
-                /*I guess the main mutex keeps this concurrent, as the
-                 * set_playback_mode has to grab it before setting the
-                 * recording_stopped flag, which means we won't wind up with
-                 * half-a-buffer, even if this
-                 * thread uses lockless techniques while running
-                 * fast-and-loose with the data...
-                 * TODO:  verify that this is safe...*/
-                if(musikernel->audio_inputs[f_i]->recording_stopped)
-                {
-                    f_did_something = 1;
-                    sf_writef_float(musikernel->audio_inputs[f_i]->sndfile,
-                            musikernel->audio_inputs[f_i]->rec_buffers[
-                            (musikernel->audio_inputs[f_i]->current_buffer)],
-                            ((musikernel->audio_inputs[f_i]->
-                            buffer_iterator[(musikernel->audio_inputs[f_i]->
-                            current_buffer)]) / 2) );
-
-                    sf_close(musikernel->audio_inputs[f_i]->sndfile);
-                    musikernel->audio_inputs[f_i]->recording_stopped = 0;
-                    musikernel->audio_inputs[f_i]->sndfile = 0;
-                }
-                f_i++;
-            }
-
-            /*Re-create the sndfile if it no longer exists, that means the
-             * UI has moved it from the tmp folder...*/
-            f_i = 0;
-
-            while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
-            {
-                if(musikernel->audio_inputs[f_i]->rec)
-                {
-                    f_did_something = 1;
-
-                    sprintf(f_file_name, "%s%i.wav",
-                            musikernel->audio_tmp_folder, f_i);
-
-                    if(!i_pydaw_file_exists(f_file_name))
-                    {
-                        v_pydaw_audio_input_record_set(
-                                musikernel->audio_inputs[f_i], f_file_name);
-                    }
-                }
-                f_i++;
-            }
-
-        }
-
-        pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
-
-        if(!f_flushed_buffer || !f_did_something)
-        {
-            usleep(10000);
-        }
-    }
-
-    return (void*)1;
-}
-
 inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
 {
     t_pytrack * f_track = self->track_pool[a_global_track_num];
     t_pydaw_plugin * f_plugin;
 
-    if(self->playback_mode > 0)
+    if(musikernel->playback_mode > 0)
     {
         v_pydaw_process_midi(self, a_global_track_num, musikernel->sample_count);
     }
@@ -1752,7 +1631,7 @@ inline void v_pydaw_process_atm(
 
     f_plugin->atm_count = 0;
 
-    if((!self->overdub_mode) && (self->playback_mode == 2) &&
+    if((!self->overdub_mode) && (musikernel->playback_mode == 2) &&
         (f_track->extern_midi))
     {
         return;
@@ -1894,7 +1773,7 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
     float f_track_next_period_beats = (self->ml_next_period_beats);
     float f_track_beats_offset = 0.0f;
 
-    if((!self->overdub_mode) && (self->playback_mode == 2) &&
+    if((!self->overdub_mode) && (musikernel->playback_mode == 2) &&
         (f_track->extern_midi))
     {
 
@@ -2142,7 +2021,7 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
 
         if(events[f_i2].type == PYDAW_EVENT_NOTEON)
         {
-            if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat = self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
@@ -2166,7 +2045,7 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
         {
             a_track->period_event_index += 1;
 
-            if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat = self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
@@ -2186,7 +2065,7 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
         }
         else if(events[f_i2].type == PYDAW_EVENT_PITCHBEND)
         {
-            if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat = self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
@@ -2220,7 +2099,7 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
 
             a_track->period_event_index += 1;
 
-            if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat =
                     self->ml_current_period_beats +
@@ -2327,11 +2206,11 @@ inline void v_pydaw_finish_time_params(t_pydaw_data * self,
 
                 if((self->current_region) >= PYDAW_MAX_REGION_COUNT)
                 {
-                    self->playback_mode = 0;
+                    musikernel->playback_mode = 0;
                     self->current_region = 0;
                 }
             }
-            else if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            else if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat = self->ml_current_period_beats;
 
@@ -2351,7 +2230,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
     musikernel->input_buffers = a_input_buffers;
     self->f_next_current_sample = f_next_current_sample;
 
-    if((self->playback_mode) > 0)
+    if((musikernel->playback_mode) > 0)
     {
         v_pydaw_set_time_params(self, sample_count);
 
@@ -2413,7 +2292,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
 
     //prep the master channel
 
-    if(self->playback_mode > 0)
+    if(musikernel->playback_mode > 0)
     {
         v_pydaw_process_midi(self, 0, musikernel->sample_count);
     }
@@ -2481,7 +2360,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
 
     v_pydaw_zero_buffer(f_master_buff, sample_count);
 
-    if((self->playback_mode) > 0)
+    if((musikernel->playback_mode) > 0)
     {
         v_pydaw_finish_time_params(self,
                 self->f_region_length_bars);
@@ -2729,7 +2608,7 @@ inline void v_pydaw_audio_items_run(t_pydaw_data * self,
                 continue;
             }
 
-            if(self->playback_mode == PYDAW_PLAYBACK_MODE_OFF &&
+            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_OFF &&
                 f_audio_item->adsr->stage < ADSR_STAGE_RELEASE)
             {
                 v_adsr_release(self->pysong->audio_items[
@@ -3455,7 +3334,6 @@ t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
 
     f_result->osc_cursor_message = (char*)malloc(sizeof(char) * 1024);
 
-    f_result->playback_mode = 0;
     f_result->pysong = NULL;
     f_result->is_soloed = 0;
     f_result->suppress_new_audio_items = 0;
@@ -3834,7 +3712,7 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
             }
 
             self->suppress_new_audio_items = 0;
-            self->playback_mode = a_mode;
+            musikernel->playback_mode = a_mode;
 
             f_i = 0;
 
@@ -3877,20 +3755,8 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
             }
 
             v_set_playback_cursor(self, a_region, a_bar);
-            if(wavenext->ab_wav_item)
-            {
-                musikernel->is_ab_ing = musikernel->ab_mode;
-                if(musikernel->is_ab_ing)
-                {
-                    v_ifh_retrigger(
-                        wavenext->ab_audio_item->sample_read_head,
-                        wavenext->ab_audio_item->sample_start_offset);
-                    v_adsr_retrigger(wavenext->ab_audio_item->adsr);
-                    v_svf_reset(wavenext->ab_audio_item->lp_filter);
-                }
-            }
-
-            self->playback_mode = a_mode;
+            
+            musikernel->playback_mode = a_mode;
 
             if(a_lock)
             {
@@ -3900,7 +3766,7 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
             break;
         }
         case 2:  //record
-            if(self->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 return;
             }
@@ -3911,7 +3777,7 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
 
             v_set_playback_cursor(self, a_region, a_bar);
 
-            self->playback_mode = a_mode;
+            musikernel->playback_mode = a_mode;
 
             if(a_lock)
             {
@@ -3919,7 +3785,6 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
             }
             break;
     }
-
 }
 
 
