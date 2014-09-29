@@ -65,6 +65,7 @@ GNU General Public License for more details.
 #include <linux/sched.h>
 
 #include "pydaw.h"
+#include "wavenext.h"
 #include "midi_device.h"
 
 #define CONFIGURE_KEY_SS "ss"
@@ -453,10 +454,6 @@ int main(int argc, char **argv)
 
     MIDI_DEVICES.count = 0;
 
-    /* Instantiate plugins */
-
-    g_pydaw_instantiate(sample_rate, &MIDI_DEVICES);
-
     /* Create OSC thread */
 
     serverThread = lo_server_thread_new("19271", osc_error);
@@ -686,6 +683,10 @@ int main(int argc, char **argv)
         break;
     }
 
+    /* Instantiate hosts */
+    g_musikernel_get(sample_rate);
+    g_pydaw_instantiate(&MIDI_DEVICES);
+
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
     signal(SIGHUP, signalHandler);
@@ -891,7 +892,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         float f_value = atof(f_val_arr->array[2]);
 
         t_pydaw_plugin * f_instance;
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
 
         f_instance = self->plugin_pool[f_plugin_uid];
 
@@ -904,7 +905,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         {
             printf("Error, no valid plugin instance\n");
         }
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_CONFIGURE_PLUGIN))
@@ -920,7 +921,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         if(f_instance)
         {
             f_instance->descriptor->configure(
-                f_instance->PYFX_handle, f_key, f_message, &self->main_lock);
+                f_instance->PYFX_handle, f_key, f_message, &musikernel->main_lock);
         }
         else
         {
@@ -966,8 +967,8 @@ void v_parse_configure_message(t_pydaw_data* self,
     else if(!strcmp(a_key, CONFIGURE_KEY_SR))
     {
         //Ensure that a project isn't being loaded right now
-        pthread_spin_lock(&self->main_lock);
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
 
         int f_uid = atoi(a_value);
         t_pyregion * f_result = g_pyregion_get(self, f_uid);
@@ -980,9 +981,9 @@ void v_parse_configure_message(t_pydaw_data* self,
             {
                 f_old_region = self->pysong->regions[f_region_index];
             }
-            pthread_spin_lock(&self->main_lock);
+            pthread_spin_lock(&musikernel->main_lock);
             self->pysong->regions[f_region_index] = f_result;
-            pthread_spin_unlock(&self->main_lock);
+            pthread_spin_unlock(&musikernel->main_lock);
             if(f_old_region)
             {
                 free(f_old_region);
@@ -995,9 +996,9 @@ void v_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_SI)) //Save Item
     {
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
         g_pyitem_get(self, atoi(a_value));
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_SS))  //Save Song
     {
@@ -1016,9 +1017,9 @@ void v_parse_configure_message(t_pydaw_data* self,
             {
                 f_old_region = self->pysong->regions_atm[f_region_index];
             }
-            pthread_spin_lock(&self->main_lock);
+            pthread_spin_lock(&musikernel->main_lock);
             self->pysong->regions_atm[f_region_index] = f_result;
-            pthread_spin_unlock(&self->main_lock);
+            pthread_spin_unlock(&musikernel->main_lock);
             if(f_old_region)
             {
                 v_atm_region_free(f_old_region);
@@ -1037,9 +1038,9 @@ void v_parse_configure_message(t_pydaw_data* self,
                 f_uid);
         int f_region_index = i_get_song_index_from_region_uid(self,
                 f_uid);
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
         self->pysong->audio_items[f_region_index] = f_result;
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
         //v_pydaw_audio_items_free(f_old); //Method needs to be re-thought...
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_PER_AUDIO_ITEM_FX_REGION))
@@ -1051,17 +1052,17 @@ void v_parse_configure_message(t_pydaw_data* self,
                 f_uid);
         t_pydaw_per_audio_item_fx_region * f_old =
                 self->pysong->per_audio_item_fx[f_region_index];
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
         self->pysong->per_audio_item_fx[f_region_index] = f_result;
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
         v_paif_region_free(f_old);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_ADD_TO_WAV_POOL))
     {
         t_key_value_pair * f_kvp = g_kvp_get(a_value);
-        printf("v_wav_pool_add_item(self->wav_pool, %i, \"%s\")\n",
+        printf("v_wav_pool_add_item(musikernel->wav_pool, %i, \"%s\")\n",
                 atoi(f_kvp->key), f_kvp->value);
-        v_wav_pool_add_item(self->wav_pool, atoi(f_kvp->key),
+        v_wav_pool_add_item(musikernel->wav_pool, atoi(f_kvp->key),
                 f_kvp->value);
         free(f_kvp);
     }
@@ -1069,9 +1070,9 @@ void v_parse_configure_message(t_pydaw_data* self,
     {
         int f_value = atoi(a_value);
 
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
         v_set_loop_mode(self, f_value);
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_OS)) //Open Song
     {
@@ -1081,9 +1082,9 @@ void v_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_TEMPO)) //Change tempo
     {
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
         v_set_tempo(self, atof(a_value));
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
         //To reload audio items when tempo changed
         //g_pysong_get(self);
     }
@@ -1095,14 +1096,14 @@ void v_parse_configure_message(t_pydaw_data* self,
         int f_mode = atoi(f_val_arr->array[1]);
         assert(f_mode == 0 || f_mode == 1);
 
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
 
         self->track_pool_all[f_track_num]->solo = f_mode;
         //self->track_pool_all[f_track_num]->period_event_index = 0;
 
         v_pydaw_set_is_soloed(self);
 
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_MUTE)) //Set track mute
@@ -1112,12 +1113,12 @@ void v_parse_configure_message(t_pydaw_data* self,
         int f_track_num = atoi(f_val_arr->array[0]);
         int f_mode = atoi(f_val_arr->array[1]);
         assert(f_mode == 0 || f_mode == 1);
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
 
         self->track_pool_all[f_track_num]->mute = f_mode;
         //self->track_pool_all[f_track_num]->period_event_index = 0;
 
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_AUDIO_INPUTS))
@@ -1127,8 +1128,8 @@ void v_parse_configure_message(t_pydaw_data* self,
     else if(!strcmp(a_key, CONFIGURE_KEY_CHANGE_INSTRUMENT))
     {
         //Ensure that a project isn't being loaded right now
-        pthread_spin_lock(&self->main_lock);
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
 
         t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
                 PYDAW_TINY_STRING);
@@ -1141,7 +1142,7 @@ void v_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_PREVIEW_SAMPLE))
     {
-        v_pydaw_set_preview_file(self, a_value);
+        v_pydaw_set_preview_file(a_value);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_PLUGIN_INDEX))
     {
@@ -1167,9 +1168,9 @@ void v_parse_configure_message(t_pydaw_data* self,
     {
         int f_bool = atoi(a_value);
         assert(f_bool == 0 || f_bool == 1);
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
         self->overdub_mode = f_bool;
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_CC_MAP))
     {
@@ -1183,7 +1184,7 @@ void v_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_AB_OPEN))
     {
-        v_pydaw_set_ab_file(self, a_value);
+        v_pydaw_set_ab_file(wavenext, a_value);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_AB_SET))
     {
@@ -1192,19 +1193,19 @@ void v_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_WE_SET))
     {
-        v_pydaw_set_wave_editor_item(self, a_value);
+        v_pydaw_set_wave_editor_item(wavenext, a_value);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_PANIC))
     {
-        pthread_spin_lock(&self->main_lock);
-        self->is_offline_rendering = 1;
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
+        musikernel->is_offline_rendering = 1;
+        pthread_spin_unlock(&musikernel->main_lock);
 
         v_pydaw_panic(self);
 
-        pthread_spin_lock(&self->main_lock);
-        self->is_offline_rendering = 0;
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
+        musikernel->is_offline_rendering = 0;
+        pthread_spin_unlock(&musikernel->main_lock);
 
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_SET_POS))
@@ -1218,9 +1219,9 @@ void v_parse_configure_message(t_pydaw_data* self,
         int f_region = atoi(f_val_arr->array[0]);
         int f_bar = atoi(f_val_arr->array[1]);
 
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
         v_set_playback_cursor(self, f_region, f_bar);
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
 
         g_free_1d_char_array(f_val_arr);
     }
@@ -1302,16 +1303,16 @@ void v_parse_configure_message(t_pydaw_data* self,
     {
         int f_uid = atoi(a_value);
         t_wav_pool_item * f_old =
-                g_wav_pool_get_item_by_uid(self->wav_pool, f_uid);
+                g_wav_pool_get_item_by_uid(musikernel->wav_pool, f_uid);
         t_wav_pool_item * f_new =
                 g_wav_pool_item_get(f_uid, f_old->path,
-                self->wav_pool->sample_rate);
+                musikernel->wav_pool->sample_rate);
 
         float * f_old_samples[2];
         f_old_samples[0] = f_old->samples[0];
         f_old_samples[1] = f_old->samples[1];
 
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
 
         f_old->channels = f_new->channels;
         f_old->length = f_new->length;
@@ -1320,7 +1321,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         f_old->samples[0] = f_new->samples[0];
         f_old->samples[1] = f_new->samples[1];
 
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
 
         if(f_old_samples[0])
         {
@@ -1354,23 +1355,23 @@ void v_parse_configure_message(t_pydaw_data* self,
         int f_output = atoi(f_val_arr->str_arr[2]);
         v_free_split_line(f_val_arr);
 
-        pthread_spin_lock(&self->main_lock);
+        pthread_spin_lock(&musikernel->main_lock);
 
         v_pydaw_set_midi_device(pydaw_data, f_on, f_device, f_output);
 
-        pthread_spin_unlock(&self->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_WE_EXPORT))
     {
-        v_pydaw_we_export(self, a_value);
+        v_pydaw_we_export(wavenext, a_value);
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_STOP_PREVIEW))
     {
-        if(self->is_previewing)
+        if(musikernel->is_previewing)
         {
-            pthread_spin_lock(&self->main_lock);
-            v_adsr_release(self->preview_audio_item->adsr);
-            pthread_spin_unlock(&self->main_lock);
+            pthread_spin_lock(&musikernel->main_lock);
+            v_adsr_release(musikernel->preview_audio_item->adsr);
+            pthread_spin_unlock(&musikernel->main_lock);
         }
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_KILL_ENGINE))

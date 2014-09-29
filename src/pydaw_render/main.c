@@ -54,7 +54,8 @@ int main(int argc, char** argv)
     int f_buffer_size = atoi(argv[8]);
     int f_thread_count = atoi(argv[9]);
 
-    g_pydaw_instantiate(f_sample_rate, 0);
+    g_musikernel_get(f_sample_rate);
+    g_pydaw_instantiate(0);
     float** f_output;
     lmalloc((void**)&f_output, sizeof(float*) * 2);
 
@@ -66,7 +67,7 @@ int main(int argc, char** argv)
         buffer_alloc((void**)&f_output[f_i], sizeof(float) * f_buffer_size);
         f_i++;
     }
-    
+
     f_i = 0;
     while(f_i < f_buffer_size)
     {
@@ -75,7 +76,7 @@ int main(int argc, char** argv)
         f_i++;
     }
 
-    pydaw_data->sample_count = f_buffer_size;
+    musikernel->sample_count = f_buffer_size;
     v_pydaw_offline_render_prep(pydaw_data);
 
     /*
