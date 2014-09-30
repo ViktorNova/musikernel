@@ -1481,16 +1481,13 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
     {
         while(1)
         {
-            pthread_spin_lock(&f_track->lock);
-
-            if((f_track->bus_counter) <= 0)
+            if(f_track->bus_counter == 0)
             {
-                pthread_spin_unlock(&f_track->lock);
                 break;
             }
-
-            pthread_spin_unlock(&f_track->lock);
         }
+        
+        assert(f_track->bus_counter == 0);
         f_track->bus_counter = (f_track->bus_count);
     }
 
