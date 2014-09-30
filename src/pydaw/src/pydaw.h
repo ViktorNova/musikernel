@@ -1515,12 +1515,18 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
         f_i++;
     }
 
-    v_pydaw_sum_track_outputs(self, f_track);
+    if(a_global_track_num)
+    {
+        v_pydaw_sum_track_outputs(self, f_track);
+    }
 
     v_pkm_run(f_track->peak_meter, f_track->buffers[0],
         f_track->buffers[1], musikernel->sample_count);
 
-    v_pydaw_zero_buffer(f_track->buffers, musikernel->sample_count);
+    if(a_global_track_num)
+    {
+        v_pydaw_zero_buffer(f_track->buffers, musikernel->sample_count);
+    }
 }
 
 inline void v_pydaw_process(t_pydaw_thread_args * f_args)
@@ -2269,24 +2275,8 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
 
     v_pydaw_process((t_pydaw_thread_args*)self->main_thread_args);
 
-    //prep the master channel
-
-    if(musikernel->playback_mode > 0)
-    {
-        v_pydaw_process_midi(self, 0, musikernel->sample_count);
-    }
-
     t_pytrack * f_master_track = self->track_pool[0];
-
-    v_pydaw_process_external_midi(self, f_master_track, musikernel->sample_count);
-
-    v_pydaw_process_note_offs(pydaw_data, 0);
-
     float ** f_master_buff = f_master_track->buffers;
-
-    v_pydaw_audio_items_run(self, musikernel->sample_count, f_master_buff, 0, 0);
-
-    t_pydaw_plugin * f_plugin;
 
     //wait for the other threads to finish
 
@@ -2302,26 +2292,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         f_i++;
     }
 
-    //Run the master channels effects
-
-    f_i = 0;
-    while(f_i < MAX_PLUGIN_COUNT)
-    {
-        f_plugin = f_master_track->plugins[f_i];
-        if(f_plugin)
-        {
-            v_pydaw_process_atm(
-                self, 0, f_i, sample_count);
-            f_plugin->descriptor->run_replacing(
-                f_plugin->PYFX_handle, sample_count,
-                    f_master_track->event_buffer,
-                    f_master_track->period_event_index,
-                    f_plugin->atm_buffer, f_plugin->atm_count,
-                    f_master_track->extern_midi,
-                    *f_master_track->extern_midi_count);
-        }
-        f_i++;
-    }
+    v_pydaw_process_track(self, 0);
 
     f_i = 0;
     while(f_i < sample_count)
@@ -2330,12 +2301,6 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         output[1][f_i] = f_master_buff[1][f_i];
         f_i++;
     }
-
-    f_master_track->bus_counter = (f_master_track->bus_count);
-
-    v_pkm_run(f_master_track->peak_meter,
-        f_master_buff[0], f_master_buff[1], sample_count);
-
 
     v_pydaw_zero_buffer(f_master_buff, sample_count);
 
