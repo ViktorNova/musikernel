@@ -48,7 +48,7 @@ GNU General Public License for more details.
 #define PYDAW_MAX_EVENTS_PER_ITEM_COUNT 1024
 
 #define PYDAW_AUDIO_INPUT_TRACK_COUNT 5
-#define PYDAW_TRACK_COUNT_ALL 33
+#define EN_TRACK_COUNT 32
 
 #define PYDAW_MAX_EVENT_BUFFER_SIZE 512  //This could probably be made smaller
 #define PYDAW_MAX_REGION_SIZE 64
@@ -126,7 +126,7 @@ typedef struct
 typedef struct
 {
     //Refers to the index of items in the master item pool
-    int item_indexes[PYDAW_TRACK_COUNT_ALL][PYDAW_MAX_REGION_SIZE];
+    int item_indexes[EN_TRACK_COUNT][PYDAW_MAX_REGION_SIZE];
     int uid;
     /*This flag is set to 1 if created during recording, signifying
      * that it requires a default name to be created for it*/
@@ -162,7 +162,7 @@ typedef struct
 
 typedef struct
 {
-    t_pydaw_atm_track tracks[PYDAW_TRACK_COUNT_ALL];
+    t_pydaw_atm_track tracks[EN_TRACK_COUNT];
 }t_pydaw_atm_region;
 
 typedef struct
@@ -198,9 +198,9 @@ t_pytrack_routing;
 
 typedef struct
 {
-    int track_pool_sorted[PYDAW_TRACK_COUNT_ALL];
+    int track_pool_sorted[EN_TRACK_COUNT];
     int track_pool_sorted_count;
-    t_pytrack_routing routes[PYDAW_TRACK_COUNT_ALL][MAX_ROUTING_COUNT];
+    t_pytrack_routing routes[EN_TRACK_COUNT][MAX_ROUTING_COUNT];
 }t_pydaw_routing_graph;
 
 float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
@@ -210,7 +210,7 @@ typedef struct
     float tempo;
     t_pysong * pysong;
     //contains a reference to all track types, in order:  MIDI, Bus, Audio
-    t_pytrack * track_pool[PYDAW_TRACK_COUNT_ALL];
+    t_pytrack * track_pool[EN_TRACK_COUNT];
     t_pydaw_routing_graph * routing_graph;
     int loop_mode;  //0 == Off, 1 == Bar, 2 == Region
     int overdub_mode;  //0 == Off, 1 == On
@@ -550,7 +550,7 @@ void v_pydaw_zero_all_buffers(t_pydaw_data * self)
 {
     int f_i = 0;
     float ** f_buff;
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         f_buff = self->track_pool[f_i]->buffers;
         v_pydaw_zero_buffer(f_buff, FRAMES_PER_BUFFER);
@@ -568,7 +568,7 @@ void v_pydaw_panic(t_pydaw_data * self)
     t_pytrack * f_track;
     t_pydaw_plugin * f_plugin;
 
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         f_track = self->track_pool[f_i];
 
@@ -882,6 +882,14 @@ void * v_pydaw_osc_send_thread(void* a_arg)
 
             f_i++;
         }
+
+        //kludge to get the wave editor peak meter working
+        f_track_index = EN_TRACK_COUNT;
+        f_pkm = wavenext->track_pool[0]->peak_meter;
+        sprintf(f_tmp1, "|%i:%f:%f",
+            f_track_index, f_pkm->value[0], f_pkm->value[1]);
+        v_pkm_reset(f_pkm);
+        strcat(f_tmp2, f_tmp1);
 
         v_queue_osc_message("peak", f_tmp2);
 
@@ -1274,7 +1282,7 @@ inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
     int f_i2;
     int f_global_track_num;
 
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         self->track_pool[f_i]->bus_count = 0;
         f_i++;
@@ -1282,7 +1290,7 @@ inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
 
     f_i = 0;
 
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         f_i2 = 0;
         while(f_i2 < MAX_ROUTING_COUNT)
@@ -1300,7 +1308,7 @@ inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
 
     f_i = 0;
 
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         self->track_pool[f_i]->bus_counter =
             self->track_pool[f_i]->bus_count;
@@ -2243,7 +2251,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
     }
 
     int f_i = 0;
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         self->track_pool[f_i]->status = STATUS_NOT_PROCESSED;
         f_i++;
@@ -2949,7 +2957,7 @@ t_pydaw_atm_region * g_atm_region_get(t_pydaw_data * self, int a_uid)
 
         int f_i = 0;
 
-        while(f_i < PYDAW_TRACK_COUNT_ALL)
+        while(f_i < EN_TRACK_COUNT)
         {
             int f_i2 = 0;
             while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
@@ -3059,7 +3067,7 @@ t_pydaw_atm_region * g_atm_region_get(t_pydaw_data * self, int a_uid)
 void v_atm_region_free(t_pydaw_atm_region * self)
 {
     int f_i = 0;
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         int f_i2 = 0;
         while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
@@ -3090,7 +3098,7 @@ t_pyregion * g_pyregion_get(t_pydaw_data* self, int a_uid)
     int f_i = 0;
     int f_i2 = 0;
 
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         f_i2 = 0;
         while(f_i2 < PYDAW_MAX_REGION_SIZE)
@@ -3166,7 +3174,7 @@ t_pyregion * g_pyregion_get(t_pydaw_data* self, int a_uid)
         free(f_x_char);
 
         char * f_item_uid = c_iterate_2d_char_array(f_current_string);
-        assert(f_y < PYDAW_TRACK_COUNT_ALL);
+        assert(f_y < EN_TRACK_COUNT);
         assert(f_x < PYDAW_MAX_REGION_SIZE);
         f_result->item_indexes[f_y][f_x] = atoi(f_item_uid);
         assert(self->item_pool[f_result->item_indexes[f_y][f_x]]);
@@ -3319,7 +3327,7 @@ t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
     int f_track_total = 0;
 
 
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         f_result->track_pool[f_track_total] = g_pytrack_get(
             f_i, musikernel->sample_rate);
@@ -3451,7 +3459,7 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
             int f_track_index = atoi(f_track_index_str);
             free(f_track_index_str);
-            assert(f_track_index >= 0 && f_track_index < PYDAW_TRACK_COUNT_ALL);
+            assert(f_track_index >= 0 && f_track_index < EN_TRACK_COUNT);
 
             int f_solo = atoi(f_solo_str);
             free(f_solo_str);
@@ -3473,7 +3481,7 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
     {
         int f_i = 0;
 
-        while(f_i < PYDAW_TRACK_COUNT_ALL)
+        while(f_i < EN_TRACK_COUNT)
         {
             self->track_pool[f_i]->solo = 0;
             self->track_pool[f_i]->mute = 0;
@@ -3660,7 +3668,7 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
 
             t_pydaw_plugin * f_plugin;
 
-            while(f_i < PYDAW_TRACK_COUNT_ALL)
+            while(f_i < EN_TRACK_COUNT)
             {
                 int f_i2 = 0;
                 f_track = self->track_pool[f_i];
@@ -3789,7 +3797,7 @@ void v_set_playback_cursor(t_pydaw_data * self, int a_region, int a_bar)
 
     int f_i = 0;
 
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         self->track_pool[f_i]->item_event_index = 0;
         if((self->is_soloed && !self->track_pool[f_i]->solo) ||
@@ -3817,7 +3825,7 @@ void v_pydaw_set_is_soloed(t_pydaw_data * self)
     int f_i = 0;
     self->is_soloed = 0;
 
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         if(self->track_pool[f_i]->solo)
         {
@@ -3958,7 +3966,7 @@ void v_pydaw_offline_render_prep(t_pydaw_data * self)
     t_pytrack * f_track;
     t_pydaw_plugin * f_plugin;
 
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         f_track = self->track_pool[f_i];
         int f_i2 = 0;
@@ -4322,7 +4330,7 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
     lmalloc((void**)&f_result, sizeof(t_pydaw_routing_graph));
 
     int f_i = 0;
-    while(f_i < PYDAW_TRACK_COUNT_ALL)
+    while(f_i < EN_TRACK_COUNT)
     {
         f_result->track_pool_sorted[f_i] = 0;
 

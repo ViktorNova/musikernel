@@ -10433,7 +10433,7 @@ class pydaw_wave_editor_widget:
         self.vol_label.setMinimumWidth(51)
         self.vol_layout.addWidget(self.vol_label)
         self.peak_meter = pydaw_widgets.peak_meter(28, a_text=True)
-        ALL_PEAK_METERS[REGION_EDITOR_TRACK_COUNT] = self.peak_meter
+        ALL_PEAK_METERS[REGION_EDITOR_TRACK_COUNT] = [self.peak_meter]
         self.edit_hlayout.addWidget(self.peak_meter.widget)
         self.ctrl_vlayout = QtGui.QVBoxLayout()
         self.edit_hlayout.addLayout(self.ctrl_vlayout)
