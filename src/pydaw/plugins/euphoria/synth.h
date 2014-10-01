@@ -160,12 +160,6 @@ typedef struct {
 
     int i_slow_index;  //For indexing operations that don't need to track realtime events closely
 
-    //iterators for iterating through their respective array dimensions
-    int i_fx_grps;
-    int i_dst;
-    int i_src;
-    int i_ctrl;
-
     float amp;  //linear amplitude, from the master volume knob
 
     float sv_pitch_bend_value;
