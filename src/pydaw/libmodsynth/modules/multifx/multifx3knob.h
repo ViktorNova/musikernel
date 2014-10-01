@@ -645,11 +645,11 @@ inline void v_mf3_run_lp_hp(t_mf3_multi*__restrict a_mf3, float a_in0,
     v_axf_set_xfade(&a_mf3->xfader, a_mf3->control_value[2]);
     v_svf2_run_2_pole_lp(&a_mf3->svf, a_in0, a_in1);
     a_mf3->output0 = f_axf_run_xfade(&a_mf3->xfader,
-            a_mf3->svf.filter_kernels[0][0]->lp,
-            a_mf3->svf.filter_kernels[0][0]->hp);
+            a_mf3->svf.filter_kernels[0][0].lp,
+            a_mf3->svf.filter_kernels[0][0].hp);
     a_mf3->output1 = f_axf_run_xfade(&a_mf3->xfader,
-            a_mf3->svf.filter_kernels[0][1]->lp,
-            a_mf3->svf.filter_kernels[0][1]->hp);
+            a_mf3->svf.filter_kernels[0][1].lp,
+            a_mf3->svf.filter_kernels[0][1].hp);
 }
 
 inline void v_mf3_run_growl_filter(t_mf3_multi*__restrict a_mf3, float a_in0,

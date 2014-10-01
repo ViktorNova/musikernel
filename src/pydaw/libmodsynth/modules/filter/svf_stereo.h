@@ -51,7 +51,7 @@ typedef struct
             filter_res_db, velocity_cutoff; //, velocity_cutoff_amt;
     float cutoff_base, cutoff_mod, cutoff_last,  velocity_mod_amt;
     float oversample_iterator;
-    t_svf2_kernel * filter_kernels [SVF_MAX_CASCADE][2];
+    t_svf2_kernel filter_kernels [SVF_MAX_CASCADE][2];
     float output0, output1;
 } t_svf2_filter;
 
@@ -86,21 +86,21 @@ inline void v_svf2_reset(t_svf2_filter * a_svf2)
     int f_i = 0;
     while(f_i < SVF_MAX_CASCADE)
     {
-        a_svf2->filter_kernels[f_i][0]->bp = 0.0f;
-        a_svf2->filter_kernels[f_i][0]->bp_m1 = 0.0f;
-        a_svf2->filter_kernels[f_i][0]->filter_input = 0.0f;
-        a_svf2->filter_kernels[f_i][0]->filter_last_input = 0.0f;
-        a_svf2->filter_kernels[f_i][0]->hp = 0.0f;
-        a_svf2->filter_kernels[f_i][0]->lp = 0.0f;
-        a_svf2->filter_kernels[f_i][0]->lp_m1 = 0.0f;
+        a_svf2->filter_kernels[f_i][0].bp = 0.0f;
+        a_svf2->filter_kernels[f_i][0].bp_m1 = 0.0f;
+        a_svf2->filter_kernels[f_i][0].filter_input = 0.0f;
+        a_svf2->filter_kernels[f_i][0].filter_last_input = 0.0f;
+        a_svf2->filter_kernels[f_i][0].hp = 0.0f;
+        a_svf2->filter_kernels[f_i][0].lp = 0.0f;
+        a_svf2->filter_kernels[f_i][0].lp_m1 = 0.0f;
 
-        a_svf2->filter_kernels[f_i][1]->bp = 0.0f;
-        a_svf2->filter_kernels[f_i][1]->bp_m1 = 0.0f;
-        a_svf2->filter_kernels[f_i][1]->filter_input = 0.0f;
-        a_svf2->filter_kernels[f_i][1]->filter_last_input = 0.0f;
-        a_svf2->filter_kernels[f_i][1]->hp = 0.0f;
-        a_svf2->filter_kernels[f_i][1]->lp = 0.0f;
-        a_svf2->filter_kernels[f_i][1]->lp_m1 = 0.0f;
+        a_svf2->filter_kernels[f_i][1].bp = 0.0f;
+        a_svf2->filter_kernels[f_i][1].bp_m1 = 0.0f;
+        a_svf2->filter_kernels[f_i][1].filter_input = 0.0f;
+        a_svf2->filter_kernels[f_i][1].filter_last_input = 0.0f;
+        a_svf2->filter_kernels[f_i][1].hp = 0.0f;
+        a_svf2->filter_kernels[f_i][1].lp = 0.0f;
+        a_svf2->filter_kernels[f_i][1].lp_m1 = 0.0f;
 
         f_i++;
     }
@@ -110,13 +110,6 @@ void v_svf2_free(t_svf2_filter*);
 
 void v_svf2_free(t_svf2_filter* a_svf2)
 {
-    int f_i = 0;
-    while(f_i < SVF_MAX_CASCADE)
-    {
-        free(a_svf2->filter_kernels[f_i][0]);
-        free(a_svf2->filter_kernels[f_i][1]);
-        f_i++;
-    }
     //free(a_svf2);
 }
 
@@ -134,14 +127,8 @@ inline void v_svf2_run_no_filter(t_svf2_filter*__restrict a_svf,
     a_svf->output1 = a_in1;
 }
 
-t_svf2_kernel * g_svf2_get_filter_kernel();
-
-t_svf2_kernel * g_svf2_get_filter_kernel()
+void g_svf2_filter_kernel_init(t_svf2_kernel * f_result)
 {
-    t_svf2_kernel * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_svf2_kernel));
-
     f_result->bp = 0.0f;
     f_result->hp = 0.0f;
     f_result->lp = 0.0f;
@@ -149,7 +136,6 @@ t_svf2_kernel * g_svf2_get_filter_kernel()
     f_result->filter_input = 0.0f;
     f_result->filter_last_input = 0.0f;
     f_result->bp_m1 = 0.0f;
-    return f_result;
 }
 
 /* inline fp_svf2_run_filter fp_svf2_get_run_filter_ptr(
@@ -241,120 +227,120 @@ inline void v_svf2_run(t_svf2_filter *__restrict a_svf,
 inline void v_svf2_run_2_pole_lp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][0]), a_in0);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][1]), a_in1);
+    v_svf2_run(a_svf, (&a_svf->filter_kernels[0][0]), a_in0);
+    v_svf2_run(a_svf, (&a_svf->filter_kernels[0][1]), a_in1);
 
-    a_svf->output0 = a_svf->filter_kernels[0][0]->lp;
-    a_svf->output1 = a_svf->filter_kernels[0][1]->lp;
+    a_svf->output0 = a_svf->filter_kernels[0][0].lp;
+    a_svf->output1 = a_svf->filter_kernels[0][1].lp;
 }
 
 inline void v_svf2_run_4_pole_lp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][0]), a_in0);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[1][0]),
-            (a_svf->filter_kernels[0][0]->lp));
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[1][0],
+        a_svf->filter_kernels[0][0].lp);
 
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][1]), a_in1);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[1][1]),
-            (a_svf->filter_kernels[0][1]->lp));
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[1][1],
+            (a_svf->filter_kernels[0][1].lp));
 
-    a_svf->output0 = a_svf->filter_kernels[1][0]->lp;
-    a_svf->output1 = a_svf->filter_kernels[1][1]->lp;
+    a_svf->output0 = a_svf->filter_kernels[1][0].lp;
+    a_svf->output1 = a_svf->filter_kernels[1][1].lp;
 }
 
 inline void v_svf2_run_2_pole_hp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][0]), a_in0);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][1]), a_in1);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
 
-    a_svf->output0 = a_svf->filter_kernels[0][0]->hp;
-    a_svf->output1 = a_svf->filter_kernels[0][1]->hp;
+    a_svf->output0 = a_svf->filter_kernels[0][0].hp;
+    a_svf->output1 = a_svf->filter_kernels[0][1].hp;
 }
 
 inline void v_svf2_run_4_pole_hp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][0]), a_in0);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[1][0]),
-            (a_svf->filter_kernels[0][0]->hp));
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[1][0],
+            (a_svf->filter_kernels[0][0].hp));
 
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][1]), a_in1);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[1][1]),
-            (a_svf->filter_kernels[0][1]->hp));
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[1][1],
+            (a_svf->filter_kernels[0][1].hp));
 
-    a_svf->output0 = a_svf->filter_kernels[1][0]->hp;
-    a_svf->output1 = a_svf->filter_kernels[1][1]->hp;
+    a_svf->output0 = a_svf->filter_kernels[1][0].hp;
+    a_svf->output1 = a_svf->filter_kernels[1][1].hp;
 }
 
 inline void v_svf2_run_2_pole_bp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][0]), a_in0);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][1]), a_in1);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
 
-    a_svf->output0 = a_svf->filter_kernels[0][0]->bp;
-    a_svf->output1 = a_svf->filter_kernels[0][1]->bp;
+    a_svf->output0 = a_svf->filter_kernels[0][0].bp;
+    a_svf->output1 = a_svf->filter_kernels[0][1].bp;
 }
 
 inline void v_svf2_run_4_pole_bp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][0]), a_in0);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[1][0]),
-            (a_svf->filter_kernels[0][0]->bp));
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[1][0],
+            (a_svf->filter_kernels[0][0].bp));
 
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][1]), a_in1);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[1][1]),
-            (a_svf->filter_kernels[0][1]->bp));
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[1][1],
+            a_svf->filter_kernels[0][1].bp);
 
-    a_svf->output0 = a_svf->filter_kernels[1][0]->bp;
-    a_svf->output1 = a_svf->filter_kernels[1][1]->bp;
+    a_svf->output0 = a_svf->filter_kernels[1][0].bp;
+    a_svf->output1 = a_svf->filter_kernels[1][1].bp;
 }
 
 inline void v_svf2_run_2_pole_notch(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][0]), a_in0);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][1]), a_in1);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
 
-    a_svf->output0 = (a_svf->filter_kernels[0][0]->hp) +
-            (a_svf->filter_kernels[0][0]->lp);
-    a_svf->output1 = (a_svf->filter_kernels[0][1]->hp) +
-            (a_svf->filter_kernels[0][1]->lp);
+    a_svf->output0 = (a_svf->filter_kernels[0][0].hp) +
+            (a_svf->filter_kernels[0][0].lp);
+    a_svf->output1 = (a_svf->filter_kernels[0][1].hp) +
+            (a_svf->filter_kernels[0][1].lp);
 }
 
 inline void v_svf2_run_4_pole_notch(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][0]), a_in0);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[1][0]),
-            (a_svf->filter_kernels[0][0]->hp) +
-            (a_svf->filter_kernels[0][0]->lp));
-    a_svf->output0 = (a_svf->filter_kernels[1][0]->hp) +
-            (a_svf->filter_kernels[1][0]->lp);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[1][0],
+            (a_svf->filter_kernels[0][0].hp) +
+            (a_svf->filter_kernels[0][0].lp));
+    a_svf->output0 = (a_svf->filter_kernels[1][0].hp) +
+            (a_svf->filter_kernels[1][0].lp);
 
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][1]), a_in1);
-    v_svf2_run(a_svf, (a_svf->filter_kernels[1][1]),
-            (a_svf->filter_kernels[0][0]->hp) +
-            (a_svf->filter_kernels[0][1]->lp));
-    a_svf->output1 = (a_svf->filter_kernels[1][1]->hp) +
-            (a_svf->filter_kernels[1][1]->lp);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[1][1],
+            (a_svf->filter_kernels[0][0].hp) +
+            (a_svf->filter_kernels[0][1].lp));
+    a_svf->output1 = (a_svf->filter_kernels[1][1].hp) +
+            (a_svf->filter_kernels[1][1].lp);
 }
 
 inline void v_svf2_run_2_pole_allpass(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][0]), a_in0);
-    a_svf->output0 = (a_svf->filter_kernels[0][0]->hp) +
-            (a_svf->filter_kernels[0][0]->lp) +
-            (a_svf->filter_kernels[0][0]->bp);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    a_svf->output0 = (a_svf->filter_kernels[0][0].hp) +
+            (a_svf->filter_kernels[0][0].lp) +
+            (a_svf->filter_kernels[0][0].bp);
 
-    v_svf2_run(a_svf, (a_svf->filter_kernels[0][1]), a_in1);
-    a_svf->output1 = (a_svf->filter_kernels[0][1]->hp) +
-            (a_svf->filter_kernels[0][1]->lp) +
-            (a_svf->filter_kernels[0][1]->bp);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
+    a_svf->output1 = (a_svf->filter_kernels[0][1].hp) +
+            (a_svf->filter_kernels[0][1].lp) +
+            (a_svf->filter_kernels[0][1].bp);
 }
 
 inline void v_svf2_set_cutoff(t_svf2_filter*);
@@ -456,8 +442,8 @@ void g_svf2_init(t_svf2_filter * f_svf, float a_sample_rate)
 
     while(f_i < SVF_MAX_CASCADE)
     {
-        f_svf->filter_kernels[f_i][0] = g_svf2_get_filter_kernel();
-        f_svf->filter_kernels[f_i][1] = g_svf2_get_filter_kernel();
+        g_svf2_filter_kernel_init(&f_svf->filter_kernels[f_i][0]);
+        g_svf2_filter_kernel_init(&f_svf->filter_kernels[f_i][1]);
         f_i++;
     }
 
