@@ -1429,8 +1429,6 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         f_bus = self->track_pool[f_bus_num];
         f_buff = f_bus->buffers;
 
-        pthread_spin_lock(&f_bus->lock);
-
         if(a_track->fade_state != FADE_STATE_FADED)
         {
             if(f_plugin && f_plugin->power)
@@ -1456,9 +1454,9 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
                 }
             }
         }
+
         f_bus->bus_counter -= 1;
 
-        pthread_spin_unlock(&f_bus->lock);
         f_i3++;
     }
 }
@@ -1470,7 +1468,8 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
 
     if(musikernel->playback_mode > 0)
     {
-        v_pydaw_process_midi(self, a_global_track_num, musikernel->sample_count);
+        v_pydaw_process_midi(
+            self, a_global_track_num, musikernel->sample_count);
     }
 
     v_pydaw_process_external_midi(self, f_track, musikernel->sample_count);
@@ -1486,8 +1485,7 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
                 break;
             }
         }
-        
-        assert(f_track->bus_counter == 0);
+
         f_track->bus_counter = (f_track->bus_count);
     }
 
@@ -1561,11 +1559,8 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
 
         v_pydaw_process_track(self, f_track->track_num);
 
-        //pthread_spin_lock(&f_track->lock);
-
         f_track->status = STATUS_PROCESSED;
 
-        //pthread_spin_unlock(&f_track->lock);
 
         f_i++;
     }
