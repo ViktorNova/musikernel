@@ -496,7 +496,7 @@ static void v_rayv_process_midi_event(
                 a_event->value;
         plugin_data->midi_event_ports[plugin_data->midi_event_count] =
                 a_event->param;
-        plugin_data->midi_event_count++;
+        ++plugin_data->midi_event_count;
 
     }
     else if (a_event->type == PYDAW_EVENT_PITCHBEND)
@@ -507,7 +507,7 @@ static void v_rayv_process_midi_event(
                 a_event->tick;
         plugin_data->midi_event_values[plugin_data->midi_event_count] =
                 0.00012207 * a_event->value;
-        plugin_data->midi_event_count++;
+        ++plugin_data->midi_event_count;
     }
 }
 
