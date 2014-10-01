@@ -1594,6 +1594,20 @@ class pydaw_atm_region:
     def __init__(self):
         self.tracks = {}
 
+    def split(self, a_index):
+        f_region0 = pydaw_atm_region()
+        f_region1 = pydaw_atm_region()
+        for f_track in self.tracks:
+            for f_plugin in self.tracks[f_track]:
+                for f_list in self.tracks[f_track][f_plugin].values():
+                    for f_item in f_list:
+                        if f_item.bar >= a_index:
+                            f_item.bar -= a_index
+                            f_region1.add_point(f_item)
+                        else:
+                            f_region0.add_point(f_item)
+        return f_region0, f_region1
+
     def add_port_list(self, a_point):
         if not a_point.track in self.tracks:
             self.tracks[a_point.track] = {}

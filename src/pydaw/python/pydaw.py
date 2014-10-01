@@ -697,6 +697,7 @@ class region_settings:
             f_new_uid = PROJECT.create_empty_region(f_region_name)
             f_midi_tuple = CURRENT_REGION.split(f_index, f_new_uid)
             f_audio_tuple = AUDIO_ITEMS.split(f_index)
+            f_atm_tuple = ATM_REGION.split(f_index)
             f_current_index = SONG_EDITOR.song.get_index_of_region(
                 CURRENT_REGION.uid)
             SONG_EDITOR.song.insert_region(f_current_index + 1, f_new_uid)
@@ -707,6 +708,8 @@ class region_settings:
             PROJECT.save_audio_region(
                 CURRENT_REGION.uid, f_audio_tuple[0])
             PROJECT.save_audio_region(f_new_uid, f_audio_tuple[1])
+            PROJECT.save_atm_region(f_atm_tuple[0], CURRENT_REGION.uid)
+            PROJECT.save_atm_region(f_atm_tuple[1], f_new_uid)
             PROJECT.commit(_("Split region {} into {}").format(
                 CURRENT_REGION_NAME, f_region_name))
             REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
