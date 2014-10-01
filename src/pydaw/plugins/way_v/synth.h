@@ -593,11 +593,6 @@ typedef struct
     float sv_pitch_bend_value;
     float sv_last_note;  //For glide
 
-    int i_fx_grps;
-    int i_dst;
-    int i_src;
-    int i_ctrl;
-
     int midi_event_types[200];
     int midi_event_ticks[200];
     float midi_event_values[200];

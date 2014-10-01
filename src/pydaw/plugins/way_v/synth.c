@@ -919,59 +919,49 @@ static void v_wayv_process_midi_event(
             plugin_data->sv_last_note =
                     (plugin_data->data[f_voice]->note_f);
 
+            int i_dst, i_fx_grps, i_src, i_ctrl;
 
             plugin_data->active_polyfx_count[f_voice] = 0;
             //Determine which PolyFX have been enabled
-            for(plugin_data->i_dst = 0;
-                (plugin_data->i_dst) < WAYV_MODULAR_POLYFX_COUNT;
-                plugin_data->i_dst = (plugin_data->i_dst) + 1)
+            for(i_dst = 0; i_dst < WAYV_MODULAR_POLYFX_COUNT; ++i_dst)
             {
                 int f_pfx_combobox_index =
-                    (int)(*(plugin_data->fx_combobox[0][(plugin_data->i_dst)]));
-                plugin_data->data[f_voice]->fx_func_ptr[(plugin_data->i_dst)] =
+                    (int)(*(plugin_data->fx_combobox[0][(i_dst)]));
+                plugin_data->data[f_voice]->fx_func_ptr[(i_dst)] =
                     g_mf3_get_function_pointer(f_pfx_combobox_index);
 
                 if(f_pfx_combobox_index != 0)
                 {
                     plugin_data->active_polyfx[f_voice]
                             [(plugin_data->active_polyfx_count[f_voice])] =
-                            (plugin_data->i_dst);
-                    plugin_data->active_polyfx_count[f_voice] =
-                            (plugin_data->active_polyfx_count[f_voice]) + 1;
+                            (i_dst);
+                    ++plugin_data->active_polyfx_count[f_voice];
                 }
             }
 
             /*Calculate an index of which mod_matrix controls to process.
              * This saves expensive iterations and if/then logic in
              * the main loop*/
-            for(plugin_data->i_fx_grps = 0;
-                (plugin_data->i_fx_grps) < WAYV_EFFECTS_GROUPS_COUNT;
-                plugin_data->i_fx_grps = (plugin_data->i_fx_grps) + 1)
+            for(i_fx_grps = 0; i_fx_grps < WAYV_EFFECTS_GROUPS_COUNT; ++i_fx_grps)
             {
-                for(plugin_data->i_dst = 0;
-                    (plugin_data->i_dst) < (plugin_data->active_polyfx_count[f_voice]);
-                    plugin_data->i_dst = (plugin_data->i_dst) + 1)
+                for(i_dst = 0; i_dst < plugin_data->active_polyfx_count[f_voice]; ++i_dst)
                 {
                     plugin_data->polyfx_mod_counts[f_voice]
                             [(plugin_data->active_polyfx[f_voice]
-                            [(plugin_data->i_dst)])] = 0;
+                            [(i_dst)])] = 0;
 
-                    for(plugin_data->i_src = 0;
-                            (plugin_data->i_src) < WAYV_MODULATOR_COUNT;
-                            plugin_data->i_src = (plugin_data->i_src) + 1)
+                    for(i_src = 0; i_src < WAYV_MODULATOR_COUNT; ++i_src)
                     {
-                        for(plugin_data->i_ctrl = 0;
-                            (plugin_data->i_ctrl) < WAYV_CONTROLS_PER_MOD_EFFECT;
-                            plugin_data->i_ctrl = (plugin_data->i_ctrl) + 1)
+                        for(i_ctrl = 0; (i_ctrl) < WAYV_CONTROLS_PER_MOD_EFFECT; ++i_ctrl)
                         {
-                            if((*(plugin_data->polyfx_mod_matrix[(plugin_data->i_fx_grps)][(plugin_data->active_polyfx[f_voice][(plugin_data->i_dst)])][(plugin_data->i_src)][(plugin_data->i_ctrl)])) != 0)
+                            if((*(plugin_data->polyfx_mod_matrix[(i_fx_grps)][(plugin_data->active_polyfx[f_voice][(i_dst)])][(i_src)][(i_ctrl)])) != 0)
                             {
-                                plugin_data->polyfx_mod_ctrl_indexes[f_voice][(plugin_data->active_polyfx[f_voice][(plugin_data->i_dst)])][(plugin_data->polyfx_mod_counts[f_voice][(plugin_data->active_polyfx[f_voice][(plugin_data->i_dst)])])] = (plugin_data->i_ctrl);
-                                plugin_data->polyfx_mod_src_index[f_voice][(plugin_data->active_polyfx[f_voice][(plugin_data->i_dst)])][(plugin_data->polyfx_mod_counts[f_voice][(plugin_data->active_polyfx[f_voice][(plugin_data->i_dst)])])] = (plugin_data->i_src);
-                                plugin_data->polyfx_mod_matrix_values[f_voice][(plugin_data->active_polyfx[f_voice][(plugin_data->i_dst)])][(plugin_data->polyfx_mod_counts[f_voice][(plugin_data->active_polyfx[f_voice][(plugin_data->i_dst)])])] =
-                                        (*(plugin_data->polyfx_mod_matrix[(plugin_data->i_fx_grps)][(plugin_data->active_polyfx[f_voice][(plugin_data->i_dst)])][(plugin_data->i_src)][(plugin_data->i_ctrl)])) * .01;
+                                plugin_data->polyfx_mod_ctrl_indexes[f_voice][(plugin_data->active_polyfx[f_voice][(i_dst)])][(plugin_data->polyfx_mod_counts[f_voice][(plugin_data->active_polyfx[f_voice][(i_dst)])])] = (i_ctrl);
+                                plugin_data->polyfx_mod_src_index[f_voice][(plugin_data->active_polyfx[f_voice][(i_dst)])][(plugin_data->polyfx_mod_counts[f_voice][(plugin_data->active_polyfx[f_voice][(i_dst)])])] = (i_src);
+                                plugin_data->polyfx_mod_matrix_values[f_voice][(plugin_data->active_polyfx[f_voice][(i_dst)])][(plugin_data->polyfx_mod_counts[f_voice][(plugin_data->active_polyfx[f_voice][(i_dst)])])] =
+                                        (*(plugin_data->polyfx_mod_matrix[(i_fx_grps)][(plugin_data->active_polyfx[f_voice][(i_dst)])][(i_src)][(i_ctrl)])) * .01;
 
-                                plugin_data->polyfx_mod_counts[f_voice][(plugin_data->active_polyfx[f_voice][(plugin_data->i_dst)])] = (plugin_data->polyfx_mod_counts[f_voice][(plugin_data->active_polyfx[f_voice][(plugin_data->i_dst)])]) + 1;
+                                ++plugin_data->polyfx_mod_counts[f_voice][(plugin_data->active_polyfx[f_voice][(i_dst)])];
                             }
                         }
                     }
@@ -1248,11 +1238,11 @@ static void v_run_wayv(
                         n_state = note_state_off;
             }
 
-            i_run_poly_voice = (i_run_poly_voice) + 1;
+            ++i_run_poly_voice;
         }
 
         ++plugin_data->sampleNo;
-        i_iterator = (i_iterator) + 1;
+        ++i_iterator;
     }
 
     //plugin_data->sampleNo += sample_count;
@@ -1478,40 +1468,41 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
     a_voice->modulex_current_sample[0] = (a_voice->current_sample);
     a_voice->modulex_current_sample[1] = (a_voice->current_sample);
 
+    int i_dst;
     //Modular PolyFX, processed from the index created during note_on
-    for(plugin_data->i_dst = 0;
-        (plugin_data->i_dst) < (plugin_data->active_polyfx_count[a_voice_num]);
-        plugin_data->i_dst = (plugin_data->i_dst) + 1)
+    for(i_dst = 0;
+        (i_dst) < (plugin_data->active_polyfx_count[a_voice_num]);
+        ++i_dst)
     {
-        v_mf3_set(a_voice->multieffect[(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])],
-            *(plugin_data->pfx_mod_knob[0][(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])][0]),
-                *(plugin_data->pfx_mod_knob[0][(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])][1]),
-                *(plugin_data->pfx_mod_knob[0][(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])][2]));
+        v_mf3_set(a_voice->multieffect[(plugin_data->active_polyfx[a_voice_num][(i_dst)])],
+            *(plugin_data->pfx_mod_knob[0][(plugin_data->active_polyfx[a_voice_num][(i_dst)])][0]),
+                *(plugin_data->pfx_mod_knob[0][(plugin_data->active_polyfx[a_voice_num][(i_dst)])][1]),
+                *(plugin_data->pfx_mod_knob[0][(plugin_data->active_polyfx[a_voice_num][(i_dst)])][2]));
 
         int f_mod_test;
 
         for(f_mod_test = 0;
-            f_mod_test < (plugin_data->polyfx_mod_counts[a_voice_num][(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])]);
+            f_mod_test < (plugin_data->polyfx_mod_counts[a_voice_num][(plugin_data->active_polyfx[a_voice_num][(i_dst)])]);
             f_mod_test++)
         {
             v_mf3_mod_single(
-                    a_voice->multieffect[(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])],
-                    *(a_voice->modulator_outputs[(plugin_data->polyfx_mod_src_index[a_voice_num][(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])][f_mod_test])]),
-                    (plugin_data->polyfx_mod_matrix_values[a_voice_num][(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])][f_mod_test]),
-                    (plugin_data->polyfx_mod_ctrl_indexes[a_voice_num][(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])][f_mod_test])
+                    a_voice->multieffect[(plugin_data->active_polyfx[a_voice_num][(i_dst)])],
+                    *(a_voice->modulator_outputs[(plugin_data->polyfx_mod_src_index[a_voice_num][(plugin_data->active_polyfx[a_voice_num][(i_dst)])][f_mod_test])]),
+                    (plugin_data->polyfx_mod_matrix_values[a_voice_num][(plugin_data->active_polyfx[a_voice_num][(i_dst)])][f_mod_test]),
+                    (plugin_data->polyfx_mod_ctrl_indexes[a_voice_num][(plugin_data->active_polyfx[a_voice_num][(i_dst)])][f_mod_test])
                     );
         }
 
-        a_voice->fx_func_ptr[(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])](
-                a_voice->multieffect[(plugin_data->active_polyfx[a_voice_num][(plugin_data->i_dst)])],
+        a_voice->fx_func_ptr[(plugin_data->active_polyfx[a_voice_num][(i_dst)])](
+                a_voice->multieffect[(plugin_data->active_polyfx[a_voice_num][(i_dst)])],
                 (a_voice->modulex_current_sample[0]), (a_voice->modulex_current_sample[1]));
 
         a_voice->modulex_current_sample[0] =
             a_voice->multieffect[(plugin_data->active_polyfx[a_voice_num]
-                [(plugin_data->i_dst)])]->output0;
+                [(i_dst)])]->output0;
         a_voice->modulex_current_sample[1] =
             a_voice->multieffect[(plugin_data->active_polyfx[a_voice_num]
-                [(plugin_data->i_dst)])]->output1;
+                [(i_dst)])]->output1;
 
     }
 
