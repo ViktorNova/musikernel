@@ -43,12 +43,8 @@ void v_crs_free(t_crs_chorus *);
 void v_crs_chorus_set(t_crs_chorus*, float, float);
 void v_crs_chorus_run(t_crs_chorus*, float, float);
 
-t_crs_chorus* g_crs_chorus_get(float a_sr)
+void g_crs_init(t_crs_chorus * f_result, float a_sr)
 {
-    t_crs_chorus * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_crs_chorus));
-
     f_result->buffer_size = (int)(a_sr * 0.050f);
     f_result->buffer_size_float = ((float)(f_result->buffer_size));
 
@@ -82,7 +78,14 @@ t_crs_chorus* g_crs_chorus_get(float a_sr)
     v_svf2_set_cutoff_base(f_result->lp, 90.0f);
     v_svf2_set_cutoff(f_result->lp);
     v_lfs_sync(f_result->lfo, 0.0f, 1);
+}
 
+t_crs_chorus* g_crs_chorus_get(float a_sr)
+{
+    t_crs_chorus * f_result;
+
+    lmalloc((void**)&f_result, sizeof(t_crs_chorus));
+    g_crs_init(f_result, a_sr);
     return f_result;
 }
 
@@ -158,7 +161,7 @@ void v_crs_free(t_crs_chorus * a_crs)
     v_svf2_free(a_crs->hp);
     v_lfs_free(a_crs->lfo);
     v_svf2_free(a_crs->lp);
-    free(a_crs);
+    //free(a_crs);
 }
 
 #ifdef	__cplusplus

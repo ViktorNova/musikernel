@@ -53,7 +53,7 @@ void v_lim_free(t_lim_limiter * a_lim)
     {
         free(a_lim->buffer0);
         free(a_lim->buffer1);
-        free(a_lim);
+        //free(a_lim);
     }
 }
 
@@ -160,11 +160,8 @@ void v_lim_run(t_lim_limiter *a_lim, float a_in0, float a_in1)
     a_lim->output1 = (a_lim->buffer1[(a_lim->buffer_index)]) * f_gain;
 }
 
-t_lim_limiter * g_lim_get(float a_sr)
+void g_lim_init(t_lim_limiter * f_result, float a_sr)
 {
-    t_lim_limiter * f_result;
-    lmalloc((void**)&f_result, sizeof(t_lim_limiter));
-
     f_result->holdtime = ((int)(a_sr / LMS_HOLD_TIME_DIVISOR));
 
     f_result->buffer_size = (f_result->holdtime); // (int)(a_sr*0.003f);
@@ -219,7 +216,13 @@ t_lim_limiter * g_lim_get(float a_sr)
     f_result->last_ceiling = 1234.4522f;
     f_result->last_release = 1234.4522f;
     f_result->last_thresh = 1234.4532f;
+}
 
+t_lim_limiter * g_lim_get(float a_sr)
+{
+    t_lim_limiter * f_result;
+    lmalloc((void**)&f_result, sizeof(t_lim_limiter));
+    g_lim_init(f_result, a_sr);
     return f_result;
 }
 

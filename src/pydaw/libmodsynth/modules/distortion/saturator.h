@@ -78,11 +78,8 @@ inline void v_sat_run(t_sat_saturator* a_sat, float a_in0, float a_in1)
             * (a_sat->outgain_lin);
 }
 
-t_sat_saturator * g_sat_get()
+void g_sat_init(t_sat_saturator * f_result)
 {
-    t_sat_saturator * f_result =
-            (t_sat_saturator*)malloc(sizeof(t_sat_saturator));
-
     f_result->a = 0.0f;
     f_result->b = 0.0f;
     f_result->amount = 1.0f;
@@ -92,6 +89,13 @@ t_sat_saturator * g_sat_get()
     f_result->outgain_lin = 1.0f;
     f_result->last_ingain = 12345.0f;
     f_result->last_outgain = 12345.0f;
+}
+
+t_sat_saturator * g_sat_get()
+{
+    t_sat_saturator * f_result;
+    lmalloc((void**)&f_result, sizeof(t_sat_saturator));
+    g_sat_init(f_result);
     return f_result;
 }
 

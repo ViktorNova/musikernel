@@ -117,7 +117,7 @@ void v_svf2_free(t_svf2_filter* a_svf2)
         free(a_svf2->filter_kernels[f_i][1]);
         f_i++;
     }
-    free(a_svf2);
+    //free(a_svf2);
 }
 
 /* inline void v_svf2_run_no_filter(
@@ -447,14 +447,8 @@ void v_svf2_set_res(t_svf2_filter *__restrict a_svf, float a_db)
             (1.0f - (f_db_to_linear_fast((a_svf->filter_res_db)))) * 2.0f;
 }
 
-/* t_svf2_filter * g_svf2_get(float a_sample_rate)
- */
-t_svf2_filter * g_svf2_get(float a_sample_rate)
+void g_svf2_init(t_svf2_filter * f_svf, float a_sample_rate)
 {
-    t_svf2_filter * f_svf;
-
-    lmalloc((void**)&f_svf, sizeof(t_svf2_filter));
-
     f_svf->sr = a_sample_rate * ((float)(SVF_OVERSAMPLE_MULTIPLIER));
     f_svf->pi2_div_sr = (PI2 / (f_svf->sr));
 
@@ -487,6 +481,17 @@ t_svf2_filter * g_svf2_get(float a_sample_rate)
     v_svf2_add_cutoff_mod(f_svf, 0.0f);
     v_svf2_set_res(f_svf, -12.0f);
     v_svf2_set_cutoff(f_svf);
+}
+
+/* t_svf2_filter * g_svf2_get(float a_sample_rate)
+ */
+t_svf2_filter * g_svf2_get(float a_sample_rate)
+{
+    t_svf2_filter * f_svf;
+
+    lmalloc((void**)&f_svf, sizeof(t_svf2_filter));
+
+    g_svf2_init(f_svf, a_sample_rate);
 
     return f_svf;
 }

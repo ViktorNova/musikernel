@@ -204,15 +204,8 @@ inline void v_cmb_mc_set_all(t_comb_filter*__restrict a_cmb, float a_wet_db, flo
     v_cmb_set_all(a_cmb, a_wet_db, a_wet_db - 13.0f, a_midi_note_number);
 }
 
-/* t_comb_filter * g_cmb_get_comb_filter(
- * float a_sr) //sample rate
- */
-t_comb_filter * g_cmb_get_comb_filter(float a_sr)
+void g_cmb_init(t_comb_filter * f_result, float a_sr)
 {
-    t_comb_filter * f_result;// = (t_comb_filter*)malloc(sizeof(t_comb_filter));
-
-    lmalloc((void**)&f_result, sizeof(t_comb_filter));
-
     int f_i = 0;
 
     f_result->buffer_size = (int)((a_sr / 20.0f) + 300);  //Allocate enough memory to accomodate 20hz filter frequency
@@ -242,6 +235,18 @@ t_comb_filter * g_cmb_get_comb_filter(float a_sr)
 
     v_cmb_set_all(f_result,-6.0f, -6.0f, 66.0f);
     v_cmb_run(f_result, 0.0f);
+}
+
+/* t_comb_filter * g_cmb_get_comb_filter(
+ * float a_sr) //sample rate
+ */
+t_comb_filter * g_cmb_get_comb_filter(float a_sr)
+{
+    t_comb_filter * f_result;// = (t_comb_filter*)malloc(sizeof(t_comb_filter));
+
+    lmalloc((void**)&f_result, sizeof(t_comb_filter));
+
+    g_cmb_init(f_result, a_sr);
 
     return f_result;
 }
@@ -250,7 +255,7 @@ t_comb_filter * g_cmb_get_comb_filter(float a_sr)
 void v_cmb_free(t_comb_filter * a_cmb)
 {
     free(a_cmb->input_buffer);
-    free(a_cmb);
+    //free(a_cmb);
 }
 
 #ifdef	__cplusplus

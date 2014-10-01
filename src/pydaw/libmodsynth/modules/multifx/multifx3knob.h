@@ -44,27 +44,27 @@ typedef struct
 {
     int effect_index;
     int channels;  //Currently only 1 or 2 are supported
-    t_svf2_filter * svf;
-    t_comb_filter * comb_filter0;
-    t_comb_filter * comb_filter1;
-    t_pkq_peak_eq * eq0;
-    t_clipper * clipper;
-    t_lim_limiter * limiter;
-    t_sat_saturator * saturator;
+    t_svf2_filter svf;
+    t_comb_filter comb_filter0;
+    t_comb_filter comb_filter1;
+    t_pkq_peak_eq eq0;
+    t_clipper clipper;
+    t_lim_limiter limiter;
+    t_sat_saturator saturator;
     float output0, output1;
     float control[MULTIFX3KNOB_KNOB_COUNT];
     float control_value[MULTIFX3KNOB_KNOB_COUNT];
     float mod_value[MULTIFX3KNOB_KNOB_COUNT];
-    t_audio_xfade * xfader;
-    t_amp_and_panner * amp_and_panner;
+    t_audio_xfade xfader;
+    t_amp_and_panner amp_and_panner;
     float outgain;  //For anything with an outgain knob
-    t_for_formant_filter * formant_filter;
-    t_crs_chorus * chorus;
-    t_glc_glitch * glitch;
-    t_rmd_ring_mod * ring_mod;
-    t_lfi_lofi * lofi;
-    t_sah_sample_and_hold * s_and_h;
-    t_grw_growl_filter * growl_filter;
+    t_for_formant_filter formant_filter;
+    t_crs_chorus chorus;
+    t_glc_glitch glitch;
+    t_rmd_ring_mod ring_mod;
+    t_lfi_lofi lofi;
+    t_sah_sample_and_hold s_and_h;
+    t_grw_growl_filter growl_filter;
 }t_mf3_multi;
 
 /*A function pointer for switching between effect types*/
@@ -196,12 +196,12 @@ void v_mf3_reset_null(t_mf3_multi* a_mf3)
 
 void v_mf3_reset_svf(t_mf3_multi* a_mf3)
 {
-    v_svf2_reset(a_mf3->svf);
+    v_svf2_reset(&a_mf3->svf);
 }
 
 void v_mf3_reset_glitch(t_mf3_multi* a_mf3)
 {
-    v_glc_glitch_retrigger(a_mf3->glitch);
+    v_glc_glitch_retrigger(&a_mf3->glitch);
 }
 
 /* void v_mf3_set(t_fx3_multi* a_mf3, int a_fx_index)
@@ -307,72 +307,72 @@ inline void v_mf3_run_lp2(t_mf3_multi*__restrict a_mf3, float a_in0,
         float a_in1)
 {
     f_mfx_transform_svf_filter(a_mf3);
-    v_svf2_run_2_pole_lp(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = a_mf3->svf->output0;
-    a_mf3->output1 = a_mf3->svf->output1;
+    v_svf2_run_2_pole_lp(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = a_mf3->svf.output0;
+    a_mf3->output1 = a_mf3->svf.output1;
 }
 
 inline void v_mf3_run_lp4(t_mf3_multi*__restrict a_mf3, float a_in0,
         float a_in1)
 {
     f_mfx_transform_svf_filter(a_mf3);
-    v_svf2_run_4_pole_lp(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = a_mf3->svf->output0;
-    a_mf3->output1 = a_mf3->svf->output1;
+    v_svf2_run_4_pole_lp(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = a_mf3->svf.output0;
+    a_mf3->output1 = a_mf3->svf.output1;
 }
 
 inline void v_mf3_run_hp2(t_mf3_multi*__restrict a_mf3, float a_in0,
         float a_in1)
 {
     f_mfx_transform_svf_filter(a_mf3);
-    v_svf2_run_2_pole_hp(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = a_mf3->svf->output0;
-    a_mf3->output1 = a_mf3->svf->output1;
+    v_svf2_run_2_pole_hp(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = a_mf3->svf.output0;
+    a_mf3->output1 = a_mf3->svf.output1;
 }
 
 inline void v_mf3_run_hp4(t_mf3_multi*__restrict a_mf3, float a_in0,
         float a_in1)
 {
     f_mfx_transform_svf_filter(a_mf3);
-    v_svf2_run_4_pole_hp(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = a_mf3->svf->output0;
-    a_mf3->output1 = a_mf3->svf->output1;
+    v_svf2_run_4_pole_hp(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = a_mf3->svf.output0;
+    a_mf3->output1 = a_mf3->svf.output1;
 }
 
 inline void v_mf3_run_bp2(t_mf3_multi*__restrict a_mf3, float a_in0,
         float a_in1)
 {
     f_mfx_transform_svf_filter(a_mf3);
-    v_svf2_run_2_pole_bp(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = a_mf3->svf->output0;
-    a_mf3->output1 = a_mf3->svf->output1;
+    v_svf2_run_2_pole_bp(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = a_mf3->svf.output0;
+    a_mf3->output1 = a_mf3->svf.output1;
 }
 
 inline void v_mf3_run_bp4(t_mf3_multi*__restrict a_mf3, float a_in0,
         float a_in1)
 {
     f_mfx_transform_svf_filter(a_mf3);
-    v_svf2_run_4_pole_bp(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = a_mf3->svf->output0;
-    a_mf3->output1 = a_mf3->svf->output1;
+    v_svf2_run_4_pole_bp(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = a_mf3->svf.output0;
+    a_mf3->output1 = a_mf3->svf.output1;
 }
 
 inline void v_mf3_run_notch2(t_mf3_multi*__restrict a_mf3, float a_in0,
         float a_in1)
 {
     f_mfx_transform_svf_filter(a_mf3);
-    v_svf2_run_2_pole_notch(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = a_mf3->svf->output0;
-    a_mf3->output1 = a_mf3->svf->output1;
+    v_svf2_run_2_pole_notch(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = a_mf3->svf.output0;
+    a_mf3->output1 = a_mf3->svf.output1;
 }
 
 inline void v_mf3_run_notch4(t_mf3_multi*__restrict a_mf3, float a_in0,
         float a_in1)
 {
     f_mfx_transform_svf_filter(a_mf3);
-    v_svf2_run_4_pole_notch(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = a_mf3->svf->output0;
-    a_mf3->output1 = a_mf3->svf->output1;
+    v_svf2_run_4_pole_notch(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = a_mf3->svf.output0;
+    a_mf3->output1 = a_mf3->svf.output1;
 }
 
 inline void v_mf3_run_eq(t_mf3_multi*__restrict a_mf3, float a_in0, float a_in1)
@@ -385,13 +385,13 @@ inline void v_mf3_run_eq(t_mf3_multi*__restrict a_mf3, float a_in0, float a_in1)
     //gain
     a_mf3->control_value[2] = (a_mf3->control[2]) * 0.377952756f - 24.0f;
 
-    v_pkq_calc_coeffs(a_mf3->eq0, a_mf3->control_value[0],
+    v_pkq_calc_coeffs(&a_mf3->eq0, a_mf3->control_value[0],
             a_mf3->control_value[1], a_mf3->control_value[2]);
 
-    v_pkq_run(a_mf3->eq0, a_in0, a_in1);
+    v_pkq_run(&a_mf3->eq0, a_in0, a_in1);
 
-    a_mf3->output0 = (a_mf3->eq0->output0);
-    a_mf3->output1 = (a_mf3->eq0->output1);
+    a_mf3->output0 = (a_mf3->eq0.output0);
+    a_mf3->output1 = (a_mf3->eq0.output1);
 }
 
 inline void v_mf3_run_dist(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -402,13 +402,13 @@ inline void v_mf3_run_dist(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.007874016f);
     a_mf3->control_value[2] = (((a_mf3->control[2]) * 0.236220472f) - 30.0f);
     a_mf3->outgain = f_db_to_linear(a_mf3->control_value[2]);
-    v_clp_set_in_gain(a_mf3->clipper, (a_mf3->control_value[0]));
-    v_axf_set_xfade(a_mf3->xfader, (a_mf3->control_value[1]));
+    v_clp_set_in_gain(&a_mf3->clipper, (a_mf3->control_value[0]));
+    v_axf_set_xfade(&a_mf3->xfader, (a_mf3->control_value[1]));
 
-    a_mf3->output0 = f_axf_run_xfade(a_mf3->xfader, a_in0,
-            (f_clp_clip(a_mf3->clipper, a_in0))) * (a_mf3->outgain);
-    a_mf3->output1 = f_axf_run_xfade(a_mf3->xfader, a_in1,
-            (f_clp_clip(a_mf3->clipper, a_in1))) * (a_mf3->outgain);
+    a_mf3->output0 = f_axf_run_xfade(&a_mf3->xfader, a_in0,
+            (f_clp_clip(&a_mf3->clipper, a_in0))) * (a_mf3->outgain);
+    a_mf3->output1 = f_axf_run_xfade(&a_mf3->xfader, a_in1,
+            (f_clp_clip(&a_mf3->clipper, a_in1))) * (a_mf3->outgain);
 }
 
 
@@ -422,18 +422,17 @@ inline void v_mf3_run_comb(t_mf3_multi*__restrict a_mf3, float a_in0,
     //res
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.157480315) - 20.0f;
 
-    v_cmb_set_all(a_mf3->comb_filter0, (a_mf3->control_value[1]),
-            (a_mf3->control_value[1]),
-                    (a_mf3->control_value[0]));
-
-    v_cmb_set_all(a_mf3->comb_filter1, (a_mf3->control_value[1]),
+    v_cmb_set_all(&a_mf3->comb_filter0, (a_mf3->control_value[1]),
             (a_mf3->control_value[1]), (a_mf3->control_value[0]));
 
-    v_cmb_run(a_mf3->comb_filter0, a_in0);
-    v_cmb_run(a_mf3->comb_filter1, a_in1);
+    v_cmb_set_all(&a_mf3->comb_filter1, (a_mf3->control_value[1]),
+            (a_mf3->control_value[1]), (a_mf3->control_value[0]));
 
-    a_mf3->output0 = (a_mf3->comb_filter0->output_sample);
-    a_mf3->output1 = (a_mf3->comb_filter1->output_sample);
+    v_cmb_run(&a_mf3->comb_filter0, a_in0);
+    v_cmb_run(&a_mf3->comb_filter1, a_in1);
+
+    a_mf3->output0 = a_mf3->comb_filter0.output_sample;
+    a_mf3->output1 = a_mf3->comb_filter1.output_sample;
 }
 
 inline void v_mf3_run_amp_panner(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -444,12 +443,12 @@ inline void v_mf3_run_amp_panner(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[0] = ((a_mf3->control[0]) * 0.007874016f);
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.503937f) - 40.0f;
 
-    v_app_set(a_mf3->amp_and_panner, (a_mf3->control_value[1]),
+    v_app_set(&a_mf3->amp_and_panner, (a_mf3->control_value[1]),
             (a_mf3->control_value[0]));
-    v_app_run(a_mf3->amp_and_panner, a_in0, a_in1);
+    v_app_run(&a_mf3->amp_and_panner, a_in0, a_in1);
 
-    a_mf3->output0 = (a_mf3->amp_and_panner->output0);
-    a_mf3->output1 = (a_mf3->amp_and_panner->output1);
+    a_mf3->output0 = a_mf3->amp_and_panner.output0;
+    a_mf3->output1 = a_mf3->amp_and_panner.output1;
 }
 
 inline void f_mfx_transform_svf_filter(t_mf3_multi*__restrict a_mf3)
@@ -460,9 +459,9 @@ inline void f_mfx_transform_svf_filter(t_mf3_multi*__restrict a_mf3)
     //res
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.236220472) - 30.0f;
 
-    v_svf2_set_cutoff_base(a_mf3->svf, (a_mf3->control_value[0]));
-    v_svf2_set_res(a_mf3->svf, (a_mf3->control_value[1]));
-    v_svf2_set_cutoff(a_mf3->svf);
+    v_svf2_set_cutoff_base(&a_mf3->svf, (a_mf3->control_value[0]));
+    v_svf2_set_res(&a_mf3->svf, (a_mf3->control_value[1]));
+    v_svf2_set_cutoff(&a_mf3->svf);
 }
 
 
@@ -474,12 +473,12 @@ inline void v_mf3_run_limiter(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[1] = (((a_mf3->control[1]) * 0.093700787f) - 11.9f);
     a_mf3->control_value[2] = (((a_mf3->control[2]) * 11.417322835f) + 50.0f);
 
-    v_lim_set(a_mf3->limiter, (a_mf3->control_value[0]),
+    v_lim_set(&a_mf3->limiter, (a_mf3->control_value[0]),
             (a_mf3->control_value[1]), (a_mf3->control_value[2]));
-    v_lim_run(a_mf3->limiter, a_in0, a_in1);
+    v_lim_run(&a_mf3->limiter, a_in0, a_in1);
 
-    a_mf3->output0 = a_mf3->limiter->output0;
-    a_mf3->output1 = a_mf3->limiter->output1;
+    a_mf3->output0 = a_mf3->limiter.output0;
+    a_mf3->output1 = a_mf3->limiter.output1;
 }
 
 inline void v_mf3_run_saturator(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -490,13 +489,13 @@ inline void v_mf3_run_saturator(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.748031496f) + 5.0f;
     a_mf3->control_value[2] = ((a_mf3->control[2]) * 0.188976378) - 12.0f;
 
-    v_sat_set(a_mf3->saturator, (a_mf3->control_value[0]),
+    v_sat_set(&a_mf3->saturator, (a_mf3->control_value[0]),
             (a_mf3->control_value[1]), (a_mf3->control_value[2]));
 
-    v_sat_run(a_mf3->saturator, a_in0, a_in1);
+    v_sat_run(&a_mf3->saturator, a_in0, a_in1);
 
-    a_mf3->output0 = a_mf3->saturator->output0;
-    a_mf3->output1 = a_mf3->saturator->output1;
+    a_mf3->output0 = a_mf3->saturator.output0;
+    a_mf3->output1 = a_mf3->saturator.output1;
 }
 
 inline void v_mf3_run_formant_filter(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -506,12 +505,12 @@ inline void v_mf3_run_formant_filter(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[0] = ((a_mf3->control[0]) * 0.07086f);
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.007874016f);
 
-    v_for_formant_filter_set(a_mf3->formant_filter, a_mf3->control_value[0],
+    v_for_formant_filter_set(&a_mf3->formant_filter, a_mf3->control_value[0],
             a_mf3->control_value[1]);
-    v_for_formant_filter_run(a_mf3->formant_filter, a_in0, a_in1);
+    v_for_formant_filter_run(&a_mf3->formant_filter, a_in0, a_in1);
 
-    a_mf3->output0 = a_mf3->formant_filter->output0;
-    a_mf3->output1 = a_mf3->formant_filter->output1;
+    a_mf3->output0 = a_mf3->formant_filter.output0;
+    a_mf3->output1 = a_mf3->formant_filter.output1;
 }
 
 inline void v_mf3_run_chorus(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -521,12 +520,12 @@ inline void v_mf3_run_chorus(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[0] = ((a_mf3->control[0]) * 0.04488189f) + 0.3f;
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.1889f) - 24.0f;
 
-    v_crs_chorus_set(a_mf3->chorus, a_mf3->control_value[0],
+    v_crs_chorus_set(&a_mf3->chorus, a_mf3->control_value[0],
             a_mf3->control_value[1]);
-    v_crs_chorus_run(a_mf3->chorus, a_in0, a_in1);
+    v_crs_chorus_run(&a_mf3->chorus, a_in0, a_in1);
 
-    a_mf3->output0 = a_mf3->chorus->output0;
-    a_mf3->output1 = a_mf3->chorus->output1;
+    a_mf3->output0 = a_mf3->chorus.output0;
+    a_mf3->output1 = a_mf3->chorus.output1;
 }
 
 inline void v_mf3_run_glitch(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -537,12 +536,12 @@ inline void v_mf3_run_glitch(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.08661f) + 1.1f;
     a_mf3->control_value[2] = ((a_mf3->control[2]) * 0.007874016f);
 
-    v_glc_glitch_set(a_mf3->glitch, a_mf3->control_value[0],
+    v_glc_glitch_set(&a_mf3->glitch, a_mf3->control_value[0],
             a_mf3->control_value[1], a_mf3->control_value[2]);
-    v_glc_glitch_run(a_mf3->glitch, a_in0, a_in1);
+    v_glc_glitch_run(&a_mf3->glitch, a_in0, a_in1);
 
-    a_mf3->output0 = a_mf3->glitch->output0;
-    a_mf3->output1 = a_mf3->glitch->output1;
+    a_mf3->output0 = a_mf3->glitch.output0;
+    a_mf3->output1 = a_mf3->glitch.output1;
 }
 
 inline void v_mf3_run_ring_mod(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -552,12 +551,12 @@ inline void v_mf3_run_ring_mod(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[0] = ((a_mf3->control[0]) * 0.44094f) + 24.0f;
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.007874f);
 
-    v_rmd_ring_mod_set(a_mf3->ring_mod, a_mf3->control_value[0],
+    v_rmd_ring_mod_set(&a_mf3->ring_mod, a_mf3->control_value[0],
             a_mf3->control_value[1]);
-    v_rmd_ring_mod_run(a_mf3->ring_mod, a_in0, a_in1);
+    v_rmd_ring_mod_run(&a_mf3->ring_mod, a_in0, a_in1);
 
-    a_mf3->output0 = a_mf3->ring_mod->output0;
-    a_mf3->output1 = a_mf3->ring_mod->output1;
+    a_mf3->output0 = a_mf3->ring_mod.output0;
+    a_mf3->output1 = a_mf3->ring_mod.output1;
 }
 
 inline void v_mf3_run_lofi(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -566,11 +565,11 @@ inline void v_mf3_run_lofi(t_mf3_multi*__restrict a_mf3, float a_in0,
     v_mf3_commit_mod(a_mf3);
     a_mf3->control_value[0] = ((a_mf3->control[0]) * 0.094488f) + 4.0f;
 
-    v_lfi_lofi_set(a_mf3->lofi, a_mf3->control_value[0]);
-    v_lfi_lofi_run(a_mf3->lofi, a_in0, a_in1);
+    v_lfi_lofi_set(&a_mf3->lofi, a_mf3->control_value[0]);
+    v_lfi_lofi_run(&a_mf3->lofi, a_in0, a_in1);
 
-    a_mf3->output0 = a_mf3->lofi->output0;
-    a_mf3->output1 = a_mf3->lofi->output1;
+    a_mf3->output0 = a_mf3->lofi.output0;
+    a_mf3->output1 = a_mf3->lofi.output1;
 }
 
 inline void v_mf3_run_s_and_h(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -580,12 +579,12 @@ inline void v_mf3_run_s_and_h(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[0] = ((a_mf3->control[0]) * 0.23622f) + 60.0f;
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.007874016f);
 
-    v_sah_sample_and_hold_set(a_mf3->s_and_h, a_mf3->control_value[0],
+    v_sah_sample_and_hold_set(&a_mf3->s_and_h, a_mf3->control_value[0],
             a_mf3->control_value[1]);
-    v_sah_sample_and_hold_run(a_mf3->s_and_h, a_in0, a_in1);
+    v_sah_sample_and_hold_run(&a_mf3->s_and_h, a_in0, a_in1);
 
-    a_mf3->output0 = a_mf3->s_and_h->output0;
-    a_mf3->output1 = a_mf3->s_and_h->output1;
+    a_mf3->output0 = a_mf3->s_and_h.output0;
+    a_mf3->output1 = a_mf3->s_and_h.output1;
 }
 
 
@@ -594,10 +593,10 @@ inline void v_mf3_run_lp_dw(t_mf3_multi*__restrict a_mf3, float a_in0,
 {
     f_mfx_transform_svf_filter(a_mf3);
     a_mf3->control_value[2] = a_mf3->control[2] * 0.007874016f;
-    v_axf_set_xfade(a_mf3->xfader, a_mf3->control_value[2]);
-    v_svf2_run_2_pole_lp(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = f_axf_run_xfade(a_mf3->xfader, a_in0, a_mf3->svf->output0);
-    a_mf3->output1 = f_axf_run_xfade(a_mf3->xfader, a_in1, a_mf3->svf->output1);
+    v_axf_set_xfade(&a_mf3->xfader, a_mf3->control_value[2]);
+    v_svf2_run_2_pole_lp(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = f_axf_run_xfade(&a_mf3->xfader, a_in0, a_mf3->svf.output0);
+    a_mf3->output1 = f_axf_run_xfade(&a_mf3->xfader, a_in1, a_mf3->svf.output1);
 }
 
 inline void v_mf3_run_hp_dw(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -605,10 +604,10 @@ inline void v_mf3_run_hp_dw(t_mf3_multi*__restrict a_mf3, float a_in0,
 {
     f_mfx_transform_svf_filter(a_mf3);
     a_mf3->control_value[2] = a_mf3->control[2] * 0.007874016f;
-    v_axf_set_xfade(a_mf3->xfader, a_mf3->control_value[2]);
-    v_svf2_run_2_pole_hp(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = f_axf_run_xfade(a_mf3->xfader, a_in0, a_mf3->svf->output0);
-    a_mf3->output1 = f_axf_run_xfade(a_mf3->xfader, a_in1, a_mf3->svf->output1);
+    v_axf_set_xfade(&a_mf3->xfader, a_mf3->control_value[2]);
+    v_svf2_run_2_pole_hp(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = f_axf_run_xfade(&a_mf3->xfader, a_in0, a_mf3->svf.output0);
+    a_mf3->output1 = f_axf_run_xfade(&a_mf3->xfader, a_in1, a_mf3->svf.output1);
 }
 
 inline void v_mf3_run_notch_dw(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -616,10 +615,10 @@ inline void v_mf3_run_notch_dw(t_mf3_multi*__restrict a_mf3, float a_in0,
 {
     f_mfx_transform_svf_filter(a_mf3);
     a_mf3->control_value[2] = a_mf3->control[2] * 0.007874016f;
-    v_axf_set_xfade(a_mf3->xfader, a_mf3->control_value[2]);
-    v_svf2_run_4_pole_notch(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = f_axf_run_xfade(a_mf3->xfader, a_in0, a_mf3->svf->output0);
-    a_mf3->output1 = f_axf_run_xfade(a_mf3->xfader, a_in1, a_mf3->svf->output1);
+    v_axf_set_xfade(&a_mf3->xfader, a_mf3->control_value[2]);
+    v_svf2_run_4_pole_notch(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = f_axf_run_xfade(&a_mf3->xfader, a_in0, a_mf3->svf.output0);
+    a_mf3->output1 = f_axf_run_xfade(&a_mf3->xfader, a_in1, a_mf3->svf.output1);
 }
 
 inline void v_mf3_run_monofier(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -630,12 +629,12 @@ inline void v_mf3_run_monofier(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[0] = ((a_mf3->control[0]) * 0.007874016f);
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.283464567f) - 30.0f;
 
-    v_app_set(a_mf3->amp_and_panner, (a_mf3->control_value[1]),
+    v_app_set(&a_mf3->amp_and_panner, (a_mf3->control_value[1]),
             (a_mf3->control_value[0]));
-    v_app_run_monofier(a_mf3->amp_and_panner, a_in0, a_in1);
+    v_app_run_monofier(&a_mf3->amp_and_panner, a_in0, a_in1);
 
-    a_mf3->output0 = (a_mf3->amp_and_panner->output0);
-    a_mf3->output1 = (a_mf3->amp_and_panner->output1);
+    a_mf3->output0 = a_mf3->amp_and_panner.output0;
+    a_mf3->output1 = a_mf3->amp_and_panner.output1;
 }
 
 inline void v_mf3_run_lp_hp(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -643,14 +642,14 @@ inline void v_mf3_run_lp_hp(t_mf3_multi*__restrict a_mf3, float a_in0,
 {
     f_mfx_transform_svf_filter(a_mf3);
     a_mf3->control_value[2] = a_mf3->control[2] * 0.007874016f;
-    v_axf_set_xfade(a_mf3->xfader, a_mf3->control_value[2]);
-    v_svf2_run_2_pole_lp(a_mf3->svf, a_in0, a_in1);
-    a_mf3->output0 = f_axf_run_xfade(a_mf3->xfader,
-            a_mf3->svf->filter_kernels[0][0]->lp,
-            a_mf3->svf->filter_kernels[0][0]->hp);
-    a_mf3->output1 = f_axf_run_xfade(a_mf3->xfader,
-            a_mf3->svf->filter_kernels[0][1]->lp,
-            a_mf3->svf->filter_kernels[0][1]->hp);
+    v_axf_set_xfade(&a_mf3->xfader, a_mf3->control_value[2]);
+    v_svf2_run_2_pole_lp(&a_mf3->svf, a_in0, a_in1);
+    a_mf3->output0 = f_axf_run_xfade(&a_mf3->xfader,
+            a_mf3->svf.filter_kernels[0][0]->lp,
+            a_mf3->svf.filter_kernels[0][0]->hp);
+    a_mf3->output1 = f_axf_run_xfade(&a_mf3->xfader,
+            a_mf3->svf.filter_kernels[0][1]->lp,
+            a_mf3->svf.filter_kernels[0][1]->hp);
 }
 
 inline void v_mf3_run_growl_filter(t_mf3_multi*__restrict a_mf3, float a_in0,
@@ -661,47 +660,47 @@ inline void v_mf3_run_growl_filter(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.007874016f);
     a_mf3->control_value[2] = ((a_mf3->control[2]) * 0.15625f);
 
-    v_grw_growl_filter_set(a_mf3->growl_filter, a_mf3->control_value[0],
+    v_grw_growl_filter_set(&a_mf3->growl_filter, a_mf3->control_value[0],
             a_mf3->control_value[1], a_mf3->control_value[2]);
-    v_grw_growl_filter_run(a_mf3->growl_filter, a_in0, a_in1);
+    v_grw_growl_filter_run(&a_mf3->growl_filter, a_in0, a_in1);
 
-    a_mf3->output0 = a_mf3->growl_filter->output0;
-    a_mf3->output1 = a_mf3->growl_filter->output1;
+    a_mf3->output0 = a_mf3->growl_filter.output0;
+    a_mf3->output1 = a_mf3->growl_filter.output1;
 }
 
 inline void v_mf3_run_screech_lp(t_mf3_multi*__restrict a_mf3, float a_in0,
         float a_in1)
 {
     f_mfx_transform_svf_filter(a_mf3);
-    v_svf2_run_4_pole_lp(a_mf3->svf, a_in0, a_in1);
+    v_svf2_run_4_pole_lp(&a_mf3->svf, a_in0, a_in1);
 
     //a_mf3->output0 = a_mf3->svf->output0;
     //a_mf3->output1 = a_mf3->svf->output1;
 
-    v_clp_set_clip_sym(a_mf3->clipper, -3.0f);
-    v_sat_set(a_mf3->saturator, 0.0f, 100.0f, 0.0f);
-    v_sat_run(a_mf3->saturator, a_mf3->svf->output0, a_mf3->svf->output1);
+    v_clp_set_clip_sym(&a_mf3->clipper, -3.0f);
+    v_sat_set(&a_mf3->saturator, 0.0f, 100.0f, 0.0f);
+    v_sat_run(&a_mf3->saturator, a_mf3->svf.output0, a_mf3->svf.output1);
 
     //cutoff
     //a_mf3->control_value[0] = (((a_mf3->control[0]) * 0.692913386) + 20.0f);
     //res
     //a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.157480315) - 24.0f;
 
-    v_cmb_set_all(a_mf3->comb_filter0, (a_mf3->control_value[1]),
+    v_cmb_set_all(&a_mf3->comb_filter0, (a_mf3->control_value[1]),
             (a_mf3->control_value[1]), (a_mf3->control_value[0]));
 
-    v_cmb_set_all(a_mf3->comb_filter1, (a_mf3->control_value[1]),
+    v_cmb_set_all(&a_mf3->comb_filter1, (a_mf3->control_value[1]),
             (a_mf3->control_value[1]), (a_mf3->control_value[0]));
 
-    v_cmb_run(a_mf3->comb_filter0, f_clp_clip(a_mf3->clipper,
-            a_mf3->saturator->output0));
-    v_cmb_run(a_mf3->comb_filter1, f_clp_clip(a_mf3->clipper,
-            a_mf3->saturator->output1));
+    v_cmb_run(&a_mf3->comb_filter0,
+        f_clp_clip(&a_mf3->clipper, a_mf3->saturator.output0));
+    v_cmb_run(&a_mf3->comb_filter1,
+        f_clp_clip(&a_mf3->clipper, a_mf3->saturator.output1));
 
-    a_mf3->output0 = (a_mf3->saturator->output0 -
-            a_mf3->comb_filter0->wet_sample);
-    a_mf3->output1 = (a_mf3->saturator->output1 -
-            a_mf3->comb_filter1->wet_sample);
+    a_mf3->output0 = (a_mf3->saturator.output0 -
+            a_mf3->comb_filter0.wet_sample);
+    a_mf3->output1 = (a_mf3->saturator.output1 -
+            a_mf3->comb_filter1.wet_sample);
 }
 
 
@@ -717,17 +716,17 @@ inline void v_mf3_run_metal_comb(t_mf3_multi*__restrict a_mf3, float a_in0,
     //detune
     a_mf3->control_value[2] = ((a_mf3->control[2]) * 0.02362f) + 1.0f;
 
-    v_cmb_mc_set_all(a_mf3->comb_filter0, (a_mf3->control_value[1]),
+    v_cmb_mc_set_all(&a_mf3->comb_filter0, (a_mf3->control_value[1]),
                     (a_mf3->control_value[0]), a_mf3->control_value[2]);
 
-    v_cmb_mc_set_all(a_mf3->comb_filter1, (a_mf3->control_value[1]),
+    v_cmb_mc_set_all(&a_mf3->comb_filter1, (a_mf3->control_value[1]),
             (a_mf3->control_value[0]), a_mf3->control_value[2]);
 
-    v_cmb_mc_run(a_mf3->comb_filter0, a_in0);
-    v_cmb_mc_run(a_mf3->comb_filter1, a_in1);
+    v_cmb_mc_run(&a_mf3->comb_filter0, a_in0);
+    v_cmb_mc_run(&a_mf3->comb_filter1, a_in1);
 
-    a_mf3->output0 = (a_mf3->comb_filter0->output_sample);
-    a_mf3->output1 = (a_mf3->comb_filter1->output_sample);
+    a_mf3->output0 = (a_mf3->comb_filter0.output_sample);
+    a_mf3->output1 = (a_mf3->comb_filter1.output_sample);
 }
 
 
@@ -742,13 +741,13 @@ t_mf3_multi * g_mf3_get(float a_sample_rate)
 
     f_result->effect_index = 0;
     f_result->channels = 2;
-    f_result->svf = g_svf2_get(a_sample_rate);
-    f_result->comb_filter0 = g_cmb_get_comb_filter(a_sample_rate);
-    f_result->comb_filter1 = g_cmb_get_comb_filter(a_sample_rate);
-    f_result->eq0 = g_pkq_get(a_sample_rate);
-    f_result->clipper = g_clp_get_clipper();
-    v_clp_set_clip_sym(f_result->clipper, -3.0f);
-    f_result->limiter = g_lim_get(a_sample_rate);
+    g_svf2_init(&f_result->svf, a_sample_rate);
+    g_cmb_init(&f_result->comb_filter0, a_sample_rate);
+    g_cmb_init(&f_result->comb_filter1, a_sample_rate);
+    g_pkq_init(&f_result->eq0, a_sample_rate);
+    g_clp_init(&f_result->clipper);
+    v_clp_set_clip_sym(&f_result->clipper, -3.0f);
+    g_lim_init(&f_result->limiter, a_sample_rate);
     f_result->output0 = 0.0f;
     f_result->output1 = 0.0f;
     f_result->control[0] = 0.0f;
@@ -760,17 +759,17 @@ t_mf3_multi * g_mf3_get(float a_sample_rate)
     f_result->mod_value[0] = 0.0f;
     f_result->mod_value[1] = 0.0f;
     f_result->mod_value[2] = 0.0f;
-    f_result->xfader = g_axf_get_audio_xfade(-3.0f);
+    g_axf_init(&f_result->xfader, -3.0f);
     f_result->outgain = 1.0f;
-    f_result->amp_and_panner = g_app_get();
-    f_result->saturator = g_sat_get();
-    f_result->formant_filter = g_for_formant_filter_get(a_sample_rate);
-    f_result->chorus = g_crs_chorus_get(a_sample_rate);
-    f_result->glitch = g_glc_glitch_get(a_sample_rate);
-    f_result->ring_mod = g_rmd_ring_mod_get(a_sample_rate);
-    f_result->lofi = g_lfi_lofi_get();
-    f_result->s_and_h = g_sah_sample_and_hold_get(a_sample_rate);
-    f_result->growl_filter = g_grw_growl_filter_get(a_sample_rate);
+    g_app_init(&f_result->amp_and_panner);
+    g_sat_init(&f_result->saturator);
+    g_for_init(&f_result->formant_filter, a_sample_rate);
+    g_crs_init(&f_result->chorus, a_sample_rate);
+    g_glc_init(&f_result->glitch, a_sample_rate);
+    g_rmd_init(&f_result->ring_mod, a_sample_rate);
+    g_lfi_init(&f_result->lofi);
+    g_sah_init(&f_result->s_and_h, a_sample_rate);
+    g_grw_init(&f_result->growl_filter, a_sample_rate);
 
     return f_result;
 }
@@ -779,24 +778,18 @@ void v_mf3_free(t_mf3_multi * a_mf3 )
 {
     if(a_mf3)
     {
-        v_app_free(a_mf3->amp_and_panner);
-        v_crs_free(a_mf3->chorus);
-        v_clp_free(a_mf3->clipper);
-        v_cmb_free(a_mf3->comb_filter0);
-        v_cmb_free(a_mf3->comb_filter1);
-        v_pkq_free(a_mf3->eq0);
+        v_crs_free(&a_mf3->chorus);
+        v_cmb_free(&a_mf3->comb_filter0);
+        v_cmb_free(&a_mf3->comb_filter1);
         //TODO:  this one's not finished yet
-        v_for_formant_filter_free(a_mf3->formant_filter);
-        v_grw_growl_filter_free(a_mf3->growl_filter);
-        v_glc_glitch_free(a_mf3->glitch);
-        v_lim_free(a_mf3->limiter);
-        free(a_mf3->lofi);
+        v_for_formant_filter_free(&a_mf3->formant_filter);
+        v_grw_growl_filter_free(&a_mf3->growl_filter);
+        v_glc_glitch_free(&a_mf3->glitch);
+        v_lim_free(&a_mf3->limiter);
         //TODO: this one is not finished yet either...
-        v_rmd_ring_mod_free(a_mf3->ring_mod);
-        v_sah_free(a_mf3->s_and_h);
-        v_sat_free(a_mf3->saturator);
-        v_svf2_free(a_mf3->svf);
-        free(a_mf3->xfader);
+        v_rmd_ring_mod_free(&a_mf3->ring_mod);
+        v_sah_free(&a_mf3->s_and_h);
+        v_svf2_free(&a_mf3->svf);
         free(a_mf3);
     }
 }

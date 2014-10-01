@@ -48,6 +48,15 @@ void v_axf_set_xfade(t_audio_xfade * a_axf_ptr, float a_point)
 
 float f_axf_run_xfade(t_audio_xfade *, float, float);
 
+
+void g_axf_init(t_audio_xfade * f_result, float a_mid_point)
+{
+    f_result->mid_point = a_mid_point;
+    f_result->mid_point_50_minus = 50.0f - f_result->mid_point;
+    f_result->in1_mult = .5f;
+    f_result->in2_mult = .5f;
+}
+
 /*t_audio_xfade * g_axf_get_audio_xfade
  * (
  * float a_mid_point //This is the negative gain at 0.5 for both channels.
@@ -57,11 +66,7 @@ float f_axf_run_xfade(t_audio_xfade *, float, float);
 t_audio_xfade * g_axf_get_audio_xfade(float a_mid_point)
 {
     t_audio_xfade * f_result = (t_audio_xfade*)malloc(sizeof(t_audio_xfade));
-    f_result->mid_point = a_mid_point;
-    f_result->mid_point_50_minus = 50.0f - f_result->mid_point;
-    f_result->in1_mult = .5f;
-    f_result->in2_mult = .5f;
-
+    g_axf_init(f_result, a_mid_point);
     return f_result;
 }
 

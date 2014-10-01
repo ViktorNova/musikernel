@@ -43,16 +43,12 @@ void v_glc_glitch_free(t_glc_glitch * a_glc)
     if(a_glc)
     {
         free(a_glc->buffer);
-        free(a_glc);
+        //free(a_glc);
     }
 }
 
-t_glc_glitch * g_glc_glitch_get(float a_sr)
+void g_glc_init(t_glc_glitch * f_result, float a_sr)
 {
-    t_glc_glitch * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_glc_glitch));
-
     f_result->buffer_size = (int)(a_sr * (1.0f/19.0f));
 
     lmalloc((void**)&f_result->buffer, sizeof(float) * f_result->buffer_size);
@@ -76,7 +72,14 @@ t_glc_glitch * g_glc_glitch_get(float a_sr)
     f_result->sample_tmp = 0.0f;
     f_result->sr = a_sr;
     f_result->xfade = g_axf_get_audio_xfade(-3.0f);
+}
 
+t_glc_glitch * g_glc_glitch_get(float a_sr)
+{
+    t_glc_glitch * f_result;
+
+    lmalloc((void**)&f_result, sizeof(t_glc_glitch));
+    g_glc_init(f_result, a_sr);
     return f_result;
 }
 

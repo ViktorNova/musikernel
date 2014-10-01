@@ -66,18 +66,22 @@ void v_app_run_monofier(t_amp_and_panner* a_app, float a_in0, float a_in1)
     a_app->output1 = a_app->output0;
 }
 
-t_amp_and_panner * g_app_get()
+void g_app_init(t_amp_and_panner * f_result)
 {
-    t_amp_and_panner * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_amp_and_panner));
-
     f_result->amp_db = 0.0f;
     f_result->pan = 0.0f;
     f_result->amp_linear0 = 1.0f;
     f_result->amp_linear1 = 1.0f;
     f_result->output0 = 0.0f;
     f_result->output1 = 0.0f;
+}
+
+t_amp_and_panner * g_app_get()
+{
+    t_amp_and_panner * f_result;
+
+    lmalloc((void**)&f_result, sizeof(t_amp_and_panner));
+    g_app_init(f_result);
 
     return f_result;
 }

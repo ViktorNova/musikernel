@@ -37,15 +37,11 @@ void v_sah_free(t_sah_sample_and_hold*);
 void v_sah_free(t_sah_sample_and_hold * a_sah)
 {
     free(a_sah->xfade);
-    free(a_sah);
+    //free(a_sah);
 }
 
-t_sah_sample_and_hold * g_sah_sample_and_hold_get(float a_sr)
+void g_sah_init(t_sah_sample_and_hold * f_result, float a_sr)
 {
-    t_sah_sample_and_hold * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_sah_sample_and_hold));
-
     f_result->hold_count = 1;
     f_result->hold_counter = 0;
     f_result->output0 = 0.0f;
@@ -56,7 +52,14 @@ t_sah_sample_and_hold * g_sah_sample_and_hold_get(float a_sr)
     f_result->sr = a_sr;
     f_result->last_wet = -99.00088f;
     f_result->xfade = g_axf_get_audio_xfade(-3.0f);
+}
 
+t_sah_sample_and_hold * g_sah_sample_and_hold_get(float a_sr)
+{
+    t_sah_sample_and_hold * f_result;
+
+    lmalloc((void**)&f_result, sizeof(t_sah_sample_and_hold));
+    g_sah_init(f_result, a_sr);
     return f_result;
 }
 

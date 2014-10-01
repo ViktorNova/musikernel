@@ -43,16 +43,12 @@ void v_rmd_ring_mod_free(t_rmd_ring_mod* a_rmd)
     {
         free(a_rmd->xfade);
         //TODO:  Free the unison osc
-        free(a_rmd);
+        //free(a_rmd);
     }
 }
 
-t_rmd_ring_mod * g_rmd_ring_mod_get(float a_sr)
+void g_rmd_init(t_rmd_ring_mod * f_result, float a_sr)
 {
-    t_rmd_ring_mod * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_rmd_ring_mod));
-
     f_result->osc = g_osc_get_osc_simple_single(a_sr);
     v_osc_set_simple_osc_unison_type(f_result->osc, 3);
     v_osc_set_uni_voice_count(f_result->osc, 1);
@@ -62,7 +58,13 @@ t_rmd_ring_mod * g_rmd_ring_mod_get(float a_sr)
     f_result->pitch = -99.99f;
     f_result->osc_output = 0.0f;
     f_result->xfade = g_axf_get_audio_xfade(0.5f);
+}
 
+t_rmd_ring_mod * g_rmd_ring_mod_get(float a_sr)
+{
+    t_rmd_ring_mod * f_result;
+    lmalloc((void**)&f_result, sizeof(t_rmd_ring_mod));
+    g_rmd_init(f_result, a_sr);
     return f_result;
 }
 

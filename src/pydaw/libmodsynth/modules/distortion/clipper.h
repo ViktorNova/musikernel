@@ -78,19 +78,22 @@ void v_clp_set_in_gain(t_clipper * a_clp, float a_db)
     }
 }
 
-t_clipper * g_clp_get_clipper()
+void g_clp_init(t_clipper * f_result)
 {
-    t_clipper * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_clipper));
-
     f_result->clip_high = 1.0f;
     f_result->clip_low = -1.0f;
     f_result->input_gain_linear = 1.0f;
     f_result->in_db = 0.0f;
     f_result->result = 0.0f;
     f_result->clip_db = 7654567.0f;
+}
 
+t_clipper * g_clp_get_clipper()
+{
+    t_clipper * f_result;
+
+    lmalloc((void**)&f_result, sizeof(t_clipper));
+    g_clp_init(f_result);
     return f_result;
 };
 

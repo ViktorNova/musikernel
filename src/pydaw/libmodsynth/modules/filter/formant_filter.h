@@ -82,16 +82,12 @@ void v_for_formant_filter_free(t_for_formant_filter * a_for)
     {
         free(a_for->xfade);
         //TODO:  Free the filters, after replacing with the stereo version
-        free(a_for);
+        //free(a_for);
     }
 }
 
-t_for_formant_filter * g_for_formant_filter_get(float a_sr)
+void g_for_init(t_for_formant_filter * f_result, float a_sr)
 {
-    t_for_formant_filter * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_for_formant_filter));
-
     int f_i = 0;
     while(f_i < 3)
     {
@@ -112,7 +108,14 @@ t_for_formant_filter * g_for_formant_filter_get(float a_sr)
     f_result->last_pos = -99.0f;
     f_result->last_wet = 0.0f;
     f_result->xfade = g_axf_get_audio_xfade(-3.0f);
+}
 
+t_for_formant_filter * g_for_formant_filter_get(float a_sr)
+{
+    t_for_formant_filter * f_result;
+
+    lmalloc((void**)&f_result, sizeof(t_for_formant_filter));
+    g_for_init(f_result, a_sr);
     return f_result;
 }
 
@@ -212,12 +215,8 @@ void v_grw_growl_filter_set(t_grw_growl_filter*, float, float, float);
 void v_grw_growl_filter_run(t_grw_growl_filter*, float, float);
 void v_grw_growl_filter_free(t_grw_growl_filter*);
 
-t_grw_growl_filter * g_grw_growl_filter_get(float a_sr)
+void g_grw_init(t_grw_growl_filter * f_result, float a_sr)
 {
-    t_grw_growl_filter * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_grw_growl_filter));
-
     int f_i = 0;
     while(f_i < 5)
     {
@@ -235,7 +234,14 @@ t_grw_growl_filter * g_grw_growl_filter_get(float a_sr)
     f_result->last_type = 99.99f;
     f_result->last_wet = 0.0f;
     f_result->xfade = g_axf_get_audio_xfade(-3.0f);
+}
 
+t_grw_growl_filter * g_grw_growl_filter_get(float a_sr)
+{
+    t_grw_growl_filter * f_result;
+
+    lmalloc((void**)&f_result, sizeof(t_grw_growl_filter));
+    g_grw_init(f_result, a_sr);
     return f_result;
 }
 
@@ -308,7 +314,7 @@ void v_grw_growl_filter_free(t_grw_growl_filter *a_grw)
             v_svf2_free(a_grw->filters[f_i]);
             f_i++;
          }
-         free(a_grw);
+         //free(a_grw);
     }
 }
 

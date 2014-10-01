@@ -140,12 +140,8 @@ inline void v_pkq_run(t_pkq_peak_eq *__restrict a_pkq,float a_in0, float a_in1)
     a_pkq->out1_m1 = (a_pkq->iir_output1);
 }
 
-t_pkq_peak_eq * g_pkq_get(float a_sample_rate)
+void g_pkq_init(t_pkq_peak_eq * f_result, float a_sample_rate)
 {
-    t_pkq_peak_eq * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_pkq_peak_eq));
-
     f_result->B = 0.0f;
     f_result->FIR_out_0 = 0.0f;
     f_result->FIR_out_1 = 0.0f;
@@ -185,7 +181,13 @@ t_pkq_peak_eq * g_pkq_get(float a_sample_rate)
     f_result->y2_0 = 0.0f;
     f_result->y2_1 = 0.0f;
     f_result->last_pitch = -452.66447f;
+}
 
+t_pkq_peak_eq * g_pkq_get(float a_sample_rate)
+{
+    t_pkq_peak_eq * f_result;
+    lmalloc((void**)&f_result, sizeof(t_pkq_peak_eq));
+    g_pkq_init(f_result, a_sample_rate);
     return f_result;
 }
 
