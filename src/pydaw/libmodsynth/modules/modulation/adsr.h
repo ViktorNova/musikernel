@@ -295,14 +295,8 @@ void v_adsr_release(t_adsr *__restrict a_adsr_ptr)
     }
 }
 
-/* t_adsr * g_adsr_get_adsr(
- * float a_sr_recip) // 1.0f/sample_rate (TODO: use sample_rate instead)
- *
- */
-t_adsr * g_adsr_get_adsr(float a_sr)
+void g_adsr_init(t_adsr * f_result, float a_sr)
 {
-    t_adsr * f_result = (t_adsr*)malloc(sizeof(t_adsr));
-
     f_result->sr = a_sr;
     f_result->sr_recip = 1.0f / a_sr;
 
@@ -332,7 +326,17 @@ t_adsr * g_adsr_get_adsr(float a_sr)
     f_result->time_counter = 0;
     f_result->delay_count = 0;
     f_result->hold_count = 0;
+}
 
+/* t_adsr * g_adsr_get_adsr(
+ * float a_sr_recip) // 1.0f/sample_rate (TODO: use sample_rate instead)
+ *
+ */
+t_adsr * g_adsr_get_adsr(float a_sr)
+{
+    t_adsr * f_result;
+    lmalloc((void**)&f_result, sizeof(t_adsr));
+    g_adsr_init(f_result, a_sr);
     return f_result;
 }
 

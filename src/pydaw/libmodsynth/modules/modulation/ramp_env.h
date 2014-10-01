@@ -195,13 +195,8 @@ void v_rmp_retrigger_glide_r(t_ramp_env*__restrict a_rmp_ptr, float a_time, floa
     }
 }
 
-/*t_ramp_env * g_rmp_get_ramp_env(
- * float a_sr  //sample rate
- * )
- */
-t_ramp_env * g_rmp_get_ramp_env(float a_sr)
+void g_rmp_init(t_ramp_env * f_result, float a_sr)
 {
-    t_ramp_env * f_result = (t_ramp_env*)malloc(sizeof(t_ramp_env));
     f_result->sr = a_sr;
     f_result->sr_recip = 1.0f/a_sr;
     f_result->output_multiplied = 0.0f;
@@ -216,7 +211,17 @@ t_ramp_env * g_rmp_get_ramp_env(float a_sr)
     f_result->curve_table[2] = 0.6666f;
     f_result->curve_table[3] = 1.0f;
     f_result->curve_table[4] = 1.0f;
+}
 
+/*t_ramp_env * g_rmp_get_ramp_env(
+ * float a_sr  //sample rate
+ * )
+ */
+t_ramp_env * g_rmp_get_ramp_env(float a_sr)
+{
+    t_ramp_env * f_result;
+    lmalloc((void**)&f_result, sizeof(t_ramp_env));
+    g_rmp_init(f_result, a_sr);
     return f_result;
 }
 

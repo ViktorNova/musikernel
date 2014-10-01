@@ -281,14 +281,9 @@ inline void v_osc_note_on_sync_phases_hard(t_osc_simple_unison * a_osc_ptr)
     }
 }
 
-/* t_osc_simple_unison * g_osc_get_osc_simple_unison(float a_sample_rate)
- */
-t_osc_simple_unison * g_osc_get_osc_simple_unison(float a_sample_rate)
+void g_osc_simple_unison_init(
+        t_osc_simple_unison * f_result, float a_sample_rate)
 {
-    t_osc_simple_unison * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_osc_simple_unison));
-
     v_osc_set_uni_voice_count(f_result, OSC_UNISON_MAX_VOICES);
     f_result->osc_type = f_get_saw;
     f_result->sr_recip = 1.0 / a_sample_rate;
@@ -333,6 +328,15 @@ t_osc_simple_unison * g_osc_get_osc_simple_unison(float a_sample_rate)
 
     v_osc_set_unison_pitch(f_result, .2, 60.0f);
 
+}
+
+/* t_osc_simple_unison * g_osc_get_osc_simple_unison(float a_sample_rate)
+ */
+t_osc_simple_unison * g_osc_get_osc_simple_unison(float a_sample_rate)
+{
+    t_osc_simple_unison * f_result;
+    lmalloc((void**)&f_result, sizeof(t_osc_simple_unison));
+    g_osc_simple_unison_init(f_result, a_sample_rate);
     return f_result;
 }
 

@@ -464,16 +464,8 @@ void v_svf_set_res(t_state_variable_filter *__restrict a_svf, float a_db)
             (1.0f - (f_db_to_linear_fast(a_svf->filter_res_db))) * 2.0f;
 }
 
-
-
-/* t_state_variable_filter * g_svf_get(float a_sample_rate)
- */
-t_state_variable_filter * g_svf_get(float a_sample_rate)
+void g_svf_init(t_state_variable_filter * f_svf, float a_sample_rate)
 {
-    t_state_variable_filter * f_svf;
-
-    lmalloc((void**)&f_svf, sizeof(t_state_variable_filter));
-
     f_svf->sr = a_sample_rate * ((float)(SVF_OVERSAMPLE_MULTIPLIER));
     f_svf->pi2_div_sr = (PI2 / (f_svf->sr));
 
@@ -509,7 +501,15 @@ t_state_variable_filter * g_svf_get(float a_sample_rate)
     v_svf_add_cutoff_mod(f_svf, 0.0f);
     v_svf_set_res(f_svf, -12.0f);
     v_svf_set_cutoff(f_svf);
+}
 
+/* t_state_variable_filter * g_svf_get(float a_sample_rate)
+ */
+t_state_variable_filter * g_svf_get(float a_sample_rate)
+{
+    t_state_variable_filter * f_svf;
+    lmalloc((void**)&f_svf, sizeof(t_state_variable_filter));
+    g_svf_init(f_svf, a_sample_rate);
     return f_svf;
 }
 

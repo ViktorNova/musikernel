@@ -85,19 +85,21 @@ inline void v_lfs_run(t_lfs_lfo * a_lfs)
     a_lfs->output = a_lfs->osc_ptr(a_lfs->osc_core);
 }
 
-t_lfs_lfo * g_lfs_get(float a_sr)
+void g_lfs_init(t_lfs_lfo * f_result, float a_sr)
 {
-    t_lfs_lfo * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_lfs_lfo));
-
     f_result->inc = 0.0f;
     f_result->osc_core = g_get_osc_core();
     f_result->osc_ptr = f_get_osc_off;
     f_result->output = 0.0f;
     f_result->sr = a_sr;
     f_result->sr_recip = 1.0f/a_sr;
+}
 
+t_lfs_lfo * g_lfs_get(float a_sr)
+{
+    t_lfs_lfo * f_result;
+    lmalloc((void**)&f_result, sizeof(t_lfs_lfo));
+    g_lfs_init(f_result, a_sr);
     return f_result;
 }
 

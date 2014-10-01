@@ -52,17 +52,12 @@ inline fp_noise_func_ptr fp_get_noise_func_ptr(int a_index)
 
 static unsigned int seed_helper = 18;
 
-/* t_white_noise * g_get_white_noise(float a_sample_rate)
- */
-t_white_noise * g_get_white_noise(float a_sample_rate)
+void g_white_noise_init(t_white_noise * f_result, float a_sample_rate)
 {
     time_t f_clock = time(NULL);
     srand(((unsigned)f_clock) + (seed_helper));
 
     seed_helper *= 2;
-
-    t_white_noise * f_result = (t_white_noise*)malloc(sizeof(t_white_noise));
-
     f_result->array_count = (int)(a_sample_rate);
 
     f_result->read_head = 0;
@@ -89,7 +84,15 @@ t_white_noise * g_get_white_noise(float a_sample_rate)
         f_result->sample_array[f_i] = (f_sample1 + f_sample2 + f_sample3) * .5f;
         f_i++;
     }
+}
 
+/* t_white_noise * g_get_white_noise(float a_sample_rate)
+ */
+t_white_noise * g_get_white_noise(float a_sample_rate)
+{
+    t_white_noise * f_result;
+    lmalloc((void**)&f_result, sizeof(t_white_noise));
+    g_white_noise_init(f_result, a_sample_rate);
     return f_result;
 }
 
