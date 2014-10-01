@@ -8303,7 +8303,8 @@ class track_send:
             if not self.track_num in f_graph.graph:
                 f_graph.graph[self.track_num] = {}
             f_feedback = f_graph.check_for_feedback(
-                self.bus_combobox.currentIndex() - 1, self.track_num)
+                self.bus_combobox.currentIndex() - 1,
+                self.track_num, self.index)
             if f_feedback:
                 QtGui.QMessageBox.warning(
                     self.bus_combobox, _("Error"),

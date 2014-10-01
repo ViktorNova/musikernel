@@ -2453,7 +2453,10 @@ class pydaw_routing_graph:
                     paths.append(newpath)
         return paths
 
-    def check_for_feedback(self, a_new, a_old):
+    def check_for_feedback(self, a_new, a_old, a_index=None):
+        if a_index:
+            if a_old in self.graph and a_index in self.graph[a_old]:
+                self.graph[a_old].pop(a_index)
         return self.find_all_paths(a_old, a_new)
 
     def toggle(self, a_src, a_dest):
