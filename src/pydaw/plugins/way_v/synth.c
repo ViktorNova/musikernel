@@ -62,7 +62,7 @@ static void v_wayv_or_prep(PYFX_Handle instance)
     while(f_i < WAYV_OSC_COUNT)
     {
         f_osc_on[f_i] = ((int)(*plugin->osc_type[f_i]) - 1);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i2 < WAYV_POLYPHONY)
@@ -78,12 +78,12 @@ static void v_wayv_or_prep(PYFX_Handle instance)
                 {
                     v_osc_wav_run_unison_core_only(f_voice->osc_wavtable[f_i3]);
                 }
-                f_i3++;
+                ++f_i3;
             }
 
-            f_i++;
+            ++f_i;
         }
-        f_i2++;
+        ++f_i2;
     }
 
     plugin->mono_modules->fm_macro_smoother[0]->last_value =
@@ -101,7 +101,7 @@ static void wayvPanic(PYFX_Handle instance)
     {
         v_adsr_kill(plugin->data[f_i]->adsr_amp);
         v_adsr_kill(plugin->data[f_i]->adsr_main);
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -112,7 +112,7 @@ static void v_wayv_on_stop(PYFX_Handle instance)
     while(f_i < WAYV_POLYPHONY)
     {
         v_wayv_poly_note_off(plugin->data[f_i], 0);
-        f_i++;
+        ++f_i;
     }
 
     plugin->sv_pitch_bend_value = 0.0f;
@@ -783,7 +783,7 @@ static void v_wayv_process_midi_event(
                 else
                 {
                     plugin_data->data[f_voice]->osc_on[f_i] = 0;
-                    f_i++;
+                    ++f_i;
                     continue;
                 }
 
@@ -795,7 +795,7 @@ static void v_wayv_process_midi_event(
                 {
                     plugin_data->data[f_voice]->osc_fm[f_i][f_i2] =
                             (*plugin_data->osc_fm[f_i][f_i2]) * 0.005f;
-                    f_i2++;
+                    ++f_i2;
                 }
 
                 f_db = (*plugin_data->osc_vol[f_i]);
@@ -840,7 +840,7 @@ static void v_wayv_process_midi_event(
                 }
 
 
-                f_i++;
+                ++f_i;
             }
 
             plugin_data->data[f_voice]->noise_linamp =
@@ -990,9 +990,9 @@ static void v_wayv_process_midi_event(
                 {
                     plugin_data->data[f_voice]->osc_macro_amp[f_i][f_i2] =
                             (*plugin_data->amp_macro_values[f_i][f_i2]);
-                    f_i2++;
+                    ++f_i2;
                 }
-                f_i++;
+                ++f_i;
             }
 
             v_adsr_retrigger(plugin_data->data[f_voice]->adsr_amp);
@@ -1129,7 +1129,7 @@ static void v_run_wayv(
     while(f_i < event_count)
     {
         v_wayv_process_midi_event(plugin_data, &events[f_i], f_poly_mode);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -1141,7 +1141,7 @@ static void v_run_wayv(
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -1149,7 +1149,7 @@ static void v_run_wayv(
     while(f_i < ext_event_count)
     {
         v_wayv_process_midi_event(plugin_data, &ext_events[f_i], f_poly_mode);
-        f_i++;
+        ++f_i;
     }
 
     /*Clear the output buffer*/
@@ -1190,7 +1190,7 @@ static void v_run_wayv(
             while(f_i < WAYV_OSC_COUNT)
             {
                 f_osc_type[f_i] = (int)(*plugin_data->osc_type[f_i]) - 1;
-                f_i++;
+                ++f_i;
             }
 
             while(f_voice < WAYV_POLYPHONY)
@@ -1208,7 +1208,7 @@ static void v_run_wayv(
                             plugin_data->mono_modules->wavetables->
                                 tables[f_osc_type[f_i]]->length);
                     }
-                    f_i++;
+                    ++f_i;
                 }
 
                 f_voice++;
@@ -1352,7 +1352,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
             {
                 a_voice->fm_osc_values[f_osc_num][f_i] =
                     a_voice->osc_fm[f_osc_num][f_i];
-                f_i++;
+                ++f_i;
             }
 
             f_i = 0;
@@ -1370,7 +1370,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
                                 * 0.005f) *
                             plugin_data->mono_modules->
                                 fm_macro_smoother[f_i]->last_value);
-                        f_i2++;
+                        ++f_i2;
                     }
 
                     if(a_voice->osc_macro_amp[f_i][f_osc_num] != 0.0f)
@@ -1381,7 +1381,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
                     }
                 }
 
-                f_i++;
+                ++f_i;
             }
 
             f_i = 0;
@@ -1412,7 +1412,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
                         a_voice->fm_osc_values[f_osc_num][f_i]);
                 }
 
-                f_i++;
+                ++f_i;
             }
 
             if(a_voice->adsr_amp_on[f_osc_num])
@@ -1574,7 +1574,7 @@ float * f_char_to_wavetable(char * a_char)
     while(f_i < 1025)
     {
         f_result[f_i - 1] = atof(f_arr->array[f_i]);
-        f_i++;
+        ++f_i;
     }
 
     g_free_1d_char_array(f_arr);
@@ -1675,7 +1675,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     while(f_i <= WAVV_PFXMATRIX_GRP0DST3SRC3CTRL2)
     {
         pydaw_set_pyfx_port(f_result, f_i,  0.0f, -100.0f, 100.0f);
-        f_i++;
+        ++f_i;
     }
 
     pydaw_set_pyfx_port(f_result, WAYV_NOISE_TYPE, 0.0f, 0, 2);
@@ -1713,7 +1713,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     while(f_i <= WAVV_PFXMATRIX_GRP0DST3SRC5CTRL2)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, -100.0f, 100.0f);
-        f_i++;
+        ++f_i;
     }
 
     pydaw_set_pyfx_port(f_result, WAYV_PERC_ENV_TIME1, 10.0f, 2.0f, 40.0f);
@@ -1761,13 +1761,13 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
             {
                 pydaw_set_pyfx_port(f_result, f_port, 0.0f, -100.0f, 100.0f);
                 f_port++;
-                f_i3++;
+                ++f_i3;
             }
 
-            f_i2++;
+            ++f_i2;
         }
 
-        f_i++;
+        ++f_i;
     }
 
 
@@ -1782,10 +1782,10 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
         {
             pydaw_set_pyfx_port(f_result, f_port, 0.0f, -30.0f, 30.0f);
             f_port++;
-            f_i2++;
+            ++f_i2;
         }
 
-        f_i++;
+        ++f_i;
     }
 
     pydaw_set_pyfx_port(f_result, WAYV_LFO_PITCH_FINE, 0.0f, -100.0f, 100.0);

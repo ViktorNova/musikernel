@@ -60,7 +60,7 @@ static void euphoriaPanic(PYFX_Handle instance)
     while(f_i < EUPHORIA_POLYPHONY)
     {
         v_adsr_kill(plugin->data[f_i]->adsr_amp);
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -71,7 +71,7 @@ static void v_euphoria_on_stop(PYFX_Handle instance)
     while(f_i < EUPHORIA_POLYPHONY)
     {
         v_euphoria_poly_note_off(plugin->data[f_i], 0);
-        f_i++;
+        ++f_i;
     }
     plugin->sv_pitch_bend_value = 0.0f;
 }
@@ -514,7 +514,7 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
         plugin_data->adjusted_base_pitch[f_i] = 60.0f;
         plugin_data->wavpool_items[f_i] = 0;
 
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -531,10 +531,10 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
             plugin_data->sample_read_heads[f_i][f_i2] = g_ifh_get();
             plugin_data->sample_indexes[f_i][f_i2] = 0;
             plugin_data->vel_sens_output[f_i][f_i2] = 0.0f;
-            f_i2++;
+            ++f_i2;
         }
 
-        f_i++;
+        ++f_i;
     }
 
     plugin_data->sampleRate = s_rate;
@@ -551,7 +551,7 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
     while (f_i < EUPHORIA_POLYPHONY)
     {
 	plugin_data->velocities[f_i] = 0;
-        f_i++;
+        ++f_i;
     }
 
     plugin_data->port_table = g_pydaw_get_port_table(
@@ -1246,7 +1246,7 @@ static void v_run_lms_euphoria(
     while (f_i < event_count) // && pos >= events[f_i].time.tick)
     {
         v_euphoria_process_midi_event(plugin_data, &events[f_i]);
-        f_i++;
+        ++f_i;
     }
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
@@ -1258,7 +1258,7 @@ static void v_run_lms_euphoria(
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -1266,7 +1266,7 @@ static void v_run_lms_euphoria(
     while (f_i < ext_event_count) // && pos >= events[f_i].time.tick)
     {
         v_euphoria_process_midi_event(plugin_data, &ext_events[f_i]);
-        f_i++;
+        ++f_i;
     }
 
     float f_temp_sample0, f_temp_sample1;
@@ -1389,7 +1389,7 @@ static char *c_euphoria_load_all(t_euphoria *plugin_data, char *paths,
     {
         f_wavpool_items[f_i] = 0;
         f_loaded_samples[f_i] = 0;
-        f_i++;
+        ++f_i;
     }
 
     char * f_result_string = (char*)malloc(sizeof(char) * 2048);
@@ -1443,7 +1443,7 @@ static char *c_euphoria_load_all(t_euphoria *plugin_data, char *paths,
     while(f_i < f_samples_loaded_count)
     {
         plugin_data->loaded_samples[f_i] = f_loaded_samples[f_i];
-        f_i++;
+        ++f_i;
     }
 
     plugin_data->loaded_samples_count = f_samples_loaded_count;
@@ -1453,7 +1453,7 @@ static char *c_euphoria_load_all(t_euphoria *plugin_data, char *paths,
     while(f_i < EUPHORIA_MAX_SAMPLE_COUNT)
     {
         plugin_data->wavpool_items[f_i] = f_wavpool_items[f_i];
-        f_i++;
+        ++f_i;
     }
 
     //Force a re-index before the next sample period
@@ -1523,7 +1523,7 @@ PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
     while(f_i <= EUPHORIA_PFXMATRIX_GRP0DST3SRC5CTRL2)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, -100.0f, 100.0f);
-        f_i++;
+        ++f_i;
     }
 
     pydaw_set_pyfx_port(f_result, EUPHORIA_LFO_PITCH, 0.0f, -36.0f, 36.0f);
@@ -1533,217 +1533,217 @@ PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
     while(f_i < EUPHORIA_SAMPLE_PITCH_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 60.0f, 0, 120);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_PLAY_PITCH_LOW_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0, 120);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_PLAY_PITCH_HIGH_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 120.0f, 0, 120);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_VOLUME_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, -50, 36);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_START_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0.0f, 1000.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_END_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 1000.0f, 0.0f, 1000.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_VEL_SENS_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 10.0f, 0.0f, 20.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_VEL_LOW_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 1.0f, 1.0f, 127.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_VEL_HIGH_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 128.0f, 1.0f, 128.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_PITCH_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, -36.0f, 36.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_TUNE_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, -100.0f, 100.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_INTERPOLATION_MODE_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 1.0f, 0.0f, 3.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_LOOP_START_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0.0f, 1000.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_LOOP_END_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 1000.0f, 0.0f, 1000.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_LOOP_MODE_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0.0f, 1.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0.0f, 127.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX0_KNOB1_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX0_KNOB2_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX0_COMBOBOX_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0, MULTIFX3KNOB_MAX_INDEX);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX1_KNOB0_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX1_KNOB1_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX1_KNOB2_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX1_COMBOBOX_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0, MULTIFX3KNOB_MAX_INDEX);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX2_KNOB0_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX2_KNOB1_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX2_KNOB2_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX2_COMBOBOX_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0, MULTIFX3KNOB_MAX_INDEX);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX3_KNOB0_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX3_KNOB1_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX3_KNOB2_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 64.0f, 0, 127);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_MONO_FX3_COMBOBOX_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0, MULTIFX3KNOB_MAX_INDEX);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_MONO_FX_GROUP_PORT_RANGE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0, (EUPHORIA_MAX_SAMPLE_COUNT - 1));
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_NOISE_AMP_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, -30.0f, -60.0f, 0.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_NOISE_TYPE_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0.0f, 2.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_FADE_IN_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 0.0f, 0.0f, 1000.0f);
-        f_i++;
+        ++f_i;
     }
 
     while(f_i < EUPHORIA_SAMPLE_FADE_OUT_MAX)
     {
         pydaw_set_pyfx_port(f_result, f_i, 1000.0f, 0.0f, 1000.0f);
-        f_i++;
+        ++f_i;
     }
 
     f_i = EUPHORIA_FIRST_EQ_PORT;
@@ -1756,18 +1756,18 @@ PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
         while(f_i3 < 6)
         {
             pydaw_set_pyfx_port(f_result, f_i, (f_i3 * 18.0f) + 24.0f, 20.0f, 120.0f);
-            f_i++;
+            ++f_i;
 
             pydaw_set_pyfx_port(f_result, f_i, 300.0f, 100.0f, 600.0f);
-            f_i++;
+            ++f_i;
 
             pydaw_set_pyfx_port(f_result, f_i, 0.0f, -24.0f, 24.0f);
-            f_i++;
+            ++f_i;
 
-            f_i3++;
+            ++f_i3;
         }
 
-        f_i2++;
+        ++f_i2;
     }
 
     pydaw_set_pyfx_port(f_result, EUPHORIA_LFO_PITCH_FINE, 0.0f, -100.0f, 100.0f);

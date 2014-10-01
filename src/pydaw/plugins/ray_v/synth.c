@@ -57,9 +57,9 @@ static void v_rayv_or_prep(PYFX_Handle instance)
         {
             f_osc_run_unison_osc_core_only(f_voice->osc_unison1);
             f_osc_run_unison_osc_core_only(f_voice->osc_unison2);
-            f_i++;
+            ++f_i;
         }
-        f_i2++;
+        ++f_i2;
     }
 }
 
@@ -76,7 +76,7 @@ static void rayvPanic(PYFX_Handle instance)
     while(f_i < RAYV_POLYPHONY)
     {
         v_adsr_kill(plugin->data[f_i]->adsr_amp);
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -87,7 +87,7 @@ static void v_rayv_on_stop(PYFX_Handle instance)
     while(f_i < RAYV_POLYPHONY)
     {
         v_rayv_poly_note_off(plugin->data[f_i], 0);
-        f_i++;
+        ++f_i;
     }
     plugin->sv_pitch_bend_value = 0.0f;
 }
@@ -538,7 +538,7 @@ static void v_run_rayv(
     {
         v_rayv_process_midi_event(plugin_data, &events[f_i], f_poly_mode);
         assert(plugin_data->midi_event_count < 200);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -550,7 +550,7 @@ static void v_run_rayv(
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -559,7 +559,7 @@ static void v_run_rayv(
     {
         v_rayv_process_midi_event(plugin_data, &ext_events[f_i], f_poly_mode);
         assert(plugin_data->midi_event_count < 200);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -616,10 +616,10 @@ static void v_run_rayv(
                 plugin_data->voices->voices[f_i2].n_state = note_state_off;
             }
 
-            f_i2++;
+            ++f_i2;
         }
 
-        f_i++;
+        ++f_i;
         plugin_data->sampleNo++;
     }
 
