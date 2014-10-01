@@ -55,7 +55,7 @@ static void v_mkdelay_panic(PYFX_Handle instance)
     {
         plugin->mono_modules->delay->delay0->buffer[f_i] = 0.0f;
         plugin->mono_modules->delay->delay1->buffer[f_i] = 0.0f;
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -189,7 +189,7 @@ static void v_mkdelay_run(
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -197,7 +197,7 @@ static void v_mkdelay_run(
     while(f_i < ext_event_count)
     {
         v_mkdelay_process_midi_event(plugin_data, &ext_events[f_i]);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -243,7 +243,7 @@ static void v_mkdelay_run(
         plugin_data->output1[(f_i)] =
                 (plugin_data->mono_modules->delay->output1);
 
-        f_i++;
+        ++f_i;
     }
 }
 

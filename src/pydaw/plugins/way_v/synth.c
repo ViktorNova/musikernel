@@ -1088,7 +1088,7 @@ static void v_wayv_process_midi_event(
                 a_event->param;
         plugin_data->midi_event_values[plugin_data->midi_event_count] =
                 a_event->value;
-        plugin_data->midi_event_count++;
+        ++plugin_data->midi_event_count;
     }
     else if (a_event->type == PYDAW_EVENT_PITCHBEND)
     {
@@ -1098,7 +1098,7 @@ static void v_wayv_process_midi_event(
                 a_event->tick;
         plugin_data->midi_event_values[plugin_data->midi_event_count] =
                 0.00012207 * a_event->value;
-        plugin_data->midi_event_count++;
+        ++plugin_data->midi_event_count;
     }
 }
 
@@ -1110,7 +1110,7 @@ static void v_run_wayv(
 {
     t_wayv *plugin_data = (t_wayv *) instance;
 
-    plugin_data->i_run_poly_voice = 0;
+    int i_run_poly_voice = 0;
     plugin_data->midi_event_count = 0;
 
     int midi_event_pos = 0;
@@ -1153,12 +1153,12 @@ static void v_run_wayv(
     }
 
     /*Clear the output buffer*/
-    plugin_data->i_iterator = 0;
+    int i_iterator = 0;
 
-    while((plugin_data->i_iterator) < sample_count)
+    while((i_iterator) < sample_count)
     {
         while(midi_event_pos < plugin_data->midi_event_count &&
-                plugin_data->midi_event_ticks[midi_event_pos] == plugin_data->i_iterator)
+                plugin_data->midi_event_ticks[midi_event_pos] == i_iterator)
         {
             if(plugin_data->midi_event_types[midi_event_pos] == PYDAW_EVENT_PITCHBEND)
             {
@@ -1174,11 +1174,11 @@ static void v_run_wayv(
                     plugin_data->midi_event_values[midi_event_pos]);
             }
 
-            midi_event_pos++;
+            ++midi_event_pos;
         }
 
         v_plugin_event_queue_atm_set(
-            &plugin_data->atm_queue, plugin_data->i_iterator,
+            &plugin_data->atm_queue, i_iterator,
             plugin_data->port_table);
 
         if(plugin_data->mono_modules->reset_wavetables)
@@ -1211,7 +1211,7 @@ static void v_run_wayv(
                     ++f_i;
                 }
 
-                f_voice++;
+                ++f_voice;
             }
 
             plugin_data->mono_modules->reset_wavetables = 0;
@@ -1226,33 +1226,33 @@ static void v_run_wayv(
         v_sml_run(plugin_data->mono_modules->fm_macro_smoother[1],
                 (*plugin_data->fm_macro[1] * 0.01f));
 
-        plugin_data->i_run_poly_voice = 0;
-        while ((plugin_data->i_run_poly_voice) < WAYV_POLYPHONY)
+        i_run_poly_voice = 0;
+        while ((i_run_poly_voice) < WAYV_POLYPHONY)
         {
             //if (data[voice].state != inactive)
-            if((plugin_data->data[(plugin_data->i_run_poly_voice)]->
-                    adsr_main->stage) != ADSR_STAGE_OFF)
+            if(plugin_data->data[(i_run_poly_voice)]->adsr_main->stage
+                != ADSR_STAGE_OFF)
             {
                 v_run_wayv_voice(plugin_data,
-                        plugin_data->voices->voices[(plugin_data->i_run_poly_voice)],
-                        plugin_data->data[(plugin_data->i_run_poly_voice)],
+                        plugin_data->voices->voices[(i_run_poly_voice)],
+                        plugin_data->data[(i_run_poly_voice)],
                         plugin_data->output0,
                         plugin_data->output1,
-                        plugin_data->i_iterator,
-                        plugin_data->i_run_poly_voice
+                        i_iterator,
+                        i_run_poly_voice
                         );
             }
             else
             {
-                plugin_data->voices->voices[(plugin_data->i_run_poly_voice)].
+                plugin_data->voices->voices[(i_run_poly_voice)].
                         n_state = note_state_off;
             }
 
-            plugin_data->i_run_poly_voice = (plugin_data->i_run_poly_voice) + 1;
+            i_run_poly_voice = (i_run_poly_voice) + 1;
         }
 
-        plugin_data->sampleNo++;
-        plugin_data->i_iterator = (plugin_data->i_iterator) + 1;
+        ++plugin_data->sampleNo;
+        i_iterator = (i_iterator) + 1;
     }
 
     //plugin_data->sampleNo += sample_count;
@@ -1445,7 +1445,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
             }
         }
 
-        f_osc_num++;
+        ++f_osc_num;
     }
 
     if(a_voice->noise_prefx)

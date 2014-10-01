@@ -153,7 +153,7 @@ static PYFX_Handle g_modulex_instantiate(PYFX_Descriptor * descriptor,
     plugin_data->i_slow_index =
             MODULEX_SLOW_INDEX_ITERATIONS + MODULEX_AMORITIZER;
 
-    MODULEX_AMORITIZER++;
+    ++MODULEX_AMORITIZER;
     if(MODULEX_AMORITIZER >= MODULEX_SLOW_INDEX_ITERATIONS)
     {
         MODULEX_AMORITIZER = 0;
@@ -198,7 +198,7 @@ static void v_modulex_check_if_on(t_modulex *plugin_data)
             plugin_data->is_on = 1;
         }
 
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -233,7 +233,7 @@ static void v_modulex_process_midi_event(
             }
         }
 
-        plugin_data->midi_event_count++;
+        ++plugin_data->midi_event_count;
     }
 }
 
@@ -264,7 +264,7 @@ static void v_modulex_run(
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -272,7 +272,7 @@ static void v_modulex_run(
     while(f_i < ext_event_count)
     {
         v_modulex_process_midi_event(plugin_data, &ext_events[f_i]);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -309,7 +309,7 @@ static void v_modulex_run(
                         plugin_data->midi_event_ports[midi_event_pos],
                         plugin_data->midi_event_values[midi_event_pos]);
                 }
-                midi_event_pos++;
+                ++midi_event_pos;
             }
 
             v_plugin_event_queue_atm_set(
@@ -349,7 +349,7 @@ static void v_modulex_run(
                     plugin_data->mono_modules->current_sample1 =
                         plugin_data->mono_modules->multieffect[f_i]->output1;
                 }
-                f_i++;
+                ++f_i;
             }
 
             plugin_data->output0[(plugin_data->i_mono_out)] =

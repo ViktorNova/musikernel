@@ -587,7 +587,7 @@ static void v_run_rayv(
                     plugin_data->midi_event_values[midi_event_pos]);
             }
 
-            midi_event_pos++;
+            ++midi_event_pos;
         }
 
         v_plugin_event_queue_atm_set(
@@ -620,7 +620,7 @@ static void v_run_rayv(
         }
 
         ++f_i;
-        plugin_data->sampleNo++;
+        ++plugin_data->sampleNo;
     }
 
     //plugin_data->sampleNo += sample_count;
