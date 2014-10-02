@@ -8087,7 +8087,9 @@ PLUGIN_UIDS = {
     "None":0, "Euphoria":1, "Ray-V":2, "Way-V":3, "Modulex":4, "MK Delay":5,
     "MK EQ":6, "Simple Fader":7, "Simple Reverb":8, "TriggerFX":9
     }
-EFFECTS_PLUGIN_NAMES = ["None"] + PLUGIN_NAMES[PLUGIN_INSTRUMENT_COUNT:]
+WAVE_EDITOR_PLUGIN_NAMES = [
+    "None", "MK Delay", "MK EQ", "Modulex", "Simple Fader",
+    "Simple Reverb"]
 MIXER_PLUGIN_NAMES = ["None", "Simple Fader"]
 PLUGIN_UIDS_REVERSE = {v:k for k, v in PLUGIN_UIDS.items()}
 CC_NAMES = {x:[] for x in PLUGIN_NAMES}
@@ -8147,7 +8149,6 @@ class plugin_settings_base:
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
         self.plugin_combobox.addItems(self.plugin_list)
-        self.plugin_combobox.insertSeparator(PLUGIN_INSTRUMENT_COUNT + 1)
         self.plugin_combobox.currentIndexChanged.connect(
             self.on_plugin_change)
         a_layout.addWidget(self.plugin_combobox, a_index + 1, 0 + a_offset)
@@ -8246,6 +8247,7 @@ class plugin_settings_main(plugin_settings_base):
             self, a_index, a_track_num, a_layout,
             a_save_callback, a_name_callback,
             a_automation_callback, a_offset, a_send)
+        self.plugin_combobox.insertSeparator(PLUGIN_INSTRUMENT_COUNT + 1)
         self.menu_button = QtGui.QPushButton(_("Menu"))
         a_layout.addWidget(self.menu_button, a_index + 1, 4 + a_offset)
         self.menu = QtGui.QMenu()
@@ -8274,7 +8276,7 @@ class plugin_settings_wave_editor(plugin_settings_base):
     def __init__(self, a_index, a_track_num,
                  a_layout, a_save_callback, a_name_callback,
                  a_automation_callback, a_offset=0, a_send=None):
-        self.plugin_list = EFFECTS_PLUGIN_NAMES
+        self.plugin_list = WAVE_EDITOR_PLUGIN_NAMES
         plugin_settings_base.__init__(
             self, a_index, a_track_num, a_layout,
             a_save_callback, a_name_callback,
