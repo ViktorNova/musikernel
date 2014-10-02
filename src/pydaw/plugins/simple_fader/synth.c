@@ -139,7 +139,7 @@ static void v_sfader_process_midi_event(
         plugin_data->midi_event_values[plugin_data->midi_event_count] =
                 a_event->value;
 
-        plugin_data->midi_event_count++;
+        ++plugin_data->midi_event_count;
     }
 }
 
@@ -157,7 +157,7 @@ static void v_sfader_process_midi(
     while (event_pos < event_count)
     {
         v_sfader_process_midi_event(plugin_data, &events[event_pos]);
-        event_pos++;
+        ++event_pos;
     }
 
     int f_i = 0;
@@ -169,7 +169,7 @@ static void v_sfader_process_midi(
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -177,7 +177,7 @@ static void v_sfader_process_midi(
     while(f_i < ext_event_count)
     {
         v_sfader_process_midi_event(plugin_data, &ext_events[f_i]);
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -211,7 +211,7 @@ static void v_sfader_run_mixing(
                     plugin_data->midi_event_ports[midi_event_pos],
                     plugin_data->midi_event_values[midi_event_pos]);
             }
-            midi_event_pos++;
+            ++midi_event_pos;
         }
 
         v_plugin_event_queue_atm_set(
@@ -229,7 +229,7 @@ static void v_sfader_run_mixing(
         output_buffers[1][f_i] += plugin_data->buffers[1][f_i] *
             (plugin_data->mono_modules->vol_linear);
 
-        f_i++;
+        ++f_i;
     }
 
 }
@@ -261,7 +261,7 @@ static void v_sfader_run(
                     plugin_data->midi_event_ports[midi_event_pos],
                     plugin_data->midi_event_values[midi_event_pos]);
             }
-            midi_event_pos++;
+            ++midi_event_pos;
         }
 
         v_plugin_event_queue_atm_set(
@@ -282,7 +282,7 @@ static void v_sfader_run(
             plugin_data->buffers[1][f_i] *=
                 (plugin_data->mono_modules->vol_linear);
         }
-        f_i++;
+        ++f_i;
     }
 }
 

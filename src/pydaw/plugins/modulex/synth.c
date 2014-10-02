@@ -285,20 +285,19 @@ static void v_modulex_run(
     }
     else
     {
-        plugin_data->i_slow_index = (plugin_data->i_slow_index) + 1;
+        ++plugin_data->i_slow_index;
     }
 
     f_i = 0;
 
     if(plugin_data->is_on)
     {
-        plugin_data->i_mono_out = 0;
+        int i_mono_out = 0;
 
-        while((plugin_data->i_mono_out) < sample_count)
+        while((i_mono_out) < sample_count)
         {
             while(midi_event_pos < plugin_data->midi_event_count &&
-                    plugin_data->midi_event_ticks[midi_event_pos] ==
-                    plugin_data->i_mono_out)
+                plugin_data->midi_event_ticks[midi_event_pos] == i_mono_out)
             {
                 if(plugin_data->midi_event_types[midi_event_pos] ==
                         PYDAW_EVENT_CONTROLLER)
@@ -313,13 +312,13 @@ static void v_modulex_run(
             }
 
             v_plugin_event_queue_atm_set(
-                &plugin_data->atm_queue, plugin_data->i_mono_out,
+                &plugin_data->atm_queue, i_mono_out,
                 plugin_data->port_table);
 
             plugin_data->mono_modules->current_sample0 =
-                    plugin_data->output0[(plugin_data->i_mono_out)];
+                    plugin_data->output0[(i_mono_out)];
             plugin_data->mono_modules->current_sample1 =
-                    plugin_data->output1[(plugin_data->i_mono_out)];
+                    plugin_data->output1[(i_mono_out)];
 
             f_i = 0;
 
@@ -352,12 +351,12 @@ static void v_modulex_run(
                 ++f_i;
             }
 
-            plugin_data->output0[(plugin_data->i_mono_out)] =
+            plugin_data->output0[(i_mono_out)] =
                     (plugin_data->mono_modules->current_sample0);
-            plugin_data->output1[(plugin_data->i_mono_out)] =
+            plugin_data->output1[(i_mono_out)] =
                     (plugin_data->mono_modules->current_sample1);
 
-            plugin_data->i_mono_out = (plugin_data->i_mono_out) + 1;
+            ++i_mono_out;
         }
     }
 }

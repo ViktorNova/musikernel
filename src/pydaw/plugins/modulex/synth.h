@@ -80,9 +80,6 @@ typedef struct
     float fs;
     t_modulex_mono_modules * mono_modules;
 
-    int i_mono_out;
-    int i_buffer_clear;
-
     int i_slow_index;
     int is_on;
 

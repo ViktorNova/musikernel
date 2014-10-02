@@ -171,7 +171,7 @@ static void v_sreverb_run(
     while (event_pos < event_count)
     {
         v_sreverb_process_midi_event(plugin_data, &events[event_pos]);
-        event_pos++;
+        ++event_pos;
     }
 
     int f_i = 0;
