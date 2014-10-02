@@ -22,12 +22,8 @@ extern "C" {
 #include "../../lib/pitch_core.h"
 #include "../../lib/lmalloc.h"
 
-//#define DLY_DEBUG_MODE
 
-/* A tap is used to read from a delay.  You can have as many
- * taps as you want per delay line.
- */
-typedef struct st_delay_tap
+    typedef struct st_delay_tap
 {
     int read_head;
     int read_head_p1;
@@ -41,13 +37,7 @@ typedef struct st_delay_tap
 }t_delay_tap;
 
 
-/* A delay is just a buffer to write audio to, that also maintains
- * information like tempo,
- * sample rate, etc...  Taps are used to read from the delay line, either
- * non-interpolated (CPU friendly, not suitable for modulation) or interpolated
- * (suitable for modulation)
- */
-typedef struct st_delay_simple
+typedef struct
 {
     int write_head;
     float sample_rate;
@@ -62,7 +52,6 @@ typedef struct st_delay_simple
 
 
 t_delay_simple * g_dly_get_delay(float, float);
-t_delay_simple * g_dly_get_delay_tempo(float,float,float);
 t_delay_tap * g_dly_get_tap();
 inline void v_dly_set_delay_seconds(t_delay_simple*,t_delay_tap*,float);
 inline void v_dly_set_delay_lin(t_delay_simple*,t_delay_tap*,float);
@@ -103,7 +92,6 @@ inline void v_dly_set_delay_lin(t_delay_simple* a_dly, t_delay_tap* a_tap,
 {
     if((a_tap->delay_seconds) != a_seconds)
     {
-
         a_tap->delay_seconds = a_seconds;
         a_tap->delay_samples = (int)((a_dly->sample_rate) * a_seconds);
         a_tap->fraction = ((a_dly->sample_rate) * a_seconds) -
@@ -144,7 +132,8 @@ inline void v_dly_set_delay_pitch(t_delay_simple* a_dly, t_delay_tap* a_tap, flo
     if((a_tap->delay_pitch) != a_pitch)
     {
         a_tap->delay_pitch = a_pitch;
-        a_tap->delay_samples = ((a_dly->sample_rate)/(f_pit_midi_note_to_hz(a_pitch)));
+        a_tap->delay_samples =
+            ((a_dly->sample_rate) / (f_pit_midi_note_to_hz(a_pitch)));
     }
 }
 
@@ -166,8 +155,8 @@ inline void v_dly_set_delay_pitch_fast(t_delay_simple* a_dly,
     if((a_tap->delay_pitch) != a_pitch)
     {
         a_tap->delay_pitch = a_pitch;
-        a_tap->delay_samples = ((a_dly->sample_rate) /
-                (f_pit_midi_note_to_hz(a_pitch)));
+        a_tap->delay_samples =
+            ((a_dly->sample_rate) / (f_pit_midi_note_to_hz(a_pitch)));
     }
 }
 
@@ -189,14 +178,6 @@ inline void v_dly_set_delay_hz(t_delay_simple* a_dly, t_delay_tap* a_tap,
 }
 
 
-/*Run the delay for one sample, and update the output sample and input buffer
- * To run with feedback, do something like this:
- * //input the delay with the processed feedback signal
- * v_dly_run_delay(f_delay, f_input + ((v_mod->output) * (f_feedback_amt));
- * //This is doing something with the feedback
- * v_mod_function(v_mod, (f_delay->output));
- * //That's where you can run it through a filter, or any other processing
- */
 inline void v_dly_run_delay(t_delay_simple* a_dly,float a_input)
 {
     a_dly->buffer[(a_dly->write_head)] = a_input;
@@ -207,23 +188,6 @@ inline void v_dly_run_delay(t_delay_simple* a_dly,float a_input)
         a_dly->write_head = 0;
     }
 
-
-#ifdef DLY_DEBUG_MODE
-    a_dly->debug_counter = (a_dly->debug_counter) + 1;
-
-    if((a_dly->debug_counter) >= 100000)
-    {
-        a_dly->debug_counter = 0;
-
-        printf("\n\nDelay debug info:\n");
-        printf("a_dly->count == %i\n", (a_dly->sample_count));
-        printf("a_dly->sample_rate == %f\n", (a_dly->sample_rate));
-        printf("a_dly->tempo == %f\n", (a_dly->tempo));
-        printf("a_dly->tempo_recip == %f\n", (a_dly->tempo_recip));
-        printf("a_dly->write_head == %i\n", (a_dly->write_head));
-    }
-
-#endif
 }
 
 inline void v_dly_run_tap(t_delay_simple* a_dly,t_delay_tap* a_tap)
@@ -236,26 +200,9 @@ inline void v_dly_run_tap(t_delay_simple* a_dly,t_delay_tap* a_tap)
     }
 
     a_tap->output = (a_dly->buffer[(a_tap->read_head)]);
-
-#ifdef DLY_DEBUG_MODE
-    if((a_dly->debug_counter) == 50000)
-    {
-        printf("\n\nTap debug info:\n");
-        printf("a_tap->delay_beats == %f\n", (a_tap->delay_beats));
-        printf("a_tap->delay_samples == %i\n", (a_tap->delay_samples));
-        printf("a_tap->delay_seconds == %f\n", (a_tap->delay_seconds));
-        printf("a_tap->output == %f\n", (a_tap->output));
-        printf("a_tap->read_head == %i\n", (a_tap->read_head));
-    }
-#endif
 }
 
-/* inline void v_dly_run_tap_lin(t_delay_simple* a_dly,t_delay_tap* a_tap)
- *
- * Run a delay line using linear interpolation.
- * The delay must have been set using:
- * v_dly_set_delay_lin();
- */
+
 inline void v_dly_run_tap_lin(t_delay_simple* a_dly,t_delay_tap* a_tap)
 {
     a_tap->read_head = (a_dly->write_head) - (a_tap->delay_samples);
@@ -265,7 +212,7 @@ inline void v_dly_run_tap_lin(t_delay_simple* a_dly,t_delay_tap* a_tap)
         a_tap->read_head = (a_tap->read_head) + (a_dly->sample_count);
     }
 
-    a_tap->read_head_p1 = (a_tap->read_head) + 1;
+    ++a_tap->read_head_p1;
 
     if((a_tap->read_head_p1) >= (a_dly->sample_count))
     {
@@ -275,31 +222,10 @@ inline void v_dly_run_tap_lin(t_delay_simple* a_dly,t_delay_tap* a_tap)
     a_tap->output = f_linear_interpolate(
             a_dly->buffer[(a_tap->read_head)],
             a_dly->buffer[(a_tap->read_head_p1)], (a_tap->fraction));
-
-
-#ifdef DLY_DEBUG_MODE
-    if((a_dly->debug_counter) == 50000)
-    {
-        printf("\n\nTap debug info:\n");
-        printf("a_tap->delay_beats == %f\n", (a_tap->delay_beats));
-        printf("a_tap->delay_samples == %i\n", (a_tap->delay_samples));
-        printf("a_tap->delay_seconds == %f\n", (a_tap->delay_seconds));
-        printf("a_tap->output == %f\n", (a_tap->output));
-        printf("a_tap->read_head == %i\n", (a_tap->read_head));
-    }
-#endif
 }
 
-/*t_delay_simple * g_dly_get_delay
- * (float a_max_size, //max size in seconds
- * float a_sr //sample rate
- * )
- */
-t_delay_simple * g_dly_get_delay(float a_max_size, float a_sr)
+void g_dly_init(t_delay_simple * f_result, float a_max_size, float a_sr)
 {
-    t_delay_simple * f_result;
-    lmalloc((void**)&f_result, sizeof(t_delay_simple));
-
     f_result->write_head = 0;
     f_result->sample_rate = a_sr;
     f_result->tempo = 999;
@@ -314,43 +240,23 @@ t_delay_simple * g_dly_get_delay(float a_max_size, float a_sr)
     while(f_i < (f_result->sample_count))
     {
         f_result->buffer[f_i] = 0.0f;
-        f_i++;
+        ++f_i;
     }
-
-    return f_result;
 }
 
-/*t_delay_simple * g_dly_get_delay_tempo(
- * float a_tempo,  //tempo in BPM
- * float a_max_size, //max size in beats
- * float a_sr //sample rate
- * )
- */
-t_delay_simple * g_dly_get_delay_tempo(float a_tempo, float a_max_size,
-        float a_sr)
+
+t_delay_simple * g_dly_get_delay(float a_max_size, float a_sr)
 {
     t_delay_simple * f_result;
     lmalloc((void**)&f_result, sizeof(t_delay_simple));
-
-    f_result->write_head = 0;
-    f_result->sample_rate = a_sr;
-    f_result->tempo = a_tempo;
-    //convert from beats per minute to seconds per beat
-    f_result->tempo_recip = (60.0f / a_tempo);
-    //add 2400 samples to ensure we don't overrun our buffer
-    f_result->sample_count = (int)((a_max_size *
-            (f_result->tempo_recip) * a_sr) + 2400);
-    buffer_alloc((void**)&f_result->buffer,
-        sizeof(float) * (f_result->sample_count));
-
+    g_dly_init(f_result, a_max_size, a_sr);
     return f_result;
 }
 
-t_delay_tap * g_dly_get_tap()
-{
-    t_delay_tap * f_result;
-    lmalloc((void**)&f_result, sizeof(t_delay_tap));
 
+
+void g_dly_tap_init(t_delay_tap * f_result)
+{
     f_result->read_head = 0;
     f_result->delay_samples = 0;
     f_result->delay_seconds  = 0.0f;
@@ -358,7 +264,13 @@ t_delay_tap * g_dly_get_tap()
     f_result->output = 0.0f;
     f_result->delay_pitch = 20.0123f;
     f_result->delay_hz = 20.2021f;
+}
 
+t_delay_tap * g_dly_get_tap()
+{
+    t_delay_tap * f_result;
+    lmalloc((void**)&f_result, sizeof(t_delay_tap));
+    g_dly_tap_init(f_result);
     return f_result;
 }
 

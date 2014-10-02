@@ -64,14 +64,6 @@ static void v_triggerfx_panic(PYFX_Handle instance)
     plugin->mono_modules->glitch_on = 0.0f;
 
     v_adsr_kill(plugin->mono_modules->glitch->adsr);
-
-    int f_i = 0;
-    while(f_i < plugin->mono_modules->delay->delay0->sample_count)
-    {
-        plugin->mono_modules->delay->delay0->buffer[f_i] = 0.0f;
-        plugin->mono_modules->delay->delay1->buffer[f_i] = 0.0f;
-        f_i++;
-    }
 }
 
 static void v_triggerfx_on_stop(PYFX_Handle instance)
@@ -207,7 +199,7 @@ static void v_triggerfx_process_midi_event(
         plugin_data->midi_event_values[plugin_data->midi_event_count] =
                 a_event->value;
 
-        plugin_data->midi_event_count++;
+        ++plugin_data->midi_event_count;
     }
     else if (a_event->type == PYDAW_EVENT_NOTEON)
     {
@@ -222,7 +214,7 @@ static void v_triggerfx_process_midi_event(
             plugin_data->midi_event_values[plugin_data->midi_event_count] =
                 f_db_to_linear_fast(f_db);
 
-            plugin_data->midi_event_count++;
+            ++plugin_data->midi_event_count;
         }
         if(a_event->note == f_glitch_note)
         {
@@ -235,7 +227,7 @@ static void v_triggerfx_process_midi_event(
             plugin_data->midi_event_values[plugin_data->midi_event_count] =
                 f_db_to_linear_fast(f_db);
 
-            plugin_data->midi_event_count++;
+            ++plugin_data->midi_event_count;
         }
     }
     else if (a_event->type == PYDAW_EVENT_NOTEOFF)
@@ -248,7 +240,7 @@ static void v_triggerfx_process_midi_event(
                     plugin_data->midi_event_count] = a_event->tick;
             plugin_data->midi_event_values[
                     plugin_data->midi_event_count] = 0.0f;
-            plugin_data->midi_event_count++;
+            ++plugin_data->midi_event_count;
         }
         if(a_event->note == f_glitch_note)
         {
@@ -258,7 +250,7 @@ static void v_triggerfx_process_midi_event(
                     plugin_data->midi_event_count] = a_event->tick;
             plugin_data->midi_event_values[
                     plugin_data->midi_event_count] = 0.0f;
-            plugin_data->midi_event_count++;
+            ++plugin_data->midi_event_count;
         }
     }
     else if (a_event->type == PYDAW_EVENT_PITCHBEND)
@@ -269,7 +261,7 @@ static void v_triggerfx_process_midi_event(
                 a_event->tick;
         plugin_data->midi_event_values[plugin_data->midi_event_count] =
                 0.00012207 * a_event->value;
-        plugin_data->midi_event_count++;
+        ++plugin_data->midi_event_count;
     }
 }
 
@@ -291,7 +283,7 @@ static void v_triggerfx_run(
     while (event_pos < event_count)
     {
         v_triggerfx_process_midi_event(plugin_data, &events[event_pos]);
-        event_pos++;
+        ++event_pos;
     }
 
     int f_i = 0;
@@ -303,7 +295,7 @@ static void v_triggerfx_run(
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -311,7 +303,7 @@ static void v_triggerfx_run(
     while(f_i < ext_event_count)
     {
         v_triggerfx_process_midi_event(plugin_data, &ext_events[f_i]);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -365,7 +357,7 @@ static void v_triggerfx_run(
                 v_glc_glitch_v2_release(plugin_data->mono_modules->glitch);
             }
 
-            midi_event_pos++;
+            ++midi_event_pos;
         }
 
         v_plugin_event_queue_atm_set(
@@ -407,7 +399,7 @@ static void v_triggerfx_run(
         plugin_data->output1[f_i] =
                 (plugin_data->mono_modules->current_sample1);
 
-        f_i++;
+        ++f_i;
     }
 
 }

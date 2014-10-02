@@ -51,10 +51,10 @@ static void v_mkdelay_panic(PYFX_Handle instance)
     t_mkdelay *plugin = (t_mkdelay*)instance;
 
     int f_i = 0;
-    while(f_i < plugin->mono_modules->delay->delay0->sample_count)
+    while(f_i < plugin->mono_modules->delay->delay0.sample_count)
     {
-        plugin->mono_modules->delay->delay0->buffer[f_i] = 0.0f;
-        plugin->mono_modules->delay->delay1->buffer[f_i] = 0.0f;
+        plugin->mono_modules->delay->delay0.buffer[f_i] = 0.0f;
+        plugin->mono_modules->delay->delay1.buffer[f_i] = 0.0f;
         ++f_i;
     }
 }
