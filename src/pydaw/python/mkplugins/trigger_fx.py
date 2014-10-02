@@ -58,7 +58,7 @@ class triggerfx_plugin_ui(pydaw_abstract_plugin_ui):
         self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
 
         self.misc_tab = QtGui.QWidget()
-        self.tab_widget.addTab(self.misc_tab, _("Misc."))
+        self.tab_widget.addTab(self.misc_tab, _("Effects"))
         self.delay_vlayout = QtGui.QVBoxLayout()
         self.misc_tab.setLayout(self.delay_vlayout)
         self.delay_hlayout = QtGui.QHBoxLayout()
