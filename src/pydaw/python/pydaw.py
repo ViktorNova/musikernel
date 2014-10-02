@@ -8555,7 +8555,8 @@ class seq_track:
             "Update track plugins for '{}', {}".format(
             self.name_callback(), self.track_number))
         f_graph = PROJECT.get_routing_graph()
-        if f_graph.set_default_output(self.track_number):
+        if self.track_number != 0 and \
+        f_graph.set_default_output(self.track_number):
             PROJECT.save_routing_graph(f_graph)
             PROJECT.commit(_("Set default output "
                 "for track {}".format(self.track_number)))

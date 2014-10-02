@@ -2500,6 +2500,8 @@ class pydaw_routing_graph:
         return None
 
     def set_default_output(self, a_track_num, a_output=0):
+        assert(a_track_num != a_output)
+        assert(a_track_num != 0)
         if not a_track_num in self.graph or \
         not self.graph[a_track_num]:
             f_send = pydaw_track_send(a_track_num, 0, a_output)
