@@ -30,17 +30,16 @@ extern "C" {
 
 typedef struct
 {
-    int iter1;
     float color;
     float wet;
     float wet_linear;
     float time;
     float output;
     float volume_factor;
-    t_state_variable_filter * diffusers[PYDAW_REVERB_DIFFUSER_COUNT];
-    t_state_variable_filter * hp;
-    t_state_variable_filter * lp;
-    t_comb_filter * taps[PYDAW_REVERB_TAP_COUNT];
+    t_state_variable_filter diffusers[PYDAW_REVERB_DIFFUSER_COUNT];
+    t_state_variable_filter hp;
+    t_state_variable_filter lp;
+    t_comb_filter taps[PYDAW_REVERB_TAP_COUNT];
     float comb_tunings[PYDAW_REVERB_TAP_COUNT];
     float allpass_tunings[PYDAW_REVERB_DIFFUSER_COUNT];
     int predelay_counter;
@@ -73,9 +72,9 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
 
         while(f_i2 < PYDAW_REVERB_TAP_COUNT)
         {
-            v_cmb_set_all(a_reverb->taps[f_i2], 0.0f, f_feedback,
+            v_cmb_set_all(&a_reverb->taps[f_i2], 0.0f, f_feedback,
                     a_reverb->comb_tunings[f_i2]);
-            f_i2++;
+            ++f_i2;
         }
     }
 
@@ -91,8 +90,8 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
 
         float f_cutoff = (a_color * 40.0f) + 70.0f;
 
-        v_svf_set_cutoff_base(a_reverb->lp, f_cutoff);
-        v_svf_set_cutoff(a_reverb->lp);
+        v_svf_set_cutoff_base(&a_reverb->lp, f_cutoff);
+        v_svf_set_cutoff(&a_reverb->lp);
     }
 
     if(a_reverb->last_predelay != a_predelay)
@@ -109,37 +108,36 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
 inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
         float a_input1)
 {
-    a_reverb->iter1 = 0;
+    int iter1 = 0;
 
     a_reverb->output = 0.0f;
 
-    float f_tmp_sample = v_svf_run_2_pole_lp(a_reverb->lp,
+    float f_tmp_sample = v_svf_run_2_pole_lp(&a_reverb->lp,
             (a_input0 + a_input1));
-    f_tmp_sample = v_svf_run_2_pole_hp(a_reverb->hp, f_tmp_sample);
+    f_tmp_sample = v_svf_run_2_pole_hp(&a_reverb->hp, f_tmp_sample);
     f_tmp_sample *= (a_reverb->wet_linear);
 
-    while((a_reverb->iter1) < PYDAW_REVERB_TAP_COUNT)
+    while((iter1) < PYDAW_REVERB_TAP_COUNT)
     {
-        v_cmb_run(a_reverb->taps[(a_reverb->iter1)], f_tmp_sample);
+        v_cmb_run(&a_reverb->taps[iter1], f_tmp_sample);
 
-        a_reverb->output += (a_reverb->taps[(a_reverb->iter1)]->output_sample);
+        a_reverb->output += (a_reverb->taps[iter1].output_sample);
 
-        a_reverb->iter1 = (a_reverb->iter1) + 1;
+        ++iter1;
     }
 
-    a_reverb->iter1 = 0;
+    iter1 = 0;
 
-    while((a_reverb->iter1) < PYDAW_REVERB_DIFFUSER_COUNT)
+    while((iter1) < PYDAW_REVERB_DIFFUSER_COUNT)
     {
         a_reverb->output =
-                v_svf_run_2_pole_allpass(a_reverb->diffusers[(a_reverb->iter1)],
-                        a_reverb->output);
-
-        a_reverb->iter1 = (a_reverb->iter1) + 1;
+            v_svf_run_2_pole_allpass(&a_reverb->diffusers[iter1],
+            a_reverb->output);
+        ++iter1;
     }
 
     a_reverb->predelay_buffer[(a_reverb->predelay_counter)] = a_reverb->output;
-    a_reverb->predelay_counter = (a_reverb->predelay_counter) + 1;
+    ++a_reverb->predelay_counter;
     if((a_reverb->predelay_counter) >= (a_reverb->predelay_size))
     {
         a_reverb->predelay_counter = 0;
@@ -155,7 +153,6 @@ t_rvb_reverb * g_rvb_reverb_get(float a_sr)
     lmalloc((void**)&f_result, sizeof(t_rvb_reverb));
 
     f_result->color = 1.0f;
-    f_result->iter1 = 0;
     f_result->time = 0.5f;
     f_result->wet = 0.0f;
     f_result->wet_linear = 0.0f;
@@ -178,34 +175,34 @@ t_rvb_reverb * g_rvb_reverb_get(float a_sr)
 
     f_result->output = 0.0f;
 
-    f_result->hp = g_svf_get(a_sr);
-    v_svf_set_cutoff_base(f_result->hp, 60.0f);
-    v_svf_set_res(f_result->hp, -24.0f);
-    v_svf_set_cutoff(f_result->hp);
+    g_svf_init(&f_result->hp, a_sr);
+    v_svf_set_cutoff_base(&f_result->hp, 60.0f);
+    v_svf_set_res(&f_result->hp, -24.0f);
+    v_svf_set_cutoff(&f_result->hp);
 
-    f_result->lp = g_svf_get(a_sr);
-    v_svf_set_res(f_result->lp, -36.0f);
+    g_svf_init(&f_result->lp, a_sr);
+    v_svf_set_res(&f_result->lp, -36.0f);
 
-    f_result->volume_factor = (1.0f/(float)PYDAW_REVERB_DIFFUSER_COUNT) * 0.5 ;
+    f_result->volume_factor = (1.0f / (float)PYDAW_REVERB_DIFFUSER_COUNT) * 0.5;
 
     int f_i2 = 0;
 
     while(f_i2 < PYDAW_REVERB_TAP_COUNT)
     {
-        f_result->taps[f_i2] = g_cmb_get_comb_filter(a_sr);
-        f_i2++;
+        g_cmb_init(&f_result->taps[f_i2], a_sr);
+        ++f_i2;
     }
 
     f_i2 = 0;
 
     while(f_i2 < PYDAW_REVERB_DIFFUSER_COUNT)
     {
-        f_result->diffusers[f_i2] = g_svf_get(a_sr);
-        v_svf_set_cutoff_base(f_result->diffusers[f_i2],
-                f_result->allpass_tunings[f_i2]);
-        v_svf_set_res(f_result->diffusers[f_i2], -1.0f);
-        v_svf_set_cutoff(f_result->diffusers[f_i2]);
-        f_i2++;
+        g_svf_init(&f_result->diffusers[f_i2], a_sr);
+        v_svf_set_cutoff_base(&f_result->diffusers[f_i2],
+            f_result->allpass_tunings[f_i2]);
+        v_svf_set_res(&f_result->diffusers[f_i2], -1.0f);
+        v_svf_set_cutoff(&f_result->diffusers[f_i2]);
+        ++f_i2;
     }
 
     f_result->predelay_counter = 0;
@@ -219,7 +216,7 @@ t_rvb_reverb * g_rvb_reverb_get(float a_sr)
     while(f_i2 < (a_sr + 5000))
     {
         f_result->predelay_buffer[f_i2] = 0.0f;
-        f_i2++;
+        ++f_i2;
     }
 
     v_rvb_reverb_set(f_result, 0.5f, 0.0f, 0.5f, 0.01f);
