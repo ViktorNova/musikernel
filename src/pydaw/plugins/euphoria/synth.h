@@ -123,7 +123,6 @@ typedef struct {
     /*TODO:  Deprecate these 2?*/
     int loaded_samples[EUPHORIA_MAX_SAMPLE_COUNT];
     int loaded_samples_count;
-    int i_loaded_samples;
     /*Used as a boolean when determining if a sample has already been loaded*/
     int sample_is_loaded;
     /*The index of the current sample being played*/

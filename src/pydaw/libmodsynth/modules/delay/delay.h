@@ -127,7 +127,8 @@ inline void v_dly_set_delay_tempo(t_delay_simple* a_dly, t_delay_tap* a_tap,
  * feedback and pitch are tightly coupled together, and
  * require accuracy.
  */
-inline void v_dly_set_delay_pitch(t_delay_simple* a_dly, t_delay_tap* a_tap, float a_pitch)
+inline void v_dly_set_delay_pitch(t_delay_simple* a_dly,
+        t_delay_tap* a_tap, float a_pitch)
 {
     if((a_tap->delay_pitch) != a_pitch)
     {
@@ -180,9 +181,9 @@ inline void v_dly_set_delay_hz(t_delay_simple* a_dly, t_delay_tap* a_tap,
 
 inline void v_dly_run_delay(t_delay_simple* a_dly,float a_input)
 {
-    a_dly->buffer[(a_dly->write_head)] = a_input;
+    a_dly->buffer[(a_dly->write_head)] = f_remove_denormal(a_input);
 
-    a_dly->write_head = (a_dly->write_head) + 1;
+    ++a_dly->write_head;
     if((a_dly->write_head) >= (a_dly->sample_count))
     {
         a_dly->write_head = 0;

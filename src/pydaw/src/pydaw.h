@@ -2142,8 +2142,7 @@ inline void v_pydaw_set_time_params(t_pydaw_data * self,
             self->ml_next_bar = 0;
             if(self->loop_mode != PYDAW_LOOP_MODE_REGION)
             {
-                self->ml_next_region =
-                    (self->ml_next_region) + 1;
+                ++self->ml_next_region;
             }
             else
             {
@@ -2170,7 +2169,7 @@ inline void v_pydaw_finish_time_params(t_pydaw_data * self,
     {
         self->playback_cursor = (self->playback_cursor) - 1.0f;
 
-        self->current_bar = (self->current_bar) + 1;
+        ++self->current_bar;
 
         if((self->current_bar) >= a_region_length_bars)
         {
@@ -2178,8 +2177,7 @@ inline void v_pydaw_finish_time_params(t_pydaw_data * self,
 
             if(self->loop_mode != PYDAW_LOOP_MODE_REGION)
             {
-                self->current_region =
-                    (self->current_region) + 1;
+                ++self->current_region;
 
                 if((self->current_region) >= PYDAW_MAX_REGION_COUNT)
                 {
@@ -3182,7 +3180,7 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
             assert((f_result->event_count) < PYDAW_MAX_EVENTS_PER_ITEM_COUNT);
             f_result->events[(f_result->event_count)] = g_pynote_get(
                     atoi(f_note), atoi(f_vel), atof(f_start), atof(f_length));
-            f_result->event_count = (f_result->event_count) + 1;
+            ++f_result->event_count;
 
             free(f_length);
             free(f_note);
@@ -3195,7 +3193,7 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
 
             f_result->events[(f_result->event_count)] = g_pycc_get(
                     atoi(f_cc_num), atof(f_cc_val), atof(f_start));
-            f_result->event_count = (f_result->event_count) + 1;
+            ++f_result->event_count;
 
             free(f_cc_num);
             free(f_cc_val);
@@ -3207,7 +3205,7 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
 
             f_result->events[(f_result->event_count)] = g_pypitchbend_get(
                     atof(f_start), f_pb_val);
-            f_result->event_count = (f_result->event_count) + 1;
+            ++f_result->event_count;
 
             free(f_pb_val_char);
         }

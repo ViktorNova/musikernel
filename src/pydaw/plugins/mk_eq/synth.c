@@ -242,22 +242,22 @@ static void v_mkeq_run(
         {
             if(*plugin_data->eq_gain[f_i2] != 0.0f)
             {
-                v_pkq_calc_coeffs(plugin_data->mono_modules->eqs[f_i2],
+                v_pkq_calc_coeffs(&plugin_data->mono_modules->eqs[f_i2],
                         *plugin_data->eq_freq[f_i2],
                         *plugin_data->eq_res[f_i2] * 0.01f,
                         *plugin_data->eq_gain[f_i2]);
-                v_pkq_run(plugin_data->mono_modules->eqs[f_i2],
+                v_pkq_run(&plugin_data->mono_modules->eqs[f_i2],
                         plugin_data->output0[f_i],
                         plugin_data->output1[f_i]);
                 plugin_data->output0[f_i] =
-                        plugin_data->mono_modules->eqs[f_i2]->output0;
+                        plugin_data->mono_modules->eqs[f_i2].output0;
                 plugin_data->output1[f_i] =
-                        plugin_data->mono_modules->eqs[f_i2]->output1;
+                        plugin_data->mono_modules->eqs[f_i2].output1;
             }
-            f_i2++;
+            ++f_i2;
         }
 
-        f_i++;
+        ++f_i;
     }
 
     if((int)(*plugin_data->spectrum_analyzer_on))

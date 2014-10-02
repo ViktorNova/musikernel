@@ -39,7 +39,7 @@ typedef struct
 
     float vol_linear;
 
-    t_pkq_peak_eq * eqs[MKEQ_EQ_COUNT];
+    t_pkq_peak_eq eqs[MKEQ_EQ_COUNT];
     t_spa_spectrum_analyzer * spectrum_analyzer;
 }t_mkeq_mono_modules;
 
@@ -54,8 +54,8 @@ t_mkeq_mono_modules * v_mkeq_mono_init(float a_sr, int a_plugin_uid)
 
     while(f_i < MKEQ_EQ_COUNT)
     {
-        a_mono->eqs[f_i] = g_pkq_get(a_sr);
-        f_i++;
+        g_pkq_init(&a_mono->eqs[f_i], a_sr);
+        ++f_i;
     }
 
     a_mono->vol_linear = 1.0f;
