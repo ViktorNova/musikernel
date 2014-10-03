@@ -217,7 +217,7 @@ static void v_scc_run(
     }
 
     f_i = 0;
-    
+
     while(f_i < sample_count)
     {
         while(midi_event_pos < plugin_data->midi_event_count &&
@@ -243,6 +243,7 @@ static void v_scc_run(
             *plugin_data->speed, *plugin_data->wet * 0.01f);
 
         v_scc_run_comp(&plugin_data->mono_modules->sidechain_comp,
+            plugin_data->sc_input0[f_i], plugin_data->sc_input1[f_i],
             plugin_data->output0[f_i], plugin_data->output1[f_i]);
 
         plugin_data->output0[f_i] =

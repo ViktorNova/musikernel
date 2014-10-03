@@ -18,6 +18,7 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
+#include "../../libmodsynth/lib/lmalloc.h"
 #include "../../libmodsynth/constants.h"
 #include "../../libmodsynth/modules/dynamics/sidechain_comp.h"
 
@@ -32,6 +33,7 @@ t_scc_mono_modules * v_scc_mono_init(float, int);
 t_scc_mono_modules * v_scc_mono_init(float a_sr, int a_plugin_uid)
 {
     t_scc_mono_modules * f_result;
+    lmalloc((void**)&f_result, sizeof(t_scc_mono_modules));
     g_scc_init(&f_result->sidechain_comp, a_sr);
     return f_result;
 }

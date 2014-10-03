@@ -32,7 +32,7 @@ typedef struct
 
 void g_scc_init(t_scc_sidechain_comp*, float);
 void v_scc_set(t_scc_sidechain_comp*, float, float, float, float);
-void v_scc_run_comp(t_scc_sidechain_comp*, float, float);
+void v_scc_run_comp(t_scc_sidechain_comp*, float, float, float, float);
 
 #ifdef	__cplusplus
 }
@@ -72,7 +72,8 @@ void v_scc_set(t_scc_sidechain_comp *self, float a_thresh, float a_ratio,
     }
 }
 
-void v_scc_run_comp(t_scc_sidechain_comp *self, float a_input0, float a_input1)
+void v_scc_run_comp(t_scc_sidechain_comp *self,
+    float a_input0, float a_input1, float a_output0, float a_output1)
 {
     float f_gain0, f_gain1;
 
@@ -84,20 +85,24 @@ void v_scc_run_comp(t_scc_sidechain_comp *self, float a_input0, float a_input1)
 
     if(f_gain0 < 0.0f)
     {
-        self->output0 = a_input0 * f_gain0;
+        f_gain0 *= self->ratio;
+        self->output0 = f_axf_run_xfade(
+            &self->xfade, a_output0, a_output0 * f_gain0);
     }
     else
     {
-        self->output0 = a_input0;
+        self->output0 = a_output0;
     }
 
     if(f_gain1 < 0.0f)
     {
-        self->output1 = a_input1 * f_gain1;
+        f_gain1 *= self->ratio;
+        self->output0 = f_axf_run_xfade(
+            &self->xfade, a_output1, a_output1 * f_gain0);
     }
     else
     {
-        self->output1 = a_input1;
+        self->output1 = a_output1;
     }
 }
 
