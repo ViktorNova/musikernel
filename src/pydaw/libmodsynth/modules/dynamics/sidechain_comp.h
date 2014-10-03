@@ -42,7 +42,7 @@ void v_scc_run_comp(t_scc_sidechain_comp*, float, float, float, float);
 void g_scc_init(t_scc_sidechain_comp * self, float a_sr)
 {
     g_svf2_init(&self->filter, a_sr);
-    v_svf2_set_res(&self->filter, -12.0f);
+    v_svf2_set_res(&self->filter, -15.0f);
     g_axf_init(&self->xfade, -3.0f);
     self->speed = 999.99f;
     self->pitch = 999.99f;
@@ -98,7 +98,7 @@ void v_scc_run_comp(t_scc_sidechain_comp *self,
     if(f_gain1 < 0.0f)
     {
         f_gain1 *= self->ratio;
-        self->output0 = f_axf_run_xfade(
+        self->output1 = f_axf_run_xfade(
             &self->xfade, a_output1, a_output1 * f_db_to_linear_fast(f_gain0));
     }
     else
