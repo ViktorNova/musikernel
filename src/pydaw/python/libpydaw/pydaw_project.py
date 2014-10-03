@@ -2473,7 +2473,7 @@ class pydaw_routing_graph:
                 self.graph[a_old].pop(a_index)
         return self.find_all_paths(a_old, a_new)
 
-    def toggle(self, a_src, a_dest):
+    def toggle(self, a_src, a_dest, a_sidechain=0):
         f_connected = a_src in self.graph and a_dest in [
             x.output for x in self.graph[a_src].values()]
         if f_connected:
@@ -2494,7 +2494,7 @@ class pydaw_routing_graph:
                 for f_i in range(4):
                     if f_i not in self.graph[a_src]:
                         break
-            f_result = pydaw_track_send(a_src, f_i, a_dest)
+            f_result = pydaw_track_send(a_src, f_i, a_dest, a_sidechain)
             self.graph[a_src][f_i] = f_result
             self.set_node(a_src, self.graph[a_src])
         return None
@@ -2504,7 +2504,7 @@ class pydaw_routing_graph:
         assert(a_track_num != 0)
         if not a_track_num in self.graph or \
         not self.graph[a_track_num]:
-            f_send = pydaw_track_send(a_track_num, 0, a_output)
+            f_send = pydaw_track_send(a_track_num, 0, a_output, 0)
             self.set_node(a_track_num, {0:f_send})
             return True
         else:
@@ -2558,14 +2558,15 @@ class pydaw_routing_graph:
 
 
 class pydaw_track_send:
-    def __init__(self, a_track_num, a_index, a_output):
+    def __init__(self, a_track_num, a_index, a_output, a_sidechain):
         self.track_num = int(a_track_num)
         self.index = int(a_index)
         self.output = int(a_output)
+        self.sidechain = int(a_sidechain)
 
     def __str__(self):
         return "|".join(str(x) for x in
-            ("s", self.track_num, self.index, self.output))
+            ("s", self.track_num, self.index, self.output, self.sidechain))
 
     def __lt__(self, other):
         return self.index < other.index

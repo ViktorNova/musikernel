@@ -8293,8 +8293,11 @@ class track_send:
         self.bus_combobox.setMinimumWidth(180)
         self.bus_combobox.wheelEvent = self.wheel_event
         self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
+        self.sidechain_checkbox = QtGui.QCheckBox()
+        self.sidechain_checkbox.clicked.connect(self.on_bus_changed)
         self.update_names()
         a_layout.addWidget(self.bus_combobox, a_index + 1, 20)
+        a_layout.addWidget(self.sidechain_checkbox, a_index + 1, 27)
         self.last_value = 0
         self.plugin_uid = -1
         self.suppress_osc = False
@@ -8328,11 +8331,14 @@ class track_send:
     def get_value(self):
         return pydaw_track_send(
             self.track_num, self.index,
-            self.bus_combobox.currentIndex() - 1)
+            self.bus_combobox.currentIndex() - 1,
+            1 if self.sidechain_checkbox.isChecked() else 0)
 
     def set_value(self, a_val):
         self.suppress_osc = True
         self.bus_combobox.setCurrentIndex(a_val.output + 1)
+        self.sidechain_checkbox.setChecked(
+            True if a_val.sidechain == 1 else False)
         self.suppress_osc = False
 
     def update_names(self):
@@ -8431,6 +8437,8 @@ class seq_track:
                 QtGui.QLabel(_("Sends")), 0, 20)
             self.menu_gridlayout.addWidget(
                 QtGui.QLabel(_("Mixer Plugin")), 0, 21)
+            self.menu_gridlayout.addWidget(
+                QtGui.QLabel(_("Sidechain")), 0, 27)
             self.menu_gridlayout.addWidget(QtGui.QLabel(_("A")), 0, 23)
             self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 24)
             for f_i in range(4):

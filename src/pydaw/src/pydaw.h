@@ -193,6 +193,7 @@ typedef struct
 {
     int output;
     int active;
+    int sidechain;
 }
 t_pytrack_routing;
 
@@ -293,7 +294,7 @@ void g_pysong_get(t_pydaw_data*, int);
 t_pytrack_routing * g_pytrack_routing_get();
 t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data *);
 void v_pytrack_routing_graph_free(t_pydaw_routing_graph*);
-void v_pytrack_routing_set(t_pytrack_routing *, int);
+void v_pytrack_routing_set(t_pytrack_routing *, int, int);
 void v_pytrack_routing_free(t_pytrack_routing *);
 t_pyregion * g_pyregion_get(t_pydaw_data*, const int);
 t_pydaw_atm_region * g_atm_region_get(t_pydaw_data*, int);
@@ -1427,7 +1428,16 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         }
 
         f_bus = self->track_pool[f_bus_num];
-        f_buff = f_bus->buffers;
+
+        if(f_route->sidechain)
+        {
+            f_buff = f_bus->sc_buffers;
+            f_bus->sc_buffers_dirty = 1;
+        }
+        else
+        {
+            f_buff = f_bus->buffers;
+        }
 
         if(a_track->fade_state != FADE_STATE_FADED)
         {
@@ -4264,9 +4274,11 @@ t_pytrack_routing * g_pytrack_routing_get()
     return f_result;
 }
 
-void v_pytrack_routing_set(t_pytrack_routing * self, int a_output)
+void v_pytrack_routing_set(t_pytrack_routing * self, int a_output,
+        int a_sidechain)
 {
     self->output = a_output;
+    self->sidechain = a_sidechain;
 
     if(a_output >= 0)
     {
@@ -4353,8 +4365,13 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
                 int f_output = atoi(f_output_str);
                 free(f_output_str);
 
+                char * f_sidechain_str = c_iterate_2d_char_array(f_2d_array);
+                int f_sidechain = atoi(f_sidechain_str);
+                free(f_sidechain_str);
+
                 v_pytrack_routing_set(
-                    &f_result->routes[f_track_num][f_index], f_output);
+                    &f_result->routes[f_track_num][f_index], f_output,
+                    f_sidechain);
             }
             else if(f_identifier_str[0] == 'c')
             {
