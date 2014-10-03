@@ -6,5 +6,6 @@ import mkplugins.mk_delay
 import mkplugins.mk_eq
 import mkplugins.simple_fader
 import mkplugins.simple_reverb
+import mkplugins.sidechain_comp
 import mkplugins.trigger_fx
 

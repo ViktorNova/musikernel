@@ -33,6 +33,7 @@ extern "C" {
 #include "../plugins/simple_fader/synth.c"
 #include "../plugins/simple_reverb/synth.c"
 #include "../plugins/trigger_fx/synth.c"
+#include "../plugins/sidechain_comp/synth.c"
 
 
 typedef struct
