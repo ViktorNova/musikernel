@@ -87,7 +87,7 @@ void v_scc_run_comp(t_scc_sidechain_comp *self,
     {
         f_gain0 *= self->ratio;
         self->output0 = f_axf_run_xfade(
-            &self->xfade, a_output0, a_output0 * f_gain0);
+            &self->xfade, a_output0, a_output0 * f_db_to_linear_fast(f_gain0));
     }
     else
     {
@@ -98,7 +98,7 @@ void v_scc_run_comp(t_scc_sidechain_comp *self,
     {
         f_gain1 *= self->ratio;
         self->output0 = f_axf_run_xfade(
-            &self->xfade, a_output1, a_output1 * f_gain0);
+            &self->xfade, a_output1, a_output1 * f_db_to_linear_fast(f_gain0));
     }
     else
     {
