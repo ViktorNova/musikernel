@@ -44,6 +44,7 @@ void g_scc_init(t_scc_sidechain_comp * self, float a_sr)
     g_svf2_init(&self->filter, a_sr);
     v_svf2_set_res(&self->filter, -12.0f);
     g_axf_init(&self->xfade, -3.0f);
+    self->speed = 999.99f;
     self->pitch = 999.99f;
     self->ratio = 999.99f;
     self->thresh = 999.99f;
