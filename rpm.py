@@ -248,6 +248,9 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/mkplugins/trigger_fx.pyc
 /usr/lib/{0}/pydaw/python/mkplugins/trigger_fx.pyo
 
+/usr/lib/{0}/pydaw/python/mkplugins/sidechain_comp.py
+/usr/lib/{0}/pydaw/python/mkplugins/sidechain_comp.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/sidechain_comp.pyo
 
 %doc
 
