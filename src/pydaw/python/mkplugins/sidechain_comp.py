@@ -75,14 +75,14 @@ class scc_plugin_ui(pydaw_abstract_plugin_ui):
         self.ratio_knob = pydaw_knob_control(
             f_knob_size, _("Ratio"), SCC_RATIO,
             self.plugin_rel_callback, self.plugin_val_callback,
-            3, 30, 12, KC_DECIMAL, self.port_dict, self.preset_manager)
+            3, 30, 12, KC_INTEGER, self.port_dict, self.preset_manager)
         self.ratio_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 7)
 
         self.speed_knob = pydaw_knob_control(
             f_knob_size, _("Speed"), SCC_SPEED,
             self.plugin_rel_callback, self.plugin_val_callback,
-            20, 100, 50, KC_DECIMAL, self.port_dict, self.preset_manager)
+            20, 100, 50, KC_NONE, self.port_dict, self.preset_manager)
         self.speed_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 15)
 
