@@ -66,11 +66,6 @@ static void v_scc_on_stop(PYFX_Handle instance)
 static void v_scc_connect_buffer(PYFX_Handle instance, int a_index,
         float * DataLocation, int a_is_sidechain)
 {
-    if(a_is_sidechain)
-    {
-        return;
-    }
-
     t_scc *plugin = (t_scc*)instance;
 
     if(a_is_sidechain)
