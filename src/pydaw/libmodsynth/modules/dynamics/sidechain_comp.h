@@ -14,6 +14,7 @@ GNU General Public License for more details.
 #ifndef SIDECHAIN_COMP_H
 #define	SIDECHAIN_COMP_H
 
+#include "../../lib/amp.h"
 #include "../../lib/lms_math.h"
 #include "../filter/svf_stereo.h"
 #include "../signal_routing/audio_xfade.h"
@@ -30,8 +31,8 @@ typedef struct
 }t_scc_sidechain_comp;
 
 void g_scc_init(t_scc_sidechain_comp*, float);
-void g_scc_set(t_scc_sidechain_comp*, float, float, float, float);
-void g_scc_run(t_scc_sidechain_comp*, float, float);
+void v_scc_set(t_scc_sidechain_comp*, float, float, float, float);
+void v_scc_run_comp(t_scc_sidechain_comp*, float, float);
 
 #ifdef	__cplusplus
 }
@@ -51,7 +52,7 @@ void g_scc_init(t_scc_sidechain_comp * self, float a_sr)
     self->output1 = 0.0f;
 }
 
-void g_scc_set(t_scc_sidechain_comp *self, float a_thresh, float a_ratio,
+void v_scc_set(t_scc_sidechain_comp *self, float a_thresh, float a_ratio,
     float a_speed, float a_wet)
 {
     self->thresh = a_thresh;
@@ -71,9 +72,33 @@ void g_scc_set(t_scc_sidechain_comp *self, float a_thresh, float a_ratio,
     }
 }
 
-void g_scc_run(t_scc_sidechain_comp*, float a_input0, float a_input1)
+void v_scc_run_comp(t_scc_sidechain_comp *self, float a_input0, float a_input1)
 {
+    float f_gain0, f_gain1;
 
+    v_svf2_run_2_pole_lp(
+        &self->filter, f_lms_abs(a_input0), f_lms_abs(a_input1));
+
+    f_gain0 = self->thresh - f_linear_to_db_fast(self->filter.output0);
+    f_gain1 = self->thresh - f_linear_to_db_fast(self->filter.output1);
+
+    if(f_gain0 < 0.0f)
+    {
+        self->output0 = a_input0 * f_gain0;
+    }
+    else
+    {
+        self->output0 = a_input0;
+    }
+
+    if(f_gain1 < 0.0f)
+    {
+        self->output1 = a_input1 * f_gain1;
+    }
+    else
+    {
+        self->output1 = a_input1;
+    }
 }
 
 #endif	/* SIDECHAIN_COMP_H */

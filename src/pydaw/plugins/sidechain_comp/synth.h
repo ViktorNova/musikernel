@@ -20,6 +20,7 @@ extern "C" {
 
 #include "../../include/pydaw_plugin.h"
 #include "libmodsynth.h"
+#include "../../libmodsynth/modules/dynamics/sidechain_comp.h"
 
 #define SCC_FIRST_CONTROL_PORT 0
 

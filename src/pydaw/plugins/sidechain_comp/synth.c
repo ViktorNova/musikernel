@@ -217,8 +217,7 @@ static void v_scc_run(
     }
 
     f_i = 0;
-    float f_dry_vol;
-
+    
     while(f_i < sample_count)
     {
         while(midi_event_pos < plugin_data->midi_event_count &&
@@ -239,19 +238,17 @@ static void v_scc_run(
         v_plugin_event_queue_atm_set(
             &plugin_data->atm_queue, f_i, plugin_data->port_table);
 
-        v_rvb_reverb_set(plugin_data->mono_modules->reverb,
-            (*plugin_data->reverb_time) * 0.01f,
-            f_db_to_linear_fast(
-                plugin_data->mono_modules->reverb_smoother->last_value),
-            (*plugin_data->reverb_color) * 0.01f,
-            (*plugin_data->reverb_predelay) * 0.01f);
+        v_scc_set(&plugin_data->mono_modules->sidechain_comp,
+            *plugin_data->threshold, *plugin_data->ratio,
+            *plugin_data->speed, *plugin_data->wet * 0.01f);
+
+        v_scc_run_comp(&plugin_data->mono_modules->sidechain_comp,
+            plugin_data->output0[f_i], plugin_data->output1[f_i]);
 
         plugin_data->output0[f_i] =
-                (plugin_data->output0[f_i] * f_dry_vol) +
-                plugin_data->mono_modules->reverb->output;
+            plugin_data->mono_modules->sidechain_comp.output0;
         plugin_data->output1[f_i] =
-                (plugin_data->output1[f_i] * f_dry_vol) +
-                plugin_data->mono_modules->reverb->output;
+            plugin_data->mono_modules->sidechain_comp.output1;
         ++f_i;
     }
 }

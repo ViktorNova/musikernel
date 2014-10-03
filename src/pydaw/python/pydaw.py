@@ -8081,11 +8081,13 @@ PLUGIN_INSTRUMENT_COUNT = 3  # For inserting the split line into the menu
 
 PLUGIN_NAMES = [
     "Euphoria", "Ray-V", "Way-V", "MK Delay", "MK EQ",
-    "Modulex", "Simple Fader", "Simple Reverb", "TriggerFX"
+    "Modulex", "Simple Fader", "Simple Reverb", "TriggerFX",
+    "Sidechain Comp."
     ]
 PLUGIN_UIDS = {
     "None":0, "Euphoria":1, "Ray-V":2, "Way-V":3, "Modulex":4, "MK Delay":5,
-    "MK EQ":6, "Simple Fader":7, "Simple Reverb":8, "TriggerFX":9
+    "MK EQ":6, "Simple Fader":7, "Simple Reverb":8, "TriggerFX":9,
+    "Sidechain Comp.":10
     }
 WAVE_EDITOR_PLUGIN_NAMES = [
     "None", "MK Delay", "MK EQ", "Modulex", "Simple Fader",
@@ -9095,7 +9097,8 @@ PLUGIN_UI_TYPES = {
     6:mkplugins.mk_eq.mkeq_plugin_ui,
     7:mkplugins.simple_fader.sfader_plugin_ui,
     8:mkplugins.simple_reverb.sreverb_plugin_ui,
-    9:mkplugins.trigger_fx.triggerfx_plugin_ui
+    9:mkplugins.trigger_fx.triggerfx_plugin_ui,
+    10:mkplugins.sidechain_comp.scc_plugin_ui
 }
 
 def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title,
@@ -10314,7 +10317,8 @@ def pydaw_load_controller_maps():
         "MK EQ":mkplugins.mk_eq.MKEQ_PORT_MAP,
         "Simple Fader":mkplugins.simple_fader.SFADER_PORT_MAP,
         "Simple Reverb":mkplugins.simple_reverb.SREVERB_PORT_MAP,
-        "TriggerFX":mkplugins.trigger_fx.TRIGGERFX_PORT_MAP
+        "TriggerFX":mkplugins.trigger_fx.TRIGGERFX_PORT_MAP,
+        "Sidechain Comp.":mkplugins.sidechain_comp.SCC_PORT_MAP,
     }
     for k, v in f_portmap_dict.items():
         for k2, v2 in v.items():

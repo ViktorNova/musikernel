@@ -101,6 +101,9 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
             f_result->descfn =
                     (PYFX_Descriptor_Function)triggerfx_PYFX_descriptor;
             break;
+        case 10:
+            f_result->descfn =
+                (PYFX_Descriptor_Function)scc_PYFX_descriptor;
         default:
             assert(0);
     }
