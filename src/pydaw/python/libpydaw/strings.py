@@ -180,3 +180,15 @@ should click 'Cancel' and close the other instance.
 This could also mean that for some reason the engine didn't properly
 terminate from another session.  If so, click 'OK' to kill the
 other process(es)""")
+
+routing_graph = _(
+"""This shows the routing per-track, this can also be configured from the
+track panel of each individual track.
+Click above the tracks to connect/disconnect a track to a destination track
+behind it, and click below to connect a track to the track in front of it.
+CTRL+click to connect/disconnect to the sidechain input of the track.
+
+Creating feedback loops is not supported, you will receive an error
+message if an attempted connection creates feedback.
+"""
+)

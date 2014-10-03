@@ -10153,9 +10153,9 @@ class pydaw_main_window(QtGui.QMainWindow):
 
     def set_tooltips(self, a_on):
         if a_on:
-            pass
+            ROUTING_GRAPH_WIDGET.setToolTip(libpydaw.strings.routing_graph)
         else:
-            pass
+            ROUTING_GRAPH_WIDGET.setToolTip("")
 
     def regions_tab_changed(self, a_val=None):
         if self.regions_tab_widget.currentIndex() == 1 and \
