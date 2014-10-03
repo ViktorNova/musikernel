@@ -2524,7 +2524,9 @@ class routing_graph_widget(QtGui.QGraphicsView):
             f_x, f_y = self.get_coords(a_event.scenePos())
             if f_x == f_y or f_y == 0:
                 return
-            self.toggle_callback(f_y, f_x)
+            self.toggle_callback(
+                f_y, f_x,
+                1 if a_event.modifiers() == QtCore.Qt.ControlModifier else 0)
 
     def backgroundHoverEvent(self, a_event):
         QtGui.QGraphicsRectItem.hoverMoveEvent(self.background_item, a_event)
@@ -2606,11 +2608,10 @@ class routing_graph_widget(QtGui.QGraphicsView):
             f_node_item.setPos(f_x, f_y)
             if f_i == 0 or f_i not in a_graph.graph:
                 continue
-            f_connections = [
-                (x.output, x.index,
-                 f_sc_wire_pen if x.sidechain else f_wire_pen)
+            f_connections = [(x.output, x.index, x.sidechain)
                 for x in a_graph.graph[f_i].values()]
-            for f_dest_pos, f_wire_index, f_pen in f_connections:
+            for f_dest_pos, f_wire_index, f_sidechain in f_connections:
+                f_pen = f_sc_wire_pen if f_sidechain else f_wire_pen
                 if f_dest_pos > f_i:
                     f_src_x = f_x + self.node_width
                     f_y_wire_offset = (f_wire_index *
@@ -2619,6 +2620,10 @@ class routing_graph_widget(QtGui.QGraphicsView):
                     f_wire_width = ((f_dest_pos - f_i - 1) *
                         self.node_width) + ROUTING_GRAPH_WIRE_INPUT
                     f_v_wire_x = f_src_x + f_wire_width
+                    if f_sidechain:
+                        f_v_wire_x += self.wire_width_div2 * 2
+                    else:
+                        f_v_wire_x -= self.wire_width_div2 * 2
                     f_wire_height = ((f_dest_pos - f_i) *
                         self.node_height) - f_y_wire_offset
                     f_dest_y = f_src_y + f_wire_height
@@ -2634,6 +2639,10 @@ class routing_graph_widget(QtGui.QGraphicsView):
                     f_wire_width = ((f_i - f_dest_pos - 1) *
                         self.node_width) + ROUTING_GRAPH_WIRE_INPUT
                     f_v_wire_x = f_src_x - f_wire_width
+                    if f_sidechain:
+                        f_v_wire_x += self.wire_width_div2 * 2
+                    else:
+                        f_v_wire_x -= self.wire_width_div2 * 2
                     f_wire_height = ((f_i - f_dest_pos - 1) *
                         self.node_height) + f_y_wire_offset
                     f_dest_y = f_src_y - f_wire_height

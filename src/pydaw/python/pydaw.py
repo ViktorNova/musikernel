@@ -11254,9 +11254,9 @@ MIDI_DEVICES_DIALOG = midi_devices_dialog()
 TRANSPORT = transport_widget()
 AUDIO_SEQ_WIDGET = audio_items_viewer_widget()
 
-def routing_graph_toggle_callback(a_src, a_dest):
+def routing_graph_toggle_callback(a_src, a_dest, a_sidechain):
     f_graph = PROJECT.get_routing_graph()
-    f_result = f_graph.toggle(a_src, a_dest)
+    f_result = f_graph.toggle(a_src, a_dest, a_sidechain)
     if f_result:
         QtGui.QMessageBox.warning(MAIN_WINDOW, _("Error"), f_result)
     else:

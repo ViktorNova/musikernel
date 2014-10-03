@@ -2475,10 +2475,11 @@ class pydaw_routing_graph:
 
     def toggle(self, a_src, a_dest, a_sidechain=0):
         f_connected = a_src in self.graph and a_dest in [
-            x.output for x in self.graph[a_src].values()]
+            x.output for x in self.graph[a_src].values()
+            if x.sidechain == a_sidechain]
         if f_connected:
             for k, v in self.graph[a_src].copy().items():
-                if v.output == a_dest:
+                if v.output == a_dest and v.sidechain == a_sidechain:
                     self.graph[a_src].pop(k)
         else:
             if self.check_for_feedback(a_src, a_dest):
