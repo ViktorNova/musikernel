@@ -2578,6 +2578,7 @@ class routing_graph_widget(QtGui.QGraphicsView):
         f_wire_gradient.setColorAt(0.0, QtGui.QColor(250, 250, 255))
         f_wire_gradient.setColorAt(1.0, QtGui.QColor(210, 210, 222))
         f_wire_pen = QtGui.QPen(f_wire_gradient, self.wire_width_div2)
+        f_sc_wire_pen = QtGui.QPen(QtCore.Qt.red, self.wire_width_div2)
         self.setUpdatesEnabled(False)
         self.scene.clear()
         self.background_item = QtGui.QGraphicsRectItem(
@@ -2605,9 +2606,11 @@ class routing_graph_widget(QtGui.QGraphicsView):
             f_node_item.setPos(f_x, f_y)
             if f_i == 0 or f_i not in a_graph.graph:
                 continue
-            f_connections = [(x.output, x.index)
+            f_connections = [
+                (x.output, x.index,
+                 f_sc_wire_pen if x.sidechain else f_wire_pen)
                 for x in a_graph.graph[f_i].values()]
-            for f_dest_pos, f_wire_index in f_connections:
+            for f_dest_pos, f_wire_index, f_pen in f_connections:
                 if f_dest_pos > f_i:
                     f_src_x = f_x + self.node_width
                     f_y_wire_offset = (f_wire_index *
@@ -2620,9 +2623,9 @@ class routing_graph_widget(QtGui.QGraphicsView):
                         self.node_height) - f_y_wire_offset
                     f_dest_y = f_src_y + f_wire_height
                     self.scene.addLine( # horizontal wire
-                        f_src_x, f_src_y, f_v_wire_x, f_src_y, f_wire_pen)
+                        f_src_x, f_src_y, f_v_wire_x, f_src_y, f_pen)
                     self.scene.addLine( # vertical wire
-                        f_v_wire_x, f_src_y, f_v_wire_x, f_dest_y, f_wire_pen)
+                        f_v_wire_x, f_src_y, f_v_wire_x, f_dest_y, f_pen)
                 else:
                     f_src_x = f_x
                     f_y_wire_offset = (f_wire_index *
@@ -2635,9 +2638,9 @@ class routing_graph_widget(QtGui.QGraphicsView):
                         self.node_height) + f_y_wire_offset
                     f_dest_y = f_src_y - f_wire_height
                     self.scene.addLine( # horizontal wire
-                        f_v_wire_x, f_src_y, f_src_x, f_src_y, f_wire_pen)
+                        f_v_wire_x, f_src_y, f_src_x, f_src_y, f_pen)
                     self.scene.addLine( # vertical wire
-                        f_v_wire_x, f_dest_y, f_v_wire_x, f_src_y, f_wire_pen)
+                        f_v_wire_x, f_dest_y, f_v_wire_x, f_src_y, f_pen)
 
         self.setUpdatesEnabled(True)
         self.update()
