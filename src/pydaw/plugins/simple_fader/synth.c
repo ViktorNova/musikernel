@@ -64,8 +64,13 @@ static void v_sfader_on_stop(PYFX_Handle instance)
 }
 
 static void v_sfader_connect_buffer(PYFX_Handle instance, int a_index,
-        float * DataLocation)
+        float * DataLocation, int a_is_sidechain)
 {
+    if(a_is_sidechain)
+    {
+        return;
+    }
+    
     t_sfader *plugin = (t_sfader*)instance;
     plugin->buffers[a_index] = DataLocation;
 }

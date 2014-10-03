@@ -65,8 +65,13 @@ static void v_mkdelay_on_stop(PYFX_Handle instance)
 }
 
 static void v_mkdelay_connect_buffer(PYFX_Handle instance, int a_index,
-        float * DataLocation)
+        float * DataLocation, int a_is_sidechain)
 {
+    if(a_is_sidechain)
+    {
+        return;
+    }
+    
     t_mkdelay *plugin = (t_mkdelay*)instance;
 
     switch(a_index)

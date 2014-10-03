@@ -77,8 +77,13 @@ static void v_euphoria_on_stop(PYFX_Handle instance)
 }
 
 static void euphoriaConnectBuffer(PYFX_Handle instance, int a_index,
-        float * DataLocation)
+        float * DataLocation, int a_is_sidechain)
 {
+    if(a_is_sidechain)
+    {
+        return;
+    }
+    
     t_euphoria *plugin = (t_euphoria *) instance;
 
     switch(a_index)

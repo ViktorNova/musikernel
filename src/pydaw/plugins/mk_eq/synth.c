@@ -65,8 +65,13 @@ static void v_mkeq_on_stop(PYFX_Handle instance)
 }
 
 static void v_mkeq_connect_buffer(PYFX_Handle instance, int a_index,
-        float * DataLocation)
+        float * DataLocation, int a_is_sidechain)
 {
+    if(a_is_sidechain)
+    {
+        return;
+    }
+    
     t_mkeq *plugin = (t_mkeq*)instance;
 
     switch(a_index)

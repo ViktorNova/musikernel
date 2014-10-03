@@ -33,6 +33,8 @@ typedef struct
     int bus_counter __attribute__((aligned(16)));
     t_pkm_peak_meter * peak_meter;
     float ** buffers;
+    float ** sc_buffers;
+    int sc_buffers_dirty;
     int channels;
     pthread_spinlock_t lock;
     t_ramp_env * fade_env;
@@ -141,7 +143,7 @@ void g_musikernel_get(float a_sr)
         musikernel->audio_inputs[f_i] = g_pyaudio_input_get(a_sr);
         musikernel->audio_inputs[f_i]->input_port[0] = f_i * 2;
         musikernel->audio_inputs[f_i]->input_port[1] = (f_i * 2) + 1;
-        f_i++;
+        ++f_i;
     }
 
     /* Create OSC thread */
@@ -168,7 +170,7 @@ void g_musikernel_get(float a_sr)
     while(f_i < MAX_PLUGIN_POOL_COUNT)
     {
         musikernel->plugin_pool[f_i] = 0;
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -214,7 +216,7 @@ inline void v_pydaw_zero_buffer(float ** a_buffers, int a_count)
     {
         a_buffers[0][f_i2] = 0.0f;
         a_buffers[1][f_i2] = 0.0f;
-        f_i2++;
+        ++f_i2;
     }
 }
 
@@ -230,19 +232,25 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     f_result->extern_midi = 0;
     f_result->extern_midi_count = &ZERO;
     f_result->midi_device = 0;
+    f_result->sc_buffers_dirty = 0;
 
     pthread_spin_init(&f_result->lock, 0);
 
     lmalloc((void**)&f_result->buffers, (sizeof(float*) * f_result->channels));
+    lmalloc((void**)&f_result->sc_buffers,
+        (sizeof(float*) * f_result->channels));
 
     while(f_i < f_result->channels)
     {
         buffer_alloc((void**)&f_result->buffers[f_i],
             (sizeof(float) * FRAMES_PER_BUFFER));
-        f_i++;
+        buffer_alloc((void**)&f_result->sc_buffers[f_i],
+            (sizeof(float) * FRAMES_PER_BUFFER));
+        ++f_i;
     }
 
     v_pydaw_zero_buffer(f_result->buffers, FRAMES_PER_BUFFER);
+    v_pydaw_zero_buffer(f_result->sc_buffers, FRAMES_PER_BUFFER);
 
     f_result->mute = 0;
     f_result->solo = 0;
@@ -256,14 +264,14 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     while(f_i < PYDAW_MAX_EVENT_BUFFER_SIZE)
     {
         v_pydaw_ev_clear(&f_result->event_buffer[f_i]);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
     while(f_i < MAX_PLUGIN_TOTAL_COUNT)
     {
         f_result->plugins[f_i] = 0;
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -271,7 +279,7 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     while(f_i < PYDAW_MIDI_NOTE_COUNT)
     {
         f_result->note_offs[f_i] = -1;
-        f_i++;
+        ++f_i;
     }
 
     f_result->period_event_index = 0;
@@ -339,7 +347,7 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                             buffer_to_flush)] = 0;
                 }
 
-                f_i++;
+                ++f_i;
             }
         }
         else
@@ -369,7 +377,7 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                     musikernel->audio_inputs[f_i]->recording_stopped = 0;
                     musikernel->audio_inputs[f_i]->sndfile = 0;
                 }
-                f_i++;
+                ++f_i;
             }
 
             /*Re-create the sndfile if it no longer exists, that means the
@@ -391,7 +399,7 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                                 musikernel->audio_inputs[f_i], f_file_name);
                     }
                 }
-                f_i++;
+                ++f_i;
             }
 
         }

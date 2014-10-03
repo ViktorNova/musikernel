@@ -93,8 +93,13 @@ static void v_rayv_on_stop(PYFX_Handle instance)
 }
 
 static void v_rayv_connect_buffer(PYFX_Handle instance, int a_index,
-        float * DataLocation)
+        float * DataLocation, int a_is_sidechain)
 {
+    if(a_is_sidechain)
+    {
+        return;
+    }
+    
     t_rayv *plugin = (t_rayv*)instance;
 
     switch(a_index)

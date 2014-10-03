@@ -103,7 +103,7 @@ typedef struct _PYFX_Descriptor {
     /* Assign the audio buffer at DataLocation to index a_index
      */
     void (*connect_buffer)(PYFX_Handle Instance, int a_index,
-            float * DataLocation);
+            float * DataLocation, int a_is_sidechain);
 
     void (*cleanup)(PYFX_Handle Instance);
 
