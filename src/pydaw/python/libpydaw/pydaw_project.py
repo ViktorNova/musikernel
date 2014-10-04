@@ -17,7 +17,7 @@ import re
 import traceback
 import subprocess
 import tarfile
-import ast
+import json
 
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
@@ -76,7 +76,7 @@ pydaw_file_pystretch = "audio/stretch.txt"
 pydaw_file_pystretch_map = "audio/stretch_map.txt"
 pydaw_file_notes = "projects/edmnext/notes.txt"
 pydaw_file_wave_editor_bookmarks = "projects/edmnext/wave_editor_bookmarks.txt"
-pydaw_file_backups = "backups"
+pydaw_file_backups = "backups.json"
 
 #Anything smaller gets deleted when doing a transform
 pydaw_min_note_length = 4.0 / 129.0
@@ -316,9 +316,11 @@ class pydaw_project:
             self.this_pydaw_osc.pydaw_open_song(self.project_folder)
 
     def create_backup(self, a_name=None):
-        f_backup_name = a_name if a_name else str(datetime.datetime.now())
+        f_backup_name = a_name if a_name else \
+            datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         with tarfile.open(
-        "{}/{}".format(self.backups_folder, f_backup_name), "w:bz2") as f_tar:
+        "{}/{}.tar.bz2".format(self.backups_folder, f_backup_name),
+        "w:bz2") as f_tar:
             f_tar.add(
                 self.projects_folder,
                 arcname=os.path.basename(self.projects_folder))
@@ -333,18 +335,20 @@ class pydaw_project:
             self.save_backups_history(f_history)
         else:
             self.save_backups_history(
-                {"NODES":{}, "CURRENT":{f_backup_name:{}}})
+                {"NODES":{f_backup_name:{}}, "CURRENT":f_backup_name})
 
     def get_backups_history(self):
         if os.path.exists(self.backups_file):
             with open(self.backups_file) as f_handle:
-                return ast.literal_eval(f_handle.read())
+                return json.load(f_handle)
         else:
             return None
 
     def save_backups_history(self, a_struct):
         with open(self.backups_file, "w") as f_handle:
-            f_handle.write(str(a_struct))
+            json.dump(
+                a_struct, f_handle, sort_keys=True, indent=4,
+                separators=(',', ': '))
 
     def get_next_glued_file_name(self):
         while True:

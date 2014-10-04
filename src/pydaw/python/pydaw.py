@@ -9208,11 +9208,22 @@ class pydaw_main_window(QtGui.QMainWindow):
         self.open_action.triggered.connect(self.on_open)
         self.open_action.setShortcut(QtGui.QKeySequence.Open)
 
+        self.save_action = self.menu_file.addAction(
+            _("Save (projects are automatically saved, "
+            "this creates a timestamped backup)"))
+        self.save_action.triggered.connect(self.on_save)
+        self.save_action.setShortcut(QtGui.QKeySequence.Save)
+
         self.save_as_action = self.menu_file.addAction(
-            _("Save As...(projects are automatically saved, "
-            "this creates a copy)"))
+            _("Save As...(this creates a named backup)"))
         self.save_as_action.triggered.connect(self.on_save_as)
         self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
+
+        self.save_copy_action = self.menu_file.addAction(
+            _("Save Copy...("
+            "this creates a full copy of the project directory)"))
+        self.save_copy_action.triggered.connect(self.on_save_copy)
+
         self.menu_file.addSeparator()
 
         self.offline_render_action = self.menu_file.addAction(
@@ -9457,13 +9468,43 @@ class pydaw_main_window(QtGui.QMainWindow):
         except Exception as ex:
             pydaw_print_generic_exception(ex)
 
+    def on_save(self):
+        PROJECT.create_backup()
+
     def on_save_as(self):
+        if IS_PLAYING:
+            return
+        def ok_handler():
+            f_name = str(f_lineedit.text()).strip()
+            f_name = f_name.replace("/", "")
+            if f_name:
+                PROJECT.create_backup(f_name)
+                f_window.close()
+
+        f_window = QtGui.QDialog()
+        f_window.setWindowTitle(_("Save As..."))
+        f_layout = QtGui.QVBoxLayout(f_window)
+        f_lineedit = QtGui.QLineEdit()
+        f_lineedit.setMinimumWidth(240)
+        f_lineedit.setMaxLength(48)
+        f_layout.addWidget(f_lineedit)
+        f_ok_layout = QtGui.QHBoxLayout()
+        f_layout.addLayout(f_ok_layout)
+        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button.pressed.connect(ok_handler)
+        f_ok_layout.addWidget(f_ok_button)
+        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_ok_layout.addWidget(f_cancel_button)
+        f_cancel_button.pressed.connect(f_window.close)
+        f_window.exec_()
+
+    def on_save_copy(self):
         if IS_PLAYING:
             return
         try:
             while True:
                 f_new_file = QtGui.QFileDialog.getSaveFileName(
-                    self, _("Save project as..."),
+                    self, _("Save copy of project as..."),
                     directory="{}/{}.{}".format(global_default_project_folder,
                     PROJECT.project_file, global_pydaw_version_string))
                 if not f_new_file is None and not str(f_new_file) == "":
