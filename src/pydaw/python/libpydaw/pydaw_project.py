@@ -16,6 +16,8 @@ import os
 import re
 import traceback
 import subprocess
+import tarfile
+import ast
 
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
@@ -54,6 +56,8 @@ pydaw_folder_samples = "audio/samples"
 pydaw_folder_timestretch = "audio/timestretch"
 pydaw_folder_glued = "audio/glued"
 pydaw_folder_user = "user"
+pydaw_folder_backups = "backups"
+pydaw_folder_projects = "projects"
 pydaw_folder_plugins = "projects/plugins"
 pydaw_folder_tracks = "projects/edmnext/tracks"
 wavenext_folder_tracks = "projects/wavenext/tracks"
@@ -72,6 +76,7 @@ pydaw_file_pystretch = "audio/stretch.txt"
 pydaw_file_pystretch_map = "audio/stretch_map.txt"
 pydaw_file_notes = "projects/edmnext/notes.txt"
 pydaw_file_wave_editor_bookmarks = "projects/edmnext/wave_editor_bookmarks.txt"
+pydaw_file_backups = "backups"
 
 #Anything smaller gets deleted when doing a transform
 pydaw_min_note_length = 4.0 / 129.0
@@ -214,6 +219,10 @@ class pydaw_project:
             self.project_folder, pydaw_folder_glued)
         self.user_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_user)
+        self.backups_folder = "{}/{}".format(
+            self.project_folder, pydaw_folder_backups)
+        self.projects_folder = "{}/{}".format(
+            self.project_folder, pydaw_folder_projects)
         self.plugin_pool_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_plugins)
         self.track_pool_folder = "{}/{}".format(
@@ -242,6 +251,8 @@ class pydaw_project:
             self.project_folder, pydaw_file_routing_graph)
         self.midi_routing_file = "{}/{}".format(
             self.project_folder, pydaw_file_midi_routing)
+        self.backups_file = "{}/{}".format(
+            self.project_folder, pydaw_file_backups)
 
         pydaw_clear_sample_graph_cache()
 
@@ -267,7 +278,8 @@ class pydaw_project:
             self.audio_tmp_folder, self.regions_audio_folder,
             self.timestretch_folder, self.glued_folder, self.user_folder,
             self.plugin_pool_folder, self.track_pool_folder,
-            self.wn_track_pool_folder, self.regions_atm_folder]
+            self.wn_track_pool_folder, self.regions_atm_folder,
+            self.projects_folder, self.backups_folder]
 
         for project_dir in project_folders:
             print(project_dir)
@@ -302,6 +314,37 @@ class pydaw_project:
         self.commit("Created project")
         if a_notify_osc:
             self.this_pydaw_osc.pydaw_open_song(self.project_folder)
+
+    def create_backup(self, a_name=None):
+        f_backup_name = a_name if a_name else str(datetime.datetime.now())
+        with tarfile.open(
+        "{}/{}".format(self.backups_folder, f_backup_name), "w:bz2") as f_tar:
+            f_tar.add(
+                self.projects_folder,
+                arcname=os.path.basename(self.projects_folder))
+        f_history = self.get_backups_history()
+        if f_history:
+            f_node = f_history["NODES"]
+            for f_name in f_history["CURRENT"].split("/"):
+                f_node = f_node[f_name]
+            f_node[f_backup_name] = {}
+            f_history["CURRENT"] = "{}/{}".format(
+                f_history["CURRENT"], f_backup_name)
+            self.save_backups_history(f_history)
+        else:
+            self.save_backups_history(
+                {"NODES":{}, "CURRENT":{f_backup_name:{}}})
+
+    def get_backups_history(self):
+        if os.path.exists(self.backups_file):
+            with open(self.backups_file) as f_handle:
+                return ast.literal_eval(f_handle.read())
+        else:
+            return None
+
+    def save_backups_history(self, a_struct):
+        with open(self.backups_file, "w") as f_handle:
+            f_handle.write(str(a_struct))
 
     def get_next_glued_file_name(self):
         while True:
