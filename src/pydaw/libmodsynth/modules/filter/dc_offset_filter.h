@@ -14,11 +14,13 @@ GNU General Public License for more details.
 #ifndef DC_OFFSET_FILTER_H
 #define	DC_OFFSET_FILTER_H
 
+#include "../../lib/denormal.h"
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-typedef struct st_dco_dc_offset_filter
+typedef struct
 {
     float in_n_m1, out_n_m1, coeff, output;
 }t_dco_dc_offset_filter;
@@ -29,11 +31,13 @@ inline void v_dco_reset(t_dco_dc_offset_filter*);
 
 inline float f_dco_run(t_dco_dc_offset_filter*__restrict a_dco,float a_in)
 {
-    a_dco->output = (a_in - (a_dco->in_n_m1)) + ((a_dco->out_n_m1) * (a_dco->coeff));
-    
+    a_dco->output =
+        (a_in - (a_dco->in_n_m1)) + ((a_dco->out_n_m1) * (a_dco->coeff));
+    a_dco->output = f_remove_denormal(a_dco->output);
+
     a_dco->in_n_m1 = a_in;
     a_dco->out_n_m1 = (a_dco->output);
-    
+
     return (a_dco->output);
 }
 
@@ -46,11 +50,12 @@ inline void v_dco_reset(t_dco_dc_offset_filter*__restrict a_dco)
 
 t_dco_dc_offset_filter * g_dco_get(float a_sr)
 {
-    t_dco_dc_offset_filter * f_result = (t_dco_dc_offset_filter*)malloc(sizeof(t_dco_dc_offset_filter));
-    
+    t_dco_dc_offset_filter * f_result;
+    lmalloc((void**)&f_result, sizeof(t_dco_dc_offset_filter));
+
     f_result->coeff = (1.0f - (6.6f/a_sr));
     v_dco_reset(f_result);
-    
+
     return f_result;
 }
 

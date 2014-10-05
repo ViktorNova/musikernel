@@ -57,7 +57,6 @@ typedef struct
     float cutoff_base, cutoff_mod, cutoff_last,  velocity_mod_amt;
     /*For the eq*/
     float gain_db, gain_linear;
-    float oversample_iterator;
     t_svf_kernel filter_kernels [SVF_MAX_CASCADE];
 } t_state_variable_filter;
 
@@ -96,7 +95,7 @@ inline void v_svf_reset(t_state_variable_filter*);
 
 inline void v_svf_reset(t_state_variable_filter * a_svf)
 {
-    int f_i = 0;
+    register int f_i = 0;
     while(f_i < SVF_MAX_CASCADE)
     {
         a_svf->filter_kernels[f_i].bp = 0.0f;
@@ -106,7 +105,7 @@ inline void v_svf_reset(t_state_variable_filter * a_svf)
         a_svf->filter_kernels[f_i].hp = 0.0f;
         a_svf->filter_kernels[f_i].lp = 0.0f;
         a_svf->filter_kernels[f_i].lp_m1 = 0.0f;
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -231,20 +230,19 @@ inline void v_svf_set_input_value(t_state_variable_filter *__restrict a_svf,
 {
     a_kernel->filter_input = a_input_value;
 
-    a_svf->oversample_iterator = 0.0f;
+    register float oversample_iterator = 0.0f;
 
-    while((a_svf->oversample_iterator) < 1.0f)
+    while((oversample_iterator) < 1.0f)
     {
         a_kernel->hp = f_linear_interpolate((a_kernel->filter_last_input),
-                (a_kernel->filter_input), (a_svf->oversample_iterator))
+                (a_kernel->filter_input), (oversample_iterator))
         - (((a_kernel->bp_m1) * (a_svf->filter_res)) + (a_kernel->lp_m1));
         a_kernel->bp = ((a_kernel->hp) * (a_svf->cutoff_filter)) +
                 (a_kernel->bp_m1);
         a_kernel->lp = ((a_kernel->bp) * (a_svf->cutoff_filter)) +
                 (a_kernel->lp_m1);
 
-        a_svf->oversample_iterator = (a_svf->oversample_iterator) +
-                SVF_OVERSAMPLE_STEP_SIZE;
+        oversample_iterator += SVF_OVERSAMPLE_STEP_SIZE;
     }
 
     a_kernel->bp_m1 = f_remove_denormal((a_kernel->bp));
@@ -484,8 +482,6 @@ void g_svf_init(t_state_variable_filter * f_svf, float a_sample_rate)
 
     f_svf->gain_db = 0.0f;
     f_svf->gain_linear = 1.0f;
-
-    f_svf->oversample_iterator = 0.0f;
 
     v_svf_set_cutoff_base(f_svf, 75.0f);
     v_svf_add_cutoff_mod(f_svf, 0.0f);

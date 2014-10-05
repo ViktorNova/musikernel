@@ -50,7 +50,6 @@ typedef struct
     float cutoff_note, cutoff_hz, cutoff_filter, pi2_div_sr, sr, filter_res,
             filter_res_db, velocity_cutoff; //, velocity_cutoff_amt;
     float cutoff_base, cutoff_mod, cutoff_last,  velocity_mod_amt;
-    float oversample_iterator;
     t_svf2_kernel filter_kernels [SVF_MAX_CASCADE][2];
     float output0, output1;
 } t_svf2_filter;
@@ -83,7 +82,7 @@ inline void v_svf2_reset(t_svf2_filter*);
 
 inline void v_svf2_reset(t_svf2_filter * a_svf2)
 {
-    int f_i = 0;
+    register int f_i = 0;
     while(f_i < SVF_MAX_CASCADE)
     {
         a_svf2->filter_kernels[f_i][0].bp = 0.0f;
@@ -102,7 +101,7 @@ inline void v_svf2_reset(t_svf2_filter * a_svf2)
         a_svf2->filter_kernels[f_i][1].lp = 0.0f;
         a_svf2->filter_kernels[f_i][1].lp_m1 = 0.0f;
 
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -203,20 +202,19 @@ inline void v_svf2_run(t_svf2_filter *__restrict a_svf,
 {
     a_kernel->filter_input = a_input_value;
 
-    a_svf->oversample_iterator = 0.0f;
+    register float oversample_iterator = 0.0f;
 
-    while((a_svf->oversample_iterator) < 1.0f)
+    while((oversample_iterator) < 1.0f)
     {
         a_kernel->hp = f_linear_interpolate((a_kernel->filter_last_input),
-                (a_kernel->filter_input), (a_svf->oversample_iterator))
+                (a_kernel->filter_input), oversample_iterator)
         - (((a_kernel->bp_m1) * (a_svf->filter_res)) + (a_kernel->lp_m1));
         a_kernel->bp = ((a_kernel->hp) *
                 (a_svf->cutoff_filter)) + (a_kernel->bp_m1);
         a_kernel->lp = ((a_kernel->bp) *
                 (a_svf->cutoff_filter)) + (a_kernel->lp_m1);
 
-        a_svf->oversample_iterator =
-                (a_svf->oversample_iterator) + SVF_OVERSAMPLE_STEP_SIZE;
+        oversample_iterator += SVF_OVERSAMPLE_STEP_SIZE;
     }
 
     a_kernel->bp_m1 = f_remove_denormal((a_kernel->bp));
@@ -460,8 +458,6 @@ void g_svf2_init(t_svf2_filter * f_svf, float a_sample_rate)
     f_svf->filter_res = 0.5f;
     f_svf->velocity_cutoff = 0.0f;
     f_svf->velocity_mod_amt = 1.0f;
-
-    f_svf->oversample_iterator = 0.0f;
 
     v_svf2_set_cutoff_base(f_svf, 75.0f);
     v_svf2_add_cutoff_mod(f_svf, 0.0f);

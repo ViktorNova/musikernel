@@ -402,7 +402,7 @@ void v_pydaw_run(float ** buffers, int sample_count)
     {
         /*Clear the output buffer*/
         musikernel->input_buffers_active = 0;
-        int f_i = 0;
+        register int f_i = 0;
 
         while(f_i < sample_count)
         {
@@ -508,7 +508,7 @@ void v_pydaw_reset_audio_item_read_heads(t_pydaw_data * self,
     t_pydaw_audio_items * f_audio_items = self->
             pysong->audio_items[a_region];
 
-    int f_i = 0;
+    register int f_i = 0;
     float f_start_beats = (float)(a_start_bar * 4);
 
     while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
@@ -549,7 +549,7 @@ void v_pydaw_reset_audio_item_read_heads(t_pydaw_data * self,
  */
 void v_pydaw_zero_all_buffers(t_pydaw_data * self)
 {
-    int f_i = 0;
+    register int f_i = 0;
     float ** f_buff;
     while(f_i < EN_TRACK_COUNT)
     {
@@ -564,8 +564,8 @@ void v_pydaw_zero_all_buffers(t_pydaw_data * self)
  */
 void v_pydaw_panic(t_pydaw_data * self)
 {
-    int f_i = 0;
-    int f_i2 = 0;
+    register int f_i = 0;
+    register int f_i2 = 0;
     t_pytrack * f_track;
     t_pydaw_plugin * f_plugin;
 
@@ -1279,8 +1279,8 @@ void v_pydaw_set_control_from_cc(
 
 inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
 {
-    int f_i = 0;
-    int f_i2;
+    register int f_i = 0;
+    register int f_i2;
     int f_global_track_num;
 
     while(f_i < EN_TRACK_COUNT)
@@ -1311,8 +1311,7 @@ inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
 
     while(f_i < EN_TRACK_COUNT)
     {
-        self->track_pool[f_i]->bus_counter =
-            self->track_pool[f_i]->bus_count;
+        self->track_pool[f_i]->bus_counter = self->track_pool[f_i]->bus_count;
         ++f_i;
     }
 }
@@ -1357,7 +1356,7 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         }
     }
 
-    int f_i2 = 0;
+    register int f_i2 = 0;
 
     if(a_track->fade_state == FADE_STATE_OFF)
     {
@@ -1396,7 +1395,7 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
     }
 
 
-    int f_i3 = 0;
+    register int f_i3 = 0;
 
     while(f_i3 < MAX_ROUTING_COUNT)
     {
@@ -1964,7 +1963,7 @@ inline void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
 {
     t_pytrack * f_track = self->track_pool[f_i];
 
-    int f_i2 = 0;
+    register int f_i2 = 0;
 
     while(f_i2 < PYDAW_MIDI_NOTE_COUNT)
     {
@@ -2000,7 +1999,7 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
 
     assert(f_extern_midi_count < 200);
 
-    int f_i2 = 0;
+    register int f_i2 = 0;
 
     char * f_osc_msg = a_track->osc_cursor_message;
 
@@ -2261,7 +2260,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         }
     }
 
-    int f_i = 0;
+    register int f_i = 0;
     while(f_i < EN_TRACK_COUNT)
     {
         self->track_pool[f_i]->status = STATUS_NOT_PROCESSED;
@@ -2333,7 +2332,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
 
     if(musikernel->is_previewing)
     {
-        int f_i = 0;
+        register int f_i = 0;
         while(f_i < sample_count)
         {
             if(musikernel->preview_audio_item->sample_read_head->whole_number >=
@@ -2398,7 +2397,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
 
     if(!musikernel->is_offline_rendering && MASTER_VOL != 1.0f)
     {
-        int f_i = 0;
+        register int f_i = 0;
         while(f_i < sample_count)
         {
             a_buffers[0][f_i] *= MASTER_VOL;
@@ -2574,7 +2573,7 @@ inline void v_pydaw_audio_items_run(t_pydaw_data * self,
                     continue;
                 }
 
-                int f_i2 = f_start_sample;
+                register int f_i2 = f_start_sample;
 
                 if(((f_audio_item->adjusted_start_beat) >=
                         f_adjusted_song_pos_beats) &&
@@ -3607,7 +3606,7 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
     {
         case 0: //stop
         {
-            int f_i = 0;
+            register int f_i = 0;
             t_pytrack * f_track;
 
             if(a_lock)
@@ -3765,7 +3764,7 @@ void v_set_playback_cursor(t_pydaw_data * self, int a_region, int a_bar)
 
     v_pydaw_reset_audio_item_read_heads(self, a_region, a_bar);
 
-    int f_i = 0;
+    register int f_i = 0;
 
     while(f_i < EN_TRACK_COUNT)
     {
@@ -3906,7 +3905,7 @@ inline float v_pydaw_count_beats(t_pydaw_data * self,
 {
     int f_bar_count = a_end_bar - a_start_bar;
 
-    int f_i = a_start_region;
+    register int f_i = a_start_region;
     int f_beat_total = 0;
 
     while(f_i < a_end_region)
@@ -3932,7 +3931,7 @@ inline float v_pydaw_count_beats(t_pydaw_data * self,
 void v_pydaw_offline_render_prep(t_pydaw_data * self)
 {
     printf("Warming up plugins for offline rendering...\n");
-    int f_i = 0;
+    register int f_i = 0;
     t_pytrack * f_track;
     t_pydaw_plugin * f_plugin;
 
@@ -3969,7 +3968,7 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
 
     int f_bar_count = a_end_bar - a_start_bar;
 
-    int f_i = a_start_region;
+    register int f_i = a_start_region;
     int f_beat_total = 0;
 
     while(f_i < a_end_region)

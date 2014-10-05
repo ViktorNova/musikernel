@@ -125,7 +125,7 @@ static void v_wayv_connect_buffer(PYFX_Handle instance, int a_index,
     {
         return;
     }
-    
+
     t_wayv *plugin = (t_wayv*)instance;
 
     switch(a_index)
@@ -924,7 +924,7 @@ static void v_wayv_process_midi_event(
             plugin_data->sv_last_note =
                     (plugin_data->data[f_voice]->note_f);
 
-            int i_dst, i_fx_grps, i_src, i_ctrl;
+            register int i_dst, i_fx_grps, i_src, i_ctrl;
 
             plugin_data->active_polyfx_count[f_voice] = 0;
             //Determine which PolyFX have been enabled
@@ -1119,7 +1119,7 @@ static void v_run_wayv(
 
     plugin_data->voices->poly_mode = f_poly_mode;
 
-    int f_i = 0;
+    register int f_i = 0;
 
     while(f_i < event_count)
     {
@@ -1148,7 +1148,7 @@ static void v_run_wayv(
     }
 
     /*Clear the output buffer*/
-    int i_iterator = 0;
+    register int i_iterator = 0;
 
     while((i_iterator) < sample_count)
     {
@@ -1257,7 +1257,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
         t_voc_single_voice a_poly_voice, t_wayv_poly_voice *a_voice,
         PYFX_Data *out0, PYFX_Data *out1, int a_i, int a_voice_num)
 {
-    a_voice->i_voice = a_i;
+    register int i_voice = a_i;
 
     if((plugin_data->sampleNo) < (a_poly_voice.on))
     {
@@ -1325,7 +1325,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
             (a_voice->lfo_pitch_output);
     }
 
-    int f_osc_num = 0;
+    register int f_osc_num = 0;
     float f_macro_amp;
     float f_osc_amp;
 
@@ -1342,7 +1342,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
                     (*plugin_data->osc_pitch[f_osc_num]) +
                     ((*plugin_data->osc_tune[f_osc_num]) * 0.01f) ));
 
-            int f_i = 0;
+            register int f_i = 0;
             while(f_i < WAYV_OSC_COUNT)
             {
                 a_voice->fm_osc_values[f_osc_num][f_i] =
@@ -1520,8 +1520,8 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
                 a_voice->noise_func_ptr(a_voice->white_noise1) *
                 (a_voice->noise_linamp) * a_voice->adsr_noise->output *
                 a_voice->adsr_main->output;
-            out0[(a_voice->i_voice)] += f_noise;
-            out1[(a_voice->i_voice)] += f_noise;
+            out0[(i_voice)] += f_noise;
+            out1[(i_voice)] += f_noise;
         }
         else
         {
@@ -1529,23 +1529,23 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
                 (a_voice->noise_func_ptr(a_voice->white_noise1) *
                 (a_voice->noise_linamp)) *
                 a_voice->adsr_main->output;
-            out0[(a_voice->i_voice)] += f_noise;
-            out1[(a_voice->i_voice)] += f_noise;
+            out0[(i_voice)] += f_noise;
+            out1[(i_voice)] += f_noise;
         }
     }
 
     if(a_voice->adsr_prefx)
     {
-        out0[(a_voice->i_voice)] += (a_voice->modulex_current_sample[0]) *
+        out0[(i_voice)] += (a_voice->modulex_current_sample[0]) *
             (a_voice->master_vol_lin);
-        out1[(a_voice->i_voice)] += (a_voice->modulex_current_sample[1]) *
+        out1[(i_voice)] += (a_voice->modulex_current_sample[1]) *
             (a_voice->master_vol_lin);
     }
     else
     {
-        out0[(a_voice->i_voice)] += (a_voice->modulex_current_sample[0]) *
+        out0[(i_voice)] += (a_voice->modulex_current_sample[0]) *
             (a_voice->adsr_main->output) * (a_voice->master_vol_lin);
-        out1[(a_voice->i_voice)] += (a_voice->modulex_current_sample[1]) *
+        out1[(i_voice)] += (a_voice->modulex_current_sample[1]) *
             (a_voice->adsr_main->output) * (a_voice->master_vol_lin);
     }
 }

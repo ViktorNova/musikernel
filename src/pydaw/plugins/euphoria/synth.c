@@ -83,7 +83,7 @@ static void euphoriaConnectBuffer(PYFX_Handle instance, int a_index,
     {
         return;
     }
-    
+
     t_euphoria *plugin = (t_euphoria *) instance;
 
     switch(a_index)
@@ -504,7 +504,7 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
 
     plugin_data->smp_pit_ratio = g_pit_ratio();
 
-    int f_i = 0;
+    register int f_i = 0;
     while(f_i < EUPHORIA_MAX_SAMPLE_COUNT)
     {
         plugin_data->sampleStarts[f_i] = 0;
@@ -713,7 +713,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
     f_voice->modulex_current_sample[0] = 0.0f;
     f_voice->modulex_current_sample[1] = 0.0f;
 
-    int i_loaded_samples = 0;
+    register int i_loaded_samples = 0;
 
     //Calculating and summing all of the interpolated samples for this note
     while(i_loaded_samples < (plugin_data->sample_indexes_count[n]))
@@ -788,7 +788,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
     }
 
     //Modular PolyFX, processed from the index created during note_on
-    int i_dst = 0;
+    register int i_dst = 0;
     while(i_dst < plugin_data->active_polyfx_count[n])
     {
         v_mf3_set(f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])],
@@ -836,8 +836,8 @@ static inline void v_euphoria_slow_index(t_euphoria* plugin_data)
     plugin_data->i_slow_index = 0;
     plugin_data->monofx_channel_index_count = 0;
 
-    int i = 0;
-    int i3;
+    register int i = 0;
+    register int i3;
 
     while(i < EUPHORIA_MONO_FX_GROUPS_COUNT)
     {
@@ -907,7 +907,7 @@ static void v_euphoria_process_midi_event(
             plugin_data->sample_indexes_count[f_voice_num] = 0;
 
             //Figure out which samples to play and stash all relevant values
-            int i = 0;
+            register int i = 0;
             while(i  < (plugin_data->loaded_samples_count))
             {
                 if((f_note >= ((int)(*(plugin_data->low_note[(plugin_data->loaded_samples[i])])))) &&
@@ -1063,7 +1063,7 @@ static void v_euphoria_process_midi_event(
 
             plugin_data->active_polyfx_count[f_voice_num] = 0;
             //Determine which PolyFX have been enabled
-            int i_dst, i_fx_grps, i_src, i_ctrl;
+            register int i_dst, i_fx_grps, i_src, i_ctrl;
             i_dst = 0;
             while((i_dst) < EUPHORIA_MODULAR_POLYFX_COUNT)
             {
@@ -1231,10 +1231,10 @@ static void v_run_lms_euphoria(
         t_pydaw_seq_event *atm_events, int atm_event_count,
         t_pydaw_seq_event *ext_events, int ext_event_count)
 {
-    t_euphoria *plugin_data = (t_euphoria *) instance;
-    int f_i = 0;
+    t_euphoria *plugin_data = (t_euphoria*)instance;
+    register int f_i = 0;
     int midi_event_pos = 0;
-    int i, i2, i3;
+    register int i, i2, i3;
 
     ++plugin_data->i_slow_index;
 

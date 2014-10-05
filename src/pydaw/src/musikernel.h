@@ -210,7 +210,7 @@ inline void v_pydaw_print_benchmark(char * a_message, clock_t a_start)
 
 inline void v_pydaw_zero_buffer(float ** a_buffers, int a_count)
 {
-    int f_i2 = 0;
+    register int f_i2 = 0;
 
     while(f_i2 < a_count)
     {

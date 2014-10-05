@@ -1887,7 +1887,7 @@ t_wt_wavetables * g_wt_wavetables_get();
 
 t_wt_wavetables * g_wt_wavetables_get()
 {
-    int f_i = 0;
+    register int f_i = 0;
     t_wt_wavetables * f_result;
     lmalloc((void**)&f_result, (sizeof(t_wt_wavetables)));
     f_result->f_count = WT_TOTAL_WAVETABLE_COUNT;

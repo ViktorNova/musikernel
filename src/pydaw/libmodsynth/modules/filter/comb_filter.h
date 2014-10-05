@@ -104,7 +104,7 @@ inline void v_cmb_mc_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
 
     if((a_cmb_ptr->wet_db) > -20.0f)
     {
-        int f_i = 0;
+        register int f_i = 0;
         while(f_i < MC_CMB_COUNT)
         {
             a_cmb_ptr->delay_pointer =
@@ -126,7 +126,7 @@ inline void v_cmb_mc_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
             a_cmb_ptr->output_sample +=
                 ((a_cmb_ptr->wet_sample) * (a_cmb_ptr->wet_linear));
 
-            f_i++;
+            ++f_i;
         }
     }
 
@@ -191,13 +191,13 @@ inline void v_cmb_mc_set_all(t_comb_filter*__restrict a_cmb, float a_wet_db, flo
     if(a_cmb->mc_detune != a_detune || (a_cmb->midi_note_number) != a_midi_note_number)
     {
         a_cmb->mc_detune = a_detune;
-        int f_i = 0;
+        register int f_i = 0;
 
         while(f_i < MC_CMB_COUNT)
         {
             a_cmb->mc_delay_samples[f_i] = f_pit_midi_note_to_samples(
                     a_midi_note_number + (a_detune * (float)f_i), (a_cmb->sr));
-            f_i++;
+            ++f_i;
         }
     }
 
@@ -206,17 +206,17 @@ inline void v_cmb_mc_set_all(t_comb_filter*__restrict a_cmb, float a_wet_db, flo
 
 void g_cmb_init(t_comb_filter * f_result, float a_sr)
 {
-    int f_i = 0;
+    register int f_i = 0;
 
     f_result->buffer_size = (int)((a_sr / 20.0f) + 300);  //Allocate enough memory to accomodate 20hz filter frequency
 
-    lmalloc((void**)(&(f_result->input_buffer)),
+    buffer_alloc((void**)(&(f_result->input_buffer)),
         sizeof(float) * (f_result->buffer_size));
 
     while(f_i < (f_result->buffer_size))
     {
         f_result->input_buffer[f_i] = 0.0f;
-        f_i++;
+        ++f_i;
     }
 
     f_result->input_pointer = 0;

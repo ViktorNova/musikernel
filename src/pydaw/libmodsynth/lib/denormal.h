@@ -29,7 +29,7 @@ inline float f_remove_denormal(float);
  * Prevent recursive modules like filters and feedback delays from
  * consuming too much CPU
  */
-inline float f_remove_denormal(float a_input)
+inline float f_remove_denormal(register float a_input)
 {
     if((a_input < .00001f) && (a_input > -.00001f))
         return 0.0f;

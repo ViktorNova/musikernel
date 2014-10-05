@@ -50,7 +50,7 @@ static void v_mkdelay_panic(PYFX_Handle instance)
 {
     t_mkdelay *plugin = (t_mkdelay*)instance;
 
-    int f_i = 0;
+    register int f_i = 0;
     while(f_i < plugin->mono_modules->delay->delay0.sample_count)
     {
         plugin->mono_modules->delay->delay0.buffer[f_i] = 0.0f;
@@ -71,7 +71,7 @@ static void v_mkdelay_connect_buffer(PYFX_Handle instance, int a_index,
     {
         return;
     }
-    
+
     t_mkdelay *plugin = (t_mkdelay*)instance;
 
     switch(a_index)
@@ -185,7 +185,7 @@ static void v_mkdelay_run(
         event_pos++;
     }
 
-    int f_i = 0;
+    register int f_i = 0;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 
@@ -207,11 +207,10 @@ static void v_mkdelay_run(
 
     f_i = 0;
 
-    while((f_i) < sample_count)
+    while(f_i < sample_count)
     {
         while(midi_event_pos < plugin_data->midi_event_count &&
-                plugin_data->midi_event_ticks[midi_event_pos] ==
-                f_i)
+            plugin_data->midi_event_ticks[midi_event_pos] == f_i)
         {
             if(plugin_data->midi_event_types[midi_event_pos] ==
                     PYDAW_EVENT_CONTROLLER)

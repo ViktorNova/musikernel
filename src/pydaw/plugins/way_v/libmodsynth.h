@@ -97,7 +97,6 @@ typedef struct
     int note;
 
     float noise_linamp;
-    int i_voice;  //for the runVoice function to iterate the current block
 
     t_mf3_multi * multieffect[WAYV_MODULAR_POLYFX_COUNT];
     fp_mf3_run fx_func_ptr[WAYV_MODULAR_POLYFX_COUNT];
@@ -179,7 +178,6 @@ t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono)
     f_voice->note_f = 1.0f;
 
     f_voice->noise_linamp = 1.0f;
-    f_voice->i_voice = 0;
     f_voice->adsr_prefx = 0;
 
     f_voice->lfo_amount_output = 0.0f;

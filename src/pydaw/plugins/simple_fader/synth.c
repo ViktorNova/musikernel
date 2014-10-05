@@ -70,7 +70,7 @@ static void v_sfader_connect_buffer(PYFX_Handle instance, int a_index,
     {
         return;
     }
-    
+
     t_sfader *plugin = (t_sfader*)instance;
     plugin->buffers[a_index] = DataLocation;
 }
@@ -156,7 +156,7 @@ static void v_sfader_process_midi(
     t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_sfader *plugin_data = (t_sfader*)instance;
-    int event_pos = 0;
+    register int event_pos = 0;
     plugin_data->midi_event_count = 0;
 
     while (event_pos < event_count)
@@ -165,7 +165,7 @@ static void v_sfader_process_midi(
         ++event_pos;
     }
 
-    int f_i = 0;
+    register int f_i = 0;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 
@@ -200,7 +200,7 @@ static void v_sfader_run_mixing(
         atm_events, atm_event_count, ext_events, ext_event_count);
 
     int midi_event_pos = 0;
-    int f_i = 0;
+    register int f_i = 0;
 
     while(f_i < sample_count)
     {

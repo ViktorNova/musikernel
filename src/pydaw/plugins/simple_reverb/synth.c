@@ -70,7 +70,7 @@ static void v_sreverb_connect_buffer(PYFX_Handle instance, int a_index,
     {
         return;
     }
-    
+
     t_sreverb *plugin = (t_sreverb*)instance;
 
     switch(a_index)
@@ -179,7 +179,7 @@ static void v_sreverb_run(
         ++event_pos;
     }
 
-    int f_i = 0;
+    register int f_i = 0;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 

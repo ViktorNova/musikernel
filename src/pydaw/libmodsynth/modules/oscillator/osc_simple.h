@@ -44,7 +44,6 @@ typedef struct
     float uni_spread;
     //Set this with unison voices to prevent excessive volume
     float adjusted_amp;
-    int i_run_unison;  //iterator for running the unison oscillator
     float current_sample;  //current output sample for the entire oscillator
     int i_unison_pitch;
     int i_sync_phase;
@@ -137,17 +136,17 @@ inline void v_osc_set_unison_pitch(t_osc_simple_unison * a_osc_ptr,
  */
 inline float f_osc_run_unison_osc(t_osc_simple_unison * a_osc_ptr)
 {
-    a_osc_ptr->i_run_unison = 0;
+    register int f_i = 0;
     a_osc_ptr->current_sample = 0.0f;
 
-    while((a_osc_ptr->i_run_unison) < (a_osc_ptr->voice_count))
+    while(f_i < (a_osc_ptr->voice_count))
     {
-        v_run_osc((a_osc_ptr->osc_cores[(a_osc_ptr->i_run_unison)]),
-                (a_osc_ptr->voice_inc[(a_osc_ptr->i_run_unison)]));
+        v_run_osc((a_osc_ptr->osc_cores[f_i]),
+                (a_osc_ptr->voice_inc[f_i]));
         a_osc_ptr->current_sample = (a_osc_ptr->current_sample) +
                 a_osc_ptr->osc_type(
-                (a_osc_ptr->osc_cores[(a_osc_ptr->i_run_unison)]));
-        a_osc_ptr->i_run_unison = (a_osc_ptr->i_run_unison) + 1;
+                (a_osc_ptr->osc_cores[f_i]));
+        ++f_i;
     }
 
     return (a_osc_ptr->current_sample) * (a_osc_ptr->adjusted_amp);
@@ -159,29 +158,29 @@ inline float f_osc_run_unison_osc(t_osc_simple_unison * a_osc_ptr)
  */
 inline void f_osc_run_unison_osc_core_only(t_osc_simple_unison * a_osc_ptr)
 {
-    a_osc_ptr->i_run_unison = 0;
+    register int f_i = 0;
     a_osc_ptr->current_sample = 0.0f;
 
-    while((a_osc_ptr->i_run_unison) < (a_osc_ptr->voice_count))
+    while(f_i < (a_osc_ptr->voice_count))
     {
-        v_run_osc((a_osc_ptr->osc_cores[(a_osc_ptr->i_run_unison)]),
-                (a_osc_ptr->voice_inc[(a_osc_ptr->i_run_unison)]));
-        a_osc_ptr->i_run_unison = (a_osc_ptr->i_run_unison) + 1;
+        v_run_osc((a_osc_ptr->osc_cores[f_i]),
+                (a_osc_ptr->voice_inc[f_i]));
+        ++f_i;
     }
 }
 
 inline float f_osc_run_unison_osc_sync(t_osc_simple_unison * a_osc_ptr)
 {
-    a_osc_ptr->i_run_unison = 0;
+    register int f_i = 0;
     a_osc_ptr->current_sample = 0.0f;
 
     a_osc_ptr->is_resetting =
-            v_run_osc_sync((a_osc_ptr->osc_cores[(a_osc_ptr->i_run_unison)]),
-            (a_osc_ptr->voice_inc[(a_osc_ptr->i_run_unison)]));
+            v_run_osc_sync((a_osc_ptr->osc_cores[f_i]),
+            (a_osc_ptr->voice_inc[f_i]));
     a_osc_ptr->current_sample =
             (a_osc_ptr->current_sample) +
             a_osc_ptr->osc_type(
-            (a_osc_ptr->osc_cores[(a_osc_ptr->i_run_unison)]));
+            (a_osc_ptr->osc_cores[f_i]));
 
     return (a_osc_ptr->current_sample) * (a_osc_ptr->adjusted_amp);
 }
@@ -290,7 +289,6 @@ void g_osc_simple_unison_init(
     f_result->adjusted_amp = 1.0;
     f_result->bottom_pitch = -0.1;
     f_result->current_sample = 0.0;
-    f_result->i_run_unison = 0;
     f_result->osc_type = f_get_osc_off;
     f_result->pitch_inc = 0.1f;
     f_result->uni_spread = 0.1f;
@@ -353,7 +351,6 @@ t_osc_simple_unison * g_osc_get_osc_simple_single(float a_sample_rate)
     f_result->adjusted_amp = 1.0;
     f_result->bottom_pitch = -0.1;
     f_result->current_sample = 0.0;
-    f_result->i_run_unison = 0;
     f_result->osc_type = f_get_osc_off;
     f_result->pitch_inc = 0.1f;
     f_result->uni_spread = 0.1f;

@@ -212,7 +212,7 @@ t_eq6 * g_eq6_get(float a_sr)
     while(f_i < 6)
     {
         f_result->eqs[f_i] = g_pkq_get(a_sr);
-        f_i++;
+        ++f_i;
     }
 
     return f_result;
@@ -228,7 +228,7 @@ void v_eq6_connect_port(t_eq6 * a_eq6, int a_port, float * a_ptr)
 
 inline void v_eq6_set(t_eq6 *a_eq6)
 {
-    int f_i = 0;
+    register int f_i = 0;
 
     while(f_i < 6)
     {
@@ -239,13 +239,13 @@ inline void v_eq6_set(t_eq6 *a_eq6)
                     *a_eq6->knobs[f_i][1] * 0.01f,
                     *a_eq6->knobs[f_i][2]);
         }
-        f_i++;
+        ++f_i;
     }
 }
 
 inline void v_eq6_run(t_eq6 *a_eq6, float a_input0, float a_input1)
 {
-    int f_i = 0;
+    register int f_i = 0;
 
     a_eq6->output0 = a_input0;
     a_eq6->output1 = a_input1;
@@ -259,7 +259,7 @@ inline void v_eq6_run(t_eq6 *a_eq6, float a_input0, float a_input1)
             a_eq6->output0 = a_eq6->eqs[f_i]->output0;
             a_eq6->output1 = a_eq6->eqs[f_i]->output1;
         }
-        f_i++;
+        ++f_i;
     }
 }
 

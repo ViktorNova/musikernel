@@ -49,10 +49,11 @@ static void v_rayv_or_prep(PYFX_Handle instance)
 {
     t_rayv *plugin = (t_rayv *)instance;
     int f_i2 = 0;
+    register int f_i;
     while(f_i2 < RAYV_POLYPHONY)
     {
         t_rayv_poly_voice * f_voice = plugin->data[f_i2];
-        int f_i = 0;
+        f_i = 0;
         while(f_i < 1000000)
         {
             f_osc_run_unison_osc_core_only(&f_voice->osc_unison1);
@@ -99,7 +100,7 @@ static void v_rayv_connect_buffer(PYFX_Handle instance, int a_index,
     {
         return;
     }
-    
+
     t_rayv *plugin = (t_rayv*)instance;
 
     switch(a_index)
@@ -267,15 +268,15 @@ static PYFX_Handle g_rayv_instantiate(PYFX_Descriptor * descriptor,
 
     plugin_data->fs = a_sr;
 
-    int i;
+    int f_i;
 
     plugin_data->voices = g_voc_get_voices(RAYV_POLYPHONY,
             RAYV_POLYPHONY_THRESH);
 
-    for (i=0; i<RAYV_POLYPHONY; i++)
+    for (f_i = 0; f_i < RAYV_POLYPHONY; ++f_i)
     {
-        plugin_data->data[i] = g_rayv_poly_init(a_sr);
-        plugin_data->data[i]->note_f = i;
+        plugin_data->data[f_i] = g_rayv_poly_init(a_sr);
+        plugin_data->data[f_i]->note_f = f_i;
     }
 
     plugin_data->sampleNo = 0;
@@ -537,7 +538,7 @@ static void v_run_rayv(
 
     plugin_data->voices->poly_mode = f_poly_mode;
 
-    int f_i = 0;
+    register int f_i = 0;
 
     while(f_i < event_count)
     {
@@ -568,13 +569,12 @@ static void v_run_rayv(
     }
 
     f_i = 0;
-    int f_i2;
+    register int f_i2;
 
     while((f_i) < sample_count)
     {
         while(midi_event_pos < plugin_data->midi_event_count &&
-            plugin_data->midi_event_ticks[midi_event_pos] ==
-                f_i)
+            plugin_data->midi_event_ticks[midi_event_pos] == f_i)
         {
             if(plugin_data->midi_event_types[midi_event_pos] ==
                     PYDAW_EVENT_PITCHBEND)
@@ -641,7 +641,7 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
         //i_voice =  (a_poly_voice.on) - (plugin_data->sampleNo);
     }
 
-    int i_voice = a_i;  //0;
+    register int i_voice = a_i;  //0;
 
     if ((plugin_data->sampleNo == a_poly_voice.off) &&
        ((a_voice->adsr_amp.stage) < ADSR_STAGE_RELEASE))
