@@ -129,7 +129,7 @@ int main(int argc, char** argv)
         f_interleaved[f_i] = 1.0f;
     }
 
-    int f_i2;
+    register int f_i2;
 
     clock_t f_start_interleaved = clock();
 
