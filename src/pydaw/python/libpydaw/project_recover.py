@@ -23,30 +23,42 @@ except ImportError:
 from PyQt4 import QtGui, QtCore
 import json
 import os
+import shutil
+import tarfile
+import datetime
 
 class project_history_widget(QtGui.QTreeWidget):
-    def __init__(self, a_backup_dir, a_backup_file):
+    def __init__(self, a_backup_dir, a_backup_file, a_project_dir):
         QtGui.QTreeWidget.__init__(self)
         self.header().close()
         self.backup_file = a_backup_file
         self.backup_dir = a_backup_dir
+        self.project_dir = a_project_dir
         with open(a_backup_file) as f_handle:
             self.project_data = json.load(f_handle)
+        self.nodes = []
         self.draw_tree()
 
     def draw_tree(self):
+        self.clear()
         for f_name, f_data in self.project_data["NODES"].items():
             pass
         # ^^^ should be exactly one root
+        self.nodes = []
         f_root_node = self.get_node(f_name, f_name)
+        self.nodes.append(f_root_node)
         self.addTopLevelItem(f_root_node)
         self.recursive_node_add(f_name, f_data, f_root_node)
         self.expandAll()
+        for f_node in self.nodes:
+            if f_node.node_path == self.project_data["CURRENT"]:
+                f_node.setSelected(True)
 
     def get_node(self, a_text, a_path):
         f_node = QtGui.QTreeWidgetItem()
         f_node.setText(0, a_text)
         f_node.node_path = a_path
+        self.nodes.append(f_node)
         return f_node
 
     def recursive_node_add(self, a_path, a_node, a_parent_node):
@@ -56,6 +68,34 @@ class project_history_widget(QtGui.QTreeWidget):
             f_node = self.get_node(k, f_path)
             a_parent_node.addChild(f_node)
             self.recursive_node_add(f_path, v, f_node)
+
+    def node_context_menu_event(self, a_event):
+        f_menu = QtGui.QMenu()
+        f_menu.exec_(QtGui.QCursor.pos())
+
+    def set_selected_as_project(self):
+        f_items = self.selectedItems()
+        if f_items and len(f_items) == 1:
+            f_project_dir = "{}/projects".format(self.project_dir)
+            f_tmp_dir = "{}-tmp-{}".format(
+                f_project_dir,
+                datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S"))
+            f_item = f_items[0]
+            f_tar_path = "{}/{}.tar.bz2".format(
+                self.backup_dir, f_item.text(0))
+            shutil.move(f_project_dir, f_tmp_dir)
+            with tarfile.open(f_tar_path, "r:bz2") as f_tar:
+                f_tar.extractall(self.project_dir)
+            self.project_data["CURRENT"] = f_item.node_path
+            with open(self.backup_file, "w") as f_handle:
+                json.dump(
+                    self.project_data, f_handle, sort_keys=True,
+                    indent=4, separators=(',', ': '))
+            shutil.rmtree(f_tmp_dir)
+            QtGui.QMessageBox.warning(
+                self, _("Complete"),
+                _("Reverted project to {}".format(f_item.node_path)))
+
 
 
 def project_recover_dialog():
@@ -81,8 +121,18 @@ def project_recover_dialog():
             f_central_widget = QtGui.QWidget()
             f_layout = QtGui.QVBoxLayout(f_central_widget)
             f_window.setCentralWidget(f_central_widget)
-            f_widget = project_history_widget(f_backup_dir, f_backup_file)
+            f_widget = project_history_widget(
+                f_backup_dir, f_backup_file, f_project_dir)
             f_layout.addWidget(f_widget)
+            f_hlayout = QtGui.QHBoxLayout()
+            f_layout.addLayout(f_hlayout)
+            f_set_project_button = QtGui.QPushButton(
+                _("Revert Project to Selected"))
+            f_set_project_button.pressed.connect(
+                f_widget.set_selected_as_project)
+            f_hlayout.addWidget(f_set_project_button)
+            f_hlayout.addItem(
+                QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
             print("showing")
             f_window.show()
             return f_window
