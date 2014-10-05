@@ -102,7 +102,7 @@ t_white_noise * g_get_white_noise(float a_sample_rate)
  */
 inline float f_run_white_noise(t_white_noise * a_w_noise)
 {
-    a_w_noise->read_head = (a_w_noise->read_head) + 1;
+    ++a_w_noise->read_head;
 
     if((a_w_noise->read_head) >= (a_w_noise->array_count))
     {
@@ -118,7 +118,7 @@ inline float f_run_white_noise(t_white_noise * a_w_noise)
  */
 inline float f_run_pink_noise(t_white_noise * a_w_noise)
 {
-    a_w_noise->read_head = (a_w_noise->read_head) + 1;
+    ++a_w_noise->read_head;
 
     if((a_w_noise->read_head) >= (a_w_noise->array_count))
     {

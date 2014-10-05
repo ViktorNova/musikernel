@@ -102,7 +102,7 @@ void v_lim_run(t_lim_limiter *a_lim, float a_in0, float a_in1)
         a_lim->maxSpls = 16.0f;
     }
 
-    a_lim->r1Timer = (a_lim->r1Timer) + 1;
+    ++a_lim->r1Timer;
 
     if((a_lim->r1Timer) >= (a_lim->holdtime))
     {
@@ -117,7 +117,7 @@ void v_lim_run(t_lim_limiter *a_lim, float a_in0, float a_in1)
 
     a_lim->max1Block = f_lms_max((a_lim->max1Block),(a_lim->maxSpls));
 
-    a_lim->r2Timer = (a_lim->r2Timer) + 1;
+    ++a_lim->r2Timer;
 
     if((a_lim->r2Timer) >= (a_lim->holdtime))
     {
@@ -146,7 +146,7 @@ void v_lim_run(t_lim_limiter *a_lim, float a_in0, float a_in1)
     a_lim->buffer0[(a_lim->buffer_index)] = a_in0;
     a_lim->buffer1[(a_lim->buffer_index)] = a_in1;
 
-    a_lim->buffer_index = (a_lim->buffer_index) + 1;
+    ++a_lim->buffer_index;
 
     if((a_lim->buffer_index) >= (a_lim->buffer_size))
     {

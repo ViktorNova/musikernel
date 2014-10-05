@@ -103,7 +103,7 @@ void g_free_1d_char_array(t_1d_char_array * a_array)
     while(f_i < (a_array->x_count))
     {
         free(a_array->array[f_i]);
-        f_i++;
+        ++f_i;
     }
 
     free(a_array->array);
@@ -141,7 +141,7 @@ t_1d_char_array * c_split_str(const char * a_input, char a_delim,
     while(f_i < a_column_count)
     {
         f_result->array[f_i] = (char*)malloc(sizeof(char) * a_string_size);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -167,7 +167,7 @@ t_1d_char_array * c_split_str(const char * a_input, char a_delim,
             f_current_string_index++;
         }
 
-        f_i++;
+        ++f_i;
     }
 
     return f_result;
@@ -189,7 +189,7 @@ t_1d_char_array * c_split_str_remainder(const char * a_input, char a_delim,
     while(f_i < a_column_count)
     {
         f_result->array[f_i] = (char*)malloc(sizeof(char) * a_string_size);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -215,7 +215,7 @@ t_1d_char_array * c_split_str_remainder(const char * a_input, char a_delim,
             f_current_string_index++;
         }
 
-        f_i++;
+        ++f_i;
     }
 
     return f_result;
@@ -253,7 +253,7 @@ t_key_value_pair * g_kvp_get(const char * a_input)
             }
         }
 
-        f_i++;
+        ++f_i;
     }
 
     f_result->value[f_result->val_len] = '\0';
@@ -305,8 +305,8 @@ char * c_iterate_2d_char_array(t_2d_char_array* a_array)
         else if(a_array->array[(a_array->current_index)] == '\n')
         {
             f_result[f_i] = '\0';
-            a_array->current_index = (a_array->current_index) + 1;
-            a_array->current_row = (a_array->current_row) + 1;
+            ++a_array->current_index;
+            ++a_array->current_row;
             a_array->current_column = 0;
             a_array->eol = 1;
             break;
@@ -314,8 +314,8 @@ char * c_iterate_2d_char_array(t_2d_char_array* a_array)
         else if(a_array->array[(a_array->current_index)] == '|')
         {
             f_result[f_i] = '\0';
-            a_array->current_index = (a_array->current_index) + 1;
-            a_array->current_column = (a_array->current_column) + 1;
+            ++a_array->current_index;
+            ++a_array->current_column;
             a_array->eol = 0;
             //TODO:  A check for acceptable column counts
             //assert((a_array->current_column) < (a_array->));
@@ -327,8 +327,8 @@ char * c_iterate_2d_char_array(t_2d_char_array* a_array)
             f_result[f_i] = a_array->array[(a_array->current_index)];
         }
 
-        a_array->current_index = (a_array->current_index) + 1;
-        f_i++;
+        ++a_array->current_index;
+        ++f_i;
     }
 
     return f_result;
@@ -353,8 +353,8 @@ char * c_iterate_2d_char_array_to_next_line(t_2d_char_array* a_array)
         else if(a_array->array[(a_array->current_index)] == '\n')
         {
             f_result[f_i] = '\0';
-            a_array->current_index = (a_array->current_index) + 1;
-            a_array->current_row = (a_array->current_row) + 1;
+            ++a_array->current_index;
+            ++a_array->current_row;
             a_array->current_column = 0;
             break;
         }
@@ -363,8 +363,8 @@ char * c_iterate_2d_char_array_to_next_line(t_2d_char_array* a_array)
             f_result[f_i] = a_array->array[(a_array->current_index)];
         }
 
-        a_array->current_index = (a_array->current_index) + 1;
-        f_i++;
+        ++a_array->current_index;
+        ++f_i;
     }
 
     return f_result;
@@ -393,7 +393,7 @@ t_pydaw_line_split * g_split_line(char a_delimiter, const char * a_str)
         {
             f_result->count++;
         }
-        f_i++;
+        ++f_i;
     }
 
     f_result->str_arr = (char**)malloc(sizeof(char*) * f_result->count);
@@ -404,7 +404,7 @@ t_pydaw_line_split * g_split_line(char a_delimiter, const char * a_str)
         f_result->str_arr[f_i] =
                 (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
         f_result->str_arr[f_i][0] = '\0';
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -427,7 +427,7 @@ t_pydaw_line_split * g_split_line(char a_delimiter, const char * a_str)
             f_i2++;
             f_i3++;
         }
-        f_i++;
+        ++f_i;
     }
 
     return f_result;
@@ -439,7 +439,7 @@ void v_free_split_line(t_pydaw_line_split * a_split_line)
     while(f_i < a_split_line->count)
     {
         free(a_split_line->str_arr[f_i]);
-        f_i++;
+        ++f_i;
     }
 
     free(a_split_line->str_arr);
@@ -481,7 +481,7 @@ t_dir_list * g_get_dir_list(char * a_dir)
 
             strcpy(f_result->dir_list[(f_result->dir_count)], ent->d_name);
 
-          f_result->dir_count = (f_result->dir_count) + 1;
+          ++f_result->dir_count;
 
           if((f_result->dir_count) >= f_current_max)
           {
