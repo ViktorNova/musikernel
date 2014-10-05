@@ -198,7 +198,7 @@ static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
         {
             midiPoll(&MIDI_DEVICES.devices[f_i]);
         }
-        f_i++;
+        ++f_i;
     }
 
 }
@@ -213,8 +213,6 @@ static int portaudioCallback( const void *inputBuffer,
                               PaStreamCallbackFlags statusFlags,
                               void *userData )
 {
-    unsigned int i;
-
     float *out = (float*)outputBuffer;
 
     if(framesPerBuffer > FRAMES_PER_BUFFER)
@@ -234,14 +232,14 @@ static int portaudioCallback( const void *inputBuffer,
         THREAD_AFFINITY_SET = 1;
     }
 
-    i = 0;
-
     v_pydaw_run(pluginOutputBuffers, framesPerBuffer);
 
-    for( i=0; i < framesPerBuffer; i++ )
+    register int f_i;
+
+    for(f_i = 0; f_i < framesPerBuffer; ++f_i)
     {
-        *out++ = pluginOutputBuffers[0][i];  // left
-        *out++ = pluginOutputBuffers[1][i];  // right
+        *out++ = pluginOutputBuffers[0][f_i];  // left
+        *out++ = pluginOutputBuffers[1][f_i];  // right
     }
 
     return paContinue;
@@ -405,7 +403,7 @@ int main(int argc, char **argv)
         buffer_alloc(
             (void**)&pluginOutputBuffers[f_i],
             sizeof(float) * FRAMES_PER_BUFFER);
-        f_i++;
+        ++f_i;
     }
 
     sample_rate = 44100.0f;
@@ -573,7 +571,7 @@ int main(int argc, char **argv)
                         continue;*/
                     }
 
-                    MIDI_DEVICES.count++;
+                    ++MIDI_DEVICES.count;
                     f_with_midi = 1;
                 }
                 else
@@ -644,7 +642,7 @@ int main(int argc, char **argv)
                 f_found_index = 1;
                 break;
             }
-            f_i++;
+            ++f_i;
         }
 
         if(!f_found_index)
@@ -798,7 +796,7 @@ int main(int argc, char **argv)
         {
             midiDeviceClose(&MIDI_DEVICES.devices[f_i]);
         }
-        f_i++;
+        ++f_i;
     }
 
     if(!PYDAW_NO_HARDWARE)
@@ -853,7 +851,7 @@ int osc_debug_handler(const char *path, const char *types, lo_arg **argv,
         printf("arg %d '%c' ", f_i, types[f_i]);
         lo_arg_pp((lo_type)types[f_i], argv[f_i]);
         printf("\n");
-        f_i++;
+        ++f_i;
     }
 
     return 1;
