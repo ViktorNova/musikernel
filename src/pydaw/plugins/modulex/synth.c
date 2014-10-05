@@ -190,7 +190,7 @@ static void v_modulex_set_port_value(PYFX_Handle Instance,
 
 static void v_modulex_check_if_on(t_modulex *plugin_data)
 {
-    int f_i = 0;
+    register int f_i = 0;
 
     while(f_i < 8)
     {
@@ -259,7 +259,7 @@ static void v_modulex_run(
         ++event_pos;
     }
 
-    int f_i = 0;
+    register int f_i = 0;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 

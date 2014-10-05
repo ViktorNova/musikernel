@@ -387,7 +387,7 @@ void v_adsr_run(t_adsr *__restrict a_adsr_ptr)
                 }
                 break;
             case ADSR_STAGE_DELAY:
-                a_adsr_ptr->time_counter += 1;
+                ++a_adsr_ptr->time_counter;
                 if(a_adsr_ptr->time_counter >= a_adsr_ptr->delay_count)
                 {
                     a_adsr_ptr->stage = ADSR_STAGE_ATTACK;
@@ -395,7 +395,7 @@ void v_adsr_run(t_adsr *__restrict a_adsr_ptr)
                 }
                 break;
             case ADSR_STAGE_HOLD:
-                a_adsr_ptr->time_counter += 1;
+                ++a_adsr_ptr->time_counter;
                 if(a_adsr_ptr->time_counter >= a_adsr_ptr->hold_count)
                 {
                     a_adsr_ptr->stage = ADSR_STAGE_DECAY;
@@ -488,7 +488,7 @@ void v_adsr_run_db(t_adsr *__restrict a_adsr_ptr)
 
                 break;
             case ADSR_STAGE_DELAY:
-                a_adsr_ptr->time_counter += 1;
+                ++a_adsr_ptr->time_counter;
                 if(a_adsr_ptr->time_counter >= a_adsr_ptr->delay_count)
                 {
                     a_adsr_ptr->stage = ADSR_STAGE_ATTACK;
@@ -496,7 +496,7 @@ void v_adsr_run_db(t_adsr *__restrict a_adsr_ptr)
                 }
                 break;
             case ADSR_STAGE_HOLD:
-                a_adsr_ptr->time_counter += 1;
+                ++a_adsr_ptr->time_counter;
                 if(a_adsr_ptr->time_counter >= a_adsr_ptr->hold_count)
                 {
                     a_adsr_ptr->stage = ADSR_STAGE_DECAY;

@@ -163,7 +163,7 @@ static void v_mkdelay_process_midi_event(
         plugin_data->midi_event_values[plugin_data->midi_event_count] =
                 a_event->value;
 
-        plugin_data->midi_event_count++;
+        ++plugin_data->midi_event_count;
     }
 }
 
@@ -182,7 +182,7 @@ static void v_mkdelay_run(
     while (event_pos < event_count)
     {
         v_mkdelay_process_midi_event(plugin_data, &events[event_pos]);
-        event_pos++;
+        ++event_pos;
     }
 
     register int f_i = 0;
@@ -221,7 +221,7 @@ static void v_mkdelay_run(
                     plugin_data->midi_event_ports[midi_event_pos],
                     plugin_data->midi_event_values[midi_event_pos]);
             }
-            midi_event_pos++;
+            ++midi_event_pos;
         }
 
         v_plugin_event_queue_atm_set(

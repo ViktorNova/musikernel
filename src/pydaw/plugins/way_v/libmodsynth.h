@@ -153,9 +153,9 @@ t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono)
         while(f_i2 < WAYV_OSC_COUNT)
         {
             f_voice->osc_fm[f_i][f_i2] = 0.0;
-            f_i2++;
+            ++f_i2;
         }
-        f_i++;
+        ++f_i;
     }
 
 
@@ -191,10 +191,10 @@ t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono)
         while(f_i3 < WAYV_OSC_COUNT)
         {
             f_voice->fm_osc_values[f_i2][f_i3] = 0.0f;
-            f_i3++;
+            ++f_i3;
         }
 
-        f_i2++;
+        ++f_i2;
     }
 
     f_voice->adsr_amp = g_adsr_get_adsr(a_sr);
@@ -263,7 +263,7 @@ void v_wayv_poly_note_off(t_wayv_poly_voice * a_voice, int a_fast)
     while(f_i < WAYV_OSC_COUNT)
     {
         v_adsr_release(a_voice->adsr_amp_osc[f_i]);
-        f_i++;
+        ++f_i;
     }
 
 }
@@ -284,7 +284,7 @@ t_wayv_mono_modules * v_wayv_mono_init(float a_sr)
     {
         a_mono->fm_macro_smoother[f_i] =
                 g_sml_get_smoother_linear(a_sr, 0.5f, 0.0f, 0.02f);
-        f_i++;
+        ++f_i;
     }
 
     a_mono->wavetables = g_wt_wavetables_get();

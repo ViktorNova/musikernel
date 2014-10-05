@@ -71,7 +71,7 @@ static void v_mkeq_connect_buffer(PYFX_Handle instance, int a_index,
     {
         return;
     }
-    
+
     t_mkeq *plugin = (t_mkeq*)instance;
 
     switch(a_index)
@@ -187,7 +187,7 @@ static void v_mkeq_run(
 {
     t_mkeq *plugin_data = (t_mkeq*)instance;
 
-    int event_pos = 0;
+    register int event_pos = 0;
     int midi_event_pos = 0;
     plugin_data->midi_event_count = 0;
 
@@ -197,7 +197,7 @@ static void v_mkeq_run(
         ++event_pos;
     }
 
-    int f_i = 0;
+    register int f_i = 0;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 

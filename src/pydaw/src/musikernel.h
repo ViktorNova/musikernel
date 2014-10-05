@@ -188,7 +188,7 @@ inline void v_queue_osc_message(char * a_key, char * a_val)
                 "%s", a_key);
         sprintf(musikernel->osc_queue_vals[musikernel->osc_queue_index],
                 "%s", a_val);
-        musikernel->osc_queue_index += 1;
+        ++musikernel->osc_queue_index;
         pthread_spin_unlock(&musikernel->ui_spinlock);
     }
 }

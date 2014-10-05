@@ -56,12 +56,12 @@ float f_pnv_run(t_pnv_perc_env * a_pnv)
     {
         a_pnv->value += a_pnv->incs[a_pnv->current_env];
 
-        a_pnv->counter += 1;
+        ++a_pnv->counter;
 
         if(a_pnv->counter >= a_pnv->sample_counts[a_pnv->current_env])
         {
             a_pnv->counter = 0;
-            a_pnv->current_env += 1;
+            ++a_pnv->current_env;
         }
     }
 

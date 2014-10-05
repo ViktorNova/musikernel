@@ -1745,7 +1745,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     while(f_i < 2)
     {
         pydaw_set_pyfx_port(f_result, f_port, 0.0f, 0.0f, 100.0f);
-        f_port++;
+        ++f_port;
 
         int f_i2 = 0;
 
@@ -1756,7 +1756,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
             while(f_i3 < 4)
             {
                 pydaw_set_pyfx_port(f_result, f_port, 0.0f, -100.0f, 100.0f);
-                f_port++;
+                ++f_port;
                 ++f_i3;
             }
 
@@ -1777,7 +1777,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
         while(f_i2 < 4)
         {
             pydaw_set_pyfx_port(f_result, f_port, 0.0f, -30.0f, 30.0f);
-            f_port++;
+            ++f_port;
             ++f_i2;
         }
 
@@ -1793,7 +1793,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     while(f_port <= WAYV_HOLD_MAIN)
     {
         pydaw_set_pyfx_port(f_result, f_port, 0.0f, 0.0f, 200.0f);
-        f_port++;
+        ++f_port;
     }
 
     pydaw_set_pyfx_port(f_result, WAYV_DELAY_NOISE, 0.0f, 0.0f, 200.0);
@@ -1844,7 +1844,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     while(f_port <= WAYV_FM_MACRO2_OSC6_VOL)
     {
         pydaw_set_pyfx_port(f_result, f_port, 0.0f, -100.0f, 100.0f);
-        f_port++;
+        ++f_port;
     }
 
     f_port = WAYV_OSC5_FM1;
@@ -1852,7 +1852,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     while(f_port <= WAYV_OSC6_FM4)
     {
         pydaw_set_pyfx_port(f_result, f_port, 0.0f, 0.0f, 100.0f);
-        f_port++;
+        ++f_port;
     }
 
     f_port = WAYV_OSC1_FM5;
@@ -1860,7 +1860,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     while(f_port <= WAYV_OSC6_FM5)
     {
         pydaw_set_pyfx_port(f_result, f_port, 0.0f, 0.0f, 100.0f);
-        f_port++;
+        ++f_port;
     }
 
     f_port = WAYV_OSC1_FM6;
@@ -1868,7 +1868,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     while(f_port <= WAYV_OSC6_FM6)
     {
         pydaw_set_pyfx_port(f_result, f_port, 0.0f, 0.0f, 100.0f);
-        f_port++;
+        ++f_port;
     }
 
     pydaw_set_pyfx_port(f_result, WAYV_NOISE_PREFX, 0.0f, 0, 1);
@@ -1878,7 +1878,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
     while(f_port <= WAVV_PFXMATRIX_GRP0DST3SRC7CTRL2)
     {
         pydaw_set_pyfx_port(f_result, f_port,  0.0f, -100.0f, 100.0f);
-        f_port++;
+        ++f_port;
     }
 
     f_result->cleanup = v_cleanup_wayv;

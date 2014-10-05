@@ -67,9 +67,9 @@ t_modulex_mono_modules * v_modulex_mono_init(float a_sr, int a_plugin_uid)
         {
             a_mono->smoothers[f_i][f_i2] =
                     g_sml_get_smoother_linear(a_sr, 127.0f, 0.0f, 0.1f);
-            f_i2++;
+            ++f_i2;
         }
-        f_i++;
+        ++f_i;
     }
 
     a_mono->time_smoother =
