@@ -103,5 +103,59 @@ int main(int argc, char** argv)
     v_pydaw_offline_render(pydaw_data, f_start_region, f_start_bar,
             f_end_region, f_end_bar, f_output_file, 0);
 
+    /*
+    printf("\nRunning benchmark of interleaved vs. non-interleaved buffers\n");
+
+    float ** f_non_interleaved;
+
+    buffer_alloc((void**)&f_non_interleaved, sizeof(float*) * 2);
+    buffer_alloc((void**)&f_non_interleaved[0], sizeof(float) * f_buffer_size);
+    buffer_alloc((void**)&f_non_interleaved[1], sizeof(float) * f_buffer_size);
+
+    for(f_i = 0; f_i < f_buffer_size; ++f_i)
+    {
+        f_non_interleaved[0][f_i] = 1.0f;
+        f_non_interleaved[1][f_i] = 1.0f;
+    }
+
+    float * f_interleaved;
+    buffer_alloc((void**)&f_interleaved, sizeof(float) * f_buffer_size * 2);
+
+    int ITERATIONS = 10000000;
+    float f_mult = 0.99999999f;
+
+    for(f_i = 0; f_i < f_buffer_size * 2; ++f_i)
+    {
+        f_interleaved[f_i] = 1.0f;
+    }
+
+    int f_i2;
+
+    clock_t f_start_interleaved = clock();
+
+    for(f_i = 0; f_i < ITERATIONS; ++f_i)
+    {
+        for(f_i2 = 0; f_i2 < f_buffer_size * 2; ++f_i2)
+        {
+            f_interleaved[f_i2] *= f_mult;
+        }
+    }
+
+    v_pydaw_print_benchmark("Interleaved: ", f_start_interleaved);
+
+    clock_t f_start_non_interleaved = clock();
+
+    for(f_i = 0; f_i < ITERATIONS; ++f_i)
+    {
+        for(f_i2 = 0; f_i2 < f_buffer_size; ++f_i2)
+        {
+            f_non_interleaved[0][f_i2] *= f_mult;
+            f_non_interleaved[1][f_i2] *= f_mult;
+        }
+    }
+
+    v_pydaw_print_benchmark("Non-interleaved: ", f_start_non_interleaved);
+    */
+
     return 0;
 }
