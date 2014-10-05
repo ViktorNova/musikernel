@@ -124,6 +124,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/midicomp
 /usr/lib/{0}/pydaw/python/libpydaw/portaudio.py
 /usr/lib/{0}/pydaw/python/libpydaw/portmidi.py
+/usr/lib/{0}/pydaw/python/libpydaw/project_recover.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_gradients.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_history.py
@@ -181,6 +182,8 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/portaudio.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/portmidi.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/portmidi.pyo
+/usr/lib/{0}/pydaw/python/libpydaw/project_recover.pyc
+/usr/lib/{0}/pydaw/python/libpydaw/project_recover.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_gradients.pyc

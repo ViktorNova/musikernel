@@ -22,7 +22,7 @@ from multiprocessing import cpu_count
 import numpy
 
 global_pydaw_version_string = "musikernel"
-global_pydaw_file_type_string = 'MusiKernel Project (*.mk)'
+global_pydaw_file_type_string = 'MusiKernel Project (default.musikernel)'
 global_euphoria_file_type_string = 'Euphoria Sample File (*.u4ia4)'
 global_euphoria_file_type_ext = '.u4ia4'
 

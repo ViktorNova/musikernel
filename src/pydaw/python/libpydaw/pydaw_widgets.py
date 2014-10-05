@@ -1381,8 +1381,8 @@ class pydaw_abstract_file_browser_widget():
         def on_ok(a_val=None):
             f_text = str(f_category.currentText()).strip()
             if not f_text:
-                QtGui.QMessageBox.warning(f_window, _("Error"),
-                                          _("Category cannot be empty"))
+                QtGui.QMessageBox.warning(
+                    f_window, _("Error"), _("Category cannot be empty"))
             f_val = str(f_lineedit.text()).strip()
             if not f_val:
                 QtGui.QMessageBox.warning(
