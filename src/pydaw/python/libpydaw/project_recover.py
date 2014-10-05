@@ -27,6 +27,7 @@ import os
 class project_history_widget(QtGui.QTreeWidget):
     def __init__(self, a_backup_dir, a_backup_file):
         QtGui.QTreeWidget.__init__(self)
+        self.header().close()
         self.backup_file = a_backup_file
         self.backup_dir = a_backup_dir
         with open(a_backup_file) as f_handle:
@@ -59,6 +60,7 @@ class project_history_widget(QtGui.QTreeWidget):
 
 def project_recover_dialog():
     f_window = QtGui.QMainWindow()
+    f_window.setStyleSheet(pydaw_util.global_stylesheet)
     f_window.setWindowState(QtCore.Qt.WindowMaximized)
     f_window.setWindowTitle("Project History")
     f_file = QtGui.QFileDialog.getOpenFileName(
