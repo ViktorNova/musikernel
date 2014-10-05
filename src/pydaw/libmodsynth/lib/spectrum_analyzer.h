@@ -57,7 +57,7 @@ t_spa_spectrum_analyzer * g_spa_spectrum_analyzer_get(
 {
     t_spa_spectrum_analyzer * f_result =
             (t_spa_spectrum_analyzer*)malloc(sizeof(t_spa_spectrum_analyzer));
-    int f_i = 0;
+    register int f_i = 0;
 
     lmalloc((void**)&f_result->buffer, sizeof(float) * a_sample_count);
 
@@ -73,7 +73,7 @@ t_spa_spectrum_analyzer * g_spa_spectrum_analyzer_get(
     {
         f_result->samples[f_i] = 0.0f;
         f_result->output[f_i] = 0.0f;
-        f_i++;
+        ++f_i;
     }
 
     f_result->str_buf = (char*)malloc(sizeof(char) * 15 * a_sample_count);
@@ -94,7 +94,7 @@ static void g_spa_free(t_spa_spectrum_analyzer *a_spa)
 
 void v_spa_compute_fft(t_spa_spectrum_analyzer *a_spa)
 {
-    int f_i = 1;
+    register int f_i = 1;
 
     fftw_execute(a_spa->plan);
 
@@ -105,7 +105,7 @@ void v_spa_compute_fft(t_spa_spectrum_analyzer *a_spa)
     {
         sprintf(a_spa->str_tmp, "|%f", cabs(a_spa->output[f_i]));
         strcat(a_spa->str_buf, a_spa->str_tmp);
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -118,13 +118,13 @@ void v_spa_compute_fft(t_spa_spectrum_analyzer *a_spa)
 void v_spa_run(t_spa_spectrum_analyzer *a_spa,
         float * a_buf0, float * a_buf1, int a_count)
 {
-    int f_i = 0;
+    register int f_i = 0;
 
     while(f_i < a_count)
     {
         a_spa->samples[a_spa->buf_pos] = (a_buf0[f_i] + a_buf1[f_i]) * 0.5f;
-        a_spa->buf_pos++;
-        f_i++;
+        ++a_spa->buf_pos;
+        ++f_i;
 
         if(a_spa->buf_pos >= a_spa->samples_count)
         {

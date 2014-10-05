@@ -22,7 +22,7 @@ extern "C" {
 
 typedef struct
 {
-    float in_n_m1, out_n_m1, coeff, output;
+    float in_n_m1, out_n_m1, coeff;
 }t_dco_dc_offset_filter;
 
 t_dco_dc_offset_filter * g_dco_get(float);
@@ -31,21 +31,20 @@ inline void v_dco_reset(t_dco_dc_offset_filter*);
 
 inline float f_dco_run(t_dco_dc_offset_filter*__restrict a_dco,float a_in)
 {
-    a_dco->output =
+    register float output =
         (a_in - (a_dco->in_n_m1)) + ((a_dco->out_n_m1) * (a_dco->coeff));
-    a_dco->output = f_remove_denormal(a_dco->output);
+    output = f_remove_denormal(output);
 
     a_dco->in_n_m1 = a_in;
-    a_dco->out_n_m1 = (a_dco->output);
+    a_dco->out_n_m1 = (output);
 
-    return (a_dco->output);
+    return output;
 }
 
 inline void v_dco_reset(t_dco_dc_offset_filter*__restrict a_dco)
 {
     a_dco->in_n_m1 = 0.0f;
     a_dco->out_n_m1 = 0.0f;
-    a_dco->output = 0.0f;
 }
 
 t_dco_dc_offset_filter * g_dco_get(float a_sr)
