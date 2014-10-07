@@ -35,7 +35,7 @@ deb:
 
 deps:
 	make -C pydaw/midicomp && cp pydaw/midicomp/midicomp pydaw/python/libpydaw
-	cd pydaw/pyliblo-0.9.1 && python3 setup.py build && cp build/lib*/*.so ../python/libpydaw
+	cd pydaw/pyliblo-0.9.2 && python3 setup.py build && cp build/lib*/*.so ../python/libpydaw
 	cd pydaw/portaudio && ./configure --with-jack=no --with-oss=no
 	make -C pydaw/portaudio
 	cp pydaw/portaudio/lib/.libs/libportaudio.so.2.0.0 pydaw/python/libpydaw/libportaudio.so
@@ -45,7 +45,7 @@ deps:
 
 deps_clean:
 	make -C pydaw/midicomp clean
-	cd pydaw/pyliblo-0.9.1 && python3 setup.py clean
+	cd pydaw/pyliblo-0.9.2 && python3 setup.py clean
 	make -C pydaw/portaudio clean
 	make -C sbsms clean
 	make -C sbsms/cli clean

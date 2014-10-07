@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from distutils.core import setup, Extension
+import os
+import sys
+
 from distutils.command.build_scripts import build_scripts
 from distutils import util, log
-import os, sys
+
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
 
 
 if '--with-cython' in sys.argv:
@@ -48,33 +54,24 @@ if use_cython:
     cmdclass['build_ext'] = build_ext
 
 
-if sys.hexversion < 0x03000000:
+setup(
+    name = 'pyliblo',
+    version = '0.9.2',
+    author = 'Dominic Sacré',
+    author_email = 'dominic.sacre@gmx.de',
+    url = 'http://das.nasophon.de/pyliblo/',
+    description = 'Python bindings for the liblo OSC library',
+    license = 'LGPL',
     scripts = [
         'scripts/send_osc.py',
         'scripts/dump_osc.py',
-    ]
+    ],
     data_files = [
         ('share/man/man1', [
             'scripts/send_osc.1',
             'scripts/dump_osc.1',
         ]),
-    ]
-else:
-    # doesn't work with Python 3.x yet
-    scripts = []
-    data_files = []
-
-
-setup (
-    name = 'pyliblo',
-    version = '0.9.1',
-    author = 'Dominic Sacre',
-    author_email = 'dominic.sacre@gmx.de',
-    url = 'http://das.nasophon.de/pyliblo/',
-    description = 'Python bindings for the liblo OSC library',
-    license = 'LGPL',
-    scripts = scripts,
-    data_files = data_files,
+    ],
     cmdclass = cmdclass,
     ext_modules = ext_modules
 )

@@ -20,7 +20,7 @@ src/sbsms/src/config.h
 src/sbsms/src/stamp-h1
 src/pydaw/midicomp/midicomp
 src/pydaw/python/libpydaw/midicomp
-src/pydaw/pyliblo-0.9.1/build/
+src/pydaw/pyliblo-0.9.2/build/
 src/pydaw/python/libpydaw/*.so
 src/pydaw/portaudio/Makefile
 src/pydaw/portaudio/bin-stamp
