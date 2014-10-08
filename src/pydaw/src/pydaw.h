@@ -2333,59 +2333,61 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
     if(musikernel->is_previewing)
     {
         register int f_i = 0;
+        t_pydaw_audio_item * f_audio_item = musikernel->preview_audio_item;
+        t_wav_pool_item * f_wav_item = musikernel->preview_wav_item;
         while(f_i < sample_count)
         {
-            if(musikernel->preview_audio_item->sample_read_head->whole_number >=
-                musikernel->preview_wav_item->length)
+            if(f_audio_item->sample_read_head->whole_number >=
+                f_wav_item->length)
             {
                 musikernel->is_previewing = 0;
                 break;
             }
             else
             {
-                v_adsr_run_db(musikernel->preview_audio_item->adsr);
-                if(musikernel->preview_wav_item->channels == 1)
+                v_adsr_run_db(f_audio_item->adsr);
+                if(f_wav_item->channels == 1)
                 {
                     float f_tmp_sample = f_cubic_interpolate_ptr_ifh(
-                    (musikernel->preview_wav_item->samples[0]),
-                    (musikernel->preview_audio_item->sample_read_head->whole_number),
-                    (musikernel->preview_audio_item->sample_read_head->fraction)) *
-                    (musikernel->preview_audio_item->adsr->output) *
+                    (f_wav_item->samples[0]),
+                    (f_audio_item->sample_read_head->whole_number),
+                    (f_audio_item->sample_read_head->fraction)) *
+                    (f_audio_item->adsr->output) *
                     (musikernel->preview_amp_lin); // *
-                    //(musikernel->preview_audio_item->fade_vol);
+                    //(f_audio_item->fade_vol);
 
                     a_buffers[0][f_i] = f_tmp_sample;
                     a_buffers[1][f_i] = f_tmp_sample;
                 }
-                else if(musikernel->preview_wav_item->channels > 1)
+                else if(f_wav_item->channels > 1)
                 {
                     a_buffers[0][f_i] = f_cubic_interpolate_ptr_ifh(
-                    (musikernel->preview_wav_item->samples[0]),
-                    (musikernel->preview_audio_item->sample_read_head->whole_number),
-                    (musikernel->preview_audio_item->sample_read_head->fraction)) *
-                    (musikernel->preview_audio_item->adsr->output) *
+                    (f_wav_item->samples[0]),
+                    (f_audio_item->sample_read_head->whole_number),
+                    (f_audio_item->sample_read_head->fraction)) *
+                    (f_audio_item->adsr->output) *
                     (musikernel->preview_amp_lin); // *
-                    //(musikernel->preview_audio_item->fade_vol);
+                    //(f_audio_item->fade_vol);
 
                     a_buffers[1][f_i] = f_cubic_interpolate_ptr_ifh(
-                    (musikernel->preview_wav_item->samples[1]),
-                    (musikernel->preview_audio_item->sample_read_head->whole_number),
-                    (musikernel->preview_audio_item->sample_read_head->fraction)) *
-                    (musikernel->preview_audio_item->adsr->output) *
+                    (f_wav_item->samples[1]),
+                    (f_audio_item->sample_read_head->whole_number),
+                    (f_audio_item->sample_read_head->fraction)) *
+                    (f_audio_item->adsr->output) *
                     (musikernel->preview_amp_lin); // *
-                    //(musikernel->preview_audio_item->fade_vol);
+                    //(f_audio_item->fade_vol);
                 }
 
-                v_ifh_run(musikernel->preview_audio_item->sample_read_head,
-                        musikernel->preview_audio_item->ratio);
+                v_ifh_run(f_audio_item->sample_read_head,
+                        f_audio_item->ratio);
 
-                if((musikernel->preview_audio_item->sample_read_head->whole_number)
+                if((f_audio_item->sample_read_head->whole_number)
                     >= (musikernel->preview_max_sample_count))
                 {
-                    v_adsr_release(musikernel->preview_audio_item->adsr);
+                    v_adsr_release(f_audio_item->adsr);
                 }
 
-                if(musikernel->preview_audio_item->adsr->stage == ADSR_STAGE_OFF)
+                if(f_audio_item->adsr->stage == ADSR_STAGE_OFF)
                 {
                     musikernel->is_previewing = 0;
                     break;
