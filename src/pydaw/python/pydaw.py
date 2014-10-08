@@ -9221,8 +9221,15 @@ class pydaw_main_window(QtGui.QMainWindow):
 
         self.save_copy_action = self.menu_file.addAction(
             _("Save Copy...("
-            "this creates a full copy of the project directory)"))
+            "This creates a full copy of the project directory)"))
         self.save_copy_action.triggered.connect(self.on_save_copy)
+
+        self.menu_file.addSeparator()
+
+        self.project_history_action = self.menu_file.addAction(
+            _("Project History...("
+            "This shows a tree of all backups"))
+        self.project_history_action.triggered.connect(self.on_project_history)
 
         self.menu_file.addSeparator()
 
@@ -9467,6 +9474,17 @@ class pydaw_main_window(QtGui.QMainWindow):
             global_open_project(f_file_str)
         except Exception as ex:
             pydaw_print_generic_exception(ex)
+
+    def on_project_history(self):
+        f_result = QtGui.QMessageBox.warning(
+            self, _("Warning"), _("This will close the application, "
+            "restart the application after you're done with the "
+            "project history editor"),
+            buttons=QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+        if f_result == QtGui.QMessageBox.Ok:
+            PROJECT.show_project_history()
+            self.ignore_close_event = False
+            self.close()
 
     def on_save(self):
         PROJECT.create_backup()

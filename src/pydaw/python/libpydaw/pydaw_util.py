@@ -54,6 +54,9 @@ def pydaw_escape_stylesheet(a_stylesheet, a_path):
 
 print("\n\n\ninstall prefix:  {}\n\n\n".format(global_pydaw_install_prefix))
 
+PROJECT_HISTORY_SCRIPT = ("{}/lib/musikernel/pydaw/python/"
+    "libpydaw/project_recover.py".format(global_pydaw_install_prefix))
+
 pydaw_bad_chars = ["|", "\\", "~", "."]
 
 def pydaw_which(a_file):

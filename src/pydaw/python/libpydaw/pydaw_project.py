@@ -350,6 +350,10 @@ class pydaw_project:
                 a_struct, f_handle, sort_keys=True, indent=4,
                 separators=(',', ': '))
 
+    def show_project_history(self):
+        f_file = "{}/default.musikernel".format(self.project_folder)
+        subprocess.Popen([PROJECT_HISTORY_SCRIPT, f_file])
+
     def get_next_glued_file_name(self):
         while True:
             self.glued_name_index += 1
