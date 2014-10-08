@@ -3,5 +3,5 @@ BIN=$PYDAW_VERSION"_render"
 PROJECT=$HOME/$PYDAW_VERSION/default-project
 
 make clean && make release && \
-./$BIN $PROJECT "test.wav" 0 0 10 0 44100 512 0
+./$BIN $PROJECT "test.wav" 0 0 10 0 44100 512 2
 

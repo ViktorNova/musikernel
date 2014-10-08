@@ -243,6 +243,7 @@ typedef struct
     pthread_cond_t * track_cond;
     //For preventing the main thread from continuing until the workers finish
     pthread_mutex_t * track_block_mutexes;
+    pthread_spinlock_t * thread_locks;
     pthread_t * track_worker_threads;
     int track_worker_thread_count;
     int * track_thread_quit_notifier;
@@ -1146,9 +1147,13 @@ void v_pydaw_init_worker_threads(t_pydaw_data * self,
             (pthread_cond_t*)malloc(sizeof(pthread_cond_t) *
                 (self->track_worker_thread_count));
 
+    self->thread_locks =
+        (pthread_spinlock_t*)malloc(sizeof(pthread_spinlock_t) *
+            (self->track_worker_thread_count));
+
     pthread_attr_t threadAttr;
     struct sched_param param;
-    param.__sched_priority = sched_get_priority_max(RT_SCHED); //90;
+    param.__sched_priority = sched_get_priority_max(RT_SCHED);
     printf(" Attempting to set .__sched_priority = %i\n",
             param.__sched_priority);
     pthread_attr_init(&threadAttr);
@@ -1189,6 +1194,7 @@ void v_pydaw_init_worker_threads(t_pydaw_data * self,
         {
             //pthread_mutex_init(&self->track_cond_mutex[f_i], NULL);
             pthread_cond_init(&self->track_cond[f_i], NULL);
+            pthread_spin_init(&self->thread_locks[f_i], 0);
             pthread_mutex_init(&self->track_block_mutexes[f_i], NULL);
             pthread_create(&self->track_worker_threads[f_i],
                     &threadAttr, v_pydaw_worker_thread, (void*)f_args);
@@ -1592,10 +1598,13 @@ void * v_pydaw_worker_thread(void* a_arg)
     pthread_cond_t * f_track_cond = &self->track_cond[f_thread_num];
     pthread_mutex_t * f_track_block_mutex =
         &self->track_block_mutexes[f_thread_num];
+    pthread_spinlock_t * f_lock = &self->thread_locks[f_thread_num];
 
     while(1)
     {
         pthread_cond_wait(f_track_cond, f_track_block_mutex);
+        pthread_spin_lock(f_lock);
+        pthread_spin_unlock(f_lock);
 
         if(self->track_thread_quit_notifier[f_thread_num])
         {
@@ -2216,6 +2225,18 @@ inline void v_pydaw_finish_time_params(t_pydaw_data * self,
 inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         long f_next_current_sample, float **output, float **a_input_buffers)
 {
+    //notify the worker threads to wake up
+    register int f_i = 1;
+    while(f_i < self->track_worker_thread_count)
+    {
+        pthread_spin_lock(&self->thread_locks[f_i]);
+        self->track_thread_is_finished[f_i] = 0;
+        pthread_mutex_lock(&self->track_block_mutexes[f_i]);
+        pthread_cond_broadcast(&self->track_cond[f_i]);
+        pthread_mutex_unlock(&self->track_block_mutexes[f_i]);
+        ++f_i;
+    }
+
     musikernel->sample_count = sample_count;
     musikernel->input_buffers = a_input_buffers;
     self->f_next_current_sample = f_next_current_sample;
@@ -2237,8 +2258,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
                         //(self->current_region)]->bar_length);
             }
 
-            if(self->pysong->regions[(self->current_region)]->
-                    region_length_bars)
+            if(self->pysong->regions[self->current_region]->region_length_bars)
             {
                 self->f_region_length_bars =
                     self->pysong->regions[
@@ -2260,20 +2280,18 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         }
     }
 
-    register int f_i = 0;
+    f_i = 0;
     while(f_i < EN_TRACK_COUNT)
     {
         self->track_pool[f_i]->status = STATUS_NOT_PROCESSED;
         ++f_i;
     }
-    //notify the worker threads
+
     f_i = 1;
+    //unleash the hounds
     while(f_i < self->track_worker_thread_count)
     {
-        self->track_thread_is_finished[f_i] = 0;
-        pthread_mutex_lock(&self->track_block_mutexes[f_i]);
-        pthread_cond_broadcast(&self->track_cond[f_i]);
-        pthread_mutex_unlock(&self->track_block_mutexes[f_i]);
+        pthread_spin_unlock(&self->thread_locks[f_i]);
         ++f_i;
     }
 
