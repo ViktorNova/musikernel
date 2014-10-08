@@ -98,51 +98,54 @@ class project_history_widget(QtGui.QTreeWidget):
 
 
 
-def project_recover_dialog():
+def project_recover_dialog(a_file):
     f_window = QtGui.QMainWindow()
     f_window.setStyleSheet(pydaw_util.global_stylesheet)
     f_window.setWindowState(QtCore.Qt.WindowMaximized)
     f_window.setWindowTitle("Project History")
-    f_file = QtGui.QFileDialog.getOpenFileName(
-        caption='Open Project',
-        filter=pydaw_util.global_pydaw_file_type_string,
-        directory=pydaw_util.global_home)
-    if f_file is not None:
-        f_file = str(f_file)
-        if f_file != "":
-            f_project_dir = os.path.dirname(f_file)
-            f_backup_file = "{}/backups.json".format(f_project_dir)
-            if not os.path.isfile(f_backup_file):
-                QtGui.QMessageBox.warning(
-                    f_window, _("Error"), _("No backups exist for this "
-                    "project, recovery is not possible."))
-                return
-            f_backup_dir = "{}/backups".format(f_project_dir)
-            f_central_widget = QtGui.QWidget()
-            f_layout = QtGui.QVBoxLayout(f_central_widget)
-            f_window.setCentralWidget(f_central_widget)
-            f_widget = project_history_widget(
-                f_backup_dir, f_backup_file, f_project_dir)
-            f_layout.addWidget(f_widget)
-            f_hlayout = QtGui.QHBoxLayout()
-            f_layout.addLayout(f_hlayout)
-            f_set_project_button = QtGui.QPushButton(
-                _("Revert Project to Selected"))
-            f_set_project_button.pressed.connect(
-                f_widget.set_selected_as_project)
-            f_hlayout.addWidget(f_set_project_button)
-            f_hlayout.addItem(
-                QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-            print("showing")
-            f_window.show()
-            return f_window
+    if a_file is None:
+        f_file = QtGui.QFileDialog.getOpenFileName(
+            caption='Open Project',
+            filter=pydaw_util.global_pydaw_file_type_string,
+            directory=pydaw_util.global_home)
+        if f_file is None or not str(f_file):
+            return None
+    else:
+        f_file = a_file
+    f_project_dir = os.path.dirname(f_file)
+    f_backup_file = "{}/backups.json".format(f_project_dir)
+    if not os.path.isfile(f_backup_file):
+        QtGui.QMessageBox.warning(
+            f_window, _("Error"), _("No backups exist for this "
+            "project, recovery is not possible."))
+        return
+    f_backup_dir = "{}/backups".format(f_project_dir)
+    f_central_widget = QtGui.QWidget()
+    f_layout = QtGui.QVBoxLayout(f_central_widget)
+    f_window.setCentralWidget(f_central_widget)
+    f_widget = project_history_widget(
+        f_backup_dir, f_backup_file, f_project_dir)
+    f_layout.addWidget(f_widget)
+    f_hlayout = QtGui.QHBoxLayout()
+    f_layout.addLayout(f_hlayout)
+    f_set_project_button = QtGui.QPushButton(
+        _("Revert Project to Selected"))
+    f_set_project_button.pressed.connect(
+        f_widget.set_selected_as_project)
+    f_hlayout.addWidget(f_set_project_button)
+    f_hlayout.addItem(
+        QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+    print("showing")
+    f_window.show()
+    return f_window
 
 
 if __name__ == "__main__":
     def _main():
         import sys
         app = QtGui.QApplication(sys.argv)
-        f_window = project_recover_dialog()
+        f_window = project_recover_dialog(
+            sys.argv[1] if len(sys.argv) == 2 else None)
         exit(app.exec_())
 
     _main()
