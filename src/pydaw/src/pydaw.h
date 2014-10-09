@@ -1074,7 +1074,7 @@ void v_self_set_thread_affinity()
 void v_pydaw_init_worker_threads(t_pydaw_data * self,
         int a_thread_count, int a_set_thread_affinity)
 {
-    int f_cpu_count = sysconf( _SC_NPROCESSORS_ONLN );
+    int f_cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
     int f_cpu_core_inc = 1;
     int f_has_ht = i_cpu_has_hyperthreading();
 
@@ -1092,9 +1092,9 @@ void v_pydaw_init_worker_threads(t_pydaw_data * self,
 
     if(a_thread_count == 0)
     {
-        self->track_worker_thread_count = f_cpu_count;
+        self->track_worker_thread_count = 1; //f_cpu_count;
 
-        if((self->track_worker_thread_count) > 4)
+        /*if((self->track_worker_thread_count) > 4)
         {
             self->track_worker_thread_count = 4;
         }
@@ -1105,18 +1105,16 @@ void v_pydaw_init_worker_threads(t_pydaw_data * self,
         else if((self->track_worker_thread_count) <= 0)
         {
             self->track_worker_thread_count = 1;
-        }
+        }*/
     }
     else
     {
         self->track_worker_thread_count = a_thread_count;
     }
 
-    if(!f_has_ht &&
-            ((self->track_worker_thread_count * 2) <= f_cpu_count))
+    if(!f_has_ht && ((self->track_worker_thread_count * 2) <= f_cpu_count))
     {
-        f_cpu_core_inc = f_cpu_count /
-                (self->track_worker_thread_count);
+        f_cpu_core_inc = f_cpu_count / self->track_worker_thread_count;
 
         if(f_cpu_core_inc < 2)
         {
@@ -1128,8 +1126,7 @@ void v_pydaw_init_worker_threads(t_pydaw_data * self,
         }
     }
 
-    printf("Spawning %i worker threads\n",
-            self->track_worker_thread_count);
+    printf("Spawning %i worker threads\n", self->track_worker_thread_count);
 
     self->track_block_mutexes =
             (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t) *
