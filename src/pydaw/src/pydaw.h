@@ -1283,45 +1283,6 @@ void v_pydaw_set_control_from_cc(
 }
 
 
-inline void v_pydaw_set_bus_counters(t_pydaw_data * self)
-{
-    register int f_i = 0;
-    register int f_i2;
-    int f_global_track_num;
-
-    while(f_i < EN_TRACK_COUNT)
-    {
-        self->track_pool[f_i]->bus_count = 0;
-        ++f_i;
-    }
-
-    f_i = 0;
-
-    while(f_i < EN_TRACK_COUNT)
-    {
-        f_i2 = 0;
-        while(f_i2 < MAX_ROUTING_COUNT)
-        {
-            if(self->routing_graph->routes[f_i][f_i2].active)
-            {
-                f_global_track_num =
-                    self->routing_graph->routes[f_i][f_i2].output;
-                ++self->track_pool[f_global_track_num]->bus_count;
-            }
-            ++f_i2;
-        }
-        ++f_i;
-    }
-
-    f_i = 0;
-
-    while(f_i < EN_TRACK_COUNT)
-    {
-        self->track_pool[f_i]->bus_counter = self->track_pool[f_i]->bus_count;
-        ++f_i;
-    }
-}
-
 inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 {
     int f_bus_num;
