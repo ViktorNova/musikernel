@@ -1945,14 +1945,14 @@ class region_editor(QtGui.QGraphicsView):
         if pydaw_current_region_is_none():
             return
 
-        f_item_list = [x.name for x in self.get_selected_items()]
-        if len(f_item_list) == 0:
+        f_item_set = {x.name for x in self.get_selected_items()}
+        if len(f_item_set) == 0:
             QtGui.QMessageBox.warning(
                 MAIN_WINDOW, _("Error"), _("No items selected"))
             return
 
         def transpose_ok_handler():
-            for f_item_name in f_item_list:
+            for f_item_name in f_item_set:
                 f_item = PROJECT.get_item_by_name(f_item_name)
                 f_item.transpose(
                     f_semitone.value(), f_octave.value(),

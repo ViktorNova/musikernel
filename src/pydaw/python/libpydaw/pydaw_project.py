@@ -2155,6 +2155,7 @@ class pydaw_item:
             if a_duplicate:
                 f_duplicates.append(pydaw_note.from_str(str(note)))
             note.note_num += f_total
+            note.note_num = pydaw_clip_value(note.note_num, 0, 120)
             if note.note_num < 0:
                 note.note_num = 0
             elif note.note_num > 127:
