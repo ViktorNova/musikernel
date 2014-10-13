@@ -627,8 +627,6 @@ int main(int argc, char **argv)
 
         outputParameters.channelCount = 2; /* stereo output */
         outputParameters.sampleFormat = PA_SAMPLE_TYPE;
-        outputParameters.suggestedLatency =
-            Pa_GetDeviceInfo(outputParameters.device )->defaultLowOutputLatency;
         outputParameters.hostApiSpecificStreamInfo = NULL;
 
         f_i = 0;
@@ -655,6 +653,9 @@ int main(int argc, char **argv)
             continue;
         }
 
+        outputParameters.suggestedLatency =
+            Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+
         err = Pa_OpenStream(
                   &stream,
                   0, //&inputParameters,
@@ -665,7 +666,7 @@ int main(int argc, char **argv)
                    * clipping them */
                   0, /* paClipOff, */
                   portaudioCallback,
-                  NULL );
+                  NULL);
         if( err != paNoError )
         {
             f_failure_count++;
