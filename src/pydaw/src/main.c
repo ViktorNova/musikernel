@@ -1352,6 +1352,7 @@ void v_parse_configure_message(t_pydaw_data* self,
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_KILL_ENGINE))
     {
+        pthread_spin_lock(&musikernel->main_lock);
         assert(0);
     }
     else
