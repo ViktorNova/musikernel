@@ -9228,7 +9228,7 @@ class pydaw_main_window(QtGui.QMainWindow):
 
         self.project_history_action = self.menu_file.addAction(
             _("Project History...("
-            "This shows a tree of all backups"))
+            "This shows a tree of all backups)"))
         self.project_history_action.triggered.connect(self.on_project_history)
 
         self.menu_file.addSeparator()
