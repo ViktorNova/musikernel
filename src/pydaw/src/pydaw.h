@@ -1428,7 +1428,7 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
             }
         }
 
-        f_bus->bus_counter -= 1;
+        --f_bus->bus_counter;
 
         ++f_i3;
     }
@@ -1443,6 +1443,10 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
     {
         v_pydaw_process_midi(
             self, a_global_track_num, musikernel->sample_count);
+    }
+    else
+    {
+        f_track->period_event_index = 0;
     }
 
     v_pydaw_process_external_midi(self, f_track, musikernel->sample_count);
@@ -2002,8 +2006,6 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
         }
         else if(events[f_i2].type == PYDAW_EVENT_NOTEOFF)
         {
-            ++a_track->period_event_index;
-
             if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat = self->ml_current_period_beats +
@@ -2055,8 +2057,6 @@ inline void v_pydaw_process_external_midi(t_pydaw_data * self,
                 * (self->playback_inc))) * 4.0f;*/
             v_pydaw_set_control_from_cc(
                 &events[f_i2], self, a_track->track_num);
-
-            ++a_track->period_event_index;
 
             if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
