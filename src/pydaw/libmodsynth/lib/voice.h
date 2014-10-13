@@ -198,12 +198,12 @@ int i_pick_voice(t_voc_voices *data, int a_current_note,
             {
                 data->voices[f_i].n_state = note_state_killed;
                 data->voices[f_i].off = a_current_sample;
-                f_note_count++;
+                ++f_note_count;
             }
             else if(data->voices[f_i].n_state ==
                     note_state_killed)
             {
-                f_note_count++;
+                ++f_note_count;
             }
             //do not allow more than 2 voices for any note, at any time...
             if(f_note_count > 2)
@@ -234,14 +234,14 @@ int i_pick_voice(t_voc_voices *data, int a_current_note,
 	}
         else
         {
-            f_active_count++;
+            ++f_active_count;
 
             if(f_active_count >= data->thresh)
             {
                 int f_voice_to_kill = i_get_oldest_voice(data, 1, -1);
                 data->voices[f_voice_to_kill].n_state = note_state_killed;
                 data->voices[f_voice_to_kill].off = a_current_sample;
-                f_active_count--;
+                --f_active_count;
             }
         }
 
