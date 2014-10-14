@@ -284,7 +284,7 @@ def int_to_bool(a_int):
 def print_sorted_dict(a_dict):
     """ Mostly intended for printing locals() and globals() """
     for k in sorted(list(a_dict.keys())):
-            print("{} : {}".format(k, a_dict[k]))
+        print("{} : {}".format(k, a_dict[k]))
 
 def time_quantize_round(a_input):
     """Properly quantize time values from QDoubleSpinBoxes
