@@ -93,7 +93,7 @@ void v_lim_set(t_lim_limiter*a_lim, float a_thresh, float a_ceiling,
 
 void v_lim_run(t_lim_limiter *a_lim, float a_in0, float a_in1)
 {
-    a_lim->maxSpls=f_lms_max(f_lms_abs(a_in0),f_lms_abs(a_in1));
+    a_lim->maxSpls = f_lms_max(f_lms_abs(a_in0),f_lms_abs(a_in1));
 
     /*clip at 24dB.  If a memory error causes a huge value,
      * the limiter would never return.*/
@@ -115,7 +115,7 @@ void v_lim_run(t_lim_limiter *a_lim, float a_in0, float a_in1)
         }
     }
 
-    a_lim->max1Block = f_lms_max((a_lim->max1Block),(a_lim->maxSpls));
+    a_lim->max1Block = f_lms_max((a_lim->max1Block), (a_lim->maxSpls));
 
     ++a_lim->r2Timer;
 
@@ -130,17 +130,17 @@ void v_lim_run(t_lim_limiter *a_lim, float a_in0, float a_in1)
         }
     }
 
-    a_lim->max2Block = f_lms_max((a_lim->max2Block),(a_lim->maxSpls));
+    a_lim->max2Block = f_lms_max((a_lim->max2Block), (a_lim->maxSpls));
 
-    a_lim->env = f_lms_max((a_lim->max1Block),(a_lim->max2Block));
+    a_lim->env = f_lms_max((a_lim->max1Block), (a_lim->max2Block));
 
     if(a_lim->env > a_lim->thresh)
     {
-        a_lim->gain = ((a_lim->thresh) / (a_lim->env))*(a_lim->volume);
+        a_lim->gain = ((a_lim->thresh) / (a_lim->env)) * (a_lim->volume);
     }
     else
     {
-        a_lim->gain= (a_lim->volume);
+        a_lim->gain = (a_lim->volume);
     }
 
     a_lim->buffer0[(a_lim->buffer_index)] = a_in0;
