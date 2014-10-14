@@ -16,7 +16,7 @@ GNU General Public License for more details.
 
 #include "../../lib/amp.h"
 #include "../../lib/lms_math.h"
-#include "../filter/svf_stereo.h"
+#include "../filter/svf.h"
 #include "../signal_routing/audio_xfade.h"
 
 #ifdef	__cplusplus
@@ -26,7 +26,7 @@ extern "C" {
 typedef struct
 {
     float pitch, ratio, thresh, wet, speed, output0, output1;
-    t_svf2_filter filter;
+    t_state_variable_filter filter;
     t_audio_xfade xfade;
 }t_scc_sidechain_comp;
 
@@ -41,8 +41,8 @@ void v_scc_run_comp(t_scc_sidechain_comp*, float, float, float, float);
 
 void g_scc_init(t_scc_sidechain_comp * self, float a_sr)
 {
-    g_svf2_init(&self->filter, a_sr);
-    v_svf2_set_res(&self->filter, -15.0f);
+    g_svf_init(&self->filter, a_sr);
+    v_svf_set_res(&self->filter, -15.0f);
     g_axf_init(&self->xfade, -3.0f);
     self->speed = 999.99f;
     self->pitch = 999.99f;
@@ -62,8 +62,8 @@ void v_scc_set(t_scc_sidechain_comp *self, float a_thresh, float a_ratio,
     if(self->speed != a_speed)
     {
         self->speed = a_speed;
-        v_svf2_set_cutoff_base(&self->filter, a_speed);
-        v_svf2_set_cutoff(&self->filter);
+        v_svf_set_cutoff_base(&self->filter, a_speed);
+        v_svf_set_cutoff(&self->filter);
     }
 
     if(self->wet != a_wet)
@@ -76,33 +76,26 @@ void v_scc_set(t_scc_sidechain_comp *self, float a_thresh, float a_ratio,
 void v_scc_run_comp(t_scc_sidechain_comp *self,
     float a_input0, float a_input1, float a_output0, float a_output1)
 {
-    float f_gain0, f_gain1;
+    float f_gain;
 
-    v_svf2_run_2_pole_lp(
-        &self->filter, f_lms_abs(a_input0), f_lms_abs(a_input1));
+    float f_env = v_svf_run_4_pole_lp(
+        &self->filter, f_lms_max(f_lms_abs(a_input0), f_lms_abs(a_input1)));
 
-    f_gain0 = self->thresh - f_linear_to_db_fast(self->filter.output0);
-    f_gain1 = self->thresh - f_linear_to_db_fast(self->filter.output1);
+    f_gain = self->thresh - f_linear_to_db_fast(f_env);
 
-    if(f_gain0 < 0.0f)
+
+    if(f_gain < 0.0f)
     {
-        f_gain0 *= self->ratio;
+        f_gain *= self->ratio;
+        f_gain = f_db_to_linear_fast(f_gain);
         self->output0 = f_axf_run_xfade(
-            &self->xfade, a_output0, a_output0 * f_db_to_linear_fast(f_gain0));
+            &self->xfade, a_output0, a_output0 * f_gain);
+        self->output1 = f_axf_run_xfade(
+            &self->xfade, a_output1, a_output1 * f_gain);
     }
     else
     {
         self->output0 = a_output0;
-    }
-
-    if(f_gain1 < 0.0f)
-    {
-        f_gain1 *= self->ratio;
-        self->output1 = f_axf_run_xfade(
-            &self->xfade, a_output1, a_output1 * f_db_to_linear_fast(f_gain0));
-    }
-    else
-    {
         self->output1 = a_output1;
     }
 }
