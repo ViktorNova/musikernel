@@ -506,43 +506,40 @@ void v_pydaw_reset_audio_item_read_heads(t_pydaw_data * self,
         return;
     }
 
-    t_pydaw_audio_items * f_audio_items = self->
-            pysong->audio_items[a_region];
+    t_pydaw_audio_items * f_audio_items = self->pysong->audio_items[a_region];
 
-    register int f_i = 0;
+    register int f_i;
     float f_start_beats = (float)(a_start_bar * 4);
+    float f_sr = musikernel->sample_rate;
+    t_pydaw_audio_item * f_audio_item;
 
-    while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
+    for(f_i = 0; f_i < PYDAW_MAX_AUDIO_ITEM_COUNT; ++f_i)
     {
         if(f_audio_items->items[f_i])
         {
+            f_audio_item = f_audio_items->items[f_i];
             float f_start_beat =
-                (float)(f_audio_items->items[f_i]->start_bar * 4) +
-                f_audio_items->items[f_i]->start_beat;
+                (float)(f_audio_item->start_bar * 4) +
+                f_audio_item->start_beat;
 
             float f_end_beat =
                 f_start_beat + f_pydaw_samples_to_beat_count(
-                    (f_audio_items->items[f_i]->sample_end_offset -
-                     f_audio_items->items[f_i]->sample_start_offset),
-                    self->tempo,
-                    musikernel->sample_rate);
+                    (f_audio_item->sample_end_offset -
+                     f_audio_item->sample_start_offset),
+                    self->tempo, f_sr);
 
             if((f_start_beats > f_start_beat) && (f_start_beats < f_end_beat))
             {
                 float f_beats_offset = (f_start_beats - f_start_beat);
                 int f_sample_start = i_pydaw_beat_count_to_samples(
-                        f_beats_offset,
-                        self->tempo,
-                        musikernel->sample_rate);
+                        f_beats_offset, self->tempo, f_sr);
 
                 v_ifh_retrigger(
-                        f_audio_items->items[f_i]->sample_read_head,
-                        f_sample_start);
+                    f_audio_item->sample_read_head, f_sample_start);
 
-                v_adsr_retrigger(f_audio_items->items[f_i]->adsr);
+                v_adsr_retrigger(f_audio_item->adsr);
             }
         }
-        ++f_i;
     }
 }
 
@@ -766,8 +763,7 @@ void v_paif_set_control(t_pydaw_data * self, int a_region_uid,
         pthread_spin_unlock(&musikernel->main_lock);
     }
 
-    if(!self->pysong->
-            per_audio_item_fx[f_song_index]->loaded[a_item_index])
+    if(!self->pysong->per_audio_item_fx[f_song_index]->loaded[a_item_index])
     {
         t_pydaw_per_audio_item_fx_item * f_items[8];
         int f_i = 0;
@@ -784,8 +780,7 @@ void v_paif_set_control(t_pydaw_data * self, int a_region_uid,
                     items[a_item_index][f_i] = f_items[f_i];
             ++f_i;
         }
-        self->pysong->per_audio_item_fx[f_song_index]->
-                loaded[a_item_index] = 1;
+        self->pysong->per_audio_item_fx[f_song_index]->loaded[a_item_index] = 1;
         pthread_spin_unlock(&musikernel->main_lock);
     }
 
