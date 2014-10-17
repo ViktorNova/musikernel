@@ -599,11 +599,11 @@ static void v_run_rayv(
             &plugin_data->atm_queue, f_i,
             plugin_data->port_table);
 
-        v_sml_run(plugin_data->mono_modules->lfo_smoother,
+        v_sml_run(&plugin_data->mono_modules->lfo_smoother,
                 (*plugin_data->lfo_freq));
-        v_sml_run(plugin_data->mono_modules->filter_smoother,
+        v_sml_run(&plugin_data->mono_modules->filter_smoother,
                 (*plugin_data->timbre));
-        v_sml_run(plugin_data->mono_modules->pitchbend_smoother,
+        v_sml_run(&plugin_data->mono_modules->pitchbend_smoother,
                 (plugin_data->sv_pitch_bend_value));
 
         f_i2 = 0;
@@ -662,7 +662,7 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
     f_rmp_run_ramp(&a_voice->glide_env);
 
     v_lfs_set(&a_voice->lfo1,
-            (plugin_data->mono_modules->lfo_smoother->last_value) * 0.01f);
+            (plugin_data->mono_modules->lfo_smoother.last_value) * 0.01f);
     v_lfs_run(&a_voice->lfo1);
     a_voice->lfo_amp_output =
         f_db_to_linear_fast((((*plugin_data->lfo_amp) *
@@ -678,7 +678,7 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
         a_voice->base_pitch =
                 (a_voice->glide_env.output_multiplied) +
                 (a_voice->pitch_env.output_multiplied)
-                + (plugin_data->mono_modules->pitchbend_smoother->last_value *
+                + (plugin_data->mono_modules->pitchbend_smoother.last_value *
                 (*(plugin_data->master_pb_amt))) +
                 (a_voice->last_pitch) + (a_voice->lfo_pitch_output);
 
@@ -705,7 +705,7 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
         a_voice->base_pitch =
                 (a_voice->glide_env.output_multiplied) +
                 (a_voice->pitch_env.output_multiplied)
-                + (plugin_data->mono_modules->pitchbend_smoother->last_value *
+                + (plugin_data->mono_modules->pitchbend_smoother.last_value *
                 (*(plugin_data->master_pb_amt))) +
                 (a_voice->last_pitch) + (a_voice->lfo_pitch_output);
 
@@ -735,7 +735,7 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
     v_adsr_run(&a_voice->adsr_filter);
 
     v_svf_set_cutoff_base(&a_voice->svf_filter,
-            (plugin_data->mono_modules->filter_smoother->last_value));
+            (plugin_data->mono_modules->filter_smoother.last_value));
 
     v_svf_add_cutoff_mod(&a_voice->svf_filter,
             (((a_voice->adsr_filter.output) * (*plugin_data->filter_env_amt)) +

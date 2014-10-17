@@ -729,16 +729,8 @@ inline void v_mf3_run_metal_comb(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->output1 = (a_mf3->comb_filter1.output_sample);
 }
 
-
-/* t_mf3_multi g_mf3_get(
- * float a_sample_rate)
- */
-t_mf3_multi * g_mf3_get(float a_sample_rate)
+void g_mf3_init(t_mf3_multi * f_result, float a_sample_rate)
 {
-    t_mf3_multi * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_mf3_multi));
-
     f_result->effect_index = 0;
     f_result->channels = 2;
     g_svf2_init(&f_result->svf, a_sample_rate);
@@ -770,6 +762,18 @@ t_mf3_multi * g_mf3_get(float a_sample_rate)
     g_lfi_init(&f_result->lofi);
     g_sah_init(&f_result->s_and_h, a_sample_rate);
     g_grw_init(&f_result->growl_filter, a_sample_rate);
+
+}
+
+/* t_mf3_multi g_mf3_get(
+ * float a_sample_rate)
+ */
+t_mf3_multi * g_mf3_get(float a_sample_rate)
+{
+    t_mf3_multi * f_result;
+
+    lmalloc((void**)&f_result, sizeof(t_mf3_multi));
+    g_mf3_init(f_result, a_sample_rate);
 
     return f_result;
 }

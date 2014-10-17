@@ -43,6 +43,22 @@ inline void v_sml_run(t_smoother_linear * a_smoother, float);
 }
 #endif
 
+
+void g_sml_init(t_smoother_linear * f_result, float a_sample_rate,
+        float a_high, float a_low, float a_time_in_seconds)
+{
+    assert(a_high > a_low);
+    f_result->last_value = (((a_high - a_low) * .5f) + a_low);
+
+    /*Rate is the time it would take to complete if the knob was all
+     * the way counter-clockwise, and then instantly moved all the
+     * way clockwise*/
+    f_result->rate = (((a_high - a_low ) / a_time_in_seconds) / a_sample_rate);
+
+    f_result->sample_rate = a_sample_rate;
+    f_result->sr_recip = 1.0f / a_sample_rate;
+}
+
 /* t_smoother_linear * g_sml_get_smoother_linear(
  * float a_sample_rate,
  * float a_high, //The high value of the control
@@ -57,24 +73,11 @@ inline void v_sml_run(t_smoother_linear * a_smoother, float);
 t_smoother_linear * g_sml_get_smoother_linear(float a_sample_rate,
         float a_high, float a_low, float a_time_in_seconds)
 {
-    assert(a_high > a_low);
-
     t_smoother_linear * f_result;
 
     lmalloc((void**)&f_result, sizeof(t_smoother_linear));
 
-    /*Start in the middle, the user can manually set the value if
-     * this isn't acceptable*/
-    f_result->last_value = (((a_high - a_low) * .5f) + a_low);
-
-    /*Rate is the time it would take to complete if the knob was all
-     * the way counter-clockwise, and then instantly moved all the
-     * way clockwise*/
-    f_result->rate = (((a_high - a_low ) / a_time_in_seconds) / a_sample_rate);
-
-    f_result->sample_rate = a_sample_rate;
-    f_result->sr_recip = 1.0f/a_sample_rate;
-
+    g_sml_init(f_result, a_sample_rate, a_high, a_low, a_time_in_seconds);
 
 #ifdef SML_DEBUG_MODE
     f_result->debug_counter = 0;

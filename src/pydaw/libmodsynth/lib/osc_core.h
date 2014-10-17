@@ -35,6 +35,10 @@ void v_osc_core_free(t_osc_core *);
 }
 #endif
 
+void g_init_osc_core(t_osc_core * f_result)
+{
+    f_result->output = 0.0f;
+}
 
 t_osc_core * g_get_osc_core()
 {

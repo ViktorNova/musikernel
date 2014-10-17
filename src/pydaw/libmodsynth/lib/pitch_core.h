@@ -34,8 +34,8 @@ t_pit_ratio * g_pit_ratio();
 inline float f_pit_midi_note_to_hz(float);
 inline float f_pit_hz_to_midi_note(float);
 inline float f_pit_midi_note_to_samples(float, float);
-inline float f_pit_midi_note_to_hz_fast(float);
-inline float f_pit_midi_note_to_ratio_fast(float, float,
+float f_pit_midi_note_to_hz_fast(float);
+float f_pit_midi_note_to_ratio_fast(float, float,
         t_pit_ratio *);
 
 #ifdef	__cplusplus
@@ -227,14 +227,14 @@ float arr_pit_p2f [arr_pit_p2f_count] __attribute__((aligned(16))) = {
 22350.572266, 22415.220703, 22480.044922, 22545.068359, 22610.269531, 22675.667969, 22741.255859, 22807.025391, 22872.994141, 22939.142578, 23005.494141, 23072.035156, 23138.759766, 23205.689453, 23272.800781, 23340.115234, 23407.626953, 23475.322266, 23543.222656, 23611.310547,
 23679.605469};
 
-/* inline float f_pit_midi_note_to_hz_fast(
+/* float f_pit_midi_note_to_hz_fast(
  * float a_midi_note_number) //range: 20 to 124
  *
  * Convert midi note number to hz, using a fast table lookup.
  * You should prefer this function whenever possible, it is much faster than the
  * regular version.
  */
-inline float f_pit_midi_note_to_hz_fast(float a_midi_note_number)
+float f_pit_midi_note_to_hz_fast(float a_midi_note_number)
 {
     float arr_index = (a_midi_note_number * 20.0f) - 1.0f;
 
@@ -257,7 +257,7 @@ inline float f_pit_midi_note_to_hz_fast(float a_midi_note_number)
  * t_pit_pitch_core* a_pit,
  * t_pit_ratio * a_ratio)
  */
-inline float f_pit_midi_note_to_ratio_fast(float a_base_pitch,
+float f_pit_midi_note_to_ratio_fast(float a_base_pitch,
         float a_transposed_pitch, t_pit_ratio *__restrict a_ratio)
 {
     if(a_base_pitch != (a_ratio->pitch))

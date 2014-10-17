@@ -24,8 +24,8 @@ extern "C" {
 
 inline float f_db_to_linear(float);
 inline float f_linear_to_db(float);
-inline float f_db_to_linear_fast(float);
-inline float f_linear_to_db_fast(float);
+float f_db_to_linear_fast(float);
+float f_linear_to_db_fast(float);
 inline float f_linear_to_db_linear(float);
 
 #ifdef	__cplusplus
@@ -102,7 +102,7 @@ float arr_amp_db2a [arr_amp_db2a_count] __attribute__((aligned(16))) = {
 57.876198, 59.566216, 61.305580, 63.095734};
 
 
-/* inline float f_db_to_linear_fast(float a_db)
+/* float f_db_to_linear_fast(float a_db)
  *
  * Convert decibels to linear using an approximated table lookup
  *
@@ -111,7 +111,7 @@ float arr_amp_db2a [arr_amp_db2a_count] __attribute__((aligned(16))) = {
  * Use the regular version if you may require more range, otherwise the values
  * will be clipped
  */
-inline float f_db_to_linear_fast(float a_db)
+float f_db_to_linear_fast(float a_db)
 {
     float f_result = ((a_db + 100.0f) * 4.0f) - 1.0f;
 
@@ -169,14 +169,14 @@ float arr_amp_a2db [arr_amp_a2db_count] __attribute__((aligned(16))) = {
 11.709208,11.731739,11.754212,11.776628,11.798985,11.821285, 11.843528,11.865714,11.887844,11.909917,11.931934,11.953897,
 11.975802,11.997654,12.019451};
 
-/*inline float f_linear_to_db_fast(
+/* float f_linear_to_db_fast(
  * float a_input  //Linear amplitude.  Typically 0 to 1
  * )
  *
  * A fast, table-lookup based linear to decibels converter.
  * The range is 0 to 4, above 4 will clip at 4.
  */
-inline float f_linear_to_db_fast(float a_input)
+float f_linear_to_db_fast(float a_input)
 {
     float f_result = (a_input  * 100.0f);
 

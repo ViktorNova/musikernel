@@ -68,13 +68,18 @@ float f_pnv_run(t_pnv_perc_env * a_pnv)
     return a_pnv->value;
 }
 
+void g_pnv_init(t_pnv_perc_env * f_result, float a_sr)
+{
+    f_result->sample_rate = a_sr;
+
+    v_pnv_set(f_result, 0.01f, 75.0f, 0.15f, 48.0f, 24.0f);
+}
+
 t_pnv_perc_env * g_pnv_get(float a_sr)
 {
     t_pnv_perc_env * f_result = (t_pnv_perc_env*)malloc(sizeof(t_pnv_perc_env));
 
-    f_result->sample_rate = a_sr;
-
-    v_pnv_set(f_result, 0.01f, 75.0f, 0.15f, 48.0f, 24.0f);
+    g_pnv_init(f_result, a_sr);
 
     return f_result;
 }
