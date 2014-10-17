@@ -1,5 +1,5 @@
 /*
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ extern "C" {
 #include "../plugins/simple_reverb/synth.c"
 #include "../plugins/trigger_fx/synth.c"
 #include "../plugins/sidechain_comp/synth.c"
+#include "../plugins/mk_channel/synth.c"
 
 
 typedef struct
@@ -104,6 +105,10 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
         case 10:
             f_result->descfn =
                 (PYFX_Descriptor_Function)scc_PYFX_descriptor;
+            break;
+        case 11:
+            f_result->descfn =
+                (PYFX_Descriptor_Function)mkchnl_PYFX_descriptor;
             break;
         default:
             assert(0);

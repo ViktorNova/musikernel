@@ -2,6 +2,7 @@ import mkplugins.euphoria
 import mkplugins.rayv
 import mkplugins.wayv
 import mkplugins.modulex
+import mkplugins.mk_channel
 import mkplugins.mk_delay
 import mkplugins.mk_eq
 import mkplugins.simple_fader
