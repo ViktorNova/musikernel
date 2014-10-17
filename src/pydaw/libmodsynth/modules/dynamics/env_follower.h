@@ -1,0 +1,79 @@
+/*
+This file is part of the MusiKernel project, Copyright MusiKernel Team
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
+#ifndef ENV_FOLLOWER_H
+#define	ENV_FOLLOWER_H
+
+#include "../../lib/lms_math.h"
+#include <math.h>
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
+typedef struct
+{
+    float attack;
+    float release;
+    float a_coeff;
+    float r_coeff;
+    float envelope;
+    float sample_rate;
+}t_enf_env_follower;
+
+#ifdef	__cplusplus
+}
+#endif
+
+
+void g_enf_init(t_enf_env_follower* self, float a_sr)
+{
+    self->envelope = 0.0f;
+    self->sample_rate = a_sr;
+    self->attack = -1.234f;
+    self->release = -1.234f;
+}
+
+void v_enf_set(t_enf_env_follower* self, float a_attack, float a_release)
+{
+    if(self->attack != a_attack)
+    {
+        self->attack = a_attack;
+        self->a_coeff = exp(log(0.01f) / ( a_attack * self->sample_rate));
+    }
+
+    if(self->release != a_release)
+    {
+        self->release = a_release;
+        self->r_coeff = exp(log(0.01f) / ( a_release * self->sample_rate));
+    }
+}
+
+void v_enf_run(t_enf_env_follower* self, float a_input)
+{
+    float tmp = f_lms_abs(a_input);
+    if(tmp > self->envelope)
+    {
+        self->envelope = self->a_coeff * (self->envelope - tmp) + tmp;
+    }
+    else
+    {
+        self->envelope = self->r_coeff * (self->envelope - tmp) + tmp;
+    }
+
+    self->envelope = f_remove_denormal(self->envelope);
+}
+
+
+#endif	/* ENV_FOLLOWER_H */
+
