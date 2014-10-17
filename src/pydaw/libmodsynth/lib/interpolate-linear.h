@@ -23,7 +23,7 @@ extern "C" {
 inline float f_linear_interpolate(float, float, float);
 inline float f_linear_interpolate_arr(float[],float);
 inline float f_linear_interpolate_arr_wrap(float[],int,float);
-inline float f_linear_interpolate_ptr_wrap(float*, int, float);
+float f_linear_interpolate_ptr_wrap(float*, int, float);
 inline float f_linear_interpolate_ptr(float*, float);
 inline float f_linear_interpolate_ptr_ifh(float * a_table, int a_whole_number,
         float a_frac);
@@ -91,7 +91,7 @@ inline float f_linear_interpolate_arr_wrap(float a_table[], int a_table_size,
             pos) + (a_table[int_pos_plus_1]);
 }
 
-/* inline float f_linear_interpolate_ptr_wrap(
+/* float f_linear_interpolate_ptr_wrap(
  * float * a_table,
  * int a_table_size,
  * float a_ptr,
@@ -100,7 +100,7 @@ inline float f_linear_interpolate_arr_wrap(float a_table[], int a_table_size,
  * This method uses a pointer instead of an array the float* must be malloc'd
  * to (sizeof(float) * a_table_size)
  */
-inline float f_linear_interpolate_ptr_wrap(float * a_table, int a_table_size,
+float f_linear_interpolate_ptr_wrap(float * a_table, int a_table_size,
         float a_ptr)
 {
     int int_pos = (int)a_ptr;

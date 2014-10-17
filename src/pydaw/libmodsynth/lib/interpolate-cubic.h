@@ -20,7 +20,7 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-inline float f_cubic_interpolate_ptr_wrap(float*, int, float);
+float f_cubic_interpolate_ptr_wrap(float*, int, float);
 inline float f_cubic_interpolate_ptr(float*, float);
 
 #ifdef	__cplusplus
@@ -40,7 +40,7 @@ inline float f_cubic_interpolate(float a_a, float a_b, float a_position)
 */
 
 
-/* inline float f_cubic_interpolate_ptr_wrap(
+/* float f_cubic_interpolate_ptr_wrap(
  * float * a_table,
  * int a_table_size,
  * float a_ptr,
@@ -49,7 +49,7 @@ inline float f_cubic_interpolate(float a_a, float a_b, float a_position)
  * This method uses a pointer instead of an array the float* must be malloc'd
  * to (sizeof(float) * a_table_size)
  */
-inline float f_cubic_interpolate_ptr_wrap(float * a_table, int a_table_size,
+float f_cubic_interpolate_ptr_wrap(float * a_table, int a_table_size,
         float a_ptr)
 {
     int int_pos = (int)a_ptr;
@@ -153,7 +153,7 @@ inline float f_cubic_interpolate_ptr(float * a_table, float a_ptr)
  *
  * For use with the read_head type in Euphoria Sampler
  */
-inline float f_cubic_interpolate_ptr_ifh(float * a_table, int a_whole_number,
+float f_cubic_interpolate_ptr_ifh(float * a_table, int a_whole_number,
         float a_frac)
 {
     int int_pos = a_whole_number;
