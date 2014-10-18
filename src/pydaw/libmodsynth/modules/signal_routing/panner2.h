@@ -44,11 +44,11 @@ void v_pn2_set(t_pn2_panner2 * self, float a_pan, float a_law)
     else if(a_pan < 0.0f)
     {
         self->gainL = f_db_to_linear_fast((1.0f + a_pan) * a_law);
-        self->gainR = f_db_to_linear_fast((-1.0f * a_pan) * - 30.0f);
+        self->gainR = f_db_to_linear_fast((-1.0f * a_pan) * - 24.0f);
     }
     else
     {
-        self->gainL = f_db_to_linear_fast(a_pan * - 30.0f);
+        self->gainL = f_db_to_linear_fast(a_pan * - 24.0f);
         self->gainR = f_db_to_linear_fast((1.0f - a_pan) * a_law);
     }
 }
