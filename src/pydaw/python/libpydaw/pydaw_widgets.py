@@ -522,8 +522,50 @@ class pydaw_abstract_ui_control:
 
     def cc_menu_triggered(self, a_item):
         f_cc = int(str(a_item.text()))
-        print("Toggling CC {}".format(f_cc))
         self.midi_learn_callback(self, f_cc)
+
+    def cc_range_dialog(self, a_item):
+        f_cc = int(str(a_item.text()))
+        def get_zero_to_one(a_val):
+            a_val = float(a_val)
+            f_min = float(self.control.minimum())
+            f_max = float(self.control.maximum())
+            f_range = f_max - f_min
+            f_result = (a_val - f_min) / f_range
+            return round(f_result, 6)
+
+        def ok_hander():
+            f_low = get_zero_to_one(f_low_spinbox.value())
+            f_high = get_zero_to_one(f_high_spinbox.value())
+            print((f_low, f_high))
+            self.midi_learn_callback(self, f_cc, f_low, f_high)
+            f_dialog.close()
+
+        f_dialog = QtGui.QDialog()
+        f_layout = QtGui.QVBoxLayout(f_dialog)
+        f_spinbox_layout = QtGui.QHBoxLayout()
+        f_layout.addLayout(f_spinbox_layout)
+        f_spinbox_layout.addWidget(QtGui.QLabel(_("Low")))
+        f_low_spinbox = QtGui.QSpinBox()
+        f_low_spinbox.setRange(self.control.minimum(), self.control.maximum())
+        f_low_spinbox.setValue(self.control.minimum())
+        f_spinbox_layout.addWidget(f_low_spinbox)
+        f_spinbox_layout.addWidget(QtGui.QLabel(_("High")))
+        f_high_spinbox = QtGui.QSpinBox()
+        f_high_spinbox.setRange(self.control.minimum(), self.control.maximum())
+        f_high_spinbox.setValue(self.control.maximum())
+        f_spinbox_layout.addWidget(f_high_spinbox)
+        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_layout.addLayout(f_ok_cancel_layout)
+        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button.pressed.connect(ok_hander)
+        f_ok_cancel_layout.addWidget(f_ok_button)
+        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button.pressed.connect(f_dialog.close)
+        f_ok_cancel_layout.addWidget(f_cancel_button)
+        f_dialog.move(self.control.mapToGlobal(QtCore.QPoint(0.0, 0.0)))
+        f_dialog.exec_()
+
 
     def contextMenuEvent(self, a_event):
         f_menu = QtGui.QMenu(self.control)
@@ -534,11 +576,16 @@ class pydaw_abstract_ui_control:
             f_menu.addMenu(f_cc_menu)
             f_cc_menu.triggered.connect(self.cc_menu_triggered)
             f_cc_map = self.get_cc_map()
+            if f_cc_map:
+                f_range_menu = QtGui.QMenu(_("Set Range for CC"))
+                f_range_menu.triggered.connect(self.cc_range_dialog)
+                f_menu.addMenu(f_range_menu)
             for f_i in range(1, 128):
                 f_cc_action = f_cc_menu.addAction(str(f_i))
                 f_cc_action.setCheckable(True)
                 if f_i in f_cc_map and f_cc_map[f_i].has_port(self.port_num):
                     f_cc_action.setChecked(True)
+                    f_range_menu.addAction(str(f_i))
             f_menu.addSeparator()
         f_reset_action = f_menu.addAction(_("Reset to Default Value"))
         f_reset_action.triggered.connect(self.reset_default_value)
@@ -4315,8 +4362,12 @@ class pydaw_abstract_plugin_ui:
             self.port_dict[f_port].set_midi_learn(
                 self.midi_learn, self.get_cc_map)
 
-    def midi_learn(self, a_ctrl, a_cc_num=None):
+    def midi_learn(self, a_ctrl, a_cc_num=None, a_low=None, a_high=None):
         if a_cc_num is not None:
+            if a_low is not None:
+                self.cc_map[a_cc_num].ports[a_ctrl.port_num] = (a_low, a_high)
+                self.set_cc_map(a_cc_num)
+                return
             if a_cc_num in self.cc_map and \
             self.cc_map[a_cc_num].has_port(a_ctrl.port_num):
                 if self.cc_map[a_cc_num].remove_port(a_ctrl.port_num):
