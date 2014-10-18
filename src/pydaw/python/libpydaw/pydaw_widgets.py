@@ -526,6 +526,7 @@ class pydaw_abstract_ui_control:
 
     def cc_range_dialog(self, a_item):
         f_cc = int(str(a_item.text()))
+
         def get_zero_to_one(a_val):
             a_val = float(a_val)
             f_min = float(self.control.minimum())
@@ -534,6 +535,14 @@ class pydaw_abstract_ui_control:
             f_result = (a_val - f_min) / f_range
             return round(f_result, 6)
 
+        def get_real_value(a_val):
+            a_val = float(a_val)
+            f_min = float(self.control.minimum())
+            f_max = float(self.control.maximum())
+            f_range = f_max - f_min
+            f_result = (a_val * f_range) + f_min
+            return int(round(f_result))
+
         def ok_hander():
             f_low = get_zero_to_one(f_low_spinbox.value())
             f_high = get_zero_to_one(f_high_spinbox.value())
@@ -541,19 +550,24 @@ class pydaw_abstract_ui_control:
             self.midi_learn_callback(self, f_cc, f_low, f_high)
             f_dialog.close()
 
+        f_cc_map = self.get_cc_map()
+        f_default_low, f_default_high = (get_real_value(x) for x in
+            f_cc_map[f_cc].ports[self.port_num])
+
         f_dialog = QtGui.QDialog()
+        f_dialog.setWindowTitle(_("Set Range for CC"))
         f_layout = QtGui.QVBoxLayout(f_dialog)
         f_spinbox_layout = QtGui.QHBoxLayout()
         f_layout.addLayout(f_spinbox_layout)
         f_spinbox_layout.addWidget(QtGui.QLabel(_("Low")))
         f_low_spinbox = QtGui.QSpinBox()
         f_low_spinbox.setRange(self.control.minimum(), self.control.maximum())
-        f_low_spinbox.setValue(self.control.minimum())
+        f_low_spinbox.setValue(f_default_low)
         f_spinbox_layout.addWidget(f_low_spinbox)
         f_spinbox_layout.addWidget(QtGui.QLabel(_("High")))
         f_high_spinbox = QtGui.QSpinBox()
         f_high_spinbox.setRange(self.control.minimum(), self.control.maximum())
-        f_high_spinbox.setValue(self.control.maximum())
+        f_high_spinbox.setValue(f_default_high)
         f_spinbox_layout.addWidget(f_high_spinbox)
         f_ok_cancel_layout = QtGui.QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout)
