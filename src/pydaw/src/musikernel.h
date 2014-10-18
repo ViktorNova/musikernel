@@ -178,7 +178,8 @@ void g_musikernel_get(float a_sr)
     }
 }
 
-inline void v_queue_osc_message(char * a_key, char * a_val)
+void v_queue_osc_message(
+    char * __restrict__ a_key, char * __restrict__ a_val)
 {
     if(musikernel->osc_queue_index >= PYDAW_OSC_SEND_QUEUE_SIZE)
     {
