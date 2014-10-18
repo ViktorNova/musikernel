@@ -107,7 +107,7 @@ def pydaw_set_tooltips_enabled(a_enabled):
 
     f_list = [SONG_EDITOR, AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR, MAIN_WINDOW,
               WAVE_EDITOR, AUDIO_EDITOR_WIDGET, AUDIO_SEQ, TRANSPORT,
-              REGION_EDITOR] + list(AUTOMATION_EDITORS)
+              REGION_EDITOR, MIXER_WIDGET] + list(AUTOMATION_EDITORS)
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
 

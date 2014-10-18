@@ -2762,6 +2762,9 @@ class mixer_channel:
                 self.grid_layout.removeWidget(f_widget)
                 f_widget.setParent(None)
 
+MIXER_TOOLTIP = _("""This is the mixer.
+To add volume sliders, etc...  select a mixer plugin for each send on
+each track that you wish to be able to control""")
 
 class mixer_widget:
     def __init__(self, a_track_count):
@@ -2776,6 +2779,12 @@ class mixer_widget:
             f_channel = mixer_channel("track{}".format(f_i))
             self.tracks[f_i] = f_channel
             self.grid_layout.addWidget(f_channel.widget, 0, f_i)
+
+    def set_tooltips(self, a_enabled):
+        if a_enabled:
+            self.widget.setToolTip(MIXER_TOOLTIP)
+        else:
+            self.widget.setToolTip("")
 
     def update_track_names(self, a_track_names_dict):
         for k, v in a_track_names_dict.items():
