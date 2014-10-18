@@ -1434,16 +1434,29 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 void v_wait_for_bus(t_pytrack * a_track)
 {
     int f_bus_count = pydaw_data->routing_graph->bus_count[a_track->track_num];
+    int f_i = 0;
 
     if(a_track->track_num && f_bus_count)
     {
-        while(1)
+        while(f_i < 100000000)
         {
-            assert(a_track->bus_counter >= 0);
-            if(a_track->bus_counter == 0)
+            if(a_track->bus_counter <= 0)
             {
                 break;
             }
+            ++f_i;
+        }
+
+        if(f_i == 100000000)
+        {
+            printf("Detected deadlock waiting for bus %i\n",
+                a_track->track_num);
+        }
+
+        if(a_track->bus_counter < 0)
+        {
+            printf("Bus %i had bus_counter < 0: %i\n",
+                a_track->track_num, a_track->bus_counter);
         }
 
         a_track->bus_counter = f_bus_count;
