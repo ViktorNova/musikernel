@@ -202,6 +202,7 @@ typedef struct
     int track_pool_sorted[EN_TRACK_COUNT];
     int track_pool_sorted_count;
     t_pytrack_routing routes[EN_TRACK_COUNT][MAX_ROUTING_COUNT];
+    int bus_count[EN_TRACK_COUNT];
 }t_pydaw_routing_graph;
 
 float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
@@ -1274,8 +1275,7 @@ void v_pydaw_set_control_from_cc(
     }
 }
 
-
-inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
+void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 {
     int f_bus_num;
     t_pytrack * f_bus;
@@ -1284,7 +1284,7 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
     float ** f_buff;
     float ** f_track_buff = a_track->buffers;
 
-    if((a_track->bus_count)
+    if((pydaw_data->routing_graph->bus_count[a_track->track_num])
         ||
         ((!a_track->mute) && (!self->is_soloed))
         ||
@@ -1429,7 +1429,28 @@ inline void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
     }
 }
 
-inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
+/* MUST KEEP THIS SEPARATE, GCC CAUSES LOCKUPS WHEN THIS IS COMPILED
+ * WITH OPTIMIZATION!!!! */
+void v_wait_for_bus(t_pytrack * a_track)
+{
+    int f_bus_count = pydaw_data->routing_graph->bus_count[a_track->track_num];
+
+    if(f_bus_count != 0)
+    {
+        while(1)
+        {
+            assert(a_track->bus_counter >= 0);
+            if(a_track->bus_counter == 0)
+            {
+                break;
+            }
+        }
+
+        a_track->bus_counter = f_bus_count;
+    }
+}__attribute__((optimize("-O0")))
+
+void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
 {
     t_pytrack * f_track = self->track_pool[a_global_track_num];
     t_pydaw_plugin * f_plugin;
@@ -1448,18 +1469,7 @@ inline void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
 
     v_pydaw_process_note_offs(self, a_global_track_num);
 
-    if((f_track->bus_count) != 0)
-    {
-        while(1)
-        {
-            if(f_track->bus_counter == 0)
-            {
-                break;
-            }
-        }
-
-        f_track->bus_counter = (f_track->bus_count);
-    }
+    v_wait_for_bus(f_track);
 
     v_pydaw_audio_items_run(self, musikernel->sample_count,
         f_track->buffers, a_global_track_num, 0);
@@ -1538,7 +1548,6 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
         v_pydaw_process_track(self, f_track->track_num);
 
         f_track->status = STATUS_PROCESSED;
-
 
         ++f_i;
     }
@@ -4221,12 +4230,19 @@ void v_pydaw_update_track_send(t_pydaw_data * self, int a_lock)
     t_pydaw_routing_graph * f_graph = g_pydaw_routing_graph_get(self);
     t_pydaw_routing_graph * f_old = self->routing_graph;
 
+    register int f_i;
+
     if(a_lock)
     {
         pthread_spin_lock(&musikernel->main_lock);
     }
 
     self->routing_graph = f_graph;
+
+    for(f_i = 0; f_i < EN_TRACK_COUNT; ++f_i)
+    {
+        pydaw_data->track_pool[f_i]->bus_counter = f_graph->bus_count[f_i];
+    }
 
     if(a_lock)
     {
@@ -4281,6 +4297,7 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
     while(f_i < EN_TRACK_COUNT)
     {
         f_result->track_pool_sorted[f_i] = 0;
+        f_result->bus_count[f_i] = 0;
 
         int f_i2 = 0;
         while(f_i2 < MAX_ROUTING_COUNT)
@@ -4295,7 +4312,8 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
     f_result->track_pool_sorted_count = 0;
 
     char f_tmp[1024];
-    sprintf(f_tmp, "%s/projects/edmnext/routing.txt", musikernel->project_folder);
+    sprintf(f_tmp, "%s/projects/edmnext/routing.txt",
+        musikernel->project_folder);
 
     if(i_pydaw_file_exists(f_tmp))
     {
@@ -4344,6 +4362,7 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
                 v_pytrack_routing_set(
                     &f_result->routes[f_track_num][f_index], f_output,
                     f_sidechain);
+                ++f_result->bus_count[f_output];
             }
             else if(f_identifier_str[0] == 'c')
             {

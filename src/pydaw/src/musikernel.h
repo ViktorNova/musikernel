@@ -32,8 +32,6 @@ typedef struct
     int period_event_index;
     t_pydaw_plugin * plugins[MAX_PLUGIN_TOTAL_COUNT];
     int track_num;
-    //Only for busses, the count of plugins writing to the buffer
-    int bus_count;
     /*This is reset to bus_count each cycle and the
      * bus track processed when count reaches 0*/
     int bus_counter __attribute__((aligned(16)));
@@ -262,7 +260,6 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     f_result->solo = 0;
     f_result->event_buffer = (t_pydaw_seq_event*)malloc(
             sizeof(t_pydaw_seq_event) * PYDAW_MAX_EVENT_BUFFER_SIZE);
-    f_result->bus_count = 0;
     f_result->bus_counter = 0;
 
     f_i = 0;
