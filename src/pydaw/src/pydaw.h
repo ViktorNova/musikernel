@@ -1435,7 +1435,7 @@ void v_wait_for_bus(t_pytrack * a_track)
 {
     int f_bus_count = pydaw_data->routing_graph->bus_count[a_track->track_num];
 
-    if(f_bus_count != 0)
+    if(a_track->track_num && f_bus_count)
     {
         while(1)
         {
