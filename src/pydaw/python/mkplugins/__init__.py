@@ -9,4 +9,5 @@ import mkplugins.simple_fader
 import mkplugins.simple_reverb
 import mkplugins.sidechain_comp
 import mkplugins.trigger_fx
+import mkplugins.xfade
 

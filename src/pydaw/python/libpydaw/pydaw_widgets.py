@@ -706,7 +706,7 @@ class pydaw_slider_control(pydaw_abstract_ui_control):
         pydaw_abstract_ui_control.__init__(
             self, a_label, a_port_num, a_rel_callback, a_val_callback,
             a_val_conversion, a_port_dict, a_preset_mgr, a_default_val)
-        self.control = QtGui.QSlider()
+        self.control = QtGui.QSlider(a_orientation)
         self.control.contextMenuEvent = self.contextMenuEvent
         self.control.setRange(a_min_val, a_max_val)
         self.control.valueChanged.connect(self.control_value_changed)
