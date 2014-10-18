@@ -21,25 +21,18 @@ extern "C" {
 #include "../../include/pydaw_plugin.h"
 #include "libmodsynth.h"
 
-#define SREVERB_SLOW_INDEX_ITERATIONS 30
+#define SREVERB_FIRST_CONTROL_PORT 0
 
-#define SREVERB_INPUT0  0
-#define SREVERB_INPUT1  1
-#define SREVERB_OUTPUT0  2
-#define SREVERB_OUTPUT1  3
+#define SREVERB_REVERB_TIME 0
+#define SREVERB_REVERB_WET 1
+#define SREVERB_REVERB_COLOR 2
+#define SREVERB_REVERB_DRY 3
+#define SREVERB_REVERB_PRE_DELAY 4
 
-#define SREVERB_FIRST_CONTROL_PORT 4
-
-#define SREVERB_REVERB_TIME 4
-#define SREVERB_REVERB_WET 5
-#define SREVERB_REVERB_COLOR 6
-#define SREVERB_REVERB_DRY 7
-#define SREVERB_REVERB_PRE_DELAY 8
-
-#define SREVERB_LAST_CONTROL_PORT 8
+#define SREVERB_LAST_CONTROL_PORT 4
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define SREVERB_COUNT 9
+#define SREVERB_COUNT 5
 
 typedef struct
 {

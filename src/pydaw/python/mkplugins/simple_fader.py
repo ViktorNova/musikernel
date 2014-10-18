@@ -16,12 +16,7 @@ GNU General Public License for more details.
 from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
 
-SFADER_INPUT0 = 0
-SFADER_INPUT1 = 1
-SFADER_OUTPUT0 = 2
-SFADER_OUTPUT1 = 3
-SFADER_FIRST_CONTROL_PORT = 4
-SFADER_VOL_SLIDER = 4
+SFADER_VOL_SLIDER = 0
 
 SFADER_PORT_MAP = {
     "Volume Slider": SFADER_VOL_SLIDER,

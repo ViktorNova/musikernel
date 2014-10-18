@@ -21,11 +21,6 @@ extern "C" {
 #include "../../include/pydaw_plugin.h"
 #include "libmodsynth.h"
 
-#define MKEQ_INPUT0  0
-#define MKEQ_INPUT1  1
-#define MKEQ_OUTPUT0  2
-#define MKEQ_OUTPUT1  3
-
 #define MKEQ_FIRST_CONTROL_PORT 4
 
 #define MKEQ_EQ1_FREQ 4

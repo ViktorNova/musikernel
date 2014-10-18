@@ -17,12 +17,6 @@ from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
 
 
-#Modulex
-
-MODULEX_INPUT0 = 0
-MODULEX_INPUT1 = 1
-MODULEX_OUTPUT0 = 2
-MODULEX_OUTPUT1 = 3
 MODULEX_FIRST_CONTROL_PORT = 4
 MODULEX_FX0_KNOB0 = 4
 MODULEX_FX0_KNOB1 = 5

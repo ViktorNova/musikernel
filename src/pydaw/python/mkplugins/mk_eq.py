@@ -17,12 +17,6 @@ from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
 
 
-#Modulex
-
-MKEQ_INPUT0 = 0
-MKEQ_INPUT1 = 1
-MKEQ_OUTPUT0 = 2
-MKEQ_OUTPUT1 = 3
 MKEQ_FIRST_CONTROL_PORT = 4
 MKEQ_EQ1_FREQ = 4
 MKEQ_EQ1_RES = 5
@@ -44,9 +38,7 @@ MKEQ_EQ6_RES = 20
 MKEQ_EQ6_GAIN = 21
 MKEQ_SPECTRUM_ENABLED = 22
 
-MKEQ_PORT_MAP = {
-}
-
+MKEQ_PORT_MAP = {}
 
 
 class mkeq_plugin_ui(pydaw_abstract_plugin_ui):

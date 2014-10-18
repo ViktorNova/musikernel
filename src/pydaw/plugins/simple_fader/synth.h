@@ -21,18 +21,13 @@ extern "C" {
 #include "../../include/pydaw_plugin.h"
 #include "libmodsynth.h"
 
-#define SFADER_INPUT0  0
-#define SFADER_INPUT1  1
-#define SFADER_OUTPUT0  2
-#define SFADER_OUTPUT1  3
+#define SFADER_FIRST_CONTROL_PORT 0
+#define SFADER_VOL_SLIDER 0
 
-#define SFADER_FIRST_CONTROL_PORT 4
-#define SFADER_VOL_SLIDER 4
-
-#define SFADER_LAST_CONTROL_PORT 4
+#define SFADER_LAST_CONTROL_PORT 0
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define SFADER_COUNT 5
+#define SFADER_COUNT 1
 
 typedef struct
 {

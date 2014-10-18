@@ -21,24 +21,19 @@ extern "C" {
 #include "../../include/pydaw_plugin.h"
 #include "libmodsynth.h"
 
-#define MKDELAY_INPUT0  0
-#define MKDELAY_INPUT1  1
-#define MKDELAY_OUTPUT0  2
-#define MKDELAY_OUTPUT1  3
+#define MKDELAY_FIRST_CONTROL_PORT 0
+#define MKDELAY_DELAY_TIME  0
+#define MKDELAY_FEEDBACK  1
+#define MKDELAY_DRY  2
+#define MKDELAY_WET  3
+#define MKDELAY_DUCK  4
+#define MKDELAY_CUTOFF 5
+#define MKDELAY_STEREO 6
 
-#define MKDELAY_FIRST_CONTROL_PORT 4
-#define MKDELAY_DELAY_TIME  4
-#define MKDELAY_FEEDBACK  5
-#define MKDELAY_DRY  6
-#define MKDELAY_WET  7
-#define MKDELAY_DUCK  8
-#define MKDELAY_CUTOFF 9
-#define MKDELAY_STEREO 10
-
-#define MKDELAY_LAST_CONTROL_PORT 10
+#define MKDELAY_LAST_CONTROL_PORT 6
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define MKDELAY_COUNT 11
+#define MKDELAY_COUNT 7
 
 typedef struct
 {
