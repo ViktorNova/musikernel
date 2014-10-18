@@ -2183,6 +2183,20 @@ inline void v_pydaw_finish_time_params(t_pydaw_data * self,
     }
 }
 
+void v_wait_for_threads()
+{
+    int f_i = 1;
+
+    while(f_i < (pydaw_data->track_worker_thread_count))
+    {
+        if(pydaw_data->track_thread_is_finished[f_i] == 0)
+        {
+            continue;  //spin until it is finished...
+        }
+
+        ++f_i;
+    }
+} __attribute__((optimize("-O0")))
 
 inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         long f_next_current_sample, float **output, float **a_input_buffers)
@@ -2263,18 +2277,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
     float ** f_master_buff = f_master_track->buffers;
 
     //wait for the other threads to finish
-
-    f_i = 1;
-
-    while(f_i < (self->track_worker_thread_count))
-    {
-        if(self->track_thread_is_finished[f_i] == 0)
-        {
-            continue;  //spin until it is finished...
-        }
-
-        ++f_i;
-    }
+    v_wait_for_threads();
 
     v_pydaw_process_track(self, 0);
 
