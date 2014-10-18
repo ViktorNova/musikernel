@@ -25,6 +25,9 @@ extern "C" {
 
 typedef struct
 {
+    /*This is reset to bus_count each cycle and the
+     * bus track processed when count reaches 0*/
+    int bus_counter __attribute__((aligned(16)));
     int status __attribute__((aligned(16)));
     int solo;
     int mute;
@@ -32,9 +35,6 @@ typedef struct
     int period_event_index;
     t_pydaw_plugin * plugins[MAX_PLUGIN_TOTAL_COUNT];
     int track_num;
-    /*This is reset to bus_count each cycle and the
-     * bus track processed when count reaches 0*/
-    int bus_counter __attribute__((aligned(16)));
     t_pkm_peak_meter * peak_meter;
     float ** buffers;
     float ** sc_buffers;
