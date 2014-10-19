@@ -1275,6 +1275,8 @@ void v_pydaw_set_control_from_cc(
     }
 }
 
+/* MUST USE __attribute__((optimize("-O0"))), GCC introduces strange
+ * concurrency issues and incorrect bus_counter values with optimization */
 void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 {
     int f_bus_num;
@@ -1398,8 +1400,6 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
             f_buff = f_bus->buffers;
         }
 
-        pthread_spin_lock(&f_bus->lock);
-
         if(a_track->fade_state != FADE_STATE_FADED)
         {
             if(f_plugin && f_plugin->power)
@@ -1427,8 +1427,6 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         }
 
         --f_bus->bus_counter;
-
-        pthread_spin_unlock(&f_bus->lock);
 
         ++f_i3;
     }
