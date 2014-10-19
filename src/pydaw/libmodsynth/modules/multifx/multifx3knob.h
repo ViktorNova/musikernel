@@ -15,7 +15,7 @@ GNU General Public License for more details.
 #define	MULTIFX3KNOB_H
 
 /*This is actually count, not index TODO:  Rename*/
-#define MULTIFX3KNOB_MAX_INDEX 29
+#define MULTIFX3KNOB_MAX_INDEX 30
 #define MULTIFX3KNOB_KNOB_COUNT 3
 
 #include "../filter/svf_stereo.h"
@@ -33,6 +33,7 @@ GNU General Public License for more details.
 #include "../distortion/ring_mod.h"
 #include "../distortion/lofi.h"
 #include "../distortion/sample_and_hold.h"
+#include "../distortion/foldback.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -65,6 +66,7 @@ typedef struct
     t_lfi_lofi lofi;
     t_sah_sample_and_hold s_and_h;
     t_grw_growl_filter growl_filter;
+    t_fbk_foldback foldback;
 }t_mf3_multi;
 
 /*A function pointer for switching between effect types*/
@@ -103,6 +105,7 @@ inline void v_mf3_run_growl_filter(t_mf3_multi*,float,float);
 inline void v_mf3_run_screech_lp(t_mf3_multi*,float,float);
 inline void v_mf3_run_metal_comb(t_mf3_multi*,float,float);
 inline void v_mf3_run_notch_dw(t_mf3_multi*,float,float);
+inline void v_mf3_run_foldback(t_mf3_multi*,float,float);
 
 inline void f_mfx_transform_svf_filter(t_mf3_multi*);
 
@@ -142,7 +145,8 @@ const fp_mf3_run mf3_function_pointers[MULTIFX3KNOB_MAX_INDEX] =
         v_mf3_run_growl_filter, //25
         v_mf3_run_screech_lp, //26
         v_mf3_run_metal_comb,   //27
-        v_mf3_run_notch_dw //28
+        v_mf3_run_notch_dw, //28
+        v_mf3_run_foldback //29
 };
 
 
@@ -184,7 +188,8 @@ const fp_mf3_reset mf3_reset_function_pointers[MULTIFX3KNOB_MAX_INDEX] =
         v_mf3_reset_null, //25
         v_mf3_reset_svf, //26
         v_mf3_reset_null, //27
-        v_mf3_reset_svf //28
+        v_mf3_reset_svf, //28
+        v_mf3_reset_null //29
 };
 
 
@@ -621,6 +626,23 @@ inline void v_mf3_run_notch_dw(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->output1 = f_axf_run_xfade(&a_mf3->xfader, a_in1, a_mf3->svf.output1);
 }
 
+inline void v_mf3_run_foldback(t_mf3_multi*__restrict a_mf3, float a_in0,
+        float a_in1)
+{
+    a_mf3->control_value[0] = ((a_mf3->control[0]) * 0.094488189f) - 12.0f;
+    a_mf3->control_value[1] = ((a_mf3->control[1]) * 0.094488189f);
+    a_mf3->control_value[2] = a_mf3->control[2] * 0.007874016f;
+    v_axf_set_xfade(&a_mf3->xfader, a_mf3->control_value[2]);
+    v_fbk_set(&a_mf3->foldback,
+        a_mf3->control_value[0], a_mf3->control_value[1]);
+    v_fbk_run(&a_mf3->foldback, a_in0, a_in1);
+    a_mf3->output0 = f_axf_run_xfade(&a_mf3->xfader, a_in0,
+        a_mf3->foldback.output[0]);
+    a_mf3->output1 = f_axf_run_xfade(&a_mf3->xfader, a_in1,
+        a_mf3->foldback.output[1]);
+}
+
+
 inline void v_mf3_run_monofier(t_mf3_multi*__restrict a_mf3, float a_in0,
         float a_in1)
 {
@@ -762,6 +784,7 @@ void g_mf3_init(t_mf3_multi * f_result, float a_sample_rate)
     g_lfi_init(&f_result->lofi);
     g_sah_init(&f_result->s_and_h, a_sample_rate);
     g_grw_init(&f_result->growl_filter, a_sample_rate);
+    g_fbk_init(&f_result->foldback);
 
 }
 

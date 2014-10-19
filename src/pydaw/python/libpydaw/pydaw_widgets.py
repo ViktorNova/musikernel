@@ -3910,7 +3910,7 @@ MODULEX_EFFECTS_LIST = [
     "Limiter", "Saturator", "Formant", "Chorus", "Glitch",
     "RingMod", "LoFi", "S/H", "LP-D/W", "HP-D/W",
     "Monofier", "LP<-->HP", "Growl Filter",
-    "Screech LP", "Metal Comb", "Notch-D/W"]
+    "Screech LP", "Metal Comb", "Notch-D/W", "Foldback"]
 
 class pydaw_modulex_single:
     def __init__(self, a_title, a_port_k1, a_rel_callback, a_val_callback,
@@ -4296,6 +4296,16 @@ class pydaw_modulex_single:
             self.knobs[0].val_conversion = KC_127_PITCH
             self.knobs[1].val_conversion = KC_127_ZERO_TO_X
             self.knobs[1].set_127_min_max(-30.0, 0.0)
+            self.knobs[2].val_conversion = KC_NONE
+            self.knobs[2].value_label.setText("")
+        elif a_val == 29: #Foldback Distortion
+            self.knobs[0].name_label.setText(_("Thresh"))
+            self.knobs[1].name_label.setText(_("Gain"))
+            self.knobs[2].name_label.setText(_("Wet"))
+            self.knobs[0].val_conversion = KC_127_ZERO_TO_X
+            self.knobs[0].set_127_min_max(-12.0, 0.0)
+            self.knobs[1].val_conversion = KC_127_ZERO_TO_X
+            self.knobs[1].set_127_min_max(0.0, 12.0)
             self.knobs[2].val_conversion = KC_NONE
             self.knobs[2].value_label.setText("")
 
