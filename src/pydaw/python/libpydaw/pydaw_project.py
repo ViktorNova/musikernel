@@ -351,6 +351,7 @@ class pydaw_project:
                 separators=(',', ': '))
 
     def show_project_history(self):
+        self.create_backup()
         f_file = "{}/default.musikernel".format(self.project_folder)
         subprocess.Popen([PROJECT_HISTORY_SCRIPT, f_file])
 
