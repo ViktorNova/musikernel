@@ -56,6 +56,25 @@ GUI Only:  Run the UI only with no audio engine
 No Audio:  No audio or MIDI, mostly useful for attaching an external debugger.
 """)
 
+THREADS_TOOLTIP = _(
+"""This control sets the number of worker threads for processing
+plugins and effects.
+Setting to 1 can result in the best latency.
+If your projects require more CPU power than one CPU core can
+provide, for best latency it is recommended that you only add
+the required number of cores, and not more than one thread
+per CPU core.
+(Intel hyperthreading should NOT be considered additional cores).
+Auto attempts to pick a sane number of worker threads
+automatically based on your CPU.
+If you're not sure how to use this setting, you should
+leave it on 'Auto'.
+It is also recommended that you leave one or more cores unused
+to power the UI and operating system, for example:
+dual-core:  1 worker thread
+quad-core:  1 - 3 worker threads
+""")
+
 class pydaw_device_dialog:
     def __init__(self, a_is_running=False):
         self.is_running = a_is_running
@@ -185,20 +204,7 @@ class pydaw_device_dialog:
         f_worker_threads_combobox = QtGui.QComboBox()
         f_worker_threads_combobox.addItems(
             [_("Auto"), "1", "2", "3", "4", "5", "6", "7", "8"])
-        f_worker_threads_combobox.setToolTip(_(
-        "This control sets the number of worker threads for processing "
-        "plugins and effects.\n"
-         "Setting to 1 can result in the best latency.\n"
-         "If your projects require more CPU power than one CPU "
-         "core can provide, for best latency it is\n"
-         "recommended that you only add the required number of cores, "
-         "and not more than one thread per CPU core.\n"
-         "(Intel hyperthreading should NOT be considered as "
-         "additional cores).\n"
-         "Auto attempts to pick a sane number of worker threads "
-         "automatically based on your CPU,\n"
-         "if you're not sure how to use this setting, you "
-         "should leave it on 'Auto'."))
+        f_worker_threads_combobox.setToolTip(THREADS_TOOLTIP)
         f_window_layout.addWidget(f_worker_threads_combobox, 3, 1)
         f_window_layout.addWidget(QtGui.QLabel(_("Audio Engine")), 4, 0)
         f_audio_engine_combobox = QtGui.QComboBox()
