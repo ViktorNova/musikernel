@@ -121,21 +121,10 @@ float f_sinc_interpolate2(t_sinc_interpolator *__restrict a_sinc,
 
 }
 
-/* t_sinc_interpolator * g_sinc_get(
- * int a_points, //The number of points to use
- * int a_samples_per_point, //how many array elements per a_point
- * double a_fc,  //cutoff, in hz
- * double sample_rate,
- * float a_normalize_to) //A value to normalize to, typically 0.5 to 0.9
- */
-t_sinc_interpolator * g_sinc_get(int a_points, int a_samples_per_point,
-        double a_fc, double a_sr, float a_normalize_to)
+void g_sinc_init(t_sinc_interpolator * f_result, int a_points,
+    int a_samples_per_point, double a_fc, double a_sr, float a_normalize_to)
 {
     double f_cutoff = a_fc / a_sr;
-
-    t_sinc_interpolator * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_sinc_interpolator));
 
     if (a_points % 2)
     {
@@ -191,7 +180,7 @@ t_sinc_interpolator * g_sinc_get(int a_points, int a_samples_per_point,
         }
     }
 
-    for(; i_int < (f_array_size + 16); i_int++)
+    for(; i_int < (f_array_size + 16); ++i_int)
     {
         //Padding the end with zeroes to be safe
         f_result->sinc_table[i_int] = 0.0f;
@@ -201,12 +190,30 @@ t_sinc_interpolator * g_sinc_get(int a_points, int a_samples_per_point,
     {
         float f_normalize = (a_normalize_to / f_high_value);
 
-        for(i_int = 0; i_int < f_array_size; i_int++)
+        for(i_int = 0; i_int < f_array_size; ++i_int)
         {
             f_result->sinc_table[i_int] =
-                    (f_result->sinc_table[i_int]) * f_normalize;
+                (f_result->sinc_table[i_int]) * f_normalize;
         }
     }
+
+}
+
+/* t_sinc_interpolator * g_sinc_get(
+ * int a_points, //The number of points to use
+ * int a_samples_per_point, //how many array elements per a_point
+ * double a_fc,  //cutoff, in hz
+ * double sample_rate,
+ * float a_normalize_to) //A value to normalize to, typically 0.5 to 0.9
+ */
+t_sinc_interpolator * g_sinc_get(int a_points, int a_samples_per_point,
+        double a_fc, double a_sr, float a_normalize_to)
+{
+    t_sinc_interpolator * f_result;
+    lmalloc((void**)&f_result, sizeof(t_sinc_interpolator));
+
+    g_sinc_init(f_result, a_points, a_samples_per_point,
+        a_fc, a_sr, a_normalize_to);
 
     return f_result;
 

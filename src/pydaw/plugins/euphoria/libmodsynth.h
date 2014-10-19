@@ -45,7 +45,7 @@ extern "C" {
 typedef struct
 {
     t_smoother_linear pitchbend_smoother;
-    t_sinc_interpolator * sinc_interpolator;
+
     t_dco_dc_offset_filter dc_offset_filters[EUPHORIA_CHANNEL_COUNT];
 
     t_mf3_multi
@@ -60,6 +60,7 @@ typedef struct
     int noise_index[EUPHORIA_MAX_SAMPLE_COUNT];
     float noise_linamp[EUPHORIA_MAX_SAMPLE_COUNT];
     t_eq6 eqs[EUPHORIA_MAX_SAMPLE_COUNT];
+    t_sinc_interpolator sinc_interpolator;
 }t_euphoria_mono_modules __attribute__((aligned(16)));
 
 typedef struct
@@ -192,9 +193,8 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
     lmalloc((void**)&a_mono, sizeof(t_euphoria_mono_modules));
 
     g_sml_init(&a_mono->pitchbend_smoother, a_sr, 1.0f, -1.0f, 0.2f);
-    a_mono->sinc_interpolator =
-            g_sinc_get(EUPHORIA_SINC_INTERPOLATION_POINTS, 6000, 8000.0f,
-            a_sr, 0.42f);
+    g_sinc_init(&a_mono->sinc_interpolator,
+        EUPHORIA_SINC_INTERPOLATION_POINTS, 6000, 8000.0f, a_sr, 0.42f);
     a_mono->noise_current_index = 0;
 
     int f_i;

@@ -632,7 +632,7 @@ static int calculate_ratio_none(t_euphoria *__restrict plugin_data, int n)
 static void run_sampler_interpolation_sinc(t_euphoria *__restrict plugin_data, int n, int ch)
 {
     plugin_data->sample_last_interpolated_value[(plugin_data->current_sample)] =
-        f_sinc_interpolate2(plugin_data->mono_modules->sinc_interpolator,
+        f_sinc_interpolate2(&plugin_data->mono_modules->sinc_interpolator,
         plugin_data->wavpool_items[(plugin_data->current_sample)]->samples[ch],
         (plugin_data->sample_read_heads[n][(plugin_data->current_sample)]->whole_number),
         (plugin_data->sample_read_heads[n][(plugin_data->current_sample)]->fraction));
