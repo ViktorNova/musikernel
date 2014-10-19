@@ -1458,8 +1458,6 @@ void v_wait_for_bus(t_pytrack * a_track)
             printf("Bus %i had bus_counter < 0: %i\n",
                 a_track->track_num, a_track->bus_counter);
         }
-
-        a_track->bus_counter = f_bus_count;
     }
 }__attribute__((optimize("-O0")))
 
@@ -2273,6 +2271,8 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
     while(f_i < EN_TRACK_COUNT)
     {
         self->track_pool[f_i]->status = STATUS_NOT_PROCESSED;
+        self->track_pool[f_i]->bus_counter =
+            self->routing_graph->bus_count[f_i];
         ++f_i;
     }
 
