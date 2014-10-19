@@ -1275,8 +1275,20 @@ void v_pydaw_set_control_from_cc(
     }
 }
 
-/* MUST USE __attribute__((optimize("-O0"))), GCC introduces strange
- * concurrency issues and incorrect bus_counter values with optimization */
+inline void v_buffer_mix(
+    float ** __restrict__ a_buffer_src, float ** __restrict__ a_buffer_dest)
+{
+    register int f_i2 = 0;
+    int f_count = musikernel->sample_count;
+    while(f_i2 < f_count)
+    {
+        a_buffer_dest[0][f_i2] += a_buffer_src[0][f_i2];
+        a_buffer_dest[1][f_i2] += a_buffer_src[1][f_i2];
+        ++f_i2;
+    }
+}
+
+
 void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 {
     int f_bus_num;
@@ -1416,13 +1428,7 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
             }
             else
             {
-                f_i2 = 0;
-                while(f_i2 < musikernel->sample_count)
-                {
-                    f_buff[0][f_i2] += f_track_buff[0][f_i2];
-                    f_buff[1][f_i2] += f_track_buff[1][f_i2];
-                    ++f_i2;
-                }
+                v_buffer_mix(f_track_buff, f_buff);
             }
         }
 
@@ -1430,11 +1436,11 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 
         ++f_i3;
     }
-}__attribute__((optimize("-O0")))
+}
 
 /* MUST KEEP THIS SEPARATE, GCC CAUSES LOCKUPS WHEN THIS IS COMPILED
  * WITH OPTIMIZATION!!!! */
-void v_wait_for_bus(t_pytrack * a_track)
+__attribute__((optimize("-O0"))) void v_wait_for_bus(t_pytrack * a_track)
 {
     int f_bus_count = pydaw_data->routing_graph->bus_count[a_track->track_num];
     int f_i = 0;
@@ -1462,7 +1468,7 @@ void v_wait_for_bus(t_pytrack * a_track)
                 a_track->track_num, a_track->bus_counter);
         }
     }
-}__attribute__((optimize("-O0")))
+}
 
 void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
 {
@@ -4111,7 +4117,7 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
     pthread_spin_unlock(&musikernel->main_lock);
 
     musikernel->ab_mode = f_ab_old;
-} __attribute__((optimize("-O0")))
+}
 
 void v_pydaw_set_ab_mode(t_pydaw_data * self, int a_mode)
 {
