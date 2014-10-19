@@ -1278,6 +1278,7 @@ void v_pydaw_set_control_from_cc(
 void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 {
     int f_bus_num;
+    register int f_i2;
     t_pytrack * f_bus;
     t_pytrack_routing * f_route;
     t_pydaw_plugin * f_plugin = 0;
@@ -1315,7 +1316,7 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         }
     }
 
-    register int f_i2 = 0;
+    f_i2 = 0;
 
     if(a_track->fade_state == FADE_STATE_OFF)
     {
@@ -1354,7 +1355,7 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
     }
 
 
-    register int f_i3 = 0;
+    int f_i3 = 0;
 
     while(f_i3 < MAX_ROUTING_COUNT)
     {
@@ -1397,6 +1398,8 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
             f_buff = f_bus->buffers;
         }
 
+        pthread_spin_lock(&f_bus->lock);
+
         if(a_track->fade_state != FADE_STATE_FADED)
         {
             if(f_plugin && f_plugin->power)
@@ -1425,9 +1428,11 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 
         --f_bus->bus_counter;
 
+        pthread_spin_unlock(&f_bus->lock);
+
         ++f_i3;
     }
-}
+}__attribute__((optimize("-O0")))
 
 /* MUST KEEP THIS SEPARATE, GCC CAUSES LOCKUPS WHEN THIS IS COMPILED
  * WITH OPTIMIZATION!!!! */
@@ -4246,19 +4251,12 @@ void v_pydaw_update_track_send(t_pydaw_data * self, int a_lock)
     t_pydaw_routing_graph * f_graph = g_pydaw_routing_graph_get(self);
     t_pydaw_routing_graph * f_old = self->routing_graph;
 
-    register int f_i;
-
     if(a_lock)
     {
         pthread_spin_lock(&musikernel->main_lock);
     }
 
     self->routing_graph = f_graph;
-
-    for(f_i = 0; f_i < EN_TRACK_COUNT; ++f_i)
-    {
-        pydaw_data->track_pool[f_i]->bus_counter = f_graph->bus_count[f_i];
-    }
 
     if(a_lock)
     {
