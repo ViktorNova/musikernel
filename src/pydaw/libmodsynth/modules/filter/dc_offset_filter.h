@@ -47,13 +47,19 @@ inline void v_dco_reset(t_dco_dc_offset_filter*__restrict a_dco)
     a_dco->out_n_m1 = 0.0f;
 }
 
+void g_dco_init(t_dco_dc_offset_filter * f_result, float a_sr)
+{
+    f_result->coeff = (1.0f - (6.6f/a_sr));
+    v_dco_reset(f_result);
+}
+
+
 t_dco_dc_offset_filter * g_dco_get(float a_sr)
 {
     t_dco_dc_offset_filter * f_result;
     lmalloc((void**)&f_result, sizeof(t_dco_dc_offset_filter));
 
-    f_result->coeff = (1.0f - (6.6f/a_sr));
-    v_dco_reset(f_result);
+    g_dco_init(f_result, a_sr);
 
     return f_result;
 }
