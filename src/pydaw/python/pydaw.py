@@ -900,6 +900,7 @@ def region_editor_set_delete_mode(a_enabled):
         REGION_EDITOR.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         REGION_EDITOR_DELETE_MODE = False
         REGION_EDITOR.selected_item_strings = set([])
+        QtGui.QApplication.restoreOverrideCursor()
 
 
 class region_editor_item(QtGui.QGraphicsRectItem):
