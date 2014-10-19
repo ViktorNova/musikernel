@@ -255,6 +255,13 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/mkplugins/sidechain_comp.pyc
 /usr/lib/{0}/pydaw/python/mkplugins/sidechain_comp.pyo
 
+/usr/lib/{0}/pydaw/python/mkplugins/mk_channel.py
+/usr/lib/{0}/pydaw/python/mkplugins/mk_channel.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/mk_channel.pyo
+/usr/lib/{0}/pydaw/python/mkplugins/xfade.py
+/usr/lib/{0}/pydaw/python/mkplugins/xfade.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/xfade.pyo
+
 %doc
 
 """.format(global_pydaw_version_string, global_version_fedora,
