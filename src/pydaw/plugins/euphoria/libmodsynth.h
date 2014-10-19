@@ -86,8 +86,6 @@ typedef struct
     float note_f;
     float noise_sample;
 
-    int i_voice;  //for the runVoice function to iterate the current block
-
     t_mf3_multi multieffect[EUPHORIA_MODULAR_POLYFX_COUNT];
     fp_mf3_run fx_func_ptr[EUPHORIA_MODULAR_POLYFX_COUNT];
     fp_mf3_reset fx_reset_ptr[EUPHORIA_MODULAR_POLYFX_COUNT];
@@ -146,8 +144,6 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 
     f_voice->note_f = 1.0f;
     f_voice->noise_sample = 0.0f;
-
-    f_voice->i_voice = 0;
 
     //From Modulex
 
