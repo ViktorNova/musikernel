@@ -45,6 +45,7 @@ def proj_file_str(a_val):
 MAX_AUDIO_ITEM_COUNT = 256
 MAX_REGION_LENGTH = 64 #bars
 
+pydaw_folder_edmnext = "projects/edmnext"
 pydaw_folder_audio = "audio/files"
 pydaw_folder_audio_per_item_fx = "projects/edmnext/audio_per_item_fx"
 pydaw_folder_items = "projects/edmnext/items"
@@ -188,7 +189,7 @@ class pydaw_project:
             f_new_project_folder, self.project_file, a_file_name))
         self.set_project_folders(f_file_name)
         self.this_pydaw_osc.pydaw_open_song(self.project_folder)
-        self.history = pydaw_history.pydaw_history(self.project_folder)
+        self.history = pydaw_history.pydaw_history(self.edmnext_folder)
 
     def set_project_folders(self, a_project_file):
         #folders
@@ -203,6 +204,8 @@ class pydaw_project:
             self.project_folder, pydaw_folder_regions_atm)
         self.items_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_items)
+        self.edmnext_folder = "{}/{}".format(
+            self.project_folder, pydaw_folder_edmnext)
         self.audio_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_audio)
         self.audio_tmp_folder = "{}/{}/tmp".format(
@@ -263,7 +266,7 @@ class pydaw_project:
                 "new project".format(a_project_file))
             self.new_project(a_project_file)
         else:
-            self.history = pydaw_history.pydaw_history(self.project_folder)
+            self.history = pydaw_history.pydaw_history(self.edmnext_folder)
             self.open_stretch_dicts()
         if a_notify_osc:
             self.this_pydaw_osc.pydaw_open_song(self.project_folder)
@@ -285,7 +288,7 @@ class pydaw_project:
             print(project_dir)
             if not os.path.isdir(project_dir):
                 os.makedirs(project_dir)
-        self.history = pydaw_history.pydaw_history(self.project_folder)
+        self.history = pydaw_history.pydaw_history(self.edmnext_folder)
 
         self.create_file(
             "", "version.txt",
