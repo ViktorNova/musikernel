@@ -59,7 +59,7 @@ static void euphoriaPanic(PYFX_Handle instance)
     int f_i = 0;
     while(f_i < EUPHORIA_POLYPHONY)
     {
-        v_adsr_kill(plugin->data[f_i]->adsr_amp);
+        v_adsr_kill(&plugin->data[f_i]->adsr_amp);
         ++f_i;
     }
 }
@@ -449,7 +449,8 @@ static void connectPortSampler(PYFX_Handle instance, int port,
         int f_port = port - EUPHORIA_FIRST_EQ_PORT;
         int f_instance = f_port / 18;
         int f_diff = f_port % 18;
-        v_eq6_connect_port(plugin->mono_modules->eqs[f_instance], f_diff, data);
+        v_eq6_connect_port(
+            &plugin->mono_modules->eqs[f_instance], f_diff, data);
     }
     else if(port == EUPHORIA_LFO_PITCH_FINE)
     {
@@ -671,32 +672,32 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
 
     //Run things that aren't per-channel like envelopes
 
-    v_adsr_run_db(f_voice->adsr_amp);
+    v_adsr_run_db(&f_voice->adsr_amp);
 
-    if(f_voice->adsr_amp->stage == ADSR_STAGE_OFF)
+    if(f_voice->adsr_amp.stage == ADSR_STAGE_OFF)
     {
         plugin_data->voices->voices[n].n_state = note_state_off;
         return;
     }
 
-    v_adsr_run(f_voice->adsr_filter);
+    v_adsr_run(&f_voice->adsr_filter);
 
     //Run the glide module
-    f_rmp_run_ramp(f_voice->ramp_env);
-    f_rmp_run_ramp(f_voice->glide_env);
+    f_rmp_run_ramp(&f_voice->ramp_env);
+    f_rmp_run_ramp(&f_voice->glide_env);
 
     //Set and run the LFO
-    v_lfs_set(f_voice->lfo1,  (*(plugin_data->lfo_freq)) * .01);
-    v_lfs_run(f_voice->lfo1);
+    v_lfs_set(&f_voice->lfo1,  (*(plugin_data->lfo_freq)) * .01);
+    v_lfs_run(&f_voice->lfo1);
 
-    f_voice->base_pitch = (f_voice->glide_env->output_multiplied)
-            +  (plugin_data->mono_modules->pitchbend_smoother->last_value *
+    f_voice->base_pitch = (f_voice->glide_env.output_multiplied)
+            +  (plugin_data->mono_modules->pitchbend_smoother.last_value *
             (*(plugin_data->master_pb_amt)))
-            + (f_voice->last_pitch) + ((f_voice->lfo1->output) *
+            + (f_voice->last_pitch) + ((f_voice->lfo1.output) *
             (*plugin_data->lfo_pitch + (*plugin_data->lfo_pitch_fine * 0.01f)));
 
     if((plugin_data->voices->voices[n].off == plugin_data->sampleNo) &&
-        (f_voice->adsr_amp->stage < ADSR_STAGE_RELEASE))
+        (f_voice->adsr_amp.stage < ADSR_STAGE_RELEASE))
     {
         if(plugin_data->voices->voices[n].n_state == note_state_killed)
         {
@@ -757,7 +758,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
 
         f_voice->noise_sample =
                 ((plugin_data->mono_modules->noise_func_ptr[(plugin_data->current_sample)](
-                plugin_data->mono_modules->white_noise1[(f_voice->noise_index)]))
+                &plugin_data->mono_modules->white_noise1[(f_voice->noise_index)]))
                 * (plugin_data->mono_modules->noise_linamp[(plugin_data->current_sample)])); //add noise
 
         ch = 0;
@@ -791,7 +792,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
     register int i_dst = 0;
     while(i_dst < plugin_data->active_polyfx_count[n])
     {
-        v_mf3_set(f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])],
+        v_mf3_set(&f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])],
             *(plugin_data->pfx_mod_knob[0][(plugin_data->active_polyfx[n][(i_dst)])][0]),
                 *(plugin_data->pfx_mod_knob[0][(plugin_data->active_polyfx[n][(i_dst)])][1]),
                 *(plugin_data->pfx_mod_knob[0][(plugin_data->active_polyfx[n][(i_dst)])][2]));
@@ -801,7 +802,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
         while(f_mod_test < (plugin_data->polyfx_mod_counts[n][(plugin_data->active_polyfx[n][(i_dst)])]))
         {
             v_mf3_mod_single(
-                f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])],
+                &f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])],
                 *(f_voice->modulator_outputs[(plugin_data->polyfx_mod_src_index[n][(plugin_data->active_polyfx[n][(i_dst)])][f_mod_test])]),
                 (plugin_data->polyfx_mod_matrix_values[n][(plugin_data->active_polyfx[n][(i_dst)])][f_mod_test]),
                 (plugin_data->polyfx_mod_ctrl_indexes[n][(plugin_data->active_polyfx[n][(i_dst)])][f_mod_test])
@@ -810,24 +811,24 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
         }
 
         f_voice->fx_func_ptr[(plugin_data->active_polyfx[n][(i_dst)])](
-                f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])],
+                &f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])],
                 (f_voice->modulex_current_sample[0]),
                 (f_voice->modulex_current_sample[1]));
 
         f_voice->modulex_current_sample[0] =
-            f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])]->output0;
+            f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])].output0;
         f_voice->modulex_current_sample[1] =
-            f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])]->output1;
+            f_voice->multieffect[(plugin_data->active_polyfx[n][(i_dst)])].output1;
         ++i_dst;
     }
 
     plugin_data->mono_fx_buffers[0][
         (plugin_data->sample_mfx_groups_index[(plugin_data->current_sample)])] +=
-            (f_voice->modulex_current_sample[0]) * (f_voice->adsr_amp->output) *
+            (f_voice->modulex_current_sample[0]) * (f_voice->adsr_amp.output) *
             (plugin_data->amp);
     plugin_data->mono_fx_buffers[1][
             (plugin_data->sample_mfx_groups_index[(plugin_data->current_sample)])] +=
-            (f_voice->modulex_current_sample[1]) * (f_voice->adsr_amp->output) *
+            (f_voice->modulex_current_sample[1]) * (f_voice->adsr_amp.output) *
             (plugin_data->amp);
 }
 
@@ -1075,7 +1076,7 @@ static void v_euphoria_process_midi_event(
                         g_mf3_get_reset_function_pointer(f_pfx_combobox_index);
 
                 plugin_data->data[f_voice_num]->fx_reset_ptr[(i_dst)](
-                    plugin_data->data[f_voice_num]->multieffect[(i_dst)]);
+                    &plugin_data->data[f_voice_num]->multieffect[(i_dst)]);
 
                 if(f_pfx_combobox_index != 0)
                 {
@@ -1152,15 +1153,15 @@ static void v_euphoria_process_midi_event(
             }
 
             v_rmp_retrigger_glide_t(
-                    plugin_data->data[f_voice_num]->glide_env,
-                    (*(plugin_data->master_glide) * .01),
-                    (plugin_data->data[f_voice_num]->last_pitch),
-                    (plugin_data->data[f_voice_num]->target_pitch));
+                &plugin_data->data[f_voice_num]->glide_env,
+                (*(plugin_data->master_glide) * .01),
+                (plugin_data->data[f_voice_num]->last_pitch),
+                (plugin_data->data[f_voice_num]->target_pitch));
 
             /*Retrigger ADSR envelopes and LFO*/
-            v_adsr_retrigger(plugin_data->data[f_voice_num]->adsr_amp);
-            v_adsr_retrigger(plugin_data->data[f_voice_num]->adsr_filter);
-            v_lfs_sync(plugin_data->data[f_voice_num]->lfo1, 0.0f,
+            v_adsr_retrigger(&plugin_data->data[f_voice_num]->adsr_amp);
+            v_adsr_retrigger(&plugin_data->data[f_voice_num]->adsr_filter);
+            v_lfs_sync(&plugin_data->data[f_voice_num]->lfo1, 0.0f,
                     *(plugin_data->lfo_type));
 
             float f_attack_a = (*(plugin_data->attack) * .01);
@@ -1169,7 +1170,7 @@ static void v_euphoria_process_midi_event(
             f_decay_a *= f_decay_a;
             float f_release_a = (*(plugin_data->release) * .01);
             f_release_a *= f_release_a;
-            v_adsr_set_adsr_db(plugin_data->data[f_voice_num]->adsr_amp,
+            v_adsr_set_adsr_db(&plugin_data->data[f_voice_num]->adsr_amp,
                     f_attack_a, f_decay_a, (*(plugin_data->sustain)),
                     f_release_a);
 
@@ -1179,12 +1180,12 @@ static void v_euphoria_process_midi_event(
             f_decay_f *= f_decay_f;
             float f_release_f = (*(plugin_data->release_f) * .01);
             f_release_f *= f_release_f;
-            v_adsr_set_adsr(plugin_data->data[f_voice_num]->adsr_filter,
+            v_adsr_set_adsr(&plugin_data->data[f_voice_num]->adsr_filter,
                     f_attack_f, f_decay_f,
                     (*(plugin_data->sustain_f) * .01), f_release_f);
 
             /*Retrigger the pitch envelope*/
-            v_rmp_retrigger((plugin_data->data[f_voice_num]->ramp_env),
+            v_rmp_retrigger(&plugin_data->data[f_voice_num]->ramp_env,
                     (*(plugin_data->pitch_env_time) * .01), 1.0f);
 
             /*Set the last_note property, so the next note can
@@ -1279,7 +1280,7 @@ static void v_run_lms_euphoria(
     while(i2 < (plugin_data->monofx_channel_index_count))
     {
         f_monofx_index = (plugin_data->monofx_channel_index[i2]);
-        v_eq6_set(plugin_data->mono_modules->eqs[f_monofx_index]);
+        v_eq6_set(&plugin_data->mono_modules->eqs[f_monofx_index]);
         ++i2;
     }
 
@@ -1308,7 +1309,7 @@ static void v_run_lms_euphoria(
         v_plugin_event_queue_atm_set(
             &plugin_data->atm_queue, i, plugin_data->port_table);
 
-        v_sml_run(plugin_data->mono_modules->pitchbend_smoother,
+        v_sml_run(&plugin_data->mono_modules->pitchbend_smoother,
                 (plugin_data->sv_pitch_bend_value));
 
         i2 = 0;
@@ -1324,7 +1325,7 @@ static void v_run_lms_euphoria(
         i2 = 0;
         while(i2 < EUPHORIA_POLYPHONY)
         {
-            if(((plugin_data->data[i2]->adsr_amp->stage) != ADSR_STAGE_OFF) &&
+            if(((plugin_data->data[i2]->adsr_amp.stage) != ADSR_STAGE_OFF) &&
                     ((plugin_data->sample_indexes_count[i2]) > 0))
             {
                 add_sample_lms_euphoria(plugin_data, i2);
@@ -1343,30 +1344,31 @@ static void v_run_lms_euphoria(
             i3 = 0;
             while(i3 < EUPHORIA_MONO_FX_COUNT)
             {
-                v_mf3_set(plugin_data->mono_modules->multieffect[f_monofx_index][i3],
-                        (*(plugin_data->mfx_knobs[f_monofx_index][i3][0])),
-                        (*(plugin_data->mfx_knobs[f_monofx_index][i3][1])),
-                        (*(plugin_data->mfx_knobs[f_monofx_index][i3][2])));
+                v_mf3_set(
+                    &plugin_data->mono_modules->multieffect[f_monofx_index][i3],
+                    (*(plugin_data->mfx_knobs[f_monofx_index][i3][0])),
+                    (*(plugin_data->mfx_knobs[f_monofx_index][i3][1])),
+                    (*(plugin_data->mfx_knobs[f_monofx_index][i3][2])));
                 plugin_data->mono_modules->fx_func_ptr[f_monofx_index][i3](
-                    plugin_data->mono_modules->multieffect[f_monofx_index][i3],
+                    &plugin_data->mono_modules->multieffect[f_monofx_index][i3],
                     f_temp_sample0, f_temp_sample1);
 
                 f_temp_sample0 =
                     (plugin_data->mono_modules->multieffect[
-                        f_monofx_index][i3]->output0);
+                        f_monofx_index][i3].output0);
                 f_temp_sample1 =
                     (plugin_data->mono_modules->multieffect[
-                        f_monofx_index][i3]->output1);
+                        f_monofx_index][i3].output1);
                 ++i3;
             }
 
-            v_eq6_run(plugin_data->mono_modules->eqs[f_monofx_index],
+            v_eq6_run(&plugin_data->mono_modules->eqs[f_monofx_index],
                     f_temp_sample0, f_temp_sample1);
 
             plugin_data->output[0][i] +=
-                    plugin_data->mono_modules->eqs[f_monofx_index]->output0;
+                    plugin_data->mono_modules->eqs[f_monofx_index].output0;
             plugin_data->output[1][i] +=
-                    plugin_data->mono_modules->eqs[f_monofx_index]->output1;
+                    plugin_data->mono_modules->eqs[f_monofx_index].output1;
             ++i2;
         }
 

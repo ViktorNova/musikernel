@@ -194,16 +194,14 @@ t_pkq_peak_eq * g_pkq_get(float a_sample_rate)
 
 typedef struct
 {
-    t_pkq_peak_eq * eqs[6];
+    t_pkq_peak_eq eqs[6];
     float * knobs[6][3];  //freq, bw, gain
     float output0;
     float output1;
 }t_eq6;
 
-t_eq6 * g_eq6_get(float a_sr)
+void g_eq6_init(t_eq6 * f_result, float a_sr)
 {
-    t_eq6 * f_result = (t_eq6*)malloc(sizeof(t_eq6));
-
     f_result->output0 = 0.0f;
     f_result->output1 = 0.0f;
 
@@ -211,9 +209,16 @@ t_eq6 * g_eq6_get(float a_sr)
 
     while(f_i < 6)
     {
-        f_result->eqs[f_i] = g_pkq_get(a_sr);
+        g_pkq_init(&f_result->eqs[f_i], a_sr);
         ++f_i;
     }
+}
+
+t_eq6 * g_eq6_get(float a_sr)
+{
+    t_eq6 * f_result = (t_eq6*)malloc(sizeof(t_eq6));
+
+    g_eq6_init(f_result, a_sr);
 
     return f_result;
 }
@@ -234,7 +239,7 @@ inline void v_eq6_set(t_eq6 *a_eq6)
     {
         if(*a_eq6->knobs[f_i][2] != 0.0f)
         {
-            v_pkq_calc_coeffs(a_eq6->eqs[f_i],
+            v_pkq_calc_coeffs(&a_eq6->eqs[f_i],
                     *a_eq6->knobs[f_i][0],
                     *a_eq6->knobs[f_i][1] * 0.01f,
                     *a_eq6->knobs[f_i][2]);
@@ -254,10 +259,10 @@ inline void v_eq6_run(t_eq6 *a_eq6, float a_input0, float a_input1)
     {
         if(*a_eq6->knobs[f_i][2] != 0.0f)
         {
-            v_pkq_run(a_eq6->eqs[f_i], a_eq6->output0, a_eq6->output1);
+            v_pkq_run(&a_eq6->eqs[f_i], a_eq6->output0, a_eq6->output1);
 
-            a_eq6->output0 = a_eq6->eqs[f_i]->output0;
-            a_eq6->output1 = a_eq6->eqs[f_i]->output1;
+            a_eq6->output0 = a_eq6->eqs[f_i].output0;
+            a_eq6->output1 = a_eq6->eqs[f_i].output1;
         }
         ++f_i;
     }

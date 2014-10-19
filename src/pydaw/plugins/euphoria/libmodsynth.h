@@ -44,33 +44,30 @@ extern "C" {
 
 typedef struct
 {
-    t_smoother_linear * pitchbend_smoother;
+    t_smoother_linear pitchbend_smoother;
     t_sinc_interpolator * sinc_interpolator;
-    t_dco_dc_offset_filter * dc_offset_filters[EUPHORIA_CHANNEL_COUNT];
+    t_dco_dc_offset_filter dc_offset_filters[EUPHORIA_CHANNEL_COUNT];
 
-    t_mf3_multi *
+    t_mf3_multi
         multieffect[EUPHORIA_MONO_FX_GROUPS_COUNT][EUPHORIA_MONO_FX_COUNT];
     fp_mf3_run
         fx_func_ptr[EUPHORIA_MONO_FX_GROUPS_COUNT][EUPHORIA_MONO_FX_COUNT];
 
-    t_white_noise * white_noise1[EUPHORIA_NOISE_COUNT];
+    t_white_noise white_noise1[EUPHORIA_NOISE_COUNT];
     int noise_current_index;
 
     fp_noise_func_ptr noise_func_ptr[EUPHORIA_MAX_SAMPLE_COUNT];
     int noise_index[EUPHORIA_MAX_SAMPLE_COUNT];
     float noise_linamp[EUPHORIA_MAX_SAMPLE_COUNT];
-    t_eq6 * eqs[EUPHORIA_MAX_SAMPLE_COUNT];
+    t_eq6 eqs[EUPHORIA_MAX_SAMPLE_COUNT];
 }t_euphoria_mono_modules __attribute__((aligned(16)));
 
 typedef struct
 {
-    t_adsr * adsr_filter;
-
-    t_adsr * adsr_amp;
-
-    t_ramp_env * glide_env;
-
-    t_ramp_env * ramp_env;
+    t_adsr adsr_filter;
+    t_adsr adsr_amp;
+    t_ramp_env glide_env;
+    t_ramp_env ramp_env;
 
     // For glide
     float last_pitch;
@@ -84,14 +81,14 @@ typedef struct
     // += this to the output buffer when finished.
     float current_sample;
 
-    t_lfs_lfo * lfo1;
+    t_lfs_lfo lfo1;
 
     float note_f;
     float noise_sample;
 
     int i_voice;  //for the runVoice function to iterate the current block
 
-    t_mf3_multi * multieffect[EUPHORIA_MODULAR_POLYFX_COUNT];
+    t_mf3_multi multieffect[EUPHORIA_MODULAR_POLYFX_COUNT];
     fp_mf3_run fx_func_ptr[EUPHORIA_MODULAR_POLYFX_COUNT];
     fp_mf3_reset fx_reset_ptr[EUPHORIA_MODULAR_POLYFX_COUNT];
 
@@ -129,11 +126,11 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 
     int f_i = 0;
 
-    f_voice->adsr_amp = g_adsr_get_adsr(a_sr);
-    f_voice->adsr_filter = g_adsr_get_adsr(a_sr);
+    g_adsr_init(&f_voice->adsr_amp, a_sr);
+    g_adsr_init(&f_voice->adsr_filter, a_sr);
 
-    f_voice->glide_env = g_rmp_get_ramp_env(a_sr);
-    f_voice->ramp_env = g_rmp_get_ramp_env(a_sr);
+    g_rmp_init(&f_voice->glide_env, a_sr);
+    g_rmp_init(&f_voice->ramp_env, a_sr);
 
     //f_voice->real_pitch = 60.0f;
 
@@ -145,7 +142,7 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 
     f_voice->filter_output = 0.0f;
 
-    f_voice->lfo1 = g_lfs_get(a_sr);
+    g_lfs_init(&f_voice->lfo1, a_sr);
 
     f_voice->note_f = 1.0f;
     f_voice->noise_sample = 0.0f;
@@ -156,14 +153,14 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 
     for(f_i = 0; f_i < EUPHORIA_MODULAR_POLYFX_COUNT; f_i++)
     {
-        f_voice->multieffect[f_i] = g_mf3_get(a_sr);
+        g_mf3_init(&f_voice->multieffect[f_i], a_sr);
         f_voice->fx_func_ptr[f_i] = v_mf3_run_off;
     }
 
-    f_voice->modulator_outputs[0] = &(f_voice->adsr_amp->output);
-    f_voice->modulator_outputs[1] = &(f_voice->adsr_filter->output);
-    f_voice->modulator_outputs[2] = &(f_voice->ramp_env->output);
-    f_voice->modulator_outputs[3] = &(f_voice->lfo1->output);
+    f_voice->modulator_outputs[0] = &(f_voice->adsr_amp.output);
+    f_voice->modulator_outputs[1] = &(f_voice->adsr_filter.output);
+    f_voice->modulator_outputs[2] = &(f_voice->ramp_env.output);
+    f_voice->modulator_outputs[3] = &(f_voice->lfo1.output);
     f_voice->modulator_outputs[4] = &(f_voice->keyboard_track);
     f_voice->modulator_outputs[5] = &(f_voice->velocity_track);
 
@@ -181,14 +178,14 @@ void v_euphoria_poly_note_off(t_euphoria_poly_voice * a_voice,
 {
     if(a_fast_release)
     {
-        v_adsr_set_fast_release(a_voice->adsr_amp);
+        v_adsr_set_fast_release(&a_voice->adsr_amp);
     }
     else
     {
-        v_adsr_release(a_voice->adsr_amp);
+        v_adsr_release(&a_voice->adsr_amp);
     }
 
-    v_adsr_release(a_voice->adsr_filter);
+    v_adsr_release(&a_voice->adsr_filter);
 }
 
 t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr);
@@ -196,15 +193,9 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr);
 t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
 {
     t_euphoria_mono_modules * a_mono;
+    lmalloc((void**)&a_mono, sizeof(t_euphoria_mono_modules));
 
-    if(posix_memalign((void**)&(a_mono), 16,
-            sizeof(t_euphoria_mono_modules)) != 0)
-    {
-        return 0;
-    }
-
-    a_mono->pitchbend_smoother =
-            g_sml_get_smoother_linear(a_sr, 1.0f, -1.0f, 0.2f);
+    g_sml_init(&a_mono->pitchbend_smoother, a_sr, 1.0f, -1.0f, 0.2f);
     a_mono->sinc_interpolator =
             g_sinc_get(EUPHORIA_SINC_INTERPOLATION_POINTS, 6000, 8000.0f,
             a_sr, 0.42f);
@@ -212,32 +203,32 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
 
     int f_i;
 
-    for(f_i = 0; f_i < EUPHORIA_CHANNEL_COUNT; f_i++)
+    for(f_i = 0; f_i < EUPHORIA_CHANNEL_COUNT; ++f_i)
     {
-        a_mono->dc_offset_filters[f_i] = g_dco_get(a_sr);
+        g_dco_init(&a_mono->dc_offset_filters[f_i], a_sr);
     }
 
     int f_i2;
 
-    for(f_i = 0; f_i < EUPHORIA_MONO_FX_GROUPS_COUNT; f_i++)
+    for(f_i = 0; f_i < EUPHORIA_MONO_FX_GROUPS_COUNT; ++f_i)
     {
-        for(f_i2 = 0; f_i2 < EUPHORIA_MONO_FX_COUNT; f_i2++)
+        for(f_i2 = 0; f_i2 < EUPHORIA_MONO_FX_COUNT; ++f_i2)
         {
-            a_mono->multieffect[f_i][f_i2] = g_mf3_get(a_sr);
+            g_mf3_init(&a_mono->multieffect[f_i][f_i2], a_sr);
             a_mono->fx_func_ptr[f_i][f_i2] = v_mf3_run_off;
         }
     }
 
-    for(f_i = 0; f_i < EUPHORIA_NOISE_COUNT; f_i++)
+    for(f_i = 0; f_i < EUPHORIA_NOISE_COUNT; ++f_i)
     {
-        a_mono->white_noise1[f_i] = g_get_white_noise(a_sr);
+        g_white_noise_init(&a_mono->white_noise1[f_i], a_sr);
     }
 
-    for(f_i = 0; f_i < EUPHORIA_MAX_SAMPLE_COUNT; f_i++)
+    for(f_i = 0; f_i < EUPHORIA_MAX_SAMPLE_COUNT; ++f_i)
     {
         a_mono->noise_func_ptr[f_i] = f_run_noise_off;
         a_mono->noise_linamp[f_i] = 1.0f;
-        a_mono->eqs[f_i] = g_eq6_get(a_sr);
+        g_eq6_init(&a_mono->eqs[f_i], a_sr);
     }
 
     return a_mono;
