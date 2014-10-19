@@ -72,7 +72,7 @@ all:
 
 dbg:
 	rm src/*.o $(PYDAW_VERSION)-engine  $(PYDAW_VERSION)-engine-dbg ; echo
-	make CFLAGS+=" -Og -g -gdwarf-3 " $(PYDAW_VERSION)-engine
+	make CFLAGS+=" -O0 -g -gdwarf-3 " $(PYDAW_VERSION)-engine
 	mv $(PYDAW_VERSION)-engine $(PYDAW_VERSION)-engine-dbg
 
 eng:
