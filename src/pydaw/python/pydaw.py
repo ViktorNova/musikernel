@@ -8297,7 +8297,7 @@ class track_send:
         self.bus_combobox.wheelEvent = self.wheel_event
         self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
         self.sidechain_checkbox = QtGui.QCheckBox()
-        self.sidechain_checkbox.clicked.connect(self.on_bus_changed)
+        self.sidechain_checkbox.clicked.connect(self.sidechain_toggled)
         self.update_names()
         a_layout.addWidget(self.bus_combobox, a_index + 1, 20)
         a_layout.addWidget(self.sidechain_checkbox, a_index + 1, 27)
@@ -8308,22 +8308,27 @@ class track_send:
     def on_bus_changed(self, a_value=0):
         self.update_engine()
 
-    def update_engine(self):
+    def sidechain_toggled(self, a_val=None):
+        self.update_engine(False)
+
+    def update_engine(self, a_check=True):
         if not self.suppress_osc:
             f_graph = PROJECT.get_routing_graph()
             if not self.track_num in f_graph.graph:
                 f_graph.graph[self.track_num] = {}
-            f_feedback = f_graph.check_for_feedback(
-                self.bus_combobox.currentIndex() - 1,
-                self.track_num, self.index)
-            if f_feedback:
-                QtGui.QMessageBox.warning(
-                    self.bus_combobox, _("Error"),
-                    _("Can't set the route, it would create a feedback loop"))
-                self.suppress_osc = True
-                self.bus_combobox.setCurrentIndex(self.last_value)
-                self.suppress_osc = False
-                return
+            if a_check:
+                f_feedback = f_graph.check_for_feedback(
+                    self.bus_combobox.currentIndex() - 1,
+                    self.track_num, self.index)
+                if f_feedback:
+                    QtGui.QMessageBox.warning(
+                        self.bus_combobox, _("Error"),
+                        _("Can't set the route, it would create "
+                        "a feedback loop"))
+                    self.suppress_osc = True
+                    self.bus_combobox.setCurrentIndex(self.last_value)
+                    self.suppress_osc = False
+                    return
             f_graph.graph[self.track_num][self.index] = self.get_value()
             PROJECT.save_routing_graph(f_graph)
             self.last_value = self.bus_combobox.currentIndex()
