@@ -34,7 +34,7 @@ all:
 
 debug:
 	rm *.o || true
-	make CFLAGS+=" -O0 -gdwarf-3 -fstack-protector-all " $(PYDAW_FILE)
+	make CFLAGS+=" -Og -gdwarf-3 -fstack-protector-all " $(PYDAW_FILE)
 	mv $(PYDAW_FILE) $(PYDAW_DBG)
 
 release:
