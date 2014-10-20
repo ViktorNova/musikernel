@@ -12,27 +12,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include <stdlib.h>
-#include <limits.h>
-#include <string.h>
-#include <stdint.h>
-
-#include <math.h>
-#include <stdio.h>
-
 #include "../../include/pydaw_plugin.h"
-
 #include "libmodsynth.h"
 #include "../../libmodsynth/lib/amp.h"
-#include "../../libmodsynth/modules/filter/svf.h"
-
-#include "../../libmodsynth/modules/delay/reverb.h"
-
 #include "synth.h"
 
 static void v_scc_run(
