@@ -1617,6 +1617,13 @@ class region_editor(QtGui.QGraphicsView):
             for k2 in sorted(self.region_items[k1]):
                 yield self.region_items[k1][k2]
 
+    def get_item(self, a_track, a_bar):
+        if a_track in self.region_items and \
+        a_bar in self.region_items[a_track]:
+            return self.region_items[a_track][a_bar]
+        else:
+            return None
+
     def get_all_points(self, a_track=None):
         if a_track is None:
             for f_point in self.automation_points:
@@ -1709,6 +1716,10 @@ class region_editor(QtGui.QGraphicsView):
         self.current_coord = self.get_item_coord(a_event.scenePos())
         if a_event.button() == QtCore.Qt.RightButton:
             if self.current_coord:
+                f_item = self.get_item(*self.current_coord[:2])
+                if f_item and not f_item.isSelected():
+                    self.clearSelection()
+                    f_item.setSelected(True)
                 self.show_context_menu()
             return
         if REGION_EDITOR_MODE == 0:
