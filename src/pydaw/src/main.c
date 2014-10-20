@@ -1348,7 +1348,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         if(musikernel->is_previewing)
         {
             pthread_spin_lock(&musikernel->main_lock);
-            v_adsr_release(musikernel->preview_audio_item->adsr);
+            v_adsr_release(&musikernel->preview_audio_item->adsr);
             pthread_spin_unlock(&musikernel->main_lock);
         }
     }

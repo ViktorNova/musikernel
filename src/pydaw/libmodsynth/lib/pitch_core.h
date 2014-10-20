@@ -42,15 +42,18 @@ float f_pit_midi_note_to_ratio_fast(float, float,
 }
 #endif
 
-t_pit_ratio * g_pit_ratio()
+void g_pit_ratio_init(t_pit_ratio * f_result)
 {
-    t_pit_ratio * f_result = (t_pit_ratio*)malloc(sizeof(t_pit_ratio));
-
     f_result->hz = 1.0f;
     f_result->hz_recip = 1.0f;
     //ensures that it won't coincidentally be the pitch
     f_result->pitch = 12.345432f;
+}
 
+t_pit_ratio * g_pit_ratio()
+{
+    t_pit_ratio * f_result = (t_pit_ratio*)malloc(sizeof(t_pit_ratio));
+    g_pit_ratio_init(f_result);
     return f_result;
 }
 

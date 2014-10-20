@@ -271,19 +271,22 @@ void v_ifh_retrigger_double(t_int_frac_read_head* a_ifh, double a_pos)
     a_ifh->fraction = a_pos - ((double)a_ifh->whole_number);
 }
 
-t_int_frac_read_head * g_ifh_get()
+void g_ifh_init(t_int_frac_read_head * f_result)
 {
-    t_int_frac_read_head * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_int_frac_read_head));
-
     f_result->float_increment = 0.0f;
     f_result->fraction = 0.0f;
     f_result->whole_number = 0;
     f_result->int_increment = 1;
     f_result->float_increment = 0.0f;
     f_result->last_increment = 0.0f;
+}
 
+t_int_frac_read_head * g_ifh_get()
+{
+    t_int_frac_read_head * f_result;
+
+    lmalloc((void**)&f_result, sizeof(t_int_frac_read_head));
+    g_ifh_init(f_result);
     return f_result;
 }
 

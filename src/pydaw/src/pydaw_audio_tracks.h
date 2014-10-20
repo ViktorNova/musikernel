@@ -56,8 +56,8 @@ typedef struct
     int sample_end_offset;
     //The audio track whose Modulex instance to write the samples to
     int audio_track_output;
-    t_int_frac_read_head * sample_read_head;
-    t_adsr * adsr;
+    t_int_frac_read_head sample_read_head;
+    t_adsr adsr;
     int index;
     float vol;
     float vol_linear;
@@ -71,8 +71,8 @@ typedef struct
     float sample_fade_out_divisor;
     float fade_vol;
 
-    t_pit_ratio * pitch_ratio_ptr;
-    t_state_variable_filter * lp_filter;  //fade smoothing
+    t_pit_ratio pitch_ratio_ptr;
+    t_state_variable_filter lp_filter;  //fade smoothing
 
     float pitch_shift_end;
     float timestretch_amt_end;
@@ -355,9 +355,6 @@ void v_pydaw_audio_item_free(t_pydaw_audio_item* a_audio_item)
 
     if(a_audio_item)
     {
-        free(a_audio_item->adsr);
-        free(a_audio_item->sample_read_head);
-        free(a_audio_item->pitch_ratio_ptr);
         free(a_audio_item);
     }
 }
@@ -370,16 +367,16 @@ t_pydaw_audio_item * g_pydaw_audio_item_get(float a_sr)
 
     f_result->ratio = 1.0f;
     f_result->uid = -1;
-    f_result->adsr = g_adsr_get_adsr(a_sr);
-    v_adsr_set_adsr_db(f_result->adsr, 0.003f, 0.1f, 0.0f, 0.2f);
-    v_adsr_retrigger(f_result->adsr);
-    f_result->sample_read_head = g_ifh_get();
+    g_adsr_init(&f_result->adsr, a_sr);
+    v_adsr_set_adsr_db(&f_result->adsr, 0.003f, 0.1f, 0.0f, 0.2f);
+    v_adsr_retrigger(&f_result->adsr);
+    g_ifh_init(&f_result->sample_read_head);
 
-    f_result->pitch_ratio_ptr = g_pit_ratio();
-    f_result->lp_filter = g_svf_get(a_sr);
-    v_svf_set_cutoff_base(f_result->lp_filter, f_pit_hz_to_midi_note(7200.0f));
-    v_svf_set_res(f_result->lp_filter, -15.0f);
-    v_svf_set_cutoff(f_result->lp_filter);
+    g_pit_ratio_init(&f_result->pitch_ratio_ptr);
+    g_svf_init(&f_result->lp_filter, a_sr);
+    v_svf_set_cutoff_base(&f_result->lp_filter, f_pit_hz_to_midi_note(7200.0f));
+    v_svf_set_res(&f_result->lp_filter, -15.0f);
+    v_svf_set_cutoff(&f_result->lp_filter);
     f_result->vol = 0.0f;
     f_result->vol_linear = 1.0f;
 
@@ -699,7 +696,7 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
                     f_result->ratio *=
                             f_pit_midi_note_to_ratio_fast(0.0f,
                                 (f_result->pitch_shift),
-                                f_result->pitch_ratio_ptr);
+                                &f_result->pitch_ratio_ptr);
                 }
                 else
                 {
@@ -707,7 +704,7 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
                             f_pit_midi_note_to_ratio_fast(
                             ((f_result->pitch_shift) * -1.0f),
                             0.0f,
-                            f_result->pitch_ratio_ptr);
+                            &f_result->pitch_ratio_ptr);
                 }
             }
         }
@@ -730,7 +727,7 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
         */
     }
 
-    f_result->adsr->stage = ADSR_STAGE_OFF;
+    f_result->adsr.stage = ADSR_STAGE_OFF;
 
     return f_result;
 }
@@ -739,12 +736,12 @@ void v_pydaw_audio_item_set_fade_vol(t_pydaw_audio_item *a_audio_item)
 {
     if(a_audio_item->is_reversed)
     {
-        if(a_audio_item->sample_read_head->whole_number >
+        if(a_audio_item->sample_read_head.whole_number >
                 a_audio_item->sample_fade_in_end &&
                 a_audio_item->sample_fade_in_divisor != 0.0f)
         {
             a_audio_item->fade_vol =
-                    ((float)(a_audio_item->sample_read_head->whole_number) -
+                    ((float)(a_audio_item->sample_read_head.whole_number) -
                     a_audio_item->sample_fade_in_end)
                     * a_audio_item->sample_fade_in_divisor;
             a_audio_item->fade_vol =
@@ -754,13 +751,13 @@ void v_pydaw_audio_item_set_fade_vol(t_pydaw_audio_item *a_audio_item)
             a_audio_item->fade_vol =
                     f_db_to_linear_fast(a_audio_item->fade_vol);
         }
-        else if(a_audio_item->sample_read_head->whole_number <=
+        else if(a_audio_item->sample_read_head.whole_number <=
                 a_audio_item->sample_fade_out_start &&
                 a_audio_item->sample_fade_out_divisor != 0.0f)
         {
             a_audio_item->fade_vol =
                     ((float)(a_audio_item->sample_fade_out_start -
-                    a_audio_item->sample_read_head->whole_number))
+                    a_audio_item->sample_read_head.whole_number))
                     * a_audio_item->sample_fade_out_divisor;
             a_audio_item->fade_vol =
                 ((1.0f - a_audio_item->fade_vol) * a_audio_item->fadeout_vol) -
@@ -777,13 +774,13 @@ void v_pydaw_audio_item_set_fade_vol(t_pydaw_audio_item *a_audio_item)
     }
     else
     {
-        if(a_audio_item->sample_read_head->whole_number <
+        if(a_audio_item->sample_read_head.whole_number <
                 a_audio_item->sample_fade_in_end &&
                 a_audio_item->sample_fade_in_divisor != 0.0f)
         {
             a_audio_item->fade_vol =
                     ((float)(a_audio_item->sample_fade_in_end -
-                    a_audio_item->sample_read_head->whole_number))
+                    a_audio_item->sample_read_head.whole_number))
                     * a_audio_item->sample_fade_in_divisor;
             a_audio_item->fade_vol =
                     ((1.0f - a_audio_item->fade_vol) * a_audio_item->fadein_vol)
@@ -793,15 +790,15 @@ void v_pydaw_audio_item_set_fade_vol(t_pydaw_audio_item *a_audio_item)
             a_audio_item->fade_vol =
                     f_db_to_linear_fast(a_audio_item->fade_vol);
             a_audio_item->fade_vol =
-                    v_svf_run_2_pole_lp(a_audio_item->lp_filter,
+                    v_svf_run_2_pole_lp(&a_audio_item->lp_filter,
                     a_audio_item->fade_vol);
         }
-        else if(a_audio_item->sample_read_head->whole_number >=
+        else if(a_audio_item->sample_read_head.whole_number >=
                 a_audio_item->sample_fade_out_start &&
                 a_audio_item->sample_fade_out_divisor != 0.0f)
         {
             a_audio_item->fade_vol =
-                    ((float)(a_audio_item->sample_read_head->whole_number) -
+                    ((float)(a_audio_item->sample_read_head.whole_number) -
                     a_audio_item->sample_fade_out_start)
                     * a_audio_item->sample_fade_out_divisor;
             a_audio_item->fade_vol =
@@ -811,7 +808,7 @@ void v_pydaw_audio_item_set_fade_vol(t_pydaw_audio_item *a_audio_item)
             a_audio_item->fade_vol =
                 f_db_to_linear_fast(a_audio_item->fade_vol);
             a_audio_item->fade_vol =
-                    v_svf_run_2_pole_lp(a_audio_item->lp_filter,
+                    v_svf_run_2_pole_lp(&a_audio_item->lp_filter,
                     a_audio_item->fade_vol);
         }
         else
