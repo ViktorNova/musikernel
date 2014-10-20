@@ -151,7 +151,7 @@ t_1d_char_array * c_split_str(const char * a_input, char a_delim,
         if(a_input[f_i] == a_delim)
         {
             f_result->array[f_current_column][f_current_string_index] = '\0';
-            f_current_column++;
+            ++f_current_column;
             f_current_string_index = 0;
             assert(f_current_column < a_column_count);
         }
@@ -164,7 +164,7 @@ t_1d_char_array * c_split_str(const char * a_input, char a_delim,
         {
             f_result->array[f_current_column][f_current_string_index] =
                     a_input[f_i];
-            f_current_string_index++;
+            ++f_current_string_index;
         }
 
         ++f_i;
@@ -200,7 +200,7 @@ t_1d_char_array * c_split_str_remainder(const char * a_input, char a_delim,
                 (a_input[f_i] == a_delim))
         {
             f_result->array[f_current_column][f_current_string_index] = '\0';
-            f_current_column++;
+            ++f_current_column;
             f_current_string_index = 0;
         }
         else if((a_input[f_i] == '\n') || (a_input[f_i] == '\0'))
@@ -212,7 +212,7 @@ t_1d_char_array * c_split_str_remainder(const char * a_input, char a_delim,
         {
             f_result->array[f_current_column][f_current_string_index] =
                     a_input[f_i];
-            f_current_string_index++;
+            ++f_current_string_index;
         }
 
         ++f_i;
@@ -237,7 +237,7 @@ t_key_value_pair * g_kvp_get(const char * a_input)
         if(f_stage)
         {
             f_result->value[f_result->val_len] = a_input[f_i];
-            f_result->val_len++;
+            ++f_result->val_len;
         }
         else
         {
@@ -249,7 +249,7 @@ t_key_value_pair * g_kvp_get(const char * a_input)
             else
             {
                 f_result->key[f_result->key_len] = a_input[f_i];
-                f_result->key_len++;
+                ++f_result->key_len;
             }
         }
 
@@ -374,6 +374,7 @@ typedef struct
 {
     int count;
     char ** str_arr;
+    char * str_block;
 }t_pydaw_line_split;
 
 t_pydaw_line_split * g_split_line(char a_delimiter, const char * a_str)
@@ -391,18 +392,20 @@ t_pydaw_line_split * g_split_line(char a_delimiter, const char * a_str)
         }
         else if(a_str[f_i] == a_delimiter)
         {
-            f_result->count++;
+            ++f_result->count;
         }
         ++f_i;
     }
 
     f_result->str_arr = (char**)malloc(sizeof(char*) * f_result->count);
+    f_result->str_block = (char*)malloc(
+        sizeof(char) * PYDAW_TINY_STRING * f_result->count);
 
     f_i = 0;
     while(f_i < f_result->count)
     {
         f_result->str_arr[f_i] =
-                (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+            &f_result->str_block[f_i * PYDAW_TINY_STRING];
         f_result->str_arr[f_i][0] = '\0';
         ++f_i;
     }
@@ -417,15 +420,15 @@ t_pydaw_line_split * g_split_line(char a_delimiter, const char * a_str)
             if(a_str[f_i3] == '\0' || a_str[f_i3] == a_delimiter)
             {
                 f_result->str_arr[f_i][f_i2] = '\0';
-                f_i3++;
+                ++f_i3;
                 break;
             }
             else
             {
                 f_result->str_arr[f_i][f_i2] = a_str[f_i3];
             }
-            f_i2++;
-            f_i3++;
+            ++f_i2;
+            ++f_i3;
         }
         ++f_i;
     }
@@ -435,13 +438,7 @@ t_pydaw_line_split * g_split_line(char a_delimiter, const char * a_str)
 
 void v_free_split_line(t_pydaw_line_split * a_split_line)
 {
-    int f_i = 0;
-    while(f_i < a_split_line->count)
-    {
-        free(a_split_line->str_arr[f_i]);
-        ++f_i;
-    }
-
+    free(a_split_line->str_block);
     free(a_split_line->str_arr);
     free(a_split_line);
 }
