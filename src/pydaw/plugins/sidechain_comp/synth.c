@@ -236,7 +236,7 @@ PYFX_Descriptor *scc_PYFX_descriptor(int index)
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(SCC_COUNT);
 
     pydaw_set_pyfx_port(f_result, SCC_THRESHOLD, -24.0f, -36.0f, -6.0f);
-    pydaw_set_pyfx_port(f_result, SCC_RATIO, 20.0f, 11.0f, 200.0f);
+    pydaw_set_pyfx_port(f_result, SCC_RATIO, 20.0f, 1.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, SCC_SPEED, 15.0f, 0.0f, 30.0f);
     pydaw_set_pyfx_port(f_result, SCC_WET, 100.0f, 0.0f, 100.0f);
 
