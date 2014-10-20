@@ -245,6 +245,7 @@ KC_127_ZERO_TO_X_INT = 7
 KC_TIME_DECIMAL = 8
 KC_HZ_DECIMAL = 9
 KC_INT_PITCH = 10
+KC_TENTH = 11
 
 LAST_TEMPO_COMBOBOX_INDEX = 2
 
@@ -338,6 +339,9 @@ class pydaw_abstract_ui_control:
                 f_dec_value = float(f_value) * 0.01
                 f_dec_value = f_dec_value * f_dec_value
                 self.value_label.setText(str(round(f_dec_value, 2)))
+            elif self.val_conversion == KC_TENTH:
+                self.value_label.setText(str(round(f_value * .1, 1)))
+
 
     def add_to_grid_layout(self, a_layout, a_x):
         if self.name_label is not None:
