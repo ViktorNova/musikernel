@@ -75,7 +75,7 @@ class scc_plugin_ui(pydaw_abstract_plugin_ui):
         self.ratio_knob = pydaw_knob_control(
             f_knob_size, _("Ratio"), SCC_RATIO,
             self.plugin_rel_callback, self.plugin_val_callback,
-            2, 20, 8, KC_INTEGER, self.port_dict, self.preset_manager)
+            11, 200, 20, KC_TENTH, self.port_dict, self.preset_manager)
         self.ratio_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 7)
 

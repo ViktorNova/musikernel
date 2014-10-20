@@ -234,7 +234,7 @@ static void v_scc_run(
             &plugin_data->atm_queue, f_i, plugin_data->port_table);
 
         v_scc_set(&plugin_data->mono_modules->sidechain_comp,
-            *plugin_data->threshold, *plugin_data->ratio,
+            *plugin_data->threshold, (*plugin_data->ratio) * 0.1f,
             *plugin_data->speed, *plugin_data->wet * 0.01f);
 
         v_scc_run_comp(&plugin_data->mono_modules->sidechain_comp,
@@ -254,7 +254,7 @@ PYFX_Descriptor *scc_PYFX_descriptor(int index)
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(SCC_COUNT);
 
     pydaw_set_pyfx_port(f_result, SCC_THRESHOLD, -24.0f, -36.0f, -6.0f);
-    pydaw_set_pyfx_port(f_result, SCC_RATIO, 8.0f, 2.0f, 20.0f);
+    pydaw_set_pyfx_port(f_result, SCC_RATIO, 20.0f, 11.0f, 200.0f);
     pydaw_set_pyfx_port(f_result, SCC_SPEED, 15.0f, 0.0f, 30.0f);
     pydaw_set_pyfx_port(f_result, SCC_WET, 100.0f, 0.0f, 100.0f);
 
