@@ -250,7 +250,8 @@ typedef struct
     int pid;
 }ui_thread_args;
 
-void * ui_process_monitor_thread(void * a_thread_args)
+__attribute__((optimize("-O0"))) void * ui_process_monitor_thread(
+    void * a_thread_args)
 {
     char f_proc_path[256];
     f_proc_path[0] = '\0';
@@ -278,7 +279,7 @@ void * ui_process_monitor_thread(void * a_thread_args)
     }
 
     return (void*)0;
-} __attribute__((optimize("-O0")))
+}
 
 #ifndef RTLD_LOCAL
 #define RTLD_LOCAL  (0)
@@ -291,7 +292,7 @@ void * ui_process_monitor_thread(void * a_thread_args)
  * Optional args:
  * --sleep
  */
-int main(int argc, char **argv)
+__attribute__((optimize("-O0"))) int main(int argc, char **argv)
 {
     if(argc < 4)
     {
@@ -824,7 +825,7 @@ int main(int argc, char **argv)
 
     printf("MusiKernel main() returning\n\n\n");
     return 0;
-} __attribute__((optimize("-O0")))
+}
 
 void osc_error(int num, const char *msg, const char *path)
 {
