@@ -456,6 +456,9 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             NULL);
     lo_server_thread_start(serverThread);
 
+    char * f_key_char = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+    char * f_value_char = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+
     while(1)
     {
         if(f_failure_count > 4)
@@ -473,18 +476,20 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
             while(1)
             {
-                char * f_key_char = c_iterate_2d_char_array(f_current_string);
+                v_iterate_2d_char_array(f_current_string);
                 if(f_current_string->eof)
                 {
                     break;
                 }
-                if(!strcmp(f_key_char, "") || f_current_string->eol)
+                if(!strcmp(f_current_string->current_str, "") ||
+                    f_current_string->eol)
                 {
                     continue;
                 }
 
-                char * f_value_char = c_iterate_2d_char_array_to_next_line(
-                        f_current_string);
+                strcpy(f_key_char, f_current_string->current_str);
+                v_iterate_2d_char_array_to_next_line(f_current_string);
+                strcpy(f_value_char, f_current_string->current_str);
 
                 if(!strcmp(f_key_char, "name"))
                 {
@@ -678,6 +683,9 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         }
         break;
     }
+
+    free(f_key_char);
+    free(f_value_char);
 
     /* Instantiate hosts */
     g_musikernel_get(sample_rate);
@@ -1209,19 +1217,21 @@ void v_parse_configure_message(t_pydaw_data* self,
         char f_tmp_char[PYDAW_SMALL_STRING];
         sprintf(f_tmp_char, "%s", a_value);
         f_arr->array = f_tmp_char;
-        char * f_in_file = c_iterate_2d_char_array(f_arr);
-        char * f_out_file = c_iterate_2d_char_array(f_arr);
-        char * f_start_str = c_iterate_2d_char_array(f_arr);
-        char * f_end_str = c_iterate_2d_char_array(f_arr);
-        float f_start = atof(f_start_str);
-        float f_end = atof(f_end_str);
+        char * f_in_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_in_file, f_arr->current_str);
+        char * f_out_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_out_file, f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_start = atof(f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_end = atof(f_arr->current_str);
 
         v_pydaw_rate_envelope(f_in_file, f_out_file, f_start, f_end);
 
         free(f_in_file);
         free(f_out_file);
-        free(f_start_str);
-        free(f_end_str);
 
         f_arr->array = 0;
         g_free_2d_char_array(f_arr);
@@ -1232,19 +1242,21 @@ void v_parse_configure_message(t_pydaw_data* self,
         char f_tmp_char[PYDAW_SMALL_STRING];
         sprintf(f_tmp_char, "%s", a_value);
         f_arr->array = f_tmp_char;
-        char * f_in_file = c_iterate_2d_char_array(f_arr);
-        char * f_out_file = c_iterate_2d_char_array(f_arr);
-        char * f_start_str = c_iterate_2d_char_array(f_arr);
-        char * f_end_str = c_iterate_2d_char_array(f_arr);
-        float f_start = atof(f_start_str);
-        float f_end = atof(f_end_str);
+        char * f_in_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_in_file, f_arr->current_str);
+        char * f_out_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_out_file, f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_start = atof(f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_end = atof(f_arr->current_str);
 
         v_pydaw_pitch_envelope(f_in_file, f_out_file, f_start, f_end);
 
         free(f_in_file);
         free(f_out_file);
-        free(f_start_str);
-        free(f_end_str);
 
         f_arr->array = 0;
         g_free_2d_char_array(f_arr);

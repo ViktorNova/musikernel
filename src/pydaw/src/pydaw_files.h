@@ -78,17 +78,16 @@ void get_string_from_file(const char * a_file, int a_size, char * a_buf)
     fclose(f_file);
 }
 
-typedef struct st_1d_char_array
+typedef struct
 {
     char ** array;
     int x_count;
 }t_1d_char_array;
 
-typedef struct st_2d_char_array
+typedef struct
 {
-    //allocate a continuous chunk of memory, otherwise we would need to
-    //free possibly thousands of pointers
     char * array;
+    char * current_str;
     int current_index;
     int current_row;
     int current_column;
@@ -119,6 +118,7 @@ void g_free_2d_char_array(t_2d_char_array * a_array)
 
     if(a_array)
     {
+        free(a_array->current_str);
         free(a_array);
     }
 }
@@ -267,6 +267,7 @@ t_2d_char_array * g_get_2d_array(int a_size)
     t_2d_char_array * f_result =
             (t_2d_char_array*)malloc(sizeof(t_2d_char_array));
     f_result->array = (char*)malloc(sizeof(char) * a_size);
+    f_result->current_str = (char*)malloc(sizeof(char) * PYDAW_SMALL_STRING);
     f_result->current_index = 0;
     f_result->current_row = 0;
     f_result->current_column = 0;
@@ -286,9 +287,9 @@ t_2d_char_array * g_get_2d_array_from_file(const char * a_file, int a_size)
 }
 
 /* Return the next string from the array*/
-char * c_iterate_2d_char_array(t_2d_char_array* a_array)
+void v_iterate_2d_char_array(t_2d_char_array* a_array)
 {
-    char * f_result = (char*)malloc(sizeof(char) * PYDAW_SMALL_STRING);
+    char * f_result = a_array->current_str;
     int f_i = 0;
 
     while(1)
@@ -330,15 +331,13 @@ char * c_iterate_2d_char_array(t_2d_char_array* a_array)
         ++a_array->current_index;
         ++f_i;
     }
-
-    return f_result;
 }
 
 /* Return the next string from the array until a newline, ignoring any
  * delimiting '|' characters */
-char * c_iterate_2d_char_array_to_next_line(t_2d_char_array* a_array)
+void v_iterate_2d_char_array_to_next_line(t_2d_char_array* a_array)
 {
-    char * f_result = (char*)malloc(sizeof(char) * PYDAW_SMALL_STRING);
+    char * f_result = a_array->current_str;
     int f_i = 0;
 
     while(1)
@@ -366,8 +365,6 @@ char * c_iterate_2d_char_array_to_next_line(t_2d_char_array* a_array)
         ++a_array->current_index;
         ++f_i;
     }
-
-    return f_result;
 }
 
 typedef struct

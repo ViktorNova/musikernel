@@ -421,29 +421,26 @@ void v_generic_cc_map_set(t_plugin_cc_map * a_cc_map, char * a_str)
 {
     t_2d_char_array * f_2d_array = g_get_2d_array(PYDAW_SMALL_STRING);
     f_2d_array->array = a_str;
-    char * f_cc_str = c_iterate_2d_char_array(f_2d_array);
-    int f_cc = atoi(f_cc_str);
-    free(f_cc_str);
+    v_iterate_2d_char_array(f_2d_array);
+    int f_cc = atoi(f_2d_array->current_str);
 
-    char * f_count_str = c_iterate_2d_char_array(f_2d_array);
-    int f_count = atoi(f_count_str);
-    free(f_count_str);
+    v_iterate_2d_char_array(f_2d_array);
+    int f_count = atoi(f_2d_array->current_str);
     a_cc_map->map[f_cc].count = f_count;
 
     int f_i = 0;
     while(f_i < f_count)
     {
-        char * f_port_str = c_iterate_2d_char_array(f_2d_array);
-        char * f_low_str = c_iterate_2d_char_array(f_2d_array);
-        char * f_high_str = c_iterate_2d_char_array(f_2d_array);
+        v_iterate_2d_char_array(f_2d_array);
+        int f_port = atoi(f_2d_array->current_str);
+        v_iterate_2d_char_array(f_2d_array);
+        float f_low = atof(f_2d_array->current_str);
+        v_iterate_2d_char_array(f_2d_array);
+        float f_high = atof(f_2d_array->current_str);
 
-        v_cc_mapping_set(&a_cc_map->map[f_cc], atoi(f_port_str),
-            atof(f_low_str), atof(f_high_str));
+        v_cc_mapping_set(&a_cc_map->map[f_cc], f_port, f_low, f_high);
 
-        free(f_port_str);
-        free(f_low_str);
-        free(f_high_str);
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -456,56 +453,58 @@ void pydaw_generic_file_loader(PYFX_Handle Instance,
 
     while(1)
     {
-        char * f_key = c_iterate_2d_char_array(f_2d_array);
+        v_iterate_2d_char_array(f_2d_array);
 
         if(f_2d_array->eof)
         {
-            free(f_key);
             break;
         }
 
-        assert(strcmp(f_key, ""));
+        assert(strcmp(f_2d_array->current_str, ""));
 
-        if(f_key[0] == 'c')
+        if(f_2d_array->current_str[0] == 'c')
         {
-            char * f_config_key = c_iterate_2d_char_array(f_2d_array);
-            char * f_value =
-                c_iterate_2d_char_array_to_next_line(f_2d_array);
+            char * f_config_key = (char*)malloc(
+                sizeof(char) * PYDAW_TINY_STRING);
+            v_iterate_2d_char_array(f_2d_array);
+            strcpy(f_config_key, f_2d_array->current_str);
+            char * f_value = (char*)malloc(
+                sizeof(char) * PYDAW_SMALL_STRING);
+            v_iterate_2d_char_array_to_next_line(f_2d_array);
+            strcpy(f_value, f_2d_array->current_str);
 
             Descriptor->configure(Instance, f_config_key, f_value, 0);
-        }
-        else if(f_key[0] == 'm')
-        {
-            char * f_cc_str = c_iterate_2d_char_array(f_2d_array);
-            int f_cc = atoi(f_cc_str);
-            free(f_cc_str);
 
-            char * f_count_str = c_iterate_2d_char_array(f_2d_array);
-            int f_count = atoi(f_count_str);
-            free(f_count_str);
+            free(f_config_key);
+            free(f_value);
+        }
+        else if(f_2d_array->current_str[0] == 'm')
+        {
+            v_iterate_2d_char_array(f_2d_array);
+            int f_cc = atoi(f_2d_array->current_str);
+
+            v_iterate_2d_char_array(f_2d_array);
+            int f_count = atoi(f_2d_array->current_str);
 
             int f_i = 0;
             while(f_i < f_count)
             {
-                char * f_port_str = c_iterate_2d_char_array(f_2d_array);
-                char * f_low_str = c_iterate_2d_char_array(f_2d_array);
-                char * f_high_str = c_iterate_2d_char_array(f_2d_array);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_port = atoi(f_2d_array->current_str);
+                v_iterate_2d_char_array(f_2d_array);
+                float f_low = atof(f_2d_array->current_str);
+                v_iterate_2d_char_array(f_2d_array);
+                float f_high = atof(f_2d_array->current_str);
 
-                v_cc_mapping_set(&a_cc_map->map[f_cc], atoi(f_port_str),
-                    atof(f_low_str), atof(f_high_str));
-
-                free(f_port_str);
-                free(f_low_str);
-                free(f_high_str);
-                f_i++;
+                v_cc_mapping_set(&a_cc_map->map[f_cc], f_port, f_low, f_high);
+                ++f_i;
             }
         }
         else
         {
-            char * f_value =
-                c_iterate_2d_char_array_to_next_line(f_2d_array);
-            int f_port_key = atoi(f_key);
-            float f_port_value = atof(f_value);
+            int f_port_key = atoi(f_2d_array->current_str);
+            v_iterate_2d_char_array_to_next_line(f_2d_array);
+            float f_port_value = atof(f_2d_array->current_str);
 
             assert(f_port_key >= 0);
             assert(f_port_key <= Descriptor->PortCount);

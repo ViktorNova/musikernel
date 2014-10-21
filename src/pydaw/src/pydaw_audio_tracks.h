@@ -305,17 +305,14 @@ void v_wav_pool_add_items(t_wav_pool* a_wav_pool, char * a_file_path)
             PYDAW_LARGE_STRING);
     while(1)
     {
-        char * f_uid_str = c_iterate_2d_char_array(f_arr);
+        v_iterate_2d_char_array(f_arr);
         if(f_arr->eof)
         {
-            free(f_uid_str);
             break;
         }
-        int f_uid = atoi(f_uid_str);
-        free(f_uid_str);
-        char * f_file_path = c_iterate_2d_char_array_to_next_line(f_arr);
-        v_wav_pool_add_item(a_wav_pool, f_uid, f_file_path);
-        free(f_file_path);
+        int f_uid = atoi(f_arr->current_str);
+        v_iterate_2d_char_array_to_next_line(f_arr);
+        v_wav_pool_add_item(a_wav_pool, f_uid, f_arr->current_str);
     }
 }
 
@@ -427,16 +424,14 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
 {
     t_pydaw_audio_item * f_result;
 
-    char * f_index_char = c_iterate_2d_char_array(f_current_string);
+    v_iterate_2d_char_array(f_current_string);
 
     if(f_current_string->eof)
     {
-        free(f_index_char);
         return 0;
     }
 
-    int f_index = atoi(f_index_char);
-    free(f_index_char);
+    int f_index = atoi(f_current_string->current_str);
 
     if(a_items)
     {
@@ -449,9 +444,8 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
 
     f_result->index = f_index;
 
-    char * f_uid_char = c_iterate_2d_char_array(f_current_string);
-    f_result->uid = atoi(f_uid_char);
-    free(f_uid_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->uid = atoi(f_current_string->current_str);
 
     if(a_wav_item)
     {
@@ -471,8 +465,8 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
             return 0;
         }
     }
-    char * f_sample_start_char = c_iterate_2d_char_array(f_current_string);
-    float f_sample_start = atof(f_sample_start_char) * 0.001f;
+    v_iterate_2d_char_array(f_current_string);
+    float f_sample_start = atof(f_current_string->current_str) * 0.001f;
 
     if(f_sample_start < 0.0f)
     {
@@ -484,7 +478,6 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
     }
 
     f_result->sample_start = f_sample_start;
-    free(f_sample_start_char);
 
     f_result->sample_start_offset =
             (int)((f_result->sample_start *
@@ -493,8 +486,8 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
     f_result->sample_start_offset_float =
             (float)(f_result->sample_start_offset);
 
-    char * f_sample_end_char = c_iterate_2d_char_array(f_current_string);
-    float f_sample_end = atof(f_sample_end_char) * 0.001f;
+    v_iterate_2d_char_array(f_current_string);
+    float f_sample_end = atof(f_current_string->current_str) * 0.001f;
 
     if(f_sample_end < 0.001f)
     {
@@ -507,83 +500,63 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
 
     f_result->sample_end = f_sample_end;
 
-    free(f_sample_end_char);
-
     f_result->sample_end_offset = (int)((f_result->sample_end *
             ((float)f_result->wav_pool_item->length)));
 
-    char * f_start_bar_char = c_iterate_2d_char_array(f_current_string);
-    f_result->start_bar = atoi(f_start_bar_char);
-    free(f_start_bar_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->start_bar = atoi(f_current_string->current_str);
 
-    char * f_start_beat_char = c_iterate_2d_char_array(f_current_string);
-    f_result->start_beat = atof(f_start_beat_char);
-    free(f_start_beat_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->start_beat = atof(f_current_string->current_str);
 
-    char * f_time_stretch_mode_char = c_iterate_2d_char_array(f_current_string);
-    f_result->timestretch_mode = atoi(f_time_stretch_mode_char);
-    free(f_time_stretch_mode_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->timestretch_mode = atoi(f_current_string->current_str);
 
-    char * f_pitch_shift_char = c_iterate_2d_char_array(f_current_string);
-    f_result->pitch_shift = atof(f_pitch_shift_char);
-    free(f_pitch_shift_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->pitch_shift = atof(f_current_string->current_str);
 
-    char * f_audio_track_output_char =
-    c_iterate_2d_char_array(f_current_string);
-    f_result->audio_track_output = atoi(f_audio_track_output_char);
-    free(f_audio_track_output_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->audio_track_output = atoi(f_current_string->current_str);
 
-    char * f_vol_char = c_iterate_2d_char_array(f_current_string);
-    f_result->vol = atof(f_vol_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->vol = atof(f_current_string->current_str);
     f_result->vol_linear = f_db_to_linear_fast(f_result->vol);
-    free(f_vol_char);
 
-    char * f_timestretch_amt_char = c_iterate_2d_char_array(f_current_string);
-    f_result->timestretch_amt = atof(f_timestretch_amt_char);
-    free(f_timestretch_amt_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->timestretch_amt = atof(f_current_string->current_str);
 
-    char * f_fade_in_char = c_iterate_2d_char_array(f_current_string);
-    f_result->sample_fade_in = atof(f_fade_in_char) * 0.001f;
-    free(f_fade_in_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->sample_fade_in = atof(f_current_string->current_str) * 0.001f;
 
-    char * f_fade_out_char = c_iterate_2d_char_array(f_current_string);
-    f_result->sample_fade_out = atof(f_fade_out_char) * 0.001f;
-    free(f_fade_out_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->sample_fade_out = atof(f_current_string->current_str) * 0.001f;
 
-    //Not used by the back-end
-    char * f_lane_num = c_iterate_2d_char_array(f_current_string);
-    free(f_lane_num);
+    //lane, not used by the back-end
+    v_iterate_2d_char_array(f_current_string);
 
 
-    char * f_pitch_shift_end_char = c_iterate_2d_char_array(f_current_string);
-    f_result->pitch_shift_end = atof(f_pitch_shift_end_char);
-    free(f_pitch_shift_end_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->pitch_shift_end = atof(f_current_string->current_str);
 
-    char * f_timestretch_end_char = c_iterate_2d_char_array(f_current_string);
-    f_result->timestretch_amt_end = atof(f_timestretch_end_char);
-    free(f_timestretch_end_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->timestretch_amt_end = atof(f_current_string->current_str);
 
-    char * f_reversed_char = c_iterate_2d_char_array(f_current_string);
-    f_result->is_reversed = atoi(f_reversed_char);
-    free(f_reversed_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->is_reversed = atoi(f_current_string->current_str);
 
-    //Not used in the back-end
-    char * f_crispness_char = c_iterate_2d_char_array(f_current_string);
-    free(f_crispness_char);
+    //crispness, Not used in the back-end
+    v_iterate_2d_char_array(f_current_string);
 
     //These are multiplied by -1.0f to work correctly with
     //v_pydaw_audio_item_set_fade_vol()
-    char * f_fadein_vol_char = c_iterate_2d_char_array(f_current_string);
-    f_result->fadein_vol = atof(f_fadein_vol_char) * -1.0f;
-    free(f_fadein_vol_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->fadein_vol = atof(f_current_string->current_str) * -1.0f;
 
-    char * f_fadeout_vol_char = c_iterate_2d_char_array(f_current_string);
-    f_result->fadeout_vol = atof(f_fadeout_vol_char) * -1.0f;
-    free(f_fadeout_vol_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->fadeout_vol = atof(f_current_string->current_str) * -1.0f;
 
-    char * f_paif_uid_char = c_iterate_2d_char_array(f_current_string);
-    f_result->paif_automation_uid = atoi(f_paif_uid_char);
-    free(f_paif_uid_char);
+    v_iterate_2d_char_array(f_current_string);
+    f_result->paif_automation_uid = atoi(f_current_string->current_str);
 
     if(f_result->sample_start_offset < PYDAW_AUDIO_ITEM_PADDING_DIV2)
     {

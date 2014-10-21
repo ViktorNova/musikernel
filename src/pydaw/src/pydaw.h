@@ -680,14 +680,12 @@ t_pydaw_per_audio_item_fx_region * g_paif_region_open(
                 g_get_2d_array_from_file(f_temp, PYDAW_LARGE_STRING);
         while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
         {
-            char * f_index_char = c_iterate_2d_char_array(f_current_string);
+            v_iterate_2d_char_array(f_current_string);
             if(f_current_string->eof)
             {
-                free(f_index_char);
                 break;
             }
-            int f_index = atoi(f_index_char);
-            free(f_index_char);
+            int f_index = atoi(f_current_string->current_str);
 
             f_result->loaded[f_index] = 1;
 
@@ -699,16 +697,13 @@ t_pydaw_per_audio_item_fx_region * g_paif_region_open(
                 int f_i3 = 0;
                 while(f_i3 < 3)
                 {
-                    char * f_knob_char =
-                        c_iterate_2d_char_array(f_current_string);
-                    float f_knob_val = atof(f_knob_char);
-                    free(f_knob_char);
+                    v_iterate_2d_char_array(f_current_string);
+                    float f_knob_val = atof(f_current_string->current_str);
                     f_result->items[f_index][f_i2]->a_knobs[f_i3] = f_knob_val;
                     ++f_i3;
                 }
-                char * f_type_char = c_iterate_2d_char_array(f_current_string);
-                int f_type_val = atoi(f_type_char);
-                free(f_type_char);
+                v_iterate_2d_char_array(f_current_string);
+                int f_type_val = atoi(f_current_string->current_str);
                 f_result->items[f_index][f_i2]->fx_type = f_type_val;
                 f_result->items[f_index][f_i2]->func_ptr =
                         g_mf3_get_function_pointer(f_type_val);
@@ -2806,7 +2801,7 @@ t_pydaw_seq_event * g_pynote_get(int a_note, int a_vel,
     return f_result;
 }
 
-void g_pycc_init(t_pydaw_seq_event * f_result, int a_cc_num, 
+void g_pycc_init(t_pydaw_seq_event * f_result, int a_cc_num,
     float a_cc_val, float a_start)
 {
     f_result->type = PYDAW_EVENT_CONTROLLER;
@@ -2823,7 +2818,7 @@ t_pydaw_seq_event * g_pycc_get(int a_cc_num, float a_cc_val, float a_start)
     return f_result;
 }
 
-void g_pypitchbend_init(t_pydaw_seq_event * f_result, float a_start, 
+void g_pypitchbend_init(t_pydaw_seq_event * f_result, float a_start,
     float a_value)
 {
     f_result->type = PYDAW_EVENT_PITCHBEND;
@@ -2867,14 +2862,14 @@ void g_pysong_get(t_pydaw_data* self, int a_lock)
 
         while(f_i < PYDAW_MAX_REGION_COUNT)
         {
-            char * f_pos_char = c_iterate_2d_char_array(f_current_string);
+            v_iterate_2d_char_array(f_current_string);
             if(f_current_string->eof)
             {
                 break;
             }
-            int f_pos = atoi(f_pos_char);
-            char * f_region_char = c_iterate_2d_char_array(f_current_string);
-            int f_uid = atoi(f_region_char);
+            int f_pos = atoi(f_current_string->current_str);
+            v_iterate_2d_char_array(f_current_string);
+            int f_uid = atoi(f_current_string->current_str);
             f_result->regions[f_pos] = g_pyregion_get(self, f_uid);
             f_result->regions[f_pos]->uid = f_uid;
             f_result->regions_atm[f_pos] = g_atm_region_get(self, f_uid);
@@ -2883,9 +2878,6 @@ void g_pysong_get(t_pydaw_data* self, int a_lock)
                 v_audio_items_load_all(self, f_uid);
             f_result->per_audio_item_fx[f_pos] =
                 g_paif_region_open(self, f_uid);
-
-            free(f_pos_char);
-            free(f_region_char);
             ++f_i;
         }
 
@@ -2966,27 +2958,22 @@ t_pydaw_atm_region * g_atm_region_get(t_pydaw_data * self, int a_uid)
 
         while(1)
         {
-            char * f_first = c_iterate_2d_char_array(f_current_string);
+            v_iterate_2d_char_array(f_current_string);
             if(f_current_string->eof)
             {
-                free(f_first);
                 break;
             }
 
-            if(f_first[0] == 'p')
+            if(f_current_string->current_str[0] == 'p')
             {
-                free(f_first);
-                char * f_track_char = c_iterate_2d_char_array(f_current_string);
-                int f_track = atoi(f_track_char);
-                free(f_track_char);
+                v_iterate_2d_char_array(f_current_string);
+                int f_track = atoi(f_current_string->current_str);
 
-                char * f_index_char = c_iterate_2d_char_array(f_current_string);
-                int f_index = atoi(f_index_char);
-                free(f_index_char);
+                v_iterate_2d_char_array(f_current_string);
+                int f_index = atoi(f_current_string->current_str);
 
-                char * f_count_char = c_iterate_2d_char_array(f_current_string);
-                int f_count = atoi(f_count_char);
-                free(f_count_char);
+                v_iterate_2d_char_array(f_current_string);
+                int f_count = atoi(f_current_string->current_str);
 
                 assert(f_count >= 1 && f_count < 100000);  //sanity check
 
@@ -2999,33 +2986,25 @@ t_pydaw_atm_region * g_atm_region_get(t_pydaw_data * self, int a_uid)
             }
             else
             {
-                int f_track = atoi(f_first);
-                free(f_first);
+                int f_track = atoi(f_current_string->current_str);
 
-                char * f_bar_char = c_iterate_2d_char_array(f_current_string);
-                int f_bar = atoi(f_bar_char);
-                free(f_bar_char);
+                v_iterate_2d_char_array(f_current_string);
+                int f_bar = atoi(f_current_string->current_str);
 
-                char * f_beat_char = c_iterate_2d_char_array(f_current_string);
-                float f_beat = atof(f_beat_char);
-                free(f_beat_char);
+                v_iterate_2d_char_array(f_current_string);
+                float f_beat = atof(f_current_string->current_str);
 
-                char * f_port_char = c_iterate_2d_char_array(f_current_string);
-                int f_port = atoi(f_port_char);
-                free(f_port_char);
+                v_iterate_2d_char_array(f_current_string);
+                int f_port = atoi(f_current_string->current_str);
 
-                char * f_val_char = c_iterate_2d_char_array(f_current_string);
-                float f_val = atof(f_val_char);
-                free(f_val_char);
+                v_iterate_2d_char_array(f_current_string);
+                float f_val = atof(f_current_string->current_str);
 
-                char * f_index_char = c_iterate_2d_char_array(f_current_string);
-                int f_index = atoi(f_index_char);
-                free(f_index_char);
+                v_iterate_2d_char_array(f_current_string);
+                int f_index = atoi(f_current_string->current_str);
 
-                char * f_plugin_char =
-                    c_iterate_2d_char_array(f_current_string);
-                int f_plugin = atoi(f_plugin_char);
-                free(f_plugin_char);
+                v_iterate_2d_char_array(f_current_string);
+                int f_plugin = atoi(f_current_string->current_str);
 
                 assert(f_pos <
                     f_result->tracks[f_track].plugins[f_index].point_count);
@@ -3110,65 +3089,52 @@ t_pyregion * g_pyregion_get(t_pydaw_data* self, int a_uid)
 
     while(f_i < 264)
     {
-        char * f_y_char = c_iterate_2d_char_array(f_current_string);
+        v_iterate_2d_char_array(f_current_string);
         if(f_current_string->eof)
         {
-            free(f_y_char);
             break;
         }
 
-        if(!strcmp("L", f_y_char))
+        if(!strcmp("L", f_current_string->current_str))
         {
-            free(f_y_char);
-            char * f_bars_char = c_iterate_2d_char_array(f_current_string);
-            int f_bars = atoi(f_bars_char);
+            v_iterate_2d_char_array(f_current_string);
+            int f_bars = atoi(f_current_string->current_str);
             f_result->region_length_bars = f_bars;
-            free(f_bars_char);
 
-            char * f_beats_char = c_iterate_2d_char_array(f_current_string);
-            int f_beats = atoi(f_beats_char);
+            v_iterate_2d_char_array(f_current_string);
+            int f_beats = atoi(f_current_string->current_str);
             f_result->region_length_beats = f_beats;
-            free(f_beats_char);
             continue;
         }
-        if(!strcmp("T", f_y_char))  //per-region tempo, not yet implemented
+        if(!strcmp("T", f_current_string->current_str))  //per-region tempo, not yet implemented
         {
-            free(f_y_char);
-            char * f_tempo_char = c_iterate_2d_char_array(f_current_string);
+            v_iterate_2d_char_array(f_current_string);
             f_result->alternate_tempo = 1;
-            f_result->tempo = atof(f_tempo_char);
-            free(f_tempo_char);
+            f_result->tempo = atof(f_current_string->current_str);
 
-            char * f_null_char = c_iterate_2d_char_array(f_current_string);
-            free(f_null_char);
+            v_iterate_2d_char_array(f_current_string);  //not used
             continue;
         }
         //per-region bar length in beats, not yet implemented
-        if(!strcmp("B", f_y_char))
+        if(!strcmp("B", f_current_string->current_str))
         {
-            free(f_y_char);
-            char * f_len_char = c_iterate_2d_char_array(f_current_string);
-            f_result->bar_length = atoi(f_len_char);
-            free(f_len_char);
+            v_iterate_2d_char_array(f_current_string);
+            f_result->bar_length = atoi(f_current_string->current_str);
 
-            char * f_null_char = c_iterate_2d_char_array(f_current_string);
-            free(f_null_char);
+            v_iterate_2d_char_array(f_current_string);  //not used
             continue;
         }
 
-        int f_y = atoi(f_y_char);
-        free(f_y_char);
+        int f_y = atoi(f_current_string->current_str);
 
-        char * f_x_char = c_iterate_2d_char_array(f_current_string);
-        int f_x = atoi(f_x_char);
-        free(f_x_char);
+        v_iterate_2d_char_array(f_current_string);
+        int f_x = atoi(f_current_string->current_str);
 
-        char * f_item_uid = c_iterate_2d_char_array(f_current_string);
+        v_iterate_2d_char_array(f_current_string);
         assert(f_y < EN_TRACK_COUNT);
         assert(f_x < PYDAW_MAX_REGION_SIZE);
-        f_result->item_indexes[f_y][f_x] = atoi(f_item_uid);
+        f_result->item_indexes[f_y][f_x] = atoi(f_current_string->current_str);
         assert(self->item_pool[f_result->item_indexes[f_y][f_x]]);
-        free(f_item_uid);
 
         ++f_i;
     }
@@ -3199,59 +3165,55 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
 
     while(f_i < PYDAW_MAX_EVENTS_PER_ITEM_COUNT)
     {
-        char * f_type = c_iterate_2d_char_array(f_current_string);
+        v_iterate_2d_char_array(f_current_string);
 
         if(f_current_string->eof)
         {
             break;
         }
 
-        char * f_start = c_iterate_2d_char_array(f_current_string);
+        char f_type = f_current_string->current_str[0];
 
-        if(!strcmp(f_type, "n"))  //note
+        v_iterate_2d_char_array(f_current_string);
+        float f_start = atof(f_current_string->current_str);
+
+        if(f_type == 'n')  //note
         {
-            char * f_length = c_iterate_2d_char_array(f_current_string);
-            char * f_note = c_iterate_2d_char_array(f_current_string);
-            char * f_vel = c_iterate_2d_char_array(f_current_string);
+            v_iterate_2d_char_array(f_current_string);
+            float f_length = atof(f_current_string->current_str);
+            v_iterate_2d_char_array(f_current_string);
+            int f_note = atoi(f_current_string->current_str);
+            v_iterate_2d_char_array(f_current_string);
+            int f_vel = atoi(f_current_string->current_str);
             assert((f_result->event_count) < PYDAW_MAX_EVENTS_PER_ITEM_COUNT);
             g_pynote_init(&f_result->events[(f_result->event_count)],
-                    atoi(f_note), atoi(f_vel), atof(f_start), atof(f_length));
+                    f_note, f_vel, f_start, f_length);
             ++f_result->event_count;
-
-            free(f_length);
-            free(f_note);
-            free(f_vel);
         }
-        else if(!strcmp(f_type, "c")) //cc
+        else if(f_type == 'c') //cc
         {
-            char * f_cc_num = c_iterate_2d_char_array(f_current_string);
-            char * f_cc_val = c_iterate_2d_char_array(f_current_string);
+            v_iterate_2d_char_array(f_current_string);
+            int f_cc_num = atoi(f_current_string->current_str);
+            v_iterate_2d_char_array(f_current_string);
+            float f_cc_val = atof(f_current_string->current_str);
 
             g_pycc_init(&f_result->events[(f_result->event_count)],
-                    atoi(f_cc_num), atof(f_cc_val), atof(f_start));
+                f_cc_num, f_cc_val, f_start);
             ++f_result->event_count;
-
-            free(f_cc_num);
-            free(f_cc_val);
         }
-        else if(!strcmp(f_type, "p")) //pitchbend
+        else if(f_type == 'p') //pitchbend
         {
-            char * f_pb_val_char = c_iterate_2d_char_array(f_current_string);
-            float f_pb_val = atof(f_pb_val_char) * 8192.0f;
+            v_iterate_2d_char_array(f_current_string);
+            float f_pb_val = atof(f_current_string->current_str) * 8192.0f;
 
             g_pypitchbend_init(&f_result->events[(f_result->event_count)],
-                    atof(f_start), f_pb_val);
+                    f_start, f_pb_val);
             ++f_result->event_count;
-
-            free(f_pb_val_char);
         }
         else
         {
-            printf("Invalid event type %s\n", f_type);
+            printf("Invalid event type %c\n", f_type);
         }
-
-        free(f_start);
-        free(f_type);
         ++f_i;
     }
 
@@ -3366,35 +3328,25 @@ void v_pydaw_open_track(int a_host_index, int a_index)
 
         while(1)
         {
-            char * f_first_str = c_iterate_2d_char_array(f_2d_array);
+            v_iterate_2d_char_array(f_2d_array);
 
             if(f_2d_array->eof)
             {
-                free(f_first_str);
                 break;
             }
 
-            if(f_first_str[0] == 'p')  //plugin
+            if(f_2d_array->current_str[0] == 'p')  //plugin
             {
-                char * f_index_str = c_iterate_2d_char_array(f_2d_array);
-                char * f_plugin_index_str = c_iterate_2d_char_array(f_2d_array);
-                char * f_plugin_uid_str = c_iterate_2d_char_array(f_2d_array);
-                char * f_mute_str = c_iterate_2d_char_array(f_2d_array);
-                char * f_solo_str = c_iterate_2d_char_array(f_2d_array);
-                char * f_power_str = c_iterate_2d_char_array(f_2d_array);
-
-                int f_index = atoi(f_index_str);
-                free(f_index_str);
-                int f_plugin_index = atoi(f_plugin_index_str);
-                free(f_plugin_index_str);
-                int f_plugin_uid = atoi(f_plugin_uid_str);
-                free(f_plugin_uid_str);
-                //int f_mute = atoi(f_mute_str);
-                free(f_mute_str);
-                //int f_solo = atoi(f_solo_str);
-                free(f_solo_str);
-                int f_power = atoi(f_power_str);
-                free(f_power_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_index = atoi(f_2d_array->current_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_plugin_index = atoi(f_2d_array->current_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_plugin_uid = atoi(f_2d_array->current_str);
+                v_iterate_2d_char_array(f_2d_array); //mute
+                v_iterate_2d_char_array(f_2d_array); //solo
+                v_iterate_2d_char_array(f_2d_array);
+                int f_power = atoi(f_2d_array->current_str);
 
                 v_pydaw_set_plugin_index(a_host_index, a_index, f_index,
                     f_plugin_index, f_plugin_uid, f_power, 0);
@@ -3402,12 +3354,13 @@ void v_pydaw_open_track(int a_host_index, int a_index)
             }
             else
             {
-                printf("Invalid track identifier '%s'\n", f_first_str);
+                printf("Invalid track identifier '%c'\n",
+                    f_2d_array->current_str[0]);
                 assert(0);
             }
-
-            free(f_first_str);
         }
+
+        g_free_2d_char_array(f_2d_array);
     }
     else
     {
@@ -3432,31 +3385,24 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 
         while(1)
         {
-            char * f_track_index_str = c_iterate_2d_char_array(f_2d_array);
+            v_iterate_2d_char_array(f_2d_array);
 
             if(f_2d_array->eof)
             {
-                free(f_track_index_str);
                 break;
             }
 
-            char * f_solo_str = c_iterate_2d_char_array(f_2d_array);
-            char * f_mute_str = c_iterate_2d_char_array(f_2d_array);
-            char * f_track_pos = c_iterate_2d_char_array(f_2d_array);  //ignored
-            char * f_name_str = c_iterate_2d_char_array(f_2d_array); //ignored
-            free(f_track_pos);
-            free(f_name_str);
+            int f_track_index = atoi(f_2d_array->current_str);
 
-            int f_track_index = atoi(f_track_index_str);
-            free(f_track_index_str);
+            v_iterate_2d_char_array(f_2d_array);
+            int f_solo = atoi(f_2d_array->current_str);
+            v_iterate_2d_char_array(f_2d_array);
+            int f_mute = atoi(f_2d_array->current_str);
+            v_iterate_2d_char_array(f_2d_array);  //ignored
+            v_iterate_2d_char_array(f_2d_array); //ignored
+
             assert(f_track_index >= 0 && f_track_index < EN_TRACK_COUNT);
-
-            int f_solo = atoi(f_solo_str);
-            free(f_solo_str);
             assert(f_solo == 0 || f_solo == 1);
-
-            int f_mute = atoi(f_mute_str);
-            free(f_mute_str);
             assert(f_mute == 0 || f_mute == 1);
 
             v_pydaw_open_track(0, f_track_index);
@@ -3560,9 +3506,8 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
 
         t_2d_char_array * f_2d_array = g_get_2d_array_from_file(
                 f_transport_file, PYDAW_LARGE_STRING);
-        char * f_tempo_str = c_iterate_2d_char_array(f_2d_array);
-        float f_tempo = atof(f_tempo_str);
-        free(f_tempo_str);
+        v_iterate_2d_char_array(f_2d_array);
+        float f_tempo = atof(f_2d_array->current_str);
 
         assert(f_tempo > 30.0f && f_tempo < 300.0f);
         v_set_tempo(self, f_tempo);
@@ -3855,31 +3800,25 @@ void v_pydaw_update_audio_inputs(t_pydaw_data * self)
         pthread_mutex_lock(&musikernel->audio_inputs_mutex);
         while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
         {
-            char * f_index_str = c_iterate_2d_char_array(f_2d_array);
+            v_iterate_2d_char_array(f_2d_array);
 
-            if(!strcmp(f_index_str, "\\"))
+            if(!strcmp(f_2d_array->current_str, "\\"))
             {
-                free(f_index_str);
                 break;
             }
 
-            int f_index = atoi(f_index_str);
-            free(f_index_str);
+            int f_index = atoi(f_2d_array->current_str);
 
-            char * f_rec_str = c_iterate_2d_char_array(f_2d_array);
-            int f_rec = atoi(f_rec_str);
-            free(f_rec_str);
+            v_iterate_2d_char_array(f_2d_array);
+            int f_rec = atoi(f_2d_array->current_str);
 
-            char * f_vol_str = c_iterate_2d_char_array(f_2d_array);
-            int f_vol = atoi(f_vol_str);
-            free(f_vol_str);
+            v_iterate_2d_char_array(f_2d_array);
+            int f_vol = atoi(f_2d_array->current_str);
 
-            char * f_out_str = c_iterate_2d_char_array(f_2d_array);
-            int f_out = atoi(f_out_str);
-            free(f_out_str);
+            v_iterate_2d_char_array(f_2d_array);
+            int f_out = atoi(f_2d_array->current_str);
 
-            char * f_in_str = c_iterate_2d_char_array(f_2d_array);
-            free(f_in_str);  //Not used yet
+            v_iterate_2d_char_array(f_2d_array);  //ignored
 
             musikernel->audio_inputs[f_index]->rec = f_rec;
             musikernel->audio_inputs[f_index]->output_track = f_out;
@@ -4353,61 +4292,52 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
         f_tmp, PYDAW_LARGE_STRING);
         while(1)
         {
-            char * f_identifier_str = c_iterate_2d_char_array(f_2d_array);
+            v_iterate_2d_char_array(f_2d_array);
             if(f_2d_array->eof)
             {
-                free(f_identifier_str);
                 break;
             }
 
-            if(f_identifier_str[0] == 't')
+            if(f_2d_array->current_str[0] == 't')
             {
-                char * f_track_str = c_iterate_2d_char_array(f_2d_array);
-                int f_track_num = atoi(f_track_str);
-                free(f_track_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_track_num = atoi(f_2d_array->current_str);
 
-                char * f_index_str = c_iterate_2d_char_array(f_2d_array);
-                int f_index = atoi(f_index_str);
-                free(f_index_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_index = atoi(f_2d_array->current_str);
 
                 f_result->track_pool_sorted[f_index] = f_track_num;
 
             }
-            else if(f_identifier_str[0] == 's')
+            else if(f_2d_array->current_str[0] == 's')
             {
-                char * f_track_str = c_iterate_2d_char_array(f_2d_array);
-                int f_track_num = atoi(f_track_str);
-                free(f_track_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_track_num = atoi(f_2d_array->current_str);
 
-                char * f_index_str = c_iterate_2d_char_array(f_2d_array);
-                int f_index = atoi(f_index_str);
-                free(f_index_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_index = atoi(f_2d_array->current_str);
 
-                char * f_output_str = c_iterate_2d_char_array(f_2d_array);
-                int f_output = atoi(f_output_str);
-                free(f_output_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_output = atoi(f_2d_array->current_str);
 
-                char * f_sidechain_str = c_iterate_2d_char_array(f_2d_array);
-                int f_sidechain = atoi(f_sidechain_str);
-                free(f_sidechain_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_sidechain = atoi(f_2d_array->current_str);
 
                 v_pytrack_routing_set(
                     &f_result->routes[f_track_num][f_index], f_output,
                     f_sidechain);
                 ++f_result->bus_count[f_output];
             }
-            else if(f_identifier_str[0] == 'c')
+            else if(f_2d_array->current_str[0] == 'c')
             {
-                char * f_count_str = c_iterate_2d_char_array(f_2d_array);
-                int f_count = atoi(f_count_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_count = atoi(f_2d_array->current_str);
                 f_result->track_pool_sorted_count = f_count;
             }
             else
             {
                 assert(0);
             }
-
-            free(f_identifier_str);
         }
         g_free_2d_char_array(f_2d_array);
     }
