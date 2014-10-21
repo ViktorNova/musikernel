@@ -3094,11 +3094,11 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         CURRENT_AUDIO_ITEM_INDEX = f_CURRENT_AUDIO_ITEM_INDEX
 
     def time_pitch_dialog(self):
-        f_dialog = time_pitch_dialog_widget()
+        f_dialog = time_pitch_dialog_widget(self.audio_item)
         f_dialog.widget.exec_()
 
     def fade_vol_dialog(self):
-        f_dialog = fade_vol_dialog_widget()
+        f_dialog = fade_vol_dialog_widget(self.audio_item)
         f_dialog.widget.exec_()
 
     def copy_as_cc_automation(self):
@@ -4415,7 +4415,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
 
 
 class time_pitch_dialog_widget:
-    def __init__(self):
+    def __init__(self, a_audio_item):
         self.widget = QtGui.QDialog()
         self.widget.setWindowTitle(_("Time/Pitch..."))
         self.widget.setMaximumWidth(480)
@@ -4439,23 +4439,26 @@ class time_pitch_dialog_widget:
         self.timestretch_mode.setMinimumWidth(240)
         self.timestretch_hlayout.addWidget(self.timestretch_mode)
         self.timestretch_mode.addItems(TIMESTRETCH_MODES)
+        self.timestretch_mode.setCurrentIndex(a_audio_item.time_stretch_mode)
         self.timestretch_mode.currentIndexChanged.connect(
             self.timestretch_mode_changed)
         self.time_pitch_gridlayout.addWidget(QtGui.QLabel(_("Pitch:")), 0, 0)
         self.pitch_shift = QtGui.QDoubleSpinBox()
         self.pitch_shift.setRange(-36, 36)
-        self.pitch_shift.setValue(0.0)
+        self.pitch_shift.setValue(a_audio_item.pitch_shift)
         self.pitch_shift.setDecimals(6)
         self.time_pitch_gridlayout.addWidget(self.pitch_shift, 0, 1)
 
         self.pitch_shift_end_checkbox = QtGui.QCheckBox(_("End:"))
+        self.pitch_shift_end_checkbox.setChecked(
+            a_audio_item.pitch_shift != a_audio_item.pitch_shift_end)
         self.pitch_shift_end_checkbox.toggled.connect(
             self.pitch_end_mode_changed)
         self.time_pitch_gridlayout.addWidget(
             self.pitch_shift_end_checkbox, 0, 2)
         self.pitch_shift_end = QtGui.QDoubleSpinBox()
         self.pitch_shift_end.setRange(-36, 36)
-        self.pitch_shift_end.setValue(0.0)
+        self.pitch_shift_end.setValue(a_audio_item.pitch_shift_end)
         self.pitch_shift_end.setDecimals(6)
         self.time_pitch_gridlayout.addWidget(self.pitch_shift_end, 0, 3)
 
@@ -4464,7 +4467,7 @@ class time_pitch_dialog_widget:
         self.timestretch_amt.setRange(0.1, 200.0)
         self.timestretch_amt.setDecimals(6)
         self.timestretch_amt.setSingleStep(0.1)
-        self.timestretch_amt.setValue(1.0)
+        self.timestretch_amt.setValue(a_audio_item.timestretch_amt)
         self.time_pitch_gridlayout.addWidget(self.timestretch_amt, 1, 1)
 
         self.crispness_layout = QtGui.QHBoxLayout()
@@ -4472,7 +4475,7 @@ class time_pitch_dialog_widget:
         self.crispness_layout.addWidget(QtGui.QLabel(_("Crispness")))
         self.crispness_combobox = QtGui.QComboBox()
         self.crispness_combobox.addItems(CRISPNESS_SETTINGS)
-        self.crispness_combobox.setCurrentIndex(5)
+        self.crispness_combobox.setCurrentIndex(a_audio_item.crispness)
         self.crispness_layout.addWidget(self.crispness_combobox)
 
         self.timestretch_amt_end_checkbox = QtGui.QCheckBox(_("End:"))
@@ -4484,7 +4487,7 @@ class time_pitch_dialog_widget:
         self.timestretch_amt_end.setRange(0.2, 4.0)
         self.timestretch_amt_end.setDecimals(6)
         self.timestretch_amt_end.setSingleStep(0.1)
-        self.timestretch_amt_end.setValue(1.0)
+        self.timestretch_amt_end.setValue(a_audio_item.timestretch_amt_end)
         self.time_pitch_gridlayout.addWidget(self.timestretch_amt_end, 1, 3)
 
         self.timestretch_mode_changed(0)
@@ -4687,7 +4690,7 @@ class time_pitch_dialog_widget:
 
 
 class fade_vol_dialog_widget:
-    def __init__(self):
+    def __init__(self, a_audio_item):
         self.widget = QtGui.QDialog()
         self.widget.setWindowTitle(_("Fade Volume..."))
         self.widget.setMaximumWidth(480)
@@ -4701,7 +4704,7 @@ class fade_vol_dialog_widget:
         self.fadein_vol_layout.addWidget(self.fadein_vol_checkbox)
         self.fadein_vol_spinbox = QtGui.QSpinBox()
         self.fadein_vol_spinbox.setRange(-50, -6)
-        self.fadein_vol_spinbox.setValue(-40)
+        self.fadein_vol_spinbox.setValue(a_audio_item.fadein_vol)
         self.fadein_vol_spinbox.valueChanged.connect(self.fadein_vol_changed)
         self.fadein_vol_layout.addWidget(self.fadein_vol_spinbox)
         self.fadein_vol_layout.addItem(
@@ -4712,7 +4715,7 @@ class fade_vol_dialog_widget:
         self.fadein_vol_layout.addWidget(self.fadeout_vol_checkbox)
         self.fadeout_vol_spinbox = QtGui.QSpinBox()
         self.fadeout_vol_spinbox.setRange(-50, -6)
-        self.fadeout_vol_spinbox.setValue(-40)
+        self.fadeout_vol_spinbox.setValue(a_audio_item.fadeout_vol)
         self.fadeout_vol_spinbox.valueChanged.connect(self.fadeout_vol_changed)
         self.fadein_vol_layout.addWidget(self.fadeout_vol_spinbox)
 
