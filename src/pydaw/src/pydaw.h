@@ -47,7 +47,7 @@ GNU General Public License for more details.
 #define PYDAW_MAX_REGION_COUNT 300
 #define PYDAW_MAX_EVENTS_PER_ITEM_COUNT 1024
 
-#define PYDAW_AUDIO_INPUT_TRACK_COUNT 5
+#define PYDAW_AUDIO_INPUT_TRACK_COUNT 0
 #define EN_TRACK_COUNT 32
 
 #define PYDAW_MAX_EVENT_BUFFER_SIZE 512  //This could probably be made smaller
