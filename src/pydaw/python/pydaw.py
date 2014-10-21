@@ -106,7 +106,7 @@ def pydaw_set_tooltips_enabled(a_enabled):
     TOOLTIPS_ENABLED = a_enabled
 
     f_list = [SONG_EDITOR, AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR, MAIN_WINDOW,
-              WAVE_EDITOR, AUDIO_EDITOR_WIDGET, AUDIO_SEQ, TRANSPORT,
+              WAVE_EDITOR, AUDIO_SEQ, TRANSPORT,
               REGION_EDITOR, MIXER_WIDGET] + list(AUTOMATION_EDITORS)
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
@@ -3040,6 +3040,10 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_move_to_end_action.triggered.connect(self.move_to_region_end)
         f_reverse_action = f_properties_menu.addAction(_("Reverse/Unreverse"))
         f_reverse_action.triggered.connect(self.reverse)
+        f_time_pitch_action = f_properties_menu.addAction(_("Time/Pitch..."))
+        f_time_pitch_action.triggered.connect(self.time_pitch_dialog)
+        f_fade_vol_action = f_properties_menu.addAction(_("Fade Volume..."))
+        f_fade_vol_action.triggered.connect(self.fade_vol_dialog)
 
         f_paif_menu = f_menu.addMenu(_("Per-Item FX"))
         f_edit_paif_action = f_paif_menu.addAction(_("Edit Per-Item Effects"))
@@ -3088,6 +3092,14 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
         f_menu.exec_(QtGui.QCursor.pos())
         CURRENT_AUDIO_ITEM_INDEX = f_CURRENT_AUDIO_ITEM_INDEX
+
+    def time_pitch_dialog(self):
+        f_dialog = time_pitch_dialog_widget()
+        f_dialog.widget.exec_()
+
+    def fade_vol_dialog(self):
+        f_dialog = fade_vol_dialog_widget()
+        f_dialog.widget.exec_()
 
     def copy_as_cc_automation(self):
         CC_EDITOR.clipboard = self.graph_object.envelope_to_automation(
@@ -4123,125 +4135,6 @@ class audio_items_viewer(QtGui.QGraphicsView):
         else:
             AUDIO_SEQ_WIDGET.modulex.widget.setDisabled(True)
 
-        f_timestretch_checked = True
-        if len(f_selected_items) > 1:
-            f_time_stretch_mode_val = \
-                f_selected_items[0].audio_item.time_stretch_mode
-            f_time_stretch_amt_val = \
-                f_selected_items[0].audio_item.timestretch_amt
-            f_pitch_val = f_selected_items[0].audio_item.pitch_shift
-            f_time_stretch_amt_end_val = \
-                f_selected_items[0].audio_item.timestretch_amt_end
-            f_pitch_end_val = f_selected_items[0].audio_item.pitch_shift_end
-            f_crispness_val = f_selected_items[0].audio_item.crispness
-            for f_item in f_selected_items[1:]:
-                if (f_item.audio_item.time_stretch_mode !=
-                    f_time_stretch_mode_val) or \
-                (f_item.audio_item.timestretch_amt !=
-                    f_time_stretch_amt_val) or \
-                (f_item.audio_item.pitch_shift != f_pitch_val) or \
-                (f_item.audio_item.pitch_shift_end != f_pitch_end_val) or \
-                (f_item.audio_item.timestretch_amt_end !=
-                    f_time_stretch_amt_end_val) or \
-                (f_item.audio_item.crispness != f_crispness_val):
-                    f_timestretch_checked = False
-                    break
-        AUDIO_EDITOR_WIDGET.timestretch_checkbox.setChecked(
-            f_timestretch_checked)
-        f_output_checked = True
-        if len(f_selected_items) > 1:
-            f_output_val = f_selected_items[0].audio_item.output_track
-            for f_item in f_selected_items[1:]:
-                if f_item.audio_item.output_track != f_output_val:
-                    f_output_checked = False
-                    break
-        AUDIO_EDITOR_WIDGET.output_checkbox.setChecked(f_output_checked)
-        f_vol_checked = True
-        if len(f_selected_items) > 1:
-            f_vol_val = f_selected_items[0].audio_item.vol
-            for f_item in f_selected_items[1:]:
-                if f_item.audio_item.vol != f_vol_val:
-                    f_vol_checked = False
-                    break
-        AUDIO_EDITOR_WIDGET.vol_checkbox.setChecked(f_vol_checked)
-
-        f_reverse_checked = True
-        if len(f_selected_items) > 1:
-            f_reverse_val = f_selected_items[0].audio_item.reversed
-            for f_item in f_selected_items[1:]:
-                if f_item.audio_item.reversed != f_reverse_val:
-                    f_reverse_checked = False
-                    break
-        AUDIO_EDITOR_WIDGET.reversed_checkbox.setChecked(f_reverse_checked)
-
-
-        f_fadein_vol_checked = True
-        if len(f_selected_items) > 1:
-            f_fadein_val = f_selected_items[0].audio_item.fadein_vol
-            for f_item in f_selected_items[1:]:
-                if f_item.audio_item.fadein_vol != f_fadein_val:
-                    f_fadein_vol_checked = False
-                    break
-        AUDIO_EDITOR_WIDGET.fadein_vol_checkbox.setChecked(
-            f_fadein_vol_checked)
-
-        f_fadeout_vol_checked = True
-        if len(f_selected_items) > 1:
-            f_fadeout_val = f_selected_items[0].audio_item.fadeout_vol
-            for f_item in f_selected_items[1:]:
-                if f_item.audio_item.fadeout_vol != f_fadeout_val:
-                    f_fadeout_vol_checked = False
-                    break
-        AUDIO_EDITOR_WIDGET.fadeout_vol_checkbox.setChecked(
-            f_fadeout_vol_checked)
-
-        if len(f_selected_items) > 0:
-            if f_timestretch_checked:
-                AUDIO_EDITOR_WIDGET.timestretch_mode.setCurrentIndex(
-                f_selected_items[0].audio_item.time_stretch_mode)
-
-                if f_selected_items[0].audio_item.timestretch_amt_end != \
-                f_selected_items[0].audio_item.timestretch_amt:
-                    AUDIO_EDITOR_WIDGET.timestretch_amt_end_checkbox.\
-                        setChecked(True)
-                else:
-                    AUDIO_EDITOR_WIDGET.timestretch_amt_end_checkbox.\
-                        setChecked(False)
-
-                if (f_selected_items[0].audio_item.pitch_shift_end !=
-                f_selected_items[0].audio_item.pitch_shift):
-                    AUDIO_EDITOR_WIDGET.pitch_shift_end_checkbox.\
-                        setChecked(True)
-                else:
-                    AUDIO_EDITOR_WIDGET.pitch_shift_end_checkbox.\
-                        setChecked(False)
-
-                AUDIO_EDITOR_WIDGET.pitch_shift.setValue(
-                    f_selected_items[0].audio_item.pitch_shift)
-                AUDIO_EDITOR_WIDGET.timestretch_amt.setValue(
-                    f_selected_items[0].audio_item.timestretch_amt)
-                AUDIO_EDITOR_WIDGET.pitch_shift_end.setValue(
-                    f_selected_items[0].audio_item.pitch_shift_end)
-                AUDIO_EDITOR_WIDGET.timestretch_amt_end.setValue(
-                f_selected_items[0].audio_item.timestretch_amt_end)
-                AUDIO_EDITOR_WIDGET.crispness_combobox.setCurrentIndex(
-                f_selected_items[0].audio_item.crispness)
-            if f_output_checked:
-                AUDIO_EDITOR_WIDGET.output_combobox.setCurrentIndex(
-                f_selected_items[0].audio_item.output_track)
-            if f_vol_checked:
-                AUDIO_EDITOR_WIDGET.sample_vol_slider.setValue(
-                    f_selected_items[0].audio_item.vol)
-            if f_reverse_checked:
-                AUDIO_EDITOR_WIDGET.is_reversed_checkbox.setChecked(
-                    f_selected_items[0].audio_item.reversed)
-            if f_fadein_vol_checked:
-                AUDIO_EDITOR_WIDGET.fadein_vol_spinbox.setValue(
-                    f_selected_items[0].audio_item.fadein_vol)
-            if f_fadeout_vol_checked:
-                AUDIO_EDITOR_WIDGET.fadeout_vol_spinbox.setValue(
-                    f_selected_items[0].audio_item.fadeout_vol)
-
     def sceneDragEnterEvent(self, a_event):
         a_event.setAccepted(True)
 
@@ -4520,6 +4413,362 @@ class audio_items_viewer(QtGui.QGraphicsView):
         self.scene.addItem(f_audio_item)
         return f_audio_item
 
+
+class time_pitch_dialog_widget:
+    def __init__(self):
+        self.widget = QtGui.QDialog()
+        self.widget.setWindowTitle(_("Time/Pitch..."))
+        self.widget.setMaximumWidth(480)
+        self.main_vlayout = QtGui.QVBoxLayout(self.widget)
+
+        self.layout = QtGui.QGridLayout()
+        self.main_vlayout.addLayout(self.layout)
+
+        self.vlayout2 = QtGui.QVBoxLayout()
+        self.layout.addLayout(self.vlayout2, 1, 1)
+        self.start_hlayout = QtGui.QHBoxLayout()
+        self.vlayout2.addLayout(self.start_hlayout)
+
+        self.timestretch_hlayout = QtGui.QHBoxLayout()
+        self.time_pitch_gridlayout = QtGui.QGridLayout()
+        self.vlayout2.addLayout(self.timestretch_hlayout)
+        self.vlayout2.addLayout(self.time_pitch_gridlayout)
+        self.timestretch_hlayout.addWidget(QtGui.QLabel(_("Mode:")))
+        self.timestretch_mode = QtGui.QComboBox()
+
+        self.timestretch_mode.setMinimumWidth(240)
+        self.timestretch_hlayout.addWidget(self.timestretch_mode)
+        self.timestretch_mode.addItems(TIMESTRETCH_MODES)
+        self.timestretch_mode.currentIndexChanged.connect(
+            self.timestretch_mode_changed)
+        self.time_pitch_gridlayout.addWidget(QtGui.QLabel(_("Pitch:")), 0, 0)
+        self.pitch_shift = QtGui.QDoubleSpinBox()
+        self.pitch_shift.setRange(-36, 36)
+        self.pitch_shift.setValue(0.0)
+        self.pitch_shift.setDecimals(6)
+        self.time_pitch_gridlayout.addWidget(self.pitch_shift, 0, 1)
+
+        self.pitch_shift_end_checkbox = QtGui.QCheckBox(_("End:"))
+        self.pitch_shift_end_checkbox.toggled.connect(
+            self.pitch_end_mode_changed)
+        self.time_pitch_gridlayout.addWidget(
+            self.pitch_shift_end_checkbox, 0, 2)
+        self.pitch_shift_end = QtGui.QDoubleSpinBox()
+        self.pitch_shift_end.setRange(-36, 36)
+        self.pitch_shift_end.setValue(0.0)
+        self.pitch_shift_end.setDecimals(6)
+        self.time_pitch_gridlayout.addWidget(self.pitch_shift_end, 0, 3)
+
+        self.time_pitch_gridlayout.addWidget(QtGui.QLabel(_("Time:")), 1, 0)
+        self.timestretch_amt = QtGui.QDoubleSpinBox()
+        self.timestretch_amt.setRange(0.1, 200.0)
+        self.timestretch_amt.setDecimals(6)
+        self.timestretch_amt.setSingleStep(0.1)
+        self.timestretch_amt.setValue(1.0)
+        self.time_pitch_gridlayout.addWidget(self.timestretch_amt, 1, 1)
+
+        self.crispness_layout = QtGui.QHBoxLayout()
+        self.vlayout2.addLayout(self.crispness_layout)
+        self.crispness_layout.addWidget(QtGui.QLabel(_("Crispness")))
+        self.crispness_combobox = QtGui.QComboBox()
+        self.crispness_combobox.addItems(CRISPNESS_SETTINGS)
+        self.crispness_combobox.setCurrentIndex(5)
+        self.crispness_layout.addWidget(self.crispness_combobox)
+
+        self.timestretch_amt_end_checkbox = QtGui.QCheckBox(_("End:"))
+        self.timestretch_amt_end_checkbox.toggled.connect(
+            self.timestretch_end_mode_changed)
+        self.time_pitch_gridlayout.addWidget(
+            self.timestretch_amt_end_checkbox, 1, 2)
+        self.timestretch_amt_end = QtGui.QDoubleSpinBox()
+        self.timestretch_amt_end.setRange(0.2, 4.0)
+        self.timestretch_amt_end.setDecimals(6)
+        self.timestretch_amt_end.setSingleStep(0.1)
+        self.timestretch_amt_end.setValue(1.0)
+        self.time_pitch_gridlayout.addWidget(self.timestretch_amt_end, 1, 3)
+
+        self.timestretch_mode_changed(0)
+
+        self.timestretch_mode.currentIndexChanged.connect(
+            self.timestretch_changed)
+        self.pitch_shift.valueChanged.connect(self.timestretch_changed)
+        self.pitch_shift_end.valueChanged.connect(self.timestretch_changed)
+        self.timestretch_amt.valueChanged.connect(self.timestretch_changed)
+        self.timestretch_amt_end.valueChanged.connect(self.timestretch_changed)
+        self.crispness_combobox.currentIndexChanged.connect(
+            self.timestretch_changed)
+
+        self.ok_layout = QtGui.QHBoxLayout()
+        self.ok = QtGui.QPushButton(_("OK"))
+        self.ok.pressed.connect(self.ok_handler)
+        self.ok_layout.addWidget(self.ok)
+        self.cancel = QtGui.QPushButton(_("Cancel"))
+        self.cancel.pressed.connect(self.widget.close)
+        self.ok_layout.addWidget(self.cancel)
+        self.vlayout2.addLayout(self.ok_layout)
+
+        self.last_open_dir = global_home
+
+    def timestretch_end_mode_changed(self, a_val=None):
+        if not self.timestretch_amt_end_checkbox.isChecked():
+            self.timestretch_amt_end.setValue(self.timestretch_amt.value())
+
+    def pitch_end_mode_changed(self, a_val=None):
+        if not self.pitch_shift_end_checkbox.isChecked():
+            self.pitch_shift_end.setValue(self.pitch_shift.value())
+
+    def end_mode_changed(self, a_val=None):
+        self.end_mode_checkbox.setChecked(True)
+
+    def timestretch_changed(self, a_val=None):
+        if not self.pitch_shift_end_checkbox.isChecked():
+            self.pitch_shift_end.setValue(self.pitch_shift.value())
+        if not self.timestretch_amt_end_checkbox.isChecked():
+            self.timestretch_amt_end.setValue(self.timestretch_amt.value())
+
+    def timestretch_mode_changed(self, a_val=None):
+        if a_val == 0:
+            self.pitch_shift.setEnabled(False)
+            self.timestretch_amt.setEnabled(False)
+            self.pitch_shift.setValue(0.0)
+            self.pitch_shift_end.setValue(0.0)
+            self.timestretch_amt.setValue(1.0)
+            self.timestretch_amt_end.setValue(1.0)
+            self.timestretch_amt_end_checkbox.setEnabled(False)
+            self.timestretch_amt_end_checkbox.setChecked(False)
+            self.pitch_shift_end_checkbox.setEnabled(False)
+            self.pitch_shift_end_checkbox.setChecked(False)
+            self.crispness_combobox.setCurrentIndex(5)
+            self.crispness_combobox.setEnabled(False)
+        elif a_val == 1:
+            self.pitch_shift.setEnabled(True)
+            self.timestretch_amt.setEnabled(False)
+            self.timestretch_amt.setValue(1.0)
+            self.timestretch_amt_end.setValue(1.0)
+            self.timestretch_amt_end.setEnabled(False)
+            self.timestretch_amt_end_checkbox.setEnabled(False)
+            self.timestretch_amt_end_checkbox.setChecked(False)
+            self.pitch_shift_end_checkbox.setEnabled(True)
+            self.pitch_shift_end.setEnabled(True)
+            self.crispness_combobox.setCurrentIndex(5)
+            self.crispness_combobox.setEnabled(False)
+        elif a_val == 2:
+            self.pitch_shift.setEnabled(False)
+            self.timestretch_amt.setEnabled(True)
+            self.pitch_shift.setValue(0.0)
+            self.pitch_shift_end.setValue(0.0)
+            self.pitch_shift_end.setEnabled(False)
+            self.timestretch_amt_end.setEnabled(True)
+            self.timestretch_amt_end_checkbox.setEnabled(True)
+            self.pitch_shift_end_checkbox.setEnabled(False)
+            self.pitch_shift_end_checkbox.setChecked(False)
+            self.crispness_combobox.setCurrentIndex(5)
+            self.crispness_combobox.setEnabled(False)
+        elif a_val == 3 or a_val == 4:
+            self.pitch_shift.setEnabled(True)
+            self.pitch_shift_end.setEnabled(False)
+            self.timestretch_amt.setEnabled(True)
+            self.timestretch_amt_end_checkbox.setEnabled(False)
+            self.timestretch_amt_end_checkbox.setChecked(False)
+            self.pitch_shift_end_checkbox.setEnabled(False)
+            self.pitch_shift_end_checkbox.setChecked(False)
+            self.crispness_combobox.setEnabled(True)
+        elif a_val == 5:
+            self.pitch_shift.setEnabled(True)
+            self.pitch_shift_end.setEnabled(True)
+            self.timestretch_amt.setEnabled(True)
+            self.timestretch_amt_end.setEnabled(True)
+            self.timestretch_amt_end_checkbox.setEnabled(True)
+            self.pitch_shift_end_checkbox.setEnabled(True)
+            self.crispness_combobox.setCurrentIndex(5)
+            self.crispness_combobox.setEnabled(False)
+        elif a_val == 6:
+            self.pitch_shift.setEnabled(True)
+            self.timestretch_amt.setEnabled(True)
+            self.timestretch_amt_end.setEnabled(False)
+            self.pitch_shift_end.setEnabled(False)
+            self.timestretch_amt_end_checkbox.setEnabled(False)
+            self.timestretch_amt_end_checkbox.setChecked(False)
+            self.pitch_shift_end_checkbox.setEnabled(False)
+            self.pitch_shift_end_checkbox.setChecked(False)
+            self.crispness_combobox.setCurrentIndex(5)
+            self.crispness_combobox.setEnabled(False)
+
+
+    def ok_handler(self):
+        if IS_PLAYING:
+            QtGui.QMessageBox.warning(
+                self.widget, _("Error"),
+                _("Cannot edit audio items during playback"))
+            return
+
+        self.end_mode = 0
+
+        f_selected_count = 0
+
+        f_region_length = CURRENT_REGION.region_length_bars
+        if f_region_length == 0:
+            f_region_length = 8
+        f_region_length -= 1
+
+        f_was_stretching = False
+        f_stretched_items = []
+
+        for f_item in AUDIO_SEQ.audio_items:
+            if f_item.isSelected():
+                f_new_ts_mode = self.timestretch_mode.currentIndex()
+                f_new_ts = round(self.timestretch_amt.value(), 6)
+                f_new_ps = round(self.pitch_shift.value(), 6)
+                if self.timestretch_amt_end_checkbox.isChecked():
+                    f_new_ts_end = round(
+                        self.timestretch_amt_end.value(), 6)
+                else:
+                    f_new_ts_end = f_new_ts
+                if self.pitch_shift_end_checkbox.isChecked():
+                    f_new_ps_end = round(self.pitch_shift_end.value(), 6)
+                else:
+                    f_new_ps_end = f_new_ps
+                f_item.audio_item.crispness = \
+                    self.crispness_combobox.currentIndex()
+
+                if ((f_item.audio_item.time_stretch_mode >= 3) or
+                (f_item.audio_item.time_stretch_mode == 1 and \
+                (f_item.audio_item.pitch_shift_end !=
+                    f_item.audio_item.pitch_shift)) or \
+                (f_item.audio_item.time_stretch_mode == 2 and \
+                (f_item.audio_item.timestretch_amt_end !=
+                    f_item.audio_item.timestretch_amt))) and \
+                ((f_new_ts_mode == 0) or \
+                (f_new_ts_mode == 1 and f_new_ps == f_new_ps_end) or \
+                (f_new_ts_mode == 2 and f_new_ts == f_new_ts_end)):
+                    f_item.audio_item.uid = \
+                        PROJECT.timestretch_get_orig_file_uid(
+                            f_item.audio_item.uid)
+
+                f_item.audio_item.time_stretch_mode = f_new_ts_mode
+                f_item.audio_item.pitch_shift = f_new_ps
+                f_item.audio_item.timestretch_amt = f_new_ts
+                f_item.audio_item.pitch_shift_end = f_new_ps_end
+                f_item.audio_item.timestretch_amt_end = f_new_ts_end
+                f_item.draw()
+                f_item.clip_at_region_end()
+                if (f_new_ts_mode >= 3) or \
+                (f_new_ts_mode == 1 and f_new_ps != f_new_ps_end) or \
+                (f_new_ts_mode == 2 and f_new_ts != f_new_ts_end) and \
+                (f_item.orig_string != str(f_item.audio_item)):
+                    f_was_stretching = True
+                    f_ts_result = PROJECT.timestretch_audio_item(
+                        f_item.audio_item)
+                    if f_ts_result is not None:
+                        f_stretched_items.append(
+                            (f_ts_result, f_item.audio_item))
+                f_item.draw()
+                f_selected_count += 1
+        if f_selected_count == 0:
+            QtGui.QMessageBox.warning(
+                self.widget, _("Error"), _("No items selected"))
+        else:
+            if f_was_stretching:
+                f_current_region_length = pydaw_get_current_region_length()
+                f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
+                PROJECT.save_stretch_dicts()
+                for f_stretch_item, f_audio_item in f_stretched_items:
+                    f_stretch_item[2].wait()
+                    f_new_uid = PROJECT.get_wav_uid_by_name(
+                        f_stretch_item[0], a_uid=f_stretch_item[1])
+                    f_graph = PROJECT.get_sample_graph_by_uid(f_new_uid)
+                    f_audio_item.clip_at_region_end(
+                        f_current_region_length, f_global_tempo,
+                        f_graph.length_in_seconds)
+            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            global_open_audio_items(True)
+            PROJECT.commit(_("Update audio items"))
+        self.widget.close()
+
+
+class fade_vol_dialog_widget:
+    def __init__(self):
+        self.widget = QtGui.QDialog()
+        self.widget.setWindowTitle(_("Fade Volume..."))
+        self.widget.setMaximumWidth(480)
+        self.main_vlayout = QtGui.QVBoxLayout(self.widget)
+
+        self.layout = QtGui.QGridLayout()
+        self.main_vlayout.addLayout(self.layout)
+
+        self.fadein_vol_layout = QtGui.QHBoxLayout()
+        self.fadein_vol_checkbox = QtGui.QCheckBox(_("Fade-In:"))
+        self.fadein_vol_layout.addWidget(self.fadein_vol_checkbox)
+        self.fadein_vol_spinbox = QtGui.QSpinBox()
+        self.fadein_vol_spinbox.setRange(-50, -6)
+        self.fadein_vol_spinbox.setValue(-40)
+        self.fadein_vol_spinbox.valueChanged.connect(self.fadein_vol_changed)
+        self.fadein_vol_layout.addWidget(self.fadein_vol_spinbox)
+        self.fadein_vol_layout.addItem(
+            QtGui.QSpacerItem(5, 5, QtGui.QSizePolicy.Expanding))
+        self.main_vlayout.addLayout(self.fadein_vol_layout)
+
+        self.fadeout_vol_checkbox = QtGui.QCheckBox(_("Fade-Out:"))
+        self.fadein_vol_layout.addWidget(self.fadeout_vol_checkbox)
+        self.fadeout_vol_spinbox = QtGui.QSpinBox()
+        self.fadeout_vol_spinbox.setRange(-50, -6)
+        self.fadeout_vol_spinbox.setValue(-40)
+        self.fadeout_vol_spinbox.valueChanged.connect(self.fadeout_vol_changed)
+        self.fadein_vol_layout.addWidget(self.fadeout_vol_spinbox)
+
+        self.ok_layout = QtGui.QHBoxLayout()
+        self.ok = QtGui.QPushButton(_("OK"))
+        self.ok.pressed.connect(self.ok_handler)
+        self.ok_layout.addWidget(self.ok)
+        self.cancel = QtGui.QPushButton(_("Cancel"))
+        self.cancel.pressed.connect(self.widget.close)
+        self.ok_layout.addWidget(self.cancel)
+        self.main_vlayout.addLayout(self.ok_layout)
+
+        self.last_open_dir = global_home
+
+    def fadein_vol_changed(self, a_val=None):
+        self.fadein_vol_checkbox.setChecked(True)
+
+    def fadeout_vol_changed(self, a_val=None):
+        self.fadeout_vol_checkbox.setChecked(True)
+
+    def ok_handler(self):
+        if IS_PLAYING:
+            QtGui.QMessageBox.warning(
+                self.widget, _("Error"),
+                _("Cannot edit audio items during playback"))
+            return
+
+        self.end_mode = 0
+
+        f_selected_count = 0
+
+        f_region_length = CURRENT_REGION.region_length_bars
+        if f_region_length == 0:
+            f_region_length = 8
+        f_region_length -= 1
+
+        for f_item in AUDIO_SEQ.audio_items:
+            if f_item.isSelected():
+                if self.fadein_vol_checkbox.isChecked():
+                    f_item.audio_item.fadein_vol = \
+                        self.fadein_vol_spinbox.value()
+                if self.fadeout_vol_checkbox.isChecked():
+                    f_item.audio_item.fadeout_vol = \
+                        self.fadeout_vol_spinbox.value()
+                f_item.draw()
+                f_selected_count += 1
+        if f_selected_count == 0:
+            QtGui.QMessageBox.warning(
+                self.widget, _("Error"), _("No items selected"))
+        else:
+            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            global_open_audio_items(True)
+            PROJECT.commit(_("Update audio items"))
+        self.widget.close()
+
+
 AUDIO_ITEMS_TO_DROP = []
 
 CURRENT_AUDIO_ITEM_INDEX = None
@@ -4547,7 +4796,6 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         self.list_file.mousePressEvent = self.file_mouse_press_event
         self.preview_button.pressed.connect(self.on_preview)
         self.stop_preview_button.pressed.connect(self.on_stop_preview)
-        self.folders_tab_widget.addTab(AUDIO_EDITOR_WIDGET.widget, _("Edit"))
 
         self.modulex = pydaw_widgets.pydaw_per_audio_item_fx_widget(
             global_paif_rel_callback, global_paif_val_callback)
@@ -4841,435 +5089,6 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         AUDIO_SEQ.set_zoom(float(a_val) * 0.1)
         global_open_audio_items(a_reload=False)
 
-
-class audio_item_editor_widget:
-    def __init__(self):
-        self.widget = QtGui.QWidget()
-        self.widget.setMaximumWidth(480)
-        self.main_vlayout = QtGui.QVBoxLayout(self.widget)
-
-        self.layout = QtGui.QGridLayout()
-        self.main_vlayout.addLayout(self.layout)
-
-        self.sample_vol_layout = QtGui.QVBoxLayout()
-        self.vol_checkbox = QtGui.QCheckBox(_("Vol"))
-        self.sample_vol_layout.addWidget(self.vol_checkbox)
-        self.sample_vol_slider = QtGui.QSlider(QtCore.Qt.Vertical)
-        self.sample_vol_slider.setRange(-24, 24)
-        self.sample_vol_slider.setValue(0)
-        self.sample_vol_slider.valueChanged.connect(self.sample_vol_changed)
-        self.sample_vol_layout.addWidget(self.sample_vol_slider)
-        self.sample_vol_label = QtGui.QLabel("0db")
-        self.sample_vol_label.setMinimumWidth(48)
-        self.sample_vol_layout.addWidget(self.sample_vol_label)
-        self.layout.addLayout(self.sample_vol_layout, 1, 2)
-        self.vlayout2 = QtGui.QVBoxLayout()
-        self.layout.addLayout(self.vlayout2, 1, 1)
-        self.start_hlayout = QtGui.QHBoxLayout()
-        self.vlayout2.addLayout(self.start_hlayout)
-
-        self.timestretch_checkbox = QtGui.QCheckBox(_("Time Stretching:"))
-        self.vlayout2.addWidget(self.timestretch_checkbox)
-        self.timestretch_hlayout = QtGui.QHBoxLayout()
-        self.time_pitch_gridlayout = QtGui.QGridLayout()
-        self.vlayout2.addLayout(self.timestretch_hlayout)
-        self.vlayout2.addLayout(self.time_pitch_gridlayout)
-        self.timestretch_hlayout.addWidget(QtGui.QLabel(_("Mode:")))
-        self.timestretch_mode = QtGui.QComboBox()
-
-        self.timestretch_mode.setMinimumWidth(240)
-        self.timestretch_hlayout.addWidget(self.timestretch_mode)
-        self.timestretch_mode.addItems(TIMESTRETCH_MODES)
-        self.timestretch_mode.currentIndexChanged.connect(
-            self.timestretch_mode_changed)
-        self.time_pitch_gridlayout.addWidget(QtGui.QLabel(_("Pitch:")), 0, 0)
-        self.pitch_shift = QtGui.QDoubleSpinBox()
-        self.pitch_shift.setRange(-36, 36)
-        self.pitch_shift.setValue(0.0)
-        self.pitch_shift.setDecimals(6)
-        self.time_pitch_gridlayout.addWidget(self.pitch_shift, 0, 1)
-
-        self.pitch_shift_end_checkbox = QtGui.QCheckBox(_("End:"))
-        self.pitch_shift_end_checkbox.toggled.connect(
-            self.pitch_end_mode_changed)
-        self.time_pitch_gridlayout.addWidget(
-            self.pitch_shift_end_checkbox, 0, 2)
-        self.pitch_shift_end = QtGui.QDoubleSpinBox()
-        self.pitch_shift_end.setRange(-36, 36)
-        self.pitch_shift_end.setValue(0.0)
-        self.pitch_shift_end.setDecimals(6)
-        self.time_pitch_gridlayout.addWidget(self.pitch_shift_end, 0, 3)
-
-        self.time_pitch_gridlayout.addWidget(QtGui.QLabel(_("Time:")), 1, 0)
-        self.timestretch_amt = QtGui.QDoubleSpinBox()
-        self.timestretch_amt.setRange(0.1, 200.0)
-        self.timestretch_amt.setDecimals(6)
-        self.timestretch_amt.setSingleStep(0.1)
-        self.timestretch_amt.setValue(1.0)
-        self.time_pitch_gridlayout.addWidget(self.timestretch_amt, 1, 1)
-
-        self.crispness_layout = QtGui.QHBoxLayout()
-        self.vlayout2.addLayout(self.crispness_layout)
-        self.crispness_layout.addWidget(QtGui.QLabel(_("Crispness")))
-        self.crispness_combobox = QtGui.QComboBox()
-        self.crispness_combobox.addItems(CRISPNESS_SETTINGS)
-        self.crispness_combobox.setCurrentIndex(5)
-        self.crispness_layout.addWidget(self.crispness_combobox)
-
-        self.timestretch_amt_end_checkbox = QtGui.QCheckBox(_("End:"))
-        self.timestretch_amt_end_checkbox.toggled.connect(
-            self.timestretch_end_mode_changed)
-        self.time_pitch_gridlayout.addWidget(
-            self.timestretch_amt_end_checkbox, 1, 2)
-        self.timestretch_amt_end = QtGui.QDoubleSpinBox()
-        self.timestretch_amt_end.setRange(0.2, 4.0)
-        self.timestretch_amt_end.setDecimals(6)
-        self.timestretch_amt_end.setSingleStep(0.1)
-        self.timestretch_amt_end.setValue(1.0)
-        self.time_pitch_gridlayout.addWidget(self.timestretch_amt_end, 1, 3)
-
-        self.timestretch_mode_changed(0)
-
-        self.timestretch_mode.currentIndexChanged.connect(
-            self.timestretch_changed)
-        self.pitch_shift.valueChanged.connect(self.timestretch_changed)
-        self.pitch_shift_end.valueChanged.connect(self.timestretch_changed)
-        self.timestretch_amt.valueChanged.connect(self.timestretch_changed)
-        self.timestretch_amt_end.valueChanged.connect(self.timestretch_changed)
-        self.crispness_combobox.currentIndexChanged.connect(
-            self.timestretch_changed)
-
-        self.vlayout2.addSpacerItem(QtGui.QSpacerItem(1, 10))
-        self.output_hlayout = QtGui.QHBoxLayout()
-        self.output_checkbox = QtGui.QCheckBox(_("Output:"))
-        self.output_hlayout.addWidget(self.output_checkbox)
-        self.output_combobox = QtGui.QComboBox()
-        global AUDIO_TRACK_COMBOBOXES
-        AUDIO_TRACK_COMBOBOXES.append(self.output_combobox)
-        self.output_combobox.setMinimumWidth(210)
-        self.output_combobox.addItems(TRACK_NAMES)
-        self.output_combobox.currentIndexChanged.connect(self.output_changed)
-        self.output_hlayout.addWidget(self.output_combobox)
-        self.vlayout2.addLayout(self.output_hlayout)
-
-        self.vlayout2.addSpacerItem(QtGui.QSpacerItem(1, 10))
-        self.reversed_layout = QtGui.QHBoxLayout()
-        self.reversed_checkbox = QtGui.QCheckBox()
-        self.reversed_layout.addWidget(self.reversed_checkbox)
-        self.is_reversed_checkbox = QtGui.QCheckBox(_("Reverse"))
-        self.is_reversed_checkbox.clicked.connect(self.reverse_changed)
-        self.reversed_layout.addWidget(self.is_reversed_checkbox)
-        self.reversed_layout.addItem(
-            QtGui.QSpacerItem(5, 5, QtGui.QSizePolicy.Expanding))
-        self.vlayout2.addLayout(self.reversed_layout)
-
-        self.vlayout2.addSpacerItem(QtGui.QSpacerItem(1, 10))
-        self.fadein_vol_layout = QtGui.QHBoxLayout()
-        self.fadein_vol_checkbox = QtGui.QCheckBox(_("Fade-In:"))
-        self.fadein_vol_layout.addWidget(self.fadein_vol_checkbox)
-        self.fadein_vol_spinbox = QtGui.QSpinBox()
-        self.fadein_vol_spinbox.setRange(-50, -6)
-        self.fadein_vol_spinbox.setValue(-40)
-        self.fadein_vol_spinbox.valueChanged.connect(self.fadein_vol_changed)
-        self.fadein_vol_layout.addWidget(self.fadein_vol_spinbox)
-        self.fadein_vol_layout.addItem(
-            QtGui.QSpacerItem(5, 5, QtGui.QSizePolicy.Expanding))
-        self.vlayout2.addLayout(self.fadein_vol_layout)
-
-        self.fadeout_vol_checkbox = QtGui.QCheckBox(_("Fade-Out:"))
-        self.fadein_vol_layout.addWidget(self.fadeout_vol_checkbox)
-        self.fadeout_vol_spinbox = QtGui.QSpinBox()
-        self.fadeout_vol_spinbox.setRange(-50, -6)
-        self.fadeout_vol_spinbox.setValue(-40)
-        self.fadeout_vol_spinbox.valueChanged.connect(self.fadeout_vol_changed)
-        self.fadein_vol_layout.addWidget(self.fadeout_vol_spinbox)
-
-        self.vlayout2.addSpacerItem(
-            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
-        self.ok_layout = QtGui.QHBoxLayout()
-        self.ok = QtGui.QPushButton(_("Save Changes"))
-        self.ok.pressed.connect(self.ok_handler)
-        self.ok_layout.addWidget(self.ok)
-        self.vlayout2.addLayout(self.ok_layout)
-
-        self.last_open_dir = global_home
-
-
-    def set_tooltips(self, a_on):
-        if a_on:
-            f_sbsms_tooltip = _(
-                "This control is only valid for the SBSMS and {} modes,\n"
-                "the start/end values are for the full sample length, "
-                "not the edited start/end points\n"
-                "setting the start/end time to different values will cause "
-                "the timestretch handle to disappear on the audio item.")
-            self.timestretch_amt_end.setToolTip(f_sbsms_tooltip.format(
-                _("Time(affecting pitch)")))
-            self.pitch_shift_end.setToolTip(f_sbsms_tooltip.format(
-                _("Pitch(affecting time)")))
-            self.ok.setToolTip(
-                _("Changes are not saved until you push this button"))
-            self.widget.setToolTip(
-                _("To edit the properties of one or more audio item(s),\n"
-                "click or marquee select items, then change their "
-                "properties and click 'Save Changes'\n"
-                "Only the control section(s) whose checkbox is checked "
-                "will be updated.\n\n"
-                "Click 'Menu->Show Tooltips' in the transport to "
-                "disable these tooltips"))
-            self.crispness_combobox.setToolTip(
-                _("Affects the sharpness of transients, only "
-                "for modes using Rubberband"))
-            self.timestretch_mode.setToolTip(
-                libpydaw.strings.timestretch_modes)
-            self.output_combobox.setToolTip(
-                _("Use this combobox to select the output "
-                "track on the 'MIDI' tab\n"
-                "where you can apply effects and automation.  "
-                "Please note that if you use a "
-                "lot of audio sequencing in your projects,\n"
-                "you must assign audio items to multiple tracks "
-                "to take advantage of "
-                "multiple CPU cores, otherwise all items will be \n"
-                "processed on a single core"))
-            self.sample_vol_slider.setToolTip(
-                _("Use this to set the sample volume. "
-                "If you need to automate volume changes, either\n"
-                "use the fade-in/fade-out handles, or automate "
-                "the volume on the audio "
-                "track specified in the Output: combobox."))
-            self.is_reversed_checkbox.setToolTip(
-                _("Checking this causes the sample to play backwards"))
-            self.fadein_vol_spinbox.setToolTip(
-                _("Sets the initial volume in dB when fading in."))
-            self.fadeout_vol_spinbox.setToolTip(
-                _("Sets the end volume in dB when fading out."))
-        else:
-            self.timestretch_amt_end.setToolTip("")
-            self.pitch_shift_end.setToolTip("")
-            self.ok.setToolTip("")
-            self.widget.setToolTip("")
-            self.crispness_combobox.setToolTip("")
-            self.timestretch_mode.setToolTip("")
-            self.output_combobox.setToolTip("")
-            self.sample_vol_slider.setToolTip("")
-            self.is_reversed_checkbox.setToolTip("")
-            self.fadein_vol_spinbox.setToolTip("")
-            self.fadeout_vol_spinbox.setToolTip("")
-
-    def reverse_changed(self, a_val=None):
-        self.reversed_checkbox.setChecked(True)
-
-    def fadein_vol_changed(self, a_val=None):
-        self.fadein_vol_checkbox.setChecked(True)
-
-    def fadeout_vol_changed(self, a_val=None):
-        self.fadeout_vol_checkbox.setChecked(True)
-
-    def timestretch_end_mode_changed(self, a_val=None):
-        if not self.timestretch_amt_end_checkbox.isChecked():
-            self.timestretch_amt_end.setValue(self.timestretch_amt.value())
-
-    def pitch_end_mode_changed(self, a_val=None):
-        if not self.pitch_shift_end_checkbox.isChecked():
-            self.pitch_shift_end.setValue(self.pitch_shift.value())
-
-    def end_mode_changed(self, a_val=None):
-        self.end_mode_checkbox.setChecked(True)
-
-    def timestretch_changed(self, a_val=None):
-        self.timestretch_checkbox.setChecked(True)
-        if not self.pitch_shift_end_checkbox.isChecked():
-            self.pitch_shift_end.setValue(self.pitch_shift.value())
-        if not self.timestretch_amt_end_checkbox.isChecked():
-            self.timestretch_amt_end.setValue(self.timestretch_amt.value())
-
-    def output_changed(self, a_val=None):
-        self.output_checkbox.setChecked(True)
-
-    def timestretch_mode_changed(self, a_val=None):
-        if a_val == 0:
-            self.pitch_shift.setEnabled(False)
-            self.timestretch_amt.setEnabled(False)
-            self.pitch_shift.setValue(0.0)
-            self.pitch_shift_end.setValue(0.0)
-            self.timestretch_amt.setValue(1.0)
-            self.timestretch_amt_end.setValue(1.0)
-            self.timestretch_amt_end_checkbox.setEnabled(False)
-            self.timestretch_amt_end_checkbox.setChecked(False)
-            self.pitch_shift_end_checkbox.setEnabled(False)
-            self.pitch_shift_end_checkbox.setChecked(False)
-            self.crispness_combobox.setCurrentIndex(5)
-            self.crispness_combobox.setEnabled(False)
-        elif a_val == 1:
-            self.pitch_shift.setEnabled(True)
-            self.timestretch_amt.setEnabled(False)
-            self.timestretch_amt.setValue(1.0)
-            self.timestretch_amt_end.setValue(1.0)
-            self.timestretch_amt_end.setEnabled(False)
-            self.timestretch_amt_end_checkbox.setEnabled(False)
-            self.timestretch_amt_end_checkbox.setChecked(False)
-            self.pitch_shift_end_checkbox.setEnabled(True)
-            self.pitch_shift_end.setEnabled(True)
-            self.crispness_combobox.setCurrentIndex(5)
-            self.crispness_combobox.setEnabled(False)
-        elif a_val == 2:
-            self.pitch_shift.setEnabled(False)
-            self.timestretch_amt.setEnabled(True)
-            self.pitch_shift.setValue(0.0)
-            self.pitch_shift_end.setValue(0.0)
-            self.pitch_shift_end.setEnabled(False)
-            self.timestretch_amt_end.setEnabled(True)
-            self.timestretch_amt_end_checkbox.setEnabled(True)
-            self.pitch_shift_end_checkbox.setEnabled(False)
-            self.pitch_shift_end_checkbox.setChecked(False)
-            self.crispness_combobox.setCurrentIndex(5)
-            self.crispness_combobox.setEnabled(False)
-        elif a_val == 3 or a_val == 4:
-            self.pitch_shift.setEnabled(True)
-            self.pitch_shift_end.setEnabled(False)
-            self.timestretch_amt.setEnabled(True)
-            self.timestretch_amt_end_checkbox.setEnabled(False)
-            self.timestretch_amt_end_checkbox.setChecked(False)
-            self.pitch_shift_end_checkbox.setEnabled(False)
-            self.pitch_shift_end_checkbox.setChecked(False)
-            self.crispness_combobox.setEnabled(True)
-        elif a_val == 5:
-            self.pitch_shift.setEnabled(True)
-            self.pitch_shift_end.setEnabled(True)
-            self.timestretch_amt.setEnabled(True)
-            self.timestretch_amt_end.setEnabled(True)
-            self.timestretch_amt_end_checkbox.setEnabled(True)
-            self.pitch_shift_end_checkbox.setEnabled(True)
-            self.crispness_combobox.setCurrentIndex(5)
-            self.crispness_combobox.setEnabled(False)
-        elif a_val == 6:
-            self.pitch_shift.setEnabled(True)
-            self.timestretch_amt.setEnabled(True)
-            self.timestretch_amt_end.setEnabled(False)
-            self.pitch_shift_end.setEnabled(False)
-            self.timestretch_amt_end_checkbox.setEnabled(False)
-            self.timestretch_amt_end_checkbox.setChecked(False)
-            self.pitch_shift_end_checkbox.setEnabled(False)
-            self.pitch_shift_end_checkbox.setChecked(False)
-            self.crispness_combobox.setCurrentIndex(5)
-            self.crispness_combobox.setEnabled(False)
-
-
-    def ok_handler(self):
-        if IS_PLAYING:
-            QtGui.QMessageBox.warning(
-                self.widget, _("Error"),
-                _("Cannot edit audio items during playback"))
-            return
-
-        self.end_mode = 0
-
-        f_selected_count = 0
-
-        f_region_length = CURRENT_REGION.region_length_bars
-        if f_region_length == 0:
-            f_region_length = 8
-        f_region_length -= 1
-
-        f_was_stretching = False
-        f_stretched_items = []
-
-        for f_item in AUDIO_SEQ.audio_items:
-            if f_item.isSelected():
-                if self.output_checkbox.isChecked():
-                    f_item.audio_item.output_track = \
-                        self.output_combobox.currentIndex()
-                if self.vol_checkbox.isChecked():
-                    f_item.audio_item.vol = self.sample_vol_slider.value()
-                if self.timestretch_checkbox.isChecked():
-                    f_new_ts_mode = self.timestretch_mode.currentIndex()
-                    f_new_ts = round(self.timestretch_amt.value(), 6)
-                    f_new_ps = round(self.pitch_shift.value(), 6)
-                    if self.timestretch_amt_end_checkbox.isChecked():
-                        f_new_ts_end = round(
-                            self.timestretch_amt_end.value(), 6)
-                    else:
-                        f_new_ts_end = f_new_ts
-                    if self.pitch_shift_end_checkbox.isChecked():
-                        f_new_ps_end = round(self.pitch_shift_end.value(), 6)
-                    else:
-                        f_new_ps_end = f_new_ps
-                    f_item.audio_item.crispness = \
-                        self.crispness_combobox.currentIndex()
-
-                    if ((f_item.audio_item.time_stretch_mode >= 3) or
-                    (f_item.audio_item.time_stretch_mode == 1 and \
-                    (f_item.audio_item.pitch_shift_end !=
-                        f_item.audio_item.pitch_shift)) or \
-                    (f_item.audio_item.time_stretch_mode == 2 and \
-                    (f_item.audio_item.timestretch_amt_end !=
-                        f_item.audio_item.timestretch_amt))) and \
-                    ((f_new_ts_mode == 0) or \
-                    (f_new_ts_mode == 1 and f_new_ps == f_new_ps_end) or \
-                    (f_new_ts_mode == 2 and f_new_ts == f_new_ts_end)):
-                        f_item.audio_item.uid = \
-                            PROJECT.timestretch_get_orig_file_uid(
-                                f_item.audio_item.uid)
-
-                    f_item.audio_item.time_stretch_mode = f_new_ts_mode
-                    f_item.audio_item.pitch_shift = f_new_ps
-                    f_item.audio_item.timestretch_amt = f_new_ts
-                    f_item.audio_item.pitch_shift_end = f_new_ps_end
-                    f_item.audio_item.timestretch_amt_end = f_new_ts_end
-                    f_item.draw()
-                    f_item.clip_at_region_end()
-                    if (f_new_ts_mode >= 3) or \
-                    (f_new_ts_mode == 1 and f_new_ps != f_new_ps_end) or \
-                    (f_new_ts_mode == 2 and f_new_ts != f_new_ts_end) and \
-                    (f_item.orig_string != str(f_item.audio_item)):
-                        f_was_stretching = True
-                        f_ts_result = PROJECT.timestretch_audio_item(
-                            f_item.audio_item)
-                        if f_ts_result is not None:
-                            f_stretched_items.append(
-                                (f_ts_result, f_item.audio_item))
-
-                if self.reversed_checkbox.isChecked():
-                    f_is_reversed = self.is_reversed_checkbox.isChecked()
-                    if f_item.audio_item.reversed != f_is_reversed:
-                        f_new_start = 1000.0 - f_item.audio_item.sample_end
-                        f_new_end = 1000.0 - f_item.audio_item.sample_start
-                        f_item.audio_item.sample_start = f_new_start
-                        f_item.audio_item.sample_end = f_new_end
-                    f_item.audio_item.reversed = f_is_reversed
-                if self.fadein_vol_checkbox.isChecked():
-                    f_item.audio_item.fadein_vol = \
-                        self.fadein_vol_spinbox.value()
-                if self.fadeout_vol_checkbox.isChecked():
-                    f_item.audio_item.fadeout_vol = \
-                        self.fadeout_vol_spinbox.value()
-                f_item.draw()
-                f_selected_count += 1
-        if f_selected_count == 0:
-            QtGui.QMessageBox.warning(
-                self.widget, _("Error"), _("No items selected"))
-        else:
-            if f_was_stretching:
-                f_current_region_length = pydaw_get_current_region_length()
-                f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
-                PROJECT.save_stretch_dicts()
-                for f_stretch_item, f_audio_item in f_stretched_items:
-                    f_stretch_item[2].wait()
-                    f_new_uid = PROJECT.get_wav_uid_by_name(
-                        f_stretch_item[0], a_uid=f_stretch_item[1])
-                    f_graph = PROJECT.get_sample_graph_by_uid(f_new_uid)
-                    f_audio_item.clip_at_region_end(
-                        f_current_region_length, f_global_tempo,
-                        f_graph.length_in_seconds)
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
-            global_open_audio_items(True)
-            PROJECT.commit(_("Update audio items"))
-
-    def sample_vol_changed(self, a_val=None):
-        self.sample_vol_label.setText(
-            "{}dB".format(self.sample_vol_slider.value()))
-        self.vol_checkbox.setChecked(True)
 
 AUDIO_ITEMS = None
 
@@ -11176,7 +10995,6 @@ REGION_SETTINGS = region_settings()
 TRACK_PANEL = tracks_widget()
 REGION_EDITOR = region_editor()
 
-AUDIO_EDITOR_WIDGET = audio_item_editor_widget()
 PIANO_ROLL_EDITOR = piano_roll_editor()
 PIANO_ROLL_EDITOR_WIDGET = piano_roll_editor_widget()
 ITEM_EDITOR = item_list_editor()
@@ -11257,7 +11075,7 @@ def kill_pydaw_engine():
 
     if len(f_result) > 0:
         f_answer = QtGui.QMessageBox.warning(
-            AUDIO_EDITOR_WIDGET.widget, _("Warning"),
+            PIANO_ROLL_EDITOR_WIDGET.widget, _("Warning"),
             libpydaw.strings.multiple_instances_warning,
             buttons=QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
         if f_answer == QtGui.QMessageBox.Cancel:
