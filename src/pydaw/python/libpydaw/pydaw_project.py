@@ -2743,7 +2743,7 @@ class pydaw_audio_item:
         self.time_stretch_mode = int(a_timestretch_mode)
         self.pitch_shift = float(a_pitch_shift)
         self.output_track = int(a_output_track)
-        self.vol = int(a_vol)
+        self.vol = round(float(a_vol), 1)
         self.timestretch_amt = float(a_timestretch_amt)
         self.fade_in = float(a_fade_in)
         self.fade_out = float(a_fade_out)

@@ -3750,8 +3750,8 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         elif self.is_amp_dragging:
             for f_item in AUDIO_SEQ.get_selected():
                 f_new_vel = pydaw_util.pydaw_clip_value(
-                    f_val + f_item.orig_value, -24, 24)
-                f_new_vel = int(f_new_vel)
+                    f_val + f_item.orig_value, -24.0, 24.0)
+                f_new_vel = round(f_new_vel, 1)
                 f_item.audio_item.vol = f_new_vel
                 f_item.set_vol_line()
         elif self.is_amp_curving:
