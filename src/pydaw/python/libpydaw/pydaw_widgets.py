@@ -1743,6 +1743,7 @@ class peak_meter:
         self.high = 0.0
         self.set_tooltip()
         self.widget.mousePressEvent = self.reset_high
+        self.white_pen = QtGui.QPen(QtCore.Qt.white)
 
     def set_value(self, a_vals):
         self.values = [float(x) for x in a_vals]
@@ -1788,9 +1789,9 @@ class peak_meter:
             p.drawRect(f_rect)
 
         if self.text:
-            p.setPen(QtGui.QPen(QtCore.Qt.white))
+            p.setPen(self.white_pen)
             for f_y, f_db in zip(
-            range(0, int(f_height), int(f_height / 5.0)),
+            range(0, int(f_height), int(f_height * 0.2)), # / 5.0
             range(0, -30, -6)):
                 p.drawText(3, f_y, str(f_db))
 
