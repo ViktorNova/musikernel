@@ -2202,8 +2202,11 @@ class eq_item(QtGui.QGraphicsEllipseItem):
         f_pos = self.pos()
         f_freq = (((f_pos.x() + EQ_POINT_RADIUS) / EQ_WIDTH) *
             EQ_HIGH_PITCH) + EQ_LOW_PITCH
+        f_freq = pydaw_util.pydaw_clip_value(
+            f_freq, EQ_LOW_PITCH, EQ_HIGH_PITCH)
         f_gain = ((1.0 - ((f_pos.y() + EQ_POINT_RADIUS) /
             EQ_HEIGHT)) * 480.0) - 240.0
+        f_gain = pydaw_util.pydaw_clip_value(f_gain, -240.0, 240.0)
         return round(f_freq, 2), round(f_gain, 1)
 
     def __lt__(self, other):
