@@ -13,26 +13,14 @@ GNU General Public License for more details.
 */
 
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdlib.h>
 #include <limits.h>
-#include <string.h>
-#include <stdint.h>
-
 #include <math.h>
-#include <stdio.h>
 
 #include "../../include/pydaw_plugin.h"
 
 #include "libmodsynth.h"
 #include "../../libmodsynth/lib/amp.h"
-#include "../../libmodsynth/modules/filter/svf.h"
-
-#include "../../libmodsynth/modules/delay/reverb.h"
-
 #include "synth.h"
 
 
@@ -250,7 +238,7 @@ static void v_mkeq_run(
                 v_pkq_calc_coeffs(&plugin_data->mono_modules->eqs[f_i2],
                         *plugin_data->eq_freq[f_i2],
                         *plugin_data->eq_res[f_i2] * 0.01f,
-                        *plugin_data->eq_gain[f_i2]);
+                        *plugin_data->eq_gain[f_i2] * 0.1f);
                 v_pkq_run(&plugin_data->mono_modules->eqs[f_i2],
                         plugin_data->output0[f_i],
                         plugin_data->output1[f_i]);
@@ -296,12 +284,12 @@ PYFX_Descriptor *mkeq_PYFX_descriptor(int index)
     pydaw_set_pyfx_port(f_result, MKEQ_EQ4_RES, 300.0f, 100.0f, 600.0f);
     pydaw_set_pyfx_port(f_result, MKEQ_EQ5_RES, 300.0f, 100.0f, 600.0f);
     pydaw_set_pyfx_port(f_result, MKEQ_EQ6_RES, 300.0f, 100.0f, 600.0f);
-    pydaw_set_pyfx_port(f_result, MKEQ_EQ1_GAIN, 0.0f, -24.0f, 24.0f);
-    pydaw_set_pyfx_port(f_result, MKEQ_EQ2_GAIN, 0.0f, -24.0f, 24.0f);
-    pydaw_set_pyfx_port(f_result, MKEQ_EQ3_GAIN, 0.0f, -24.0f, 24.0f);
-    pydaw_set_pyfx_port(f_result, MKEQ_EQ4_GAIN, 0.0f, -24.0f, 24.0f);
-    pydaw_set_pyfx_port(f_result, MKEQ_EQ5_GAIN, 0.0f, -24.0f, 24.0f);
-    pydaw_set_pyfx_port(f_result, MKEQ_EQ6_GAIN, 0.0f, -24.0f, 24.0f);
+    pydaw_set_pyfx_port(f_result, MKEQ_EQ1_GAIN, 0.0f, -240.0f, 240.0f);
+    pydaw_set_pyfx_port(f_result, MKEQ_EQ2_GAIN, 0.0f, -240.0f, 240.0f);
+    pydaw_set_pyfx_port(f_result, MKEQ_EQ3_GAIN, 0.0f, -240.0f, 240.0f);
+    pydaw_set_pyfx_port(f_result, MKEQ_EQ4_GAIN, 0.0f, -240.0f, 240.0f);
+    pydaw_set_pyfx_port(f_result, MKEQ_EQ5_GAIN, 0.0f, -240.0f, 240.0f);
+    pydaw_set_pyfx_port(f_result, MKEQ_EQ6_GAIN, 0.0f, -240.0f, 240.0f);
     pydaw_set_pyfx_port(f_result, MKEQ_SPECTRUM_ENABLED, 0.0f, 0.0f, 1.0f);
 
     f_result->cleanup = v_mkeq_cleanup;

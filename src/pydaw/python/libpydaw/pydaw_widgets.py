@@ -2193,7 +2193,7 @@ class eq_item(QtGui.QGraphicsEllipseItem):
         f_gain = self.eq.gain_knob.get_value()
         f_x = (((f_freq - EQ_LOW_PITCH) / EQ_HIGH_PITCH) *
             EQ_WIDTH) - EQ_POINT_RADIUS
-        f_y = ((1.0 - ((f_gain + 24.0) / 48.0)) *
+        f_y = ((1.0 - ((f_gain + 240.0) / 480.0)) *
             EQ_HEIGHT) - EQ_POINT_RADIUS
         self.setPos(f_x, f_y)
         self.draw_path_item()
@@ -2203,8 +2203,8 @@ class eq_item(QtGui.QGraphicsEllipseItem):
         f_freq = (((f_pos.x() + EQ_POINT_RADIUS) / EQ_WIDTH) *
             EQ_HIGH_PITCH) + EQ_LOW_PITCH
         f_gain = ((1.0 - ((f_pos.y() + EQ_POINT_RADIUS) /
-            EQ_HEIGHT)) * 48.0) - 24.0
-        return round(f_freq, 2), round(f_gain, 2)
+            EQ_HEIGHT)) * 480.0) - 240.0
+        return round(f_freq, 2), round(f_gain, 1)
 
     def __lt__(self, other):
         return self.pos().x() < other.pos().x()
@@ -2364,7 +2364,7 @@ class eq_widget:
 
         self.gain_knob = pydaw_knob_control(
             a_size, _("Gain"), a_gain_port, a_rel_callback,
-            a_val_callback, -24.0, 24.0, 0.0, KC_INTEGER,
+            a_val_callback, -240.0, 240.0, 0.0, KC_TENTH,
             a_port_dict, a_preset_mgr)
         self.gain_knob.add_to_grid_layout(self.layout, 2)
 

@@ -242,7 +242,7 @@ inline void v_eq6_set(t_eq6 *a_eq6)
             v_pkq_calc_coeffs(&a_eq6->eqs[f_i],
                     *a_eq6->knobs[f_i][0],
                     *a_eq6->knobs[f_i][1] * 0.01f,
-                    *a_eq6->knobs[f_i][2]);
+                    *a_eq6->knobs[f_i][2] * 0.1f);
         }
         ++f_i;
     }

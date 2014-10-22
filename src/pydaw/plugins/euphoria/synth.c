@@ -1765,7 +1765,7 @@ PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
             pydaw_set_pyfx_port(f_result, f_i, 300.0f, 100.0f, 600.0f);
             ++f_i;
 
-            pydaw_set_pyfx_port(f_result, f_i, 0.0f, -24.0f, 24.0f);
+            pydaw_set_pyfx_port(f_result, f_i, 0.0f, -240.0f, 240.0f);
             ++f_i;
 
             ++f_i3;
