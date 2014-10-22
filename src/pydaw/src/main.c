@@ -718,6 +718,10 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             system(f_cmd_buffer);
             exiting = 1;
         }
+        const PaStreamInfo * f_stream_info = Pa_GetStreamInfo(stream);
+        printf("Actual output latency:\n\tseconds:  %f\n\tsamples:  %i\n",
+            (float)f_stream_info->outputLatency,
+            (int)(f_stream_info->outputLatency * f_stream_info->sampleRate));
     }
     else
     {
