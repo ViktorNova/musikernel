@@ -972,9 +972,9 @@ void cpuID(unsigned int i, unsigned int regs[4])
       ("cpuid" : "=a" (regs[0]), "=b" (regs[1]), "=c" (regs[2]), "=d" (regs[3])
        : "a" (i), "c" (0));
     // ECX is set to zero for CPUID function 4
-} __attribute__((optimize("-O0")))
+}
 
-char * uint_to_char(unsigned int a_input)
+__attribute__((optimize("-O0"))) char * uint_to_char(unsigned int a_input)
 {
     char* bytes = (char*)malloc(sizeof(char) * 5);
 
@@ -985,9 +985,9 @@ char * uint_to_char(unsigned int a_input)
     bytes[4] = '\0';
 
     return bytes;
-} __attribute__((optimize("-O0")))
+}
 
-int i_cpu_has_hyperthreading()
+__attribute__((optimize("-O0"))) int i_cpu_has_hyperthreading()
 {
     unsigned int regs[4];
 
@@ -1031,7 +1031,7 @@ int i_cpu_has_hyperthreading()
                 cpuVendor);
         return 0;
     }
-} __attribute__((optimize("-O0")))
+}
 #else
 int i_cpu_has_hyperthreading()
 {
@@ -1039,7 +1039,7 @@ int i_cpu_has_hyperthreading()
 }
 #endif
 
-void v_self_set_thread_affinity()
+__attribute__((optimize("-O0"))) void v_self_set_thread_affinity()
 {
     pthread_attr_t threadAttr;
     struct sched_param param;
