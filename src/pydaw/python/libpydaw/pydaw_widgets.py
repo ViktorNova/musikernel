@@ -2838,7 +2838,8 @@ class pydaw_abstract_custom_oscillator:
 
 
 ADDITIVE_OSC_HEIGHT = 310
-ADDITIVE_OSC_INC = 10
+ADDITIVE_OSC_MIN_AMP = -30
+ADDITIVE_OSC_INC = 10 #int(ADDITIVE_OSC_HEIGHT / -ADDITIVE_OSC_MIN_AMP)
 ADDITIVE_MAX_Y_POS = ADDITIVE_OSC_HEIGHT - ADDITIVE_OSC_INC
 ADDITIVE_OSC_HARMONIC_COUNT = 32
 ADDITIVE_OSC_BAR_WIDTH = 10
@@ -2885,12 +2886,12 @@ class pydaw_additive_osc_amp_bar(QtGui.QGraphicsRectItem):
         self.x_pos = a_x_pos
         self.setPos(a_x_pos, ADDITIVE_OSC_HEIGHT - ADDITIVE_OSC_INC)
         self.setRect(0.0, 0.0, ADDITIVE_OSC_BAR_WIDTH, ADDITIVE_OSC_INC)
-        self.value = -30
+        self.value = ADDITIVE_OSC_MIN_AMP
         self.extend_to_bottom()
 
     def set_value(self, a_value):
         if self.value != a_value:
-            self.value = a_value
+            self.value = int(a_value)
             f_y_pos = (a_value * ADDITIVE_OSC_INC * -1.0)
             self.setPos(self.x_pos, f_y_pos)
             self.extend_to_bottom()
@@ -2899,11 +2900,11 @@ class pydaw_additive_osc_amp_bar(QtGui.QGraphicsRectItem):
             return False
 
     def get_value(self):
-        return self.value
+        return int(self.value)
 
     def extend_to_bottom(self):
         f_pos_y = pydaw_util.pydaw_clip_value(
-            round(self.pos().y(), -1), 10, ADDITIVE_MAX_Y_POS)
+            round(self.pos().y(), -1), ADDITIVE_OSC_INC, ADDITIVE_MAX_Y_POS)
         self.setPos(self.x_pos, f_pos_y)
         self.setRect(
             0.0, 0.0, ADDITIVE_OSC_BAR_WIDTH,
@@ -3007,7 +3008,7 @@ class pydaw_additive_osc_viewer(QtGui.QGraphicsView):
 
     def clear_osc(self):
         for f_point in self.bars:
-            f_point.set_value(-30)
+            f_point.set_value(ADDITIVE_OSC_MIN_AMP)
         self.get_wav()
 
     def open_osc(self, a_arr):
@@ -3019,7 +3020,7 @@ class pydaw_additive_osc_viewer(QtGui.QGraphicsView):
         f_pos = a_pos
         f_pos_x = f_pos.x()
         f_pos_y = f_pos.y()
-        f_db = (f_pos_y / ADDITIVE_OSC_HEIGHT) * -30.0
+        f_db = (f_pos_y / ADDITIVE_OSC_HEIGHT) * ADDITIVE_OSC_MIN_AMP
         f_harmonic = int((f_pos_x / ADDITIVE_OSC_WIDTH) *
             ADDITIVE_OSC_HARMONIC_COUNT)
         if f_harmonic < 0:
@@ -3030,8 +3031,8 @@ class pydaw_additive_osc_viewer(QtGui.QGraphicsView):
             return
         if f_db > 0:
             f_db = 0
-        elif f_db < -30:
-            f_db = -30
+        elif f_db < ADDITIVE_OSC_MIN_AMP:
+            f_db = ADDITIVE_OSC_MIN_AMP
         if self.bars[int(f_harmonic)].set_value(int(f_db)):
             self.get_wav()
 
@@ -3142,8 +3143,9 @@ class pydaw_custom_additive_oscillator(pydaw_abstract_custom_oscillator):
             if a_configure:
                 f_recall_list.append("{}".format(f_db))
                 f_phase_list.append("{}".format(f_phase))
-            f_phase = (f_phase + 30.0) / 15.0
-            if f_db > -29:
+            f_phase = (f_phase + (ADDITIVE_OSC_MIN_AMP * -1.0)) / (
+                ADDITIVE_OSC_MIN_AMP / 2)
+            if f_db > (ADDITIVE_OSC_MIN_AMP + 1):
                 f_sin = global_get_sine(
                     f_size, f_phase) * pydaw_util.pydaw_db_to_lin(f_db)
                 for f_i2 in range(
@@ -3175,9 +3177,9 @@ class pydaw_custom_additive_oscillator(pydaw_abstract_custom_oscillator):
             f_db = int(pydaw_util.pydaw_lin_to_db(1.0 / (f_i + 1)))
             self.viewer.bars[f_i].set_value(f_db)
         for f_i in range(len(self.phase_viewer.bars)):
-            self.phase_viewer.bars[f_i].set_value(-30)
+            self.phase_viewer.bars[f_i].set_value(ADDITIVE_OSC_MIN_AMP)
         for f_i in range(1, len(self.phase_viewer.bars), 2):
-            self.phase_viewer.bars[f_i].set_value(-15)
+            self.phase_viewer.bars[f_i].set_value(ADDITIVE_OSC_MIN_AMP / 2)
         self.get_wav(True)
 
     def set_square(self):
@@ -3190,8 +3192,8 @@ class pydaw_custom_additive_oscillator(pydaw_abstract_custom_oscillator):
                 f_point.set_value(f_db)
             else:
                 f_odd = True
-                f_point.set_value(-30)
-            self.phase_viewer.bars[f_i].set_value(-30)
+                f_point.set_value(ADDITIVE_OSC_MIN_AMP)
+            self.phase_viewer.bars[f_i].set_value(ADDITIVE_OSC_MIN_AMP)
         self.get_wav(True)
 
     def set_triangle(self):
@@ -3205,17 +3207,17 @@ class pydaw_custom_additive_oscillator(pydaw_abstract_custom_oscillator):
                 f_point.set_value(f_db)
             else:
                 f_odd = True
-                f_point.set_value(-30)
-            self.phase_viewer.bars[f_i].set_value(-30)
-        self.phase_viewer.bars[2].set_value(-15)
+                f_point.set_value(ADDITIVE_OSC_MIN_AMP)
+            self.phase_viewer.bars[f_i].set_value(ADDITIVE_OSC_MIN_AMP)
+        self.phase_viewer.bars[2].set_value(ADDITIVE_OSC_MIN_AMP / 2.0)
         self.get_wav(True)
 
     def set_sine(self):
         self.viewer.bars[0].set_value(0)
         for f_point in self.viewer.bars[1:]:
-            f_point.set_value(-30)
+            f_point.set_value(ADDITIVE_OSC_MIN_AMP)
         for f_i in range(len(self.phase_viewer.bars)):
-            self.phase_viewer.bars[f_i].set_value(-30)
+            self.phase_viewer.bars[f_i].set_value(ADDITIVE_OSC_MIN_AMP)
         self.get_wav(True)
 
 AUDIO_ITEM_SCENE_HEIGHT = 1200.0
