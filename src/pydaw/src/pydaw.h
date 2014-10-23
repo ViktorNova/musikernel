@@ -286,7 +286,6 @@ typedef struct
 
 typedef struct
 {
-    t_pydaw_data * pydaw_data;
     int thread_num;
 }t_pydaw_thread_args;
 
@@ -1173,7 +1172,6 @@ void v_pydaw_init_worker_threads(t_pydaw_data * self,
         self->track_thread_quit_notifier[f_i] = 0;
         t_pydaw_thread_args * f_args =
                 (t_pydaw_thread_args*)malloc(sizeof(t_pydaw_thread_args));
-        f_args->pydaw_data = self;
         f_args->thread_num = f_i;
 
         if(f_i > 0)
@@ -1529,7 +1527,7 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
 {
     t_pytrack * f_track;
     int f_track_index;
-    t_pydaw_data * self = f_args->pydaw_data;
+    t_pydaw_data * self = pydaw_data;
     int f_i = f_args->thread_num;
 
     while(f_i < self->routing_graph->track_pool_sorted_count)
@@ -1572,7 +1570,7 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
 void * v_pydaw_worker_thread(void* a_arg)
 {
     t_pydaw_thread_args * f_args = (t_pydaw_thread_args*)(a_arg);
-    t_pydaw_data * self = f_args->pydaw_data;
+    t_pydaw_data * self = pydaw_data;
     int f_thread_num = f_args->thread_num;
     pthread_cond_t * f_track_cond = &self->track_cond[f_thread_num];
     pthread_mutex_t * f_track_block_mutex =
