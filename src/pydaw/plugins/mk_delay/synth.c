@@ -233,8 +233,8 @@ static void v_mkdelay_run(
 
         v_ldl_set_delay(plugin_data->mono_modules->delay,
             (plugin_data->mono_modules->time_smoother->last_value * 0.01f),
-            *(plugin_data->feedback),
-            *(plugin_data->wet), *(plugin_data->dry),
+            (*plugin_data->feedback) * 0.1f,
+            (*plugin_data->wet) * 0.1f, (*plugin_data->dry) * 0.1f,
             (*(plugin_data->stereo) * .01), (*plugin_data->duck),
             (*plugin_data->cutoff));
 
@@ -256,9 +256,9 @@ PYFX_Descriptor *mkdelay_PYFX_descriptor(int index)
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(MKDELAY_COUNT);
 
     pydaw_set_pyfx_port(f_result, MKDELAY_DELAY_TIME, 50.0f, 10.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, MKDELAY_FEEDBACK, -12.0f, -15.0f, 0.0f);
-    pydaw_set_pyfx_port(f_result, MKDELAY_DRY, 0.0f, -30.0f, 0.0f);
-    pydaw_set_pyfx_port(f_result, MKDELAY_WET, -30.0f, -30.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, MKDELAY_FEEDBACK, -120.0f, -200.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, MKDELAY_DRY, 0.0f, -300.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, MKDELAY_WET, -120.0f, -300.0f, 0.0f);
     pydaw_set_pyfx_port(f_result, MKDELAY_DUCK, -20.0f, -40.0f, 0.0f);
     pydaw_set_pyfx_port(f_result, MKDELAY_CUTOFF, 90.0f, 40.0f, 118.0f);
     pydaw_set_pyfx_port(f_result, MKDELAY_STEREO, 100.0f, 0.0f, 100.0f);

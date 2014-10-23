@@ -78,14 +78,14 @@ class sreverb_plugin_ui(pydaw_abstract_plugin_ui):
         self.reverb_dry_knob = pydaw_knob_control(
             f_knob_size, _("Dry"), SREVERB_REVERB_DRY,
             self.plugin_rel_callback, self.plugin_val_callback,
-            -50, 0, 0, KC_INTEGER, self.port_dict, self.preset_manager)
+            -500, 0, 0, KC_TENTH, self.port_dict, self.preset_manager)
         self.reverb_dry_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 9)
 
         self.reverb_wet_knob = pydaw_knob_control(
             f_knob_size, _("Wet"), SREVERB_REVERB_WET,
             self.plugin_rel_callback, self.plugin_val_callback,
-            -50, 0, -12, KC_INTEGER, self.port_dict, self.preset_manager)
+            -500, 0, -120, KC_TENTH, self.port_dict, self.preset_manager)
         self.reverb_wet_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 10)
 

@@ -75,17 +75,17 @@ class mkdelay_plugin_ui(pydaw_abstract_plugin_ui):
         self.feedback = pydaw_knob_control(
             f_knob_size, _("Fdbk"), MKDELAY_FEEDBACK,
             self.plugin_rel_callback, self.plugin_val_callback,
-            -20, 0, -12, KC_INTEGER, self.port_dict, self.preset_manager)
+            -200, 0, -120, KC_TENTH, self.port_dict, self.preset_manager)
         self.feedback.add_to_grid_layout(delay_gridlayout, 1)
         self.dry_knob = pydaw_knob_control(
             f_knob_size, _("Dry"), MKDELAY_DRY,
             self.plugin_rel_callback, self.plugin_val_callback,
-            -30, 0, 0, KC_INTEGER, self.port_dict, self.preset_manager)
+            -300, 0, 0, KC_TENTH, self.port_dict, self.preset_manager)
         self.dry_knob.add_to_grid_layout(delay_gridlayout, 2)
         self.wet_knob = pydaw_knob_control(
             f_knob_size, _("Wet"), MKDELAY_WET,
-            self.plugin_rel_callback, self.plugin_val_callback, -30, 0, -30,
-            KC_INTEGER, self.port_dict, self.preset_manager)
+            self.plugin_rel_callback, self.plugin_val_callback, -300, 0, -120,
+            KC_TENTH, self.port_dict, self.preset_manager)
         self.wet_knob.add_to_grid_layout(delay_gridlayout, 3)
         self.duck_knob = pydaw_knob_control(
             f_knob_size, _("Duck"), MKDELAY_DUCK,
