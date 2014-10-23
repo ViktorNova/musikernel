@@ -1469,8 +1469,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
         a_voice->current_sample *= (a_voice->adsr_main.output);
     }
 
-    a_voice->current_sample = (a_voice->current_sample) * (a_voice->amp) *
-            (a_voice->lfo_amp_output);
+    a_voice->current_sample = (a_voice->current_sample) * (a_voice->amp);
 
     a_voice->modulex_current_sample[0] = (a_voice->current_sample);
     a_voice->modulex_current_sample[1] = (a_voice->current_sample);
@@ -1510,8 +1509,10 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
         a_voice->modulex_current_sample[1] =
             a_voice->multieffect[(plugin_data->active_polyfx[a_voice_num]
                 [(i_dst)])].output1;
-
     }
+
+    a_voice->modulex_current_sample[0] *= a_voice->lfo_amp_output;
+    a_voice->modulex_current_sample[1] *= a_voice->lfo_amp_output;
 
     if(!a_voice->noise_prefx)
     {
