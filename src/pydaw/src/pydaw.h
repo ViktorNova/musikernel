@@ -118,8 +118,6 @@ typedef struct
 {
     t_pydaw_seq_event events[PYDAW_MAX_EVENTS_PER_ITEM_COUNT];
     int event_count;
-    //Used to avoid reading the same event twice in an unsorted item.
-    int rec_event_count;
     int uid;
 }t_pyitem;
 
@@ -3216,8 +3214,6 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
         }
         ++f_i;
     }
-
-    f_result->rec_event_count = f_result->event_count;
 
     g_free_2d_char_array(f_current_string);
 
