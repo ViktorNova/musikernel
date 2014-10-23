@@ -12,11 +12,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
@@ -26,7 +21,6 @@ GNU General Public License for more details.
 #include <stdio.h>
 
 #include "../../include/pydaw_plugin.h"
-
 #include "libmodsynth.h"
 #include "../../libmodsynth/lib/amp.h"
 #include "../../libmodsynth/modules/filter/svf.h"
@@ -83,7 +77,7 @@ static void v_triggerfx_connect_buffer(PYFX_Handle instance, int a_index,
     {
         return;
     }
-    
+
     t_triggerfx *plugin = (t_triggerfx*)instance;
 
     switch(a_index)
