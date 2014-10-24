@@ -1743,7 +1743,7 @@ class peak_meter:
         self.high = 0.0
         self.set_tooltip()
         self.widget.mousePressEvent = self.reset_high
-        self.white_pen = QtGui.QPen(QtCore.Qt.white)
+        self.white_pen = QtGui.QPen(QtCore.Qt.white, 1.0)
 
     def set_value(self, a_vals):
         self.values = [float(x) for x in a_vals]
@@ -1793,7 +1793,7 @@ class peak_meter:
             for f_y, f_db in zip(
             range(0, int(f_height), int(f_height * 0.2)), # / 5.0
             range(0, -30, -6)):
-                p.drawText(3, f_y, str(f_db))
+                p.drawText(3, f_y, str(-f_db))
 
 PRESET_FILE_DIALOG_STRING = 'MusiKernel Presets (*.mkp)'
 BM_FILE_DIALOG_STRING = 'MusiKernel Bookmarks (*.pybm4)'
@@ -2747,7 +2747,7 @@ class mixer_channel:
         self.vlayout.addWidget(self.name_label, -1, QtCore.Qt.AlignTop)
         self.grid_layout = QtGui.QGridLayout()
         self.vlayout.addLayout(self.grid_layout, 1)
-        self.peak_meter = peak_meter(30, True)
+        self.peak_meter = peak_meter(20, True)
         self.grid_layout.addWidget(self.peak_meter.widget, 1, 0)
 
     def clear(self):
