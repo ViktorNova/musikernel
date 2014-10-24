@@ -27,37 +27,27 @@ typedef struct
     float pitch;
     float last_wet;
     float output0, output1;
-    t_osc_simple_unison * osc;
+    t_osc_simple_unison osc;
     float osc_output;
-    t_audio_xfade * xfade;
+    t_audio_xfade xfade;
 }t_rmd_ring_mod;
 
 t_rmd_ring_mod * g_rmd_ring_mod_get(float);
 void v_rmd_ring_mod_set(t_rmd_ring_mod*, float, float);
 void v_rmd_ring_mod_run(t_rmd_ring_mod*, float, float);
-void v_rmd_ring_mod_free(t_rmd_ring_mod*);
 
-void v_rmd_ring_mod_free(t_rmd_ring_mod* a_rmd)
-{
-    if(a_rmd)
-    {
-        free(a_rmd->xfade);
-        //TODO:  Free the unison osc
-        //free(a_rmd);
-    }
-}
 
 void g_rmd_init(t_rmd_ring_mod * f_result, float a_sr)
 {
-    f_result->osc = g_osc_get_osc_simple_single(a_sr);
-    v_osc_set_simple_osc_unison_type(f_result->osc, 3);
-    v_osc_set_uni_voice_count(f_result->osc, 1);
+    g_osc_init_osc_simple_single(&f_result->osc, a_sr);
+    v_osc_set_simple_osc_unison_type(&f_result->osc, 3);
+    v_osc_set_uni_voice_count(&f_result->osc, 1);
     f_result->output0 = 0.0f;
     f_result->output1 = 0.0f;
     f_result->last_wet = -110.0f;
     f_result->pitch = -99.99f;
     f_result->osc_output = 0.0f;
-    f_result->xfade = g_axf_get_audio_xfade(0.5f);
+    g_axf_init(&f_result->xfade, 0.5f);
 }
 
 t_rmd_ring_mod * g_rmd_ring_mod_get(float a_sr)
@@ -73,23 +63,23 @@ void v_rmd_ring_mod_set(t_rmd_ring_mod* a_rmd, float a_pitch, float a_wet)
     if(a_rmd->last_wet != a_wet)
     {
         a_rmd->last_wet = a_wet;
-        v_axf_set_xfade(a_rmd->xfade, a_wet);
+        v_axf_set_xfade(&a_rmd->xfade, a_wet);
     }
 
     if(a_rmd->pitch != a_pitch)
     {
         a_rmd->pitch = a_pitch;
-        v_osc_set_unison_pitch(a_rmd->osc, 0.0f, a_pitch);
+        v_osc_set_unison_pitch(&a_rmd->osc, 0.0f, a_pitch);
     }
 }
 
 void v_rmd_ring_mod_run(t_rmd_ring_mod* a_rmd, float a_input0, float a_input1)
 {
-    a_rmd->osc_output = f_osc_run_unison_osc(a_rmd->osc);
+    a_rmd->osc_output = f_osc_run_unison_osc(&a_rmd->osc);
 
-    a_rmd->output0 = f_axf_run_xfade(a_rmd->xfade, a_input0,
+    a_rmd->output0 = f_axf_run_xfade(&a_rmd->xfade, a_input0,
             (a_input0 * (a_rmd->osc_output)));
-    a_rmd->output1 = f_axf_run_xfade(a_rmd->xfade, a_input1,
+    a_rmd->output1 = f_axf_run_xfade(&a_rmd->xfade, a_input1,
             (a_input1 * (a_rmd->osc_output)));
 }
 

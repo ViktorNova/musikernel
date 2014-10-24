@@ -26,7 +26,7 @@ typedef struct
     float output0, output1, hold0, hold1;
     int hold_count, hold_counter;
     float last_pitch, last_wet, sr;
-    t_audio_xfade * xfade;
+    t_audio_xfade xfade;
 } t_sah_sample_and_hold;
 
 t_sah_sample_and_hold * g_sah_sample_and_hold_get(float);
@@ -34,11 +34,6 @@ void v_sah_sample_and_hold_set(t_sah_sample_and_hold*, float, float);
 void v_sah_sample_and_hold_run(t_sah_sample_and_hold*, float, float);
 void v_sah_free(t_sah_sample_and_hold*);
 
-void v_sah_free(t_sah_sample_and_hold * a_sah)
-{
-    free(a_sah->xfade);
-    //free(a_sah);
-}
 
 void g_sah_init(t_sah_sample_and_hold * f_result, float a_sr)
 {
@@ -51,7 +46,7 @@ void g_sah_init(t_sah_sample_and_hold * f_result, float a_sr)
     f_result->last_pitch = -99.999f;
     f_result->sr = a_sr;
     f_result->last_wet = -99.00088f;
-    f_result->xfade = g_axf_get_audio_xfade(-3.0f);
+    g_axf_init(&f_result->xfade, -3.0f);
 }
 
 t_sah_sample_and_hold * g_sah_sample_and_hold_get(float a_sr)
@@ -76,17 +71,17 @@ void v_sah_sample_and_hold_set(t_sah_sample_and_hold* a_sah, float a_pitch,
     if(a_sah->last_wet != a_wet)
     {
         a_sah->last_wet = a_wet;
-        v_axf_set_xfade(a_sah->xfade, a_wet);
+        v_axf_set_xfade(&a_sah->xfade, a_wet);
     }
 }
 
 void v_sah_sample_and_hold_run(t_sah_sample_and_hold* a_sah,
         float a_in0, float a_in1)
 {
-    a_sah->output0 = f_axf_run_xfade(a_sah->xfade, a_in0, a_sah->hold0);
-    a_sah->output1 = f_axf_run_xfade(a_sah->xfade, a_in1, a_sah->hold1);
+    a_sah->output0 = f_axf_run_xfade(&a_sah->xfade, a_in0, a_sah->hold0);
+    a_sah->output1 = f_axf_run_xfade(&a_sah->xfade, a_in1, a_sah->hold1);
 
-    a_sah->hold_counter++;
+    ++a_sah->hold_counter;
 
     if(a_sah->hold_counter >= a_sah->hold_count)
     {

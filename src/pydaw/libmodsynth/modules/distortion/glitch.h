@@ -30,7 +30,7 @@ typedef struct
     int sample_count, repeat_count, is_repeating, current_repeat_count;
     float sr, sample_tmp;
     float output0, output1;
-    t_audio_xfade * xfade;
+    t_audio_xfade xfade;
 }t_glc_glitch;
 
 t_glc_glitch * g_glc_glitch_get(float);
@@ -71,7 +71,7 @@ void g_glc_init(t_glc_glitch * f_result, float a_sr)
     f_result->sample_count = 99.99f;
     f_result->sample_tmp = 0.0f;
     f_result->sr = a_sr;
-    f_result->xfade = g_axf_get_audio_xfade(-3.0f);
+    g_axf_init(&f_result->xfade, -3.0f);
 }
 
 t_glc_glitch * g_glc_glitch_get(float a_sr)
@@ -102,7 +102,7 @@ void v_glc_glitch_set(t_glc_glitch* a_glc, float a_pitch, float a_repeat,
     if(a_glc->last_wet != a_wet)
     {
         a_glc->last_wet = a_wet;
-        v_axf_set_xfade(a_glc->xfade, a_wet);
+        v_axf_set_xfade(&a_glc->xfade, a_wet);
     }
 }
 
@@ -113,9 +113,9 @@ inline void v_glc_glitch_retrigger(t_glc_glitch* a_glc)
 
 void v_glc_glitch_run(t_glc_glitch* a_glc, float a_input0, float a_input1)
 {
-    a_glc->output0 = f_axf_run_xfade(a_glc->xfade, a_input0,
+    a_glc->output0 = f_axf_run_xfade(&a_glc->xfade, a_input0,
             a_glc->buffer[a_glc->buffer_ptr]);
-    a_glc->output1 = f_axf_run_xfade(a_glc->xfade, a_input1,
+    a_glc->output1 = f_axf_run_xfade(&a_glc->xfade, a_input1,
             a_glc->buffer[a_glc->buffer_ptr]);
 
     if(!a_glc->is_repeating)

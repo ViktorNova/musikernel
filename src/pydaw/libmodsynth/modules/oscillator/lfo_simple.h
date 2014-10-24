@@ -25,7 +25,7 @@ extern "C" {
 typedef struct st_lfs_lfo
 {
     float inc, sr, sr_recip, output;
-    t_osc_core * osc_core;
+    t_osc_core osc_core;
     fp_get_osc_func_ptr osc_ptr;
 }t_lfs_lfo;
 
@@ -47,7 +47,7 @@ void v_lfs_free(t_lfs_lfo * );
  */
 inline void v_lfs_sync(t_lfs_lfo * a_lfs, float a_phase, int a_type)
 {
-    a_lfs->osc_core->output = a_phase;
+    a_lfs->osc_core.output = a_phase;
 
     switch(a_type)
     {
@@ -60,7 +60,7 @@ inline void v_lfs_sync(t_lfs_lfo * a_lfs, float a_phase, int a_type)
         case 2:
             a_lfs->osc_ptr = f_get_triangle;
             //So that it will be at 0 to begin with
-            a_lfs->osc_core->output = 0.5f;
+            a_lfs->osc_core.output = 0.5f;
             break;
     }
 }
@@ -81,18 +81,18 @@ inline void v_lfs_set(t_lfs_lfo * a_lfs_ptr, float a_hz)
  */
 inline void v_lfs_run(t_lfs_lfo * a_lfs)
 {
-    v_run_osc(a_lfs->osc_core, (a_lfs->inc));
-    a_lfs->output = a_lfs->osc_ptr(a_lfs->osc_core);
+    v_run_osc(&a_lfs->osc_core, (a_lfs->inc));
+    a_lfs->output = a_lfs->osc_ptr(&a_lfs->osc_core);
 }
 
 void g_lfs_init(t_lfs_lfo * f_result, float a_sr)
 {
     f_result->inc = 0.0f;
-    f_result->osc_core = g_get_osc_core();
+    g_init_osc_core(&f_result->osc_core);
     f_result->osc_ptr = f_get_osc_off;
     f_result->output = 0.0f;
     f_result->sr = a_sr;
-    f_result->sr_recip = 1.0f/a_sr;
+    f_result->sr_recip = 1.0f / a_sr;
 }
 
 t_lfs_lfo * g_lfs_get(float a_sr)
@@ -105,7 +105,6 @@ t_lfs_lfo * g_lfs_get(float a_sr)
 
 void v_lfs_free(t_lfs_lfo * a_lfs)
 {
-    v_osc_core_free(a_lfs->osc_core);
     free(a_lfs);
 }
 

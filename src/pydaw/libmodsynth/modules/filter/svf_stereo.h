@@ -105,12 +105,6 @@ inline void v_svf2_reset(t_svf2_filter * a_svf2)
     }
 }
 
-void v_svf2_free(t_svf2_filter*);
-
-void v_svf2_free(t_svf2_filter* a_svf2)
-{
-    //free(a_svf2);
-}
 
 /* inline void v_svf2_run_no_filter(
  * t_svf2_filter* a_svf,

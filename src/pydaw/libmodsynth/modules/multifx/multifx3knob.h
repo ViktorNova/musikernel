@@ -808,15 +808,8 @@ void v_mf3_free(t_mf3_multi * a_mf3 )
         v_crs_free(&a_mf3->chorus);
         v_cmb_free(&a_mf3->comb_filter0);
         v_cmb_free(&a_mf3->comb_filter1);
-        //TODO:  this one's not finished yet
-        v_for_formant_filter_free(&a_mf3->formant_filter);
-        v_grw_growl_filter_free(&a_mf3->growl_filter);
         v_glc_glitch_free(&a_mf3->glitch);
         v_lim_free(&a_mf3->limiter);
-        //TODO: this one is not finished yet either...
-        v_rmd_ring_mod_free(&a_mf3->ring_mod);
-        v_sah_free(&a_mf3->s_and_h);
-        v_svf2_free(&a_mf3->svf);
         free(a_mf3);
     }
 }

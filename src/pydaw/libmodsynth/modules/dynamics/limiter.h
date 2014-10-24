@@ -39,7 +39,7 @@ typedef struct st_lim_limiter
     float autogain;
     float *buffer0, *buffer1;
     int buffer_size, buffer_index, buffer_read_index;
-    t_state_variable_filter * filter;
+    t_state_variable_filter filter;
 }t_lim_limiter;
 
 t_lim_limiter * g_lim_get(float);
@@ -154,7 +154,7 @@ void v_lim_run(t_lim_limiter *a_lim, float a_in0, float a_in1)
     }
 
     float f_gain =
-        v_svf_run_4_pole_lp(a_lim->filter, (a_lim->gain) * (a_lim->autogain));
+        v_svf_run_4_pole_lp(&a_lim->filter, (a_lim->gain) * (a_lim->autogain));
 
     a_lim->output0 = (a_lim->buffer0[(a_lim->buffer_index)]) * f_gain;
     a_lim->output1 = (a_lim->buffer1[(a_lim->buffer_index)]) * f_gain;
@@ -200,15 +200,15 @@ void g_lim_init(t_lim_limiter * f_result, float a_sr)
     f_result->sr = a_sr;
     f_result->sr_recip = 1.0f / a_sr;
 
-    f_result->filter = g_svf_get(a_sr);
-    v_svf_set_res(f_result->filter, -9.0f);
-    v_svf_set_cutoff_base(f_result->filter, f_pit_hz_to_midi_note(4000.0f));
-    v_svf_set_cutoff(f_result->filter);
+    g_svf_init(&f_result->filter, a_sr);
+    v_svf_set_res(&f_result->filter, -9.0f);
+    v_svf_set_cutoff_base(&f_result->filter, f_pit_hz_to_midi_note(4000.0f));
+    v_svf_set_cutoff(&f_result->filter);
 
     f_i = 0;
     while(f_i < 50)
     {
-        v_svf_run_4_pole_lp(f_result->filter, 1.0f);
+        v_svf_run_4_pole_lp(&f_result->filter, 1.0f);
         f_i++;
     }
 

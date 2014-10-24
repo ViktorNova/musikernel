@@ -67,23 +67,13 @@ typedef struct
     float pitch_tmp;
     float last_pos;
     float last_wet;
-    t_audio_xfade * xfade;
+    t_audio_xfade xfade;
 }t_for_formant_filter;
 
 t_for_formant_filter * g_for_formant_filter_get(float);
 void v_for_formant_filter_set(t_for_formant_filter*, float, float);
 void v_for_formant_filter_run(t_for_formant_filter*, float, float);
-void v_for_formant_filter_free(t_for_formant_filter*);
 
-void v_for_formant_filter_free(t_for_formant_filter * a_for)
-{
-    if(a_for)
-    {
-        free(a_for->xfade);
-        //TODO:  Free the filters, after replacing with the stereo version
-        //free(a_for);
-    }
-}
 
 void g_for_init(t_for_formant_filter * f_result, float a_sr)
 {
@@ -107,7 +97,7 @@ void g_for_init(t_for_formant_filter * f_result, float a_sr)
     f_result->pitch_tmp = 0.0f;
     f_result->last_pos = -99.0f;
     f_result->last_wet = 0.0f;
-    f_result->xfade = g_axf_get_audio_xfade(-3.0f);
+    g_axf_init(&f_result->xfade, -3.0f);
 }
 
 t_for_formant_filter * g_for_formant_filter_get(float a_sr)
@@ -142,7 +132,7 @@ void v_for_formant_filter_set(t_for_formant_filter* a_for, float a_pos, float a_
     if(a_for->last_wet != a_wet)
     {
         a_for->last_wet = a_wet;
-        v_axf_set_xfade(a_for->xfade, a_wet);
+        v_axf_set_xfade(&a_for->xfade, a_wet);
     }
 }
 
@@ -154,16 +144,18 @@ void v_for_formant_filter_run(t_for_formant_filter* a_for, float a_input0, float
 
     while(iter < 3)
     {
-        a_for->output0 += v_svf_run_4_pole_bp(a_for->filters[(iter)][0], a_input0);
-        a_for->output1 += v_svf_run_4_pole_bp(a_for->filters[(iter)][1], a_input1);
+        a_for->output0 +=
+            v_svf_run_4_pole_bp(a_for->filters[(iter)][0], a_input0);
+        a_for->output1 +=
+            v_svf_run_4_pole_bp(a_for->filters[(iter)][1], a_input1);
         ++iter;
     }
 
     a_for->output0 *= 0.33333f;
     a_for->output1 *= 0.33333f;
 
-    a_for->output0 = f_axf_run_xfade(a_for->xfade, a_input0, a_for->output0);
-    a_for->output1 = f_axf_run_xfade(a_for->xfade, a_input1, a_for->output1);
+    a_for->output0 = f_axf_run_xfade(&a_for->xfade, a_input0, a_for->output0);
+    a_for->output1 = f_axf_run_xfade(&a_for->xfade, a_input1, a_for->output1);
 }
 
 
@@ -311,13 +303,6 @@ void v_grw_growl_filter_run(t_grw_growl_filter* a_grw,
     a_grw->output1 = f_axf_run_xfade(&a_grw->xfade, a_input1, a_grw->output1);
 }
 
-void v_grw_growl_filter_free(t_grw_growl_filter *a_grw)
-{
-    if(a_grw)
-    {
-         free(a_grw);
-    }
-}
 
 #ifdef	__cplusplus
 }
