@@ -1287,7 +1287,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         }
 
         v_pydaw_offline_render(self, f_region_index, f_start_bar,
-                f_region_index, f_end_bar, f_path, 1);
+                f_region_index, f_end_bar, f_path, 1, 1);
 
         v_free_split_line(f_val_arr);
 

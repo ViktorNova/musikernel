@@ -329,7 +329,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * pydaw_data, int sample_count,
         long f_next_current_sample, float **output, float **a_input_buffers);
 void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         int a_start_bar, int a_end_region, int a_end_bar, char * a_file_out,
-        int a_is_audio_glue);
+        int a_is_audio_glue, int a_create_file);
 inline void v_pydaw_audio_items_run(t_pydaw_data * self,
         int a_sample_count, float** a_output,
         int a_audio_track_num, int a_is_audio_glue);
@@ -3910,7 +3910,8 @@ void v_pydaw_offline_render_prep(t_pydaw_data * self)
 
 void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         int a_start_bar, int a_end_region,
-        int a_end_bar, char * a_file_out, int a_is_audio_glue)
+        int a_end_bar, char * a_file_out, int a_is_audio_glue,
+        int a_create_file)
 {
     pthread_spin_lock(&musikernel->main_lock);
     musikernel->is_offline_rendering = 1;
@@ -4032,7 +4033,10 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
             ++f_i;
         }
 
-        sf_writef_float(f_sndfile, f_output, f_block_size);
+        if(a_create_file)
+        {
+            sf_writef_float(f_sndfile, f_output, f_block_size);
+        }
     }
 
     v_pydaw_print_benchmark("v_pydaw_offline_render ", f_start);

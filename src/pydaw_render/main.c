@@ -38,10 +38,10 @@ void print_help()
 
 int main(int argc, char** argv)
 {
-    if(argc != 10)
+    if(argc < 10)
     {
         print_help();
-        exit(100);
+        exit(1);
     }
 
     char * f_project_dir = argv[1];
@@ -53,6 +53,16 @@ int main(int argc, char** argv)
     int f_sample_rate = atoi(argv[7]);
     int f_buffer_size = atoi(argv[8]);
     int f_thread_count = atoi(argv[9]);
+    int f_create_file = 1;
+
+    int f_i;
+    for(f_i = 10; f_i < argc; ++f_i)
+    {
+        if(!strcmp(argv[f_i], "--no-file"))
+        {
+            f_create_file = 0;
+        }
+    }
 
     g_musikernel_get(f_sample_rate);
     g_pydaw_instantiate(0);
@@ -63,7 +73,7 @@ int main(int argc, char** argv)
 
     v_pydaw_activate(f_thread_count, 0, f_project_dir);
 
-    int f_i = 0;
+    f_i = 0;
     while(f_i < 2)
     {
         buffer_alloc((void**)&f_output[f_i], sizeof(float) * f_buffer_size);
@@ -101,7 +111,7 @@ int main(int argc, char** argv)
     */
 
     v_pydaw_offline_render(pydaw_data, f_start_region, f_start_bar,
-            f_end_region, f_end_bar, f_output_file, 0);
+            f_end_region, f_end_bar, f_output_file, 0, f_create_file);
 
     /*
     printf("\nRunning benchmark of interleaved vs. non-interleaved buffers\n");
