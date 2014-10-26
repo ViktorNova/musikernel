@@ -9145,6 +9145,10 @@ class pydaw_main_window(QtGui.QMainWindow):
 
         self.menu_help = self.menu_bar.addMenu(_("Help"))
 
+        self.troubleshoot_action = self.menu_help.addAction(
+            _("Troubleshooting..."))
+        self.troubleshoot_action.triggered.connect(self.on_troubleshoot)
+
         self.version_action = self.menu_help.addAction(_("Version Info..."))
         self.version_action.triggered.connect(self.on_version)
 
@@ -9768,9 +9772,7 @@ class pydaw_main_window(QtGui.QMainWindow):
         except Exception as ex:
             pydaw_print_generic_exception(ex)
 
-    def on_version(self):
-        def on_ok():
-            f_window.close()
+    def on_version(self):        
         f_window = QtGui.QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Version Info"))
         f_window.setFixedSize(420, 150)
@@ -9786,8 +9788,23 @@ class pydaw_main_window(QtGui.QMainWindow):
         f_layout.addWidget(f_version)
         f_ok_button = QtGui.QPushButton(_("OK"))
         f_layout.addWidget(f_ok_button)
-        f_ok_button.pressed.connect(on_ok)
+        f_ok_button.pressed.connect(f_window.close)
         f_window.exec_()
+
+    def on_troubleshoot(self):
+        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.setWindowTitle(_("Troubleshooting"))
+        f_window.setFixedSize(640, 460)
+        f_layout = QtGui.QVBoxLayout()
+        f_window.setLayout(f_layout)        
+        f_label = QtGui.QTextEdit(libpydaw.strings.troubleshooting)        
+        f_label.setReadOnly(True)
+        f_layout.addWidget(f_label)
+        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_layout.addWidget(f_ok_button)
+        f_ok_button.pressed.connect(f_window.close)
+        f_window.exec_()
+        
 
     def on_spacebar(self):
         TRANSPORT.on_spacebar()

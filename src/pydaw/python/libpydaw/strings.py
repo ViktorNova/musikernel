@@ -192,3 +192,19 @@ Creating feedback loops is not supported, you will receive an error
 message if an attempted connection creates feedback.
 """
 )
+
+troubleshooting = _(
+"""Drop-outs or Xruns:
+
+
+These are usually caused by CPU power management throttling the CPU clock
+frequency too aggressively.  Some PCs may just be able to force the CPU
+governor to "Performance" mode, others may have to disable power management
+features in the BIOS.  Many laptops don't expose the ability to turn off
+these features in the BIOS.  Unfortunately, there is no one-size-fits-all
+solution, as different generations of Intel and AMD processors use different
+CPU frequency drivers and offer different power saving features and different
+BIOS.
+"""
+)
+
