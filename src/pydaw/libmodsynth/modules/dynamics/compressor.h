@@ -23,7 +23,8 @@ extern "C" {
 
 typedef struct
 {
-    float thresh, ratio, ratio_recip, knee, gain, gain_lin, output0, output1;
+    float thresh, ratio, ratio_recip, knee, knee_thresh,
+        gain, gain_lin, output0, output1;
     t_enf2_env_follower env_follower;
 }t_cmp_compressor;
 
@@ -35,6 +36,7 @@ typedef struct
 void g_cmp_init(t_cmp_compressor * self, float a_sr)
 {
     self->thresh = 0.0f;
+    self->knee_thresh = 0.0f;
     self->ratio = 1.0f;
     self->knee = 0.0f;
     self->gain = 0.0f;
@@ -49,8 +51,9 @@ void v_cmp_set(t_cmp_compressor * self, float thresh, float ratio,
 {
     v_enf_set(&self->env_follower, attack, release);
 
-    self->knee = thresh - knee;
+    self->knee = knee;
     self->thresh = thresh;
+    self->knee_thresh = thresh - knee;
 
     if(self->ratio != ratio)
     {
@@ -75,6 +78,15 @@ void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
     {
         float f_vol =
             f_db_to_linear_fast((f_db - self->thresh) * self->ratio_recip);
+        self->output0 = a_in0 * f_vol;
+        self->output1 = a_in1 * f_vol;
+    }
+    else if(f_db > self->knee_thresh)
+    {
+        float f_diff = (f_db - self->knee_thresh);
+        float f_percent = f_diff / self->knee;
+        float f_ratio = ((self->ratio - 1.0f) * f_percent) + 1.0f;
+        float f_vol = f_db_to_linear_fast(f_diff / f_ratio);
         self->output0 = a_in0 * f_vol;
         self->output1 = a_in1 * f_vol;
     }
