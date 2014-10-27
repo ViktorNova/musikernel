@@ -7914,18 +7914,20 @@ class midi_devices_dialog:
 PLUGIN_INSTRUMENT_COUNT = 3  # For inserting the split line into the menu
 
 PLUGIN_NAMES = [
-    "Euphoria", "Ray-V", "Way-V", "MK Channel", "MK Delay",
-    "MK EQ", "Modulex", "Sidechain Comp.", "Simple Fader",
-    "Simple Reverb", "TriggerFX", "X-Fade",
+    "Euphoria", "Ray-V", "Way-V", "MK Channel", "MK Compressor",
+    "MK Delay", "MK EQ", "Modulex", "Sidechain Comp.",
+    "Simple Fader", "Simple Reverb", "TriggerFX", "X-Fade",
     ]
 PLUGIN_UIDS = {
     "None":0, "Euphoria":1, "Ray-V":2, "Way-V":3, "Modulex":4, "MK Delay":5,
     "MK EQ":6, "Simple Fader":7, "Simple Reverb":8, "TriggerFX":9,
-    "Sidechain Comp.":10, "MK Channel":11, "X-Fade":12
+    "Sidechain Comp.":10, "MK Channel":11, "X-Fade":12, "MK Compressor":13,
     }
 WAVE_EDITOR_PLUGIN_NAMES = [
-    "None", "MK Channel", "MK Delay", "MK EQ", "Modulex", "Simple Fader",
-    "Simple Reverb"]
+    "None", "MK Channel", "MK Compressor", "MK Delay", "MK EQ",
+    "Modulex", "Simple Fader", "Simple Reverb"
+    ]
+
 MIXER_PLUGIN_NAMES = ["None", "Simple Fader", "MK Channel"]
 PLUGIN_UIDS_REVERSE = {v:k for k, v in PLUGIN_UIDS.items()}
 CC_NAMES = {x:[] for x in PLUGIN_NAMES}
@@ -8940,6 +8942,7 @@ PLUGIN_UI_TYPES = {
     10:mkplugins.sidechain_comp.scc_plugin_ui,
     11:mkplugins.mk_channel.mkchnl_plugin_ui,
     12:mkplugins.xfade.xfade_plugin_ui,
+    13:mkplugins.mk_compressor.mk_comp_plugin_ui,
 }
 
 def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title,
@@ -9772,7 +9775,7 @@ class pydaw_main_window(QtGui.QMainWindow):
         except Exception as ex:
             pydaw_print_generic_exception(ex)
 
-    def on_version(self):        
+    def on_version(self):
         f_window = QtGui.QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Version Info"))
         f_window.setFixedSize(420, 150)
@@ -9796,15 +9799,15 @@ class pydaw_main_window(QtGui.QMainWindow):
         f_window.setWindowTitle(_("Troubleshooting"))
         f_window.setFixedSize(640, 460)
         f_layout = QtGui.QVBoxLayout()
-        f_window.setLayout(f_layout)        
-        f_label = QtGui.QTextEdit(libpydaw.strings.troubleshooting)        
+        f_window.setLayout(f_layout)
+        f_label = QtGui.QTextEdit(libpydaw.strings.troubleshooting)
         f_label.setReadOnly(True)
         f_layout.addWidget(f_label)
         f_ok_button = QtGui.QPushButton(_("OK"))
         f_layout.addWidget(f_ok_button)
         f_ok_button.pressed.connect(f_window.close)
         f_window.exec_()
-        
+
 
     def on_spacebar(self):
         TRANSPORT.on_spacebar()
@@ -10231,6 +10234,7 @@ def pydaw_load_controller_maps():
         "Ray-V":mkplugins.rayv.RAYV_PORT_MAP,
         "Modulex":mkplugins.modulex.MODULEX_PORT_MAP,
         "MK Channel":mkplugins.mk_channel.MKCHNL_PORT_MAP,
+        "MK Compressor":mkplugins.mk_compressor.MK_COMP_PORT_MAP,
         "MK Delay":mkplugins.mk_delay.MKDELAY_PORT_MAP,
         "MK EQ":mkplugins.mk_eq.MKEQ_PORT_MAP,
         "Simple Fader":mkplugins.simple_fader.SFADER_PORT_MAP,

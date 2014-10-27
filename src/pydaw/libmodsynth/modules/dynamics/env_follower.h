@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef ENV_FOLLOWER_H
-#define	ENV_FOLLOWER_H
+#ifndef ENF_ENV_FOLLOWER_H
+#define	ENF_ENV_FOLLOWER_H
 
 #include "../../lib/lms_math.h"
 #include <math.h>
@@ -29,14 +29,14 @@ typedef struct
     float r_coeff;
     float envelope;
     float sample_rate;
-}t_enf_env_follower;
+}t_enf2_env_follower;
 
 #ifdef	__cplusplus
 }
 #endif
 
 
-void g_enf_init(t_enf_env_follower* self, float a_sr)
+void g_enf_init(t_enf2_env_follower* self, float a_sr)
 {
     self->envelope = 0.0f;
     self->sample_rate = a_sr;
@@ -44,7 +44,7 @@ void g_enf_init(t_enf_env_follower* self, float a_sr)
     self->release = -1.234f;
 }
 
-void v_enf_set(t_enf_env_follower* self, float a_attack, float a_release)
+void v_enf_set(t_enf2_env_follower* self, float a_attack, float a_release)
 {
     if(self->attack != a_attack)
     {
@@ -59,7 +59,7 @@ void v_enf_set(t_enf_env_follower* self, float a_attack, float a_release)
     }
 }
 
-void v_enf_run(t_enf_env_follower* self, float a_input)
+void v_enf_run(t_enf2_env_follower* self, float a_input)
 {
     float tmp = f_lms_abs(a_input);
     if(tmp > self->envelope)
@@ -75,5 +75,5 @@ void v_enf_run(t_enf_env_follower* self, float a_input)
 }
 
 
-#endif	/* ENV_FOLLOWER_H */
+#endif	/* ENF_ENV_FOLLOWER_H */
 
