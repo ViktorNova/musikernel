@@ -262,6 +262,10 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/mkplugins/xfade.pyc
 /usr/lib/{0}/pydaw/python/mkplugins/xfade.pyo
 
+/usr/lib/{0}/pydaw/python/mkplugins/mk_compressor.py
+/usr/lib/{0}/pydaw/python/mkplugins/mk_compressor.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/mk_compressor.pyo
+
 %doc
 
 """.format(global_pydaw_version_string, global_version_fedora,
