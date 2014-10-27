@@ -82,7 +82,7 @@ class mk_comp_plugin_ui(pydaw_abstract_plugin_ui):
         self.knee_knob = pydaw_knob_control(
             f_knob_size, _("Knee"), MK_COMP_KNEE,
             self.plugin_rel_callback, self.plugin_val_callback,
-            0, 100, 0, KC_NONE, self.port_dict, self.preset_manager)
+            0, 120, 0, KC_TENTH, self.port_dict, self.preset_manager)
         self.knee_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 15)
 
@@ -96,7 +96,7 @@ class mk_comp_plugin_ui(pydaw_abstract_plugin_ui):
         self.release_knob = pydaw_knob_control(
             f_knob_size, _("Release"), MK_COMP_RELEASE,
             self.plugin_rel_callback, self.plugin_val_callback,
-            20, 100, 50, KC_DECIMAL, self.port_dict, self.preset_manager)
+            20, 300, 50, KC_DECIMAL, self.port_dict, self.preset_manager)
         self.release_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 22)
 

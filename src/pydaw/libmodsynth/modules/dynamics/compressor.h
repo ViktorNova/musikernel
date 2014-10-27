@@ -48,7 +48,8 @@ void v_cmp_set(t_cmp_compressor * self, float thresh, float ratio,
         float knee, float attack, float release, float gain)
 {
     v_enf_set(&self->env_follower, attack, release);
-    self->knee = knee;
+
+    self->knee = thresh - knee;
     self->thresh = thresh;
 
     if(self->ratio != ratio)

@@ -205,7 +205,7 @@ static void v_mk_comp_run(
 
         v_cmp_set(&plugin_data->mono_modules->compressor,
             *plugin_data->threshold * 0.1f, (*plugin_data->ratio) * 0.1f,
-            *plugin_data->knee * 0.01f, *plugin_data->attack * 0.01f,
+            *plugin_data->knee * 0.1f, *plugin_data->attack * 0.01f,
             *plugin_data->release * 0.01f, *plugin_data->gain * 0.1f);
 
         v_cmp_run(&plugin_data->mono_modules->compressor,
@@ -225,9 +225,9 @@ PYFX_Descriptor *mk_comp_PYFX_descriptor(int index)
 
     pydaw_set_pyfx_port(f_result, MK_COMP_THRESHOLD, -240.0f, -360.0f, -60.0f);
     pydaw_set_pyfx_port(f_result, MK_COMP_RATIO, 20.0f, 10.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, MK_COMP_KNEE, 0.0f, 0.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, MK_COMP_KNEE, 0.0f, 0.0f, 120.0f);
     pydaw_set_pyfx_port(f_result, MK_COMP_ATTACK, 20.0f, 10.0f, 50.0f);
-    pydaw_set_pyfx_port(f_result, MK_COMP_RELEASE, 50.0f, 20.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, MK_COMP_RELEASE, 50.0f, 20.0f, 300.0f);
     pydaw_set_pyfx_port(f_result, MK_COMP_GAIN, 0.0f, -240.0f, 240.0f);
 
     f_result->cleanup = v_mk_comp_cleanup;
