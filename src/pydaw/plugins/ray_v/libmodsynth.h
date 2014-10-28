@@ -88,7 +88,7 @@ typedef struct
 
     t_clipper clipper1;
     t_audio_xfade dist_dry_wet;
-}t_rayv_poly_voice;
+}t_rayv_poly_voice  __attribute__((aligned(16)));
 
 t_rayv_poly_voice * g_rayv_poly_init(float);
 
@@ -96,8 +96,8 @@ t_rayv_poly_voice * g_rayv_poly_init(float);
 
 t_rayv_poly_voice * g_rayv_poly_init(float a_sr)
 {
-    t_rayv_poly_voice * f_voice =
-            (t_rayv_poly_voice*)malloc(sizeof(t_rayv_poly_voice));
+    t_rayv_poly_voice * f_voice;
+    lmalloc((void**)&f_voice, sizeof(t_rayv_poly_voice));
 
     g_osc_simple_unison_init(&f_voice->osc_unison1, a_sr);
     g_osc_simple_unison_init(&f_voice->osc_unison2, a_sr);

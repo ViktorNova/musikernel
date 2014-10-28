@@ -119,7 +119,7 @@ typedef struct
     float amp;
     float master_vol_lin;
 
-}t_wayv_poly_voice;
+}t_wayv_poly_voice  __attribute__((aligned(16)));
 
 t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono);
 

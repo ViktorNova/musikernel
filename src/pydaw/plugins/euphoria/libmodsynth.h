@@ -117,11 +117,7 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float);
 t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 {
     t_euphoria_poly_voice * f_voice;
-    if(posix_memalign((void**)&(f_voice), 16,
-            (sizeof(t_euphoria_poly_voice))) != 0)
-    {
-        return 0;
-    }
+    lmalloc((void**)&f_voice, sizeof(t_euphoria_poly_voice));
 
     int f_i = 0;
 
@@ -148,7 +144,7 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 
     //From Modulex
 
-    for(f_i = 0; f_i < EUPHORIA_MODULAR_POLYFX_COUNT; f_i++)
+    for(f_i = 0; f_i < EUPHORIA_MODULAR_POLYFX_COUNT; ++f_i)
     {
         g_mf3_init(&f_voice->multieffect[f_i], a_sr);
         f_voice->fx_func_ptr[f_i] = v_mf3_run_off;
