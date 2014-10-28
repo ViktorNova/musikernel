@@ -1,0 +1,5 @@
+PYDAW_VERSION=$(cat ../major-version.txt)
+BIN=$PYDAW_VERSION"_render-dbg"
+
+make clean && make debug && pahole $BIN
+
