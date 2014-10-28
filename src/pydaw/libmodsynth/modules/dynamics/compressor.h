@@ -14,7 +14,7 @@ GNU General Public License for more details.
 #ifndef COMPRESSOR_H
 #define	COMPRESSOR_H
 
-#include "env_follower.h"
+#include "../modulation/env_follower2.h"
 #include "../../lib/amp.h"
 
 #ifdef	__cplusplus
