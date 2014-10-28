@@ -318,22 +318,18 @@ void v_wav_pool_add_items(t_wav_pool* a_wav_pool, char * a_file_path)
 
 t_wav_pool_item * g_wav_pool_get_item_by_uid(t_wav_pool* a_wav_pool, int a_uid)
 {
-    int f_i = 0;
-    while(f_i < a_wav_pool->count)
+    if(a_wav_pool->items[a_uid] && a_wav_pool->items[a_uid]->uid == a_uid)
     {
-        if(a_wav_pool->items[f_i] && a_wav_pool->items[f_i]->uid == a_uid)
+        if(!a_wav_pool->items[a_uid]->is_loaded)
         {
-            if(!a_wav_pool->items[f_i]->is_loaded)
+            if(!i_wav_pool_item_load(a_wav_pool->items[a_uid]))
             {
-                if(!i_wav_pool_item_load(a_wav_pool->items[f_i]))
-                {
-                    return 0;
-                }
+                return 0;
             }
-            return a_wav_pool->items[f_i];
         }
-        f_i++;
+        return a_wav_pool->items[a_uid];
     }
+
     return 0;
 }
 
