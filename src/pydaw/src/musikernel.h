@@ -19,6 +19,8 @@ GNU General Public License for more details.
 #define PYDAW_MIDI_NOTE_COUNT 128
 #define MAX_PLUGIN_COUNT 10
 
+int exiting = 0;
+
 #ifdef	__cplusplus
 extern "C" {
 #endif

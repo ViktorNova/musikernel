@@ -24,6 +24,55 @@ GNU General Public License for more details.
 #define _GNU_SOURCE
 #endif
 
+#define CONFIGURE_KEY_SS "ss"
+#define CONFIGURE_KEY_OS "os"
+#define CONFIGURE_KEY_SI "si"
+#define CONFIGURE_KEY_SR "sr"
+#define CONFIGURE_KEY_SAVE_ATM "sa"
+#define CONFIGURE_KEY_EN_PLAYBACK "enp"
+#define CONFIGURE_KEY_WN_PLAYBACK "wnp"
+#define CONFIGURE_KEY_LOOP "loop"
+#define CONFIGURE_KEY_TEMPO "tempo"
+#define CONFIGURE_KEY_SOLO "solo"
+#define CONFIGURE_KEY_MUTE "mute"
+
+#define CONFIGURE_KEY_PREVIEW_SAMPLE "preview"
+#define CONFIGURE_KEY_STOP_PREVIEW "spr"
+
+#define CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL "ai"
+#define CONFIGURE_KEY_ADD_TO_WAV_POOL "wp"
+
+#define CONFIGURE_KEY_UPDATE_AUDIO_INPUTS "ua"
+#define CONFIGURE_KEY_SET_OVERDUB_MODE "od"
+
+#define CONFIGURE_KEY_LOAD_AB_OPEN "abo"
+#define CONFIGURE_KEY_LOAD_AB_SET "abs"
+#define CONFIGURE_KEY_WE_SET "we"
+#define CONFIGURE_KEY_WE_EXPORT "wex"
+#define CONFIGURE_KEY_PANIC "panic"
+#define CONFIGURE_KEY_PITCH_ENV "penv"
+#define CONFIGURE_KEY_RATE_ENV "renv"
+//Update a single control for a per-audio-item-fx
+#define CONFIGURE_KEY_PER_AUDIO_ITEM_FX "paif"
+//Reload entire region for per-audio-item-fx
+#define CONFIGURE_KEY_PER_AUDIO_ITEM_FX_REGION "par"
+#define CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL "pc"
+#define CONFIGURE_KEY_CONFIGURE_PLUGIN "co"
+#define CONFIGURE_KEY_GLUE_AUDIO_ITEMS "ga"
+#define CONFIGURE_KEY_EXIT "exit"
+
+#define CONFIGURE_KEY_MIDI_LEARN "ml"
+#define CONFIGURE_KEY_LOAD_CC_MAP "cm"
+#define CONFIGURE_KEY_MIDI_DEVICE "md"
+
+#define CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD "wr"
+#define CONFIGURE_KEY_MASTER_VOL "mvol"
+#define CONFIGURE_KEY_KILL_ENGINE "abort"
+#define CONFIGURE_KEY_SET_POS "pos"
+
+#define CONFIGURE_KEY_PLUGIN_INDEX "pi"
+#define CONFIGURE_KEY_UPDATE_SEND "ts"
+
 #define PYDAW_LOOP_MODE_OFF 0
 #define PYDAW_LOOP_MODE_REGION 1
 
@@ -4378,6 +4427,500 @@ void v_pydaw_set_midi_device(
         f_track_new->extern_midi = 0;
         f_track_new->extern_midi_count = &ZERO;
         f_track_new->midi_device = 0;
+    }
+}
+
+void v_parse_configure_message(t_pydaw_data* self,
+        const char* a_key, const char* a_value)
+{
+    printf("v_parse_configure_message:  key: \"%s\", value: \"%s\"\n",
+            a_key, a_value);
+    if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL))
+    {
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 3,
+                PYDAW_TINY_STRING);
+
+        int f_plugin_uid = atoi(f_val_arr->array[0]);
+
+        int f_port = atoi(f_val_arr->array[1]);
+        float f_value = atof(f_val_arr->array[2]);
+
+        t_pydaw_plugin * f_instance;
+        pthread_spin_lock(&musikernel->main_lock);
+
+        f_instance = musikernel->plugin_pool[f_plugin_uid];
+
+        if(f_instance)
+        {
+            f_instance->descriptor->set_port_value(
+                f_instance->PYFX_handle, f_port, f_value);
+        }
+        else
+        {
+            printf("Error, no valid plugin instance\n");
+        }
+        pthread_spin_unlock(&musikernel->main_lock);
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_CONFIGURE_PLUGIN))
+    {
+        t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 3,
+                PYDAW_LARGE_STRING);
+        int f_plugin_uid = atoi(f_val_arr->array[0]);
+        char * f_key = f_val_arr->array[1];
+        char * f_message = f_val_arr->array[2];
+
+        t_pydaw_plugin * f_instance = musikernel->plugin_pool[f_plugin_uid];
+
+        if(f_instance)
+        {
+            f_instance->descriptor->configure(
+                f_instance->PYFX_handle, f_key, f_message, &musikernel->main_lock);
+        }
+        else
+        {
+            printf("Error, no valid plugin instance\n");
+        }
+
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_PER_AUDIO_ITEM_FX))
+    {
+        t_1d_char_array * f_arr = c_split_str(a_value, '|', 4,
+                PYDAW_SMALL_STRING);
+        int f_region_uid = atoi(f_arr->array[0]);
+        int f_item_index = atoi(f_arr->array[1]);
+        int f_port_num = atoi(f_arr->array[2]);
+        float f_port_val = atof(f_arr->array[3]);
+
+        v_paif_set_control(self, f_region_uid, f_item_index,
+                f_port_num, f_port_val);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_EN_PLAYBACK))
+    {
+        t_1d_char_array * f_arr = c_split_str(a_value, '|', 3,
+                PYDAW_SMALL_STRING);
+        int f_mode = atoi(f_arr->array[0]);
+        assert(f_mode >= 0 && f_mode <= 2);
+        int f_region = atoi(f_arr->array[1]);
+        int f_bar = atoi(f_arr->array[2]);
+        v_set_playback_mode(self, f_mode, f_region, f_bar, 1);
+        g_free_1d_char_array(f_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_WN_PLAYBACK))
+    {
+        int f_mode = atoi(a_value);
+        assert(f_mode >= 0 && f_mode <= 2);
+        v_wn_set_playback_mode(wavenext, f_mode, 1);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_SR))
+    {
+        //Ensure that a project isn't being loaded right now
+        pthread_spin_lock(&musikernel->main_lock);
+        pthread_spin_unlock(&musikernel->main_lock);
+
+        int f_uid = atoi(a_value);
+        t_pyregion * f_result = g_pyregion_get(self, f_uid);
+        int f_region_index = i_get_song_index_from_region_uid(self, f_uid);
+
+        if(f_region_index >= 0 )
+        {
+            t_pyregion * f_old_region = NULL;
+            if(self->pysong->regions[f_region_index])
+            {
+                f_old_region = self->pysong->regions[f_region_index];
+            }
+            pthread_spin_lock(&musikernel->main_lock);
+            self->pysong->regions[f_region_index] = f_result;
+            pthread_spin_unlock(&musikernel->main_lock);
+            if(f_old_region)
+            {
+                free(f_old_region);
+            }
+        }
+        else
+        {
+            printf("region %i is not in song, not loading...", f_uid);
+        }
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_SI)) //Save Item
+    {
+        pthread_spin_lock(&musikernel->main_lock);
+        g_pyitem_get(self, atoi(a_value));
+        pthread_spin_unlock(&musikernel->main_lock);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_SS))  //Save Song
+    {
+        g_pysong_get(self, 1);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_SAVE_ATM))
+    {
+        int f_uid = atoi(a_value);
+        t_pydaw_atm_region * f_result = g_atm_region_get(self, f_uid);
+        int f_region_index = i_get_song_index_from_region_uid(self, f_uid);
+
+        if(f_region_index >= 0 )
+        {
+            t_pydaw_atm_region * f_old_region = NULL;
+            if(self->pysong->regions_atm[f_region_index])
+            {
+                f_old_region = self->pysong->regions_atm[f_region_index];
+            }
+            pthread_spin_lock(&musikernel->main_lock);
+            self->pysong->regions_atm[f_region_index] = f_result;
+            pthread_spin_unlock(&musikernel->main_lock);
+            if(f_old_region)
+            {
+                v_atm_region_free(f_old_region);
+            }
+        }
+        else
+        {
+            printf("region %i is not in song, not loading...", f_uid);
+        }
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL))
+    {
+        int f_uid = atoi(a_value);
+        //t_pydaw_audio_items * f_old;
+        t_pydaw_audio_items * f_result = v_audio_items_load_all(self,
+                f_uid);
+        int f_region_index = i_get_song_index_from_region_uid(self,
+                f_uid);
+        pthread_spin_lock(&musikernel->main_lock);
+        self->pysong->audio_items[f_region_index] = f_result;
+        pthread_spin_unlock(&musikernel->main_lock);
+        //v_pydaw_audio_items_free(f_old); //Method needs to be re-thought...
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_PER_AUDIO_ITEM_FX_REGION))
+    {
+        int f_uid = atoi(a_value);
+        t_pydaw_per_audio_item_fx_region * f_result =
+                g_paif_region_open(self, f_uid);
+        int f_region_index = i_get_song_index_from_region_uid(self,
+                f_uid);
+        t_pydaw_per_audio_item_fx_region * f_old =
+                self->pysong->per_audio_item_fx[f_region_index];
+        pthread_spin_lock(&musikernel->main_lock);
+        self->pysong->per_audio_item_fx[f_region_index] = f_result;
+        pthread_spin_unlock(&musikernel->main_lock);
+        v_paif_region_free(f_old);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_ADD_TO_WAV_POOL))
+    {
+        t_key_value_pair * f_kvp = g_kvp_get(a_value);
+        printf("v_wav_pool_add_item(musikernel->wav_pool, %i, \"%s\")\n",
+                atoi(f_kvp->key), f_kvp->value);
+        v_wav_pool_add_item(musikernel->wav_pool, atoi(f_kvp->key),
+                f_kvp->value);
+        free(f_kvp);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_LOOP)) //Set loop mode
+    {
+        int f_value = atoi(a_value);
+
+        pthread_spin_lock(&musikernel->main_lock);
+        v_set_loop_mode(self, f_value);
+        pthread_spin_unlock(&musikernel->main_lock);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_OS)) //Open Song
+    {
+        t_key_value_pair * f_kvp = g_kvp_get(a_value);
+        int f_first_open = atoi(f_kvp->key);
+        v_open_project(self, f_kvp->value, f_first_open);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_TEMPO)) //Change tempo
+    {
+        pthread_spin_lock(&musikernel->main_lock);
+        v_set_tempo(self, atof(a_value));
+        pthread_spin_unlock(&musikernel->main_lock);
+        //To reload audio items when tempo changed
+        //g_pysong_get(self);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_SOLO)) //Set track solo
+    {
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
+                PYDAW_TINY_STRING);
+        int f_track_num = atoi(f_val_arr->array[0]);
+        int f_mode = atoi(f_val_arr->array[1]);
+        assert(f_mode == 0 || f_mode == 1);
+
+        pthread_spin_lock(&musikernel->main_lock);
+
+        self->track_pool[f_track_num]->solo = f_mode;
+        //self->track_pool[f_track_num]->period_event_index = 0;
+
+        v_pydaw_set_is_soloed(self);
+
+        pthread_spin_unlock(&musikernel->main_lock);
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_MUTE)) //Set track mute
+    {
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
+                PYDAW_TINY_STRING);
+        int f_track_num = atoi(f_val_arr->array[0]);
+        int f_mode = atoi(f_val_arr->array[1]);
+        assert(f_mode == 0 || f_mode == 1);
+        pthread_spin_lock(&musikernel->main_lock);
+
+        self->track_pool[f_track_num]->mute = f_mode;
+        //self->track_pool[f_track_num]->period_event_index = 0;
+
+        pthread_spin_unlock(&musikernel->main_lock);
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_AUDIO_INPUTS))
+    {
+        v_pydaw_update_audio_inputs(self);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_PREVIEW_SAMPLE))
+    {
+        v_pydaw_set_preview_file(a_value);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_PLUGIN_INDEX))
+    {
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 6,
+                PYDAW_TINY_STRING);
+        int f_host_index = atoi(f_val_arr->array[0]);
+        int f_track_num = atoi(f_val_arr->array[1]);
+        int f_index = atoi(f_val_arr->array[2]);
+        int f_plugin_index = atoi(f_val_arr->array[3]);
+        int f_plugin_uid = atoi(f_val_arr->array[4]);
+        int f_power = atoi(f_val_arr->array[5]);
+
+        v_pydaw_set_plugin_index(
+            f_host_index, f_track_num, f_index,
+            f_plugin_index, f_plugin_uid, f_power, 1);
+
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_SEND))
+    {
+        v_pydaw_update_track_send(self, 1);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_SET_OVERDUB_MODE))
+    {
+        int f_bool = atoi(a_value);
+        assert(f_bool == 0 || f_bool == 1);
+        pthread_spin_lock(&musikernel->main_lock);
+        self->overdub_mode = f_bool;
+        pthread_spin_unlock(&musikernel->main_lock);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_CC_MAP))
+    {
+        t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 2,
+                PYDAW_SMALL_STRING);
+        int f_plugin_uid = atoi(f_val_arr->array[0]);
+        musikernel->plugin_pool[f_plugin_uid]->descriptor->set_cc_map(
+            musikernel->plugin_pool[f_plugin_uid]->PYFX_handle,
+            f_val_arr->array[1]);
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_AB_OPEN))
+    {
+        v_pydaw_set_ab_file(wavenext, a_value);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_AB_SET))
+    {
+        int f_mode = atoi(a_value);
+        v_pydaw_set_ab_mode(self, f_mode);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_WE_SET))
+    {
+        v_pydaw_set_wave_editor_item(wavenext, a_value);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_PANIC))
+    {
+        pthread_spin_lock(&musikernel->main_lock);
+        musikernel->is_offline_rendering = 1;
+        pthread_spin_unlock(&musikernel->main_lock);
+
+        v_pydaw_panic(self);
+
+        pthread_spin_lock(&musikernel->main_lock);
+        musikernel->is_offline_rendering = 0;
+        pthread_spin_unlock(&musikernel->main_lock);
+
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_SET_POS))
+    {
+        if(musikernel->playback_mode != 0)
+        {
+            return;
+        }
+        t_1d_char_array * f_val_arr =
+            c_split_str(a_value, '|', 2, PYDAW_TINY_STRING);
+        int f_region = atoi(f_val_arr->array[0]);
+        int f_bar = atoi(f_val_arr->array[1]);
+
+        pthread_spin_lock(&musikernel->main_lock);
+        v_set_playback_cursor(self, f_region, f_bar);
+        pthread_spin_unlock(&musikernel->main_lock);
+
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_RATE_ENV))
+    {
+        t_2d_char_array * f_arr = g_get_2d_array(PYDAW_SMALL_STRING);
+        char f_tmp_char[PYDAW_SMALL_STRING];
+        sprintf(f_tmp_char, "%s", a_value);
+        f_arr->array = f_tmp_char;
+        char * f_in_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_in_file, f_arr->current_str);
+        char * f_out_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_out_file, f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_start = atof(f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_end = atof(f_arr->current_str);
+
+        v_pydaw_rate_envelope(f_in_file, f_out_file, f_start, f_end);
+
+        free(f_in_file);
+        free(f_out_file);
+
+        f_arr->array = 0;
+        g_free_2d_char_array(f_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_PITCH_ENV))
+    {
+        t_2d_char_array * f_arr = g_get_2d_array(PYDAW_SMALL_STRING);
+        char f_tmp_char[PYDAW_SMALL_STRING];
+        sprintf(f_tmp_char, "%s", a_value);
+        f_arr->array = f_tmp_char;
+        char * f_in_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_in_file, f_arr->current_str);
+        char * f_out_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_out_file, f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_start = atof(f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_end = atof(f_arr->current_str);
+
+        v_pydaw_pitch_envelope(f_in_file, f_out_file, f_start, f_end);
+
+        free(f_in_file);
+        free(f_out_file);
+
+        f_arr->array = 0;
+        g_free_2d_char_array(f_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_GLUE_AUDIO_ITEMS))
+    {
+        t_pydaw_line_split * f_val_arr = g_split_line('|', a_value);
+        char * f_path = f_val_arr->str_arr[0];  //Don't free this
+        int f_region_index = atoi(f_val_arr->str_arr[1]);
+        int f_start_bar = atoi(f_val_arr->str_arr[2]);
+        int f_end_bar = atoi(f_val_arr->str_arr[3]);
+        int f_i = 0;
+        while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
+        {
+            self->audio_glue_indexes[f_i] = 0;
+            f_i++;
+        }
+
+        f_i = 4;
+        while(f_i < f_val_arr->count)
+        {
+            int f_index = atoi(f_val_arr->str_arr[f_i]);
+            self->audio_glue_indexes[f_index] = 1;
+            f_i++;
+        }
+
+        v_pydaw_offline_render(self, f_region_index, f_start_bar,
+                f_region_index, f_end_bar, f_path, 1, 1);
+
+        v_free_split_line(f_val_arr);
+
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD))
+    {
+        int f_uid = atoi(a_value);
+        t_wav_pool_item * f_old =
+                g_wav_pool_get_item_by_uid(musikernel->wav_pool, f_uid);
+        t_wav_pool_item * f_new =
+                g_wav_pool_item_get(f_uid, f_old->path,
+                musikernel->wav_pool->sample_rate);
+
+        float * f_old_samples[2];
+        f_old_samples[0] = f_old->samples[0];
+        f_old_samples[1] = f_old->samples[1];
+
+        pthread_spin_lock(&musikernel->main_lock);
+
+        f_old->channels = f_new->channels;
+        f_old->length = f_new->length;
+        f_old->ratio_orig = f_new->ratio_orig;
+        f_old->sample_rate = f_new->sample_rate;
+        f_old->samples[0] = f_new->samples[0];
+        f_old->samples[1] = f_new->samples[1];
+
+        pthread_spin_unlock(&musikernel->main_lock);
+
+        if(f_old_samples[0])
+        {
+            free(f_old_samples[0]);
+        }
+
+        if(f_old_samples[1])
+        {
+            free(f_old_samples[1]);
+        }
+
+        free(f_new);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_MASTER_VOL))
+    {
+        MASTER_VOL = atof(a_value);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_EXIT))
+    {
+        exiting = 1;
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_MIDI_LEARN))
+    {
+        pydaw_data->midi_learn = 1;
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_MIDI_DEVICE))
+    {
+        t_pydaw_line_split * f_val_arr = g_split_line('|', a_value);
+        int f_on = atoi(f_val_arr->str_arr[0]);
+        int f_device = atoi(f_val_arr->str_arr[1]);
+        int f_output = atoi(f_val_arr->str_arr[2]);
+        v_free_split_line(f_val_arr);
+
+        pthread_spin_lock(&musikernel->main_lock);
+
+        v_pydaw_set_midi_device(pydaw_data, f_on, f_device, f_output);
+
+        pthread_spin_unlock(&musikernel->main_lock);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_WE_EXPORT))
+    {
+        v_pydaw_we_export(wavenext, a_value);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_STOP_PREVIEW))
+    {
+        if(musikernel->is_previewing)
+        {
+            pthread_spin_lock(&musikernel->main_lock);
+            v_adsr_release(&musikernel->preview_audio_item->adsr);
+            pthread_spin_unlock(&musikernel->main_lock);
+        }
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_KILL_ENGINE))
+    {
+        pthread_spin_lock(&musikernel->main_lock);
+        assert(0);
+    }
+    else
+    {
+        printf("Unknown configure message key: %s, value %s\n", a_key, a_value);
     }
 }
 
