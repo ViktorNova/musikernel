@@ -32,11 +32,12 @@ extern "C" {
 #define MK_COMP_GAIN 5
 #define MK_COMP_MODE 6
 #define MK_COMP_RMS_TIME 7
+#define MK_COMP_UI_MSG_ENABLED 8
 
-#define MK_COMP_LAST_CONTROL_PORT 7
+#define MK_COMP_LAST_CONTROL_PORT 8
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define MK_COMP_COUNT 8
+#define MK_COMP_COUNT 9
 
 typedef struct
 {
@@ -51,6 +52,7 @@ typedef struct
     PYFX_Data *gain;
     PYFX_Data *mode;
     PYFX_Data *rms_time;
+    PYFX_Data *peak_meter;
 
 
     float fs;
@@ -68,6 +70,7 @@ typedef struct
     float * port_table;
     t_plugin_cc_map cc_map;
     PYFX_Descriptor * descriptor;
+    char ui_msg_buff[64];
 } t_mk_comp;
 
 #ifdef	__cplusplus

@@ -26,7 +26,9 @@ typedef struct
     float thresh, ratio, ratio_recip, knee, knee_thresh,
         gain, gain_lin, output0, output1;
     float rms_time, rms_last, rms_sum, rms_count_recip, sr;
-    int rms_counter, rms_count;
+    int rms_counter, rms_count, peak_count,
+        peak_counter, peak_dirty;
+    float gain_redux;
     t_enf2_env_follower env_follower;
 }t_cmp_compressor;
 
@@ -51,6 +53,9 @@ void g_cmp_init(t_cmp_compressor * self, float a_sr)
     self->rms_time = -123.456f;
     self->rms_last = 0.0f;
     self->rms_sum = 0.0f;
+    self->gain_redux = 0.0f;
+    self->peak_counter = 0;
+    self->peak_count = (int)(a_sr / 30.0f);
     g_enf_init(&self->env_follower, a_sr);
 }
 
@@ -76,16 +81,39 @@ void v_cmp_set(t_cmp_compressor * self, float thresh, float ratio,
     }
 }
 
+void v_cmp_reset_peak(t_cmp_compressor * self)
+{
+    self->peak_dirty = 0;
+    self->gain_redux = 0.0f;
+}
+
+void v_cmp_run_peak(t_cmp_compressor * self, float a_gain)
+{
+    ++self->peak_counter;
+    if(self->peak_counter >= self->peak_count)
+    {
+        self->peak_dirty = 1;
+        self->peak_counter = 0;
+    }
+
+    if(a_gain < self->gain_redux)
+    {
+        self->gain_redux = a_gain;
+    }
+}
+
 void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
 {
     float f_max = f_lms_max(f_lms_abs(a_in0), f_lms_abs(a_in1));
     v_enf_run(&self->env_follower, f_max);
     float f_db = f_linear_to_db_fast(self->env_follower.envelope);
+    float f_vol = 1.0f;
+    float f_gain = 0.0f;
 
     if(f_db > self->thresh)
     {
-        float f_vol =
-            f_db_to_linear_fast((f_db - self->thresh) * self->ratio_recip);
+        f_gain = (f_db - self->thresh) * self->ratio_recip;
+        f_vol = f_db_to_linear_fast(f_gain);
         self->output0 = a_in0 * f_vol;
         self->output1 = a_in1 * f_vol;
     }
@@ -94,7 +122,8 @@ void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
         float f_diff = (f_db - self->knee_thresh);
         float f_percent = f_diff / self->knee;
         float f_ratio = ((self->ratio - 1.0f) * f_percent) + 1.0f;
-        float f_vol = f_db_to_linear_fast(f_diff / f_ratio);
+        f_gain = f_diff / f_ratio;
+        f_vol = f_db_to_linear_fast(f_gain);
         self->output0 = a_in0 * f_vol;
         self->output1 = a_in1 * f_vol;
     }
@@ -103,8 +132,9 @@ void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
         self->output0 = a_in0;
         self->output1 = a_in1;
     }
-}
 
+    v_cmp_run_peak(self, f_gain);
+}
 
 void v_cmp_set_rms(t_cmp_compressor * self, float rms_time)
 {
@@ -118,6 +148,8 @@ void v_cmp_set_rms(t_cmp_compressor * self, float rms_time)
 
 void v_cmp_run_rms(t_cmp_compressor * self, float a_in0, float a_in1)
 {
+    float f_vol = 1.0f;
+    float f_gain = 0.0f;
     self->rms_sum += f_lms_max(a_in0 * a_in0, a_in1 * a_in1);
     ++self->rms_counter;
 
@@ -133,8 +165,8 @@ void v_cmp_run_rms(t_cmp_compressor * self, float a_in0, float a_in1)
 
     if(f_db > self->thresh)
     {
-        float f_vol =
-            f_db_to_linear_fast((f_db - self->thresh) * self->ratio_recip);
+        f_gain = (f_db - self->thresh) * self->ratio_recip;
+        f_vol = f_db_to_linear_fast(f_gain);
         self->output0 = a_in0 * f_vol;
         self->output1 = a_in1 * f_vol;
     }
@@ -143,7 +175,8 @@ void v_cmp_run_rms(t_cmp_compressor * self, float a_in0, float a_in1)
         float f_diff = (f_db - self->knee_thresh);
         float f_percent = f_diff / self->knee;
         float f_ratio = ((self->ratio - 1.0f) * f_percent) + 1.0f;
-        float f_vol = f_db_to_linear_fast(f_diff / f_ratio);
+        f_gain = f_diff / f_ratio;
+        f_vol = f_db_to_linear_fast(f_gain);
         self->output0 = a_in0 * f_vol;
         self->output1 = a_in1 * f_vol;
     }
@@ -152,6 +185,8 @@ void v_cmp_run_rms(t_cmp_compressor * self, float a_in0, float a_in1)
         self->output0 = a_in0;
         self->output1 = a_in1;
     }
+
+    v_cmp_run_peak(self, f_gain);
 }
 
 #endif	/* COMPRESSOR_H */

@@ -83,6 +83,7 @@ static void v_mk_comp_connect_port(PYFX_Handle instance, int port,
         case MK_COMP_GAIN: plugin->gain = data; break;
         case MK_COMP_MODE: plugin->mode = data; break;
         case MK_COMP_RMS_TIME: plugin->rms_time = data; break;
+        case MK_COMP_UI_MSG_ENABLED: plugin->peak_meter = data; break;
     }
 }
 
@@ -227,6 +228,17 @@ static void v_mk_comp_run(
         plugin_data->output1[f_i] = f_cmp->output1 * f_gain;
         ++f_i;
     }
+
+    if((int)(*plugin_data->peak_meter))
+    {
+        if(f_cmp->peak_dirty)
+        {
+            sprintf(plugin_data->ui_msg_buff, "%i|gain|%f",
+                plugin_data->plugin_uid, f_cmp->gain_redux);
+            plugin_data->queue_func("ui", plugin_data->ui_msg_buff);
+            v_cmp_reset_peak(&plugin_data->mono_modules->compressor);
+        }
+    }
 }
 
 PYFX_Descriptor *mk_comp_PYFX_descriptor(int index)
@@ -241,6 +253,7 @@ PYFX_Descriptor *mk_comp_PYFX_descriptor(int index)
     pydaw_set_pyfx_port(f_result, MK_COMP_GAIN, 0.0f, -240.0f, 240.0f);
     pydaw_set_pyfx_port(f_result, MK_COMP_MODE, 0.0f, 0.0f, 1.0f);
     pydaw_set_pyfx_port(f_result, MK_COMP_RMS_TIME, 2.0f, 1.0f, 5.0f);
+    pydaw_set_pyfx_port(f_result, MK_COMP_UI_MSG_ENABLED, 0.0f, 0.0f, 1.0f);
 
     f_result->cleanup = v_mk_comp_cleanup;
     f_result->connect_port = v_mk_comp_connect_port;

@@ -34,16 +34,20 @@ typedef struct
 }
 #endif
 
-t_pkm_peak_meter * g_pkm_get()
+void g_pkm_init(t_pkm_peak_meter * f_result)
 {
-    t_pkm_peak_meter * f_result;
-
-    lmalloc((void**)(&f_result), sizeof(t_pkm_peak_meter));
-
     f_result->value[0] = 0.0f;
     f_result->value[1] = 0.0f;
     f_result->buffer_pos = 0;
     f_result->dirty = 0;
+}
+
+t_pkm_peak_meter * g_pkm_get()
+{
+    t_pkm_peak_meter * f_result;
+    lmalloc((void**)(&f_result), sizeof(t_pkm_peak_meter));
+
+    g_pkm_init(f_result);
 
     return f_result;
 }
