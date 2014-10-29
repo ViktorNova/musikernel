@@ -1,4 +1,3 @@
-/* -*- c-basic-offset: 4 -*-  vi:set ts=8 sts=4 sw=4: */
 /*
 This file is part of the PyDAW project, Copyright MusiKernel Team
 
@@ -82,6 +81,8 @@ static void v_mk_comp_connect_port(PYFX_Handle instance, int port,
         case MK_COMP_ATTACK: plugin->attack = data; break;
         case MK_COMP_RELEASE: plugin->release = data; break;
         case MK_COMP_GAIN: plugin->gain = data; break;
+        case MK_COMP_MODE: plugin->mode = data; break;
+        case MK_COMP_RMS_TIME: plugin->rms_time = data; break;
     }
 }
 
@@ -152,6 +153,8 @@ static void v_mk_comp_run(
 
     int event_pos = 0;
     int midi_event_pos = 0;
+    int f_is_rms = (int)(*plugin_data->mode);
+    t_cmp_compressor * f_cmp = &plugin_data->mono_modules->compressor;
     float f_gain = f_db_to_linear_fast((*plugin_data->gain) * 0.1f);
     plugin_data->midi_event_count = 0;
 
@@ -203,18 +206,25 @@ static void v_mk_comp_run(
         v_plugin_event_queue_atm_set(
             &plugin_data->atm_queue, f_i, plugin_data->port_table);
 
-        v_cmp_set(&plugin_data->mono_modules->compressor,
+        v_cmp_set(f_cmp,
             *plugin_data->threshold * 0.1f, (*plugin_data->ratio) * 0.1f,
             *plugin_data->knee * 0.1f, *plugin_data->attack * 0.01f,
             *plugin_data->release * 0.01f, *plugin_data->gain * 0.1f);
 
-        v_cmp_run(&plugin_data->mono_modules->compressor,
-            plugin_data->output0[f_i], plugin_data->output1[f_i]);
+        if(f_is_rms)
+        {
+            v_cmp_set_rms(f_cmp, (*plugin_data->rms_time) * 0.01f);
+            v_cmp_run_rms(
+                f_cmp, plugin_data->output0[f_i], plugin_data->output1[f_i]);
+        }
+        else
+        {
+            v_cmp_run(
+                f_cmp, plugin_data->output0[f_i], plugin_data->output1[f_i]);
+        }
 
-        plugin_data->output0[f_i] =
-            plugin_data->mono_modules->compressor.output0 * f_gain;
-        plugin_data->output1[f_i] =
-            plugin_data->mono_modules->compressor.output1 * f_gain;
+        plugin_data->output0[f_i] = f_cmp->output0 * f_gain;
+        plugin_data->output1[f_i] = f_cmp->output1 * f_gain;
         ++f_i;
     }
 }
@@ -229,6 +239,8 @@ PYFX_Descriptor *mk_comp_PYFX_descriptor(int index)
     pydaw_set_pyfx_port(f_result, MK_COMP_ATTACK, 20.0f, 10.0f, 50.0f);
     pydaw_set_pyfx_port(f_result, MK_COMP_RELEASE, 50.0f, 20.0f, 300.0f);
     pydaw_set_pyfx_port(f_result, MK_COMP_GAIN, 0.0f, -240.0f, 240.0f);
+    pydaw_set_pyfx_port(f_result, MK_COMP_MODE, 0.0f, 0.0f, 1.0f);
+    pydaw_set_pyfx_port(f_result, MK_COMP_RMS_TIME, 2.0f, 1.0f, 5.0f);
 
     f_result->cleanup = v_mk_comp_cleanup;
     f_result->connect_port = v_mk_comp_connect_port;

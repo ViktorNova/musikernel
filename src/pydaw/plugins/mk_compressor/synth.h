@@ -30,11 +30,13 @@ extern "C" {
 #define MK_COMP_ATTACK 3
 #define MK_COMP_RELEASE 4
 #define MK_COMP_GAIN 5
+#define MK_COMP_MODE 6
+#define MK_COMP_RMS_TIME 7
 
-#define MK_COMP_LAST_CONTROL_PORT 5
+#define MK_COMP_LAST_CONTROL_PORT 7
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define MK_COMP_COUNT 6
+#define MK_COMP_COUNT 8
 
 typedef struct
 {
@@ -47,6 +49,9 @@ typedef struct
     PYFX_Data *attack;
     PYFX_Data *release;
     PYFX_Data *gain;
+    PYFX_Data *mode;
+    PYFX_Data *rms_time;
+
 
     float fs;
     t_mk_comp_mono_modules * mono_modules;

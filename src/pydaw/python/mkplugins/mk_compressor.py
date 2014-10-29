@@ -23,6 +23,8 @@ MK_COMP_KNEE = 2
 MK_COMP_ATTACK = 3
 MK_COMP_RELEASE = 4
 MK_COMP_GAIN = 5
+MK_COMP_MODE = 6
+MK_COMP_RMS_TIME = 7
 
 
 MK_COMP_PORT_MAP = {}
@@ -57,7 +59,7 @@ class mk_comp_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.reverb_groupbox = QtGui.QGroupBox("MK Compressor")
         self.reverb_groupbox.setObjectName("plugin_groupbox")
-        self.reverb_groupbox_gridlayout = QtGui.QGridLayout(
+        self.groupbox_gridlayout = QtGui.QGridLayout(
             self.reverb_groupbox)
         self.reverb_hlayout = QtGui.QHBoxLayout()
         self.delay_vlayout.addLayout(self.reverb_hlayout)
@@ -69,44 +71,49 @@ class mk_comp_plugin_ui(pydaw_abstract_plugin_ui):
             f_knob_size, _("Thresh"), MK_COMP_THRESHOLD,
             self.plugin_rel_callback, self.plugin_val_callback,
             -360, -60, -240, KC_TENTH, self.port_dict, self.preset_manager)
-        self.thresh_knob.add_to_grid_layout(
-            self.reverb_groupbox_gridlayout, 3)
+        self.thresh_knob.add_to_grid_layout(self.groupbox_gridlayout, 3)
 
         self.ratio_knob = pydaw_knob_control(
             f_knob_size, _("Ratio"), MK_COMP_RATIO,
             self.plugin_rel_callback, self.plugin_val_callback,
             10, 100, 20, KC_TENTH, self.port_dict, self.preset_manager)
-        self.ratio_knob.add_to_grid_layout(
-            self.reverb_groupbox_gridlayout, 7)
+        self.ratio_knob.add_to_grid_layout(self.groupbox_gridlayout, 7)
 
         self.knee_knob = pydaw_knob_control(
             f_knob_size, _("Knee"), MK_COMP_KNEE,
             self.plugin_rel_callback, self.plugin_val_callback,
             0, 120, 0, KC_TENTH, self.port_dict, self.preset_manager)
-        self.knee_knob.add_to_grid_layout(
-            self.reverb_groupbox_gridlayout, 15)
+        self.knee_knob.add_to_grid_layout(self.groupbox_gridlayout, 15)
 
         self.attack_knob = pydaw_knob_control(
             f_knob_size, _("Attack"), MK_COMP_ATTACK,
             self.plugin_rel_callback, self.plugin_val_callback,
             10, 50, 20, KC_DECIMAL, self.port_dict, self.preset_manager)
-        self.attack_knob.add_to_grid_layout(
-            self.reverb_groupbox_gridlayout, 21)
+        self.attack_knob.add_to_grid_layout(self.groupbox_gridlayout, 21)
 
         self.release_knob = pydaw_knob_control(
             f_knob_size, _("Release"), MK_COMP_RELEASE,
             self.plugin_rel_callback, self.plugin_val_callback,
             20, 300, 50, KC_DECIMAL, self.port_dict, self.preset_manager)
-        self.release_knob.add_to_grid_layout(
-            self.reverb_groupbox_gridlayout, 22)
+        self.release_knob.add_to_grid_layout(self.groupbox_gridlayout, 22)
 
         self.gain_knob = pydaw_knob_control(
             f_knob_size, _("Gain"), MK_COMP_GAIN,
             self.plugin_rel_callback, self.plugin_val_callback,
             -240, 240, 0, KC_TENTH, self.port_dict, self.preset_manager)
-        self.gain_knob.add_to_grid_layout(
-            self.reverb_groupbox_gridlayout, 30)
+        self.gain_knob.add_to_grid_layout(self.groupbox_gridlayout, 30)
 
+        self.mono_combobox = pydaw_combobox_control(
+            90, _("Mode"), MK_COMP_MODE,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            [_("Peak"), _("RMS")], self.port_dict, 0, self.preset_manager)
+        self.mono_combobox.add_to_grid_layout(self.groupbox_gridlayout, 36)
+
+        self.rms_time_knob = pydaw_knob_control(
+            f_knob_size, _("RMS Time"), MK_COMP_RMS_TIME,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            1, 5, 2, KC_DECIMAL, self.port_dict, self.preset_manager)
+        self.rms_time_knob.add_to_grid_layout(self.groupbox_gridlayout, 37)
 
         self.delay_spacer_layout = QtGui.QVBoxLayout()
         self.delay_vlayout.addLayout(self.delay_spacer_layout)
