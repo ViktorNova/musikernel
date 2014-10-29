@@ -159,8 +159,6 @@ class mk_comp_plugin_ui(pydaw_abstract_plugin_ui):
 
     def ui_message(self, a_name, a_value):
         if a_name == "gain":
-            print(a_value)
-            a_value = pydaw_db_to_lin(float(a_value))
             self.peak_meter.set_value([a_value] * 2)
         else:
             pydaw_abstract_plugin_ui.ui_message(a_name, a_value)

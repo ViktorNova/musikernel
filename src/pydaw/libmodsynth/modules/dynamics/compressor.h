@@ -84,7 +84,7 @@ void v_cmp_set(t_cmp_compressor * self, float thresh, float ratio,
 void v_cmp_reset_peak(t_cmp_compressor * self)
 {
     self->peak_dirty = 0;
-    self->gain_redux = 0.0f;
+    self->gain_redux = 1.0f;
 }
 
 void v_cmp_run_peak(t_cmp_compressor * self, float a_gain)
@@ -133,7 +133,7 @@ void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
         self->output1 = a_in1;
     }
 
-    v_cmp_run_peak(self, f_gain);
+    v_cmp_run_peak(self, f_vol);
 }
 
 void v_cmp_set_rms(t_cmp_compressor * self, float rms_time)
@@ -186,7 +186,7 @@ void v_cmp_run_rms(t_cmp_compressor * self, float a_in0, float a_in1)
         self->output1 = a_in1;
     }
 
-    v_cmp_run_peak(self, f_gain);
+    v_cmp_run_peak(self, f_vol);
 }
 
 #endif	/* COMPRESSOR_H */
