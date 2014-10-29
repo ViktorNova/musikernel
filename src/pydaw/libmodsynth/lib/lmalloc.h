@@ -16,10 +16,23 @@ GNU General Public License for more details.
 
 #include <malloc.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+
+//allocate 100MB at a time
+#define HUGEPAGE_ALLOC_SIZE (1024 * 1024 * 100)
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
+
+typedef struct
+{
+    char * ptr;
+    size_t pos;
+    size_t size;
+}huge_page_data;
 
 void lmalloc(void**, size_t);
 
@@ -44,6 +57,80 @@ void buffer_alloc(void ** a_ptr, size_t a_size)
 {
     assert(posix_memalign(a_ptr, 64, a_size) == 0);
 }
+
+int USE_HUGEPAGES = 1;
+int HUGE_PAGE_DATA_COUNT = 0;
+huge_page_data HUGE_PAGE_DATA[50];
+
+int alloc_hugepage_data()
+{
+    huge_page_data * f_data = &HUGE_PAGE_DATA[HUGE_PAGE_DATA_COUNT];
+    f_data->ptr = (char*)mmap(NULL, HUGEPAGE_ALLOC_SIZE,
+        PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS |
+        MAP_POPULATE | MAP_HUGETLB, -1, 0);
+    if(f_data->ptr == MAP_FAILED)
+    {
+        printf("Attempt to allocate hugepages failed, falling back to "
+            "normal pages\n");
+        USE_HUGEPAGES = 0;
+        return 0;
+    }
+    ++HUGE_PAGE_DATA_COUNT;
+    f_data->pos = 0;
+    f_data->size = HUGEPAGE_ALLOC_SIZE;
+    return 1;
+}
+
+/* Only use for things that do not free their memory and get reclaimed
+   when the process goes away.
+ */
+void hpalloc(void ** a_ptr, size_t a_size)
+{
+    if(USE_HUGEPAGES)
+    {
+        if(!HUGE_PAGE_DATA_COUNT && !alloc_hugepage_data())
+        {
+            lmalloc(a_ptr, a_size);
+            return;
+        }
+
+        // TODO:  Allocate huge pages just for this that can be
+        // munmapped...
+        if(a_size >= HUGEPAGE_ALLOC_SIZE)
+        {
+            lmalloc(a_ptr, a_size);
+            return;
+        }
+
+        int f_i;
+        for(f_i = 0; f_i < HUGE_PAGE_DATA_COUNT; ++f_i)
+        {
+            huge_page_data * f_data = &HUGE_PAGE_DATA[f_i];
+            if((f_data->size - f_data->pos) > a_size)
+            {
+                *a_ptr = &f_data->ptr[f_data->pos];
+                f_data->pos += a_size;
+                return;
+            }
+        }
+
+        if(alloc_hugepage_data())
+        {
+            huge_page_data * f_data = &HUGE_PAGE_DATA[f_i];
+            *a_ptr = &f_data->ptr[f_data->pos];
+            f_data->pos += a_size;
+        }
+        else
+        {
+            lmalloc(a_ptr, a_size);
+        }
+    }
+    else
+    {
+        lmalloc(a_ptr, a_size);
+    }
+}
+
 
 #endif	/* LMALLOC_H */
 
