@@ -25,6 +25,8 @@ typedef struct
 {
     float thresh, ratio, ratio_recip, knee, knee_thresh,
         gain, gain_lin, output0, output1;
+    float rms_time, rms_last, rms_sum, rms_count_recip, sr;
+    int rms_counter, rms_count;
     t_enf2_env_follower env_follower;
 }t_cmp_compressor;
 
@@ -43,6 +45,12 @@ void g_cmp_init(t_cmp_compressor * self, float a_sr)
     self->gain_lin = 1.0f;
     self->output0 = 0.0f;
     self->output1 = 0.0f;
+    self->sr = a_sr;
+    self->rms_count = 100;
+    self->rms_counter = 0;
+    self->rms_time = -123.456f;
+    self->rms_last = 0.0f;
+    self->rms_sum = 0.0f;
     g_enf_init(&self->env_follower, a_sr);
 }
 
@@ -97,6 +105,54 @@ void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
     }
 }
 
+
+void v_cmp_set_rms(t_cmp_compressor * self, float rms_time)
+{
+    if(self->rms_time != rms_time)
+    {
+        self->rms_time = rms_time;
+        self->rms_count = rms_time * self->sr;
+        self->rms_count_recip = 1.0f / (float)self->rms_count;
+    }
+}
+
+void v_cmp_run_rms(t_cmp_compressor * self, float a_in0, float a_in1)
+{
+    self->rms_sum += f_lms_max(a_in0 * a_in0, a_in1 * a_in1);
+    ++self->rms_counter;
+
+    if(self->rms_counter >= self->rms_count)
+    {
+        self->rms_counter = 0;
+        self->rms_last = sqrt(self->rms_sum * self->rms_count_recip);
+        self->rms_sum = 0.0f;
+    }
+
+    v_enf_run(&self->env_follower, self->rms_last);
+    float f_db = f_linear_to_db_fast(self->env_follower.envelope);
+
+    if(f_db > self->thresh)
+    {
+        float f_vol =
+            f_db_to_linear_fast((f_db - self->thresh) * self->ratio_recip);
+        self->output0 = a_in0 * f_vol;
+        self->output1 = a_in1 * f_vol;
+    }
+    else if(f_db > self->knee_thresh)
+    {
+        float f_diff = (f_db - self->knee_thresh);
+        float f_percent = f_diff / self->knee;
+        float f_ratio = ((self->ratio - 1.0f) * f_percent) + 1.0f;
+        float f_vol = f_db_to_linear_fast(f_diff / f_ratio);
+        self->output0 = a_in0 * f_vol;
+        self->output1 = a_in1 * f_vol;
+    }
+    else
+    {
+        self->output0 = a_in0;
+        self->output1 = a_in1;
+    }
+}
 
 #endif	/* COMPRESSOR_H */
 
