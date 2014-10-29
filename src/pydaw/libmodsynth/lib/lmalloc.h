@@ -22,6 +22,7 @@ GNU General Public License for more details.
 
 //allocate 100MB at a time
 #define HUGEPAGE_ALLOC_SIZE (1024 * 1024 * 100)
+#define HUGEPAGE_MIN_ALIGN 16
 
 #ifdef	__cplusplus
 extern "C" {
@@ -29,9 +30,9 @@ extern "C" {
 
 typedef struct
 {
-    char * ptr;
-    size_t pos;
-    size_t size;
+    char * start;
+    char * pos;
+    char * end;
 }huge_page_data;
 
 void lmalloc(void**, size_t);
@@ -62,22 +63,30 @@ int USE_HUGEPAGES = 1;
 int HUGE_PAGE_DATA_COUNT = 0;
 huge_page_data HUGE_PAGE_DATA[50];
 
+/* Ensure that any pointers carved out of hugepages meet minimum
+ * alignment for SIMD instructions (or maybe cache lines eventually) */
+char * hugepage_align(char * a_pos)
+{
+    return a_pos + (HUGEPAGE_MIN_ALIGN - ((size_t)a_pos % HUGEPAGE_MIN_ALIGN));
+}
+
 int alloc_hugepage_data()
 {
     huge_page_data * f_data = &HUGE_PAGE_DATA[HUGE_PAGE_DATA_COUNT];
-    f_data->ptr = (char*)mmap(NULL, HUGEPAGE_ALLOC_SIZE,
+    f_data->start = (char*)mmap(NULL, HUGEPAGE_ALLOC_SIZE,
         PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS |
         MAP_POPULATE | MAP_HUGETLB, -1, 0);
-    if(f_data->ptr == MAP_FAILED)
+    if(f_data->start == MAP_FAILED)
     {
         printf("Attempt to allocate hugepages failed, falling back to "
             "normal pages\n");
         USE_HUGEPAGES = 0;
         return 0;
     }
+    printf("Successfully allocated 100MB of hugepages\n");
     ++HUGE_PAGE_DATA_COUNT;
-    f_data->pos = 0;
-    f_data->size = HUGEPAGE_ALLOC_SIZE;
+    f_data->pos = hugepage_align(f_data->start);
+    f_data->end = f_data->start + HUGEPAGE_ALLOC_SIZE;
     return 1;
 }
 
@@ -106,10 +115,10 @@ void hpalloc(void ** a_ptr, size_t a_size)
         for(f_i = 0; f_i < HUGE_PAGE_DATA_COUNT; ++f_i)
         {
             huge_page_data * f_data = &HUGE_PAGE_DATA[f_i];
-            if((f_data->size - f_data->pos) > a_size)
+            if((f_data->end - f_data->pos) > a_size)
             {
-                *a_ptr = &f_data->ptr[f_data->pos];
-                f_data->pos += a_size;
+                *a_ptr = f_data->pos;
+                f_data->pos = hugepage_align(a_size + f_data->pos);
                 return;
             }
         }
@@ -117,8 +126,8 @@ void hpalloc(void ** a_ptr, size_t a_size)
         if(alloc_hugepage_data())
         {
             huge_page_data * f_data = &HUGE_PAGE_DATA[f_i];
-            *a_ptr = &f_data->ptr[f_data->pos];
-            f_data->pos += a_size;
+            *a_ptr = f_data->pos;
+            f_data->pos = hugepage_align(a_size + f_data->pos);
         }
         else
         {
