@@ -4141,7 +4141,7 @@ void v_pydaw_set_preview_file(const char * a_file)
 
     if(f_result)
     {
-        if(i_wav_pool_item_load(f_result))
+        if(i_wav_pool_item_load(f_result, 0))
         {
             t_wav_pool_item * f_old = musikernel->preview_wav_item;
 

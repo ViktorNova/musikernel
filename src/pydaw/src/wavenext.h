@@ -251,7 +251,7 @@ void v_pydaw_set_ab_file(t_wavenext * self, const char * a_file)
     t_wav_pool_item * f_result = g_wav_pool_item_get(0, a_file,
             musikernel->sample_rate);
 
-    if(i_wav_pool_item_load(f_result))
+    if(i_wav_pool_item_load(f_result, 0))
     {
         pthread_spin_lock(&musikernel->main_lock);
 

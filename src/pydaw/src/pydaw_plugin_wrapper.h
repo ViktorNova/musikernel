@@ -60,7 +60,7 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
         int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_pydaw_plugin * f_result;
-    lmalloc((void**)&f_result, sizeof(t_pydaw_plugin));
+    hpalloc((void**)&f_result, sizeof(t_pydaw_plugin));
 
     f_result->uid = a_index;
     f_result->pool_uid = a_plugin_uid;
@@ -138,6 +138,7 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
     return f_result;
 }
 
+/*
 void v_free_pydaw_plugin(t_pydaw_plugin * a_plugin)
 {
     if(a_plugin)
@@ -155,7 +156,7 @@ void v_free_pydaw_plugin(t_pydaw_plugin * a_plugin)
                 "with v_free_pydaw_plugin()\n");
     }
 }
-
+*/
 
 #ifdef	__cplusplus
 }

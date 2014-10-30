@@ -123,7 +123,7 @@ t_wav_pool_item * g_wav_pool_item_get(int a_uid, const char *a_path, float a_sr)
     return f_result;
 }
 
-int i_wav_pool_item_load(t_wav_pool_item *a_wav_pool_item)
+int i_wav_pool_item_load(t_wav_pool_item *a_wav_pool_item, int a_huge_pages)
 {
     SF_INFO info;
     SNDFILE *file;
@@ -174,9 +174,17 @@ int i_wav_pool_item_load(t_wav_pool_item *a_wav_pool_item)
 
     while(f_i < f_adjusted_channel_count)
     {
-        buffer_alloc((void**)&(tmpSamples[f_i]),
-            f_actual_array_size * sizeof(float));
-        f_i++;
+        if(a_huge_pages)
+        {
+            hpalloc((void**)&(tmpSamples[f_i]),
+                f_actual_array_size * sizeof(float));
+        }
+        else
+        {
+            buffer_alloc((void**)&(tmpSamples[f_i]),
+                f_actual_array_size * sizeof(float));
+        }
+        ++f_i;
     }
 
     int j;
@@ -322,7 +330,7 @@ t_wav_pool_item * g_wav_pool_get_item_by_uid(t_wav_pool* a_wav_pool, int a_uid)
     {
         if(!a_wav_pool->items[a_uid]->is_loaded)
         {
-            if(!i_wav_pool_item_load(a_wav_pool->items[a_uid]))
+            if(!i_wav_pool_item_load(a_wav_pool->items[a_uid], 1))
             {
                 return 0;
             }
