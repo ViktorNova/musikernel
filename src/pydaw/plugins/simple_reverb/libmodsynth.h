@@ -41,8 +41,8 @@ t_sreverb_mono_modules * v_sreverb_mono_init(float, int);
 
 t_sreverb_mono_modules * v_sreverb_mono_init(float a_sr, int a_plugin_uid)
 {
-    t_sreverb_mono_modules * a_mono =
-            (t_sreverb_mono_modules*)malloc(sizeof(t_sreverb_mono_modules));
+    t_sreverb_mono_modules * a_mono;
+    hpalloc((void**)&a_mono, sizeof(t_sreverb_mono_modules));
 
     a_mono->reverb = g_rvb_reverb_get(a_sr);
     a_mono->reverb_smoother =

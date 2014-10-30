@@ -128,7 +128,7 @@ t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono);
 t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono)
 {
     t_wayv_poly_voice * f_voice;
-    lmalloc((void**)&f_voice, sizeof(t_wayv_poly_voice));
+    hpalloc((void**)&f_voice, sizeof(t_wayv_poly_voice));
 
     int f_i = 0;
 
@@ -269,7 +269,7 @@ t_wayv_mono_modules * v_wayv_mono_init(float);
 t_wayv_mono_modules * v_wayv_mono_init(float a_sr)
 {
     t_wayv_mono_modules * a_mono;
-    lmalloc((void**)&a_mono, sizeof(t_wayv_mono_modules));
+    hpalloc((void**)&a_mono, sizeof(t_wayv_mono_modules));
     g_sml_init(&a_mono->pitchbend_smoother, a_sr, 1.0f, -1.0f, 0.2f);
 
     int f_i = 0;

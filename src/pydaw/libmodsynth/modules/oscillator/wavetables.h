@@ -1841,9 +1841,9 @@ t_wavetable * g_wavetable_get();
 t_wavetable * g_wavetable_get()
 {
     t_wavetable * f_result;
-    lmalloc((void**)&f_result, (sizeof(t_wavetable)));
+    hpalloc((void**)&f_result, (sizeof(t_wavetable)));
 
-    buffer_alloc((void**)&f_result->wavetable,
+    hpalloc((void**)&f_result->wavetable,
         (sizeof(float) * WT_FRAMES_PER_CYCLE));
 
     f_result->length = WT_FRAMES_PER_CYCLE;
@@ -1876,10 +1876,15 @@ void v_wt_set_wavetable(t_wt_wavetables* a_wt, int a_index, float * a_arr,
         pthread_spin_unlock(a_spinlock);
     }
 
+    //Not doing this now because hpalloc's can't be free'd, the
+    //leak shouldn't be significant unless somebody spends hours
+    //tweaking a wavetable
+    /*
     if(f_old)
     {
         free(f_old);
     }
+    */
 }
 
 
@@ -1889,9 +1894,9 @@ t_wt_wavetables * g_wt_wavetables_get()
 {
     register int f_i = 0;
     t_wt_wavetables * f_result;
-    lmalloc((void**)&f_result, (sizeof(t_wt_wavetables)));
+    hpalloc((void**)&f_result, (sizeof(t_wt_wavetables)));
     f_result->f_count = WT_TOTAL_WAVETABLE_COUNT;
-    lmalloc((void**)&f_result->tables,
+    hpalloc((void**)&f_result->tables,
         sizeof(t_wavetable) * WT_TOTAL_WAVETABLE_COUNT);
     f_result->tables[0] = g_wavetable_get();
     f_i = 0;

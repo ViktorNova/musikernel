@@ -233,7 +233,7 @@ void g_dly_init(t_delay_simple * f_result, float a_max_size, float a_sr)
     f_result->tempo_recip = 999;
     //add 2400 samples to ensure we don't overrun our buffer
     f_result->sample_count = (int)((a_max_size * a_sr) + 2400);
-    buffer_alloc((void**)&f_result->buffer,
+    hpalloc((void**)&f_result->buffer,
         sizeof(float) * (f_result->sample_count));
 
     int f_i = 0;
@@ -249,7 +249,7 @@ void g_dly_init(t_delay_simple * f_result, float a_max_size, float a_sr)
 t_delay_simple * g_dly_get_delay(float a_max_size, float a_sr)
 {
     t_delay_simple * f_result;
-    lmalloc((void**)&f_result, sizeof(t_delay_simple));
+    hpalloc((void**)&f_result, sizeof(t_delay_simple));
     g_dly_init(f_result, a_max_size, a_sr);
     return f_result;
 }
@@ -270,7 +270,7 @@ void g_dly_tap_init(t_delay_tap * f_result)
 t_delay_tap * g_dly_get_tap()
 {
     t_delay_tap * f_result;
-    lmalloc((void**)&f_result, sizeof(t_delay_tap));
+    hpalloc((void**)&f_result, sizeof(t_delay_tap));
     g_dly_tap_init(f_result);
     return f_result;
 }

@@ -60,7 +60,6 @@ typedef struct st_adsr
     int time_counter;
     int delay_count;
     int hold_count;
-
 }t_adsr;
 
 void v_adsr_set_a_time(t_adsr*, float);
@@ -335,7 +334,7 @@ void g_adsr_init(t_adsr * f_result, float a_sr)
 t_adsr * g_adsr_get_adsr(float a_sr)
 {
     t_adsr * f_result;
-    lmalloc((void**)&f_result, sizeof(t_adsr));
+    hpalloc((void**)&f_result, sizeof(t_adsr));
     g_adsr_init(f_result, a_sr);
     return f_result;
 }

@@ -651,7 +651,7 @@ static PYFX_Handle g_wayv_instantiate(PYFX_Descriptor * descriptor,
             int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_wayv *plugin_data;
-    lmalloc((void**)&plugin_data, sizeof(t_wayv));
+    hpalloc((void**)&plugin_data, sizeof(t_wayv));
 
     plugin_data->fs = s_rate;
     plugin_data->descriptor = descriptor;
@@ -1558,10 +1558,7 @@ float * f_char_to_wavetable(char * a_char)
 {
     float * f_result;
 
-    if(posix_memalign((void**)&f_result, 16, (sizeof(float) * 1024)) != 0)
-    {
-        return 0;
-    }
+    lmalloc((void**)&f_result, sizeof(float) * 1024);
 
     t_1d_char_array * f_arr = c_split_str(a_char, '|', 1025, 32);
 

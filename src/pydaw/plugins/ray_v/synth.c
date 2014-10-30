@@ -264,7 +264,8 @@ static PYFX_Handle g_rayv_instantiate(PYFX_Descriptor * descriptor,
         int a_sr, fp_get_wavpool_item_from_host a_host_wavpool_func,
         int a_plugin_uid, fp_queue_message a_queue_func)
 {
-    t_rayv *plugin_data = (t_rayv*) malloc(sizeof(t_rayv));
+    t_rayv *plugin_data;
+    hpalloc((void**)&plugin_data, sizeof(t_rayv));
 
     plugin_data->fs = a_sr;
 

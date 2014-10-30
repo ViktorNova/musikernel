@@ -343,12 +343,12 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
     j = 0;
 
-    lmalloc((void**)&pluginOutputBuffers, 2 * sizeof(float*));
+    hpalloc((void**)&pluginOutputBuffers, 2 * sizeof(float*));
 
     int f_i = 0;
     while(f_i < 2)
     {
-        buffer_alloc(
+        hpalloc(
             (void**)&pluginOutputBuffers[f_i],
             sizeof(float) * FRAMES_PER_BUFFER);
         ++f_i;

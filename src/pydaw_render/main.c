@@ -69,14 +69,14 @@ int main(int argc, char** argv)
     g_wavenext_get();
 
     float** f_output;
-    lmalloc((void**)&f_output, sizeof(float*) * 2);
+    hpalloc((void**)&f_output, sizeof(float*) * 2);
 
     v_pydaw_activate(f_thread_count, 0, f_project_dir);
 
     f_i = 0;
     while(f_i < 2)
     {
-        buffer_alloc((void**)&f_output[f_i], sizeof(float) * f_buffer_size);
+        hpalloc((void**)&f_output[f_i], sizeof(float) * f_buffer_size);
         f_i++;
     }
 

@@ -150,7 +150,7 @@ t_rvb_reverb * g_rvb_reverb_get(float a_sr)
 {
     t_rvb_reverb * f_result;
 
-    lmalloc((void**)&f_result, sizeof(t_rvb_reverb));
+    hpalloc((void**)&f_result, sizeof(t_rvb_reverb));
 
     f_result->color = 1.0f;
     f_result->time = 0.5f;
@@ -209,7 +209,7 @@ t_rvb_reverb * g_rvb_reverb_get(float a_sr)
     f_result->last_predelay = -1234.0f;
     f_result->predelay_size = (int)(a_sr * 0.01f);
 
-    buffer_alloc((void**)&f_result->predelay_buffer,
+    hpalloc((void**)&f_result->predelay_buffer,
         sizeof(float) * (a_sr + 5000));
 
     f_i2 = 0;

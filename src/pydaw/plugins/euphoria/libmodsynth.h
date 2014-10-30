@@ -117,7 +117,7 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float);
 t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 {
     t_euphoria_poly_voice * f_voice;
-    lmalloc((void**)&f_voice, sizeof(t_euphoria_poly_voice));
+    hpalloc((void**)&f_voice, sizeof(t_euphoria_poly_voice));
 
     int f_i = 0;
 
@@ -186,7 +186,7 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr);
 t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
 {
     t_euphoria_mono_modules * a_mono;
-    lmalloc((void**)&a_mono, sizeof(t_euphoria_mono_modules));
+    hpalloc((void**)&a_mono, sizeof(t_euphoria_mono_modules));
 
     g_sml_init(&a_mono->pitchbend_smoother, a_sr, 1.0f, -1.0f, 0.2f);
     g_sinc_init(&a_mono->sinc_interpolator,

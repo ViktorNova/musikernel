@@ -877,17 +877,17 @@ void * v_pydaw_osc_send_thread(void* a_arg)
 
     while(f_i < PYDAW_OSC_SEND_QUEUE_SIZE)
     {
-        buffer_alloc((void**)&osc_queue_vals[f_i],
+        hpalloc((void**)&osc_queue_vals[f_i],
             sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
         ++f_i;
     }
 
     char * f_tmp1 = NULL;
-    buffer_alloc((void**)&f_tmp1, sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
+    hpalloc((void**)&f_tmp1, sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
     char * f_tmp2 = NULL;
-    buffer_alloc((void**)&f_tmp2, sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
+    hpalloc((void**)&f_tmp2, sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
     char * f_msg = NULL;
-    buffer_alloc((void**)&f_msg, sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
+    hpalloc((void**)&f_msg, sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
 
     f_tmp1[0] = '\0';
     f_tmp2[0] = '\0';
@@ -3274,7 +3274,8 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
 
 t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
 {
-    t_pydaw_data * f_result = (t_pydaw_data*)malloc(sizeof(t_pydaw_data));
+    t_pydaw_data * f_result;
+    hpalloc((void**)&f_result, sizeof(t_pydaw_data));
 
     pthread_mutex_init(&musikernel->audio_inputs_mutex, NULL);
 

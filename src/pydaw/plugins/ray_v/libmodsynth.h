@@ -97,7 +97,7 @@ t_rayv_poly_voice * g_rayv_poly_init(float);
 t_rayv_poly_voice * g_rayv_poly_init(float a_sr)
 {
     t_rayv_poly_voice * f_voice;
-    lmalloc((void**)&f_voice, sizeof(t_rayv_poly_voice));
+    hpalloc((void**)&f_voice, sizeof(t_rayv_poly_voice));
 
     g_osc_simple_unison_init(&f_voice->osc_unison1, a_sr);
     g_osc_simple_unison_init(&f_voice->osc_unison2, a_sr);
@@ -175,7 +175,7 @@ t_rayv_mono_modules * v_rayv_mono_init(float);
 t_rayv_mono_modules * v_rayv_mono_init(float a_sr)
 {
     t_rayv_mono_modules * a_mono;
-    lmalloc((void**)&a_mono, sizeof(t_rayv_mono_modules));
+    hpalloc((void**)&a_mono, sizeof(t_rayv_mono_modules));
     g_sml_init(&a_mono->filter_smoother, a_sr, 124.0f, 20.0f, 0.2f);
     g_sml_init(&a_mono->lfo_smoother, a_sr, 1600.0f, 10.0f, 0.2f);
     //To prevent low volume and brightness at the first note-on(s)

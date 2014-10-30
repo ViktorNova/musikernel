@@ -48,7 +48,7 @@ void g_crs_init(t_crs_chorus * f_result, float a_sr)
     f_result->buffer_size = (int)(a_sr * 0.050f);
     f_result->buffer_size_float = ((float)(f_result->buffer_size));
 
-    lmalloc((void**)&f_result->buffer, sizeof(float) * f_result->buffer_size);
+    hpalloc((void**)&f_result->buffer, sizeof(float) * f_result->buffer_size);
 
     int f_i = 0;
     while(f_i < f_result->buffer_size)
@@ -148,7 +148,7 @@ void v_crs_chorus_run(t_crs_chorus* a_crs, float a_input0, float a_input1)
     a_crs->output0 = a_crs->lp.output0;
     a_crs->output1 = a_crs->lp.output1;
 
-    a_crs->buffer_ptr++;
+    ++a_crs->buffer_ptr;
     if((a_crs->buffer_ptr) >= (a_crs->buffer_size))
     {
         a_crs->buffer_ptr = 0;

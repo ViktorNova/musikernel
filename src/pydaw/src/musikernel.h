@@ -119,7 +119,7 @@ void pydaw_osc_error(int num, const char *msg, const char *path)
 
 void g_musikernel_get(float a_sr)
 {
-    lmalloc((void**)&musikernel, sizeof(t_musikernel));
+    hpalloc((void**)&musikernel, sizeof(t_musikernel));
     musikernel->wav_pool = g_wav_pool_get(a_sr);
     musikernel->ab_mode = 0;
     musikernel->is_ab_ing = 0;
@@ -232,7 +232,7 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     int f_i = 0;
 
     t_pytrack * f_result;
-    lmalloc((void**)&f_result, sizeof(t_pytrack));
+    hpalloc((void**)&f_result, sizeof(t_pytrack));
 
     f_result->track_num = a_track_num;
     f_result->channels = 2;
@@ -243,15 +243,15 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
 
     pthread_spin_init(&f_result->lock, 0);
 
-    lmalloc((void**)&f_result->buffers, (sizeof(float*) * f_result->channels));
-    lmalloc((void**)&f_result->sc_buffers,
+    hpalloc((void**)&f_result->buffers, (sizeof(float*) * f_result->channels));
+    hpalloc((void**)&f_result->sc_buffers,
         (sizeof(float*) * f_result->channels));
 
     while(f_i < f_result->channels)
     {
-        buffer_alloc((void**)&f_result->buffers[f_i],
+        hpalloc((void**)&f_result->buffers[f_i],
             (sizeof(float) * FRAMES_PER_BUFFER));
-        buffer_alloc((void**)&f_result->sc_buffers[f_i],
+        hpalloc((void**)&f_result->sc_buffers[f_i],
             (sizeof(float) * FRAMES_PER_BUFFER));
         ++f_i;
     }
@@ -261,8 +261,9 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
 
     f_result->mute = 0;
     f_result->solo = 0;
-    f_result->event_buffer = (t_pydaw_seq_event*)malloc(
-            sizeof(t_pydaw_seq_event) * PYDAW_MAX_EVENT_BUFFER_SIZE);
+
+    hpalloc((void**)&f_result->event_buffer,
+        sizeof(t_pydaw_seq_event) * PYDAW_MAX_EVENT_BUFFER_SIZE);
     f_result->bus_counter = 0;
 
     f_i = 0;
@@ -296,7 +297,7 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     v_rmp_set_time(f_result->fade_env, 0.03f);
     f_result->fade_state = 0;
 
-    f_result->osc_cursor_message = (char*)malloc(sizeof(char) * 1024);
+    hpalloc((void**)&f_result->osc_cursor_message, sizeof(char) * 1024);
 
     f_result->status = STATUS_NOT_PROCESSED;
 

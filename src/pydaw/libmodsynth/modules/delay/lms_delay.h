@@ -75,7 +75,7 @@ inline void v_ldl_run_delay(t_lms_delay*,float,float);
 t_lms_delay * g_ldl_get_delay(float a_seconds, float a_sr)
 {
     t_lms_delay* f_result;
-    lmalloc((void**)&f_result, sizeof(t_lms_delay));
+    hpalloc((void**)&f_result, sizeof(t_lms_delay));
 
     g_dly_init(&f_result->delay0, a_seconds, a_sr);
     g_dly_init(&f_result->delay1, a_seconds, a_sr);

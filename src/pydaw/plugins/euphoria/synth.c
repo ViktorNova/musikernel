@@ -489,7 +489,7 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
     wavpool_get_func = a_host_wavpool_func;
     t_euphoria *plugin_data;
 
-    lmalloc((void**)&plugin_data, sizeof(t_euphoria));
+    hpalloc((void**)&plugin_data, sizeof(t_euphoria));
 
     plugin_data->descriptor = descriptor;
     plugin_data->voices = g_voc_get_voices(EUPHORIA_POLYPHONY,
