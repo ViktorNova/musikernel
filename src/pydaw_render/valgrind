@@ -8,8 +8,8 @@ exit $?
 
 if [ -z $@ ]; then
     valgrind --alignment=16 --track-origins=yes \
-        ./$BIN $PROJECT "test.wav" 0 0 3 3 44100 512 1
+        ./$BIN $PROJECT "test.wav" 0 0 3 3 44100 512 1 0 --no-file
 else
-    valgrind $@ ./$BIN $PROJECT "test.wav" 0 0 3 3 44100 512 1
+    valgrind $@ ./$BIN $PROJECT "test.wav" 0 0 3 3 44100 512 1 0 --no-file
 fi
 

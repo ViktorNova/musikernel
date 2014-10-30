@@ -75,6 +75,25 @@ dual-core:  1 worker thread
 quad-core:  1 - 3 worker threads
 """)
 
+HUGEPAGES_TOOLTIP = _(
+"""HugePages can improve memory/cache performance (sometimes significantly),
+but you must allocate system memory for it that can only be used for HugePages.
+
+It is recommended that you allocate at least 1GB of HugePages.  To allocate
+HugePages, run this command to see your HugePage size:
+
+grep -i hugepage /proc/meminfo
+
+Then add a line like this to the end of /etc/sysctl.conf and reboot:
+
+# 1024 * 2MB HugePages = 2GB of HugePages
+vm.nr_hugepages=1024
+
+Some older CPUs and kernels don't support or have buggy support for HugePages,
+disable this if it causes performance problems on your configuration.
+"""
+)
+
 class pydaw_device_dialog:
     def __init__(self, a_is_running=False):
         self.is_running = a_is_running
@@ -252,8 +271,13 @@ class pydaw_device_dialog:
             "certain security configurations.  Disable this if the "
             "engine crashes on startup."))
         f_window_layout.addWidget(f_governor_checkbox, 6, 1)
+        f_hugepages_checkbox = QtGui.QCheckBox(
+            _("Use HugePages? (You must configure HugePages on your "
+            "system first)"))
+        f_hugepages_checkbox.setToolTip(_(HUGEPAGES_TOOLTIP))
+        f_window_layout.addWidget(f_hugepages_checkbox, 7, 1)
 
-        f_window_layout.addWidget(QtGui.QLabel(_("MIDI In Devices:")), 7, 0)
+        f_window_layout.addWidget(QtGui.QLabel(_("MIDI In Devices:")), 15, 0)
         f_ok_cancel_layout = QtGui.QHBoxLayout()
         f_window_layout.addLayout(f_ok_cancel_layout, 50, 1)
         f_ok_button = QtGui.QPushButton(_("OK"))
@@ -280,7 +304,7 @@ class pydaw_device_dialog:
             f_audio_device_names.append(f_dev_name)
 
         print("\n")
-        f_midi_in_pos = 7
+        f_midi_in_pos = 15
         self.midi_in_checkboxes = {}
 
         for loop in range(self.pypm.Pm_CountDevices()):
@@ -326,14 +350,10 @@ class pydaw_device_dialog:
                     "please de-select some devices"))
                 return
             f_audio_engine = f_audio_engine_combobox.currentIndex()
-            if f_thread_affinity_checkbox.isChecked():
-                f_thread_affinity = 1
-            else:
-                f_thread_affinity = 0
-            if f_governor_checkbox.isChecked():
-                f_performance = 1
-            else:
-                f_performance = 0
+            f_thread_affinity = 1 if f_thread_affinity_checkbox.isChecked() \
+                else 0
+            f_performance = 1 if f_governor_checkbox.isChecked() else 0
+            f_hugepages = 1 if f_hugepages_checkbox.isChecked() else 0
             try:
                 #This doesn't work if the device is open already,
                 #so skip the test, and if it fails the
@@ -357,6 +377,7 @@ class pydaw_device_dialog:
                 f_file.write("audioEngine|{}\n".format(f_audio_engine))
                 f_file.write("threads|{}\n".format(f_worker_threads))
                 f_file.write("threadAffinity|{}\n".format(f_thread_affinity))
+                f_file.write("hugePages|{}\n".format(f_hugepages))
                 f_file.write("performance|{}\n".format(f_performance))
                 for f_midi_in_device in f_midi_in_devices:
                     f_file.write("midiInDevice|{}\n".format(f_midi_in_device))
@@ -420,6 +441,10 @@ class pydaw_device_dialog:
         if "performance" in pydaw_util.global_device_val_dict:
             if int(pydaw_util.global_device_val_dict["performance"]) == 1:
                 f_governor_checkbox.setChecked(True)
+
+        if "hugePages" in pydaw_util.global_device_val_dict and \
+        int(pydaw_util.global_device_val_dict["hugePages"]) == 1:
+            f_hugepages_checkbox.setChecked(True)
 
         for f_device_name in pydaw_util.MIDI_IN_DEVICES:
             if f_device_name in self.midi_in_checkboxes:

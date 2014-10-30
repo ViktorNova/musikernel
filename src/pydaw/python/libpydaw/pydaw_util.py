@@ -457,6 +457,8 @@ def set_file_setting(a_name, a_val):
     with open(f_file_name, "w") as f_file:
         f_file.write(str(a_val))
 
+USE_HUGEPAGES = 0
+
 global_device_val_dict = {}
 global_pydaw_device_config = "{}/device.txt".format(CONFIG_DIR)
 
@@ -473,7 +475,7 @@ def pydaw_delete_device_config():
 
 def pydaw_read_device_config():
     global global_pydaw_bin_path, global_device_val_dict, MIDI_IN_DEVICES
-    global global_pydaw_is_sandboxed, global_pydaw_with_audio
+    global global_pydaw_is_sandboxed, global_pydaw_with_audio, USE_HUGEPAGES
 
     global_device_val_dict = {}
     MIDI_IN_DEVICES = []
@@ -494,6 +496,10 @@ def pydaw_read_device_config():
             pydaw_set_bin_path()
             global_pydaw_is_sandboxed = False
             global_pydaw_with_audio = True
+
+            if "hugePages" in global_device_val_dict and \
+            int(global_device_val_dict["hugePages"]) == 1:
+                USE_HUGEPAGES = 1
 
             f_selinux = False
             try:

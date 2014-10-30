@@ -241,10 +241,10 @@ __attribute__((optimize("-O0"))) void * ui_process_monitor_thread(
  */
 __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 {
-    if(argc < 4)
+    if(argc < 5)
     {
-        printf("\nUsage: %s install_prefix project_path ui_pid [--sleep]\n\n",
-                argv[0]);
+        printf("\nUsage: %s install_prefix project_path ui_pid "
+            "huge_pages[--sleep]\n\n", argv[0]);
         exit(9996);
     }
 
@@ -271,6 +271,16 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     pthread_create(&f_ui_monitor_thread, &f_ui_threadAttr,
             ui_process_monitor_thread, (void*)f_ui_thread_args);
 
+    int f_huge_pages = atoi(argv[4]);
+    assert(f_huge_pages == 0 || f_huge_pages == 1);
+
+    if(f_huge_pages)
+    {
+        printf("Attempting to use hugepages\n");
+    }
+
+    USE_HUGEPAGES = f_huge_pages;
+
     j = 0;
 
     while(j < argc)
@@ -289,9 +299,9 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
     int f_usleep = 0;
 
-    if(argc >= 5)
+    if(argc > 5)
     {
-        j = 4;
+        j = 5;
         while(j < argc)
         {
             if(!strcmp(argv[j], "--sleep"))

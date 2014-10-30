@@ -11148,27 +11148,28 @@ def open_pydaw_engine(a_project_path):
             f_cmd = (
                 """pasuspender -- x-terminal-emulator -e """
                 """bash -c 'ulimit -c unlimited ; """
-                """{} "{}" "{}" "{}" {} {} ; read' """.format(
+                """{} "{}" "{}" "{}" {} {} {}; read' """.format(
                 f_run_with, pydaw_util.global_pydaw_bin_path,
-                global_pydaw_install_prefix, f_project_dir, f_pid, f_sleep))
+                global_pydaw_install_prefix, f_project_dir, f_pid,
+                pydaw_util.USE_HUGEPAGES, f_sleep))
         else:
             f_cmd = (
                 """x-terminal-emulator -e bash -c 'ulimit -c unlimited ; """
-                """{} "{}" "{}" "{}" {} {} ; read' """.format(
+                """{} "{}" "{}" "{}" {} {} {}; read' """.format(
                 f_run_with, pydaw_util.global_pydaw_bin_path,
                 pydaw_util.global_pydaw_install_prefix, f_project_dir,
-                f_pid, f_sleep))
+                f_pid, pydaw_util.USE_HUGEPAGES, f_sleep))
     else:
         if f_pa_suspend:
-            f_cmd = 'pasuspender -- "{}" "{}" "{}" {}'.format(
+            f_cmd = 'pasuspender -- "{}" "{}" "{}" {} {}'.format(
                 pydaw_util.global_pydaw_bin_path,
                 pydaw_util.global_pydaw_install_prefix,
-                f_project_dir, f_pid)
+                f_project_dir, f_pid, pydaw_util.USE_HUGEPAGES)
         else:
-            f_cmd = '"{}" "{}" "{}" {}'.format(
+            f_cmd = '"{}" "{}" "{}" {} {}'.format(
                 pydaw_util.global_pydaw_bin_path,
                 pydaw_util.global_pydaw_install_prefix,
-                f_project_dir, f_pid)
+                f_project_dir, f_pid, pydaw_util.USE_HUGEPAGES)
     print(f_cmd)
     PYDAW_SUBPROCESS = subprocess.Popen([f_cmd], shell=True)
 

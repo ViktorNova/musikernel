@@ -33,12 +33,12 @@ void print_help()
 {
     printf("Usage:  %s_render [project_dir] [output_file] [start_region] "
             "[start_bar] [end_region] [end_bar] [sample_rate] "
-            "[buffer_size] [thread_count]\n\n", PYDAW_VERSION);
+            "[buffer_size] [thread_count] [huge_pages]\n\n", PYDAW_VERSION);
 }
 
 int main(int argc, char** argv)
 {
-    if(argc < 10)
+    if(argc < 11)
     {
         print_help();
         exit(1);
@@ -53,10 +53,21 @@ int main(int argc, char** argv)
     int f_sample_rate = atoi(argv[7]);
     int f_buffer_size = atoi(argv[8]);
     int f_thread_count = atoi(argv[9]);
+
+    int f_huge_pages = atoi(argv[10]);
+    assert(f_huge_pages == 0 || f_huge_pages == 1);
+
+    if(f_huge_pages)
+    {
+        printf("Attempting to use hugepages\n");
+    }
+
+    USE_HUGEPAGES = f_huge_pages;
+
     int f_create_file = 1;
 
     int f_i;
-    for(f_i = 10; f_i < argc; ++f_i)
+    for(f_i = 11; f_i < argc; ++f_i)
     {
         if(!strcmp(argv[f_i], "--no-file"))
         {
