@@ -41,7 +41,7 @@ t_wavenext * wavenext;
 
 void g_wavenext_get()
 {
-    lmalloc((void**)&wavenext, sizeof(t_wavenext));
+    hpalloc((void**)&wavenext, sizeof(t_wavenext));
     wavenext->ab_wav_item = 0;
     wavenext->ab_audio_item = g_pydaw_audio_item_get(musikernel->sample_rate);
     wavenext->tracks_folder = (char*)malloc(sizeof(char) * 1024);

@@ -131,7 +131,7 @@ static PYFX_Handle g_triggerfx_instantiate(PYFX_Descriptor * descriptor,
     plugin_data->sv_pitch_bend_value = 0.0f;
 
     plugin_data->mono_modules =
-            v_triggerfx_mono_init(plugin_data->fs, plugin_data->plugin_uid);
+        v_triggerfx_mono_init(plugin_data->fs, plugin_data->plugin_uid);
 
     plugin_data->port_table = g_pydaw_get_port_table(
         (void**)plugin_data, descriptor);
@@ -161,9 +161,9 @@ static inline void v_triggerfx_run_gate(t_triggerfx *plugin_data,
 {
     v_sml_run(plugin_data->mono_modules->gate_wet_smoother,
             *plugin_data->gate_wet * 0.01f);
-    v_gat_set(plugin_data->mono_modules->gate, *plugin_data->gate_pitch,
+    v_gat_set(&plugin_data->mono_modules->gate, *plugin_data->gate_pitch,
             plugin_data->mono_modules->gate_wet_smoother->last_value);
-    v_gat_run(plugin_data->mono_modules->gate,
+    v_gat_run(&plugin_data->mono_modules->gate,
             plugin_data->mono_modules->gate_on, a_in0, a_in1);
 }
 
@@ -388,9 +388,9 @@ static void v_triggerfx_run(
                     plugin_data->mono_modules->current_sample0,
                     plugin_data->mono_modules->current_sample1);
             plugin_data->mono_modules->current_sample0 =
-                    plugin_data->mono_modules->gate->output[0];
+                    plugin_data->mono_modules->gate.output[0];
             plugin_data->mono_modules->current_sample1 =
-                    plugin_data->mono_modules->gate->output[1];
+                    plugin_data->mono_modules->gate.output[1];
         }
 
         plugin_data->output0[f_i] =

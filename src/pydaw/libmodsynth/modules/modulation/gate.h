@@ -23,8 +23,8 @@ extern "C" {
 
 typedef struct
 {
-    t_state_variable_filter * svf;
-    t_audio_xfade * xfade;
+    t_state_variable_filter svf;
+    t_audio_xfade xfade;
     float last_cutoff;
     float last_wet;
     float output[2];
@@ -43,14 +43,14 @@ void v_gat_set(t_gat_gate* a_gat, float a_pitch, float a_wet)
     if(a_pitch != a_gat->last_cutoff)
     {
         a_gat->last_cutoff = a_pitch;
-        v_svf_set_cutoff_base(a_gat->svf, a_pitch);
-        v_svf_set_cutoff(a_gat->svf);
+        v_svf_set_cutoff_base(&a_gat->svf, a_pitch);
+        v_svf_set_cutoff(&a_gat->svf);
     }
 
     if(a_wet != a_gat->last_wet)
     {
         a_gat->last_wet = a_wet;
-        v_axf_set_xfade(a_gat->xfade, a_wet);
+        v_axf_set_xfade(&a_gat->xfade, a_wet);
     }
 }
 
@@ -59,36 +59,30 @@ void v_gat_set(t_gat_gate* a_gat, float a_pitch, float a_wet)
  */
 void v_gat_run(t_gat_gate * a_gat, float a_on, float a_in0, float a_in1)
 {
-    a_gat->value = v_svf_run_2_pole_lp(a_gat->svf, a_on);
+    a_gat->value = v_svf_run_2_pole_lp(&a_gat->svf, a_on);
 
     a_gat->output[0] = f_axf_run_xfade(
-            a_gat->xfade, a_in0, a_gat->value * a_in0);
+            &a_gat->xfade, a_in0, a_gat->value * a_in0);
     a_gat->output[1] = f_axf_run_xfade(
-            a_gat->xfade, a_in1, a_gat->value * a_in1);
+            &a_gat->xfade, a_in1, a_gat->value * a_in1);
 }
 
-/*
- * t_gat_gate * g_gat_get(float a_sr)
- */
-t_gat_gate * g_gat_get(float a_sr)
+void g_gat_init(t_gat_gate * f_result, float a_sr)
 {
-    t_gat_gate * f_result = (t_gat_gate*)malloc(sizeof(t_gat_gate));
-
     f_result->value = 0.0f;
     f_result->output[0] = 0.0f;
     f_result->output[1] = 0.0f;
     f_result->last_cutoff = 6699.0f;
     f_result->last_wet = -3210.0f;
-    f_result->svf = g_svf_get(a_sr);
+    g_svf_init(&f_result->svf, a_sr);
 
-    f_result->xfade = g_axf_get_audio_xfade(-3.0f);
+    g_axf_init(&f_result->xfade, -3.0f);
 
-    v_svf_set_cutoff_base(f_result->svf, 66.0f);
-    v_svf_set_res(f_result->svf, -12.0f);
-    v_svf_set_cutoff(f_result->svf);
-
-    return f_result;
+    v_svf_set_cutoff_base(&f_result->svf, 66.0f);
+    v_svf_set_res(&f_result->svf, -12.0f);
+    v_svf_set_cutoff(&f_result->svf);
 }
+
 
 #ifdef	__cplusplus
 }

@@ -43,7 +43,7 @@ typedef struct
     t_smoother_linear * gate_wet_smoother;
     t_smoother_linear * glitch_time_smoother;
 
-    t_gat_gate * gate;
+    t_gat_gate gate;
     float gate_on;
 
     t_glc_glitch_v2 * glitch;
@@ -69,7 +69,7 @@ t_triggerfx_mono_modules * v_triggerfx_mono_init(float a_sr, int a_plugin_uid)
 
     a_mono->vol_linear = 1.0f;
 
-    a_mono->gate = g_gat_get(a_sr);
+    g_gat_init(&a_mono->gate, a_sr);
     a_mono->gate_on = 0.0f;
 
     a_mono->glitch = g_glc_glitch_v2_get(a_sr);
