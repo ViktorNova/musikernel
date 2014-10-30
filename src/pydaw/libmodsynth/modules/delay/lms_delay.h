@@ -96,7 +96,7 @@ t_lms_delay * g_ldl_get_delay(float a_seconds, float a_sr)
     f_result->input_env_follower = g_enf_get_env_follower(a_sr);
     f_result->combined_inputs = 0.0f;
 
-    g_lim_init(&f_result->limiter, a_sr);
+    g_lim_init(&f_result->limiter, a_sr, 1);
     f_result->last_duck = -99.999f;
 
     f_result->limiter_gain = 0.0f;

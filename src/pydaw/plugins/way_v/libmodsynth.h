@@ -212,7 +212,7 @@ t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono)
 
     for(f_i = 0; f_i < WAYV_MODULAR_POLYFX_COUNT; f_i++)
     {
-        g_mf3_init(&f_voice->multieffect[f_i], a_sr);
+        g_mf3_init(&f_voice->multieffect[f_i], a_sr, 1);
         f_voice->fx_func_ptr[f_i] = v_mf3_run_off;
     }
 

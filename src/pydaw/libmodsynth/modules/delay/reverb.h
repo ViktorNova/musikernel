@@ -189,7 +189,7 @@ t_rvb_reverb * g_rvb_reverb_get(float a_sr)
 
     while(f_i2 < PYDAW_REVERB_TAP_COUNT)
     {
-        g_cmb_init(&f_result->taps[f_i2], a_sr);
+        g_cmb_init(&f_result->taps[f_i2], a_sr, 1);
         ++f_i2;
     }
 

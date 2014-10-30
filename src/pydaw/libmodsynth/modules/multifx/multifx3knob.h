@@ -751,17 +751,17 @@ inline void v_mf3_run_metal_comb(t_mf3_multi*__restrict a_mf3, float a_in0,
     a_mf3->output1 = (a_mf3->comb_filter1.output_sample);
 }
 
-void g_mf3_init(t_mf3_multi * f_result, float a_sample_rate)
+void g_mf3_init(t_mf3_multi * f_result, float a_sample_rate, int a_huge_pages)
 {
     f_result->effect_index = 0;
     f_result->channels = 2;
     g_svf2_init(&f_result->svf, a_sample_rate);
-    g_cmb_init(&f_result->comb_filter0, a_sample_rate);
-    g_cmb_init(&f_result->comb_filter1, a_sample_rate);
+    g_cmb_init(&f_result->comb_filter0, a_sample_rate, a_huge_pages);
+    g_cmb_init(&f_result->comb_filter1, a_sample_rate, a_huge_pages);
     g_pkq_init(&f_result->eq0, a_sample_rate);
     g_clp_init(&f_result->clipper);
     v_clp_set_clip_sym(&f_result->clipper, -3.0f);
-    g_lim_init(&f_result->limiter, a_sample_rate);
+    g_lim_init(&f_result->limiter, a_sample_rate, a_huge_pages);
     f_result->output0 = 0.0f;
     f_result->output1 = 0.0f;
     f_result->control[0] = 0.0f;
@@ -778,7 +778,7 @@ void g_mf3_init(t_mf3_multi * f_result, float a_sample_rate)
     g_app_init(&f_result->amp_and_panner);
     g_sat_init(&f_result->saturator);
     g_for_init(&f_result->formant_filter, a_sample_rate);
-    g_crs_init(&f_result->chorus, a_sample_rate);
+    g_crs_init(&f_result->chorus, a_sample_rate, a_huge_pages);
     g_glc_init(&f_result->glitch, a_sample_rate);
     g_rmd_init(&f_result->ring_mod, a_sample_rate);
     g_lfi_init(&f_result->lofi);
@@ -796,7 +796,7 @@ t_mf3_multi * g_mf3_get(float a_sample_rate)
     t_mf3_multi * f_result;
 
     lmalloc((void**)&f_result, sizeof(t_mf3_multi));
-    g_mf3_init(f_result, a_sample_rate);
+    g_mf3_init(f_result, a_sample_rate, 0);
 
     return f_result;
 }

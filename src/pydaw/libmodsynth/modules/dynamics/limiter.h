@@ -42,7 +42,6 @@ typedef struct st_lim_limiter
     t_state_variable_filter filter;
 }t_lim_limiter;
 
-t_lim_limiter * g_lim_get(float);
 void v_lim_set(t_lim_limiter*,float, float, float);
 void v_lim_run(t_lim_limiter*,float, float);
 void v_lim_free(t_lim_limiter*);
@@ -160,18 +159,27 @@ void v_lim_run(t_lim_limiter *a_lim, float a_in0, float a_in1)
     a_lim->output1 = (a_lim->buffer1[(a_lim->buffer_index)]) * f_gain;
 }
 
-void g_lim_init(t_lim_limiter * f_result, float a_sr)
+void g_lim_init(t_lim_limiter * f_result, float a_sr, int a_huge_pages)
 {
     f_result->holdtime = ((int)(a_sr / LMS_HOLD_TIME_DIVISOR));
 
     f_result->buffer_size = (f_result->holdtime); // (int)(a_sr*0.003f);
     f_result->buffer_index = 0;
 
-    buffer_alloc((void**)&f_result->buffer0, sizeof(float) *
-        (f_result->buffer_size));
-
-    buffer_alloc((void**)&f_result->buffer1, sizeof(float) *
-        (f_result->buffer_size));
+    if(a_huge_pages)
+    {
+        hpalloc((void**)&f_result->buffer0, sizeof(float) *
+            (f_result->buffer_size));
+        hpalloc((void**)&f_result->buffer1, sizeof(float) *
+            (f_result->buffer_size));
+    }
+    else
+    {
+        buffer_alloc((void**)&f_result->buffer0, sizeof(float) *
+            (f_result->buffer_size));
+        buffer_alloc((void**)&f_result->buffer1, sizeof(float) *
+            (f_result->buffer_size));
+    }
 
     int f_i;
 
@@ -216,14 +224,6 @@ void g_lim_init(t_lim_limiter * f_result, float a_sr)
     f_result->last_ceiling = 1234.4522f;
     f_result->last_release = 1234.4522f;
     f_result->last_thresh = 1234.4532f;
-}
-
-t_lim_limiter * g_lim_get(float a_sr)
-{
-    t_lim_limiter * f_result;
-    lmalloc((void**)&f_result, sizeof(t_lim_limiter));
-    g_lim_init(f_result, a_sr);
-    return f_result;
 }
 
 #ifdef	__cplusplus

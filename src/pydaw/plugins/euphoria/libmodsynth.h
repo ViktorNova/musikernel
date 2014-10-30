@@ -146,7 +146,7 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 
     for(f_i = 0; f_i < EUPHORIA_MODULAR_POLYFX_COUNT; ++f_i)
     {
-        g_mf3_init(&f_voice->multieffect[f_i], a_sr);
+        g_mf3_init(&f_voice->multieffect[f_i], a_sr, 1);
         f_voice->fx_func_ptr[f_i] = v_mf3_run_off;
     }
 
@@ -206,7 +206,7 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
     {
         for(f_i2 = 0; f_i2 < EUPHORIA_MONO_FX_COUNT; ++f_i2)
         {
-            g_mf3_init(&a_mono->multieffect[f_i][f_i2], a_sr);
+            g_mf3_init(&a_mono->multieffect[f_i][f_i2], a_sr, 1);
             a_mono->fx_func_ptr[f_i][f_i2] = v_mf3_run_off;
         }
     }

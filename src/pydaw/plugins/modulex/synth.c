@@ -243,6 +243,7 @@ static void v_modulex_run(
         t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_modulex *plugin_data = (t_modulex*)instance;
+    t_mf3_multi * f_fx;
 
     int event_pos = 0;
     int midi_event_pos = 0;
@@ -325,27 +326,26 @@ static void v_modulex_run(
             {
                 if(plugin_data->mono_modules->fx_func_ptr[f_i] != v_mf3_run_off)
                 {
-                    v_sml_run(plugin_data->mono_modules->smoothers[f_i][0],
+                    f_fx = &plugin_data->mono_modules->multieffect[f_i];
+                    v_sml_run(&plugin_data->mono_modules->smoothers[f_i][0],
                             *plugin_data->fx_knob0[f_i]);
-                    v_sml_run(plugin_data->mono_modules->smoothers[f_i][1],
+                    v_sml_run(&plugin_data->mono_modules->smoothers[f_i][1],
                             *plugin_data->fx_knob1[f_i]);
-                    v_sml_run(plugin_data->mono_modules->smoothers[f_i][2],
+                    v_sml_run(&plugin_data->mono_modules->smoothers[f_i][2],
                             *plugin_data->fx_knob2[f_i]);
 
-                    v_mf3_set(plugin_data->mono_modules->multieffect[f_i],
-                    plugin_data->mono_modules->smoothers[f_i][0]->last_value,
-                    plugin_data->mono_modules->smoothers[f_i][1]->last_value,
-                    plugin_data->mono_modules->smoothers[f_i][2]->last_value);
+                    v_mf3_set(f_fx,
+                    plugin_data->mono_modules->smoothers[f_i][0].last_value,
+                    plugin_data->mono_modules->smoothers[f_i][1].last_value,
+                    plugin_data->mono_modules->smoothers[f_i][2].last_value);
 
                     plugin_data->mono_modules->fx_func_ptr[f_i](
-                        plugin_data->mono_modules->multieffect[f_i],
+                        f_fx,
                         (plugin_data->mono_modules->current_sample0),
                         (plugin_data->mono_modules->current_sample1));
 
-                    plugin_data->mono_modules->current_sample0 =
-                        plugin_data->mono_modules->multieffect[f_i]->output0;
-                    plugin_data->mono_modules->current_sample1 =
-                        plugin_data->mono_modules->multieffect[f_i]->output1;
+                    plugin_data->mono_modules->current_sample0 = f_fx->output0;
+                    plugin_data->mono_modules->current_sample1 = f_fx->output1;
                 }
                 ++f_i;
             }

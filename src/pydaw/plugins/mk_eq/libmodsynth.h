@@ -47,8 +47,8 @@ t_mkeq_mono_modules * v_mkeq_mono_init(float, int);
 
 t_mkeq_mono_modules * v_mkeq_mono_init(float a_sr, int a_plugin_uid)
 {
-    t_mkeq_mono_modules * a_mono =
-            (t_mkeq_mono_modules*)malloc(sizeof(t_mkeq_mono_modules));
+    t_mkeq_mono_modules * a_mono;
+    hpalloc((void**)&a_mono, sizeof(t_mkeq_mono_modules));
 
     int f_i = 0;
 

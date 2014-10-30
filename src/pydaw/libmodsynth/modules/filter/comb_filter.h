@@ -202,15 +202,23 @@ inline void v_cmb_mc_set_all(t_comb_filter*__restrict a_cmb, float a_wet_db, flo
     v_cmb_set_all(a_cmb, a_wet_db, a_wet_db - 13.0f, a_midi_note_number);
 }
 
-void g_cmb_init(t_comb_filter * f_result, float a_sr)
+void g_cmb_init(t_comb_filter * f_result, float a_sr, int a_huge_pages)
 {
     register int f_i = 0;
 
     //Allocate enough memory to accomodate 20hz filter frequency
     f_result->buffer_size = (int)((a_sr / 20.0f) + 300);
 
-    buffer_alloc((void**)(&(f_result->input_buffer)),
-        sizeof(float) * (f_result->buffer_size));
+    if(a_huge_pages)
+    {
+        hpalloc((void**)(&(f_result->input_buffer)),
+            sizeof(float) * (f_result->buffer_size));
+    }
+    else
+    {
+        buffer_alloc((void**)(&(f_result->input_buffer)),
+            sizeof(float) * (f_result->buffer_size));
+    }
 
     while(f_i < (f_result->buffer_size))
     {

@@ -393,7 +393,7 @@ float * g_pydaw_get_port_table(PYFX_Handle * handle,
 
     int f_i = 0;
 
-    lmalloc((void**)(&pluginControlIns), sizeof(float) * descriptor->PortCount);
+    hpalloc((void**)(&pluginControlIns), sizeof(float) * descriptor->PortCount);
 
     f_i = 0;
     while(f_i < descriptor->PortCount)
