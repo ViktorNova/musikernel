@@ -126,7 +126,7 @@ void hpalloc(void ** a_ptr, size_t a_size)
         if(alloc_hugepage_data())
         {
             huge_page_data * f_data = &HUGE_PAGE_DATA[f_i];
-            *a_ptr = f_data->pos;
+            *a_ptr = __builtin_assume_aligned(f_data->pos, HUGEPAGE_MIN_ALIGN);
             f_data->pos = hugepage_align(a_size + f_data->pos);
         }
         else
