@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../pydaw/src/compiler.h"
 #include "../pydaw/src/pydaw.h"
 #include "../pydaw/include/pydaw_plugin.h"
 #include "../pydaw/libmodsynth/lib/lmalloc.h"

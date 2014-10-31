@@ -663,7 +663,7 @@ static PYFX_Handle g_wayv_instantiate(PYFX_Descriptor * descriptor,
     plugin_data->voices = g_voc_get_voices(WAYV_POLYPHONY,
             WAYV_POLYPHONY_THRESH);
 
-    for (i = 0; i < WAYV_POLYPHONY; i++)
+    for (i = 0; i < WAYV_POLYPHONY; ++i)
     {
         plugin_data->data[i] = g_wayv_poly_init(
                 plugin_data->fs, plugin_data->mono_modules);
@@ -1114,7 +1114,7 @@ static void v_run_wayv(
 
     int f_poly_mode = (int)(*plugin_data->mono_mode);
 
-    if(f_poly_mode == 2 && plugin_data->voices->poly_mode != 2)
+    if(unlikely(f_poly_mode == 2 && plugin_data->voices->poly_mode != 2))
     {
         wayvPanic(instance);  //avoid hung notes
     }

@@ -59,38 +59,38 @@ float f_cubic_interpolate_ptr_wrap(float * a_table, int a_table_size,
     int int_pos_minus1 = int_pos - 1;
     int int_pos_minus2 = int_pos - 2;
 
-    if(int_pos >= a_table_size)
+    if(unlikely(int_pos >= a_table_size))
     {
         int_pos = int_pos - a_table_size;
     }
-    else if(int_pos < 0)
+    else if(unlikely(int_pos < 0))
     {
         int_pos = int_pos + a_table_size;
     }
 
-    if(int_pos_plus1 >= a_table_size)
+    if(unlikely(int_pos_plus1 >= a_table_size))
     {
         int_pos_plus1 = int_pos_plus1 - a_table_size;
     }
-    else if(int_pos_plus1 < 0)
+    else if(unlikely(int_pos_plus1 < 0))
     {
         int_pos_plus1 = int_pos_plus1 + a_table_size;
     }
 
-    if(int_pos_minus1 >= a_table_size)
+    if(unlikely(int_pos_minus1 >= a_table_size))
     {
         int_pos_minus1 = int_pos_minus1 - a_table_size;
     }
-    else if(int_pos_minus1 < 0)
+    else if(unlikely(int_pos_minus1 < 0))
     {
         int_pos_minus1 = int_pos_minus1 + a_table_size;
     }
 
-    if(int_pos_minus2 >= a_table_size)
+    if(unlikely(int_pos_minus2 >= a_table_size))
     {
         int_pos_minus2 = int_pos_minus2 - a_table_size;
     }
-    else if(int_pos_minus2 < 0)
+    else if(unlikely(int_pos_minus2 < 0))
     {
         int_pos_minus2 = int_pos_minus2 + a_table_size;
     }

@@ -47,7 +47,7 @@ typedef struct st_osc_wav_unison
     int selected_wavetable_sample_count;
     float selected_wavetable_sample_count_float;
     //Restart the oscillators at the same phase on each note-on
-    float phases [OSC_UNISON_MAX_VOICES];
+    float phases[OSC_UNISON_MAX_VOICES];
     //for generating instantaneous phase without affecting real phase
     float fm_phases [OSC_UNISON_MAX_VOICES];
     float uni_spread;

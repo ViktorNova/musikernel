@@ -24,6 +24,7 @@ GNU General Public License for more details.
 #define _GNU_SOURCE
 #endif
 
+#include "compiler.h"
 #include "pydaw_files.h"
 #include "../include/pydaw_plugin.h"
 #include <portaudio.h>
