@@ -950,8 +950,8 @@ void * v_pydaw_osc_send_thread(void* a_arg)
             {
                 if(!musikernel->is_offline_rendering)
                 {
-                    sprintf(f_msg, "%i|%i|%f", self->ml_next_region,
-                        self->ml_next_bar, self->ml_next_beat);
+                    sprintf(f_msg, "%i|%i|%f", self->current_region,
+                        self->current_bar, self->ml_current_period_beats);
                     v_queue_osc_message("cur", f_msg);
                 }
             }
@@ -3771,6 +3771,7 @@ void v_set_playback_cursor(t_pydaw_data * self, int a_region, int a_bar)
     self->current_bar = a_bar;
     self->current_region = a_region;
     self->playback_cursor = 0.0f;
+    self->ml_current_period_beats = 0.0f;
 
     v_pydaw_reset_audio_item_read_heads(self, a_region, a_bar);
 
