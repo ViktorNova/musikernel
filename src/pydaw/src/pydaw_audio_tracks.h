@@ -86,7 +86,7 @@ typedef struct
 {
     float sample_rate;
     int count;
-    t_wav_pool_item * items[PYDAW_MAX_WAV_POOL_ITEM_COUNT];
+    t_wav_pool_item items[PYDAW_MAX_WAV_POOL_ITEM_COUNT];
     char samples_folder[2048];  //This must be set when opening a project
 }t_wav_pool;
 
@@ -108,17 +108,22 @@ void v_pydaw_audio_item_free(t_pydaw_audio_item *);
 }
 #endif
 
+void g_wav_pool_item_init(t_wav_pool_item *f_result,
+    int a_uid, const char *a_path, float a_sr)
+{
+    f_result->uid = a_uid;
+    f_result->is_loaded = 0;
+    f_result->host_sr = a_sr;
+    sprintf(f_result->path, "%s", a_path);
+}
+
 t_wav_pool_item * g_wav_pool_item_get(int a_uid, const char *a_path, float a_sr)
 {
     t_wav_pool_item *f_result;
 
     lmalloc((void**)&f_result, sizeof(t_wav_pool_item));
 
-    f_result->uid = a_uid;
-    f_result->is_loaded = 0;
-    f_result->host_sr = a_sr;
-
-    sprintf(f_result->path, "%s", a_path);
+    g_wav_pool_item_init(f_result, a_uid, a_path, a_sr);
 
     return f_result;
 }
@@ -281,7 +286,8 @@ void v_wav_pool_item_free(t_wav_pool_item *a_wav_pool_item)
 
 t_wav_pool * g_wav_pool_get(float a_sr)
 {
-    t_wav_pool * f_result = (t_wav_pool*)malloc(sizeof(t_wav_pool));
+    t_wav_pool * f_result;
+    hpalloc((void**)&f_result, sizeof(t_wav_pool));
 
     f_result->sample_rate = a_sr;
     f_result->count = 0;
@@ -289,8 +295,8 @@ t_wav_pool * g_wav_pool_get(float a_sr)
     int f_i = 0;
     while(f_i < PYDAW_MAX_WAV_POOL_ITEM_COUNT)
     {
-        f_result->items[f_i] = 0;
-        f_i++;
+        f_result->items[f_i].uid = -1;
+        ++f_i;
     }
     return f_result;
 }
@@ -299,10 +305,9 @@ void v_wav_pool_add_item(t_wav_pool* a_wav_pool, int a_uid, char * a_file_path)
 {
     char f_path[2048];
     sprintf(f_path, "%s%s", a_wav_pool->samples_folder, a_file_path);
-    t_wav_pool_item * f_result = g_wav_pool_item_get(a_uid, f_path,
+    g_wav_pool_item_init(&a_wav_pool->items[a_wav_pool->count], a_uid, f_path,
             a_wav_pool->sample_rate);
-    a_wav_pool->items[a_wav_pool->count] = f_result;
-    a_wav_pool->count++;
+    ++a_wav_pool->count;
 }
 
 /* Load entire pool at startup/open */
@@ -326,16 +331,16 @@ void v_wav_pool_add_items(t_wav_pool* a_wav_pool, char * a_file_path)
 
 t_wav_pool_item * g_wav_pool_get_item_by_uid(t_wav_pool* a_wav_pool, int a_uid)
 {
-    if(a_wav_pool->items[a_uid] && a_wav_pool->items[a_uid]->uid == a_uid)
+    if(a_wav_pool->items[a_uid].uid == a_uid)
     {
-        if(!a_wav_pool->items[a_uid]->is_loaded)
+        if(!a_wav_pool->items[a_uid].is_loaded)
         {
-            if(!i_wav_pool_item_load(a_wav_pool->items[a_uid], 1))
+            if(!i_wav_pool_item_load(&a_wav_pool->items[a_uid], 1))
             {
                 return 0;
             }
         }
-        return a_wav_pool->items[a_uid];
+        return &a_wav_pool->items[a_uid];
     }
 
     return 0;
@@ -397,7 +402,7 @@ t_pydaw_audio_items * g_pydaw_audio_items_get(int a_sr)
     while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
     {
         f_result->items[f_i] = 0; //g_pydaw_audio_item_get((float)(a_sr));
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -409,9 +414,9 @@ t_pydaw_audio_items * g_pydaw_audio_items_get(int a_sr)
         while(f_i2 < PYDAW_MAX_AUDIO_ITEM_COUNT)
         {
             f_result->indexes[f_i][f_i2] = 0;
-            f_i2++;
+            ++f_i2;
         }
-        f_i++;
+        ++f_i;
     }
     return f_result;
 }
@@ -802,7 +807,7 @@ void v_pydaw_audio_items_free(t_pydaw_audio_items *a_audio_items)
     {
         v_pydaw_audio_item_free(a_audio_items->items[f_i]);
         a_audio_items->items[f_i] = 0;
-        f_i++;
+        ++f_i;
     }
 
     free(a_audio_items);
