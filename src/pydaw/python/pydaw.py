@@ -9564,7 +9564,8 @@ class pydaw_main_window(QtGui.QMainWindow):
                 f_cmd = [str(x) for x in
                     (pydaw_util.global_pydaw_render_bin_path,
                      f_dir, f_out_file, f_sr, f_sb, f_er, f_eb,
-                     f_samp_rate, f_buff_size, f_thread_count)]
+                     f_samp_rate, f_buff_size, f_thread_count,
+                     pydaw_util.USE_HUGEPAGES)]
                 self.show_offline_rendering_wait_window_v2(f_cmd, f_out_file)
 
         def cancel_handler():
