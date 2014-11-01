@@ -337,8 +337,7 @@ static void v_rayv_process_midi_event(
             plugin_data->data[f_voice]->amp =
                     f_db_to_linear_fast(
                     //-20db to 0db, + master volume (0 to -60)
-                    ((a_event->velocity * 0.094488)
-                    - 12.0f + (*(plugin_data->master_vol))));
+                    ((a_event->velocity * 0.094488) - 12.0f));
             v_svf_velocity_mod(&plugin_data->data[f_voice]->svf_filter,
                     a_event->velocity);
 
@@ -569,10 +568,11 @@ static void v_run_rayv(
         ++f_i;
     }
 
-    f_i = 0;
+    float f_master_vol = f_db_to_linear_fast(*plugin_data->master_vol);
+
     register int f_i2;
 
-    while((f_i) < sample_count)
+    for(f_i = 0; f_i < sample_count; ++f_i)
     {
         while(midi_event_pos < plugin_data->midi_event_count &&
             plugin_data->midi_event_ticks[midi_event_pos] == f_i)
@@ -597,8 +597,7 @@ static void v_run_rayv(
         }
 
         v_plugin_event_queue_atm_set(
-            &plugin_data->atm_queue, f_i,
-            plugin_data->port_table);
+            &plugin_data->atm_queue, f_i, plugin_data->port_table);
 
         v_sml_run(&plugin_data->mono_modules->lfo_smoother,
                 (*plugin_data->lfo_freq));
@@ -607,8 +606,7 @@ static void v_run_rayv(
         v_sml_run(&plugin_data->mono_modules->pitchbend_smoother,
                 (plugin_data->sv_pitch_bend_value));
 
-        f_i2 = 0;
-        while (f_i2 < RAYV_POLYPHONY)
+        for(f_i2 = 0; f_i2 < RAYV_POLYPHONY; ++f_i2)
         {
             if((plugin_data->data[f_i2]->adsr_amp.stage) != ADSR_STAGE_OFF)
             {
@@ -621,15 +619,13 @@ static void v_run_rayv(
             {
                 plugin_data->voices->voices[f_i2].n_state = note_state_off;
             }
-
-            ++f_i2;
         }
 
-        ++f_i;
+        plugin_data->output0[f_i] *= f_master_vol;
+        plugin_data->output1[f_i] *= f_master_vol;
+
         ++plugin_data->sampleNo;
     }
-
-    //plugin_data->sampleNo += sample_count;
 }
 
 static void v_run_rayv_voice(t_rayv *plugin_data,
