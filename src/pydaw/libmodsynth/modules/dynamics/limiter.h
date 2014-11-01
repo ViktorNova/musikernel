@@ -217,7 +217,7 @@ void g_lim_init(t_lim_limiter * f_result, float a_sr, int a_huge_pages)
     while(f_i < 50)
     {
         v_svf_run_4_pole_lp(&f_result->filter, 1.0f);
-        f_i++;
+        ++f_i;
     }
 
     //nonsensical values that it won't evaluate to on the first run

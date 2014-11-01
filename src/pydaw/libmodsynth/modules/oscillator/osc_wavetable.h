@@ -258,7 +258,7 @@ void v_osc_wav_note_on_sync_phases(t_osc_wav_unison * a_osc_ptr)
     while(f_i < a_osc_ptr->voice_count)
     {
         a_osc_ptr->osc_cores[f_i].output = a_osc_ptr->phases[f_i];
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -291,7 +291,7 @@ void g_osc_init_osc_wav_unison(
     {
         g_init_osc_core(&f_result->osc_cores[f_i]);
         //f_result->osc_wavs[f_i] =
-        f_i++;
+        ++f_i;
     }
 
     v_osc_wav_set_unison_pitch(f_result, .5f, 60.0f);
@@ -301,7 +301,7 @@ void g_osc_init_osc_wav_unison(
     while(f_i < 200000)
     {
         v_osc_wav_run_unison_core_only(f_result);
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -310,7 +310,7 @@ void g_osc_init_osc_wav_unison(
     {
         f_result->phases[f_i] = f_result->osc_cores[f_i].output;
         f_result->fm_phases[f_i] = 0.0f;
-        f_i++;
+        ++f_i;
     }
 
     v_osc_wav_set_unison_pitch(f_result, .2f, 60.0f);

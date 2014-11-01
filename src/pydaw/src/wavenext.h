@@ -49,7 +49,7 @@ void g_wavenext_get()
     while(f_i < 1)
     {
         wavenext->track_pool[f_i] = g_pytrack_get(f_i, musikernel->sample_rate);
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -87,12 +87,12 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
                     {
                         f_plugin->descriptor->on_stop(f_plugin->PYFX_handle);
                     }
-                    f_i2++;
+                    ++f_i2;
                 }
 
                 f_track->item_event_index = 0;
 
-                f_i++;
+                ++f_i;
             }
 
             if(a_lock)
@@ -170,7 +170,7 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
     while(f_i < 2)
     {
         f_buffer[f_i] = (float*)malloc(sizeof(float) * f_block_size);
-        f_i++;
+        ++f_i;
     }
 
     int f_old_ab_mode = musikernel->ab_mode;
@@ -202,7 +202,7 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
         {
             f_buffer[0][f_i] = 0.0f;
             f_buffer[1][f_i] = 0.0f;
-            f_i++;
+            ++f_i;
         }
 
         v_pydaw_run_wave_editor(self, f_block_size, f_buffer);
@@ -212,10 +212,10 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
         while(f_i < f_block_size)
         {
             f_output[f_size] = f_buffer[0][f_i];
-            f_size++;
+            ++f_size;
             f_output[f_size] = f_buffer[1][f_i];
-            f_size++;
-            f_i++;
+            ++f_size;
+            ++f_i;
         }
 
         sf_writef_float(f_sndfile, f_output, f_block_size);
@@ -364,7 +364,7 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
                 v_adsr_release(&self->ab_audio_item->adsr);
             }
         }
-        f_i++;
+        ++f_i;
     }
 
     float ** f_buff = f_track->buffers;
@@ -374,7 +374,7 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
     {
         f_buff[0][f_i] = output[0][f_i];
         f_buff[1][f_i] = output[1][f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -389,7 +389,7 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
                 f_plugin->atm_buffer, f_plugin->atm_count,
                 f_track->extern_midi, *f_track->extern_midi_count);
         }
-        f_i++;
+        ++f_i;
     }
 
     f_i = 0;
@@ -397,7 +397,7 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
     {
         output[0][f_i] = f_buff[0][f_i];
         output[1][f_i] = f_buff[1][f_i];
-        f_i++;
+        ++f_i;
     }
 
     v_pkm_run(f_track->peak_meter, f_buff[0], f_buff[1],

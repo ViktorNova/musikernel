@@ -436,7 +436,7 @@ void g_svf2_init(t_svf2_filter * f_svf, float a_sample_rate)
     {
         g_svf2_filter_kernel_init(&f_svf->filter_kernels[f_i][0]);
         g_svf2_filter_kernel_init(&f_svf->filter_kernels[f_i][1]);
-        f_i++;
+        ++f_i;
     }
 
     f_svf->cutoff_note = 60.0f;

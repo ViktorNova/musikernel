@@ -1903,7 +1903,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[0]->wavetable[f_i] = plain_saw_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[1] = g_wavetable_get();
@@ -1911,7 +1911,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[1]->wavetable[f_i] = superbsaw_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
 
@@ -1920,7 +1920,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[2]->wavetable[f_i] = viralsaw_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[3] = g_wavetable_get();
@@ -1928,7 +1928,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[3]->wavetable[f_i] = soft_saw_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
 
@@ -1937,7 +1937,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[4]->wavetable[f_i] = mid_saw_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[5] = g_wavetable_get();
@@ -1945,7 +1945,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[5]->wavetable[f_i] = lush_saw_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[6] = g_wavetable_get();
@@ -1953,7 +1953,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[6]->wavetable[f_i] = evil_square_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[7] = g_wavetable_get();
@@ -1961,7 +1961,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[7]->wavetable[f_i] = punchy_square_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
 
@@ -1970,7 +1970,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[8]->wavetable[f_i] = soft_square_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[9] = g_wavetable_get();
@@ -1978,7 +1978,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[9]->wavetable[f_i] = pink_glitch_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[10] = g_wavetable_get();
@@ -1986,7 +1986,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[10]->wavetable[f_i] = white_glitch_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[11] = g_wavetable_get();
@@ -1994,7 +1994,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[11]->wavetable[f_i] = acid_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[12] = g_wavetable_get();
@@ -2002,7 +2002,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[12]->wavetable[f_i] = screetch_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[13] = g_wavetable_get();
@@ -2010,7 +2010,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[13]->wavetable[f_i] = thick_bass_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[14] = g_wavetable_get();
@@ -2018,7 +2018,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[14]->wavetable[f_i] = rattler_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[15] = g_wavetable_get();
@@ -2026,7 +2026,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[15]->wavetable[f_i] = deep_saw_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[16] = g_wavetable_get();
@@ -2034,7 +2034,7 @@ t_wt_wavetables * g_wt_wavetables_get()
     while(f_i < WT_FRAMES_PER_CYCLE)
     {
         f_result->tables[16]->wavetable[f_i] = sine_array[f_i];
-        f_i++;
+        ++f_i;
     }
 
     f_result->tables[17] = g_wavetable_get();
@@ -2051,7 +2051,7 @@ t_wt_wavetables * g_wt_wavetables_get()
         f_result->tables[17]->wavetable[f_i] = 0.0f;
         f_result->tables[18]->wavetable[f_i] = 0.0f;
         f_result->tables[19]->wavetable[f_i] = 0.0f;
-        f_i++;
+        ++f_i;
     }
 
     return f_result;

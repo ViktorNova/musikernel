@@ -77,7 +77,7 @@ t_glc_glitch_v2 * g_glc_glitch_v2_get(float a_sr)
     while(f_i < f_result->buffer_size + 100)
     {
         f_result->buffer[f_i] = 0.0f;
-        f_i++;
+        ++f_i;
     }
 
     f_result->read_head_int = 0;
@@ -147,7 +147,7 @@ void v_glc_glitch_v2_run(t_glc_glitch_v2* a_glc, float a_input0, float a_input1)
     if(a_glc->write_head < a_glc->buffer_size)
     {
         a_glc->buffer[a_glc->write_head] = (a_input0 + a_input1) * 0.5f;
-        a_glc->write_head++;
+        ++a_glc->write_head;
     }
 
     v_adsr_run(a_glc->adsr);
@@ -157,7 +157,7 @@ void v_glc_glitch_v2_run(t_glc_glitch_v2* a_glc, float a_input0, float a_input1)
         a_glc->output0 = a_input0;
         a_glc->output1 = a_input1;
 
-        a_glc->read_head_int++;
+        ++a_glc->read_head_int;
         if(a_glc->read_head_int >= a_glc->sample_count)
         {
             a_glc->first_run = 0;

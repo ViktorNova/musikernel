@@ -77,7 +77,7 @@ int midiDeviceInit(t_midi_device * self, char * f_midi_device_name)
                 self->f_device_id = f_i;
                 break;
             }
-            f_i++;
+            ++f_i;
         }
 
         if(self->f_device_id == pmNoDevice)
@@ -136,7 +136,7 @@ void midiReceive(
             v_pydaw_ev_set_pitchbend(
                 &self->midiEventBuffer[self->midiEventWriteIndex],
                 channel, f_pb_val);
-            self->midiEventWriteIndex++;
+            ++self->midiEventWriteIndex;
             //printf("MIDI PITCHBEND status %i ch %i, value %i\n",
             //      status, channel+1, f_pb_val);
         }
@@ -145,7 +145,7 @@ void midiReceive(
             v_pydaw_ev_set_noteoff(
                 &self->midiEventBuffer[self->midiEventWriteIndex],
                 channel, control, value);
-            self->midiEventWriteIndex++;
+            ++self->midiEventWriteIndex;
             /*printf("MIDI NOTE_OFF status %i (ch %i, opcode %i), ctrl %i, "
                     "val %i\n", status, channel+1, (status & 255)>>4, control,
                     value);*/
@@ -163,7 +163,7 @@ void midiReceive(
                     &self->midiEventBuffer[self->midiEventWriteIndex],
                     channel, control, value);
             }
-            self->midiEventWriteIndex++;
+            ++self->midiEventWriteIndex;
             /*printf("MIDI NOTE_ON status %i (ch %i, opcode %i), ctrl %i, "
                     "val %i\n", status, channel+1, (status & 255)>>4, control,
                     value);*/
@@ -173,7 +173,7 @@ void midiReceive(
             v_pydaw_ev_set_controller(
                 &self->midiEventBuffer[self->midiEventWriteIndex],
                 channel, control, value);
-            self->midiEventWriteIndex++;
+            ++self->midiEventWriteIndex;
             /*printf("MIDI CC status %i (ch %i, opcode %i), ctrl %i, "
                     "val %i\n", status, channel+1, (status & 255)>>4, control,
                     value);*/
@@ -393,7 +393,7 @@ void midiDeviceRead(t_midi_device * self, float sample_rate,
             else if (controller > 0 && controller < MIDI_CONTROLLER_COUNT)
             {
                 self->instanceEventBuffers[self->instanceEventCounts] = *ev;
-                self->instanceEventCounts++;
+                ++self->instanceEventCounts;
 	    }
             else
             {
@@ -403,10 +403,10 @@ void midiDeviceRead(t_midi_device * self, float sample_rate,
         else
         {
             self->instanceEventBuffers[self->instanceEventCounts] = *ev;
-            self->instanceEventCounts++;
+            ++self->instanceEventCounts;
 	}
 
-        self->midiEventReadIndex++;
+        ++self->midiEventReadIndex;
         if(self->midiEventReadIndex >= MIDI_EVENT_BUFFER_SIZE)
         {
             self->midiEventReadIndex = 0;

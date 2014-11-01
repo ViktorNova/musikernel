@@ -4822,7 +4822,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
         {
             self->audio_glue_indexes[f_i] = 0;
-            f_i++;
+            ++f_i;
         }
 
         f_i = 4;
@@ -4830,7 +4830,7 @@ void v_parse_configure_message(t_pydaw_data* self,
         {
             int f_index = atoi(f_val_arr->str_arr[f_i]);
             self->audio_glue_indexes[f_index] = 1;
-            f_i++;
+            ++f_i;
         }
 
         v_pydaw_offline_render(self, f_region_index, f_start_bar,

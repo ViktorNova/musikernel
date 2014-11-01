@@ -463,7 +463,7 @@ void g_svf_init(t_state_variable_filter * f_svf, float a_sample_rate)
     while(f_i < SVF_MAX_CASCADE)
     {
         g_svf_filter_kernel_init(&f_svf->filter_kernels[f_i]);
-        f_i++;
+        ++f_i;
     }
 
     f_svf->cutoff_note = 60.0f;

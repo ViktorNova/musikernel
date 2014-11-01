@@ -113,7 +113,7 @@ void v_pydaw_restore_cpu_governor()
                 f_i, f_policy->governor);
         sprintf(f_policy->governor, "ondemand");
         cpufreq_set_policy(f_i, f_policy);
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -127,7 +127,7 @@ void v_pydaw_set_cpu_governor()
         struct cpufreq_policy * f_policy = cpufreq_get_policy(f_i);
         sprintf(f_policy->governor, "performance");
         cpufreq_set_policy(f_i, f_policy);
-        f_i++;
+        ++f_i;
     }
 }
 
@@ -514,7 +514,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
                     else if(f_device_result == 1)
                     {
                         printf("Error, did not find MIDI device\n");
-                        /*f_failure_count++;
+                        /*++f_failure_count;
                         sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
                             "Error: did not find MIDI device:",
                             f_midi_device_name);
@@ -524,7 +524,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
                     else if(f_device_result == 2)
                     {
                         printf("Error, opening MIDI device\n");
-                        /*f_failure_count++;
+                        /*++f_failure_count;
                         sprintf(f_cmd_buffer, "%s \"%s %s, %s\"",
                             f_show_dialog_cmd, "Error opening MIDI device: ",
                             f_midi_device_name, Pm_GetErrorText(f_midi_err));
@@ -547,7 +547,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         }
         else
         {
-            f_failure_count++;
+            ++f_failure_count;
             printf("%s does not exist, running %s\n", f_device_file_path,
                     f_show_dialog_cmd);
             f_device_name[0] = '\0';
@@ -610,7 +610,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
                     "%s \"Did not find device '%s' on this system.\"",
                     f_show_dialog_cmd, f_device_name);
             system(f_cmd_buffer);
-            f_failure_count++;
+            ++f_failure_count;
             continue;
         }
 
@@ -630,7 +630,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
                   NULL);
         if( err != paNoError )
         {
-            f_failure_count++;
+            ++f_failure_count;
             sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
                     "Error while opening audio device: ", Pa_GetErrorText(err));
             system(f_cmd_buffer);

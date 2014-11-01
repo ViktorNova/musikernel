@@ -85,7 +85,7 @@ inline void v_mcm_run(t_mcm_multicomb*__restrict a_cmb_ptr,float a_value)
 
         a_cmb_ptr->output_sample += (a_cmb_ptr->wet_sample);
 
-        f_i++;
+        ++f_i;
     }
 
     a_cmb_ptr->input_buffer[(a_cmb_ptr->input_pointer)] *=
@@ -141,7 +141,7 @@ inline void v_mcm_set(t_mcm_multicomb*__restrict a_cmb_ptr, float a_feedback_db,
                     f_pit_midi_note_to_samples(f_note, (a_cmb_ptr->sr),
                     a_cmb_ptr->pitch_core);
             f_note += a_spread;
-            f_i++;
+            ++f_i;
         }
     }
 
@@ -168,7 +168,7 @@ t_mcm_multicomb * g_mcm_get(int a_comb_count, float a_sr)
     while(f_i < (f_result->buffer_size))
     {
         f_result->input_buffer[f_i] = 0.0f;
-        f_i++;
+        ++f_i;
     }
 
     f_result->input_pointer = 0;
@@ -187,7 +187,7 @@ t_mcm_multicomb * g_mcm_get(int a_comb_count, float a_sr)
     while(f_i < a_comb_count)
     {
         f_result->delay_samples[f_i] = 150.0f + (float)f_i;
-        f_i++;
+        ++f_i;
     }
 
     f_result->sr = a_sr;
