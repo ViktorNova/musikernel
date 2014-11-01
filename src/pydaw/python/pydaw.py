@@ -8004,7 +8004,7 @@ class plugin_settings_base:
         self.power_checkbox = QtGui.QCheckBox("")
         self.power_checkbox.setChecked(True)
         a_layout.addWidget(self.power_checkbox, a_index + 1, 3 + a_offset)
-        self.power_checkbox.clicked.connect(self.on_plugin_change)
+        self.power_checkbox.clicked.connect(self.on_power_changed)
 
     def clear(self):
         self.set_value(pydaw_track_plugin(self.index, 0, -1))
@@ -8064,6 +8064,14 @@ class plugin_settings_base:
         self.save_callback()
         if self.automation_callback:
             self.automation_check_changed()
+
+    def on_power_changed(self, a_val=None):
+        f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
+        if f_index:
+            PROJECT.this_pydaw_osc.pydaw_set_plugin(
+                self.host_index, self.track_num, self.index, f_index,
+                self.plugin_uid, self.power_checkbox.isChecked())
+            self.save_callback()
 
     def wheel_event(self, a_event=None):
         pass
