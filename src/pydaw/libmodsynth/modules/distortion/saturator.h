@@ -56,7 +56,7 @@ inline void v_sat_set(t_sat_saturator* a_sat, float a_ingain, float a_amt,
     if(a_amt != (a_sat->amount))
     {
         a_sat->a=(a_amt*0.005)*3.141592f;
-        a_sat->b = sin((a_amt*0.005)*3.141592f);
+        a_sat->b = 1.0f / (sin((a_amt*0.005) * 3.141592f));
         a_sat->amount = a_amt;
     }
 
@@ -69,13 +69,19 @@ inline void v_sat_set(t_sat_saturator* a_sat, float a_ingain, float a_amt,
 
 inline void v_sat_run(t_sat_saturator* a_sat, float a_in0, float a_in1)
 {
-    a_sat->output0 = f_lms_min(f_lms_max(
-        sin(f_lms_max(f_lms_min((a_in0 * (a_sat->ingain_lin)),1.0f),-1.0f) *
-            (a_sat->a))/(a_sat->b) ,-1.0f) ,1.0f) * (a_sat->outgain_lin);
+    a_sat->output0 = f_lms_min(
+        f_lms_max(
+        sin(
+        f_lms_max(
+        f_lms_min((a_in0 * (a_sat->ingain_lin)), 1.0f), -1.0f) * (a_sat->a))
+        * (a_sat->b) ,-1.0f) ,1.0f) * (a_sat->outgain_lin);
 
-    a_sat->output1 = f_lms_min(f_lms_max( sin(f_lms_max(f_lms_min((a_in1 *
-        (a_sat->ingain_lin)),1.0f),-1.0f)*(a_sat->a))/(a_sat->b) ,-1.0f) ,1.0f)
-            * (a_sat->outgain_lin);
+    a_sat->output1 = f_lms_min(
+        f_lms_max(
+        sin(
+        f_lms_max(
+        f_lms_min((a_in1 * (a_sat->ingain_lin)), 1.0f), -1.0f) * (a_sat->a))
+        * (a_sat->b) ,-1.0f) ,1.0f) * (a_sat->outgain_lin);
 }
 
 void g_sat_init(t_sat_saturator * f_result)
@@ -91,13 +97,6 @@ void g_sat_init(t_sat_saturator * f_result)
     f_result->last_outgain = 12345.0f;
 }
 
-t_sat_saturator * g_sat_get()
-{
-    t_sat_saturator * f_result;
-    lmalloc((void**)&f_result, sizeof(t_sat_saturator));
-    g_sat_init(f_result);
-    return f_result;
-}
 
 #ifdef	__cplusplus
 }
