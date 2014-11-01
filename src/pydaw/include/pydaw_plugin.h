@@ -161,12 +161,17 @@ typedef PYFX_Descriptor * (*PYFX_Descriptor_Function)(int Index);
 
 typedef struct
 {
+    int type;
+    int tick;
+    float value;
+    int port;
+}t_plugin_event_queue_item;
+
+typedef struct
+{
     int count;
     int pos;
-    int types[200];
-    int ticks[200];
-    float values[200];
-    int ports[200];
+    t_plugin_event_queue_item items[200];
 }t_plugin_event_queue;
 
 typedef struct
@@ -184,7 +189,7 @@ typedef struct
 
 void v_plugin_event_queue_add(t_plugin_event_queue*, int, int, float, int);
 void v_plugin_event_queue_reset(t_plugin_event_queue*);
-int v_plugin_event_queue_iter(t_plugin_event_queue*, int);
+t_plugin_event_queue_item * v_plugin_event_queue_iter(t_plugin_event_queue*, int);
 void v_plugin_event_queue_atm_set(t_plugin_event_queue*, int, float*);
 inline float f_cc_to_ctrl_val(PYFX_Descriptor*, int, float);
 void v_cc_mapping_init(t_cc_mapping*);
@@ -219,7 +224,7 @@ void v_cc_map_init(t_plugin_cc_map * self)
     }
 }
 
-inline void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
+void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
     float *a_port_table, int a_cc, float a_value)
 {
     int f_i = 0;
@@ -238,7 +243,7 @@ inline void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
     }
 }
 
-inline float f_atm_to_ctrl_val(PYFX_Descriptor *self, int a_port, float a_val)
+float f_atm_to_ctrl_val(PYFX_Descriptor *self, int a_port, float a_val)
 {
     PYFX_PortRangeHint * f_range = &self->PortRangeHints[a_port];
     a_val *= 0.007874f;  // a_val / 127.0f
@@ -246,50 +251,53 @@ inline float f_atm_to_ctrl_val(PYFX_Descriptor *self, int a_port, float a_val)
         f_range->LowerBound;
 }
 
-inline void v_plugin_event_queue_add(
-    t_plugin_event_queue *self, int a_type, int a_tick, float a_val, int a_port)
+void v_plugin_event_queue_add(
+    t_plugin_event_queue *self, int a_type, int a_tick,
+    float a_val, int a_port)
 {
-    self->types[self->count] = a_type;
-    self->ticks[self->count] = a_tick;
-    self->values[self->count] = a_val;
-    self->ports[self->count] = a_port;
-    self->count++;
+    t_plugin_event_queue_item * f_item = &self->items[self->count];
+    f_item->type = a_type;
+    f_item->tick = a_tick;
+    f_item->value = a_val;
+    f_item->port = a_port;
+    ++self->count;
 }
 
-inline void v_plugin_event_queue_reset(t_plugin_event_queue * self)
+void v_plugin_event_queue_reset(t_plugin_event_queue * self)
 {
     self->pos = 0;
     self->count = 0;
 }
 
-inline int v_plugin_event_queue_iter(
+t_plugin_event_queue_item * v_plugin_event_queue_iter(
     t_plugin_event_queue *self, int a_sample_num)
 {
+    t_plugin_event_queue_item * f_item = &self->items[self->pos];
     if(self->pos < self->count &&
-       a_sample_num == self->ticks[self->pos])
+       a_sample_num == f_item->tick)
     {
-       int f_result = self->pos;
-       self->pos++;
-       return f_result;
+       ++self->pos;
+       return f_item;
     }
     else
     {
-        return -1;
+        return 0;
     }
 }
 
-inline void v_plugin_event_queue_atm_set(
+void v_plugin_event_queue_atm_set(
     t_plugin_event_queue *self, int a_sample_num, float * a_table)
 {
     while(1)
     {
-        int f_pos = v_plugin_event_queue_iter(self, a_sample_num);
-        if(f_pos == -1)
+        t_plugin_event_queue_item * f_item =
+            v_plugin_event_queue_iter(self, a_sample_num);
+        if(!f_item)
         {
             break;
         }
 
-        a_table[self->ports[f_pos]] = self->values[f_pos];
+        a_table[f_item->port] = f_item->value;
     }
 }
 
