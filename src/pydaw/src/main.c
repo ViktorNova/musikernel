@@ -799,15 +799,6 @@ void osc_error(int num, const char *msg, const char *path)
     printf("liblo server error %d in path %s: %s\n", num, path, msg);
 }
 
-int osc_configure_handler(lo_arg **argv)
-{
-    const char *key = (const char *)&argv[0]->s;
-    const char *value = (const char *)&argv[1]->s;
-
-    v_en_configure(pydaw_data, key, value);
-
-    return 0;
-}
 
 int osc_debug_handler(const char *path, const char *types, lo_arg **argv,
                       int argc, void *data, void *user_data)
@@ -829,9 +820,13 @@ int osc_debug_handler(const char *path, const char *types, lo_arg **argv,
 int osc_message_handler(const char *path, const char *types, lo_arg **argv,
                         int argc, void *data, void *user_data)
 {
+    const char *key = (const char *)&argv[0]->s;
+    const char *value = (const char *)&argv[1]->s;
+
     if(!strcmp(path, "/musikernel/edmnext") && !strcmp(types, "ss"))
     {
-        return osc_configure_handler(argv);
+        v_en_configure(pydaw_data, key, value);
+        return 0;
     }
     else
     {
