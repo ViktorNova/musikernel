@@ -31,8 +31,7 @@ extern "C" {
 
 typedef struct
 {
-    t_smoother_linear * time_smoother;
-    t_smoother_linear * pitchbend_smoother;
+    t_smoother_linear pitchbend_smoother;
     t_enf_env_follower * env_follower;
 
     float current_sample0;
@@ -40,13 +39,13 @@ typedef struct
 
     float vol_linear;
 
-    t_smoother_linear * gate_wet_smoother;
-    t_smoother_linear * glitch_time_smoother;
+    t_smoother_linear gate_wet_smoother;
+    t_smoother_linear glitch_time_smoother;
 
     t_gat_gate gate;
     float gate_on;
 
-    t_glc_glitch_v2 * glitch;
+    t_glc_glitch_v2 glitch;
     float glitch_on;
 }t_triggerfx_mono_modules;
 
@@ -54,28 +53,23 @@ t_triggerfx_mono_modules * v_triggerfx_mono_init(float, int);
 
 t_triggerfx_mono_modules * v_triggerfx_mono_init(float a_sr, int a_plugin_uid)
 {
-    t_triggerfx_mono_modules * a_mono =
-            (t_triggerfx_mono_modules*)malloc(sizeof(t_triggerfx_mono_modules));
+    t_triggerfx_mono_modules * a_mono;
+    hpalloc((void**)&a_mono, sizeof(t_triggerfx_mono_modules));
 
-    a_mono->time_smoother =
-            g_sml_get_smoother_linear(a_sr, 100.0f, 10.0f, 0.1f);
-    a_mono->pitchbend_smoother =
-            g_sml_get_smoother_linear(a_sr, 1.0f, -1.0f, 0.1f);
+    g_sml_init(&a_mono->pitchbend_smoother, a_sr, 1.0f, -1.0f, 0.1f);
     a_mono->env_follower = g_enf_get_env_follower(a_sr);
 
-    a_mono->gate_wet_smoother =
-            g_sml_get_smoother_linear(a_sr, 100.0f, 0.0f, 0.01f);
-    a_mono->gate_wet_smoother->last_value = 0.0f;
+    g_sml_init(&a_mono->gate_wet_smoother,a_sr, 100.0f, 0.0f, 0.01f);
+    a_mono->gate_wet_smoother.last_value = 0.0f;
 
     a_mono->vol_linear = 1.0f;
 
     g_gat_init(&a_mono->gate, a_sr);
     a_mono->gate_on = 0.0f;
 
-    a_mono->glitch = g_glc_glitch_v2_get(a_sr);
+    g_glc_glitch_v2_init(&a_mono->glitch, a_sr);
     a_mono->glitch_on = 0.0f;
-    a_mono->glitch_time_smoother =
-            g_sml_get_smoother_linear(a_sr, 0.10f, 0.01f, 0.01f);
+    g_sml_init(&a_mono->glitch_time_smoother, a_sr, 0.10f, 0.01f, 0.01f);
 
     return a_mono;
 }

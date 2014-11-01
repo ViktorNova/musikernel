@@ -57,7 +57,7 @@ static void v_triggerfx_panic(PYFX_Handle instance)
     plugin->mono_modules->gate_on = 0.0f;
     plugin->mono_modules->glitch_on = 0.0f;
 
-    v_adsr_kill(plugin->mono_modules->glitch->adsr);
+    v_adsr_kill(&plugin->mono_modules->glitch.adsr);
 }
 
 static void v_triggerfx_on_stop(PYFX_Handle instance)
@@ -66,7 +66,7 @@ static void v_triggerfx_on_stop(PYFX_Handle instance)
 
     plugin->mono_modules->gate_on = 0.0f;
     plugin->mono_modules->glitch_on = 0.0f;
-    v_glc_glitch_v2_release(plugin->mono_modules->glitch);
+    v_glc_glitch_v2_release(&plugin->mono_modules->glitch);
     plugin->sv_pitch_bend_value = 0.0f;
 }
 
@@ -121,7 +121,7 @@ static PYFX_Handle g_triggerfx_instantiate(PYFX_Descriptor * descriptor,
         int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_triggerfx *plugin_data;
-    lmalloc((void**)&plugin_data, sizeof(t_triggerfx));
+    hpalloc((void**)&plugin_data, sizeof(t_triggerfx));
 
     plugin_data->descriptor = descriptor;
     plugin_data->fs = s_rate;
@@ -159,10 +159,10 @@ static void v_triggerfx_set_port_value(PYFX_Handle Instance,
 static inline void v_triggerfx_run_gate(t_triggerfx *plugin_data,
         float a_in0, float a_in1)
 {
-    v_sml_run(plugin_data->mono_modules->gate_wet_smoother,
+    v_sml_run(&plugin_data->mono_modules->gate_wet_smoother,
             *plugin_data->gate_wet * 0.01f);
     v_gat_set(&plugin_data->mono_modules->gate, *plugin_data->gate_pitch,
-            plugin_data->mono_modules->gate_wet_smoother->last_value);
+            plugin_data->mono_modules->gate_wet_smoother.last_value);
     v_gat_run(&plugin_data->mono_modules->gate,
             plugin_data->mono_modules->gate_on, a_in0, a_in1);
 }
@@ -170,13 +170,13 @@ static inline void v_triggerfx_run_gate(t_triggerfx *plugin_data,
 static inline void v_triggerfx_run_glitch(t_triggerfx *plugin_data,
         float a_in0, float a_in1)
 {
-    v_sml_run(plugin_data->mono_modules->glitch_time_smoother,
+    v_sml_run(&plugin_data->mono_modules->glitch_time_smoother,
             *plugin_data->glitch_time * 0.01f);
-    v_glc_glitch_v2_set(plugin_data->mono_modules->glitch,
-            plugin_data->mono_modules->glitch_time_smoother->last_value,
-            plugin_data->mono_modules->pitchbend_smoother->last_value *
+    v_glc_glitch_v2_set(&plugin_data->mono_modules->glitch,
+            plugin_data->mono_modules->glitch_time_smoother.last_value,
+            plugin_data->mono_modules->pitchbend_smoother.last_value *
             (*plugin_data->glitch_pb));
-    v_glc_glitch_v2_run(plugin_data->mono_modules->glitch, a_in0, a_in1);
+    v_glc_glitch_v2_run(&plugin_data->mono_modules->glitch, a_in0, a_in1);
 }
 
 static void v_triggerfx_process_midi_event(
@@ -346,14 +346,14 @@ static void v_triggerfx_run(
                 plugin_data->mono_modules->glitch_on =
                         plugin_data->midi_event_values[midi_event_pos];
                 v_glc_glitch_v2_retrigger(
-                        plugin_data->mono_modules->glitch);
+                        &plugin_data->mono_modules->glitch);
             }
             else if(plugin_data->midi_event_types[midi_event_pos] ==
                     TRIGGERFX_EVENT_GLITCH_OFF)
             {
                 plugin_data->mono_modules->glitch_on =
                         plugin_data->midi_event_values[midi_event_pos];
-                v_glc_glitch_v2_release(plugin_data->mono_modules->glitch);
+                v_glc_glitch_v2_release(&plugin_data->mono_modules->glitch);
             }
 
             ++midi_event_pos;
@@ -367,19 +367,19 @@ static void v_triggerfx_run(
         plugin_data->mono_modules->current_sample1 =
                 plugin_data->output1[f_i];
 
-        v_sml_run(plugin_data->mono_modules->pitchbend_smoother,
+        v_sml_run(&plugin_data->mono_modules->pitchbend_smoother,
                 (plugin_data->sv_pitch_bend_value));
 
         if(f_glitch_on &&
-        plugin_data->mono_modules->glitch->adsr->stage != ADSR_STAGE_OFF)
+        plugin_data->mono_modules->glitch.adsr.stage != ADSR_STAGE_OFF)
         {
             v_triggerfx_run_glitch(plugin_data,
                     plugin_data->mono_modules->current_sample0,
                     plugin_data->mono_modules->current_sample1);
             plugin_data->mono_modules->current_sample0 =
-                    plugin_data->mono_modules->glitch->output0;
+                    plugin_data->mono_modules->glitch.output0;
             plugin_data->mono_modules->current_sample1 =
-                    plugin_data->mono_modules->glitch->output1;
+                    plugin_data->mono_modules->glitch.output1;
         }
 
         if(f_gate_on)

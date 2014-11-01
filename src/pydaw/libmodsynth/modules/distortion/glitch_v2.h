@@ -34,43 +34,32 @@ typedef struct
     float sr, sample_count_f;
     float rate;
     float output0, output1;
-    t_pit_ratio * pitch_ratio;
-    t_audio_xfade * xfade;
-    t_adsr * adsr;
+    t_pit_ratio pitch_ratio;
+    t_audio_xfade xfade;
+    t_adsr adsr;
 }t_glc_glitch_v2;
 
-t_glc_glitch_v2 * g_glc_glitch_v2_get(float);
+void g_glc_glitch_v2_init(t_glc_glitch_v2*, float);
 void v_glc_glitch_v2_set(t_glc_glitch_v2*, float, float);
 void v_glc_glitch_v2_run(t_glc_glitch_v2*, float, float);
-void v_glc_glitch_v2_free(t_glc_glitch_v2*);
 
-void v_glc_glitch_v2_free(t_glc_glitch_v2 * a_glc)
-{
-    if(a_glc)
-    {
-        free(a_glc->buffer);
-        free(a_glc->pitch_ratio);
-        free(a_glc->adsr);
-        free(a_glc);
-    }
+#ifdef	__cplusplus
 }
+#endif
 
-t_glc_glitch_v2 * g_glc_glitch_v2_get(float a_sr)
+
+void g_glc_glitch_v2_init(t_glc_glitch_v2 * f_result, float a_sr)
 {
-    t_glc_glitch_v2 * f_result;
-
-    lmalloc((void**)&f_result, sizeof(t_glc_glitch_v2));
-
     f_result->buffer_size = (int)(a_sr * 0.25f);
 
-    lmalloc((void**)&f_result->buffer,
+    hpalloc((void**)&f_result->buffer,
         sizeof(float) * (f_result->buffer_size + 100));
 
-    f_result->pitch_ratio = g_pit_ratio();
-    f_result->adsr = g_adsr_get_adsr(a_sr);
-    f_result->xfade = g_axf_get_audio_xfade(-3.0f);
+    g_pit_ratio_init(&f_result->pitch_ratio);
+    g_adsr_init(&f_result->adsr, a_sr);
+    g_axf_init(&f_result->xfade, -3.0f);
 
-    v_adsr_set_adsr(f_result->adsr, 0.0f, 0.05f, 1.0f, 0.01f);
+    v_adsr_set_adsr(&f_result->adsr, 0.0f, 0.05f, 1.0f, 0.01f);
 
     int f_i = 0;
 
@@ -89,8 +78,6 @@ t_glc_glitch_v2 * g_glc_glitch_v2_get(float a_sr)
     f_result->sample_count = 99;
     f_result->sample_count_f = 99.99f;
     f_result->sr = a_sr;
-
-    return f_result;
 }
 
 void v_glc_glitch_v2_set(t_glc_glitch_v2* a_glc, float a_time, float a_pitch)
@@ -117,12 +104,12 @@ void v_glc_glitch_v2_set(t_glc_glitch_v2* a_glc, float a_time, float a_pitch)
         else if (a_pitch > 0.0f)
         {
             a_glc->rate = f_pit_midi_note_to_ratio_fast(
-                0.0f, a_pitch, a_glc->pitch_ratio);
+                0.0f, a_pitch, &a_glc->pitch_ratio);
         }
         else
         {
             a_glc->rate = f_pit_midi_note_to_ratio_fast(
-                a_pitch * -1.0f, 0.0f, a_glc->pitch_ratio);
+                a_pitch * -1.0f, 0.0f, &a_glc->pitch_ratio);
         }
 
     }
@@ -134,12 +121,12 @@ inline void v_glc_glitch_v2_retrigger(t_glc_glitch_v2* a_glc)
     a_glc->read_head_int = 0;
     a_glc->write_head = 0;
     a_glc->first_run = 1;
-    v_adsr_retrigger(a_glc->adsr);
+    v_adsr_retrigger(&a_glc->adsr);
 }
 
 inline void v_glc_glitch_v2_release(t_glc_glitch_v2* a_glc)
 {
-    v_adsr_release(a_glc->adsr);
+    v_adsr_release(&a_glc->adsr);
 }
 
 void v_glc_glitch_v2_run(t_glc_glitch_v2* a_glc, float a_input0, float a_input1)
@@ -150,7 +137,7 @@ void v_glc_glitch_v2_run(t_glc_glitch_v2* a_glc, float a_input0, float a_input1)
         ++a_glc->write_head;
     }
 
-    v_adsr_run(a_glc->adsr);
+    v_adsr_run(&a_glc->adsr);
 
     if(a_glc->first_run)
     {
@@ -176,10 +163,10 @@ void v_glc_glitch_v2_run(t_glc_glitch_v2* a_glc, float a_input0, float a_input1)
             f_cubic_interpolate_ptr_wrap(
                 a_glc->buffer, a_glc->sample_count, a_glc->read_head);
 
-        v_axf_set_xfade(a_glc->xfade, a_glc->adsr->output);
+        v_axf_set_xfade(&a_glc->xfade, a_glc->adsr.output);
 
-        a_glc->output0 = f_axf_run_xfade(a_glc->xfade, a_input0, f_output);
-        a_glc->output1 = f_axf_run_xfade(a_glc->xfade, a_input1, f_output);
+        a_glc->output0 = f_axf_run_xfade(&a_glc->xfade, a_input0, f_output);
+        a_glc->output1 = f_axf_run_xfade(&a_glc->xfade, a_input1, f_output);
 
         a_glc->read_head += a_glc->rate;
         if(a_glc->read_head >= a_glc->sample_count_f)
@@ -188,10 +175,6 @@ void v_glc_glitch_v2_run(t_glc_glitch_v2* a_glc, float a_input0, float a_input1)
         }
     }
 }
-
-#ifdef	__cplusplus
-}
-#endif
 
 #endif	/* PYDAW_GLITCH_V2_H */
 
