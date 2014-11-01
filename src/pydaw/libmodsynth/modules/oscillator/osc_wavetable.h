@@ -133,7 +133,7 @@ void v_osc_wav_set_unison_pitch(t_osc_wav_unison * a_osc_ptr,
     }
     else
     {
-        if(a_spread != (a_osc_ptr->uni_spread))
+        if(unlikely(a_spread != (a_osc_ptr->uni_spread)))
         {
             a_osc_ptr->uni_spread = a_spread;
             a_osc_ptr->bottom_pitch = -0.5f * a_spread;
