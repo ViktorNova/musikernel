@@ -4404,8 +4404,7 @@ void v_pydaw_set_midi_device(
     t_pytrack * f_track_old = self->track_pool[f_route->output_track];
     t_pytrack * f_track_new = self->track_pool[a_output];
 
-    if(!f_route->on ||
-        f_route->output_track != a_output)
+    if(!f_route->on || f_route->output_track != a_output)
     {
         f_track_old->extern_midi = 0;
         f_track_old->extern_midi_count = &ZERO;
@@ -4434,8 +4433,8 @@ void v_pydaw_set_midi_device(
 void v_en_configure(t_pydaw_data* self,
         const char* a_key, const char* a_value)
 {
-    printf("v_en_configure:  key: \"%s\", value: \"%s\"\n",
-            a_key, a_value);
+    printf("v_en_configure:  key: \"%s\", value: \"%s\"\n", a_key, a_value);
+
     if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL))
     {
         t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 3,
