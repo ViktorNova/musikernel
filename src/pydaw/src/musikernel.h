@@ -103,6 +103,7 @@ t_pytrack * g_pytrack_get(int, float);
 inline void v_pydaw_zero_buffer(float**, int);
 void v_pydaw_print_benchmark(char * a_message, clock_t a_start);
 void * v_pydaw_audio_recording_thread(void* a_arg);
+void v_queue_osc_message(char*, char*);
 
 #ifdef	__cplusplus
 }

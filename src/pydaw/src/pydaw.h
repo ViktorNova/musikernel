@@ -403,7 +403,6 @@ inline void v_pydaw_process_midi(t_pydaw_data * self,
         int f_i, int sample_count);
 void v_pydaw_zero_all_buffers(t_pydaw_data * self);
 void v_pydaw_panic(t_pydaw_data * self);
-inline void v_queue_osc_message(char * a_key, char * a_val);
 
 void v_pydaw_process_atm(
     t_pydaw_data * self, int f_track_num, int f_index, int sample_count);
