@@ -22,7 +22,6 @@ extern "C" {
 
 inline float f_linear_interpolate(float, float, float);
 inline float f_linear_interpolate_arr(float[],float);
-inline float f_linear_interpolate_arr_wrap(float[],int,float);
 float f_linear_interpolate_ptr_wrap(float*, int, float);
 inline float f_linear_interpolate_ptr(float*, float);
 inline float f_linear_interpolate_ptr_ifh(float * a_table, int a_whole_number,
@@ -43,16 +42,7 @@ inline float f_linear_interpolate(float a_a, float a_b, float a_position)
     return (((a_a - a_b) * a_position) + a_b);
 }
 
-/* inline float f_linear_interpolate_arr(
- * float a_table[], //an array of floats
- * float a_ptr, //the position in a_table to interpolate
- * t_lin_interpolater * a_lin)
- *
- * You will typically want to use f_linear_interpolate_arr_wrap instead,
- * unless you already know ahead of time
- * that you either won't be outside the bounds of your table, or else that
- * wrapping is not acceptable behavior
- */
+
 inline float f_linear_interpolate_arr(float a_table[], float a_ptr)
 {
     int int_pos = (int)a_ptr;
@@ -61,34 +51,6 @@ inline float f_linear_interpolate_arr(float a_table[], float a_ptr)
 
     return ((a_table[int_pos] - a_table[int_pos_plus_1]) *
             pos) + a_table[int_pos_plus_1];
-}
-
-/* inline float f_linear_interpolate_arr_wrap(
- * float a_table[], //an array of floats
- * int a_table_size, //the size of a_table
- * float a_ptr)  //The position on the table you are interpolating
- *
- * example:
- * //interpolates halfway between a_table[5] and a_table[6]
- * f_linear_interpolate_arr_wrap(a_table[], 10, 5.5);
- *
- * This function wraps if a_ptr exceeds a_table_size or is less than 0.
- */
-inline float f_linear_interpolate_arr_wrap(float a_table[], int a_table_size,
-        float a_ptr)
-{
-    int int_pos = (int)a_ptr;
-    int int_pos_plus_1 = int_pos + 1;
-
-    if(int_pos_plus_1 >= a_table_size)
-    {
-        int_pos_plus_1 = 0;
-    }
-
-    float pos = a_ptr - int_pos;
-
-    return (((a_table[int_pos]) - (a_table[int_pos_plus_1])) *
-            pos) + (a_table[int_pos_plus_1]);
 }
 
 /* float f_linear_interpolate_ptr_wrap(
@@ -106,22 +68,22 @@ float f_linear_interpolate_ptr_wrap(float * a_table, int a_table_size,
     int int_pos = (int)a_ptr;
     int int_pos_plus_1 = int_pos + 1;
 
-    if(int_pos >= a_table_size)
+    if(unlikely(int_pos >= a_table_size))
     {
         int_pos -= a_table_size;
     }
 
-    if(int_pos_plus_1 >= a_table_size)
+    if(unlikely(int_pos_plus_1 >= a_table_size))
     {
         int_pos_plus_1 -= a_table_size;
     }
 
-    if(int_pos < 0)
+    if(unlikely(int_pos < 0))
     {
         int_pos += a_table_size;
     }
 
-    if(int_pos_plus_1 < 0)
+    if(unlikely(int_pos_plus_1 < 0))
     {
         int_pos_plus_1 += a_table_size;
     }

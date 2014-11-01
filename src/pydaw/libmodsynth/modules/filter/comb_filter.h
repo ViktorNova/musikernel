@@ -69,7 +69,7 @@ inline void v_cmb_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
     }
 
     a_cmb_ptr->wet_sample =
-        (f_linear_interpolate_arr_wrap(a_cmb_ptr->input_buffer,
+        (f_linear_interpolate_ptr_wrap(a_cmb_ptr->input_buffer,
         (a_cmb_ptr->buffer_size), (a_cmb_ptr->delay_pointer)));
 
     a_cmb_ptr->input_buffer[(a_cmb_ptr->input_pointer)] =
@@ -115,7 +115,7 @@ inline void v_cmb_mc_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
             }
 
             a_cmb_ptr->wet_sample =
-                (f_linear_interpolate_arr_wrap(a_cmb_ptr->input_buffer,
+                (f_linear_interpolate_ptr_wrap(a_cmb_ptr->input_buffer,
                 (a_cmb_ptr->buffer_size), (a_cmb_ptr->delay_pointer)));
 
             a_cmb_ptr->input_buffer[(a_cmb_ptr->input_pointer)] +=
