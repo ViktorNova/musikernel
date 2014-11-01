@@ -75,7 +75,7 @@ class pydaw_osc:
                 self.with_osc = False
                 return
 
-            self.configure_path = "/musikernel/configure"
+            self.configure_path = "/musikernel/edmnext"
 
     def stop_server(self):
         print("stop_server called")

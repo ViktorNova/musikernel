@@ -4431,10 +4431,10 @@ void v_pydaw_set_midi_device(
     }
 }
 
-void v_parse_configure_message(t_pydaw_data* self,
+void v_en_configure(t_pydaw_data* self,
         const char* a_key, const char* a_value)
 {
-    printf("v_parse_configure_message:  key: \"%s\", value: \"%s\"\n",
+    printf("v_en_configure:  key: \"%s\", value: \"%s\"\n",
             a_key, a_value);
     if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL))
     {
