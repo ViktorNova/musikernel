@@ -40,6 +40,7 @@ GNU General Public License for more details.
 #include <signal.h>
 #include <dirent.h>
 #include <time.h>
+#include <sys/resource.h>
 #include <libgen.h>
 
 #include <string.h>
@@ -287,6 +288,11 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         ++j;
     }
 
+    if(setpriority(PRIO_PROCESS, 0, -20))
+    {
+        printf("Unable to renice process (this was to be expected if "
+            "the process is not running as root)\n");
+    }
 
     timer_t timerid;
     struct sigevent sev;
