@@ -19,7 +19,7 @@ GNU General Public License for more details.
 #define PYDAW_MIDI_NOTE_COUNT 128
 #define MAX_PLUGIN_COUNT 10
 
-int exiting = 0;
+volatile int exiting = 0;
 
 #ifdef	__cplusplus
 extern "C" {
@@ -29,8 +29,8 @@ typedef struct
 {
     /*This is reset to bus_count each cycle and the
      * bus track processed when count reaches 0*/
-    int bus_counter __attribute__((aligned(16)));
-    int status __attribute__((aligned(16)));
+    volatile int bus_counter;
+    volatile int status;
     int solo;
     int mute;
     t_pydaw_seq_event * event_buffer;
@@ -53,7 +53,7 @@ typedef struct
     int * extern_midi_count;
     t_pydaw_seq_event * extern_midi;
     t_midi_device * midi_device;
-}t_pytrack;
+}t_pytrack  __attribute__((aligned(16)));
 
 typedef struct
 {
