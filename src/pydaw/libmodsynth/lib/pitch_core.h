@@ -35,8 +35,7 @@ inline float f_pit_midi_note_to_hz(float);
 inline float f_pit_hz_to_midi_note(float);
 inline float f_pit_midi_note_to_samples(float, float);
 float f_pit_midi_note_to_hz_fast(float);
-float f_pit_midi_note_to_ratio_fast(float, float,
-        t_pit_ratio *);
+float f_pit_midi_note_to_ratio_fast(float, float, t_pit_ratio*);
 
 #ifdef	__cplusplus
 }
@@ -65,8 +64,7 @@ t_pit_ratio * g_pit_ratio()
  * Convert midi note number to hz*/
 inline float f_pit_midi_note_to_hz(float a_midi_note_number)
 {
-    return (base_a4*pow(2.0f,(a_midi_note_number-57.0f)*.0833333f));
-
+    return (base_a4 * pow(2.0f, (a_midi_note_number - 57.0f) * 0.0833333f));
 }
 
 /* inline float f_pit_hz_to_midi_note(
@@ -75,7 +73,7 @@ inline float f_pit_midi_note_to_hz(float a_midi_note_number)
  * Convert hz to midi note number*/
 inline float f_pit_hz_to_midi_note(float a_hz)
 {
-     return ((12.0f*log2(a_hz*base_a4_recip))+57.0f);
+     return ((12.0f * log2(a_hz * base_a4_recip)) + 57.0f);
 }
 
 /* inline float f_pit_midi_note_to_samples(
@@ -101,7 +99,8 @@ inline float f_pit_midi_note_to_samples(float a_midi_note_number,
 #define arr_pit_p2f_count 2521
 #define arr_pit_p2f_count_m1 2520
 
-float arr_pit_p2f [arr_pit_p2f_count] __attribute__((aligned(16))) = {
+static const __thread float arr_pit_p2f[arr_pit_p2f_count]
+__attribute__((aligned(16))) = {
 16.351620, 16.398912, 16.446342, 16.493912, 16.541616, 16.589458, 16.637440, 16.685560, 16.733822, 16.782221, 16.830759, 16.879436, 16.928257, 16.977221, 17.026323, 17.075567, 17.124954, 17.174484, 17.224159, 17.273975,
 17.323936, 17.374043, 17.424292, 17.474691, 17.525232, 17.575920, 17.626753, 17.677734, 17.728867, 17.780142, 17.831566, 17.883141, 17.934862, 17.986738, 18.038761, 18.090933, 18.143255, 18.195730, 18.248362, 18.301140,
 18.354071, 18.407156, 18.460394, 18.513790, 18.567337, 18.621037, 18.674894, 18.728907, 18.783079, 18.837404, 18.891886, 18.946526, 19.001324, 19.056286, 19.111401, 19.166676, 19.222111, 19.277704, 19.333466, 19.389381,

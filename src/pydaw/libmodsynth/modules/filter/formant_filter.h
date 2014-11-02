@@ -24,7 +24,8 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-static float f_formant_pitches[3][10] __attribute__((aligned(16))) =
+static const __thread float f_formant_pitches[3][10]
+__attribute__((aligned(16))) =
 {
     {65.7647152829, 64.0195500087, 60.2218660311, 48.5454706023, 54.9116472027,
      58.8633387057, 61.4815007463, 50.3695077237, 59.892097194, 57.0},
@@ -162,7 +163,8 @@ void v_for_formant_filter_run(t_for_formant_filter* a_for, float a_input0, float
 }
 
 
-static float pydaw_growl_table[25][3][5] =
+static const __thread float pydaw_growl_table[25][3][5]
+__attribute__((aligned(16))) =
 {
     {{67.35f, 73.633f, 89.038f, 92.901f, 98.902f}, {1.0f, 0.631f, 0.1f, 0.016f, 0.001f}, {-0.75, -0.556, -0.167, -0.077, 0.0}}, //alto a
     {{55.35f, 79.35f, 88.409f, 91.883f, 98.902f}, {1.0f, 0.063f, 0.032f, 0.018f, 0.001f}, {-1.333, -0.75, -0.167, 0.067, 0.3}}, //alto e
