@@ -295,7 +295,7 @@ typedef struct
     pthread_t * track_worker_threads;
     int track_worker_thread_count;
     int * track_thread_quit_notifier;
-    int * track_thread_is_finished;
+    volatile int * track_thread_is_finished;
 
     int default_region_length_bars;
     int default_region_length_beats;
@@ -2253,7 +2253,7 @@ void v_wait_for_threads()
 
         ++f_i;
     }
-} __attribute__((optimize("-O0")))
+}
 
 inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
         long f_next_current_sample, float **output, float **a_input_buffers)
