@@ -369,17 +369,16 @@ void v_pydaw_set_plugin_index(int a_host_index, int a_track_num,
         int a_index, int a_plugin_index, int a_plugin_uid,
         int a_power, int a_lock);
 void v_pydaw_update_track_send(t_pydaw_data * self, int a_lock);
-inline void v_pydaw_update_ports(t_pydaw_plugin * a_plugin);
 void * v_pydaw_worker_thread(void*);
 void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
-inline void v_pydaw_process_external_midi(t_pydaw_data * pydaw_data,
+void v_pydaw_process_external_midi(t_pydaw_data * pydaw_data,
         t_pytrack * a_track, int sample_count);
 inline void v_pydaw_run_main_loop(t_pydaw_data * pydaw_data, int sample_count,
         long f_next_current_sample, float **output, float **a_input_buffers);
 void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         int a_start_bar, int a_end_region, int a_end_bar, char * a_file_out,
         int a_is_audio_glue, int a_create_file);
-inline void v_pydaw_audio_items_run(t_pydaw_data * self,
+void v_pydaw_audio_items_run(t_pydaw_data * self,
         int a_sample_count, float** a_output,
         int a_audio_track_num, int a_is_audio_glue);
 void v_pydaw_update_audio_inputs(t_pydaw_data * self);
@@ -398,8 +397,8 @@ t_pydaw_per_audio_item_fx_item * g_paif_item_get(t_pydaw_data *);
 void v_paif_set_control(t_pydaw_data *, int, int, int, float);
 
 void v_pysong_free(t_pysong *);
-inline void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i);
-inline void v_pydaw_process_midi(t_pydaw_data * self,
+void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i);
+void v_pydaw_process_midi(t_pydaw_data * self,
         int f_i, int sample_count);
 void v_pydaw_zero_all_buffers(t_pydaw_data * self);
 void v_pydaw_panic(t_pydaw_data * self);
@@ -1786,8 +1785,7 @@ inline void v_pydaw_process_atm(
     }
 }
 
-inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
-        int sample_count)
+void v_pydaw_process_midi(t_pydaw_data * self, int f_i, int sample_count)
 {
     t_pytrack * f_track = self->track_pool[f_i];
     f_track->period_event_index = 0;
@@ -1993,7 +1991,7 @@ inline void v_pydaw_process_midi(t_pydaw_data * self, int f_i,
     }
 }
 
-inline void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
+void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
 {
     t_pytrack * f_track = self->track_pool[f_i];
 
@@ -2017,7 +2015,7 @@ inline void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
     }
 }
 
-inline void v_pydaw_process_external_midi(t_pydaw_data * self,
+void v_pydaw_process_external_midi(t_pydaw_data * self,
         t_pytrack * a_track, int sample_count)
 {
     if(!a_track->midi_device)
@@ -2455,7 +2453,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
 
 
 
-inline void v_pydaw_audio_items_run(t_pydaw_data * self,
+void v_pydaw_audio_items_run(t_pydaw_data * self,
     int a_sample_count, float** a_output,
     int a_audio_track_num, int a_is_audio_glue)
 {
