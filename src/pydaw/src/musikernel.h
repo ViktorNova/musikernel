@@ -33,7 +33,6 @@ typedef struct
     volatile int status;
     int solo;
     int mute;
-    t_pydaw_seq_event * event_buffer;
     int period_event_index;
     t_pydaw_plugin * plugins[MAX_PLUGIN_TOTAL_COUNT];
     int track_num;
@@ -43,7 +42,7 @@ typedef struct
     int sc_buffers_dirty;
     int channels;
     pthread_spinlock_t lock;
-    t_ramp_env * fade_env;
+    t_ramp_env fade_env;
     int fade_state;
     /*When a note_on event is fired,
      * a sample number of when to release it is stored here*/
@@ -51,8 +50,9 @@ typedef struct
     int item_event_index;
     char * osc_cursor_message;
     int * extern_midi_count;
-    t_pydaw_seq_event * extern_midi;
     t_midi_device * midi_device;
+    t_pydaw_seq_event * extern_midi;
+    t_pydaw_seq_event event_buffer[PYDAW_MAX_EVENT_BUFFER_SIZE];
 }t_pytrack  __attribute__((aligned(16)));
 
 typedef struct
@@ -263,8 +263,6 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     f_result->mute = 0;
     f_result->solo = 0;
 
-    hpalloc((void**)&f_result->event_buffer,
-        sizeof(t_pydaw_seq_event) * PYDAW_MAX_EVENT_BUFFER_SIZE);
     f_result->bus_counter = 0;
 
     f_i = 0;
@@ -294,8 +292,8 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
 
     f_result->peak_meter = g_pkm_get();
 
-    f_result->fade_env = g_rmp_get_ramp_env(a_sr);
-    v_rmp_set_time(f_result->fade_env, 0.03f);
+    g_rmp_init(&f_result->fade_env, a_sr);
+    v_rmp_set_time(&f_result->fade_env, 0.03f);
     f_result->fade_state = 0;
 
     hpalloc((void**)&f_result->osc_cursor_message, sizeof(char) * 1024);

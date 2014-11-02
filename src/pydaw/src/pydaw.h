@@ -1347,11 +1347,11 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         if(a_track->fade_state == FADE_STATE_FADED)
         {
             a_track->fade_state = FADE_STATE_RETURNING;
-            v_rmp_retrigger(a_track->fade_env, 0.1f, 1.0f);
+            v_rmp_retrigger(&a_track->fade_env, 0.1f, 1.0f);
         }
         else if(a_track->fade_state == FADE_STATE_FADING)
         {
-            a_track->fade_env->output = 1.0f - a_track->fade_env->output;
+            a_track->fade_env.output = 1.0f - a_track->fade_env.output;
             a_track->fade_state = FADE_STATE_RETURNING;
         }
     }
@@ -1360,11 +1360,11 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         if(a_track->fade_state == FADE_STATE_OFF)
         {
             a_track->fade_state = FADE_STATE_FADING;
-            v_rmp_retrigger(a_track->fade_env, 0.1f, 1.0f);
+            v_rmp_retrigger(&a_track->fade_env, 0.1f, 1.0f);
         }
         else if(a_track->fade_state == FADE_STATE_RETURNING)
         {
-            a_track->fade_env->output = 1.0f - a_track->fade_env->output;
+            a_track->fade_env.output = 1.0f - a_track->fade_env.output;
             a_track->fade_state = FADE_STATE_FADING;
         }
     }
@@ -1379,14 +1379,14 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
     {
         while(f_i2 < musikernel->sample_count)
         {
-            f_rmp_run_ramp(a_track->fade_env);
+            f_rmp_run_ramp(&a_track->fade_env);
 
-            f_track_buff[0][f_i2] *= (1.0f - a_track->fade_env->output);
-            f_track_buff[1][f_i2] *= (1.0f - a_track->fade_env->output);
+            f_track_buff[0][f_i2] *= (1.0f - a_track->fade_env.output);
+            f_track_buff[1][f_i2] *= (1.0f - a_track->fade_env.output);
             ++f_i2;
         }
 
-        if(a_track->fade_env->output >= 1.0f)
+        if(a_track->fade_env.output >= 1.0f)
         {
             a_track->fade_state = FADE_STATE_FADED;
         }
@@ -1395,13 +1395,13 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
     {
         while(f_i2 < musikernel->sample_count)
         {
-            f_rmp_run_ramp(a_track->fade_env);
-            f_track_buff[0][f_i2] *= a_track->fade_env->output;
-            f_track_buff[1][f_i2] *= a_track->fade_env->output;
+            f_rmp_run_ramp(&a_track->fade_env);
+            f_track_buff[0][f_i2] *= a_track->fade_env.output;
+            f_track_buff[1][f_i2] *= a_track->fade_env.output;
             ++f_i2;
         }
 
-        if(a_track->fade_env->output >= 1.0f)
+        if(a_track->fade_env.output >= 1.0f)
         {
             a_track->fade_state = FADE_STATE_OFF;
         }
