@@ -225,8 +225,9 @@ class pydaw_pixmap_knob(QtGui.QDial):
         f_val = pydaw_util.pydaw_clip_value(
             f_val, self.minimum(), self.maximum())
         f_val = int(f_val)
-        self.setValue(f_val)
-        self.valueChanged.emit(f_val)
+        if f_val != self.value():
+            self.setValue(f_val)
+            self.valueChanged.emit(f_val)
 
     def mouseReleaseEvent(self, a_event):
         QtGui.QCursor.setPos(self.mouse_pos)
