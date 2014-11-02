@@ -26,9 +26,12 @@ extern "C" {
 
 static float f_formant_pitches[3][10] __attribute__((aligned(16))) =
 {
-    {65.7647152829, 64.0195500087, 60.2218660311, 48.5454706023, 54.9116472027, 58.8633387057, 61.4815007463, 50.3695077237, 59.892097194, 57.0},
-    {72.7050324737, 80.6019976328, 81.769564049, 85.5572660335, 83.1263160229, 76.408607741, 68.1946296497, 68.8021425265, 74.224633736, 71.55592468},
-    {86.6556686271, 86.4414926111, 86.937176301, 90.2902566975, 87.4190618187, 80.2973738117, 86.4414926111, 85.175079641, 86.2972222721, 85.175079641}
+    {65.7647152829, 64.0195500087, 60.2218660311, 48.5454706023, 54.9116472027,
+     58.8633387057, 61.4815007463, 50.3695077237, 59.892097194, 57.0},
+    {72.7050324737, 80.6019976328, 81.769564049, 85.5572660335, 83.1263160229,
+     76.408607741, 68.1946296497, 68.8021425265, 74.224633736, 71.55592468},
+    {86.6556686271, 86.4414926111, 86.937176301, 90.2902566975, 87.4190618187,
+     80.2973738117, 86.4414926111, 85.175079641, 86.2972222721, 85.175079641}
 };
 
 /* ^^^^ Generated with this Python script:
@@ -199,7 +202,7 @@ typedef struct
     float last_wet;
     float last_type;
     t_audio_xfade xfade;
-}t_grw_growl_filter;
+}t_grw_growl_filter __attribute__((aligned(16)));
 
 t_grw_growl_filter * g_grw_growl_filter_get(float);
 void v_grw_growl_filter_set(t_grw_growl_filter*, float, float, float);
@@ -234,7 +237,8 @@ t_grw_growl_filter * g_grw_growl_filter_get(float a_sr)
     return f_result;
 }
 
-void v_grw_growl_filter_set(t_grw_growl_filter* a_grw, float a_pos, float a_wet, float a_type)
+void v_grw_growl_filter_set(t_grw_growl_filter* a_grw, float a_pos,
+    float a_wet, float a_type)
 {
     if(a_pos != a_grw->last_pos || a_type != a_grw->last_type)
     {
