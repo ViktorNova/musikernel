@@ -249,7 +249,7 @@ float f_pit_midi_note_to_hz_fast(float a_midi_note_number)
         arr_index = 0.0f;
     }
 
-    return f_linear_interpolate_arr(arr_pit_p2f, arr_index);
+    return f_linear_interpolate_ptr_const(arr_pit_p2f, arr_index);
 }
 
 

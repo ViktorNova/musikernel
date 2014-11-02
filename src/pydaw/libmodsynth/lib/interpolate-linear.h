@@ -21,7 +21,6 @@ extern "C" {
 #endif
 
 inline float f_linear_interpolate(float, float, float);
-inline float f_linear_interpolate_arr(float[],float);
 float f_linear_interpolate_ptr_wrap(float*, int, float);
 inline float f_linear_interpolate_ptr(float*, float);
 inline float f_linear_interpolate_ptr_ifh(float * a_table, int a_whole_number,
@@ -43,7 +42,7 @@ inline float f_linear_interpolate(float a_a, float a_b, float a_position)
 }
 
 
-inline float f_linear_interpolate_arr(float a_table[], float a_ptr)
+inline float f_linear_interpolate_ptr_const(const float * a_table, float a_ptr)
 {
     int int_pos = (int)a_ptr;
     int int_pos_plus_1 = int_pos + 1;

@@ -123,9 +123,12 @@ void v_for_formant_filter_set(t_for_formant_filter* a_for, float a_pos, float a_
         while(iter < 3)
         {
             a_for->pitch_tmp =
-                f_linear_interpolate_ptr(f_formant_pitches[(iter)], a_pos);
-            v_svf_set_cutoff_base(a_for->filters[(iter)][0], (a_for->pitch_tmp));
-            v_svf_set_cutoff_base(a_for->filters[(iter)][1], (a_for->pitch_tmp));
+                f_linear_interpolate_ptr_const(
+                    f_formant_pitches[(iter)], a_pos);
+            v_svf_set_cutoff_base(
+                a_for->filters[(iter)][0], (a_for->pitch_tmp));
+            v_svf_set_cutoff_base(
+                a_for->filters[(iter)][1], (a_for->pitch_tmp));
             v_svf_set_cutoff(a_for->filters[(iter)][0]);
             v_svf_set_cutoff(a_for->filters[(iter)][1]);
             ++iter;

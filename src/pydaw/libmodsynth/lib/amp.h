@@ -126,7 +126,7 @@ float f_db_to_linear_fast(float a_db)
         f_result = 0.0f;
     }
 
-    return f_linear_interpolate_arr(arr_amp_db2a, (f_result));
+    return f_linear_interpolate_ptr_const(arr_amp_db2a, (f_result));
 }
 
 
@@ -192,7 +192,7 @@ float f_linear_to_db_fast(float a_input)
         f_result = 0.0f;
     }
 
-    return f_linear_interpolate_arr(arr_amp_a2db, (f_result));
+    return f_linear_interpolate_ptr_const(arr_amp_a2db, (f_result));
 }
 
 
