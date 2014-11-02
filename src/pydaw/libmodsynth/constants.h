@@ -1,30 +1,23 @@
 /*
- * File:   constants.h
- * Author: Jeff Hubbard
- *
- * This file provides basic constants
- *
- * TODO: use defines instead
- *
- * Created on January 7, 2012, 8:56 PM
- */
+This file is part of the MusiKernel project, Copyright MusiKernel Team
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
 
 #ifndef CONSTANTS_H
 #define	CONSTANTS_H
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
 const float PI = 3.141592654f;
 const float PI2 = 6.283185307f;
-const float base_a4=440.0f;
-const float base_a4_recip=1.0f/440.0f;
-
-
-#ifdef	__cplusplus
-}
-#endif
+const float base_a4 = 440.0f;
+const float base_a4_recip = 1.0f / 440.0f;
 
 #endif	/* CONSTANTS_H */
 
