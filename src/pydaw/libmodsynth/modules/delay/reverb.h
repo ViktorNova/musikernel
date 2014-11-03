@@ -62,7 +62,7 @@ inline void v_rvb_reverb_run(t_rvb_reverb *, float, float);
 void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
         float a_color, float a_predelay)
 {
-    if(a_time != (a_reverb->time))
+    if(unlikely(a_time != a_reverb->time))
     {
         a_reverb->time = a_time;
 
@@ -78,13 +78,13 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
         }
     }
 
-    if(a_wet != (a_reverb->wet))
+    if(unlikely(a_wet != a_reverb->wet))
     {
         a_reverb->wet = a_wet;
         a_reverb->wet_linear =  a_wet * (a_reverb->volume_factor);
     }
 
-    if(a_color != (a_reverb->color))
+    if(unlikely(a_color != a_reverb->color))
     {
         a_reverb->color = a_color;
 
@@ -94,7 +94,7 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
         v_svf_set_cutoff(&a_reverb->lp);
     }
 
-    if(a_reverb->last_predelay != a_predelay)
+    if(unlikely(a_reverb->last_predelay != a_predelay))
     {
         a_reverb->last_predelay = a_predelay;
         a_reverb->predelay_size = (int)(a_reverb->sr * a_predelay);
@@ -138,7 +138,7 @@ inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
 
     a_reverb->predelay_buffer[(a_reverb->predelay_counter)] = a_reverb->output;
     ++a_reverb->predelay_counter;
-    if((a_reverb->predelay_counter) >= (a_reverb->predelay_size))
+    if(unlikely(a_reverb->predelay_counter >= a_reverb->predelay_size))
     {
         a_reverb->predelay_counter = 0;
     }

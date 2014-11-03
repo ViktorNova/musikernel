@@ -39,27 +39,28 @@ extern "C" {
 
 typedef struct st_adsr
 {
+    float output;
+    float output_db;
+    int stage;  //0=a,1=d,2=s,3=r,4=inactive,6=delay,9=hold
     float a_inc;
-    float a_time;
     float d_inc;
-    float d_time;
     float s_value;
     float r_inc;
-    float r_time;
 
-    float sr;
-    float sr_recip;
-    int stage;  //0=a,1=d,2=s,3=r,4=inactive,6=delay,9=hold
-    float output;
-
-    float output_db;
     float a_inc_db;
     float d_inc_db;
     float r_inc_db;
 
+    float a_time;
+    float d_time;
+    float r_time;
+    
     int time_counter;
     int delay_count;
     int hold_count;
+
+    float sr;
+    float sr_recip;
 }t_adsr;
 
 void v_adsr_set_a_time(t_adsr*, float);

@@ -80,7 +80,7 @@ inline void v_cmb_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
         f_remove_denormal(a_value + ((a_cmb_ptr->wet_sample) *
         (a_cmb_ptr->feedback_linear)));
 
-    if((a_cmb_ptr->wet_db) <= -20.0f)
+    if(unlikely((a_cmb_ptr->wet_db) <= -20.0f))
     {
         a_cmb_ptr->output_sample = a_value;
     }
@@ -92,7 +92,7 @@ inline void v_cmb_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
 
     ++a_cmb_ptr->input_pointer;
 
-    if((a_cmb_ptr->input_pointer) >= (a_cmb_ptr->buffer_size))
+    if(unlikely(a_cmb_ptr->input_pointer >= a_cmb_ptr->buffer_size))
     {
         a_cmb_ptr->input_pointer = 0;
     }

@@ -23,7 +23,7 @@ extern "C" {
 #include "../../lib/lmalloc.h"
 
 
-    typedef struct st_delay_tap
+typedef struct st_delay_tap
 {
     int read_head;
     int read_head_p1;
@@ -45,9 +45,6 @@ typedef struct
     float tempo_recip;
     int sample_count;
     float* buffer;
-#ifdef DLY_DEBUG_MODE
-    int debug_counter;
-#endif
 }t_delay_simple;
 
 
@@ -184,7 +181,7 @@ inline void v_dly_run_delay(t_delay_simple* a_dly,float a_input)
     a_dly->buffer[(a_dly->write_head)] = f_remove_denormal(a_input);
 
     ++a_dly->write_head;
-    if((a_dly->write_head) >= (a_dly->sample_count))
+    if(unlikely(a_dly->write_head >= a_dly->sample_count))
     {
         a_dly->write_head = 0;
     }
@@ -215,14 +212,14 @@ inline void v_dly_run_tap_lin(t_delay_simple* a_dly,t_delay_tap* a_tap)
 
     ++a_tap->read_head_p1;
 
-    if((a_tap->read_head_p1) >= (a_dly->sample_count))
+    if(unlikely(a_tap->read_head_p1 >= a_dly->sample_count))
     {
-        a_tap->read_head_p1 = (a_tap->read_head_p1) - (a_dly->sample_count);
+        a_tap->read_head_p1 -= a_dly->sample_count;
     }
 
     a_tap->output = f_linear_interpolate(
-            a_dly->buffer[(a_tap->read_head)],
-            a_dly->buffer[(a_tap->read_head_p1)], (a_tap->fraction));
+        a_dly->buffer[(a_tap->read_head)],
+        a_dly->buffer[(a_tap->read_head_p1)], (a_tap->fraction));
 }
 
 void g_dly_init(t_delay_simple * f_result, float a_max_size, float a_sr)

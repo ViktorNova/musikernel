@@ -205,15 +205,6 @@ void g_eq6_init(t_eq6 * f_result, float a_sr)
     }
 }
 
-t_eq6 * g_eq6_get(float a_sr)
-{
-    t_eq6 * f_result = (t_eq6*)malloc(sizeof(t_eq6));
-
-    g_eq6_init(f_result, a_sr);
-
-    return f_result;
-}
-
 void v_eq6_connect_port(t_eq6 * a_eq6, int a_port, float * a_ptr)
 {
     int f_eq_num = a_port / 3;
@@ -224,9 +215,9 @@ void v_eq6_connect_port(t_eq6 * a_eq6, int a_port, float * a_ptr)
 
 inline void v_eq6_set(t_eq6 *a_eq6)
 {
-    register int f_i = 0;
+    int f_i;
 
-    while(f_i < 6)
+    for(f_i = 0; f_i < 6; ++f_i)
     {
         if(*a_eq6->knobs[f_i][2] != 0.0f)
         {
@@ -235,18 +226,17 @@ inline void v_eq6_set(t_eq6 *a_eq6)
                     *a_eq6->knobs[f_i][1] * 0.01f,
                     *a_eq6->knobs[f_i][2] * 0.1f);
         }
-        ++f_i;
     }
 }
 
 inline void v_eq6_run(t_eq6 *a_eq6, float a_input0, float a_input1)
 {
-    register int f_i = 0;
+    int f_i;
 
     a_eq6->output0 = a_input0;
     a_eq6->output1 = a_input1;
 
-    while(f_i < 6)
+    for(f_i = 0; f_i < 6; ++f_i)
     {
         if(*a_eq6->knobs[f_i][2] != 0.0f)
         {
@@ -255,7 +245,6 @@ inline void v_eq6_run(t_eq6 *a_eq6, float a_input0, float a_input1)
             a_eq6->output0 = a_eq6->eqs[f_i].output0;
             a_eq6->output1 = a_eq6->eqs[f_i].output1;
         }
-        ++f_i;
     }
 }
 

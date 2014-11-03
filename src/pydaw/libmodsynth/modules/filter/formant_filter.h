@@ -289,20 +289,19 @@ void v_grw_growl_filter_set(t_grw_growl_filter* a_grw, float a_pos,
 void v_grw_growl_filter_run(t_grw_growl_filter* a_grw,
         float a_input0, float a_input1)
 {
-    register int iter = 0;
+    int f_i;
     t_svf2_filter * f_filter;
     float f_amp;
     a_grw->output0 = 0.0f;
     a_grw->output1 = 0.0f;
 
-    while(iter < 5)
+    for(f_i = 0; f_i < 5; ++f_i)
     {
-        f_filter = &a_grw->filters[iter];
-        f_amp = a_grw->formant_amp[iter];
+        f_filter = &a_grw->filters[f_i];
+        f_amp = a_grw->formant_amp[f_i];
         v_svf2_run_2_pole_bp(f_filter, a_input0, a_input1);
         a_grw->output0 += f_filter->output0 * f_amp;
         a_grw->output1 += f_filter->output1 * f_amp;
-        ++iter;
     }
 
     a_grw->output0 *= 0.33333f;
