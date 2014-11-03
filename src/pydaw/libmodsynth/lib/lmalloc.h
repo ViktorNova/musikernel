@@ -1,5 +1,5 @@
 /*
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ GNU General Public License for more details.
 #include <stdlib.h>
 #include <sys/mman.h>
 
-//allocate 100MB at a time
+//allocate 100MB at a time and slice it up on request
 #define HUGEPAGE_ALLOC_SIZE (1024 * 1024 * 100)
 #define HUGEPAGE_MIN_ALIGN 16
 
