@@ -56,7 +56,7 @@ inline float f_linear_to_db(float a_linear)
 #define arr_amp_db2a_count 545
 #define arr_amp_db2a_count_m1_f 544.0f
 
-static const __thread float arr_amp_db2a[arr_amp_db2a_count]
+static __thread float arr_amp_db2a[arr_amp_db2a_count]
 __attribute__((aligned(16))) = {
 0.000010, 0.000010, 0.000011, 0.000011, 0.000011, 0.000012, 0.000012, 0.000012, 0.000013, 0.000013, 0.000013, 0.000014, 0.000014,
 0.000015, 0.000015, 0.000015, 0.000016, 0.000016, 0.000017, 0.000017, 0.000018, 0.000018, 0.000019, 0.000019, 0.000020, 0.000021,
@@ -126,7 +126,7 @@ float f_db_to_linear_fast(float a_db)
         f_result = 0.0f;
     }
 
-    return f_linear_interpolate_ptr_const(arr_amp_db2a, (f_result));
+    return f_linear_interpolate_ptr(arr_amp_db2a, (f_result));
 }
 
 
@@ -134,7 +134,7 @@ float f_db_to_linear_fast(float a_db)
 #define arr_amp_a2db_count_float 400.0f
 #define arr_amp_a2db_count_float_m1 399.0f
 
-static const __thread float arr_amp_a2db [arr_amp_a2db_count]
+static __thread float arr_amp_a2db[arr_amp_a2db_count]
 __attribute__((aligned(16))) = {
 -100 ,-40.000000,-33.979401,-30.457575,-27.958801,-26.020601,-24.436975, -23.098040,-21.938202,-20.915152,-20.000002,-19.172148,-18.416376,
 -17.721134,-17.077440,-16.478176,-15.917601,-15.391022,-14.894549, -14.424928,-13.979400,-13.555614,-13.151546,-12.765442,-12.395774,
@@ -192,7 +192,7 @@ float f_linear_to_db_fast(float a_input)
         f_result = 0.0f;
     }
 
-    return f_linear_interpolate_ptr_const(arr_amp_a2db, (f_result));
+    return f_linear_interpolate_ptr(arr_amp_a2db, (f_result));
 }
 
 

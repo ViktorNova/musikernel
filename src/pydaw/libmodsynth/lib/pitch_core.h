@@ -99,7 +99,7 @@ inline float f_pit_midi_note_to_samples(float a_midi_note_number,
 #define arr_pit_p2f_count 2521
 #define arr_pit_p2f_count_m1 2520
 
-static const __thread float arr_pit_p2f[arr_pit_p2f_count]
+static __thread float arr_pit_p2f[arr_pit_p2f_count]
 __attribute__((aligned(16))) = {
 16.351620, 16.398912, 16.446342, 16.493912, 16.541616, 16.589458, 16.637440, 16.685560, 16.733822, 16.782221, 16.830759, 16.879436, 16.928257, 16.977221, 17.026323, 17.075567, 17.124954, 17.174484, 17.224159, 17.273975,
 17.323936, 17.374043, 17.424292, 17.474691, 17.525232, 17.575920, 17.626753, 17.677734, 17.728867, 17.780142, 17.831566, 17.883141, 17.934862, 17.986738, 18.038761, 18.090933, 18.143255, 18.195730, 18.248362, 18.301140,
@@ -249,7 +249,7 @@ float f_pit_midi_note_to_hz_fast(float a_midi_note_number)
         arr_index = 0.0f;
     }
 
-    return f_linear_interpolate_ptr_const(arr_pit_p2f, arr_index);
+    return f_linear_interpolate_ptr(arr_pit_p2f, arr_index);
 }
 
 

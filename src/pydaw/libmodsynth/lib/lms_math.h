@@ -115,7 +115,7 @@ inline float f_lms_ceiling(float a_input, float a_ceiling)
 
 #define arr_sqrt_count 401
 
-static const __thread float arr_sqrt [arr_sqrt_count]
+static __thread float arr_sqrt [arr_sqrt_count]
 __attribute__((aligned(16))) = {
 0.000000,0.100000,0.141421,0.173205,0.200000,0.223607,
 0.244949,0.264575,0.282843,0.300000,0.316228,0.331662,
@@ -192,7 +192,7 @@ __attribute__((aligned(16))) = {
  */
 inline float f_lms_sqrt(float a_input)
 {
-    return f_linear_interpolate_ptr_const(arr_sqrt, (a_input * 100.0f));
+    return f_linear_interpolate_ptr(arr_sqrt, (a_input * 100.0f));
 }
 
 

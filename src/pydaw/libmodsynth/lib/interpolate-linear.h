@@ -42,16 +42,6 @@ inline float f_linear_interpolate(float a_a, float a_b, float a_position)
 }
 
 
-inline float f_linear_interpolate_ptr_const(const float * a_table, float a_ptr)
-{
-    int int_pos = (int)a_ptr;
-    int int_pos_plus_1 = int_pos + 1;
-    float pos = a_ptr - int_pos;
-
-    return ((a_table[int_pos] - a_table[int_pos_plus_1]) *
-            pos) + a_table[int_pos_plus_1];
-}
-
 /* float f_linear_interpolate_ptr_wrap(
  * float * a_table,
  * int a_table_size,

@@ -24,7 +24,7 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-static const __thread float f_formant_pitches[3][10]
+static __thread float f_formant_pitches[3][10]
 __attribute__((aligned(16))) =
 {
     {65.7647152829, 64.0195500087, 60.2218660311, 48.5454706023, 54.9116472027,
@@ -123,7 +123,7 @@ void v_for_formant_filter_set(t_for_formant_filter* a_for, float a_pos, float a_
         while(iter < 3)
         {
             a_for->pitch_tmp =
-                f_linear_interpolate_ptr_const(
+                f_linear_interpolate_ptr(
                     f_formant_pitches[(iter)], a_pos);
             v_svf_set_cutoff_base(
                 a_for->filters[(iter)][0], (a_for->pitch_tmp));
@@ -166,7 +166,7 @@ void v_for_formant_filter_run(t_for_formant_filter* a_for, float a_input0, float
 }
 
 
-static const __thread float pydaw_growl_table[25][3][5]
+static __thread float pydaw_growl_table[25][3][5]
 __attribute__((aligned(16))) =
 {
     {{67.35f, 73.633f, 89.038f, 92.901f, 98.902f}, {1.0f, 0.631f, 0.1f, 0.016f, 0.001f}, {-0.75, -0.556, -0.167, -0.077, 0.0}}, //alto a
