@@ -41,7 +41,6 @@ typedef struct
     float last_pitch;
 }t_pkq_peak_eq;
 
-t_pkq_peak_eq * g_pkq_get(float);
 
 inline void v_pkq_calc_coeffs(t_pkq_peak_eq*, float, float, float);
 inline void v_pkq_run(t_pkq_peak_eq*, float, float);
@@ -181,14 +180,6 @@ void g_pkq_init(t_pkq_peak_eq * f_result, float a_sample_rate)
     f_result->y2_0 = 0.0f;
     f_result->y2_1 = 0.0f;
     f_result->last_pitch = -452.66447f;
-}
-
-t_pkq_peak_eq * g_pkq_get(float a_sample_rate)
-{
-    t_pkq_peak_eq * f_result;
-    lmalloc((void**)&f_result, sizeof(t_pkq_peak_eq));
-    g_pkq_init(f_result, a_sample_rate);
-    return f_result;
 }
 
 
