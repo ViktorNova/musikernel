@@ -214,31 +214,31 @@ static void v_sreverb_run(
         v_plugin_event_queue_atm_set(
             &plugin_data->atm_queue, f_i, plugin_data->port_table);
 
-        v_sml_run(plugin_data->mono_modules->reverb_smoother,
+        v_sml_run(&plugin_data->mono_modules->reverb_smoother,
             (*plugin_data->reverb_wet) * 0.1f);
 
-        v_rvb_reverb_set(plugin_data->mono_modules->reverb,
+        v_sml_run(&plugin_data->mono_modules->reverb_dry_smoother,
+            (*plugin_data->reverb_dry) * 0.1f);
+        f_dry_vol = f_db_to_linear_fast(
+            plugin_data->mono_modules->reverb_dry_smoother.last_value);
+
+        v_rvb_reverb_set(&plugin_data->mono_modules->reverb,
             (*plugin_data->reverb_time) * 0.01f,
             f_db_to_linear_fast(
-                plugin_data->mono_modules->reverb_smoother->last_value),
+                plugin_data->mono_modules->reverb_smoother.last_value),
             (*plugin_data->reverb_color) * 0.01f,
             (*plugin_data->reverb_predelay) * 0.01f);
 
-        v_sml_run(plugin_data->mono_modules->reverb_dry_smoother,
-            (*plugin_data->reverb_dry) * 0.1f);
-        f_dry_vol = f_db_to_linear_fast(
-            plugin_data->mono_modules->reverb_dry_smoother->last_value);
-
-        v_rvb_reverb_run(plugin_data->mono_modules->reverb,
+        v_rvb_reverb_run(&plugin_data->mono_modules->reverb,
             plugin_data->output0[f_i],
             plugin_data->output1[f_i]);
 
         plugin_data->output0[f_i] =
                 (plugin_data->output0[f_i] * f_dry_vol) +
-                plugin_data->mono_modules->reverb->output;
+                plugin_data->mono_modules->reverb.output;
         plugin_data->output1[f_i] =
                 (plugin_data->output1[f_i] * f_dry_vol) +
-                plugin_data->mono_modules->reverb->output;
+                plugin_data->mono_modules->reverb.output;
         ++f_i;
     }
 }

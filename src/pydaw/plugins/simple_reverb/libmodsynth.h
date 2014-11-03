@@ -29,12 +29,9 @@ extern "C" {
 
 typedef struct
 {
-    t_rvb_reverb * reverb;
-
-    float current_sample0;
-    float current_sample1;
-    t_smoother_linear * reverb_smoother;
-    t_smoother_linear * reverb_dry_smoother;
+    t_smoother_linear reverb_smoother;
+    t_smoother_linear reverb_dry_smoother;
+    t_rvb_reverb reverb;
 }t_sreverb_mono_modules;
 
 t_sreverb_mono_modules * v_sreverb_mono_init(float, int);
@@ -44,14 +41,12 @@ t_sreverb_mono_modules * v_sreverb_mono_init(float a_sr, int a_plugin_uid)
     t_sreverb_mono_modules * a_mono;
     hpalloc((void**)&a_mono, sizeof(t_sreverb_mono_modules));
 
-    a_mono->reverb = g_rvb_reverb_get(a_sr);
-    a_mono->reverb_smoother =
-            g_sml_get_smoother_linear(a_sr, 100.0f, 0.0f, 0.001f);
-    a_mono->reverb_smoother->last_value = 0.0f;
+    g_sml_init(&a_mono->reverb_smoother, a_sr, 100.0f, 0.0f, 0.001f);
+    a_mono->reverb_smoother.last_value = 0.0f;
+    g_sml_init(&a_mono->reverb_dry_smoother, a_sr, 100.0f, 0.0f, 0.001f);
+    a_mono->reverb_dry_smoother.last_value = 1.0f;
 
-    a_mono->reverb_dry_smoother =
-            g_sml_get_smoother_linear(a_sr, 100.0f, 0.0f, 0.001f);
-    a_mono->reverb_dry_smoother->last_value = 1.0f;
+    g_rvb_reverb_init(&a_mono->reverb, a_sr);
 
     return a_mono;
 }

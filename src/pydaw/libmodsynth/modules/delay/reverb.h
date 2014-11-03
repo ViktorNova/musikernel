@@ -146,12 +146,8 @@ inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
 
 }
 
-t_rvb_reverb * g_rvb_reverb_get(float a_sr)
+void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
 {
-    t_rvb_reverb * f_result;
-
-    hpalloc((void**)&f_result, sizeof(t_rvb_reverb));
-
     f_result->color = 1.0f;
     f_result->time = 0.5f;
     f_result->wet = 0.0f;
@@ -220,8 +216,6 @@ t_rvb_reverb * g_rvb_reverb_get(float a_sr)
     }
 
     v_rvb_reverb_set(f_result, 0.5f, 0.0f, 0.5f, 0.01f);
-
-    return f_result;
 }
 
 #ifdef	__cplusplus
