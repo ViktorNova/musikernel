@@ -32,11 +32,11 @@ inline float f_cosine_fast_run_radians(float);
 #endif
 
 
-#define arr_sine_count 802
-#define arr_sine_count_radians (arr_sine_count/PI2)
-#define arr_cosine_phase_radians (PI* 0.25f)
+#define ARR_SINE_COUNT 802
+#define ARR_SINE_COUNT_RADIANS (ARR_SINE_COUNT / PI2)
+#define ARR_COSINE_PHASE_RADIANS (PI* 0.25f)
 
-float arr_sine [arr_sine_count] __attribute__((aligned(16))) = {
+static __thread float ARR_SINE[ARR_SINE_COUNT] __attribute__((aligned(16))) = {
 0.000000, 0.007836, 0.015672, 0.023506, 0.031340, 0.039171, 0.047000, 0.054826, 0.062648, 0.070467, 0.078282, 0.086091, 0.093896, 0.101694, 0.109486, 0.117272, 0.125051, 0.132821, 0.140584, 0.148338,
 0.156083, 0.163818, 0.171543, 0.179258, 0.186961, 0.194654, 0.202334, 0.210002, 0.217657, 0.225298, 0.232926, 0.240539, 0.248138, 0.255721, 0.263289, 0.270840, 0.278375, 0.285893, 0.293393, 0.300876,
 0.308339, 0.315784, 0.323210, 0.330615, 0.338001, 0.345365, 0.352708, 0.360030, 0.367330, 0.374607, 0.381861, 0.389091, 0.396298, 0.403480, 0.410638, 0.417770, 0.424877, 0.431957, 0.439011, 0.446038,
@@ -86,8 +86,8 @@ float arr_sine [arr_sine_count] __attribute__((aligned(16))) = {
  */
 inline float f_sine_fast_run(float a_osc_core)
 {
-    return f_linear_interpolate_ptr_wrap(arr_sine, arr_sine_count,
-            (a_osc_core * arr_sine_count));
+    return f_linear_interpolate_ptr_wrap(ARR_SINE, ARR_SINE_COUNT,
+            (a_osc_core * ARR_SINE_COUNT));
 }
 
 /* inline float f_sine_fast_run(float a_osc_core)
@@ -96,8 +96,8 @@ inline float f_sine_fast_run(float a_osc_core)
  */
 inline float f_sine_fast_run_radians(float a_osc_core)
 {
-    return f_linear_interpolate_ptr_wrap(arr_sine, arr_sine_count,
-            (a_osc_core * arr_sine_count_radians));
+    return f_linear_interpolate_ptr_wrap(ARR_SINE, ARR_SINE_COUNT,
+            (a_osc_core * ARR_SINE_COUNT_RADIANS));
 }
 
 /* inline float f_cosine_fast_run(
@@ -108,8 +108,8 @@ inline float f_sine_fast_run_radians(float a_osc_core)
  */
 inline float f_cosine_fast_run(float a_osc_core)
 {
-    return f_linear_interpolate_ptr_wrap(arr_sine, arr_sine_count,
-            ((a_osc_core * arr_sine_count) + 0.25f));
+    return f_linear_interpolate_ptr_wrap(ARR_SINE, ARR_SINE_COUNT,
+            ((a_osc_core * ARR_SINE_COUNT) + 0.25f));
 }
 
 
@@ -122,8 +122,8 @@ inline float f_cosine_fast_run(float a_osc_core)
  */
 inline float f_cosine_fast_run_radians(float a_osc_core)
 {
-    return f_linear_interpolate_ptr_wrap(arr_sine, arr_sine_count,
-        ((a_osc_core * arr_sine_count_radians) + arr_cosine_phase_radians));
+    return f_linear_interpolate_ptr_wrap(ARR_SINE, ARR_SINE_COUNT,
+        ((a_osc_core * ARR_SINE_COUNT_RADIANS) + ARR_COSINE_PHASE_RADIANS));
 }
 
 
