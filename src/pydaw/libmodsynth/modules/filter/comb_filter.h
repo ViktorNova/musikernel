@@ -15,11 +15,6 @@ GNU General Public License for more details.
 #define	COMB_FILTER_H
 
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
-
 #include "../../lib/amp.h"
 #include "../../lib/pitch_core.h"
 #include "../../lib/interpolate-linear.h"
@@ -29,28 +24,37 @@ extern "C" {
 
 #define MC_CMB_COUNT 4
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 typedef struct st_comb_filter
 {
-    int buffer_size;  //The size of input_buffer
+    float delay_pointer;
     int input_pointer;  //The index where the current sample is written to
-    float delay_pointer; //
+    int buffer_size;  //The size of input_buffer
     float wet_sample;
-    float output_sample;
+    float feedback_linear;
     float wet_db;
+    float output_sample;
     float wet_linear;
     float feedback_db;
-    float feedback_linear;
     float midi_note_number;
-    float delay_samples;  //How many samples, including the fractional part, to delay the signal
+    //How many samples, including the fractional part, to delay the signal
+    float delay_samples;
     float sr;
     float * input_buffer;
     int mc_delay_samples[MC_CMB_COUNT];
     float mc_detune;
 }t_comb_filter;
 
-inline void v_cmb_run(t_comb_filter*,float);
-inline void v_cmb_set_all(t_comb_filter*, float,float,float);
-void v_cmb_free(t_comb_filter *);
+inline void v_cmb_run(t_comb_filter*, float);
+inline void v_cmb_set_all(t_comb_filter*, float, float, float);
+void v_cmb_free(t_comb_filter*);
+
+#ifdef	__cplusplus
+}
+#endif
 
 /* v_cmb_run(
  * t_comb_filter*,
@@ -85,7 +89,6 @@ inline void v_cmb_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
         a_cmb_ptr->output_sample =
             (a_value + ((a_cmb_ptr->wet_sample) * (a_cmb_ptr->wet_linear)));
     }
-
 
     ++a_cmb_ptr->input_pointer;
 
@@ -184,9 +187,11 @@ inline void v_cmb_set_all(t_comb_filter*__restrict a_cmb_ptr,
 
 }
 
-inline void v_cmb_mc_set_all(t_comb_filter*__restrict a_cmb, float a_wet_db, float a_midi_note_number, float a_detune)
+inline void v_cmb_mc_set_all(t_comb_filter*__restrict a_cmb,
+    float a_wet_db, float a_midi_note_number, float a_detune)
 {
-    if(a_cmb->mc_detune != a_detune || (a_cmb->midi_note_number) != a_midi_note_number)
+    if(a_cmb->mc_detune != a_detune ||
+        a_cmb->midi_note_number != a_midi_note_number)
     {
         a_cmb->mc_detune = a_detune;
         register int f_i = 0;
@@ -249,11 +254,6 @@ void v_cmb_free(t_comb_filter * a_cmb)
     free(a_cmb->input_buffer);
     //free(a_cmb);
 }
-
-#ifdef	__cplusplus
-}
-#endif
-
 
 #endif	/* COMB_FILTER_H */
 
