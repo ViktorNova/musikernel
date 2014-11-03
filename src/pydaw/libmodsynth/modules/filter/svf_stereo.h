@@ -14,10 +14,6 @@ GNU General Public License for more details.
 #ifndef PYDAW_SVF_STEREO_H
 #define	PYDAW_SVF_STEREO_H
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
 #include "../../lib/pitch_core.h"
 #include "../../lib/amp.h"
 #include "../../lib/lmalloc.h"
@@ -25,6 +21,7 @@ extern "C" {
 #include "../../constants.h"
 #include "../../lib/smoother-linear.h"
 #include "../../lib/denormal.h"
+#include "svf.h"
 
 #define SVF_FILTER_TYPE_LP 0
 #define SVF_FILTER_TYPE_HP 1
@@ -40,9 +37,13 @@ extern "C" {
 #define SVF_OVERSAMPLE_STEP_SIZE 0.25f
 
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
-    float filter_input, filter_last_input, bp_m1, lp_m1, hp, lp, bp;
+    float filter_input, filter_last_input, bp_m1, lp_m1, hp, bp, lp;
 }t_svf2_kernel __attribute__((aligned(16)));
 
 typedef struct
@@ -53,6 +54,12 @@ typedef struct
     t_svf2_kernel filter_kernels [SVF_MAX_CASCADE][2];
     float output0, output1;
 } t_svf2_filter __attribute__((aligned(16)));
+
+void v_svf2_set_cutoff(t_svf2_filter*);
+void v_svf2_set_res(t_svf2_filter*,  float);
+void v_svf2_set_cutoff_base(t_svf2_filter*, float);
+void v_svf2_add_cutoff_mod(t_svf2_filter*, float);
+void v_svf2_velocity_mod(t_svf2_filter*,float);
 
 typedef void (*fp_svf2_run_filter)(t_svf2_filter*,float, float);
 
@@ -79,6 +86,9 @@ void v_svf2_run_2_pole_allpass(t_svf2_filter*, float, float);
 
 void v_svf2_reset(t_svf2_filter*);
 
+#ifdef	__cplusplus
+}
+#endif
 
 void v_svf2_reset(t_svf2_filter * a_svf2)
 {
@@ -191,28 +201,28 @@ fp_svf2_run_filter fp_svf2_get_run_filter_ptr(int a_cascades,
  * float a_input_value) //the audio input to filter
  *
  * The main action to run the filter kernel*/
-void v_svf2_run(t_svf2_filter *__restrict a_svf,
+inline void v_svf2_run(t_svf2_filter *__restrict a_svf,
         t_svf2_kernel *__restrict a_kernel, float a_input_value)
 {
+    float oversample_iterator = 0.0f;
+    int f_i;
+
     a_kernel->filter_input = a_input_value;
 
-    register float oversample_iterator = 0.0f;
-
-    while((oversample_iterator) < 1.0f)
+    for(f_i = 0; f_i < 4; ++f_i)
     {
-        a_kernel->hp = f_linear_interpolate((a_kernel->filter_last_input),
-                (a_kernel->filter_input), oversample_iterator)
-        - (((a_kernel->bp_m1) * (a_svf->filter_res)) + (a_kernel->lp_m1));
-        a_kernel->bp = ((a_kernel->hp) *
-                (a_svf->cutoff_filter)) + (a_kernel->bp_m1);
-        a_kernel->lp = ((a_kernel->bp) *
-                (a_svf->cutoff_filter)) + (a_kernel->lp_m1);
+        a_kernel->hp = f_linear_interpolate(
+            a_kernel->filter_last_input,
+            a_kernel->filter_input, oversample_iterator) -
+            ((a_kernel->bp_m1 * a_svf->filter_res) + a_kernel->lp_m1);
+        a_kernel->bp = (a_kernel->hp * a_svf->cutoff_filter) + a_kernel->bp_m1;
+        a_kernel->lp = (a_kernel->bp * a_svf->cutoff_filter) + a_kernel->lp_m1;
 
         oversample_iterator += SVF_OVERSAMPLE_STEP_SIZE;
     }
 
-    a_kernel->bp_m1 = f_remove_denormal((a_kernel->bp));
-    a_kernel->lp_m1 = f_remove_denormal((a_kernel->lp));
+    a_kernel->bp_m1 = f_remove_denormal(a_kernel->bp);
+    a_kernel->lp_m1 = f_remove_denormal(a_kernel->lp);
     a_kernel->filter_last_input = a_input_value;
 }
 
@@ -220,9 +230,9 @@ void v_svf2_run_2_pole_lp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
     v_svf2_run(a_svf, (&a_svf->filter_kernels[0][0]), a_in0);
-    v_svf2_run(a_svf, (&a_svf->filter_kernels[0][1]), a_in1);
-
     a_svf->output0 = a_svf->filter_kernels[0][0].lp;
+
+    v_svf2_run(a_svf, (&a_svf->filter_kernels[0][1]), a_in1);
     a_svf->output1 = a_svf->filter_kernels[0][1].lp;
 }
 
@@ -230,14 +240,14 @@ void v_svf2_run_4_pole_lp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
     v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
+
     v_svf2_run(a_svf, &a_svf->filter_kernels[1][0],
         a_svf->filter_kernels[0][0].lp);
+    a_svf->output0 = a_svf->filter_kernels[1][0].lp;
 
-    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
     v_svf2_run(a_svf, &a_svf->filter_kernels[1][1],
             (a_svf->filter_kernels[0][1].lp));
-
-    a_svf->output0 = a_svf->filter_kernels[1][0].lp;
     a_svf->output1 = a_svf->filter_kernels[1][1].lp;
 }
 
@@ -245,9 +255,9 @@ void v_svf2_run_2_pole_hp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
     v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
-    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
-
     a_svf->output0 = a_svf->filter_kernels[0][0].hp;
+
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
     a_svf->output1 = a_svf->filter_kernels[0][1].hp;
 }
 
@@ -255,14 +265,14 @@ void v_svf2_run_4_pole_hp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
     v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
+
     v_svf2_run(a_svf, &a_svf->filter_kernels[1][0],
             (a_svf->filter_kernels[0][0].hp));
+    a_svf->output0 = a_svf->filter_kernels[1][0].hp;
 
-    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
     v_svf2_run(a_svf, &a_svf->filter_kernels[1][1],
             (a_svf->filter_kernels[0][1].hp));
-
-    a_svf->output0 = a_svf->filter_kernels[1][0].hp;
     a_svf->output1 = a_svf->filter_kernels[1][1].hp;
 }
 
@@ -270,9 +280,9 @@ void v_svf2_run_2_pole_bp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
     v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
-    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
-
     a_svf->output0 = a_svf->filter_kernels[0][0].bp;
+
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
     a_svf->output1 = a_svf->filter_kernels[0][1].bp;
 }
 
@@ -280,14 +290,14 @@ void v_svf2_run_4_pole_bp(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
     v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
+
     v_svf2_run(a_svf, &a_svf->filter_kernels[1][0],
             (a_svf->filter_kernels[0][0].bp));
+    a_svf->output0 = a_svf->filter_kernels[1][0].bp;
 
-    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
     v_svf2_run(a_svf, &a_svf->filter_kernels[1][1],
             a_svf->filter_kernels[0][1].bp);
-
-    a_svf->output0 = a_svf->filter_kernels[1][0].bp;
     a_svf->output1 = a_svf->filter_kernels[1][1].bp;
 }
 
@@ -295,10 +305,10 @@ void v_svf2_run_2_pole_notch(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
     v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
-    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
-
     a_svf->output0 = (a_svf->filter_kernels[0][0].hp) +
             (a_svf->filter_kernels[0][0].lp);
+
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
     a_svf->output1 = (a_svf->filter_kernels[0][1].hp) +
             (a_svf->filter_kernels[0][1].lp);
 }
@@ -307,13 +317,13 @@ void v_svf2_run_4_pole_notch(t_svf2_filter*__restrict a_svf,
         float a_in0, float a_in1)
 {
     v_svf2_run(a_svf, &a_svf->filter_kernels[0][0], a_in0);
+    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
     v_svf2_run(a_svf, &a_svf->filter_kernels[1][0],
             (a_svf->filter_kernels[0][0].hp) +
             (a_svf->filter_kernels[0][0].lp));
     a_svf->output0 = (a_svf->filter_kernels[1][0].hp) +
             (a_svf->filter_kernels[1][0].lp);
 
-    v_svf2_run(a_svf, &a_svf->filter_kernels[0][1], a_in1);
     v_svf2_run(a_svf, &a_svf->filter_kernels[1][1],
             (a_svf->filter_kernels[0][0].hp) +
             (a_svf->filter_kernels[0][1].lp));
@@ -334,13 +344,6 @@ void v_svf2_run_2_pole_allpass(t_svf2_filter*__restrict a_svf,
             (a_svf->filter_kernels[0][1].lp) +
             (a_svf->filter_kernels[0][1].bp);
 }
-
-void v_svf2_set_cutoff(t_svf2_filter*);
-void v_svf2_set_res(t_svf2_filter*,  float);
-t_svf2_filter * g_svf2_get(float);
-void v_svf2_set_cutoff_base(t_svf2_filter*, float);
-void v_svf2_add_cutoff_mod(t_svf2_filter*, float);
-void v_svf2_velocity_mod(t_svf2_filter*,float);
 
 /* void v_svf2_velocity_mod(t_svf2_filter* a_svf, float a_velocity)
  */
@@ -459,23 +462,6 @@ void g_svf2_init(t_svf2_filter * f_svf, float a_sample_rate)
     v_svf2_set_cutoff(f_svf);
 }
 
-/* t_svf2_filter * g_svf2_get(float a_sample_rate)
- */
-t_svf2_filter * g_svf2_get(float a_sample_rate)
-{
-    t_svf2_filter * f_svf;
-
-    lmalloc((void**)&f_svf, sizeof(t_svf2_filter));
-
-    g_svf2_init(f_svf, a_sample_rate);
-
-    return f_svf;
-}
-
-
-#ifdef	__cplusplus
-}
-#endif
 
 #endif	/* PYDAW_SVF_STEREO_H */
 
