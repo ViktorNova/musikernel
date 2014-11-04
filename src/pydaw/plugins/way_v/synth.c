@@ -719,45 +719,42 @@ static void v_wayv_process_midi_event(
                     plugin_data->sampleNo,
                     a_event->tick);
 
-            plugin_data->data[f_voice]->amp =
+            t_wayv_poly_voice * f_wayv_voice = plugin_data->data[f_voice];
+
+            f_wayv_voice->amp =
                     f_db_to_linear_fast(
                     ((a_event->velocity
                     * 0.094488) - 12)); //-12db to 0db
 
-            plugin_data->data[f_voice]->master_vol_lin =
+            f_wayv_voice->master_vol_lin =
                     f_db_to_linear_fast((*(plugin_data->master_vol)));
 
-            plugin_data->data[f_voice]->keyboard_track =
+            f_wayv_voice->keyboard_track =
                     ((float)(a_event->note))
                     * 0.007874016f;
 
-            plugin_data->data[f_voice]->velocity_track =
+            f_wayv_voice->velocity_track =
                     ((float)(a_event->velocity))
                     * 0.007874016f;
 
-            plugin_data->data[f_voice]->note_f =
-                    (float)a_event->note;
-            plugin_data->data[f_voice]->note =
-                    a_event->note;
+            f_wayv_voice->note_f = (float)a_event->note;
+            f_wayv_voice->note = a_event->note;
 
-            plugin_data->data[f_voice]->target_pitch =
-                    (plugin_data->data[f_voice]->note_f);
+            f_wayv_voice->target_pitch = f_wayv_voice->note_f;
 
             if(plugin_data->sv_last_note < 0.0f)
             {
-                plugin_data->data[f_voice]->last_pitch =
-                        (plugin_data->data[f_voice]->note_f);
+                f_wayv_voice->last_pitch = f_wayv_voice->note_f;
             }
             else
             {
-                plugin_data->data[f_voice]->last_pitch =
-                        (plugin_data->sv_last_note);
+                f_wayv_voice->last_pitch = plugin_data->sv_last_note;
             }
 
-            v_rmp_retrigger_glide_t(&plugin_data->data[f_voice]->glide_env,
+            v_rmp_retrigger_glide_t(&f_wayv_voice->glide_env,
                     (*(plugin_data->master_glide) * 0.01f),
-                    (plugin_data->data[f_voice]->last_pitch),
-                    (plugin_data->data[f_voice]->target_pitch));
+                    (f_wayv_voice->last_pitch),
+                    (f_wayv_voice->target_pitch));
 
             int f_i = 0;
 
@@ -769,62 +766,60 @@ static void v_wayv_process_midi_event(
 
                 if(f_osc_type >= 0)
                 {
-                    plugin_data->data[f_voice]->osc_on[f_i] = 1;
+                    f_wayv_voice->osc_on[f_i] = 1;
 
                     if(f_poly_mode == 0)
                     {
                         v_osc_wav_note_on_sync_phases(
-                            &plugin_data->data[f_voice]->osc_wavtable[f_i]);
+                            &f_wayv_voice->osc_wavtable[f_i]);
                     }
                     v_osc_wav_set_waveform(
-                            &plugin_data->data[f_voice]->osc_wavtable[f_i],
+                            &f_wayv_voice->osc_wavtable[f_i],
                             plugin_data->mono_modules->
                             wavetables->tables[f_osc_type]->wavetable,
                             plugin_data->mono_modules->wavetables->
                             tables[f_osc_type]->length);
                     v_osc_wav_set_uni_voice_count(
-                            &plugin_data->data[f_voice]->osc_wavtable[f_i],
+                            &f_wayv_voice->osc_wavtable[f_i],
                             *plugin_data->osc_uni_voice[f_i]);
                 }
                 else
                 {
-                    plugin_data->data[f_voice]->osc_on[f_i] = 0;
+                    f_wayv_voice->osc_on[f_i] = 0;
                     ++f_i;
                     continue;
                 }
 
-                plugin_data->data[f_voice]->osc_uni_spread[f_i] =
+                f_wayv_voice->osc_uni_spread[f_i] =
                     (*plugin_data->osc_uni_spread[f_i]) * 0.01f;
 
                 int f_i2 = 0;
                 while(f_i2 < WAYV_OSC_COUNT)
                 {
-                    plugin_data->data[f_voice]->osc_fm[f_i][f_i2] =
+                    f_wayv_voice->osc_fm[f_i][f_i2] =
                             (*plugin_data->osc_fm[f_i][f_i2]) * 0.005f;
                     ++f_i2;
                 }
 
                 f_db = (*plugin_data->osc_vol[f_i]);
 
-                v_adsr_retrigger(
-                    &plugin_data->data[f_voice]->adsr_amp_osc[f_i]);
+                v_adsr_retrigger(&f_wayv_voice->adsr_amp_osc[f_i]);
 
-                plugin_data->data[f_voice]->osc_linamp[f_i] =
-                    f_db_to_linear_fast(f_db);
+                f_wayv_voice->osc_linamp[f_i] = f_db_to_linear_fast(f_db);
 
                 if(f_db > -29.2f)
                 {
-                    plugin_data->data[f_voice]->osc_audible[f_i] = 1;
+                    f_wayv_voice->osc_audible[f_i] = 1;
                 }
                 else
                 {
-                    plugin_data->data[f_voice]->osc_audible[f_i] = 0;
+                    f_wayv_voice->osc_audible[f_i] = 0;
                 }
 
-                plugin_data->data[f_voice]->adsr_amp_on[f_i] =
+                f_wayv_voice->adsr_amp_on[f_i] =
                     (int)(*(plugin_data->adsr_checked[f_i]));
 
-                if(plugin_data->data[f_voice]->adsr_amp_on[f_i])
+                if(f_wayv_voice->adsr_amp_on[f_i])
                 {
                     float f_attack1 = *(plugin_data->attack[f_i]) * .01f;
                     f_attack1 = (f_attack1) * (f_attack1);
@@ -834,34 +829,30 @@ static void v_wayv_process_midi_event(
                     f_release1 = (f_release1) * (f_release1);
 
                     v_adsr_set_adsr_db(
-                        &plugin_data->data[f_voice]->adsr_amp_osc[f_i],
+                        &f_wayv_voice->adsr_amp_osc[f_i],
                         (f_attack1), (f_decay1), *(plugin_data->sustain[f_i]),
                         (f_release1));
 
                     v_adsr_set_delay_time(
-                        &plugin_data->data[f_voice]->adsr_amp_osc[f_i],
+                        &f_wayv_voice->adsr_amp_osc[f_i],
                         (*plugin_data->adsr_fm_delay[f_i]) * 0.01f);
                     v_adsr_set_hold_time(
-                        &plugin_data->data[f_voice]->adsr_amp_osc[f_i],
+                        &f_wayv_voice->adsr_amp_osc[f_i],
                         (*plugin_data->adsr_fm_hold[f_i]) * 0.01f);
                 }
-
-
                 ++f_i;
             }
 
-            plugin_data->data[f_voice]->noise_linamp =
+            f_wayv_voice->noise_linamp =
                 f_db_to_linear_fast(*(plugin_data->noise_amp));
 
-            plugin_data->data[f_voice]->adsr_noise_on =
-                    (int)*plugin_data->noise_adsr_on;
+            f_wayv_voice->adsr_noise_on = (int)*plugin_data->noise_adsr_on;
 
-            plugin_data->data[f_voice]->noise_prefx =
-                    (int)*plugin_data->noise_prefx;
+            f_wayv_voice->noise_prefx = (int)*plugin_data->noise_prefx;
 
-            if(plugin_data->data[f_voice]->adsr_noise_on)
+            if(f_wayv_voice->adsr_noise_on)
             {
-                v_adsr_retrigger(&plugin_data->data[f_voice]->adsr_noise);
+                v_adsr_retrigger(&f_wayv_voice->adsr_noise);
                 float f_attack = *(plugin_data->noise_attack) * .01f;
                 f_attack = (f_attack) * (f_attack);
                 float f_decay = *(plugin_data->noise_decay) * .01f;
@@ -869,22 +860,21 @@ static void v_wayv_process_midi_event(
                 float f_sustain = (*plugin_data->noise_sustain);
                 float f_release = *(plugin_data->noise_release) * .01f;
                 f_release = (f_release) * (f_release);
-                v_adsr_set_adsr_db(&plugin_data->data[f_voice]->adsr_noise,
+                v_adsr_set_adsr_db(&f_wayv_voice->adsr_noise,
                         f_attack, f_decay, f_sustain, f_release);
                 v_adsr_set_delay_time(
-                        &plugin_data->data[f_voice]->adsr_noise,
+                        &f_wayv_voice->adsr_noise,
                         (*plugin_data->noise_delay) * 0.01f);
                 v_adsr_set_hold_time(
-                        &plugin_data->data[f_voice]->adsr_noise,
+                        &f_wayv_voice->adsr_noise,
                         (*plugin_data->noise_hold) * 0.01f);
             }
 
-            plugin_data->data[f_voice]->adsr_lfo_on =
-                    (int)*plugin_data->lfo_adsr_on;
+            f_wayv_voice->adsr_lfo_on = (int)*plugin_data->lfo_adsr_on;
 
-            if(plugin_data->data[f_voice]->adsr_lfo_on)
+            if(f_wayv_voice->adsr_lfo_on)
             {
-                v_adsr_retrigger(&plugin_data->data[f_voice]->adsr_lfo);
+                v_adsr_retrigger(&f_wayv_voice->adsr_lfo);
                 float f_attack = *(plugin_data->lfo_attack) * .01f;
                 f_attack = (f_attack) * (f_attack);
                 float f_decay = *(plugin_data->lfo_decay) * .01f;
@@ -892,17 +882,17 @@ static void v_wayv_process_midi_event(
                 float f_sustain = (*plugin_data->lfo_sustain) * 0.01f;
                 float f_release = *(plugin_data->lfo_release) * .01f;
                 f_release = (f_release) * (f_release);
-                v_adsr_set_adsr(&plugin_data->data[f_voice]->adsr_lfo,
+                v_adsr_set_adsr(&f_wayv_voice->adsr_lfo,
                         f_attack, f_decay, f_sustain, f_release);
                 v_adsr_set_delay_time(
-                        &plugin_data->data[f_voice]->adsr_lfo,
+                        &f_wayv_voice->adsr_lfo,
                         (*plugin_data->lfo_delay) * 0.01f);
                 v_adsr_set_hold_time(
-                        &plugin_data->data[f_voice]->adsr_lfo,
+                        &f_wayv_voice->adsr_lfo,
                         (*plugin_data->lfo_hold) * 0.01f);
             }
 
-            v_adsr_retrigger(&plugin_data->data[f_voice]->adsr_main);
+            v_adsr_retrigger(&f_wayv_voice->adsr_main);
 
             float f_attack = *(plugin_data->attack_main) * .01f;
             f_attack = (f_attack) * (f_attack);
@@ -911,20 +901,19 @@ static void v_wayv_process_midi_event(
             float f_release = *(plugin_data->release_main) * .01f;
             f_release = (f_release) * (f_release);
 
-            v_adsr_set_adsr_db(&plugin_data->data[f_voice]->adsr_main,
+            v_adsr_set_adsr_db(&f_wayv_voice->adsr_main,
                 (f_attack), (f_decay), *(plugin_data->sustain_main),
                     (f_release));
 
-            v_adsr_set_hold_time(&plugin_data->data[f_voice]->adsr_main,
+            v_adsr_set_hold_time(&f_wayv_voice->adsr_main,
                     (*plugin_data->hold_main) * 0.01f);
 
-            plugin_data->data[f_voice]->noise_amp =
+            f_wayv_voice->noise_amp =
                 f_db_to_linear(*(plugin_data->noise_amp));
 
             /*Set the last_note property, so the next note can glide from
              * it if glide is turned on*/
-            plugin_data->sv_last_note =
-                    (plugin_data->data[f_voice]->note_f);
+            plugin_data->sv_last_note = f_wayv_voice->note_f;
 
             register int i_dst, i_fx_grps, i_src, i_ctrl;
 
@@ -934,7 +923,7 @@ static void v_wayv_process_midi_event(
             {
                 int f_pfx_combobox_index =
                     (int)(*(plugin_data->fx_combobox[0][(i_dst)]));
-                plugin_data->data[f_voice]->fx_func_ptr[(i_dst)] =
+                f_wayv_voice->fx_func_ptr[(i_dst)] =
                     g_mf3_get_function_pointer(f_pfx_combobox_index);
 
                 if(f_pfx_combobox_index != 0)
@@ -975,7 +964,7 @@ static void v_wayv_process_midi_event(
                 }
             }
             //Get the noise function pointer
-            plugin_data->data[f_voice]->noise_func_ptr =
+            f_wayv_voice->noise_func_ptr =
                     fp_get_noise_func_ptr((int)(*(plugin_data->noise_type)));
 
             f_i = 0;
@@ -985,16 +974,16 @@ static void v_wayv_process_midi_event(
                 int f_i2 = 0;
                 while(f_i2 < WAYV_OSC_COUNT)
                 {
-                    plugin_data->data[f_voice]->osc_macro_amp[f_i][f_i2] =
+                    f_wayv_voice->osc_macro_amp[f_i][f_i2] =
                             (*plugin_data->amp_macro_values[f_i][f_i2]);
                     ++f_i2;
                 }
                 ++f_i;
             }
 
-            v_adsr_retrigger(&plugin_data->data[f_voice]->adsr_amp);
-            v_adsr_retrigger(&plugin_data->data[f_voice]->adsr_filter);
-            v_lfs_sync(&plugin_data->data[f_voice]->lfo1,
+            v_adsr_retrigger(&f_wayv_voice->adsr_amp);
+            v_adsr_retrigger(&f_wayv_voice->adsr_filter);
+            v_lfs_sync(&f_wayv_voice->lfo1,
                        *plugin_data->lfo_phase * 0.01f,
                        *plugin_data->lfo_type);
 
@@ -1005,15 +994,15 @@ static void v_wayv_process_midi_event(
             float f_release_a = (*(plugin_data->pfx_release) * .01);
             f_release_a *= f_release_a;
 
-            v_adsr_set_adsr_db(&plugin_data->data[f_voice]->adsr_amp,
+            v_adsr_set_adsr_db(&f_wayv_voice->adsr_amp,
                     f_attack_a, f_decay_a, (*(plugin_data->pfx_sustain)),
                     f_release_a);
 
             v_adsr_set_delay_time(
-                &plugin_data->data[f_voice]->adsr_amp,
+                &f_wayv_voice->adsr_amp,
                 (*(plugin_data->pfx_delay) * .01));
             v_adsr_set_hold_time(
-                &plugin_data->data[f_voice]->adsr_amp,
+                &f_wayv_voice->adsr_amp,
                 (*(plugin_data->pfx_hold) * .01));
 
             float f_attack_f = (*(plugin_data->pfx_attack_f) * .01);
@@ -1023,39 +1012,36 @@ static void v_wayv_process_midi_event(
             float f_release_f = (*(plugin_data->pfx_release_f) * .01);
             f_release_f *= f_release_f;
 
-            v_adsr_set_adsr(&plugin_data->data[f_voice]->adsr_filter,
+            v_adsr_set_adsr(&f_wayv_voice->adsr_filter,
                     f_attack_f, f_decay_f,
                     (*(plugin_data->pfx_sustain_f) * .01), f_release_f);
 
             v_adsr_set_delay_time(
-                &plugin_data->data[f_voice]->adsr_filter,
+                &f_wayv_voice->adsr_filter,
                 (*(plugin_data->pfx_delay_f) * .01));
             v_adsr_set_hold_time(
-                &plugin_data->data[f_voice]->adsr_filter,
+                &f_wayv_voice->adsr_filter,
                 (*(plugin_data->pfx_hold_f) * .01));
 
             /*Retrigger the pitch envelope*/
-            v_rmp_retrigger_curve(&plugin_data->data[f_voice]->ramp_env,
+            v_rmp_retrigger_curve(&f_wayv_voice->ramp_env,
                     (*(plugin_data->pitch_env_time) * .01), 1.0f,
                     (*plugin_data->ramp_curve) * 0.01f);
 
-            plugin_data->data[f_voice]->noise_amp =
-                    f_db_to_linear(*(plugin_data->noise_amp));
+            f_wayv_voice->noise_amp = f_db_to_linear(*(plugin_data->noise_amp));
 
-            plugin_data->data[f_voice]->adsr_prefx =
-                    (int)*plugin_data->adsr_prefx;
+            f_wayv_voice->adsr_prefx = (int)*plugin_data->adsr_prefx;
 
-            plugin_data->data[f_voice]->perc_env_on =
-                    (int)(*plugin_data->perc_env_on);
+            f_wayv_voice->perc_env_on = (int)(*plugin_data->perc_env_on);
 
-            if(plugin_data->data[f_voice]->perc_env_on)
+            if(f_wayv_voice->perc_env_on)
             {
-                v_pnv_set(&plugin_data->data[f_voice]->perc_env,
+                v_pnv_set(&f_wayv_voice->perc_env,
                         (*plugin_data->perc_env_time1) * 0.001f,
                         (*plugin_data->perc_env_pitch1),
                         (*plugin_data->perc_env_time2) * 0.001f,
                         (*plugin_data->perc_env_pitch2),
-                        plugin_data->data[f_voice]->note_f);
+                        f_wayv_voice->note_f);
             }
         }
         /*0 velocity, the same as note-off*/
