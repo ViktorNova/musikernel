@@ -15,6 +15,8 @@ GNU General Public License for more details.
 import os
 import sys
 
+python_version = "".join(str(x) for x in sys.version_info[:2])
+
 orig_wd = os.path.dirname(os.path.abspath(__file__))
 
 os.chdir(orig_wd)
@@ -119,7 +121,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/presets/RAYV.mkp
 /usr/lib/{0}/presets/WAYV.mkp
 /usr/lib/{0}/pydaw/python/libpydaw/__init__.py
-/usr/lib/{0}/pydaw/python/libpydaw/liblo.cpython-33m.so
+/usr/lib/{0}/pydaw/python/libpydaw/liblo.cpython-{4}m.so
 /usr/lib/{0}/pydaw/python/libpydaw/libportaudio.so
 /usr/lib/{0}/pydaw/python/libpydaw/midicomp
 /usr/lib/{0}/pydaw/python/libpydaw/portaudio.py
@@ -269,7 +271,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc
 
 """.format(global_pydaw_version_string, global_version_fedora,
-    global_tarball_url, f_native)
+    global_tarball_url, f_native, python_version)
 
 f_spec_file = open(global_spec_file, "w")
 f_spec_file.write(f_spec_template)
