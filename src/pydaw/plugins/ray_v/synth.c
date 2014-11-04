@@ -35,7 +35,7 @@ static void v_run_rayv(
     PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
     t_pydaw_seq_event *, int);
 
-static void v_run_rayv_voice(t_rayv *p, t_voc_single_voice a_poly_voice,
+static void v_run_rayv_voice(t_rayv *p, t_voc_single_voice * a_poly_voice,
         t_rayv_poly_voice *d, PYFX_Data *out0, PYFX_Data *out1, int a_i);
 
 PYFX_Descriptor *rayv_PYFX_descriptor(int index);
@@ -611,7 +611,7 @@ static void v_run_rayv(
             if((plugin_data->data[f_i2]->adsr_amp.stage) != ADSR_STAGE_OFF)
             {
                 v_run_rayv_voice(plugin_data,
-                    plugin_data->voices->voices[f_i2],
+                    &plugin_data->voices->voices[f_i2],
                     plugin_data->data[f_i2],
                     plugin_data->output0, plugin_data->output1, f_i);
             }
@@ -629,10 +629,10 @@ static void v_run_rayv(
 }
 
 static void v_run_rayv_voice(t_rayv *plugin_data,
-        t_voc_single_voice a_poly_voice, t_rayv_poly_voice *a_voice,
+        t_voc_single_voice * a_poly_voice, t_rayv_poly_voice *a_voice,
         PYFX_Data *out0, PYFX_Data *out1, int a_i)
 {
-    if((plugin_data->sampleNo) < (a_poly_voice.on))
+    if((plugin_data->sampleNo) < (a_poly_voice->on))
     {
         return;
         //i_voice =  (a_poly_voice.on) - (plugin_data->sampleNo);
@@ -640,10 +640,10 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
 
     register int i_voice = a_i;  //0;
 
-    if ((plugin_data->sampleNo == a_poly_voice.off) &&
+    if ((plugin_data->sampleNo == a_poly_voice->off) &&
        ((a_voice->adsr_amp.stage) < ADSR_STAGE_RELEASE))
     {
-        if(a_poly_voice.n_state == note_state_killed)
+        if(a_poly_voice->n_state == note_state_killed)
         {
             v_rayv_poly_note_off(a_voice, 1);
         }

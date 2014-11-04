@@ -21,16 +21,11 @@ GNU General Public License for more details.
 #define _GNU_SOURCE
 #endif
 
-#include "compiler.h"
-#include "pydaw_files.h"
-#include "../include/pydaw_plugin.h"
 #include <portaudio.h>
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <dlfcn.h>
 #include <unistd.h>
 #include <math.h>
 #include <sys/types.h>
@@ -41,17 +36,11 @@ GNU General Public License for more details.
 #include <dirent.h>
 #include <time.h>
 #include <sys/resource.h>
-#include <libgen.h>
-
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <sys/stat.h>
 #include <errno.h>
 
 #include <lo/lo.h>
 
-#include "../libmodsynth/lib/lmalloc.h"
 //  If you define this, you must also link to cpufreq appropriately with
 //    LDFLAGS+="-lcpufreq"  //or whatever flag
 //  #define PYDAW_CPUFREQ
@@ -62,6 +51,10 @@ GNU General Public License for more details.
 
 #include <linux/sched.h>
 
+#include "compiler.h"
+#include "pydaw_files.h"
+#include "../include/pydaw_plugin.h"
+#include "../libmodsynth/lib/lmalloc.h"
 #include "pydaw.h"
 #include "wavenext.h"
 #include "midi_device.h"

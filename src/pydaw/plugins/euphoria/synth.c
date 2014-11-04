@@ -657,7 +657,9 @@ static void run_sampler_interpolation_none(t_euphoria *__restrict plugin_data, i
 */
 static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
 {
-    if((plugin_data->voices->voices[n].on) > (plugin_data->sampleNo))
+    t_voc_single_voice * f_poly_voice = &plugin_data->voices->voices[n];
+    
+    if((f_poly_voice->on) > (plugin_data->sampleNo))
     {
         return;
     }
@@ -672,7 +674,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
 
     if(f_voice->adsr_amp.stage == ADSR_STAGE_OFF)
     {
-        plugin_data->voices->voices[n].n_state = note_state_off;
+        f_poly_voice->n_state = note_state_off;
         return;
     }
 
@@ -692,10 +694,10 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
             + (f_voice->last_pitch) + ((f_voice->lfo1.output) *
             (*plugin_data->lfo_pitch + (*plugin_data->lfo_pitch_fine * 0.01f)));
 
-    if((plugin_data->voices->voices[n].off == plugin_data->sampleNo) &&
+    if((f_poly_voice->off == plugin_data->sampleNo) &&
         (f_voice->adsr_amp.stage < ADSR_STAGE_RELEASE))
     {
-        if(plugin_data->voices->voices[n].n_state == note_state_killed)
+        if(f_poly_voice->n_state == note_state_killed)
         {
             v_euphoria_poly_note_off(f_voice, 1);
         }
