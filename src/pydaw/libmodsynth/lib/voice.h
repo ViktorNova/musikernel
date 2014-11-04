@@ -49,7 +49,6 @@ typedef struct
     int poly_mode;  //0 = retrigger, 1 = free, 2 = mono, 3 = mono_v2
 }t_voc_voices;
 
-t_voc_single_voice g_voc_get_single_voice(int);
 t_voc_voices * g_voc_get_voices(int, int);
 
 #ifdef	__cplusplus
@@ -57,37 +56,33 @@ t_voc_voices * g_voc_get_voices(int, int);
 #endif
 
 
-t_voc_single_voice g_voc_get_single_voice(int a_voice_number)
+void g_voc_single_init(t_voc_single_voice * f_result, int a_voice_number)
 {
-    t_voc_single_voice * f_result =
-            (t_voc_single_voice*)malloc(sizeof(t_voc_single_voice));
-
     f_result->voice_number = a_voice_number;
     f_result->note = -1;
     f_result->n_state = note_state_off;
     f_result->on = -1;
     f_result->off = -1;
-    return *f_result;
 }
 
 t_voc_voices * g_voc_get_voices(int a_count, int a_thresh)
 {
     assert(a_thresh < a_count);
 
-    t_voc_voices * f_result = (t_voc_voices*)malloc(sizeof(t_voc_voices));
+    t_voc_voices * f_result;
+    hpalloc((void**)&f_result, sizeof(t_voc_voices));
 
     f_result->count = a_count;
     f_result->thresh = a_thresh;
     f_result->poly_mode = 0;
 
-    f_result->voices =
-            (t_voc_single_voice*)malloc(sizeof(t_voc_single_voice) * a_count);
+    hpalloc((void**)&f_result->voices, sizeof(t_voc_single_voice) * a_count);
 
     register int f_i = 0;
 
     while(f_i < a_count)
     {
-        f_result->voices[f_i] = g_voc_get_single_voice(f_i);
+        g_voc_single_init(&f_result->voices[f_i], f_i);
         ++f_i;
     }
 
