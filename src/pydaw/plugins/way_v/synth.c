@@ -1250,7 +1250,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
         t_voc_single_voice * a_poly_voice, t_wayv_poly_voice *a_voice,
         PYFX_Data *out0, PYFX_Data *out1, int a_i, int a_voice_num)
 {
-    register int i_voice = a_i;
+    int i_voice = a_i;
 
     if(plugin_data->sampleNo < a_poly_voice->on)
     {
@@ -1274,16 +1274,15 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
 
     f_rmp_run_ramp(&a_voice->glide_env);
 
-    v_adsr_run_db(&plugin_data->data[a_voice_num]->adsr_amp);
+    v_adsr_run_db(&a_voice->adsr_amp);
 
-    v_adsr_run(&plugin_data->data[a_voice_num]->adsr_filter);
+    v_adsr_run(&a_voice->adsr_filter);
 
-    f_rmp_run_ramp_curve(&plugin_data->data[a_voice_num]->ramp_env);
+    f_rmp_run_ramp_curve(&a_voice->ramp_env);
 
     //Set and run the LFO
-    v_lfs_set(&plugin_data->data[a_voice_num]->lfo1,
-            (*(plugin_data->lfo_freq)) * .01);
-    v_lfs_run(&plugin_data->data[a_voice_num]->lfo1);
+    v_lfs_set(&a_voice->lfo1, (*(plugin_data->lfo_freq)) * .01);
+    v_lfs_run(&a_voice->lfo1);
 
     a_voice->lfo_amount_output =
             (a_voice->lfo1.output) * ((*plugin_data->lfo_amount) * 0.01f);
