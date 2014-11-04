@@ -55,14 +55,37 @@ typedef struct
 
 typedef struct
 {
+    t_adsr adsr_main;
+    /*This corresponds to the current sample being processed on this voice.
+     * += this to the output buffer when finished.*/
+    float current_sample;
+    t_ramp_env glide_env;
+    t_adsr adsr_amp;
+    t_adsr adsr_filter;
+    t_ramp_env ramp_env;
+
+    int adsr_lfo_on;
+    t_lfs_lfo lfo1;
+    float lfo_amount_output, lfo_amp_output, lfo_pitch_output;
+    t_adsr adsr_lfo;
+    fp_noise_func_ptr noise_func_ptr;
+
     float note_f;
     int note;
 
     t_smoother_linear glide_smoother;
-    t_ramp_env glide_env;
+
+    //base pitch for all oscillators, to avoid redundant calculations
+    float base_pitch;
+    float target_pitch;
+    //For simplicity, this is used whether glide is turned on or not
+    float last_pitch;
 
     int perc_env_on;
     t_pnv_perc_env perc_env;
+
+    float fm_osc_values[WAYV_OSC_COUNT][WAYV_OSC_COUNT];
+    float fm_last[WAYV_OSC_COUNT];
 
     float osc_linamp[WAYV_OSC_COUNT];
     int osc_audible[WAYV_OSC_COUNT];
@@ -70,51 +93,29 @@ typedef struct
     float osc_uni_spread[WAYV_OSC_COUNT];
     float osc_fm[WAYV_OSC_COUNT][WAYV_OSC_COUNT];
     float osc_macro_amp[2][WAYV_OSC_COUNT];
-    float fm_osc_values[WAYV_OSC_COUNT][WAYV_OSC_COUNT];
-    float fm_last[WAYV_OSC_COUNT];
 
     t_osc_wav_unison osc_wavtable[WAYV_OSC_COUNT];
+
+    t_adsr adsr_amp_osc[WAYV_OSC_COUNT];
+    int adsr_amp_on[WAYV_OSC_COUNT];
 
     float noise_amp;
     float noise_linamp;
     t_white_noise white_noise1;
     float noise_sample;
+    t_adsr adsr_noise;
+    int adsr_noise_on;
+    int noise_prefx;
 
     int adsr_prefx;
-    t_adsr adsr_main;
-
-    t_adsr adsr_amp_osc[WAYV_OSC_COUNT];
-    int adsr_amp_on[WAYV_OSC_COUNT];
-
-    //For simplicity, this is used whether glide is turned on or not
-    float last_pitch;
-    //base pitch for all oscillators, to avoid redundant calculations
-    float base_pitch;
-    float target_pitch;
-    /*This corresponds to the current sample being processed on this voice.
-     * += this to the output buffer when finished.*/
-    float current_sample;
 
     float velocity_track;
     float keyboard_track;
 
-    fp_noise_func_ptr noise_func_ptr;
-    t_lfs_lfo lfo1;
-    float lfo_amount_output, lfo_amp_output, lfo_pitch_output;
-    t_adsr adsr_filter;
-    t_adsr adsr_amp;
-    t_adsr adsr_noise;
-    t_adsr adsr_lfo;
-    int adsr_noise_on;
-    int noise_prefx;
-    int adsr_lfo_on;
-    t_ramp_env ramp_env;
     t_mf3_multi multieffect[WAYV_MODULAR_POLYFX_COUNT];
     fp_mf3_run fx_func_ptr[WAYV_MODULAR_POLYFX_COUNT];
     float modulex_current_sample[2];
     float * modulator_outputs[WAYV_MODULATOR_COUNT];
-
-    float filter_output;
 
     float amp;
     float master_vol_lin;
@@ -202,8 +203,6 @@ t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono)
 
     g_rmp_init(&f_voice->glide_env, a_sr);
     g_rmp_init(&f_voice->ramp_env, a_sr);
-
-    f_voice->filter_output = 0.0f;
 
     g_lfs_init(&f_voice->lfo1, a_sr);
 

@@ -1256,6 +1256,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
         }
     }
 
+    v_adsr_run_db(&a_voice->adsr_main);
     a_voice->current_sample = 0.0f;
 
     f_rmp_run_ramp(&a_voice->glide_env);
@@ -1438,7 +1439,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
         }
     }
 
-    v_adsr_run_db(&a_voice->adsr_main);
+    prefetch(&a_voice->modulex_current_sample, 1);
 
     if(a_voice->adsr_prefx)
     {
