@@ -34,7 +34,7 @@ static void v_run_wayv(
     t_pydaw_seq_event *, int);
 
 static void v_run_wayv_voice(
-        t_wayv *, t_voc_single_voice, t_wayv_poly_voice *,
+        t_wayv *, t_voc_single_voice*, t_wayv_poly_voice *,
         PYFX_Data *, PYFX_Data *, int, int );
 
 PYFX_Descriptor *wayv_PYFX_descriptor(int index);
@@ -1105,13 +1105,9 @@ static void v_run_wayv(
         t_pydaw_seq_event *atm_events, int atm_event_count,
         t_pydaw_seq_event *ext_events, int ext_event_count)
 {
-    t_wayv *plugin_data = (t_wayv *) instance;
-
-    int i_run_poly_voice = 0;
+    t_wayv *plugin_data = (t_wayv*) instance;
     plugin_data->midi_event_count = 0;
-
     int midi_event_pos = 0;
-
     int f_poly_mode = (int)(*plugin_data->mono_mode);
 
     if(unlikely(f_poly_mode == 2 && plugin_data->voices->poly_mode != 2))
@@ -1149,20 +1145,21 @@ static void v_run_wayv(
         ++f_i;
     }
 
-    /*Clear the output buffer*/
-    register int i_iterator = 0;
+    int i_iterator = 0;
 
-    while((i_iterator) < sample_count)
+    while(i_iterator < sample_count)
     {
         while(midi_event_pos < plugin_data->midi_event_count &&
                 plugin_data->midi_event_ticks[midi_event_pos] == i_iterator)
         {
-            if(plugin_data->midi_event_types[midi_event_pos] == PYDAW_EVENT_PITCHBEND)
+            if(plugin_data->midi_event_types[midi_event_pos] ==
+                PYDAW_EVENT_PITCHBEND)
             {
                 plugin_data->sv_pitch_bend_value =
                         plugin_data->midi_event_values[midi_event_pos];
             }
-            else if(plugin_data->midi_event_types[midi_event_pos] == PYDAW_EVENT_CONTROLLER)
+            else if(plugin_data->midi_event_types[midi_event_pos] ==
+                PYDAW_EVENT_CONTROLLER)
             {
                 v_cc_map_translate(
                     &plugin_data->cc_map, plugin_data->descriptor,
@@ -1223,29 +1220,23 @@ static void v_run_wayv(
         v_sml_run(&plugin_data->mono_modules->fm_macro_smoother[1],
                 (*plugin_data->fm_macro[1] * 0.01f));
 
-        i_run_poly_voice = 0;
-        while ((i_run_poly_voice) < WAYV_POLYPHONY)
+        for(f_i = 0; f_i < WAYV_POLYPHONY; ++f_i)
         {
-            //if (data[voice].state != inactive)
-            if(plugin_data->data[(i_run_poly_voice)]->adsr_main.stage
-                != ADSR_STAGE_OFF)
+            if(plugin_data->data[f_i]->adsr_main.stage != ADSR_STAGE_OFF)
             {
                 v_run_wayv_voice(plugin_data,
-                        plugin_data->voices->voices[(i_run_poly_voice)],
-                        plugin_data->data[(i_run_poly_voice)],
+                        &plugin_data->voices->voices[f_i],
+                        plugin_data->data[f_i],
                         plugin_data->output0,
                         plugin_data->output1,
                         i_iterator,
-                        i_run_poly_voice
+                        f_i
                         );
             }
             else
             {
-                plugin_data->voices->voices[(i_run_poly_voice)].
-                        n_state = note_state_off;
+                plugin_data->voices->voices[f_i].n_state = note_state_off;
             }
-
-            ++i_run_poly_voice;
         }
 
         ++plugin_data->sampleNo;
@@ -1256,20 +1247,20 @@ static void v_run_wayv(
 }
 
 static void v_run_wayv_voice(t_wayv *plugin_data,
-        t_voc_single_voice a_poly_voice, t_wayv_poly_voice *a_voice,
+        t_voc_single_voice * a_poly_voice, t_wayv_poly_voice *a_voice,
         PYFX_Data *out0, PYFX_Data *out1, int a_i, int a_voice_num)
 {
     register int i_voice = a_i;
 
-    if((plugin_data->sampleNo) < (a_poly_voice.on))
+    if(plugin_data->sampleNo < a_poly_voice->on)
     {
         return;
     }
 
-    if (((plugin_data->sampleNo) == a_poly_voice.off) &&
-            ((a_voice->adsr_main.stage) < ADSR_STAGE_RELEASE))
+    if (((plugin_data->sampleNo) == a_poly_voice->off) &&
+            (a_voice->adsr_main.stage < ADSR_STAGE_RELEASE))
     {
-        if(a_poly_voice.n_state == note_state_killed)
+        if(a_poly_voice->n_state == note_state_killed)
         {
             v_wayv_poly_note_off(a_voice, 1);
         }
