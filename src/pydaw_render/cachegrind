@@ -1,0 +1,11 @@
+PYDAW_VERSION=$(cat ../major-version.txt)
+BIN=$PYDAW_VERSION"_render"
+PROJECT=$HOME/$PYDAW_VERSION/default-project
+
+make clean && \
+make CFLAGS+=" -g " release || \
+exit $?
+
+valgrind --tool=cachegrind \
+./$BIN $PROJECT "test.wav" 0 0 3 3 44100 512 1 0 --no-file
+
