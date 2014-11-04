@@ -17,5 +17,19 @@ GNU General Public License for more details.
 #define likely(x)   __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
 
+#define prefetch __builtin_prefetch
+#define PREFETCH_STRIDE 64
+
+inline void prefetch_range(void *addr, size_t len)
+{
+    char *cp;
+    char *end = addr + len;
+
+    for(cp = addr; cp < end; cp += PREFETCH_STRIDE)
+    {
+        prefetch(cp);
+    }
+}
+
 #endif	/* MK_COMPILER_H */
 
