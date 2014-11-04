@@ -725,7 +725,8 @@ class pydaw_project:
             a_audio_item.uid = self.timestretch_cache[f_key]
             return None
         else:
-            f_uid = pydaw_gen_uid()
+            f_wavs_dict = self.get_wavs_dict()
+            f_uid = f_wavs_dict.gen_file_name_uid()
             f_dest_path = "{}/{}.wav".format(self.timestretch_folder, f_uid)
 
             f_cmd = None
