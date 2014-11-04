@@ -6,9 +6,10 @@ make clean && \
 make CFLAGS+=" -g " release || \
 exit $?
 
+rm cachegrind.out*
+
 valgrind --tool=cachegrind \
 ./$BIN $PROJECT "test.wav" 0 0 3 3 44100 512 1 0 --no-file
 
-echo
-echo "Now run cg_annotate cachegrind.out* [source file name] to view"
+kcachegrind cachegrind.out*
 
