@@ -2030,7 +2030,7 @@ class pydaw_preset_manager_widget:
         self.presets_delimited[f_preset_name] = f_result_values
 
         f_presets = "\n".join("|".join([x] + self.presets_delimited[x])
-            for x in sorted(self.presets_delimited))
+            for x in sorted(self.presets_delimited, key=lambda s: s.lower()))
         f_result = "{}\n{}".format(self.plugin_name, f_presets)
         pydaw_util.pydaw_write_file_text(self.preset_path, f_result)
         self.load_presets()
