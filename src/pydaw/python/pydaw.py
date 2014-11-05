@@ -82,15 +82,16 @@ def pydaw_print_generic_exception(a_ex):
 def global_get_audio_file_from_clipboard():
     f_clipboard = QtGui.QApplication.clipboard()
     f_path = f_clipboard.text()
-    if f_path is None:
+    if not f_path:
         QtGui.QMessageBox.warning(
             MAIN_WINDOW, _("Error"), _("No text in the system clipboard"))
     else:
-        f_path = str(f_path)
+        f_path = str(f_path).strip()
         if os.path.isfile(f_path):
+            print(f_path)
             return f_path
         else:
-            f_path = f_path[100:]
+            f_path = f_path[:100]
             QtGui.QMessageBox.warning(
                 MAIN_WINDOW, _("Error"),
                 _("{} is not a valid file").format(f_path))
@@ -4112,9 +4113,10 @@ class audio_items_viewer(QtGui.QGraphicsView):
 
     def on_scene_paste_paths(self):
         f_path = global_get_audio_file_from_clipboard()
-        if f_path is not None:
+        if f_path:
             self.add_items(
-                self.context_menu_pos.x(), self.context_menu_pos.y(), [f_path])
+                self.context_menu_pos.x(), self.context_menu_pos.y(),
+                [f_path])
 
     def scene_selection_changed(self):
         f_selected_items = []
@@ -4147,11 +4149,10 @@ class audio_items_viewer(QtGui.QGraphicsView):
         return False
 
     def sceneDropEvent(self, a_event):
-        if len(AUDIO_ITEMS_TO_DROP) == 0:
-            return
-        f_x = a_event.scenePos().x()
-        f_y = a_event.scenePos().y()
-        self.add_items(f_x, f_y, AUDIO_ITEMS_TO_DROP)
+        if AUDIO_ITEMS_TO_DROP:
+            f_x = a_event.scenePos().x()
+            f_y = a_event.scenePos().y()
+            self.add_items(f_x, f_y, AUDIO_ITEMS_TO_DROP)
 
     def add_items(self, f_x, f_y, a_item_list):
         if self.check_running():

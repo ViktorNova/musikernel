@@ -305,7 +305,7 @@ void v_wav_pool_add_item(t_wav_pool* a_wav_pool, int a_uid, char * a_file_path)
 {
     char f_path[2048];
     sprintf(f_path, "%s%s", a_wav_pool->samples_folder, a_file_path);
-    g_wav_pool_item_init(&a_wav_pool->items[a_wav_pool->count], a_uid, f_path,
+    g_wav_pool_item_init(&a_wav_pool->items[a_uid], a_uid, f_path,
             a_wav_pool->sample_rate);
     ++a_wav_pool->count;
 }
@@ -337,10 +337,15 @@ t_wav_pool_item * g_wav_pool_get_item_by_uid(t_wav_pool* a_wav_pool, int a_uid)
         {
             if(!i_wav_pool_item_load(&a_wav_pool->items[a_uid], 1))
             {
+                printf("Failed to load file\n");
                 return 0;
             }
         }
         return &a_wav_pool->items[a_uid];
+    }
+    else
+    {
+        printf("Couldn't find uid\n");
     }
 
     return 0;
