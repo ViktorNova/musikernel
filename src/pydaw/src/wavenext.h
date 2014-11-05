@@ -59,41 +59,13 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
     {
         case 0: //stop
         {
-            int f_i = 0;
-            t_pytrack * f_track;
-
             if(a_lock)
             {
                 pthread_spin_lock(&musikernel->main_lock);
             }
 
+            musikernel->is_ab_ing = 0;
             musikernel->playback_mode = a_mode;
-
-            f_i = 0;
-
-            t_pydaw_plugin * f_plugin;
-
-            while(f_i < 1)
-            {
-                int f_i2 = 0;
-                f_track = self->track_pool[f_i];
-
-                f_track->period_event_index = 0;
-
-                while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
-                {
-                    f_plugin = f_track->plugins[f_i2];
-                    if(f_plugin)
-                    {
-                        f_plugin->descriptor->on_stop(f_plugin->PYFX_handle);
-                    }
-                    ++f_i2;
-                }
-
-                f_track->item_event_index = 0;
-
-                ++f_i;
-            }
 
             if(a_lock)
             {
