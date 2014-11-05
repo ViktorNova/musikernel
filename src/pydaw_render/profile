@@ -7,9 +7,9 @@ make clean && make gprof && \
 && gprof ./$BIN > profile.txt
 
 if [ -f /usr/bin/gedit ]; then
-	gedit profile.txt
+	gedit profile.txt &
 elif [ -f /usr/bin/kate ]; then
-	kate profile.txt
+	kate profile.txt &
 else
 	echo "Now open profile.txt in your favorite editor."
 fi

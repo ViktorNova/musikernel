@@ -1,3 +1,4 @@
+callgrind.out.*
 cachegrind.out.*
 tags
 *.rpm

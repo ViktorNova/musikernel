@@ -6,10 +6,10 @@ make clean && \
 make CFLAGS+=" -g " release || \
 exit $?
 
-rm cachegrind.out*
+rm callgrind.out*
 
-valgrind --tool=cachegrind \
+valgrind --tool=callgrind \
 ./$BIN $PROJECT "test.wav" 0 0 3 3 44100 512 1 0 --no-file
 
-kcachegrind cachegrind.out* &
+kcachegrind callgrind.out* &
 
