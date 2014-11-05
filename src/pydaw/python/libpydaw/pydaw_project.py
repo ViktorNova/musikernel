@@ -2385,9 +2385,9 @@ class pydaw_note(pydaw_abstract_midi_event):
 
 class pydaw_cc(pydaw_abstract_midi_event):
     def __init__(self, a_start, a_cc_num, a_cc_val):
-        self.start = float(a_start)
+        self.start = round(float(a_start), 6)
         self.cc_num = int(a_cc_num)
-        self.cc_val = float(a_cc_val)
+        self.cc_val = round(float(a_cc_val), 6)
 
     def __eq__(self, other):
         return ((self.start == other.start) and
@@ -2416,8 +2416,8 @@ class pydaw_cc(pydaw_abstract_midi_event):
 
 class pydaw_pitchbend(pydaw_abstract_midi_event):
     def __init__(self, a_start, a_pb_val):
-        self.start = float(a_start)
-        self.pb_val = float(a_pb_val)
+        self.start = round(float(a_start), 6)
+        self.pb_val = round(float(a_pb_val), 6)
 
     def __eq__(self, other):
         #TODO:  get rid of the pb_val comparison?
@@ -3219,7 +3219,7 @@ class pydaw_sample_graph:
             f_start = f_start % 4.0
             if a_is_cc:
                 f_val = pydaw_clip_value(f_point * 127.0, 0.0, 127.0)
-                f_result.append(pydaw_cc(f_start, 0, f_val), f_index)
+                f_result.append((pydaw_cc(f_start, 0, f_val), f_index))
             else:
                 f_val = pydaw_clip_value(f_point, 0.0, 1.0)
                 f_result.append((pydaw_pitchbend(f_start, f_val), f_index))
