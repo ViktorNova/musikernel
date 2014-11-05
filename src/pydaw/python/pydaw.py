@@ -2983,10 +2983,6 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_replace_action.triggered.connect(self.replace_with_path_in_clipboard)
 
         f_properties_menu = f_menu.addMenu(_("Properties"))
-        f_edit_properties_action = f_properties_menu.addAction(
-            _("Edit Properties"))
-        f_edit_properties_action.triggered.connect(self.edit_properties)
-        f_properties_menu.addSeparator()
         f_output_menu = f_properties_menu.addMenu("Track")
         f_output_menu.triggered.connect(self.output_menu_triggered)
 
@@ -3198,7 +3194,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             elif f_index == 2:
                 f_reverse_val = True
             PROJECT.set_vol_for_all_audio_items(
-                self.audio_item.uid, f_vol_slider.value(), f_reverse_val,
+                self.audio_item.uid, get_vol(), f_reverse_val,
                 f_same_vol_checkbox.isChecked(), self.audio_item.vol)
             f_dialog.close()
             global_open_audio_items()
@@ -3207,13 +3203,17 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             f_dialog.close()
 
         def vol_changed(a_val=None):
-            f_vol_label.setText("{}dB".format(f_vol_slider.value()))
+            f_vol_label.setText("{}dB".format(get_vol()))
+
+        def get_vol():
+            return round(f_vol_slider.value() * 0.1, 1)
 
         f_dialog = QtGui.QDialog(MAIN_WINDOW)
+        f_dialog.setWindowTitle(_("Set Volume for all Instance of File"))
         f_layout = QtGui.QGridLayout(f_dialog)
         f_layout.setAlignment(QtCore.Qt.AlignCenter)
         f_vol_slider = QtGui.QSlider(QtCore.Qt.Vertical)
-        f_vol_slider.setRange(-24, 24)
+        f_vol_slider.setRange(-240, 240)
         f_vol_slider.setMinimumHeight(360)
         f_vol_slider.valueChanged.connect(vol_changed)
         f_layout.addWidget(f_vol_slider, 0, 1, QtCore.Qt.AlignCenter)
@@ -3378,15 +3378,10 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         WAVE_EDITOR.set_audio_item(self.audio_item)
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(2)
 
-    def edit_properties(self):
-        AUDIO_SEQ.scene.clearSelection()
-        self.setSelected(True)
-        AUDIO_SEQ_WIDGET.folders_tab_widget.setCurrentIndex(2)
-
     def edit_paif(self):
         AUDIO_SEQ.scene.clearSelection()
         self.setSelected(True)
-        AUDIO_SEQ_WIDGET.folders_tab_widget.setCurrentIndex(3)
+        AUDIO_SEQ_WIDGET.folders_tab_widget.setCurrentIndex(2)
 
     def normalize(self, a_value):
         f_val = self.graph_object.normalize(a_value)
@@ -3394,7 +3389,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
     def volume_dialog(self):
         def on_ok():
-            f_val = f_db_spinbox.value()
+            f_val = round(f_db_spinbox.value(), 1)
             for f_item in AUDIO_SEQ.get_selected():
                 f_item.audio_item.vol = f_val
             PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
@@ -3414,8 +3409,9 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_hlayout = QtGui.QHBoxLayout()
         f_layout.addLayout(f_hlayout)
         f_hlayout.addWidget(QtGui.QLabel("dB"))
-        f_db_spinbox = QtGui.QSpinBox()
+        f_db_spinbox = QtGui.QDoubleSpinBox()
         f_hlayout.addWidget(f_db_spinbox)
+        f_db_spinbox.setDecimals(1)
         f_db_spinbox.setRange(-24, 24)
         f_vols = {x.audio_item.vol for x in AUDIO_SEQ.get_selected()}
         if len(f_vols) == 1:

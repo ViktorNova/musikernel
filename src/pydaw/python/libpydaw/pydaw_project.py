@@ -587,7 +587,7 @@ class pydaw_project:
                     (a_reverse and f_audio_item.reversed) or \
                     (not a_reverse and not f_audio_item.reversed):
                         if not a_same_vol or a_old_vol == f_audio_item.vol:
-                            f_audio_item.vol = int(a_vol)
+                            f_audio_item.vol = float(a_vol)
                             f_changed = True
             if f_changed:
                 self.save_audio_region(f_region_uid, f_audio_region)
