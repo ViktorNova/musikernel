@@ -9337,7 +9337,7 @@ class pydaw_main_window(QtGui.QMainWindow):
         if f_result == QtGui.QMessageBox.Ok:
             PROJECT.show_project_history()
             self.ignore_close_event = False
-            self.close()
+            self.prepare_to_quit()
 
     def on_save(self):
         PROJECT.create_backup()
@@ -10176,6 +10176,33 @@ class pydaw_main_window(QtGui.QMainWindow):
                 if f_plugin_uid in PLUGIN_UI_DICT:
                     PLUGIN_UI_DICT[f_plugin_uid].set_cc_val(f_cc, f_val)
 
+    def prepare_to_quit(self):
+        try:
+            AUDIO_SEQ.prepare_to_quit()
+            PIANO_ROLL_EDITOR.prepare_to_quit()
+            time.sleep(0.5)
+            global_close_all_plugin_windows()
+            if self.osc_server is not None:
+                self.osc_timer.stop()
+            if global_pydaw_with_audio:
+                self.subprocess_timer.stop()
+                if not "--debug" in sys.argv:
+                    close_pydaw_engine()
+            else:
+                PROJECT.flush_history()
+            if self.osc_server is not None:
+                self.osc_server.free()
+            self.ignore_close_event = False
+            f_quit_timer = QtCore.QTimer(self)
+            f_quit_timer.setSingleShot(True)
+            f_quit_timer.timeout.connect(self.close)
+            f_quit_timer.start(1000)
+        except Exception as ex:
+            print("Exception thrown while attempting to exit, "
+                "forcing MusiKernel to exit")
+            print("Exception:  {}".format(ex))
+            exit(999)
+
     def closeEvent(self, event):
         if self.ignore_close_event:
             event.ignore()
@@ -10190,31 +10217,7 @@ class pydaw_main_window(QtGui.QMainWindow):
                 self.setEnabled(True)
                 return
             else:
-                try:
-                    AUDIO_SEQ.prepare_to_quit()
-                    PIANO_ROLL_EDITOR.prepare_to_quit()
-                    time.sleep(0.5)
-                    global_close_all_plugin_windows()
-                    if self.osc_server is not None:
-                        self.osc_timer.stop()
-                    if global_pydaw_with_audio:
-                        self.subprocess_timer.stop()
-                        if not "--debug" in sys.argv:
-                            close_pydaw_engine()
-                    else:
-                        PROJECT.flush_history()
-                    if self.osc_server is not None:
-                        self.osc_server.free()
-                    self.ignore_close_event = False
-                    f_quit_timer = QtCore.QTimer(self)
-                    f_quit_timer.setSingleShot(True)
-                    f_quit_timer.timeout.connect(self.close)
-                    f_quit_timer.start(1000)
-                except Exception as ex:
-                    print("Exception thrown while attempting to exit, "
-                        "forcing MusiKernel to exit")
-                    print("Exception:  {}".format(ex))
-                    exit(999)
+                self.prepare_to_quit()
         else:
             event.accept()
 
