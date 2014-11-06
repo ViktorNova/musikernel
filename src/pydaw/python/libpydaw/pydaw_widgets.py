@@ -1854,6 +1854,9 @@ class pydaw_preset_manager_widget:
             _("Restore Factory Bank..."))
         f_restore_action.triggered.connect(self.on_restore_bank)
         self.more_menu.addSeparator()
+        f_delete_action = self.more_menu.addAction(_("Delete Preset"))
+        f_delete_action.triggered.connect(self.delete_preset)
+        self.more_menu.addSeparator()
         f_copy_action = self.more_menu.addAction(_("Copy Plugin Settings"))
         f_copy_action.triggered.connect(self.on_copy)
         f_paste_action = self.more_menu.addAction(_("Paste Plugin Settings"))
@@ -1875,6 +1878,17 @@ class pydaw_preset_manager_widget:
             self.program_changed)
         self.bank_combobox.currentIndexChanged.connect(
             self.bank_changed)
+
+    def delete_preset(self):
+        f_name = self.program_combobox.currentText()
+        if f_name:
+            f_name = str(f_name)
+        print(f_name)
+        if f_name and f_name in self.presets_delimited:
+            print("Found preset, deleting")
+            self.presets_delimited.pop(f_name)
+            self.program_combobox.clearEditText()
+            self.commit_presets()
 
     def load_banks(self):
         if not os.path.isfile(self.user_factory_presets):
@@ -2059,16 +2073,18 @@ class pydaw_preset_manager_widget:
                     "c:{}:{}".format(k, v.replace("|", ":")))
 
         self.presets_delimited[f_preset_name] = f_result_values
+        self.commit_presets()
+        self.suppress_change = True
+        self.program_combobox.setCurrentIndex(
+            self.program_combobox.findText(f_preset_name))
+        self.suppress_change = False
 
+    def commit_presets(self):
         f_presets = "\n".join("|".join([x] + self.presets_delimited[x])
             for x in sorted(self.presets_delimited, key=lambda s: s.lower()))
         f_result = "{}\n{}".format(self.plugin_name, f_presets)
         pydaw_util.pydaw_write_file_text(self.preset_path, f_result)
         self.load_presets()
-        self.suppress_change = True
-        self.program_combobox.setCurrentIndex(
-            self.program_combobox.findText(f_preset_name))
-        self.suppress_change = False
 
     def program_changed(self, a_val=None):
         if not a_val or self.suppress_change:
