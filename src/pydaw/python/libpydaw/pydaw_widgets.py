@@ -1817,7 +1817,6 @@ class pydaw_preset_manager_widget:
         self.user_factory_presets = "{}/factory.mkp".format(self.bank_dir)
         self.bank_file = "{}/{}-last-bank.txt".format(
             pydaw_util.PRESET_DIR, a_plugin_name)
-        self.load_default_preset_path()
         self.group_box = QtGui.QWidget()
         self.group_box.setObjectName("plugin_groupbox")
         self.layout = QtGui.QHBoxLayout(self.group_box)
@@ -1868,9 +1867,14 @@ class pydaw_preset_manager_widget:
         self.layout.addWidget(self.more_button)
         self.presets_delimited = {}
         self.controls = {}
+        self.suppress_bank_changes = False
+        self.load_default_preset_path()
         self.load_banks()
         self.load_presets()
-        self.program_combobox.currentIndexChanged.connect(self.program_changed)
+        self.program_combobox.currentIndexChanged.connect(
+            self.program_changed)
+        self.bank_combobox.currentIndexChanged.connect(
+            self.bank_changed)
 
     def load_banks(self):
         if not os.path.isfile(self.user_factory_presets):
@@ -1880,10 +1884,17 @@ class pydaw_preset_manager_widget:
         self.bank_combobox.addItems(
             sorted(x.rsplit(".", 1)[0]
                 for x in os.listdir(self.bank_dir) if x.endswith(".mkp")))
+        self.suppress_bank_changes = True
+        self.bank_combobox.setCurrentIndex(
+            self.bank_combobox.findText(self.bank_name))
+        self.suppress_bank_changes = False
 
     def bank_changed(self, a_val=None):
+        if self.suppress_bank_changes:
+            return
         self.preset_path = "{}/{}.mkp".format(
             self.bank_dir, self.bank_combobox.currentText())
+        pydaw_util.pydaw_write_file_text(self.bank_file, self.preset_path)
         self.load_presets()
 
     def load_default_preset_path(self):
@@ -1893,10 +1904,13 @@ class pydaw_preset_manager_widget:
             if os.path.isfile(f_text):
                 print("Setting self.preset_path to {}".format(f_text))
                 self.preset_path = f_text
+                self.bank_name = f_text.rsplit("/", 1)[1].rsplit(".", 1)[0]
+                return
             else:
                 print("{} does not exist".format(f_text))
         else:
             print("{} does not exist".format(self.bank_file))
+        self.bank_name = "factory"
 
     def reload_default_presets(self):
         self.load_default_preset_path()
@@ -1930,24 +1944,41 @@ class pydaw_preset_manager_widget:
         self.on_save_as(True)
 
     def on_save_as(self, a_new=False):
-        f_file = QtGui.QFileDialog.getSaveFileName(
-            parent=self.group_box, caption=_('Save preset bank...'),
-            directory=pydaw_util.global_home,
-            filter=PRESET_FILE_DIALOG_STRING)
-        if not f_file is None and not str(f_file) == "":
-            f_file = str(f_file)
+        def ok_handler():
+            f_name = pydaw_util.pydaw_remove_bad_chars(f_lineedit.text())
+            f_file = "{}/{}".format(self.bank_dir, f_name)
             if not f_file.endswith(".mkp"):
                 f_file += ".mkp"
+            if os.path.exists(f_file):
+                QtGui.QMessageBox.warning(
+                    self.group_box, _("Error"),
+                    _("This bank name already exists"))
+                return
             if a_new:
                 pydaw_util.pydaw_write_file_text(
                     f_file, "\n".join([self.plugin_name]))
             else:
-                os.system('cp -f "{}" "{}"'.format(self.preset_path, f_file))
+                os.system("cp -f '{}' '{}'".format(self.preset_path, f_file))
             self.preset_path = f_file
             pydaw_util.pydaw_write_file_text(self.bank_file, self.preset_path)
-            if a_new:
-                self.program_combobox.setCurrentIndex(0)
-                self.load_presets()
+            self.load_banks()
+            self.program_combobox.setCurrentIndex(
+                self.program_combobox.findText(f_name))
+
+
+        f_dialog = QtGui.QDialog(self.group_box)
+        f_dialog.setWindowTitle(_("Save Bank"))
+        f_groupbox_layout = QtGui.QGridLayout(f_dialog)
+        f_groupbox_layout.addWidget(QtGui.QLabel(_("Name")), 0, 0)
+        f_lineedit = QtGui.QLineEdit()
+        f_groupbox_layout.addWidget(f_lineedit, 0, 1)
+        f_sync_button = QtGui.QPushButton(_("OK"))
+        f_sync_button.pressed.connect(ok_handler)
+        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button.pressed.connect(f_dialog.close)
+        f_groupbox_layout.addWidget(f_cancel_button, 2, 0)
+        f_groupbox_layout.addWidget(f_sync_button, 2, 1)
+        f_dialog.exec_()
 
     def on_open_bank(self):
         f_file = QtGui.QFileDialog.getOpenFileName(
@@ -1962,11 +1993,11 @@ class pydaw_preset_manager_widget:
             self.load_presets()
 
     def on_restore_bank(self):
-        if os.path.isfile(self.bank_file):
-            os.system("rm -f '{}'".format(self.bank_file))
+        os.system("cp -f '{}' '{}'".format(
+            self.factory_preset_path, self.user_factory_presets))
         self.preset_path = self.user_factory_presets
-        os.system("rm -f '{}'".format(self.preset_path))
-        self.program_combobox.setCurrentIndex(0)
+        self.bank_name = "factory"
+        self.load_banks()
         self.load_presets()
 
     def reset_controls(self):
