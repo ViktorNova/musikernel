@@ -3791,8 +3791,8 @@ t_pydaw_audio_items * v_audio_items_load_all(t_pydaw_data * self,
                     f_result->indexes[f_global_index][
                     f_result->index_counts[f_global_index]].item_num =
                         f_new->index;
-                f_result->indexes[f_global_index][
-                    f_result->index_counts[f_global_index]].send_num = f_i2;
+                    f_result->indexes[f_global_index][
+                        f_result->index_counts[f_global_index]].send_num = f_i2;
                     ++f_result->index_counts[f_global_index];
                 }
             }

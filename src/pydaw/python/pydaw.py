@@ -3246,7 +3246,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             f_vol_label = QtGui.QLabel("0dB")
             f_vol_labels.append(f_vol_label)
             f_layout.addWidget(f_vol_label, 2, f_i)
-            f_vol_slider.setValue(self.audio_item.vol)
+            f_vol_slider.setValue(f_vol * 10.0)
 
         f_ok_cancel_layout = QtGui.QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout, 10, 2)
