@@ -87,10 +87,10 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
                 if(musikernel->is_ab_ing)
                 {
                     v_ifh_retrigger(
-                        &wavenext->ab_audio_item->sample_read_head,
+                        &wavenext->ab_audio_item->sample_read_heads[0],
                         wavenext->ab_audio_item->sample_start_offset);
-                    v_adsr_retrigger(&wavenext->ab_audio_item->adsr);
-                    v_svf_reset(&wavenext->ab_audio_item->lp_filter);
+                    v_adsr_retrigger(&wavenext->ab_audio_item->adsrs[0]);
+                    v_svf_reset(&wavenext->ab_audio_item->lp_filters[0]);
                 }
             }
 
@@ -164,7 +164,7 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
 
     clock_t f_start = clock();
 
-    while((self->ab_audio_item->sample_read_head.whole_number) <
+    while((self->ab_audio_item->sample_read_heads[0].whole_number) <
             (self->ab_audio_item->sample_end_offset))
     {
         int f_i = 0;
@@ -284,7 +284,7 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
 
     while(f_i < sample_count)
     {
-        if((self->ab_audio_item->sample_read_head.whole_number) >=
+        if((self->ab_audio_item->sample_read_heads[0].whole_number) >=
             (self->ab_audio_item->sample_end_offset))
         {
             output[0][f_i] = 0.0f;
@@ -292,18 +292,18 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
         }
         else
         {
-            v_adsr_run_db(&self->ab_audio_item->adsr);
-            v_pydaw_audio_item_set_fade_vol(self->ab_audio_item);
+            v_adsr_run_db(&self->ab_audio_item->adsrs[0]);
+            v_pydaw_audio_item_set_fade_vol(self->ab_audio_item, 0);
 
             if(self->ab_wav_item->channels == 1)
             {
                 float f_tmp_sample = f_cubic_interpolate_ptr_ifh(
                 (self->ab_wav_item->samples[0]),
-                (self->ab_audio_item->sample_read_head.whole_number),
-                (self->ab_audio_item->sample_read_head.fraction)) *
-                (self->ab_audio_item->adsr.output) *
+                (self->ab_audio_item->sample_read_heads[0].whole_number),
+                (self->ab_audio_item->sample_read_heads[0].fraction)) *
+                (self->ab_audio_item->adsrs[0].output) *
                 (self->ab_audio_item->vols_linear[0]) *
-                (self->ab_audio_item->fade_vol);
+                (self->ab_audio_item->fade_vols[0]);
 
                 output[0][f_i] = f_tmp_sample;
                 output[1][f_i] = f_tmp_sample;
@@ -312,28 +312,28 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
             {
                 output[0][f_i] = f_cubic_interpolate_ptr_ifh(
                 (self->ab_wav_item->samples[0]),
-                (self->ab_audio_item->sample_read_head.whole_number),
-                (self->ab_audio_item->sample_read_head.fraction)) *
-                (self->ab_audio_item->adsr.output) *
+                (self->ab_audio_item->sample_read_heads[0].whole_number),
+                (self->ab_audio_item->sample_read_heads[0].fraction)) *
+                (self->ab_audio_item->adsrs[0].output) *
                 (self->ab_audio_item->vols_linear[0]) *
-                (self->ab_audio_item->fade_vol);
+                (self->ab_audio_item->fade_vols[0]);
 
                 output[1][f_i] = f_cubic_interpolate_ptr_ifh(
                 (self->ab_wav_item->samples[1]),
-                (self->ab_audio_item->sample_read_head.whole_number),
-                (self->ab_audio_item->sample_read_head.fraction)) *
-                (self->ab_audio_item->adsr.output) *
+                (self->ab_audio_item->sample_read_heads[0].whole_number),
+                (self->ab_audio_item->sample_read_heads[0].fraction)) *
+                (self->ab_audio_item->adsrs[0].output) *
                 (self->ab_audio_item->vols_linear[0]) *
-                (self->ab_audio_item->fade_vol);
+                (self->ab_audio_item->fade_vols[0]);
             }
 
-            v_ifh_run(&self->ab_audio_item->sample_read_head,
+            v_ifh_run(&self->ab_audio_item->sample_read_heads[0],
                     self->ab_audio_item->ratio);
 
             if(musikernel->playback_mode != PYDAW_PLAYBACK_MODE_PLAY &&
-                self->ab_audio_item->adsr.stage < ADSR_STAGE_RELEASE)
+                self->ab_audio_item->adsrs[0].stage < ADSR_STAGE_RELEASE)
             {
-                v_adsr_release(&self->ab_audio_item->adsr);
+                v_adsr_release(&self->ab_audio_item->adsrs[0]);
             }
         }
         ++f_i;

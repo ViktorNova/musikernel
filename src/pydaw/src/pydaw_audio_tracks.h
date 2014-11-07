@@ -60,8 +60,12 @@ typedef struct
     int outputs[EN_AUDIO_ITEM_SEND_COUNT];
     float vols[EN_AUDIO_ITEM_SEND_COUNT];
     float vols_linear[EN_AUDIO_ITEM_SEND_COUNT];
-    t_int_frac_read_head sample_read_head;
-    t_adsr adsr;
+    t_int_frac_read_head sample_read_heads[EN_AUDIO_ITEM_SEND_COUNT];
+    t_adsr adsrs[EN_AUDIO_ITEM_SEND_COUNT];
+    float fade_vols[EN_AUDIO_ITEM_SEND_COUNT];
+    //fade smoothing
+    t_state_variable_filter lp_filters[EN_AUDIO_ITEM_SEND_COUNT];
+
     int index;
 
     float timestretch_amt;
@@ -71,10 +75,8 @@ typedef struct
     int sample_fade_out_start;
     float sample_fade_in_divisor;
     float sample_fade_out_divisor;
-    float fade_vol;
 
     t_pit_ratio pitch_ratio_ptr;
-    t_state_variable_filter lp_filter;  //fade smoothing
 
     float pitch_shift_end;
     float timestretch_amt_end;
@@ -380,24 +382,30 @@ void v_pydaw_audio_item_free(t_pydaw_audio_item* a_audio_item)
 
 t_pydaw_audio_item * g_pydaw_audio_item_get(float a_sr)
 {
+    int f_i;
     t_pydaw_audio_item * f_result;
 
     lmalloc((void**)&f_result, sizeof(t_pydaw_audio_item));
 
     f_result->ratio = 1.0f;
     f_result->uid = -1;
-    g_adsr_init(&f_result->adsr, a_sr);
-    v_adsr_set_adsr_db(&f_result->adsr, 0.003f, 0.1f, 0.0f, 0.2f);
-    v_adsr_retrigger(&f_result->adsr);
-    g_ifh_init(&f_result->sample_read_head);
-
     g_pit_ratio_init(&f_result->pitch_ratio_ptr);
-    g_svf_init(&f_result->lp_filter, a_sr);
-    v_svf_set_cutoff_base(&f_result->lp_filter, f_pit_hz_to_midi_note(7200.0f));
-    v_svf_set_res(&f_result->lp_filter, -15.0f);
-    v_svf_set_cutoff(&f_result->lp_filter);
-    f_result->vols[0] = 0.0f;
-    f_result->vols_linear[0] = 1.0f;
+
+    for(f_i = 0; f_i < EN_AUDIO_ITEM_SEND_COUNT; ++f_i)
+    {
+        g_adsr_init(&f_result->adsrs[f_i], a_sr);
+        v_adsr_set_adsr_db(&f_result->adsrs[f_i], 0.003f, 0.1f, 0.0f, 0.2f);
+        v_adsr_retrigger(&f_result->adsrs[f_i]);
+        f_result->adsrs[f_i].stage = ADSR_STAGE_OFF;
+        g_ifh_init(&f_result->sample_read_heads[f_i]);
+        g_svf_init(&f_result->lp_filters[f_i], a_sr);
+        v_svf_set_cutoff_base(&f_result->lp_filters[f_i],
+            f_pit_hz_to_midi_note(7200.0f));
+        v_svf_set_res(&f_result->lp_filters[f_i], -15.0f);
+        v_svf_set_cutoff(&f_result->lp_filters[f_i]);
+        f_result->vols[f_i] = 0.0f;
+        f_result->vols_linear[f_i] = 1.0f;
+    }
 
     return f_result;
 }
@@ -732,93 +740,95 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
         */
     }
 
-    f_result->adsr.stage = ADSR_STAGE_OFF;
-
     return f_result;
 }
 
-void v_pydaw_audio_item_set_fade_vol(t_pydaw_audio_item *a_audio_item)
+void v_pydaw_audio_item_set_fade_vol(t_pydaw_audio_item *a_audio_item,
+        int a_send_num)
 {
     if(a_audio_item->is_reversed)
     {
-        if(a_audio_item->sample_read_head.whole_number >
+        if(a_audio_item->sample_read_heads[a_send_num].whole_number >
                 a_audio_item->sample_fade_in_end &&
                 a_audio_item->sample_fade_in_divisor != 0.0f)
         {
-            a_audio_item->fade_vol =
-                    ((float)(a_audio_item->sample_read_head.whole_number) -
-                    a_audio_item->sample_fade_in_end)
-                    * a_audio_item->sample_fade_in_divisor;
-            a_audio_item->fade_vol =
-                    ((1.0f - a_audio_item->fade_vol) * a_audio_item->fadein_vol)
-                    - a_audio_item->fadein_vol;
+            a_audio_item->fade_vols[a_send_num] =
+                ((float)(a_audio_item->sample_read_heads[
+                    a_send_num].whole_number) -
+                a_audio_item->sample_fade_in_end)
+                * a_audio_item->sample_fade_in_divisor;
+            a_audio_item->fade_vols[a_send_num] =
+                ((1.0f - a_audio_item->fade_vols[a_send_num])
+                * a_audio_item->fadein_vol)
+                - a_audio_item->fadein_vol;
             //a_audio_item->fade_vol = (a_audio_item->fade_vol * 40.0f) - 40.0f;
-            a_audio_item->fade_vol =
-                    f_db_to_linear_fast(a_audio_item->fade_vol);
+            a_audio_item->fade_vols[a_send_num] =
+                f_db_to_linear_fast(a_audio_item->fade_vols[a_send_num]);
         }
-        else if(a_audio_item->sample_read_head.whole_number <=
+        else if(a_audio_item->sample_read_heads[a_send_num].whole_number <=
                 a_audio_item->sample_fade_out_start &&
                 a_audio_item->sample_fade_out_divisor != 0.0f)
         {
-            a_audio_item->fade_vol =
-                    ((float)(a_audio_item->sample_fade_out_start -
-                    a_audio_item->sample_read_head.whole_number))
-                    * a_audio_item->sample_fade_out_divisor;
-            a_audio_item->fade_vol =
-                ((1.0f - a_audio_item->fade_vol) * a_audio_item->fadeout_vol) -
-                    a_audio_item->fadeout_vol;
+            a_audio_item->fade_vols[a_send_num] =
+                ((float)(a_audio_item->sample_fade_out_start -
+                a_audio_item->sample_read_heads[a_send_num].whole_number))
+                * a_audio_item->sample_fade_out_divisor;
+            a_audio_item->fade_vols[a_send_num] =
+                ((1.0f - a_audio_item->fade_vols[a_send_num])
+                * a_audio_item->fadeout_vol) - a_audio_item->fadeout_vol;
             //a_audio_item->fade_vol =
             //  ((a_audio_item->fade_vol) * 40.0f) - 40.0f;
-            a_audio_item->fade_vol =
-                    f_db_to_linear_fast(a_audio_item->fade_vol);
+            a_audio_item->fade_vols[a_send_num] =
+                f_db_to_linear_fast(a_audio_item->fade_vols[a_send_num]);
         }
         else
         {
-            a_audio_item->fade_vol = 1.0f;
+            a_audio_item->fade_vols[a_send_num] = 1.0f;
         }
     }
     else
     {
-        if(a_audio_item->sample_read_head.whole_number <
+        if(a_audio_item->sample_read_heads[a_send_num].whole_number <
                 a_audio_item->sample_fade_in_end &&
                 a_audio_item->sample_fade_in_divisor != 0.0f)
         {
-            a_audio_item->fade_vol =
-                    ((float)(a_audio_item->sample_fade_in_end -
-                    a_audio_item->sample_read_head.whole_number))
-                    * a_audio_item->sample_fade_in_divisor;
-            a_audio_item->fade_vol =
-                    ((1.0f - a_audio_item->fade_vol) * a_audio_item->fadein_vol)
-                    - a_audio_item->fadein_vol;
+            a_audio_item->fade_vols[a_send_num] =
+                ((float)(a_audio_item->sample_fade_in_end -
+                a_audio_item->sample_read_heads[a_send_num].whole_number))
+                * a_audio_item->sample_fade_in_divisor;
+            a_audio_item->fade_vols[a_send_num] =
+                ((1.0f - a_audio_item->fade_vols[a_send_num])
+                * a_audio_item->fadein_vol) - a_audio_item->fadein_vol;
             //a_audio_item->fade_vol =
             //  ((a_audio_item->fade_vol) * 40.0f) - 40.0f;
-            a_audio_item->fade_vol =
-                    f_db_to_linear_fast(a_audio_item->fade_vol);
-            a_audio_item->fade_vol =
-                    v_svf_run_2_pole_lp(&a_audio_item->lp_filter,
-                    a_audio_item->fade_vol);
+            a_audio_item->fade_vols[a_send_num] =
+                f_db_to_linear_fast(a_audio_item->fade_vols[a_send_num]);
+            a_audio_item->fade_vols[a_send_num] =
+                v_svf_run_2_pole_lp(&a_audio_item->lp_filters[a_send_num],
+                a_audio_item->fade_vols[a_send_num]);
         }
-        else if(a_audio_item->sample_read_head.whole_number >=
+        else if(a_audio_item->sample_read_heads[a_send_num].whole_number >=
                 a_audio_item->sample_fade_out_start &&
                 a_audio_item->sample_fade_out_divisor != 0.0f)
         {
-            a_audio_item->fade_vol =
-                    ((float)(a_audio_item->sample_read_head.whole_number) -
-                    a_audio_item->sample_fade_out_start)
-                    * a_audio_item->sample_fade_out_divisor;
-            a_audio_item->fade_vol =
-                    ((1.0f - a_audio_item->fade_vol) *
-                    a_audio_item->fadeout_vol) - a_audio_item->fadeout_vol;
+            a_audio_item->fade_vols[a_send_num] =
+                ((float)(a_audio_item->sample_read_heads[
+                    a_send_num].whole_number) -
+                a_audio_item->sample_fade_out_start)
+                * a_audio_item->sample_fade_out_divisor;
+            a_audio_item->fade_vols[a_send_num] =
+                ((1.0f - a_audio_item->fade_vols[a_send_num]) *
+                a_audio_item->fadeout_vol) - a_audio_item->fadeout_vol;
             //a_audio_item->fade_vol = (a_audio_item->fade_vol * 40.0f) - 40.0f;
-            a_audio_item->fade_vol =
-                f_db_to_linear_fast(a_audio_item->fade_vol);
-            a_audio_item->fade_vol =
-                    v_svf_run_2_pole_lp(&a_audio_item->lp_filter,
-                    a_audio_item->fade_vol);
+            a_audio_item->fade_vols[a_send_num] =
+                f_db_to_linear_fast(a_audio_item->fade_vols[a_send_num]);
+            a_audio_item->fade_vols[a_send_num] =
+                v_svf_run_2_pole_lp(&a_audio_item->lp_filters[a_send_num],
+                a_audio_item->fade_vols[a_send_num]);
         }
         else
         {
-            a_audio_item->fade_vol = 1.0f;
+            a_audio_item->fade_vols[a_send_num] = 1.0f;
         }
     }
 }
