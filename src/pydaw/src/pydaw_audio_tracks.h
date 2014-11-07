@@ -402,26 +402,21 @@ t_pydaw_audio_items * g_pydaw_audio_items_get(int a_sr)
 
     f_result->sample_rate = a_sr;
 
-    int f_i = 0;
+    int f_i, f_i2;
 
-    while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
+    for(f_i = 0; f_i < PYDAW_MAX_AUDIO_ITEM_COUNT; ++f_i)
     {
         f_result->items[f_i] = 0; //g_pydaw_audio_item_get((float)(a_sr));
-        ++f_i;
     }
 
-    f_i = 0;
-
-    while(f_i < EN_TRACK_COUNT)
+    for(f_i = 0; f_i < EN_TRACK_COUNT; ++f_i)
     {
         f_result->index_counts[f_i] = 0;
-        int f_i2 = 0;
-        while(f_i2 < PYDAW_MAX_AUDIO_ITEM_COUNT)
+
+        for(f_i2 = 0; f_i2 < PYDAW_MAX_AUDIO_ITEM_COUNT; ++f_i2)
         {
             f_result->indexes[f_i][f_i2] = 0;
-            ++f_i2;
         }
-        ++f_i;
     }
     return f_result;
 }
