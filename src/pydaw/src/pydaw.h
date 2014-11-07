@@ -2562,13 +2562,17 @@ void v_pydaw_audio_items_run(t_pydaw_data * self,
 
         int f_i = 0;
         int f_index_pos = 0;
+        int f_send_num = -1;
 
         while(a_is_audio_glue ||
             f_index_pos < f_region->index_counts[a_audio_track_num])
         {
             if(!a_is_audio_glue)
             {
-                f_i = f_region->indexes[a_audio_track_num][f_index_pos];
+                f_i = f_region->indexes[
+                    a_audio_track_num][f_index_pos].item_num;
+                f_send_num = f_region->indexes[
+                    a_audio_track_num][f_index_pos].send_num;
                 ++f_index_pos;
             }
             else
@@ -2608,7 +2612,7 @@ void v_pydaw_audio_items_run(t_pydaw_data * self,
             }
 
             if(a_is_audio_glue ||
-            f_audio_item->audio_track_output == a_audio_track_num)
+            f_audio_item->outputs[f_send_num] == a_audio_track_num)
             {
                 if((f_audio_item->adjusted_start_beat) >=
                         f_adjusted_next_song_pos_beats)
@@ -2680,7 +2684,7 @@ void v_pydaw_audio_items_run(t_pydaw_data * self,
                             (f_audio_item->sample_read_head.whole_number),
                             (f_audio_item->sample_read_head.fraction)) *
                             (f_audio_item->adsr.output) *
-                            (f_audio_item->vol_linear) *
+                            (f_audio_item->vols_linear[f_send_num]) *
                             (f_audio_item->fade_vol);
 
                             float f_tmp_sample1 = f_tmp_sample0;
@@ -2734,7 +2738,7 @@ void v_pydaw_audio_items_run(t_pydaw_data * self,
                             f_audio_item->sample_read_head.whole_number,
                             f_audio_item->sample_read_head.fraction) *
                             f_audio_item->adsr.output *
-                            f_audio_item->vol_linear *
+                            f_audio_item->vols_linear[f_send_num] *
                             f_audio_item->fade_vol;
 
                             float f_tmp_sample1 = f_cubic_interpolate_ptr_ifh(
@@ -2742,7 +2746,8 @@ void v_pydaw_audio_items_run(t_pydaw_data * self,
                             f_audio_item->sample_read_head.whole_number,
                             f_audio_item->sample_read_head.fraction) *
                             f_audio_item->adsr.output *
-                            f_audio_item->vol_linear * f_audio_item->fade_vol;
+                            f_audio_item->vols_linear[f_send_num]
+                            * f_audio_item->fade_vol;
 
                             if(f_paif_region)
                             {
@@ -3722,16 +3727,16 @@ t_pydaw_audio_items * v_audio_items_load_all(t_pydaw_data * self,
             g_pydaw_audio_items_get(musikernel->sample_rate);
     char f_file[1024] = "\0";
     sprintf(f_file, "%s%i", self->region_audio_folder, a_region_uid);
+    int f_i, f_i2;
 
     if(i_pydaw_file_exists(f_file))
     {
         printf("v_audio_items_load_all: loading a_file: \"%s\"\n", f_file);
-        int f_i = 0;
 
         t_2d_char_array * f_current_string = g_get_2d_array_from_file(f_file,
                 PYDAW_LARGE_STRING);
 
-        while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
+        for(f_i = 0; f_i < PYDAW_MAX_AUDIO_ITEM_COUNT; ++f_i)
         {
             t_pydaw_audio_item * f_new =
                     g_audio_item_load_single(musikernel->sample_rate,
@@ -3741,13 +3746,29 @@ t_pydaw_audio_items * v_audio_items_load_all(t_pydaw_data * self,
                 break;
             }
 
-            int f_global_index = f_new->audio_track_output;
+            int f_global_index = f_new->outputs[0];
 
             f_result->indexes[f_global_index][
-                f_result->index_counts[f_global_index]] = f_new->index;
+                f_result->index_counts[f_global_index]].item_num = f_new->index;
+            f_result->indexes[f_global_index][
+                f_result->index_counts[f_global_index]].send_num = 0;
             ++f_result->index_counts[f_global_index];
+
+            for(f_i2 = 1; f_i2 < 3; ++f_i2)
+            {
+                f_global_index = f_new->outputs[f_i2];
+                if(f_global_index > -1)
+                {
+                    f_result->indexes[f_global_index][
+                    f_result->index_counts[f_global_index]].item_num =
+                        f_new->index;
+                f_result->indexes[f_global_index][
+                    f_result->index_counts[f_global_index]].send_num = f_i2;
+                    ++f_result->index_counts[f_global_index];
+                }
+            }
+
             f_result->items[f_new->index] = f_new;
-            ++f_i;
         }
 
         g_free_2d_char_array(f_current_string);

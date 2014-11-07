@@ -34,6 +34,8 @@ GNU General Public License for more details.
 #define PYDAW_AUDIO_ITEM_PADDING_DIV2 32
 #define PYDAW_AUDIO_ITEM_PADDING_DIV2_FLOAT 32.0f
 
+#define EN_AUDIO_ITEM_SEND_COUNT 3
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -55,12 +57,12 @@ typedef struct
     float sample_start_offset_float;
     int sample_end_offset;
     //The audio track whose Modulex instance to write the samples to
-    int audio_track_output;
+    int outputs[EN_AUDIO_ITEM_SEND_COUNT];
+    float vols[EN_AUDIO_ITEM_SEND_COUNT];
+    float vols_linear[EN_AUDIO_ITEM_SEND_COUNT];
     t_int_frac_read_head sample_read_head;
     t_adsr adsr;
     int index;
-    float vol;
-    float vol_linear;
 
     float timestretch_amt;
     float sample_fade_in;
@@ -92,8 +94,14 @@ typedef struct
 
 typedef struct
 {
+    int item_num;
+    int send_num;
+}t_audio_item_index;
+
+typedef struct
+{
     t_pydaw_audio_item * items[PYDAW_MAX_AUDIO_ITEM_COUNT];
-    int indexes[EN_TRACK_COUNT][PYDAW_MAX_AUDIO_ITEM_COUNT];
+    t_audio_item_index indexes[EN_TRACK_COUNT][PYDAW_MAX_AUDIO_ITEM_COUNT];
     int index_counts[EN_TRACK_COUNT];
     int sample_rate;
     int uid;
@@ -388,8 +396,8 @@ t_pydaw_audio_item * g_pydaw_audio_item_get(float a_sr)
     v_svf_set_cutoff_base(&f_result->lp_filter, f_pit_hz_to_midi_note(7200.0f));
     v_svf_set_res(&f_result->lp_filter, -15.0f);
     v_svf_set_cutoff(&f_result->lp_filter);
-    f_result->vol = 0.0f;
-    f_result->vol_linear = 1.0f;
+    f_result->vols[0] = 0.0f;
+    f_result->vols_linear[0] = 1.0f;
 
     return f_result;
 }
@@ -415,7 +423,8 @@ t_pydaw_audio_items * g_pydaw_audio_items_get(int a_sr)
 
         for(f_i2 = 0; f_i2 < PYDAW_MAX_AUDIO_ITEM_COUNT; ++f_i2)
         {
-            f_result->indexes[f_i][f_i2] = 0;
+            f_result->indexes[f_i][f_i2].item_num = 0;
+            f_result->indexes[f_i][f_i2].send_num = 0;
         }
     }
     return f_result;
@@ -525,11 +534,11 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
     f_result->pitch_shift = atof(f_current_string->current_str);
 
     v_iterate_2d_char_array(f_current_string);
-    f_result->audio_track_output = atoi(f_current_string->current_str);
+    f_result->outputs[0] = atoi(f_current_string->current_str);
 
     v_iterate_2d_char_array(f_current_string);
-    f_result->vol = atof(f_current_string->current_str);
-    f_result->vol_linear = f_db_to_linear_fast(f_result->vol);
+    f_result->vols[0] = atof(f_current_string->current_str);
+    f_result->vols_linear[0] = f_db_to_linear_fast(f_result->vols[0]);
 
     v_iterate_2d_char_array(f_current_string);
     f_result->timestretch_amt = atof(f_current_string->current_str);
@@ -566,6 +575,20 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
 
     v_iterate_2d_char_array(f_current_string);
     f_result->paif_automation_uid = atoi(f_current_string->current_str);
+
+    v_iterate_2d_char_array(f_current_string);
+    f_result->outputs[1] = atoi(f_current_string->current_str);
+
+    v_iterate_2d_char_array(f_current_string);
+    f_result->vols[1] = atof(f_current_string->current_str);
+    f_result->vols_linear[1] = f_db_to_linear_fast(f_result->vols[1]);
+
+    v_iterate_2d_char_array(f_current_string);
+    f_result->outputs[2] = atoi(f_current_string->current_str);
+
+    v_iterate_2d_char_array(f_current_string);
+    f_result->vols[2] = atof(f_current_string->current_str);
+    f_result->vols_linear[2] = f_db_to_linear_fast(f_result->vols[2]);
 
     if(f_result->sample_start_offset < PYDAW_AUDIO_ITEM_PADDING_DIV2)
     {

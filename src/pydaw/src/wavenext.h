@@ -302,7 +302,7 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
                 (self->ab_audio_item->sample_read_head.whole_number),
                 (self->ab_audio_item->sample_read_head.fraction)) *
                 (self->ab_audio_item->adsr.output) *
-                (self->ab_audio_item->vol_linear) *
+                (self->ab_audio_item->vols_linear[0]) *
                 (self->ab_audio_item->fade_vol);
 
                 output[0][f_i] = f_tmp_sample;
@@ -315,7 +315,7 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
                 (self->ab_audio_item->sample_read_head.whole_number),
                 (self->ab_audio_item->sample_read_head.fraction)) *
                 (self->ab_audio_item->adsr.output) *
-                (self->ab_audio_item->vol_linear) *
+                (self->ab_audio_item->vols_linear[0]) *
                 (self->ab_audio_item->fade_vol);
 
                 output[1][f_i] = f_cubic_interpolate_ptr_ifh(
@@ -323,7 +323,7 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
                 (self->ab_audio_item->sample_read_head.whole_number),
                 (self->ab_audio_item->sample_read_head.fraction)) *
                 (self->ab_audio_item->adsr.output) *
-                (self->ab_audio_item->vol_linear) *
+                (self->ab_audio_item->vols_linear[0]) *
                 (self->ab_audio_item->fade_vol);
             }
 
