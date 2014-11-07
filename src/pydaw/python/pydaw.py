@@ -3041,6 +3041,8 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_time_pitch_action.triggered.connect(self.time_pitch_dialog)
         f_fade_vol_action = f_properties_menu.addAction(_("Fade Volume..."))
         f_fade_vol_action.triggered.connect(self.fade_vol_dialog)
+        f_sends_action = f_properties_menu.addAction(_("Sends..."))
+        f_sends_action.triggered.connect(self.sends_dialog)
 
         f_paif_menu = f_menu.addMenu(_("Per-Item FX"))
         f_edit_paif_action = f_paif_menu.addAction(_("Edit Per-Item Effects"))
@@ -3184,6 +3186,77 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
     def set_fades_for_all_instances(self):
         PROJECT.set_fades_for_all_audio_items(self.audio_item)
         global_open_audio_items()
+
+    def sends_dialog(self):
+        def ok_handler():
+            f_list = [x.audio_item for x in AUDIO_SEQ.audio_items
+                if x.isSelected()]
+            for f_item in f_list:
+                f_item.output_track = f_track_cboxes[0].currentIndex()
+                f_item.vol = get_vol(f_track_vols[0].value())
+                f_item.send1 = f_track_cboxes[1].currentIndex() - 1
+                f_item.s1_vol = get_vol(f_track_vols[1].value())
+                f_item.send2 = f_track_cboxes[2].currentIndex() - 1
+                f_item.s2_vol = get_vol(f_track_vols[2].value())
+            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.commit(_("Update sends for audio item(s)"))
+            global_open_audio_items()
+
+        def cancel_handler():
+            f_dialog.close()
+
+        def vol_changed(a_val=None):
+            for f_vol_label, f_vol_slider in zip(f_vol_labels, f_track_vols):
+                f_vol_label.setText(
+                    "{}dB".format(get_vol(f_vol_slider.value())))
+
+        def get_vol(a_val):
+            return round(a_val * 0.1, 1)
+
+        f_dialog = QtGui.QDialog(MAIN_WINDOW)
+        f_dialog.setWindowTitle(_("Set Volume for all Instance of File"))
+        f_layout = QtGui.QGridLayout(f_dialog)
+        f_layout.setAlignment(QtCore.Qt.AlignCenter)
+        f_track_cboxes = []
+        f_track_vols = []
+        f_vol_labels = []
+        f_current_vals = [
+            (self.audio_item.output_track, self.audio_item.vol),
+            (self.audio_item.send1, self.audio_item.s1_vol),
+            (self.audio_item.send2, self.audio_item.s2_vol)]
+        for f_i in range(3):
+            f_out, f_vol = f_current_vals[f_i]
+            f_tracks_combobox = QtGui.QComboBox()
+            f_track_cboxes.append(f_tracks_combobox)
+            if f_i == 0:
+                f_tracks_combobox.addItems(TRACK_NAMES)
+                f_tracks_combobox.setCurrentIndex(f_out)
+            else:
+                f_tracks_combobox.addItems(["None"] + TRACK_NAMES)
+                f_tracks_combobox.setCurrentIndex(f_out + 1)
+            f_tracks_combobox.setMinimumWidth(105)
+            f_layout.addWidget(f_tracks_combobox, 0, f_i)
+            f_vol_slider = QtGui.QSlider(QtCore.Qt.Vertical)
+            f_track_vols.append(f_vol_slider)
+            f_vol_slider.setRange(-240, 240)
+            f_vol_slider.setMinimumHeight(360)
+            f_vol_slider.valueChanged.connect(vol_changed)
+            f_layout.addWidget(f_vol_slider, 1, f_i, QtCore.Qt.AlignCenter)
+            f_vol_label = QtGui.QLabel("0dB")
+            f_vol_labels.append(f_vol_label)
+            f_layout.addWidget(f_vol_label, 2, f_i)
+            f_vol_slider.setValue(self.audio_item.vol)
+
+        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_layout.addLayout(f_ok_cancel_layout, 10, 2)
+        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button.pressed.connect(ok_handler)
+        f_ok_cancel_layout.addWidget(f_ok_button)
+        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button.pressed.connect(cancel_handler)
+        f_ok_cancel_layout.addWidget(f_cancel_button)
+        f_dialog.exec_()
+
 
     def set_vol_for_all_instances(self):
         def ok_handler():
