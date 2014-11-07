@@ -3201,6 +3201,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
             PROJECT.commit(_("Update sends for audio item(s)"))
             global_open_audio_items()
+            f_dialog.close()
 
         def cancel_handler():
             f_dialog.close()
