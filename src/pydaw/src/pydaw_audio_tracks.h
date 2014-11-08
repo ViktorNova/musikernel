@@ -58,6 +58,7 @@ typedef struct
     int sample_end_offset;
     //The audio track whose Modulex instance to write the samples to
     int outputs[EN_AUDIO_ITEM_SEND_COUNT];
+    int sidechain[EN_AUDIO_ITEM_SEND_COUNT];
     float vols[EN_AUDIO_ITEM_SEND_COUNT];
     float vols_linear[EN_AUDIO_ITEM_SEND_COUNT];
     t_int_frac_read_head sample_read_heads[EN_AUDIO_ITEM_SEND_COUNT];
@@ -597,6 +598,15 @@ t_pydaw_audio_item * g_audio_item_load_single(float a_sr,
     v_iterate_2d_char_array(f_current_string);
     f_result->vols[2] = atof(f_current_string->current_str);
     f_result->vols_linear[2] = f_db_to_linear_fast(f_result->vols[2]);
+
+    v_iterate_2d_char_array(f_current_string);
+    f_result->sidechain[0] = atoi(f_current_string->current_str);
+
+    v_iterate_2d_char_array(f_current_string);
+    f_result->sidechain[1] = atoi(f_current_string->current_str);
+
+    v_iterate_2d_char_array(f_current_string);
+    f_result->sidechain[2] = atoi(f_current_string->current_str);
 
     if(f_result->sample_start_offset < PYDAW_AUDIO_ITEM_PADDING_DIV2)
     {

@@ -281,6 +281,7 @@ def int_to_bool(a_int):
     else:
         assert(False)
 
+
 def print_sorted_dict(a_dict):
     """ Mostly intended for printing locals() and globals() """
     for k in sorted(list(a_dict.keys())):

@@ -3194,10 +3194,13 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             for f_item in f_list:
                 f_item.output_track = f_track_cboxes[0].currentIndex()
                 f_item.vol = get_vol(f_track_vols[0].value())
+                f_item.s0_sc = f_sc_checkboxes[0].isChecked()
                 f_item.send1 = f_track_cboxes[1].currentIndex() - 1
                 f_item.s1_vol = get_vol(f_track_vols[1].value())
+                f_item.s1_sc = f_sc_checkboxes[1].isChecked()
                 f_item.send2 = f_track_cboxes[2].currentIndex() - 1
                 f_item.s2_vol = get_vol(f_track_vols[2].value())
+                f_item.s2_sc = f_sc_checkboxes[2].isChecked()
             PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
             PROJECT.commit(_("Update sends for audio item(s)"))
             global_open_audio_items()
@@ -3219,14 +3222,18 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_layout = QtGui.QGridLayout(f_dialog)
         f_layout.setAlignment(QtCore.Qt.AlignCenter)
         f_track_cboxes = []
+        f_sc_checkboxes = []
         f_track_vols = []
         f_vol_labels = []
         f_current_vals = [
-            (self.audio_item.output_track, self.audio_item.vol),
-            (self.audio_item.send1, self.audio_item.s1_vol),
-            (self.audio_item.send2, self.audio_item.s2_vol)]
+            (self.audio_item.output_track, self.audio_item.vol,
+             self.audio_item.s0_sc),
+            (self.audio_item.send1, self.audio_item.s1_vol,
+             self.audio_item.s1_sc),
+            (self.audio_item.send2, self.audio_item.s2_vol,
+             self.audio_item.s2_sc)]
         for f_i in range(3):
-            f_out, f_vol = f_current_vals[f_i]
+            f_out, f_vol, f_sc = f_current_vals[f_i]
             f_tracks_combobox = QtGui.QComboBox()
             f_track_cboxes.append(f_tracks_combobox)
             if f_i == 0:
@@ -3237,15 +3244,20 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 f_tracks_combobox.setCurrentIndex(f_out + 1)
             f_tracks_combobox.setMinimumWidth(105)
             f_layout.addWidget(f_tracks_combobox, 0, f_i)
+            f_sc_checkbox = QtGui.QCheckBox(_("Sidechain"))
+            f_sc_checkboxes.append(f_sc_checkbox)
+            if f_sc:
+                f_sc_checkbox.setChecked(True)
+            f_layout.addWidget(f_sc_checkbox, 1, f_i)
             f_vol_slider = QtGui.QSlider(QtCore.Qt.Vertical)
             f_track_vols.append(f_vol_slider)
             f_vol_slider.setRange(-240, 240)
             f_vol_slider.setMinimumHeight(360)
             f_vol_slider.valueChanged.connect(vol_changed)
-            f_layout.addWidget(f_vol_slider, 1, f_i, QtCore.Qt.AlignCenter)
-            f_vol_label = QtGui.QLabel("0dB")
+            f_layout.addWidget(f_vol_slider, 2, f_i, QtCore.Qt.AlignCenter)
+            f_vol_label = QtGui.QLabel("0.0dB")
             f_vol_labels.append(f_vol_label)
-            f_layout.addWidget(f_vol_label, 2, f_i)
+            f_layout.addWidget(f_vol_label, 3, f_i)
             f_vol_slider.setValue(f_vol * 10.0)
 
         f_ok_cancel_layout = QtGui.QHBoxLayout()

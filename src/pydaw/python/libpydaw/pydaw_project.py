@@ -2737,7 +2737,8 @@ class pydaw_audio_item:
             a_lane_num=0, a_pitch_shift_end=0.0,
             a_timestretch_amt_end=1.0, a_reversed=False, a_crispness=5,
             a_fadein_vol=-18, a_fadeout_vol=-18, a_paif_automation_uid=0,
-            a_send1=-1, a_s1_vol=0.0, a_send2=-1, a_s2_vol=0.0):
+            a_send1=-1, a_s1_vol=0.0, a_send2=-1, a_s2_vol=0.0,
+            a_s0_sc=False, a_s1_sc=False, a_s2_sc=False):
         self.uid = int(a_uid)
         self.sample_start = float(a_sample_start)
         self.sample_end = float(a_sample_end)
@@ -2765,6 +2766,9 @@ class pydaw_audio_item:
         self.s1_vol = round(float(a_s1_vol), 1)
         self.send2 = int(a_send2)
         self.s2_vol = round(float(a_s2_vol), 1)
+        self.s0_sc = int_to_bool(a_s0_sc)
+        self.s1_sc = int_to_bool(a_s1_sc)
+        self.s2_sc = int_to_bool(a_s2_sc)
 
     def set_pos(self, a_bar, a_beat):
         self.start_bar = int(a_bar)
@@ -2826,7 +2830,9 @@ class pydaw_audio_item:
             self.timestretch_amt_end, bool_to_int(self.reversed),
             int(self.crispness), int(self.fadein_vol), int(self.fadeout_vol),
             int(self.paif_automation_uid),
-            self.send1, self.s1_vol, self.send2, self.s2_vol)))
+            self.send1, self.s1_vol, self.send2, self.s2_vol,
+            bool_to_int(self.s0_sc), bool_to_int(self.s1_sc),
+            bool_to_int(self.s2_sc))))
 
     @staticmethod
     def from_str(f_str):
@@ -2836,6 +2842,7 @@ class pydaw_audio_item:
     def from_arr(a_arr):
         f_result = pydaw_audio_item(*a_arr)
         return f_result
+
 
 class pydaw_audio_item_fx_region:
     def __init__(self):
