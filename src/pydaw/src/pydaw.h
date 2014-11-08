@@ -2507,17 +2507,15 @@ void v_pydaw_audio_items_run(t_pydaw_data * self,
                 }
 
                 if(self->pysong->regions[
-                        (self->current_region)]->
-                        region_length_bars == 0)
+                    (self->current_region)]->region_length_bars == 0)
                 {
                     f_adjusted_next_song_pos_beats = 32.0f;
                 }
                 else
                 {
                     f_adjusted_next_song_pos_beats =
-                            (float)(self->pysong->regions[
-                            (self->current_region)]->
-                            region_length_bars * 4);
+                        (float)(self->pysong->regions[
+                        (self->current_region)]->region_length_bars * 4);
                 }
 
                 float test1 = (int)(f_adjusted_next_song_pos_beats);
@@ -2567,7 +2565,7 @@ void v_pydaw_audio_items_run(t_pydaw_data * self,
 
         int f_i = 0;
         int f_index_pos = 0;
-        int f_send_num = -1;
+        int f_send_num = 0;
         float ** f_buff = a_buff;
 
         while(a_is_audio_glue ||
@@ -2597,7 +2595,7 @@ void v_pydaw_audio_items_run(t_pydaw_data * self,
 
             t_pydaw_audio_item * f_audio_item = f_region->items[f_i];
 
-            if(f_audio_item->sidechain[f_send_num])
+            if(!a_is_audio_glue && f_audio_item->sidechain[f_send_num])
             {
                 f_buff = a_sc_buff;
                 *a_sc_dirty = 1;
