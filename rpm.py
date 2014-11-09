@@ -268,6 +268,10 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/mkplugins/mk_compressor.pyc
 /usr/lib/{0}/pydaw/python/mkplugins/mk_compressor.pyo
 
+/usr/lib/{0}/pydaw/python/mkplugins/mk_vocoder.py
+/usr/lib/{0}/pydaw/python/mkplugins/mk_vocoder.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/mk_vocoder.pyo
+
 %doc
 
 """.format(global_pydaw_version_string, global_version_fedora,
