@@ -411,23 +411,22 @@ void v_svf2_set_res(t_svf2_filter *__restrict a_svf, float a_db)
 {
     /*Don't calculate it again if it hasn't changed*/
     if((a_svf->filter_res_db) == a_db)
+    {
         return;
+    }
+
+    a_svf->filter_res_db = a_db;
 
     if(a_db < -100.0f)
     {
-        a_svf->filter_res_db = -100.0f;
+        a_db = -100.0f;
     }
-    else if (a_db > -.5f)
+    else if (a_db > -0.2f)
     {
-        a_svf->filter_res_db = -.5f;
-    }
-    else
-    {
-        a_svf->filter_res_db = a_db;
+        a_db = -0.2f;
     }
 
-       a_svf->filter_res =
-            (1.0f - (f_db_to_linear_fast((a_svf->filter_res_db)))) * 2.0f;
+    a_svf->filter_res = (1.0f - (f_db_to_linear_fast(a_db))) * 2.0f;
 }
 
 void g_svf2_init(t_svf2_filter * f_svf, float a_sample_rate)
