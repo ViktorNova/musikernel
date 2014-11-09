@@ -40,8 +40,8 @@ t_mkchnl_mono_modules * v_mkchnl_mono_init(float, int);
 
 t_mkchnl_mono_modules * v_mkchnl_mono_init(float a_sr, int a_plugin_uid)
 {
-    t_mkchnl_mono_modules * a_mono =
-            (t_mkchnl_mono_modules*)malloc(sizeof(t_mkchnl_mono_modules));
+    t_mkchnl_mono_modules * a_mono;
+    hpalloc((void**)&a_mono, sizeof(t_mkchnl_mono_modules));
 
     g_sml_init(&a_mono->volume_smoother, a_sr, 0.0f, -50.0f, 0.1f);
     a_mono->volume_smoother.last_value = 0.0f;

@@ -92,7 +92,7 @@ static PYFX_Handle g_mk_comp_instantiate(PYFX_Descriptor * descriptor,
         int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_mk_comp *plugin_data;
-    lmalloc((void**)&plugin_data, sizeof(t_mk_comp));
+    hpalloc((void**)&plugin_data, sizeof(t_mk_comp));
 
     plugin_data->descriptor = descriptor;
     plugin_data->fs = s_rate;

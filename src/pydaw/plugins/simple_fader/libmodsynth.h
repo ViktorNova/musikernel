@@ -38,8 +38,8 @@ t_sfader_mono_modules * v_sfader_mono_init(float, int);
 
 t_sfader_mono_modules * v_sfader_mono_init(float a_sr, int a_plugin_uid)
 {
-    t_sfader_mono_modules * a_mono =
-            (t_sfader_mono_modules*)malloc(sizeof(t_sfader_mono_modules));
+    t_sfader_mono_modules * a_mono;
+    hpalloc((void**)&a_mono, sizeof(t_sfader_mono_modules));
 
     a_mono->volume_smoother =
             g_sml_get_smoother_linear(a_sr, 0.0f, -50.0f, 0.1f);

@@ -104,7 +104,7 @@ static PYFX_Handle g_scc_instantiate(PYFX_Descriptor * descriptor,
         int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_scc *plugin_data;
-    lmalloc((void**)&plugin_data, sizeof(t_scc));
+    hpalloc((void**)&plugin_data, sizeof(t_scc));
 
     plugin_data->descriptor = descriptor;
     plugin_data->fs = s_rate;

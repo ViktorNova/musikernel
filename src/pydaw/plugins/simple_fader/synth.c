@@ -88,8 +88,8 @@ static PYFX_Handle g_sfader_instantiate(PYFX_Descriptor * descriptor,
         int a_plugin_uid, fp_queue_message a_queue_func)
 {
     t_sfader *plugin_data;
-    lmalloc((void**)&plugin_data, sizeof(t_sfader));
-    lmalloc((void**)&plugin_data->buffers, sizeof(float*) * 2);
+    hpalloc((void**)&plugin_data, sizeof(t_sfader));
+    hpalloc((void**)&plugin_data->buffers, sizeof(float*) * 2);
 
     plugin_data->descriptor = descriptor;
     plugin_data->fs = s_rate;

@@ -39,8 +39,8 @@ t_xfade_mono_modules * v_xfade_mono_init(float, int);
 
 t_xfade_mono_modules * v_xfade_mono_init(float a_sr, int a_plugin_uid)
 {
-    t_xfade_mono_modules * a_mono =
-            (t_xfade_mono_modules*)malloc(sizeof(t_xfade_mono_modules));
+    t_xfade_mono_modules * a_mono;
+    hpalloc((void**)&a_mono, sizeof(t_xfade_mono_modules));
 
     g_sml_init(&a_mono->pan_smoother, a_sr, 100.0f, -100.0f, 0.1f);
     a_mono->pan_smoother.last_value = 0.0f;

@@ -33,7 +33,7 @@ t_mk_comp_mono_modules * v_mk_comp_mono_init(float, int);
 t_mk_comp_mono_modules * v_mk_comp_mono_init(float a_sr, int a_plugin_uid)
 {
     t_mk_comp_mono_modules * f_result;
-    lmalloc((void**)&f_result, sizeof(t_mk_comp_mono_modules));
+    hpalloc((void**)&f_result, sizeof(t_mk_comp_mono_modules));
     g_cmp_init(&f_result->compressor, a_sr);
     return f_result;
 }
