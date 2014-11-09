@@ -230,7 +230,7 @@ inline float f_get_osc_off(t_osc_core * a_core)
 
 fp_get_osc_func_ptr SIMPLE_OSC_TYPES[] =
 {
-    f_get_saw, f_get_square, f_get_triangle, f_get_sine, f_get_osc_off
+    f_get_osc_off, f_get_saw, f_get_square, f_get_triangle, f_get_sine
 };
 
 /* void v_osc_set_simple_osc_unison_type(
