@@ -948,7 +948,7 @@ class pydaw_filter_widget:
         self.cutoff_knob.add_to_grid_layout(self.layout, 0)
         self.res_knob = pydaw_knob_control(
             a_size, _("Res"), a_res_port, a_rel_callback,
-            a_val_callback, -30, 0, -12, KC_INTEGER,
+            a_val_callback, -300, 0, -120, KC_TENTH,
             a_port_dict, a_preset_mgr)
         self.res_knob.add_to_grid_layout(self.layout, 1)
         if a_type_port is not None:

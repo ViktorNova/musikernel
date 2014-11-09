@@ -413,7 +413,7 @@ static void v_rayv_process_midi_event(
                     *plugin_data->dist);
 
             v_svf_set_res(&plugin_data->data[f_voice]->svf_filter,
-                    *plugin_data->res);
+                    (*plugin_data->res) * 0.1f);
 
             plugin_data->data[f_voice]->noise_amp =
                     f_db_to_linear(*(plugin_data->noise_amp));
@@ -759,7 +759,7 @@ PYFX_Descriptor *rayv_PYFX_descriptor(int index)
     pydaw_set_pyfx_port(f_result, RAYV_SUSTAIN, 0.0f, -60.0f, 0.0f);
     pydaw_set_pyfx_port(f_result, RAYV_RELEASE, 50.0f, 10.0f, 400.0f);
     pydaw_set_pyfx_port(f_result, RAYV_TIMBRE, 124.0f, 20.0f, 124.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_RES, -12.0f, -30.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, RAYV_RES, -120.0f, -300.0f, 0.0f);
     pydaw_set_pyfx_port(f_result, RAYV_DIST, 15.0f, 0.0f, 48.0f);
     pydaw_set_pyfx_port(f_result, RAYV_FILTER_ATTACK, 10.0f, 0.0f, 200.0f);
     pydaw_set_pyfx_port(f_result, RAYV_FILTER_DECAY, 50.0f, 10.0f, 200.0f);
