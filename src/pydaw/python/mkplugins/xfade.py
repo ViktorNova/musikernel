@@ -71,7 +71,7 @@ class xfade_plugin_ui(pydaw_abstract_plugin_ui):
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(
-            "Fader - {}".format(self.track_name))
+            "X-Fade - {}".format(self.track_name))
 
     def raise_widget(self):
         pydaw_abstract_plugin_ui.raise_widget(self)
