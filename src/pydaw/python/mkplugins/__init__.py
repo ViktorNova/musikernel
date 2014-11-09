@@ -11,4 +11,5 @@ import mkplugins.sidechain_comp
 import mkplugins.trigger_fx
 import mkplugins.xfade
 import mkplugins.mk_compressor
+import mkplugins.mk_vocoder
 
