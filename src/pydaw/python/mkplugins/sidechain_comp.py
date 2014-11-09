@@ -19,8 +19,9 @@ from libpydaw.translate import _
 
 SCC_THRESHOLD = 0
 SCC_RATIO = 1
-SCC_SPEED = 2
-SCC_WET = 3
+SCC_ATTACK = 2
+SCC_RELEASE = 3
+SCC_WET = 4
 
 
 SCC_PORT_MAP = {
@@ -79,12 +80,19 @@ class scc_plugin_ui(pydaw_abstract_plugin_ui):
         self.ratio_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 7)
 
-        self.speed_knob = pydaw_knob_control(
-            f_knob_size, _("Speed"), SCC_SPEED,
+        self.attack_knob = pydaw_knob_control(
+            f_knob_size, _("Attack"), SCC_ATTACK,
             self.plugin_rel_callback, self.plugin_val_callback,
-            0, 30, 15, KC_NONE, self.port_dict, self.preset_manager)
-        self.speed_knob.add_to_grid_layout(
+            10, 100, 20, KC_INTEGER, self.port_dict, self.preset_manager)
+        self.attack_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 15)
+
+        self.release_knob = pydaw_knob_control(
+            f_knob_size, _("Release"), SCC_RELEASE,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            30, 300, 50, KC_INTEGER, self.port_dict, self.preset_manager)
+        self.release_knob.add_to_grid_layout(
+            self.reverb_groupbox_gridlayout, 18)
 
         self.wet_knob = pydaw_knob_control(
             f_knob_size, _("Wet"), SCC_WET,

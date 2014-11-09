@@ -26,13 +26,14 @@ extern "C" {
 
 #define SCC_THRESHOLD 0
 #define SCC_RATIO 1
-#define SCC_SPEED 2
-#define SCC_WET 3
+#define SCC_ATTACK 2
+#define SCC_RELEASE 3
+#define SCC_WET 4
 
-#define SCC_LAST_CONTROL_PORT 3
+#define SCC_LAST_CONTROL_PORT 4
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define SCC_COUNT 4
+#define SCC_COUNT 5
 
 typedef struct
 {
@@ -44,7 +45,8 @@ typedef struct
 
     PYFX_Data *threshold;
     PYFX_Data *ratio;
-    PYFX_Data *speed;
+    PYFX_Data *attack;
+    PYFX_Data *release;
     PYFX_Data *wet;
 
     float fs;

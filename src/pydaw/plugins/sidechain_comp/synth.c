@@ -93,7 +93,8 @@ static void v_scc_connect_port(PYFX_Handle instance, int port,
     {
         case SCC_THRESHOLD: plugin->threshold = data; break;
         case SCC_RATIO: plugin->ratio = data; break;
-        case SCC_SPEED: plugin->speed = data; break;
+        case SCC_ATTACK: plugin->attack = data; break;
+        case SCC_RELEASE: plugin->release = data; break;
         case SCC_WET: plugin->wet = data; break;
     }
 }
@@ -217,7 +218,8 @@ static void v_scc_run(
 
         v_scc_set(&plugin_data->mono_modules->sidechain_comp,
             *plugin_data->threshold, (*plugin_data->ratio) * 0.1f,
-            *plugin_data->speed, *plugin_data->wet * 0.01f);
+            *plugin_data->attack * 0.001f, *plugin_data->release * 0.001f,
+            *plugin_data->wet * 0.01f);
 
         v_scc_run_comp(&plugin_data->mono_modules->sidechain_comp,
             plugin_data->sc_input0[f_i], plugin_data->sc_input1[f_i],
@@ -237,7 +239,8 @@ PYFX_Descriptor *scc_PYFX_descriptor(int index)
 
     pydaw_set_pyfx_port(f_result, SCC_THRESHOLD, -24.0f, -36.0f, -6.0f);
     pydaw_set_pyfx_port(f_result, SCC_RATIO, 20.0f, 1.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, SCC_SPEED, 15.0f, 0.0f, 30.0f);
+    pydaw_set_pyfx_port(f_result, SCC_ATTACK, 20.0f, 10.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, SCC_RELEASE, 50.0f, 30.0f, 300.0f);
     pydaw_set_pyfx_port(f_result, SCC_WET, 100.0f, 0.0f, 100.0f);
 
     f_result->cleanup = v_scc_cleanup;

@@ -16,7 +16,7 @@ GNU General Public License for more details.
 
 #include "../../lib/amp.h"
 #include "../../lib/lms_math.h"
-#include "../filter/svf.h"
+#include "../modulation/env_follower2.h"
 #include "../signal_routing/audio_xfade.h"
 
 #ifdef	__cplusplus
@@ -25,14 +25,10 @@ extern "C" {
 
 typedef struct
 {
-    float pitch, ratio, thresh, wet, speed, output0, output1;
-    t_state_variable_filter filter;
+    float pitch, ratio, thresh, wet, attack, release, output0, output1;
+    t_enf2_env_follower env_follower;
     t_audio_xfade xfade;
 }t_scc_sidechain_comp;
-
-void g_scc_init(t_scc_sidechain_comp*, float);
-void v_scc_set(t_scc_sidechain_comp*, float, float, float, float);
-void v_scc_run_comp(t_scc_sidechain_comp*, float, float, float, float);
 
 #ifdef	__cplusplus
 }
@@ -41,10 +37,10 @@ void v_scc_run_comp(t_scc_sidechain_comp*, float, float, float, float);
 
 void g_scc_init(t_scc_sidechain_comp * self, float a_sr)
 {
-    g_svf_init(&self->filter, a_sr);
-    v_svf_set_res(&self->filter, -15.0f);
+    g_enf_init(&self->env_follower, a_sr);
     g_axf_init(&self->xfade, -3.0f);
-    self->speed = 999.99f;
+    self->attack = 999.99f;
+    self->release = 999.99f;
     self->pitch = 999.99f;
     self->ratio = 999.99f;
     self->thresh = 999.99f;
@@ -54,16 +50,16 @@ void g_scc_init(t_scc_sidechain_comp * self, float a_sr)
 }
 
 void v_scc_set(t_scc_sidechain_comp *self, float a_thresh, float a_ratio,
-    float a_speed, float a_wet)
+    float a_attack, float a_release, float a_wet)
 {
     self->thresh = a_thresh;
     self->ratio = a_ratio;
 
-    if(self->speed != a_speed)
+    if(self->attack != a_attack || self->release != a_release)
     {
-        self->speed = a_speed;
-        v_svf_set_cutoff_base(&self->filter, a_speed);
-        v_svf_set_cutoff(&self->filter);
+        self->attack = a_attack;
+        self->release = a_release;
+        v_enf_set(&self->env_follower, a_attack, a_release);
     }
 
     if(self->wet != a_wet)
@@ -78,11 +74,10 @@ void v_scc_run_comp(t_scc_sidechain_comp *self,
 {
     float f_gain;
 
-    float f_env = v_svf_run_4_pole_lp(
-        &self->filter, f_lms_max(f_lms_abs(a_input0), f_lms_abs(a_input1)));
+    v_enf_run(&self->env_follower,
+        f_lms_max(f_lms_abs(a_input0), f_lms_abs(a_input1)));
 
-    f_gain = self->thresh - f_linear_to_db_fast(f_env);
-
+    f_gain = self->thresh - f_linear_to_db_fast(self->env_follower.envelope);
 
     if(f_gain < 0.0f)
     {
