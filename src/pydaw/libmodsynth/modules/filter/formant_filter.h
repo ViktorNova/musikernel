@@ -198,15 +198,19 @@ __attribute__((aligned(16))) =
 
 typedef struct
 {
-    t_svf2_filter filters[5];
-    float formant_amp[5];
+    t_svf2_filter filter;
+    float amp;
+}t_grw_band;
+
+typedef struct
+{
     float output0;
     float output1;
-    float pitch_tmp;
-    float last_pos;
-    float last_wet;
-    float last_type;
+    t_grw_band bands[5];
     t_audio_xfade xfade;
+    float last_pos;
+    float last_type;
+    float last_wet;
 }t_grw_growl_filter __attribute__((aligned(16)));
 
 t_grw_growl_filter * g_grw_growl_filter_get(float);
@@ -216,22 +220,24 @@ void v_grw_growl_filter_free(t_grw_growl_filter*);
 
 void g_grw_init(t_grw_growl_filter * f_result, float a_sr)
 {
-    int f_i = 0;
-    while(f_i < 5)
-    {
-        g_svf2_init(&f_result->filters[f_i], a_sr);
-        v_svf2_set_res(&f_result->filters[f_i], -1.5f);
-        f_result->formant_amp[f_i] = 1.0f;
-        ++f_i;
-    }
+    int f_i;
 
     f_result->output0 = 0.0f;
     f_result->output1 = 0.0f;
-    f_result->pitch_tmp = 0.0f;
+
+    for(f_i = 0; f_i < 5; ++f_i)
+    {
+        g_svf2_init(&f_result->bands[f_i].filter, a_sr);
+        v_svf2_set_res(&f_result->bands[f_i].filter, -1.5f);
+        f_result->bands[f_i].amp = 1.0f;
+    }
+
+    g_axf_init(&f_result->xfade, -3.0f);
+
     f_result->last_pos = -99.0f;
     f_result->last_type = 99.99f;
     f_result->last_wet = 0.0f;
-    g_axf_init(&f_result->xfade, -3.0f);
+
 }
 
 t_grw_growl_filter * g_grw_growl_filter_get(float a_sr)
@@ -250,7 +256,7 @@ void v_grw_growl_filter_set(t_grw_growl_filter* a_grw, float a_pos,
         t_svf2_filter * f_filter;
         a_grw->last_pos = a_pos;
         a_grw->last_type = a_type;
-        register int iter = 0;
+        int iter;
         float f_pos_f = a_pos + a_type;
         int f_pos = (int)f_pos_f;
         int f_pos_plus_one = f_pos + 1;
@@ -261,9 +267,9 @@ void v_grw_growl_filter_set(t_grw_growl_filter* a_grw, float a_pos,
 
         float f_pos_frac = f_pos_f - (float)f_pos;
 
-        while(iter < 5)
+        for(iter = 0; iter < 5; ++iter)
         {
-            f_filter = &a_grw->filters[iter];
+            f_filter = &a_grw->bands[iter].filter;
             v_svf2_set_cutoff_base(f_filter,
                 f_linear_interpolate(pydaw_growl_table[f_pos][0][(iter)],
                 pydaw_growl_table[f_pos_plus_one][0][(iter)],
@@ -272,10 +278,9 @@ void v_grw_growl_filter_set(t_grw_growl_filter* a_grw, float a_pos,
                 f_linear_interpolate(pydaw_growl_table[f_pos][2][(iter)],
                     pydaw_growl_table[f_pos_plus_one][2][(iter)], f_pos_frac));
             v_svf2_set_cutoff(f_filter);
-            a_grw->formant_amp[iter] =
+            a_grw->bands[iter].amp =
                 f_linear_interpolate(pydaw_growl_table[f_pos][1][(iter)],
                 pydaw_growl_table[f_pos_plus_one][1][(iter)], f_pos_frac);
-            ++iter;
         }
     }
 
@@ -297,8 +302,8 @@ void v_grw_growl_filter_run(t_grw_growl_filter* a_grw,
 
     for(f_i = 0; f_i < 5; ++f_i)
     {
-        f_filter = &a_grw->filters[f_i];
-        f_amp = a_grw->formant_amp[f_i];
+        f_filter = &a_grw->bands[f_i].filter;
+        f_amp = a_grw->bands[f_i].amp;
         v_svf2_run_2_pole_bp(f_filter, a_input0, a_input1);
         a_grw->output0 += f_filter->output0 * f_amp;
         a_grw->output1 += f_filter->output1 * f_amp;
