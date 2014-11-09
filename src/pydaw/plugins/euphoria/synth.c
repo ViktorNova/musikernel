@@ -1,6 +1,5 @@
-/* -*- c-basic-offset: 4 -*-  vi:set ts=8 sts=4 sw=4: */
 /*
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -12,18 +11,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#include <stdlib.h>
-#include <limits.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <math.h>
-
 #include "../../include/pydaw_plugin.h"
-
-#include <sndfile.h>
-#include <pthread.h>
-
 #include "synth.h"
 #include "../../libmodsynth/lib/lms_math.h"
 
@@ -658,7 +646,7 @@ static void run_sampler_interpolation_none(t_euphoria *__restrict plugin_data, i
 static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
 {
     t_voc_single_voice * f_poly_voice = &plugin_data->voices->voices[n];
-    
+
     if((f_poly_voice->on) > (plugin_data->sampleNo))
     {
         return;

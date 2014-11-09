@@ -22,6 +22,9 @@ GNU General Public License for more details.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sndfile.h>
+#include <pthread.h>
+#include <limits.h>
 
 #include "../pydaw/src/compiler.h"
 #include "../pydaw/src/pydaw.h"

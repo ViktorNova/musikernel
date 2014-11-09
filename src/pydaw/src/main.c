@@ -21,6 +21,9 @@ GNU General Public License for more details.
 #define _GNU_SOURCE
 #endif
 
+#include <sndfile.h>
+#include <pthread.h>
+#include <limits.h>
 #include <portaudio.h>
 #include <stdlib.h>
 #include <stdio.h>

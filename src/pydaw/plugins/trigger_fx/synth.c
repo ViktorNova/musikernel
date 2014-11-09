@@ -1,6 +1,5 @@
-/* -*- c-basic-offset: 4 -*-  vi:set ts=8 sts=4 sw=4: */
 /*
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -11,14 +10,6 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
-
-#include <stdlib.h>
-#include <limits.h>
-#include <string.h>
-#include <stdint.h>
-
-#include <math.h>
-#include <stdio.h>
 
 #include "../../include/pydaw_plugin.h"
 #include "libmodsynth.h"

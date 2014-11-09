@@ -1,5 +1,5 @@
 /*
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ t_triggerfx_mono_modules * v_triggerfx_mono_init(float a_sr, int a_plugin_uid)
     hpalloc((void**)&a_mono, sizeof(t_triggerfx_mono_modules));
 
     g_sml_init(&a_mono->pitchbend_smoother, a_sr, 1.0f, -1.0f, 0.1f);
-    
+
     g_sml_init(&a_mono->gate_wet_smoother,a_sr, 100.0f, 0.0f, 0.01f);
     a_mono->gate_wet_smoother.last_value = 0.0f;
 

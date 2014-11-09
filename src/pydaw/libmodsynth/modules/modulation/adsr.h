@@ -1,5 +1,5 @@
 /*
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ typedef struct st_adsr
     float a_time;
     float d_time;
     float r_time;
-    
+
     int time_counter;
     int delay_count;
     int hold_count;

@@ -1,5 +1,5 @@
 /*
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,10 +18,7 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
-#include <stdio.h>
 #include "../../libmodsynth/constants.h"
-
-/*includes for any libmodsynth modules you'll be using*/
 #include "../../libmodsynth/lib/osc_core.h"
 #include "../../libmodsynth/lib/pitch_core.h"
 #include "../../libmodsynth/lib/smoother-linear.h"
