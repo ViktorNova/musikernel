@@ -60,7 +60,7 @@ fi)
 
 LINK_CFLAGS  = $(RT_LIB_FLAG) -pthread $(LIBLO_FLAG) $(PORTMIDI_FLAG) \
 portaudio/lib/.libs/libportaudio.a \
-$(LDFLAGS) $(shell pkg-config --libs sndfile alsa fftw3) $(MATH_LIB_FLAG)
+$(LDFLAGS) $(shell pkg-config --libs sndfile alsa fftw3f) $(MATH_LIB_FLAG)
 
 C_OBJS   = src/main.o
 

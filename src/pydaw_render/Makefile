@@ -22,7 +22,7 @@ BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
 
 BUILD_CFLAGS   = $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
 LINK_CFLAGS    = -ldl -lm -lportmidi \
-$(shell pkg-config --libs liblo sndfile fftw3) $(LDFLAGS)
+$(shell pkg-config --libs liblo sndfile fftw3f) $(LDFLAGS)
 
 C_OBJS   = main.o
 

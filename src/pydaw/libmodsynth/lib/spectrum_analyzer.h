@@ -38,12 +38,12 @@ typedef struct {
     int plugin_uid;
     float * buffer;
     int buf_pos;
-    fftw_complex *output;
-    fftw_plan plan;
+    fftwf_complex *output;
+    fftwf_plan plan;
     int height, width;
     int samples_count;
     int samples_count_div2;
-    double *samples;
+    float *samples;
     char * str_buf;
     char str_tmp[128];
 } t_spa_spectrum_analyzer;
@@ -66,8 +66,8 @@ t_spa_spectrum_analyzer * g_spa_spectrum_analyzer_get(
     f_result->samples_count = a_sample_count;
     f_result->samples_count_div2 = a_sample_count / 2;
 
-    f_result->samples = fftw_alloc_real(a_sample_count);
-    f_result->output = fftw_alloc_complex(a_sample_count);
+    f_result->samples = fftwf_alloc_real(a_sample_count);
+    f_result->output = fftwf_alloc_complex(a_sample_count);
 
     while(f_i < f_result->samples_count)
     {
@@ -79,7 +79,7 @@ t_spa_spectrum_analyzer * g_spa_spectrum_analyzer_get(
     f_result->str_buf = (char*)malloc(sizeof(char) * 15 * a_sample_count);
     f_result->str_buf[0] = '\0';
 
-    f_result->plan = fftw_plan_dft_r2c_1d(f_result->samples_count,
+    f_result->plan = fftwf_plan_dft_r2c_1d(f_result->samples_count,
         f_result->samples, f_result->output, 0);
 
     return f_result;
@@ -87,16 +87,16 @@ t_spa_spectrum_analyzer * g_spa_spectrum_analyzer_get(
 
 static void g_spa_free(t_spa_spectrum_analyzer *a_spa)
 {
-    fftw_destroy_plan(a_spa->plan);
-    fftw_free(a_spa->output);
-    fftw_free(a_spa->samples);
+    fftwf_destroy_plan(a_spa->plan);
+    fftwf_free(a_spa->output);
+    fftwf_free(a_spa->samples);
 }
 
 void v_spa_compute_fft(t_spa_spectrum_analyzer *a_spa)
 {
     register int f_i = 1;
 
-    fftw_execute(a_spa->plan);
+    fftwf_execute(a_spa->plan);
 
     sprintf(a_spa->str_buf, "%i|spectrum|%f",
             a_spa->plugin_uid, cabs(a_spa->output[0]));
