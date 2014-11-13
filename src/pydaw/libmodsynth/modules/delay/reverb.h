@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include "../../lib/pitch_core.h"
 #include "../filter/comb_filter.h"
 #include "../filter/svf.h"
+#include "../oscillator/lfo_simple.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -30,12 +31,26 @@ extern "C" {
 
 typedef struct
 {
+    t_comb_filter tap;
+    float pitch;
+}t_rvb_tap;
+
+typedef struct
+{
+    t_state_variable_filter diffuser;
+    float pitch;
+}t_rvb_diffuser;
+
+typedef struct
+{
     float output;
+    float feedback;
+    t_lfs_lfo lfo;
     t_state_variable_filter lp;
     t_state_variable_filter hp;
     float wet_linear;
-    t_comb_filter taps[PYDAW_REVERB_TAP_COUNT];
-    t_state_variable_filter diffusers[PYDAW_REVERB_DIFFUSER_COUNT];
+    t_rvb_tap taps[PYDAW_REVERB_TAP_COUNT];
+    t_rvb_diffuser diffusers[PYDAW_REVERB_DIFFUSER_COUNT];
     float * predelay_buffer;
     int predelay_counter;
     int predelay_size;
@@ -43,7 +58,6 @@ typedef struct
     float wet;
     float time;
     float volume_factor;
-    float allpass_tunings[PYDAW_REVERB_DIFFUSER_COUNT];
     float last_predelay;
     float sr;
 } t_rvb_reverb;
@@ -65,17 +79,17 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
     {
         a_reverb->time = a_time;
 
-        float f_feedback = (a_time) + -1.05f;
+        a_reverb->feedback = (a_time) + -1.05f;
 
-        int f_i2 = 0;
+        int f_i;
         float f_base = 20.0f - (a_time * 11.0f);
         float f_factor = 1.0f + (a_time * 0.8f);
 
-        while(f_i2 < PYDAW_REVERB_TAP_COUNT)
+        for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
         {
-            v_cmb_set_all(&a_reverb->taps[f_i2], 0.0f, f_feedback,
-                f_base + (((float)f_i2) * f_factor));
-            ++f_i2;
+            a_reverb->taps[f_i].pitch = f_base + (((float)f_i) * f_factor);
+            v_cmb_set_all(&a_reverb->taps[f_i].tap, 0.0f, a_reverb->feedback,
+                a_reverb->taps[f_i].pitch);
         }
     }
 
@@ -111,7 +125,9 @@ inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
 {
     int f_i;
 
-    a_reverb->output = 0.0f;
+    a_reverb->output *= 0.01f;
+    v_lfs_run(&a_reverb->lfo);
+    float f_lfo_diff = a_reverb->lfo.output * 3.0f;
 
     float f_tmp_sample = v_svf_run_2_pole_lp(&a_reverb->lp,
             (a_input0 + a_input1));
@@ -120,14 +136,17 @@ inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
 
     for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
     {
-        v_cmb_run(&a_reverb->taps[f_i], f_tmp_sample);
-        a_reverb->output += (a_reverb->taps[f_i].output_sample);
+        v_cmb_run(&a_reverb->taps[f_i].tap, f_tmp_sample);
+        a_reverb->output += (a_reverb->taps[f_i].tap.output_sample);
     }
 
     for(f_i = 0; f_i < PYDAW_REVERB_DIFFUSER_COUNT; ++f_i)
     {
+        v_svf_set_cutoff_base(&a_reverb->diffusers[f_i].diffuser,
+            a_reverb->diffusers[f_i].pitch + f_lfo_diff);
+        v_svf_set_cutoff(&a_reverb->diffusers[f_i].diffuser);
         a_reverb->output =
-            v_svf_run_2_pole_allpass(&a_reverb->diffusers[f_i],
+            v_svf_run_2_pole_allpass(&a_reverb->diffusers[f_i].diffuser,
             a_reverb->output);
     }
 
@@ -154,10 +173,14 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
 
     for(f_i = 0; f_i < PYDAW_REVERB_DIFFUSER_COUNT; ++f_i)
     {
-        f_result->allpass_tunings[f_i] = 33.0f + (((float)f_i) * 7.0f);
+        f_result->diffusers[f_i].pitch = 33.0f + (((float)f_i) * 7.0f);
     }
 
     f_result->output = 0.0f;
+
+    g_lfs_init(&f_result->lfo, a_sr);
+    v_lfs_set(&f_result->lfo, 0.1f);
+    v_lfs_sync(&f_result->lfo, 0.0f, 1);
 
     g_svf_init(&f_result->hp, a_sr);
     v_svf_set_cutoff_base(&f_result->hp, 60.0f);
@@ -169,24 +192,24 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
 
     f_result->volume_factor = (1.0f / (float)PYDAW_REVERB_DIFFUSER_COUNT) * 0.5;
 
-    int f_i2 = 0;
+    f_i = 0;
 
-    while(f_i2 < PYDAW_REVERB_TAP_COUNT)
+    while(f_i < PYDAW_REVERB_TAP_COUNT)
     {
-        g_cmb_init(&f_result->taps[f_i2], a_sr, 1);
-        ++f_i2;
+        g_cmb_init(&f_result->taps[f_i].tap, a_sr, 1);
+        ++f_i;
     }
 
-    f_i2 = 0;
+    f_i = 0;
 
-    while(f_i2 < PYDAW_REVERB_DIFFUSER_COUNT)
+    while(f_i < PYDAW_REVERB_DIFFUSER_COUNT)
     {
-        g_svf_init(&f_result->diffusers[f_i2], a_sr);
-        v_svf_set_cutoff_base(&f_result->diffusers[f_i2],
-            f_result->allpass_tunings[f_i2]);
-        v_svf_set_res(&f_result->diffusers[f_i2], -1.0f);
-        v_svf_set_cutoff(&f_result->diffusers[f_i2]);
-        ++f_i2;
+        g_svf_init(&f_result->diffusers[f_i].diffuser, a_sr);
+        v_svf_set_cutoff_base(&f_result->diffusers[f_i].diffuser,
+            f_result->diffusers[f_i].pitch);
+        v_svf_set_res(&f_result->diffusers[f_i].diffuser, -1.0f);
+        v_svf_set_cutoff(&f_result->diffusers[f_i].diffuser);
+        ++f_i;
     }
 
     f_result->predelay_counter = 0;
@@ -196,11 +219,11 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
     hpalloc((void**)&f_result->predelay_buffer,
         sizeof(float) * (a_sr + 5000));
 
-    f_i2 = 0;
-    while(f_i2 < (a_sr + 5000))
+    f_i = 0;
+    while(f_i < (a_sr + 5000))
     {
-        f_result->predelay_buffer[f_i2] = 0.0f;
-        ++f_i2;
+        f_result->predelay_buffer[f_i] = 0.0f;
+        ++f_i;
     }
 
     v_rvb_reverb_set(f_result, 0.5f, 0.0f, 0.5f, 0.01f);
