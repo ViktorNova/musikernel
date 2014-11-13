@@ -43,7 +43,6 @@ typedef struct
     float wet;
     float time;
     float volume_factor;
-    float comb_tunings[PYDAW_REVERB_TAP_COUNT];
     float allpass_tunings[PYDAW_REVERB_DIFFUSER_COUNT];
     float last_predelay;
     float sr;
@@ -69,11 +68,13 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
         float f_feedback = (a_time) + -1.05f;
 
         int f_i2 = 0;
+        float f_base = 20.0f - (a_time * 11.0f);
+        float f_factor = 1.0f + (a_time * 0.8f);
 
         while(f_i2 < PYDAW_REVERB_TAP_COUNT)
         {
             v_cmb_set_all(&a_reverb->taps[f_i2], 0.0f, f_feedback,
-                    a_reverb->comb_tunings[f_i2]);
+                f_base + (((float)f_i2) * f_factor));
             ++f_i2;
         }
     }
@@ -108,7 +109,7 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
 inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
         float a_input1)
 {
-    int iter1 = 0;
+    int f_i;
 
     a_reverb->output = 0.0f;
 
@@ -117,23 +118,17 @@ inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
     f_tmp_sample = v_svf_run_2_pole_hp(&a_reverb->hp, f_tmp_sample);
     f_tmp_sample *= (a_reverb->wet_linear);
 
-    while((iter1) < PYDAW_REVERB_TAP_COUNT)
+    for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
     {
-        v_cmb_run(&a_reverb->taps[iter1], f_tmp_sample);
-
-        a_reverb->output += (a_reverb->taps[iter1].output_sample);
-
-        ++iter1;
+        v_cmb_run(&a_reverb->taps[f_i], f_tmp_sample);
+        a_reverb->output += (a_reverb->taps[f_i].output_sample);
     }
 
-    iter1 = 0;
-
-    while((iter1) < PYDAW_REVERB_DIFFUSER_COUNT)
+    for(f_i = 0; f_i < PYDAW_REVERB_DIFFUSER_COUNT; ++f_i)
     {
         a_reverb->output =
-            v_svf_run_2_pole_allpass(&a_reverb->diffusers[iter1],
+            v_svf_run_2_pole_allpass(&a_reverb->diffusers[f_i],
             a_reverb->output);
-        ++iter1;
     }
 
     a_reverb->predelay_buffer[(a_reverb->predelay_counter)] = a_reverb->output;
@@ -142,8 +137,8 @@ inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
     {
         a_reverb->predelay_counter = 0;
     }
-    a_reverb->output = a_reverb->predelay_buffer[(a_reverb->predelay_counter)];
 
+    a_reverb->output = a_reverb->predelay_buffer[(a_reverb->predelay_counter)];
 }
 
 void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
@@ -156,11 +151,6 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
     f_result->wet_linear = 0.0f;
 
     f_result->sr = a_sr;
-
-    for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
-    {
-        f_result->comb_tunings[f_i] = 9.0f + (((float)f_i) * 1.5f);
-    }
 
     for(f_i = 0; f_i < PYDAW_REVERB_DIFFUSER_COUNT; ++f_i)
     {

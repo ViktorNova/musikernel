@@ -69,7 +69,7 @@ class sreverb_plugin_ui(pydaw_abstract_plugin_ui):
             QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
 
         self.reverb_time_knob = pydaw_knob_control(
-            f_knob_size, _("Time"), SREVERB_REVERB_TIME,
+            f_knob_size, _("Size"), SREVERB_REVERB_TIME,
             self.plugin_rel_callback, self.plugin_val_callback,
             0, 100, 50, KC_DECIMAL, self.port_dict, self.preset_manager)
         self.reverb_time_knob.add_to_grid_layout(
