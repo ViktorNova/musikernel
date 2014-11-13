@@ -30,22 +30,22 @@ extern "C" {
 
 typedef struct
 {
-    float color;
-    float wet;
-    float wet_linear;
-    float time;
     float output;
-    float volume_factor;
-    t_state_variable_filter diffusers[PYDAW_REVERB_DIFFUSER_COUNT];
-    t_state_variable_filter hp;
     t_state_variable_filter lp;
+    t_state_variable_filter hp;
+    float wet_linear;
     t_comb_filter taps[PYDAW_REVERB_TAP_COUNT];
-    float comb_tunings[PYDAW_REVERB_TAP_COUNT];
-    float allpass_tunings[PYDAW_REVERB_DIFFUSER_COUNT];
+    t_state_variable_filter diffusers[PYDAW_REVERB_DIFFUSER_COUNT];
+    float * predelay_buffer;
     int predelay_counter;
     int predelay_size;
+    float color;
+    float wet;
+    float time;
+    float volume_factor;
+    float comb_tunings[PYDAW_REVERB_TAP_COUNT];
+    float allpass_tunings[PYDAW_REVERB_DIFFUSER_COUNT];
     float last_predelay;
-    float * predelay_buffer;
     float sr;
 } t_rvb_reverb;
 
@@ -66,7 +66,7 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
     {
         a_reverb->time = a_time;
 
-        float f_feedback = (a_time) + -1.10f;
+        float f_feedback = (a_time) + -1.05f;
 
         int f_i2 = 0;
 
@@ -148,6 +148,8 @@ inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
 
 void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
 {
+    int f_i;
+
     f_result->color = 1.0f;
     f_result->time = 0.5f;
     f_result->wet = 0.0f;
@@ -155,19 +157,15 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
 
     f_result->sr = a_sr;
 
-    f_result->comb_tunings[0] = 24.0f;
-    f_result->comb_tunings[1] = 25.0f;
-    f_result->comb_tunings[2] = 26.0f;
-    f_result->comb_tunings[3] = 27.0f;
-    f_result->comb_tunings[4] = 28.0f;
-    f_result->comb_tunings[5] = 29.0f;
-    f_result->comb_tunings[6] = 30.0f;
-    f_result->comb_tunings[7] = 31.0f;
+    for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
+    {
+        f_result->comb_tunings[f_i] = 24.0f + (float)f_i;
+    }
 
-    f_result->allpass_tunings[0] = 33.0f;
-    f_result->allpass_tunings[1] = 40.0f;
-    f_result->allpass_tunings[2] = 47.0f;
-    f_result->allpass_tunings[3] = 54.0f;
+    for(f_i = 0; f_i < PYDAW_REVERB_DIFFUSER_COUNT; ++f_i)
+    {
+        f_result->allpass_tunings[f_i] = 33.0f + (((float)f_i) * 7.0f);
+    }
 
     f_result->output = 0.0f;
 
