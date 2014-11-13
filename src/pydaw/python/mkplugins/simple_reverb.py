@@ -22,12 +22,14 @@ SREVERB_REVERB_WET = 1
 SREVERB_REVERB_COLOR = 2
 SREVERB_REVERB_DRY = 3
 SREVERB_REVERB_PRE_DELAY = 4
+SREVERB_REVERB_HP = 5
 
 
 SREVERB_PORT_MAP = {
     "Reverb Wet": SREVERB_REVERB_WET,
     "Reverb Dry": SREVERB_REVERB_DRY,
-    "Reverb Color": SREVERB_REVERB_COLOR,
+    "Reverb LP": SREVERB_REVERB_COLOR,
+    "Reverb HP": SREVERB_REVERB_HP,
 }
 
 
@@ -89,12 +91,19 @@ class sreverb_plugin_ui(pydaw_abstract_plugin_ui):
         self.reverb_wet_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 10)
 
-        self.reverb_color_knob = pydaw_knob_control(
-            f_knob_size, _("Color"), SREVERB_REVERB_COLOR,
+        self.reverb_hp_knob = pydaw_knob_control(
+            f_knob_size, _("HP"), SREVERB_REVERB_HP,
             self.plugin_rel_callback, self.plugin_val_callback,
-            0, 100, 50, KC_DECIMAL, self.port_dict, self.preset_manager)
-        self.reverb_color_knob.add_to_grid_layout(
+            20, 96, 50, KC_PITCH, self.port_dict, self.preset_manager)
+        self.reverb_hp_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 15)
+
+        self.reverb_lp_knob = pydaw_knob_control(
+            f_knob_size, _("LP"), SREVERB_REVERB_COLOR,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            48, 120, 90, KC_PITCH, self.port_dict, self.preset_manager)
+        self.reverb_lp_knob.add_to_grid_layout(
+            self.reverb_groupbox_gridlayout, 16)
 
         self.reverb_predelay_knob = pydaw_knob_control(
             f_knob_size, _("PreDelay"), SREVERB_REVERB_PRE_DELAY,

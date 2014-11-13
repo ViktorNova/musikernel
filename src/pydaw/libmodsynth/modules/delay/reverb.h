@@ -60,10 +60,11 @@ typedef struct
     float volume_factor;
     float last_predelay;
     float sr;
+    float hp_cutoff;
 } t_rvb_reverb;
 
 t_rvb_reverb * g_rvb_reverb_get(float);
-void v_rvb_reverb_set(t_rvb_reverb *, float, float, float, float);
+void v_rvb_reverb_set(t_rvb_reverb *, float, float, float, float, float);
 inline void v_rvb_reverb_run(t_rvb_reverb *, float, float);
 
 /* void v_rvb_reverb_set(t_rvb_reverb * a_reverb,
@@ -73,17 +74,16 @@ inline void v_rvb_reverb_run(t_rvb_reverb *, float, float);
  * float a_color) //0 to 1, I may change the meaning later...
  */
 void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
-        float a_color, float a_predelay)
+        float a_color, float a_predelay, float a_hp_cutoff)
 {
     if(unlikely(a_time != a_reverb->time))
     {
-        a_reverb->time = a_time;
-
-        a_reverb->feedback = (a_time) + -1.05f;
-
         int f_i;
         float f_base = 20.0f - (a_time * 11.0f);
         float f_factor = 1.0f + (a_time * 0.8f);
+
+        a_reverb->feedback = a_time + -1.05f;
+        v_lfs_set(&a_reverb->lfo, 1.0f - (a_time * 0.9f));
 
         for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
         {
@@ -91,6 +91,8 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
             v_cmb_set_all(&a_reverb->taps[f_i].tap, 0.0f, a_reverb->feedback,
                 a_reverb->taps[f_i].pitch);
         }
+
+        a_reverb->time = a_time;
     }
 
     if(unlikely(a_wet != a_reverb->wet))
@@ -117,6 +119,13 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
         {
             a_reverb->predelay_counter = 0;
         }
+    }
+
+    if(unlikely(a_reverb->hp_cutoff != a_hp_cutoff))
+    {
+        v_svf_set_cutoff_base(&a_reverb->hp, a_hp_cutoff);
+        v_svf_set_cutoff(&a_reverb->hp);
+        a_reverb->hp_cutoff = a_hp_cutoff;
     }
 }
 
@@ -160,6 +169,28 @@ inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
     a_reverb->output = a_reverb->predelay_buffer[(a_reverb->predelay_counter)];
 }
 
+void v_rvb_panic(t_rvb_reverb * self)
+{
+    register int f_i, f_i2;
+    float * f_tmp;
+    int f_count;
+    int f_pre_count = self->sr + 5000;
+    for(f_i = 0; f_i < f_pre_count; ++f_i)
+    {
+        self->predelay_buffer[f_i] = 0.0f;
+    }
+
+    for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
+    {
+        f_tmp = self->taps[f_i].tap.input_buffer;
+        f_count = self->taps[f_i].tap.buffer_size;
+        for(f_i2 = 0; f_i2 < f_count; ++f_i2)
+        {
+            f_tmp[f_i2] = 0.0f;
+        }
+    }
+}
+
 void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
 {
     int f_i;
@@ -168,6 +199,7 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
     f_result->time = 0.5f;
     f_result->wet = 0.0f;
     f_result->wet_linear = 0.0f;
+    f_result->hp_cutoff = -12345.0f;
 
     f_result->sr = a_sr;
 
@@ -179,12 +211,11 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
     f_result->output = 0.0f;
 
     g_lfs_init(&f_result->lfo, a_sr);
-    v_lfs_set(&f_result->lfo, 0.1f);
     v_lfs_sync(&f_result->lfo, 0.0f, 1);
 
     g_svf_init(&f_result->hp, a_sr);
+    v_svf_set_res(&f_result->hp, -36.0f);
     v_svf_set_cutoff_base(&f_result->hp, 60.0f);
-    v_svf_set_res(&f_result->hp, -24.0f);
     v_svf_set_cutoff(&f_result->hp);
 
     g_svf_init(&f_result->lp, a_sr);
@@ -226,7 +257,7 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
         ++f_i;
     }
 
-    v_rvb_reverb_set(f_result, 0.5f, 0.0f, 0.5f, 0.01f);
+    v_rvb_reverb_set(f_result, 0.5f, 0.0f, 0.5f, 0.01f, 60.0f);
 }
 
 #ifdef	__cplusplus

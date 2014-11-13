@@ -28,11 +28,12 @@ extern "C" {
 #define SREVERB_REVERB_COLOR 2
 #define SREVERB_REVERB_DRY 3
 #define SREVERB_REVERB_PRE_DELAY 4
+#define SREVERB_REVERB_HP 5
 
-#define SREVERB_LAST_CONTROL_PORT 4
+#define SREVERB_LAST_CONTROL_PORT 5
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define SREVERB_COUNT 5
+#define SREVERB_COUNT 6
 
 typedef struct
 {
@@ -43,6 +44,7 @@ typedef struct
     PYFX_Data *reverb_dry;
     PYFX_Data *reverb_wet;
     PYFX_Data *reverb_color;
+    PYFX_Data *reverb_hp;
     PYFX_Data *reverb_predelay;
 
     float fs;
