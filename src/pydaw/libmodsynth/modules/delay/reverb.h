@@ -14,7 +14,7 @@ GNU General Public License for more details.
 #ifndef PYDAW_REVERB_H
 #define	PYDAW_REVERB_H
 
-#define PYDAW_REVERB_DIFFUSER_COUNT 4
+#define PYDAW_REVERB_DIFFUSER_COUNT 5
 #define PYDAW_REVERB_TAP_COUNT 12
 
 
@@ -67,19 +67,14 @@ t_rvb_reverb * g_rvb_reverb_get(float);
 void v_rvb_reverb_set(t_rvb_reverb *, float, float, float, float, float);
 inline void v_rvb_reverb_run(t_rvb_reverb *, float, float);
 
-/* void v_rvb_reverb_set(t_rvb_reverb * a_reverb,
- * float a_time,  //0 to 1, not attempting to use RT60 because the algo
- *                //will be non-standard and may change...
- * float a_wet, //0 to 1, I may change the meaning later...
- * float a_color) //0 to 1, I may change the meaning later...
- */
+
 void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
         float a_color, float a_predelay, float a_hp_cutoff)
 {
     if(unlikely(a_time != a_reverb->time))
     {
         int f_i;
-        float f_base = 20.0f - (a_time * 11.0f);
+        float f_base = 20.0f - (a_time * 15.0f);
         float f_factor = 1.0f + (a_time * 0.8f);
 
         a_reverb->feedback = a_time + -1.05f;
@@ -104,10 +99,7 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
     if(unlikely(a_color != a_reverb->color))
     {
         a_reverb->color = a_color;
-
-        float f_cutoff = (a_color * 40.0f) + 70.0f;
-
-        v_svf_set_cutoff_base(&a_reverb->lp, f_cutoff);
+        v_svf_set_cutoff_base(&a_reverb->lp, a_color);
         v_svf_set_cutoff(&a_reverb->lp);
     }
 
@@ -238,7 +230,7 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
         g_svf_init(&f_result->diffusers[f_i].diffuser, a_sr);
         v_svf_set_cutoff_base(&f_result->diffusers[f_i].diffuser,
             f_result->diffusers[f_i].pitch);
-        v_svf_set_res(&f_result->diffusers[f_i].diffuser, -1.0f);
+        v_svf_set_res(&f_result->diffusers[f_i].diffuser, -6.0f);
         v_svf_set_cutoff(&f_result->diffusers[f_i].diffuser);
         ++f_i;
     }
@@ -257,7 +249,7 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
         ++f_i;
     }
 
-    v_rvb_reverb_set(f_result, 0.5f, 0.0f, 0.5f, 0.01f, 60.0f);
+    v_rvb_reverb_set(f_result, 0.5f, 0.0f, 55.5f, 0.01f, 60.0f);
 }
 
 #ifdef	__cplusplus
