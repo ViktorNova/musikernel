@@ -15,7 +15,7 @@ GNU General Public License for more details.
 #define	PYDAW_REVERB_H
 
 #define PYDAW_REVERB_DIFFUSER_COUNT 4
-#define PYDAW_REVERB_TAP_COUNT 8
+#define PYDAW_REVERB_TAP_COUNT 12
 
 
 #include "../../lib/amp.h"
@@ -159,7 +159,7 @@ void g_rvb_reverb_init(t_rvb_reverb * f_result, float a_sr)
 
     for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
     {
-        f_result->comb_tunings[f_i] = 24.0f + (float)f_i;
+        f_result->comb_tunings[f_i] = 9.0f + (((float)f_i) * 1.5f);
     }
 
     for(f_i = 0; f_i < PYDAW_REVERB_DIFFUSER_COUNT; ++f_i)
