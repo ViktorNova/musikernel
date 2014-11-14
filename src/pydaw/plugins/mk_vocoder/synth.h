@@ -30,8 +30,8 @@ extern "C" {
 
 typedef struct
 {
-    float ** buffers;
-    float ** sc_buffers;
+    float * buffers[2];
+    float * sc_buffers[2];
     float fs;
     t_mk_vocoder_mono_modules * mono_modules;
 

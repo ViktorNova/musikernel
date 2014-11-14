@@ -32,8 +32,8 @@ extern "C" {
 
 typedef struct
 {
-    float ** buffers;
-    float ** sc_buffers;
+    float * buffers[2];
+    float * sc_buffers[2];
     PYFX_Data *pan;
     PYFX_Data *pan_law;
     float fs;

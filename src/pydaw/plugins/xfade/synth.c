@@ -82,8 +82,6 @@ static PYFX_Handle g_xfade_instantiate(PYFX_Descriptor * descriptor,
 {
     t_xfade *plugin_data;
     hpalloc((void**)&plugin_data, sizeof(t_xfade));
-    hpalloc((void**)&plugin_data->buffers, sizeof(float*) * 2);
-    hpalloc((void**)&plugin_data->sc_buffers, sizeof(float*) * 2);
 
     plugin_data->descriptor = descriptor;
     plugin_data->fs = s_rate;

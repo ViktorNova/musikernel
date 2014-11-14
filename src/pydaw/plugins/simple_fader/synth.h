@@ -31,7 +31,7 @@ extern "C" {
 
 typedef struct
 {
-    float ** buffers;
+    float * buffers[2];
     PYFX_Data *vol_slider;
     float fs;
     t_sfader_mono_modules * mono_modules;

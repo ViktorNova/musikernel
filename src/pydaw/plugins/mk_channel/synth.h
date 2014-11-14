@@ -34,7 +34,7 @@ extern "C" {
 
 typedef struct
 {
-    float ** buffers;
+    float * buffers[2];
     PYFX_Data *vol_slider;
     PYFX_Data *gain;
     PYFX_Data *pan;
