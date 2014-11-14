@@ -68,97 +68,97 @@ void v_rvb_reverb_set(t_rvb_reverb *, float, float, float, float, float);
 inline void v_rvb_reverb_run(t_rvb_reverb *, float, float);
 
 
-void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
+void v_rvb_reverb_set(t_rvb_reverb * self, float a_time, float a_wet,
         float a_color, float a_predelay, float a_hp_cutoff)
 {
-    if(unlikely(a_time != a_reverb->time))
+    if(unlikely(a_time != self->time))
     {
         int f_i;
         float f_base = 30.0f - (a_time * 25.0f);
         float f_factor = 1.4f + (a_time * 0.8f);
 
-        a_reverb->feedback = a_time + -1.05f;
-        v_lfs_set(&a_reverb->lfo, 1.0f - (a_time * 0.9f));
+        self->feedback = a_time + -1.05f;
+        v_lfs_set(&self->lfo, 1.0f - (a_time * 0.9f));
 
         for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
         {
-            a_reverb->taps[f_i].pitch = f_base + (((float)f_i) * f_factor);
-            v_cmb_set_all(&a_reverb->taps[f_i].tap, 0.0f, a_reverb->feedback,
-                a_reverb->taps[f_i].pitch);
+            self->taps[f_i].pitch = f_base + (((float)f_i) * f_factor);
+            v_cmb_set_all(&self->taps[f_i].tap, 0.0f, self->feedback,
+                self->taps[f_i].pitch);
         }
 
-        a_reverb->time = a_time;
+        self->time = a_time;
     }
 
-    if(unlikely(a_wet != a_reverb->wet))
+    if(unlikely(a_wet != self->wet))
     {
-        a_reverb->wet = a_wet;
-        a_reverb->wet_linear =  a_wet * (a_reverb->volume_factor);
+        self->wet = a_wet;
+        self->wet_linear =  a_wet * (self->volume_factor);
     }
 
-    if(unlikely(a_color != a_reverb->color))
+    if(unlikely(a_color != self->color))
     {
-        a_reverb->color = a_color;
-        v_svf_set_cutoff_base(&a_reverb->lp, a_color);
-        v_svf_set_cutoff(&a_reverb->lp);
+        self->color = a_color;
+        v_svf_set_cutoff_base(&self->lp, a_color);
+        v_svf_set_cutoff(&self->lp);
     }
 
-    if(unlikely(a_reverb->last_predelay != a_predelay))
+    if(unlikely(self->last_predelay != a_predelay))
     {
-        a_reverb->last_predelay = a_predelay;
-        a_reverb->predelay_size = (int)(a_reverb->sr * a_predelay);
-        if(a_reverb->predelay_counter >= a_reverb->predelay_size)
+        self->last_predelay = a_predelay;
+        self->predelay_size = (int)(self->sr * a_predelay);
+        if(self->predelay_counter >= self->predelay_size)
         {
-            a_reverb->predelay_counter = 0;
+            self->predelay_counter = 0;
         }
     }
 
-    if(unlikely(a_reverb->hp_cutoff != a_hp_cutoff))
+    if(unlikely(self->hp_cutoff != a_hp_cutoff))
     {
-        v_svf_set_cutoff_base(&a_reverb->hp, a_hp_cutoff);
-        v_svf_set_cutoff(&a_reverb->hp);
-        a_reverb->hp_cutoff = a_hp_cutoff;
+        v_svf_set_cutoff_base(&self->hp, a_hp_cutoff);
+        v_svf_set_cutoff(&self->hp);
+        self->hp_cutoff = a_hp_cutoff;
     }
 }
 
-inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
+inline void v_rvb_reverb_run(t_rvb_reverb * self, float a_input0,
         float a_input1)
 {
     int f_i;
+    
+    self->output *= 0.02f;
+    v_lfs_run(&self->lfo);
+    float f_lfo_diff = self->lfo.output * 2.0f;
 
-    a_reverb->output *= 0.02f;
-    v_lfs_run(&a_reverb->lfo);
-    float f_lfo_diff = a_reverb->lfo.output * 2.0f;
-
-    float f_tmp_sample = v_svf_run_2_pole_lp(&a_reverb->lp,
+    float f_tmp_sample = v_svf_run_2_pole_lp(&self->lp,
             (a_input0 + a_input1));
-    f_tmp_sample = v_svf_run_2_pole_hp(&a_reverb->hp, f_tmp_sample);
-    f_tmp_sample *= (a_reverb->wet_linear);
+    f_tmp_sample = v_svf_run_2_pole_hp(&self->hp, f_tmp_sample);
+    f_tmp_sample *= (self->wet_linear);
 
     for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
     {
-        v_cmb_run(&a_reverb->taps[f_i].tap, f_tmp_sample);
-        a_reverb->output += (a_reverb->taps[f_i].tap.output_sample);
+        v_cmb_run(&self->taps[f_i].tap, f_tmp_sample);
+        self->output += (self->taps[f_i].tap.output_sample);
     }
 
     for(f_i = 0; f_i < PYDAW_REVERB_DIFFUSER_COUNT; ++f_i)
     {
-        v_svf_set_cutoff_base(&a_reverb->diffusers[f_i].diffuser,
-            a_reverb->diffusers[f_i].pitch + f_lfo_diff);
-        v_svf_set_cutoff(&a_reverb->diffusers[f_i].diffuser);
-        a_reverb->output =
-            v_svf_run_2_pole_allpass(&a_reverb->diffusers[f_i].diffuser,
-            a_reverb->output);
+        v_svf_set_cutoff_base(&self->diffusers[f_i].diffuser,
+            self->diffusers[f_i].pitch + f_lfo_diff);
+        v_svf_set_cutoff(&self->diffusers[f_i].diffuser);
+        self->output =
+            v_svf_run_2_pole_allpass(&self->diffusers[f_i].diffuser,
+            self->output);
     }
 
-    a_reverb->predelay_buffer[(a_reverb->predelay_counter)] = a_reverb->output;
-    ++a_reverb->predelay_counter;
-    if(unlikely(a_reverb->predelay_counter >= a_reverb->predelay_size))
+    self->predelay_buffer[(self->predelay_counter)] = self->output;
+    ++self->predelay_counter;
+    if(unlikely(self->predelay_counter >= self->predelay_size))
     {
-        a_reverb->predelay_counter = 0;
+        self->predelay_counter = 0;
     }
 
-    a_reverb->output = a_reverb->predelay_buffer[(a_reverb->predelay_counter)];
+    self->output = self->predelay_buffer[(self->predelay_counter)];
 }
 
 void v_rvb_panic(t_rvb_reverb * self)
