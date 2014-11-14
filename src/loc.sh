@@ -4,6 +4,6 @@ pydaw/libmodsynth/lib/* pydaw/libmodsynth/*/*/*
 
 echo "^^^ Lines of C code"
 
-wc -l pydaw/python/*.py pydaw/python/libpydaw/*.py
+wc -l pydaw/python/*.py pydaw/python/libpydaw/*.py pydaw/python/mkplugins/*
 
 echo "^^^ Lines of Python code"
