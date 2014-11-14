@@ -1839,7 +1839,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor(int index)
         ++f_port;
     }
 
-    pydaw_set_pyfx_port(f_result, WAYV_NOISE_PREFX, 0.0f, 0, 1);
+    pydaw_set_pyfx_port(f_result, WAYV_NOISE_PREFX, 1.0f, 0, 1);
 
     f_port = WAVV_PFXMATRIX_GRP0DST0SRC6CTRL0;
 
