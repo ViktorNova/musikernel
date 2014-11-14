@@ -125,7 +125,9 @@ inline void v_rvb_reverb_run(t_rvb_reverb * self, float a_input0,
         float a_input1)
 {
     int f_i;
-    
+    t_state_variable_filter * f_filter;
+    t_comb_filter * f_comb;
+
     self->output *= 0.02f;
     v_lfs_run(&self->lfo);
     float f_lfo_diff = self->lfo.output * 2.0f;
@@ -137,18 +139,18 @@ inline void v_rvb_reverb_run(t_rvb_reverb * self, float a_input0,
 
     for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)
     {
-        v_cmb_run(&self->taps[f_i].tap, f_tmp_sample);
-        self->output += (self->taps[f_i].tap.output_sample);
+        f_comb = &self->taps[f_i].tap;
+        v_cmb_run(f_comb, f_tmp_sample);
+        self->output += f_comb->output_sample;
     }
 
     for(f_i = 0; f_i < PYDAW_REVERB_DIFFUSER_COUNT; ++f_i)
     {
-        v_svf_set_cutoff_base(&self->diffusers[f_i].diffuser,
+        f_filter = &self->diffusers[f_i].diffuser;
+        v_svf_set_cutoff_base(f_filter,
             self->diffusers[f_i].pitch + f_lfo_diff);
-        v_svf_set_cutoff(&self->diffusers[f_i].diffuser);
-        self->output =
-            v_svf_run_2_pole_allpass(&self->diffusers[f_i].diffuser,
-            self->output);
+        v_svf_set_cutoff(f_filter);
+        self->output = v_svf_run_2_pole_allpass(f_filter, self->output);
     }
 
     self->predelay_buffer[(self->predelay_counter)] = self->output;
