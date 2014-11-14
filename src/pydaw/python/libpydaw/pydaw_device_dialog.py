@@ -79,8 +79,12 @@ HUGEPAGES_TOOLTIP = _(
 """HugePages can improve memory/cache performance (sometimes significantly),
 but you must allocate system memory for it that can only be used for HugePages.
 
-It is recommended that you allocate at least 1GB of HugePages.  To allocate
-HugePages, run this command to see your HugePage size:
+It is recommended that you allocate at least 1GB of HugePages, and that you
+leave AT LEAST 2GB of non-HugePage memory for other processes.  (if you use
+other memory intensive applications that are not HugePage-enabled, you may
+need to leave more than 2GB)
+
+To allocate HugePages, run this command to see your HugePage size:
 
 grep -i hugepage /proc/meminfo
 
