@@ -74,8 +74,8 @@ void v_rvb_reverb_set(t_rvb_reverb * a_reverb, float a_time, float a_wet,
     if(unlikely(a_time != a_reverb->time))
     {
         int f_i;
-        float f_base = 20.0f - (a_time * 15.0f);
-        float f_factor = 1.0f + (a_time * 0.8f);
+        float f_base = 30.0f - (a_time * 25.0f);
+        float f_factor = 1.4f + (a_time * 0.8f);
 
         a_reverb->feedback = a_time + -1.05f;
         v_lfs_set(&a_reverb->lfo, 1.0f - (a_time * 0.9f));
@@ -126,9 +126,9 @@ inline void v_rvb_reverb_run(t_rvb_reverb * a_reverb, float a_input0,
 {
     int f_i;
 
-    a_reverb->output *= 0.01f;
+    a_reverb->output *= 0.02f;
     v_lfs_run(&a_reverb->lfo);
-    float f_lfo_diff = a_reverb->lfo.output * 3.0f;
+    float f_lfo_diff = a_reverb->lfo.output * 2.0f;
 
     float f_tmp_sample = v_svf_run_2_pole_lp(&a_reverb->lp,
             (a_input0 + a_input1));
