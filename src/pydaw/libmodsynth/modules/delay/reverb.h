@@ -77,7 +77,7 @@ void v_rvb_reverb_set(t_rvb_reverb * self, float a_time, float a_wet,
         float f_base = 30.0f - (a_time * 25.0f);
         float f_factor = 1.4f + (a_time * 0.8f);
 
-        self->feedback = a_time + -1.05f;
+        self->feedback = a_time - 1.03f;
         v_lfs_set(&self->lfo, 1.0f - (a_time * 0.9f));
 
         for(f_i = 0; f_i < PYDAW_REVERB_TAP_COUNT; ++f_i)

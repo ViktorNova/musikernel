@@ -154,28 +154,22 @@ inline void v_cmb_mc_run(t_comb_filter*__restrict a_cmb_ptr, float a_value)
 inline void v_cmb_set_all(t_comb_filter*__restrict a_cmb_ptr,
     float a_wet_db, float a_feedback_db, float a_midi_note_number)
 {
-    /*Set wet_linear, but only if it's changed since last time*/
     if((a_cmb_ptr->wet_db) != a_wet_db)
     {
         a_cmb_ptr->wet_db = a_wet_db;
         a_cmb_ptr->wet_linear = f_db_to_linear_fast(a_wet_db);
     }
 
-    /*Set feedback_linear, but only if it's changed since last time*/
     if((a_cmb_ptr->feedback_db) != a_feedback_db)
     {
-        if(a_feedback_db > -0.1f)
+        a_cmb_ptr->feedback_db = a_feedback_db;
+
+        if(a_feedback_db > -0.05f)
         {
-            a_cmb_ptr->feedback_db = -0.1f;
-        }
-        else
-        {
-            a_cmb_ptr->feedback_db = a_feedback_db;
+            a_feedback_db = -0.05f;
         }
 
-        a_cmb_ptr->feedback_linear =
-            f_db_to_linear_fast(a_cmb_ptr->feedback_db);
-            // * -1;  //negative feedback, gives a comb-ier sound
+        a_cmb_ptr->feedback_linear = f_db_to_linear_fast(a_feedback_db);
     }
 
     if((a_cmb_ptr->midi_note_number) != a_midi_note_number)
