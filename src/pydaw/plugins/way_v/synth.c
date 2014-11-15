@@ -1054,25 +1054,15 @@ static void v_wayv_process_midi_event(
     {
         assert(a_event->param >= 1 && a_event->param < 128);
 
-        plugin_data->midi_event_types[plugin_data->midi_event_count] =
-                PYDAW_EVENT_CONTROLLER;
-        plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
-                a_event->tick;
-        plugin_data->midi_event_ports[plugin_data->midi_event_count] =
-                a_event->param;
-        plugin_data->midi_event_values[plugin_data->midi_event_count] =
-                a_event->value;
-        ++plugin_data->midi_event_count;
+        v_plugin_event_queue_add(&plugin_data->midi_queue,
+            PYDAW_EVENT_CONTROLLER, a_event->tick,
+            a_event->value, a_event->param);
     }
     else if (a_event->type == PYDAW_EVENT_PITCHBEND)
     {
-        plugin_data->midi_event_types[plugin_data->midi_event_count] =
-                PYDAW_EVENT_PITCHBEND;
-        plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
-                a_event->tick;
-        plugin_data->midi_event_values[plugin_data->midi_event_count] =
-                0.00012207 * a_event->value;
-        ++plugin_data->midi_event_count;
+        v_plugin_event_queue_add(&plugin_data->midi_queue,
+            PYDAW_EVENT_PITCHBEND, a_event->tick,
+            a_event->value * 0.00012207f, 0);
     }
 }
 
@@ -1083,7 +1073,9 @@ static void v_run_wayv(
         t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_wayv *plugin_data = (t_wayv*) instance;
-    plugin_data->midi_event_count = 0;
+
+    v_plugin_event_queue_reset(&plugin_data->midi_queue);
+
     int midi_event_pos = 0;
     int f_poly_mode = (int)(*plugin_data->mono_mode);
 
@@ -1123,26 +1115,29 @@ static void v_run_wayv(
     }
 
     int i_iterator = 0;
+    t_plugin_event_queue_item * f_midi_item;
 
     while(i_iterator < sample_count)
     {
-        while(midi_event_pos < plugin_data->midi_event_count &&
-                plugin_data->midi_event_ticks[midi_event_pos] == i_iterator)
+        while(1)
         {
-            if(plugin_data->midi_event_types[midi_event_pos] ==
-                PYDAW_EVENT_PITCHBEND)
+            f_midi_item = v_plugin_event_queue_iter(
+                &plugin_data->midi_queue, i_iterator);
+            if(!f_midi_item)
             {
-                plugin_data->sv_pitch_bend_value =
-                        plugin_data->midi_event_values[midi_event_pos];
+                break;
             }
-            else if(plugin_data->midi_event_types[midi_event_pos] ==
-                PYDAW_EVENT_CONTROLLER)
+
+            if(f_midi_item->type == PYDAW_EVENT_PITCHBEND)
+            {
+                plugin_data->sv_pitch_bend_value = f_midi_item->value;
+            }
+            else if(f_midi_item->type == PYDAW_EVENT_CONTROLLER)
             {
                 v_cc_map_translate(
                     &plugin_data->cc_map, plugin_data->descriptor,
                     plugin_data->port_table,
-                    plugin_data->midi_event_ports[midi_event_pos],
-                    plugin_data->midi_event_values[midi_event_pos]);
+                    f_midi_item->port, f_midi_item->value);
             }
 
             ++midi_event_pos;

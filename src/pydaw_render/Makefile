@@ -39,7 +39,7 @@ debug:
 
 release:
 	rm *.o || true
-	make CFLAGS+=" -O2 " $(PYDAW_FILE)
+	make CFLAGS+=" -O3 " $(PYDAW_FILE)
 
 gprof:
 	make CFLAGS+=" -O2 -pg " LDFLAGS+=" -pg "
