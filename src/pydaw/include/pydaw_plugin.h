@@ -261,6 +261,7 @@ void v_plugin_event_queue_add(
     f_item->value = a_val;
     f_item->port = a_port;
     ++self->count;
+    assert(self->count <= 200);
 }
 
 void v_plugin_event_queue_reset(t_plugin_event_queue * self)

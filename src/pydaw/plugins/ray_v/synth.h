@@ -142,11 +142,7 @@ typedef struct {
     float sv_pitch_bend_value;
     float sv_last_note;  //For glide
 
-    int midi_event_types[200];
-    int midi_event_ticks[200];
-    float midi_event_values[200];
-    int midi_event_ports[200];
-    int midi_event_count;
+    t_plugin_event_queue midi_queue;
     t_plugin_event_queue atm_queue;
     float * port_table;
     t_plugin_cc_map cc_map;
