@@ -29,31 +29,44 @@ GNU General Public License for more details.
 //How many buffers in between slow indexing operations.  Buffer == users soundcard latency settings, ie: 512 samples
 #define EUPHORIA_SLOW_INDEX_COUNT 64
 
+typedef struct
+{
+    PYFX_Data *basePitch;
+    PYFX_Data *low_note;
+    PYFX_Data *high_note;
+    PYFX_Data *sample_vol;
+    PYFX_Data *sampleStarts;
+    PYFX_Data *sampleEnds;
+    PYFX_Data *sampleLoopStarts;
+    PYFX_Data *sampleLoopEnds;
+    PYFX_Data *sampleLoopModes;
+    PYFX_Data *sampleFadeInEnds;
+    PYFX_Data *sampleFadeOutStarts;
+    PYFX_Data *sample_vel_sens;
+    PYFX_Data *sample_vel_low;
+    PYFX_Data *sample_vel_high;
+    PYFX_Data *sample_pitch;
+    PYFX_Data *sample_tune;
+    PYFX_Data *sample_interpolation_mode;
+    PYFX_Data *noise_amp;
+    PYFX_Data *noise_type;
+    float       sample_last_interpolated_value;
+    t_wav_pool_item * wavpool_items;
+    float       sampleStartPos;
+    float       sampleEndPos;
+    // There is no sampleLoopEndPos because the regular
+    // sample end is re-used for this purpose
+    float       sampleLoopStartPos;
+    float       sample_amp;     //linear, for multiplying
+    float adjusted_base_pitch;
+}t_euphoria_sample;
+
 typedef struct {
     PYFX_Data *output[2];
-    PYFX_Data *basePitch[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *low_note[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *high_note[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sample_vol[EUPHORIA_MAX_SAMPLE_COUNT];     //in decibels
-    PYFX_Data *sampleStarts[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sampleEnds[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sampleLoopStarts[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sampleLoopEnds[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sampleLoopModes[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sampleFadeInEnds[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sampleFadeOutStarts[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sample_vel_sens[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sample_vel_low[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sample_vel_high[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sample_pitch[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sample_tune[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *sample_interpolation_mode[EUPHORIA_MAX_SAMPLE_COUNT];
+    t_euphoria_sample samples[EUPHORIA_MAX_SAMPLE_COUNT];
 
     PYFX_Data *mfx_knobs[EUPHORIA_MONO_FX_GROUPS_COUNT][EUPHORIA_MONO_FX_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
     PYFX_Data *mfx_comboboxes[EUPHORIA_MONO_FX_GROUPS_COUNT][EUPHORIA_MONO_FX_COUNT];
-
-    //The MonoFX group selected for each sample
-    PYFX_Data *sample_mfx_groups[EUPHORIA_MAX_SAMPLE_COUNT];
 
     PYFX_Data *selected_sample;
 
@@ -68,9 +81,6 @@ typedef struct {
     PYFX_Data *release_f;
 
     PYFX_Data *master_vol;
-
-    PYFX_Data *noise_amp[EUPHORIA_MAX_SAMPLE_COUNT];
-    PYFX_Data *noise_type[EUPHORIA_MAX_SAMPLE_COUNT];
 
     PYFX_Data *master_glide;
     PYFX_Data *master_pb_amt;
@@ -99,26 +109,19 @@ typedef struct {
 
     int         i_selected_sample;
     int          channels;
-    float       sample_last_interpolated_value[EUPHORIA_MAX_SAMPLE_COUNT];
-    t_wav_pool_item * wavpool_items[EUPHORIA_MAX_SAMPLE_COUNT];
-    float       sampleStartPos[EUPHORIA_MAX_SAMPLE_COUNT];
-    float       sampleEndPos[EUPHORIA_MAX_SAMPLE_COUNT];
-    float       sampleLoopStartPos[EUPHORIA_MAX_SAMPLE_COUNT];   //There is no sampleLoopEndPos because the regular sample end is re-used for this purpose
-    float       sample_amp[EUPHORIA_MAX_SAMPLE_COUNT];     //linear, for multiplying
+
+    float vel_sens_output[EUPHORIA_POLYPHONY][EUPHORIA_MAX_SAMPLE_COUNT];
     int         sample_indexes[EUPHORIA_POLYPHONY][EUPHORIA_MAX_SAMPLE_COUNT];  //Sample indexes for each note to play
     int         sample_indexes_count[EUPHORIA_POLYPHONY]; //The count of sample indexes to iterate through
-    float vel_sens_output[EUPHORIA_POLYPHONY][EUPHORIA_MAX_SAMPLE_COUNT];
-
-    int sample_mfx_groups_index[EUPHORIA_MAX_SAMPLE_COUNT];  //Cast to int during note_on
 
     //These 2 calculate which channels are assigned to a sample and should be processed
     int monofx_channel_index[EUPHORIA_MONO_FX_GROUPS_COUNT];
     int monofx_channel_index_count;
     //Tracks which indexes are in use
     int monofx_channel_index_tracker[EUPHORIA_MONO_FX_GROUPS_COUNT];
-
-    float adjusted_base_pitch[EUPHORIA_MAX_SAMPLE_COUNT];
-
+    //The MonoFX group selected for each sample
+    PYFX_Data *sample_mfx_groups[EUPHORIA_MAX_SAMPLE_COUNT];
+    int sample_mfx_groups_index[EUPHORIA_MAX_SAMPLE_COUNT];
     /*TODO:  Deprecate these 2?*/
     int loaded_samples[EUPHORIA_MAX_SAMPLE_COUNT];
     int loaded_samples_count;
