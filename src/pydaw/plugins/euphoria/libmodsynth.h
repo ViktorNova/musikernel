@@ -114,6 +114,23 @@ typedef struct
     //The count of sample indexes to iterate through
     int sample_indexes_count;
 
+    //PolyFX modulation streams
+     //The index of the control to mod, currently 0-2
+    int polyfx_mod_ctrl_indexes[EUPHORIA_MODULAR_POLYFX_COUNT][
+        (EUPHORIA_CONTROLS_PER_MOD_EFFECT * EUPHORIA_MODULATOR_COUNT)];
+     //How many polyfx_mod_ptrs to iterate through for the current note
+    int polyfx_mod_counts[EUPHORIA_MODULAR_POLYFX_COUNT];
+    //The index of the modulation source(LFO, ADSR, etc...) to multiply by
+    int polyfx_mod_src_index[EUPHORIA_MODULAR_POLYFX_COUNT][
+        (EUPHORIA_CONTROLS_PER_MOD_EFFECT * EUPHORIA_MODULATOR_COUNT)];
+    //The value of the mod_matrix knob, multiplied by .01
+    float polyfx_mod_matrix_values[EUPHORIA_MODULAR_POLYFX_COUNT][
+        (EUPHORIA_CONTROLS_PER_MOD_EFFECT * EUPHORIA_MODULATOR_COUNT)];
+
+    //Active PolyFX to process
+    int active_polyfx[EUPHORIA_MODULAR_POLYFX_COUNT];
+    int active_polyfx_count;
+
 }t_euphoria_poly_voice __attribute__((aligned(16)));
 
 t_euphoria_poly_voice * g_euphoria_poly_init(float);

@@ -138,17 +138,6 @@ typedef struct {
 
     float sample[EUPHORIA_CHANNEL_COUNT];
 
-    //PolyFX modulation streams
-    int polyfx_mod_ctrl_indexes[EUPHORIA_POLYPHONY][EUPHORIA_MODULAR_POLYFX_COUNT][(EUPHORIA_CONTROLS_PER_MOD_EFFECT * EUPHORIA_MODULATOR_COUNT)]; //The index of the control to mod, currently 0-2
-    int polyfx_mod_counts[EUPHORIA_POLYPHONY][EUPHORIA_MODULAR_POLYFX_COUNT];  //How many polyfx_mod_ptrs to iterate through for the current note
-    int polyfx_mod_src_index[EUPHORIA_POLYPHONY][EUPHORIA_MODULAR_POLYFX_COUNT][(EUPHORIA_CONTROLS_PER_MOD_EFFECT * EUPHORIA_MODULATOR_COUNT)];  //The index of the modulation source(LFO, ADSR, etc...) to multiply by
-    float polyfx_mod_matrix_values[EUPHORIA_POLYPHONY][EUPHORIA_MODULAR_POLYFX_COUNT][(EUPHORIA_CONTROLS_PER_MOD_EFFECT * EUPHORIA_MODULATOR_COUNT)];  //The value of the mod_matrix knob, multiplied by .01
-
-    //Active PolyFX to process
-    int active_polyfx[EUPHORIA_POLYPHONY][EUPHORIA_MODULAR_POLYFX_COUNT];
-    int active_polyfx_count[EUPHORIA_POLYPHONY];
-
-    //pthread_mutex_t mutex;
     t_euphoria_mono_modules * mono_modules;
     t_pit_ratio * smp_pit_ratio;
     t_euphoria_poly_voice * data[EUPHORIA_POLYPHONY];
