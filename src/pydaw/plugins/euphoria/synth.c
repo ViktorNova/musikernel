@@ -503,6 +503,10 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
         f_sample->sample_last_interpolated_value = 0.0f;
         f_sample->adjusted_base_pitch = 60.0f;
         f_sample->wavpool_items = NULL;
+        f_sample->noise_func_ptr = f_run_noise_off;
+        f_sample->noise_linamp = 1.0f;
+        f_sample->noise_type = NULL;
+        f_sample->noise_amp = NULL;
 
         ++f_i;
     }
@@ -768,9 +772,9 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
         }
 
         f_voice->noise_sample =
-                ((plugin_data->mono_modules->noise_func_ptr[(plugin_data->current_sample)](
-                &plugin_data->mono_modules->white_noise1[(f_voice->noise_index)]))
-                * (plugin_data->mono_modules->noise_linamp[(plugin_data->current_sample)])); //add noise
+            f_sample->noise_func_ptr(
+            &plugin_data->mono_modules->white_noise1[(f_voice->noise_index)])
+            * f_sample->noise_linamp;
 
         ch = 0;
         while(ch < (f_sample->wavpool_items->channels))
@@ -883,13 +887,11 @@ static inline void v_euphoria_slow_index(t_euphoria* plugin_data)
 
         int f_index = (int)(*f_sample->noise_type);
         //Get the noise function pointer
-        plugin_data->mono_modules->noise_func_ptr[(plugin_data->loaded_samples[i])] =
-            fp_get_noise_func_ptr(f_index);
+        f_sample->noise_func_ptr = fp_get_noise_func_ptr(f_index);
 
         if(f_index > 0)
         {
-            plugin_data->mono_modules->noise_linamp[(plugin_data->loaded_samples[i])] =
-                f_db_to_linear_fast(*f_sample->noise_amp);
+            f_sample->noise_linamp = f_db_to_linear_fast(*f_sample->noise_amp);
         }
         ++i;
     }

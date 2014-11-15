@@ -56,10 +56,7 @@ typedef struct
     t_white_noise white_noise1[EUPHORIA_NOISE_COUNT];
     int noise_current_index;
 
-    fp_noise_func_ptr noise_func_ptr[EUPHORIA_MAX_SAMPLE_COUNT];
-    int noise_index[EUPHORIA_MAX_SAMPLE_COUNT];
-    float noise_linamp[EUPHORIA_MAX_SAMPLE_COUNT];
-    t_eq6 eqs[EUPHORIA_MAX_SAMPLE_COUNT];
+    t_eq6 eqs[EUPHORIA_MONO_FX_GROUPS_COUNT];
     t_sinc_interpolator sinc_interpolator;
 }t_euphoria_mono_modules __attribute__((aligned(16)));
 
@@ -204,6 +201,8 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
 
     for(f_i = 0; f_i < EUPHORIA_MONO_FX_GROUPS_COUNT; ++f_i)
     {
+        g_eq6_init(&a_mono->eqs[f_i], a_sr);
+
         for(f_i2 = 0; f_i2 < EUPHORIA_MONO_FX_COUNT; ++f_i2)
         {
             g_mf3_init(&a_mono->multieffect[f_i][f_i2], a_sr, 1);
@@ -214,13 +213,6 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
     for(f_i = 0; f_i < EUPHORIA_NOISE_COUNT; ++f_i)
     {
         g_white_noise_init(&a_mono->white_noise1[f_i], a_sr);
-    }
-
-    for(f_i = 0; f_i < EUPHORIA_MAX_SAMPLE_COUNT; ++f_i)
-    {
-        a_mono->noise_func_ptr[f_i] = f_run_noise_off;
-        a_mono->noise_linamp[f_i] = 1.0f;
-        g_eq6_init(&a_mono->eqs[f_i], a_sr);
     }
 
     return a_mono;

@@ -59,6 +59,9 @@ typedef struct
     float       sampleLoopStartPos;
     float       sample_amp;     //linear, for multiplying
     float adjusted_base_pitch;
+    fp_noise_func_ptr noise_func_ptr;
+    int noise_index;
+    float noise_linamp;
 }t_euphoria_sample;
 
 typedef struct {
@@ -120,8 +123,8 @@ typedef struct {
     //Tracks which indexes are in use
     int monofx_channel_index_tracker[EUPHORIA_MONO_FX_GROUPS_COUNT];
     //The MonoFX group selected for each sample
-    PYFX_Data *sample_mfx_groups[EUPHORIA_MAX_SAMPLE_COUNT];
-    int sample_mfx_groups_index[EUPHORIA_MAX_SAMPLE_COUNT];
+    PYFX_Data *sample_mfx_groups[EUPHORIA_MONO_FX_GROUPS_COUNT];
+    int sample_mfx_groups_index[EUPHORIA_MONO_FX_GROUPS_COUNT];
     /*TODO:  Deprecate these 2?*/
     int loaded_samples[EUPHORIA_MAX_SAMPLE_COUNT];
     int loaded_samples_count;
