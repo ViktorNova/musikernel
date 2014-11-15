@@ -108,6 +108,12 @@ typedef struct
     int velocities;
     t_int_frac_read_head sample_read_heads[EUPHORIA_MAX_SAMPLE_COUNT];
 
+    float vel_sens_output[EUPHORIA_MAX_SAMPLE_COUNT];
+    //Sample indexes for each note to play
+    int sample_indexes[EUPHORIA_MAX_SAMPLE_COUNT];
+    //The count of sample indexes to iterate through
+    int sample_indexes_count;
+
 }t_euphoria_poly_voice __attribute__((aligned(16)));
 
 t_euphoria_poly_voice * g_euphoria_poly_init(float);
@@ -159,10 +165,13 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 
     f_voice->noise_index = 0;
     f_voice->velocities = 0;
+    f_voice->sample_indexes_count = 0;
 
     for(f_i = 0; f_i < EUPHORIA_MAX_SAMPLE_COUNT; ++f_i)
     {
         g_ifh_init(&f_voice->sample_read_heads[f_i]);
+        f_voice->sample_indexes[f_i] = 0;
+        f_voice->vel_sens_output[f_i] = 0.0f;
     }
 
     return f_voice;

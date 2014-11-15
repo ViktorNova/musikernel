@@ -512,21 +512,10 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
     }
 
     f_i = 0;
-    int f_i2;
 
     while(f_i < EUPHORIA_POLYPHONY)
     {
-        plugin_data->sample_indexes_count[f_i] = 0;
         plugin_data->data[f_i] = g_euphoria_poly_init(s_rate);
-
-        f_i2 = 0;
-        while(f_i2 < EUPHORIA_MAX_SAMPLE_COUNT)
-        {
-            plugin_data->sample_indexes[f_i][f_i2] = 0;
-            plugin_data->vel_sens_output[f_i][f_i2] = 0.0f;
-            ++f_i2;
-        }
-
         ++f_i;
     }
 
@@ -722,10 +711,10 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
     register int i_loaded_samples = 0;
 
     //Calculating and summing all of the interpolated samples for this note
-    while(i_loaded_samples < (plugin_data->sample_indexes_count[n]))
+    while(i_loaded_samples < f_voice->sample_indexes_count)
     {
         plugin_data->current_sample =
-            (plugin_data->sample_indexes[n][i_loaded_samples]);
+            (f_voice->sample_indexes[i_loaded_samples]);
         if(ratio_function_ptrs[(plugin_data->current_sample)](plugin_data, n)
                 == 1)
         {
@@ -922,7 +911,7 @@ static void v_euphoria_process_midi_event(
             f_voice->velocity_track =
                 ((float)(a_event->velocity)) * 0.007874016f;
 
-            plugin_data->sample_indexes_count[f_voice_num] = 0;
+            f_voice->sample_indexes_count = 0;
 
             //Figure out which samples to play and stash all relevant values
             register int i = 0;
@@ -937,9 +926,9 @@ static void v_euphoria_process_midi_event(
                 (f_voice->velocities <= ((int)(*f_sample->sample_vel_high))) &&
                 (f_voice->velocities >= ((int)(*f_sample->sample_vel_low))))
                 {
-                    plugin_data->sample_indexes[f_voice_num][(plugin_data->sample_indexes_count[f_voice_num])] =
+                    f_voice->sample_indexes[f_voice->sample_indexes_count] =
                         (plugin_data->loaded_samples[i]);
-                    ++plugin_data->sample_indexes_count[f_voice_num];
+                    ++f_voice->sample_indexes_count;
 
                     plugin_data->sample_mfx_groups_index[(plugin_data->loaded_samples[i])] =
                         (int)(*(plugin_data->sample_mfx_groups[(plugin_data->loaded_samples[i])]));
@@ -1050,9 +1039,8 @@ static void v_euphoria_process_midi_event(
                     v_ifh_retrigger(f_read_head,
                         (f_sample->sampleStartPos)); // 0.0f;
 
-                    plugin_data->vel_sens_output[f_voice_num][(plugin_data->loaded_samples[i])] =
-                            (1.0f -
-                            (((float)(a_event->velocity) -
+                    f_voice->vel_sens_output[(plugin_data->loaded_samples[i])] =
+                            (1.0f - (((float)(a_event->velocity) -
                             (*f_sample->sample_vel_low))
                             /
                             ((float)(*f_sample->sample_vel_high) -
@@ -1061,7 +1049,7 @@ static void v_euphoria_process_midi_event(
 
                     f_sample->sample_amp = f_db_to_linear(
                         (*f_sample->sample_vol) +
-                        (plugin_data->vel_sens_output[f_voice_num][(plugin_data->loaded_samples[i])]));
+                        (f_voice->vel_sens_output[(plugin_data->loaded_samples[i])]));
 
                     switch((int)(*f_sample->sample_interpolation_mode))
                     {
@@ -1352,7 +1340,7 @@ static void v_run_lms_euphoria(
         while(i2 < EUPHORIA_POLYPHONY)
         {
             if(((plugin_data->data[i2]->adsr_amp.stage) != ADSR_STAGE_OFF) &&
-                    ((plugin_data->sample_indexes_count[i2]) > 0))
+                (plugin_data->data[i2]->sample_indexes_count > 0))
             {
                 add_sample_lms_euphoria(plugin_data, i2);
             }

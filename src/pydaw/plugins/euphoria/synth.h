@@ -113,10 +113,6 @@ typedef struct {
     int         i_selected_sample;
     int          channels;
 
-    float vel_sens_output[EUPHORIA_POLYPHONY][EUPHORIA_MAX_SAMPLE_COUNT];
-    int         sample_indexes[EUPHORIA_POLYPHONY][EUPHORIA_MAX_SAMPLE_COUNT];  //Sample indexes for each note to play
-    int         sample_indexes_count[EUPHORIA_POLYPHONY]; //The count of sample indexes to iterate through
-
     //These 2 calculate which channels are assigned to a sample and should be processed
     int monofx_channel_index[EUPHORIA_MONO_FX_GROUPS_COUNT];
     int monofx_channel_index_count;
