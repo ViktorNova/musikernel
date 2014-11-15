@@ -188,7 +188,7 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
     t_euphoria_mono_modules * a_mono;
     hpalloc((void**)&a_mono, sizeof(t_euphoria_mono_modules));
 
-    g_sml_init(&a_mono->pitchbend_smoother, a_sr, 1.0f, -1.0f, 0.2f);
+    g_sml_init(&a_mono->pitchbend_smoother, a_sr, 1.0f, -1.0f, 0.1f);
     g_sinc_init(&a_mono->sinc_interpolator,
         EUPHORIA_SINC_INTERPOLATION_POINTS, 6000, 8000.0f, a_sr, 0.42f);
     a_mono->noise_current_index = 0;
