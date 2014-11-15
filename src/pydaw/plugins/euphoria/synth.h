@@ -99,13 +99,13 @@ typedef struct {
     PYFX_Data *max_note;
 
     //Corresponds to the actual knobs on the effects themselves, not the mod matrix
-    PYFX_Data *pfx_mod_knob[EUPHORIA_EFFECTS_GROUPS_COUNT][EUPHORIA_MODULAR_POLYFX_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
+    PYFX_Data *pfx_mod_knob[EUPHORIA_MODULAR_POLYFX_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
 
-    PYFX_Data *fx_combobox[EUPHORIA_EFFECTS_GROUPS_COUNT][EUPHORIA_MODULAR_POLYFX_COUNT];
+    PYFX_Data *fx_combobox[EUPHORIA_MODULAR_POLYFX_COUNT];
 
     //PolyFX Mod Matrix
     //Corresponds to the mod matrix spinboxes
-    PYFX_Data *polyfx_mod_matrix[EUPHORIA_EFFECTS_GROUPS_COUNT][EUPHORIA_MODULAR_POLYFX_COUNT][EUPHORIA_MODULATOR_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
+    PYFX_Data *polyfx_mod_matrix[EUPHORIA_MODULAR_POLYFX_COUNT][EUPHORIA_MODULATOR_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
 
     //End from PolyFX Mod Matrix
 

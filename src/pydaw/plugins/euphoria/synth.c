@@ -139,101 +139,101 @@ static void connectPortSampler(PYFX_Handle instance, int port,
                 plugin->lfo_type = data;
                 break;
 
-            case EUPHORIA_FX0_KNOB0: plugin->pfx_mod_knob[0][0][0] = data; break;
-            case EUPHORIA_FX0_KNOB1: plugin->pfx_mod_knob[0][0][1] = data; break;
-            case EUPHORIA_FX0_KNOB2: plugin->pfx_mod_knob[0][0][2] = data; break;
-            case EUPHORIA_FX1_KNOB0: plugin->pfx_mod_knob[0][1][0] = data; break;
-            case EUPHORIA_FX1_KNOB1: plugin->pfx_mod_knob[0][1][1] = data; break;
-            case EUPHORIA_FX1_KNOB2: plugin->pfx_mod_knob[0][1][2] = data; break;
-            case EUPHORIA_FX2_KNOB0: plugin->pfx_mod_knob[0][2][0] = data; break;
-            case EUPHORIA_FX2_KNOB1: plugin->pfx_mod_knob[0][2][1] = data; break;
-            case EUPHORIA_FX2_KNOB2: plugin->pfx_mod_knob[0][2][2] = data; break;
-            case EUPHORIA_FX3_KNOB0: plugin->pfx_mod_knob[0][3][0] = data; break;
-            case EUPHORIA_FX3_KNOB1: plugin->pfx_mod_knob[0][3][1] = data; break;
-            case EUPHORIA_FX3_KNOB2: plugin->pfx_mod_knob[0][3][2] = data; break;
+            case EUPHORIA_FX0_KNOB0: plugin->pfx_mod_knob[0][0] = data; break;
+            case EUPHORIA_FX0_KNOB1: plugin->pfx_mod_knob[0][1] = data; break;
+            case EUPHORIA_FX0_KNOB2: plugin->pfx_mod_knob[0][2] = data; break;
+            case EUPHORIA_FX1_KNOB0: plugin->pfx_mod_knob[1][0] = data; break;
+            case EUPHORIA_FX1_KNOB1: plugin->pfx_mod_knob[1][1] = data; break;
+            case EUPHORIA_FX1_KNOB2: plugin->pfx_mod_knob[1][2] = data; break;
+            case EUPHORIA_FX2_KNOB0: plugin->pfx_mod_knob[2][0] = data; break;
+            case EUPHORIA_FX2_KNOB1: plugin->pfx_mod_knob[2][1] = data; break;
+            case EUPHORIA_FX2_KNOB2: plugin->pfx_mod_knob[2][2] = data; break;
+            case EUPHORIA_FX3_KNOB0: plugin->pfx_mod_knob[3][0] = data; break;
+            case EUPHORIA_FX3_KNOB1: plugin->pfx_mod_knob[3][1] = data; break;
+            case EUPHORIA_FX3_KNOB2: plugin->pfx_mod_knob[3][2] = data; break;
 
-            case EUPHORIA_FX0_COMBOBOX: plugin->fx_combobox[0][0] = data; break;
-            case EUPHORIA_FX1_COMBOBOX: plugin->fx_combobox[0][1] = data; break;
-            case EUPHORIA_FX2_COMBOBOX: plugin->fx_combobox[0][2] = data; break;
-            case EUPHORIA_FX3_COMBOBOX: plugin->fx_combobox[0][3] = data; break;
+            case EUPHORIA_FX0_COMBOBOX: plugin->fx_combobox[0] = data; break;
+            case EUPHORIA_FX1_COMBOBOX: plugin->fx_combobox[1] = data; break;
+            case EUPHORIA_FX2_COMBOBOX: plugin->fx_combobox[2] = data; break;
+            case EUPHORIA_FX3_COMBOBOX: plugin->fx_combobox[3] = data; break;
             //End from Modulex
             /*PolyFX mod matrix port connections*/
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC0CTRL0: plugin->polyfx_mod_matrix[0][0][0][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC0CTRL1: plugin->polyfx_mod_matrix[0][0][0][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC0CTRL2: plugin->polyfx_mod_matrix[0][0][0][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC1CTRL0: plugin->polyfx_mod_matrix[0][0][1][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC1CTRL1: plugin->polyfx_mod_matrix[0][0][1][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC1CTRL2: plugin->polyfx_mod_matrix[0][0][1][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC2CTRL0: plugin->polyfx_mod_matrix[0][0][2][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC2CTRL1: plugin->polyfx_mod_matrix[0][0][2][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC2CTRL2: plugin->polyfx_mod_matrix[0][0][2][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC3CTRL0: plugin->polyfx_mod_matrix[0][0][3][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC3CTRL1: plugin->polyfx_mod_matrix[0][0][3][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC3CTRL2: plugin->polyfx_mod_matrix[0][0][3][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC0CTRL0: plugin->polyfx_mod_matrix[0][1][0][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC0CTRL1: plugin->polyfx_mod_matrix[0][1][0][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC0CTRL2: plugin->polyfx_mod_matrix[0][1][0][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC1CTRL0: plugin->polyfx_mod_matrix[0][1][1][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC1CTRL1: plugin->polyfx_mod_matrix[0][1][1][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC1CTRL2: plugin->polyfx_mod_matrix[0][1][1][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC2CTRL0: plugin->polyfx_mod_matrix[0][1][2][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC2CTRL1: plugin->polyfx_mod_matrix[0][1][2][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC2CTRL2: plugin->polyfx_mod_matrix[0][1][2][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC3CTRL0: plugin->polyfx_mod_matrix[0][1][3][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC3CTRL1: plugin->polyfx_mod_matrix[0][1][3][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC3CTRL2: plugin->polyfx_mod_matrix[0][1][3][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC0CTRL0: plugin->polyfx_mod_matrix[0][2][0][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC0CTRL1: plugin->polyfx_mod_matrix[0][2][0][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC0CTRL2: plugin->polyfx_mod_matrix[0][2][0][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC1CTRL0: plugin->polyfx_mod_matrix[0][2][1][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC1CTRL1: plugin->polyfx_mod_matrix[0][2][1][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC1CTRL2: plugin->polyfx_mod_matrix[0][2][1][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC2CTRL0: plugin->polyfx_mod_matrix[0][2][2][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC2CTRL1: plugin->polyfx_mod_matrix[0][2][2][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC2CTRL2: plugin->polyfx_mod_matrix[0][2][2][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC3CTRL0: plugin->polyfx_mod_matrix[0][2][3][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC3CTRL1: plugin->polyfx_mod_matrix[0][2][3][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC3CTRL2: plugin->polyfx_mod_matrix[0][2][3][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC0CTRL0: plugin->polyfx_mod_matrix[0][3][0][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC0CTRL1: plugin->polyfx_mod_matrix[0][3][0][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC0CTRL2: plugin->polyfx_mod_matrix[0][3][0][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC1CTRL0: plugin->polyfx_mod_matrix[0][3][1][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC1CTRL1: plugin->polyfx_mod_matrix[0][3][1][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC1CTRL2: plugin->polyfx_mod_matrix[0][3][1][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC2CTRL0: plugin->polyfx_mod_matrix[0][3][2][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC2CTRL1: plugin->polyfx_mod_matrix[0][3][2][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC2CTRL2: plugin->polyfx_mod_matrix[0][3][2][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC3CTRL0: plugin->polyfx_mod_matrix[0][3][3][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC3CTRL1: plugin->polyfx_mod_matrix[0][3][3][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC3CTRL2: plugin->polyfx_mod_matrix[0][3][3][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC0CTRL0: plugin->polyfx_mod_matrix[0][0][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC0CTRL1: plugin->polyfx_mod_matrix[0][0][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC0CTRL2: plugin->polyfx_mod_matrix[0][0][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC1CTRL0: plugin->polyfx_mod_matrix[0][1][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC1CTRL1: plugin->polyfx_mod_matrix[0][1][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC1CTRL2: plugin->polyfx_mod_matrix[0][1][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC2CTRL0: plugin->polyfx_mod_matrix[0][2][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC2CTRL1: plugin->polyfx_mod_matrix[0][2][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC2CTRL2: plugin->polyfx_mod_matrix[0][2][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC3CTRL0: plugin->polyfx_mod_matrix[0][3][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC3CTRL1: plugin->polyfx_mod_matrix[0][3][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC3CTRL2: plugin->polyfx_mod_matrix[0][3][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC0CTRL0: plugin->polyfx_mod_matrix[1][0][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC0CTRL1: plugin->polyfx_mod_matrix[1][0][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC0CTRL2: plugin->polyfx_mod_matrix[1][0][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC1CTRL0: plugin->polyfx_mod_matrix[1][1][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC1CTRL1: plugin->polyfx_mod_matrix[1][1][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC1CTRL2: plugin->polyfx_mod_matrix[1][1][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC2CTRL0: plugin->polyfx_mod_matrix[1][2][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC2CTRL1: plugin->polyfx_mod_matrix[1][2][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC2CTRL2: plugin->polyfx_mod_matrix[1][2][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC3CTRL0: plugin->polyfx_mod_matrix[1][3][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC3CTRL1: plugin->polyfx_mod_matrix[1][3][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC3CTRL2: plugin->polyfx_mod_matrix[1][3][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC0CTRL0: plugin->polyfx_mod_matrix[2][0][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC0CTRL1: plugin->polyfx_mod_matrix[2][0][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC0CTRL2: plugin->polyfx_mod_matrix[2][0][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC1CTRL0: plugin->polyfx_mod_matrix[2][1][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC1CTRL1: plugin->polyfx_mod_matrix[2][1][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC1CTRL2: plugin->polyfx_mod_matrix[2][1][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC2CTRL0: plugin->polyfx_mod_matrix[2][2][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC2CTRL1: plugin->polyfx_mod_matrix[2][2][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC2CTRL2: plugin->polyfx_mod_matrix[2][2][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC3CTRL0: plugin->polyfx_mod_matrix[2][3][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC3CTRL1: plugin->polyfx_mod_matrix[2][3][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC3CTRL2: plugin->polyfx_mod_matrix[2][3][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC0CTRL0: plugin->polyfx_mod_matrix[3][0][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC0CTRL1: plugin->polyfx_mod_matrix[3][0][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC0CTRL2: plugin->polyfx_mod_matrix[3][0][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC1CTRL0: plugin->polyfx_mod_matrix[3][1][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC1CTRL1: plugin->polyfx_mod_matrix[3][1][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC1CTRL2: plugin->polyfx_mod_matrix[3][1][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC2CTRL0: plugin->polyfx_mod_matrix[3][2][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC2CTRL1: plugin->polyfx_mod_matrix[3][2][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC2CTRL2: plugin->polyfx_mod_matrix[3][2][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC3CTRL0: plugin->polyfx_mod_matrix[3][3][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC3CTRL1: plugin->polyfx_mod_matrix[3][3][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC3CTRL2: plugin->polyfx_mod_matrix[3][3][2] = data; break;
 
             //keyboard tracking
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL0: plugin->polyfx_mod_matrix[0][0][4][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL1: plugin->polyfx_mod_matrix[0][0][4][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL2: plugin->polyfx_mod_matrix[0][0][4][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC4CTRL0: plugin->polyfx_mod_matrix[0][1][4][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC4CTRL1: plugin->polyfx_mod_matrix[0][1][4][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC4CTRL2: plugin->polyfx_mod_matrix[0][1][4][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC4CTRL0: plugin->polyfx_mod_matrix[0][2][4][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC4CTRL1: plugin->polyfx_mod_matrix[0][2][4][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC4CTRL2: plugin->polyfx_mod_matrix[0][2][4][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC4CTRL0: plugin->polyfx_mod_matrix[0][3][4][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC4CTRL1: plugin->polyfx_mod_matrix[0][3][4][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC4CTRL2: plugin->polyfx_mod_matrix[0][3][4][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL0: plugin->polyfx_mod_matrix[0][4][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL1: plugin->polyfx_mod_matrix[0][4][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC4CTRL2: plugin->polyfx_mod_matrix[0][4][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC4CTRL0: plugin->polyfx_mod_matrix[1][4][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC4CTRL1: plugin->polyfx_mod_matrix[1][4][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC4CTRL2: plugin->polyfx_mod_matrix[1][4][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC4CTRL0: plugin->polyfx_mod_matrix[2][4][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC4CTRL1: plugin->polyfx_mod_matrix[2][4][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC4CTRL2: plugin->polyfx_mod_matrix[2][4][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC4CTRL0: plugin->polyfx_mod_matrix[3][4][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC4CTRL1: plugin->polyfx_mod_matrix[3][4][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC4CTRL2: plugin->polyfx_mod_matrix[3][4][2] = data; break;
 
             //velocity tracking
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC5CTRL0: plugin->polyfx_mod_matrix[0][0][5][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC5CTRL1: plugin->polyfx_mod_matrix[0][0][5][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST0SRC5CTRL2: plugin->polyfx_mod_matrix[0][0][5][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC5CTRL0: plugin->polyfx_mod_matrix[0][1][5][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC5CTRL1: plugin->polyfx_mod_matrix[0][1][5][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST1SRC5CTRL2: plugin->polyfx_mod_matrix[0][1][5][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC5CTRL0: plugin->polyfx_mod_matrix[0][2][5][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC5CTRL1: plugin->polyfx_mod_matrix[0][2][5][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST2SRC5CTRL2: plugin->polyfx_mod_matrix[0][2][5][2] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC5CTRL0: plugin->polyfx_mod_matrix[0][3][5][0] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC5CTRL1: plugin->polyfx_mod_matrix[0][3][5][1] = data; break;
-            case EUPHORIA_PFXMATRIX_GRP0DST3SRC5CTRL2: plugin->polyfx_mod_matrix[0][3][5][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC5CTRL0: plugin->polyfx_mod_matrix[0][5][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC5CTRL1: plugin->polyfx_mod_matrix[0][5][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST0SRC5CTRL2: plugin->polyfx_mod_matrix[0][5][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC5CTRL0: plugin->polyfx_mod_matrix[1][5][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC5CTRL1: plugin->polyfx_mod_matrix[1][5][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST1SRC5CTRL2: plugin->polyfx_mod_matrix[1][5][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC5CTRL0: plugin->polyfx_mod_matrix[2][5][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC5CTRL1: plugin->polyfx_mod_matrix[2][5][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST2SRC5CTRL2: plugin->polyfx_mod_matrix[2][5][2] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC5CTRL0: plugin->polyfx_mod_matrix[3][5][0] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC5CTRL1: plugin->polyfx_mod_matrix[3][5][1] = data; break;
+            case EUPHORIA_PFXMATRIX_GRP0DST3SRC5CTRL2: plugin->polyfx_mod_matrix[3][5][2] = data; break;
 
             //End PolyFX mod matrix
             case EUPHORIA_LFO_PITCH: plugin->lfo_pitch = data; break;
@@ -789,9 +789,9 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
     while(i_dst < f_voice->active_polyfx_count)
     {
         v_mf3_set(&f_voice->multieffect[(f_voice->active_polyfx[(i_dst)])],
-            *(plugin_data->pfx_mod_knob[0][(f_voice->active_polyfx[(i_dst)])][0]),
-            *(plugin_data->pfx_mod_knob[0][(f_voice->active_polyfx[(i_dst)])][1]),
-            *(plugin_data->pfx_mod_knob[0][(f_voice->active_polyfx[(i_dst)])][2]));
+            *(plugin_data->pfx_mod_knob[(f_voice->active_polyfx[(i_dst)])][0]),
+            *(plugin_data->pfx_mod_knob[(f_voice->active_polyfx[(i_dst)])][1]),
+            *(plugin_data->pfx_mod_knob[(f_voice->active_polyfx[(i_dst)])][2]));
 
         int f_mod_test = 0;
 
@@ -1082,12 +1082,12 @@ static void v_euphoria_process_midi_event(
 
             f_voice->active_polyfx_count = 0;
             //Determine which PolyFX have been enabled
-            register int i_dst, i_fx_grps, i_src, i_ctrl;
+            register int i_dst, i_src, i_ctrl;
             i_dst = 0;
             while((i_dst) < EUPHORIA_MODULAR_POLYFX_COUNT)
             {
                 int f_pfx_combobox_index =
-                    (int)(*(plugin_data->fx_combobox[0][(i_dst)]));
+                    (int)(*plugin_data->fx_combobox[(i_dst)]);
                 f_voice->fx_func_ptr[(i_dst)] =
                         g_mf3_get_function_pointer(f_pfx_combobox_index);
                 f_voice->fx_reset_ptr[(i_dst)] =
@@ -1105,42 +1105,36 @@ static void v_euphoria_process_midi_event(
                 ++i_dst;
             }
 
-            //Calculate an index of which mod_matrix controls to process.  This saves expensive iterations and if/then logic in the main loop
-            i_fx_grps = 0;
-            while((i_fx_grps) < EUPHORIA_EFFECTS_GROUPS_COUNT)
+            i_dst = 0;
+            while((i_dst) < (f_voice->active_polyfx_count))
             {
-                i_dst = 0;
-                while((i_dst) < (f_voice->active_polyfx_count))
+                f_voice->polyfx_mod_counts[f_voice->active_polyfx[i_dst]]
+                    = 0;
+
+                i_src = 0;
+                while((i_src) < EUPHORIA_MODULATOR_COUNT)
                 {
-                    f_voice->polyfx_mod_counts[f_voice->active_polyfx[i_dst]]
-                        = 0;
-
-                    i_src = 0;
-                    while((i_src) < EUPHORIA_MODULATOR_COUNT)
+                    i_ctrl = 0;
+                    while((i_ctrl) < EUPHORIA_CONTROLS_PER_MOD_EFFECT)
                     {
-                        i_ctrl = 0;
-                        while((i_ctrl) < EUPHORIA_CONTROLS_PER_MOD_EFFECT)
+                        if((*plugin_data->polyfx_mod_matrix[f_voice->active_polyfx[i_dst]][i_src][i_ctrl]) != 0)
                         {
-                            if((*plugin_data->polyfx_mod_matrix[(i_fx_grps)][f_voice->active_polyfx[i_dst]][i_src][i_ctrl]) != 0)
-                            {
-                                f_voice->polyfx_mod_ctrl_indexes[
-                                    (f_voice->active_polyfx[(i_dst)])][
-                                    (f_voice->polyfx_mod_counts[
-                                    (f_voice->active_polyfx[(i_dst)])])] = (i_ctrl);
-                                f_voice->polyfx_mod_src_index[
-                                    (f_voice->active_polyfx[(i_dst)])][(f_voice->polyfx_mod_counts[(f_voice->active_polyfx[(i_dst)])])] = (i_src);
-                                f_voice->polyfx_mod_matrix_values[(f_voice->active_polyfx[(i_dst)])][(f_voice->polyfx_mod_counts[(f_voice->active_polyfx[(i_dst)])])] =
-                                        (*(plugin_data->polyfx_mod_matrix[(i_fx_grps)][(f_voice->active_polyfx[(i_dst)])][(i_src)][(i_ctrl)])) * .01;
+                            f_voice->polyfx_mod_ctrl_indexes[
+                                (f_voice->active_polyfx[(i_dst)])][
+                                (f_voice->polyfx_mod_counts[
+                                (f_voice->active_polyfx[(i_dst)])])] = (i_ctrl);
+                            f_voice->polyfx_mod_src_index[
+                                (f_voice->active_polyfx[(i_dst)])][(f_voice->polyfx_mod_counts[(f_voice->active_polyfx[(i_dst)])])] = (i_src);
+                            f_voice->polyfx_mod_matrix_values[(f_voice->active_polyfx[(i_dst)])][(f_voice->polyfx_mod_counts[(f_voice->active_polyfx[(i_dst)])])] =
+                                    (*(plugin_data->polyfx_mod_matrix[(f_voice->active_polyfx[(i_dst)])][(i_src)][(i_ctrl)])) * .01;
 
-                                ++f_voice->polyfx_mod_counts[(f_voice->active_polyfx[(i_dst)])];
-                            }
-                            ++i_ctrl;
+                            ++f_voice->polyfx_mod_counts[(f_voice->active_polyfx[(i_dst)])];
                         }
-                        ++i_src;
+                        ++i_ctrl;
                     }
-                    ++i_dst;
+                    ++i_src;
                 }
-                ++i_fx_grps;
+                ++i_dst;
             }
 
             f_voice->noise_index =

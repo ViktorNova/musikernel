@@ -29,9 +29,7 @@ GNU General Public License for more details.
 #define EUPHORIA_PORTS_PER_MOD_EFFECT 4
 //How many knobs per PolyFX, 3 knobs
 #define EUPHORIA_CONTROLS_PER_MOD_EFFECT 3
-//How many groups of effects.  This will become useful when each sample has an "effects group" choice
-//EDIT:  This may or may not ever come to fruition with my new strategy.  Delete this and re-arrange everywhere it's used...
-#define EUPHORIA_EFFECTS_GROUPS_COUNT 1
+
 //The number of mono_fx groups
 #define EUPHORIA_MONO_FX_GROUPS_COUNT EUPHORIA_MAX_SAMPLE_COUNT
 #define EUPHORIA_MONO_FX_COUNT 4
