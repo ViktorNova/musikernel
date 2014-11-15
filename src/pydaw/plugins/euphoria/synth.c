@@ -431,7 +431,7 @@ static void connectPortSampler(PYFX_Handle instance, int port,
         int f_instance = f_port / 18;
         int f_diff = f_port % 18;
         v_eq6_connect_port(
-            &plugin->mono_modules->eqs[f_instance], f_diff, data);
+            &plugin->mono_modules->mfx[f_instance].eqs, f_diff, data);
     }
     else if(port == EUPHORIA_LFO_PITCH_FINE)
     {
@@ -862,7 +862,7 @@ static inline void v_euphoria_slow_index(t_euphoria* plugin_data)
             i3 = 0;
             while(i3 < EUPHORIA_MONO_FX_COUNT)
             {
-                plugin_data->mono_modules->fx_func_ptr[f_mono_fx_group][i3] =
+                plugin_data->mono_modules->mfx[f_mono_fx_group].fx_func_ptr[i3] =
                     g_mf3_get_function_pointer((int)(*(plugin_data->mfx_comboboxes[f_mono_fx_group][i3])));
                 ++i3;
             }
@@ -1285,7 +1285,7 @@ static void v_run_lms_euphoria(
     while(i2 < (plugin_data->monofx_channel_index_count))
     {
         f_monofx_index = (plugin_data->monofx_channel_index[i2]);
-        v_eq6_set(&plugin_data->mono_modules->eqs[f_monofx_index]);
+        v_eq6_set(&plugin_data->mono_modules->mfx[f_monofx_index].eqs);
         ++i2;
     }
 
@@ -1355,30 +1355,29 @@ static void v_run_lms_euphoria(
             while(i3 < EUPHORIA_MONO_FX_COUNT)
             {
                 v_mf3_set(
-                    &plugin_data->mono_modules->multieffect[f_monofx_index][i3],
+                    &plugin_data->mono_modules->mfx[f_monofx_index].multieffect[i3],
                     (*(plugin_data->mfx_knobs[f_monofx_index][i3][0])),
                     (*(plugin_data->mfx_knobs[f_monofx_index][i3][1])),
                     (*(plugin_data->mfx_knobs[f_monofx_index][i3][2])));
-                plugin_data->mono_modules->fx_func_ptr[f_monofx_index][i3](
-                    &plugin_data->mono_modules->multieffect[f_monofx_index][i3],
+                plugin_data->mono_modules->mfx[f_monofx_index].fx_func_ptr[i3](
+                    &plugin_data->mono_modules->mfx[f_monofx_index].multieffect[i3],
                     f_temp_sample0, f_temp_sample1);
 
                 f_temp_sample0 =
-                    (plugin_data->mono_modules->multieffect[
-                        f_monofx_index][i3].output0);
+                    (plugin_data->mono_modules->mfx[f_monofx_index].multieffect[i3].output0);
                 f_temp_sample1 =
-                    (plugin_data->mono_modules->multieffect[
-                        f_monofx_index][i3].output1);
+                    (plugin_data->mono_modules->mfx[
+                        f_monofx_index].multieffect[i3].output1);
                 ++i3;
             }
 
-            v_eq6_run(&plugin_data->mono_modules->eqs[f_monofx_index],
-                    f_temp_sample0, f_temp_sample1);
+            v_eq6_run(&plugin_data->mono_modules->mfx[f_monofx_index].eqs,
+                f_temp_sample0, f_temp_sample1);
 
             plugin_data->output[0][i] +=
-                    plugin_data->mono_modules->eqs[f_monofx_index].output0;
+                plugin_data->mono_modules->mfx[f_monofx_index].eqs.output0;
             plugin_data->output[1][i] +=
-                    plugin_data->mono_modules->eqs[f_monofx_index].output1;
+                plugin_data->mono_modules->mfx[f_monofx_index].eqs.output1;
             ++i2;
         }
 

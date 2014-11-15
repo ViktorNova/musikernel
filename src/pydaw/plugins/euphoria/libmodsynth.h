@@ -44,19 +44,21 @@ extern "C" {
 
 typedef struct
 {
+    t_mf3_multi multieffect[EUPHORIA_MONO_FX_COUNT];
+    fp_mf3_run fx_func_ptr[EUPHORIA_MONO_FX_COUNT];
+    t_eq6 eqs;
+}t_euphoria_mfx_group;
+
+typedef struct
+{
     t_smoother_linear pitchbend_smoother;
 
     t_dco_dc_offset_filter dc_offset_filters[EUPHORIA_CHANNEL_COUNT];
-
-    t_mf3_multi
-        multieffect[EUPHORIA_MONO_FX_GROUPS_COUNT][EUPHORIA_MONO_FX_COUNT];
-    fp_mf3_run
-        fx_func_ptr[EUPHORIA_MONO_FX_GROUPS_COUNT][EUPHORIA_MONO_FX_COUNT];
+    t_euphoria_mfx_group mfx[EUPHORIA_MONO_FX_GROUPS_COUNT];
 
     t_white_noise white_noise1[EUPHORIA_NOISE_COUNT];
     int noise_current_index;
 
-    t_eq6 eqs[EUPHORIA_MONO_FX_GROUPS_COUNT];
     t_sinc_interpolator sinc_interpolator;
 }t_euphoria_mono_modules __attribute__((aligned(16)));
 
@@ -236,12 +238,12 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
 
     for(f_i = 0; f_i < EUPHORIA_MONO_FX_GROUPS_COUNT; ++f_i)
     {
-        g_eq6_init(&a_mono->eqs[f_i], a_sr);
+        g_eq6_init(&a_mono->mfx[f_i].eqs, a_sr);
 
         for(f_i2 = 0; f_i2 < EUPHORIA_MONO_FX_COUNT; ++f_i2)
         {
-            g_mf3_init(&a_mono->multieffect[f_i][f_i2], a_sr, 1);
-            a_mono->fx_func_ptr[f_i][f_i2] = v_mf3_run_off;
+            g_mf3_init(&a_mono->mfx[f_i].multieffect[f_i2], a_sr, 1);
+            a_mono->mfx[f_i].fx_func_ptr[f_i2] = v_mf3_run_off;
         }
     }
 
