@@ -549,7 +549,7 @@ static inline int check_sample_bounds(t_euphoria *__restrict plugin_data, int n)
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        &plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)];
+        &plugin_data->data[n]->samples[(plugin_data->current_sample)].sample_read_heads;
 
     if (f_read_head->whole_number >= f_sample->sampleEndPos)
     {
@@ -580,7 +580,8 @@ static int calculate_ratio_sinc(t_euphoria *__restrict plugin_data, int n)
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        &plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)];
+        &plugin_data->data[n]->samples[
+            (plugin_data->current_sample)].sample_read_heads;
     plugin_data->ratio =
     f_pit_midi_note_to_ratio_fast(f_sample->adjusted_base_pitch,
         ((plugin_data->data[n]->base_pitch) //+ (plugin_data->data[n]->lfo_pitch_output)
@@ -600,7 +601,8 @@ static int calculate_ratio_linear(t_euphoria *__restrict plugin_data, int n)
 
 static int calculate_ratio_none(t_euphoria *__restrict plugin_data, int n)
 {
-    ++plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)].whole_number;
+    ++plugin_data->data[n]->samples[
+        (plugin_data->current_sample)].sample_read_heads.whole_number;
     return check_sample_bounds(plugin_data, n);
 }
 
@@ -610,7 +612,8 @@ static void run_sampler_interpolation_sinc(
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        &plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)];
+        &plugin_data->data[n]->samples[
+            (plugin_data->current_sample)].sample_read_heads;
 
     f_sample->sample_last_interpolated_value =
         f_sinc_interpolate2(&plugin_data->mono_modules->sinc_interpolator,
@@ -625,7 +628,8 @@ static void run_sampler_interpolation_linear(
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        &plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)];
+        &plugin_data->data[n]->samples[
+            (plugin_data->current_sample)].sample_read_heads;
 
     f_sample->sample_last_interpolated_value =
         f_cubic_interpolate_ptr_ifh(
@@ -640,7 +644,8 @@ static void run_sampler_interpolation_none(
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        &plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)];
+        &plugin_data->data[n]->samples[
+            (plugin_data->current_sample)].sample_read_heads;
 
     f_sample->sample_last_interpolated_value =
         f_sample->wavpool_items-> samples[ch][(f_read_head->whole_number)];
@@ -661,7 +666,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
     int ch;
     t_euphoria_sample * f_sample = NULL;
     t_int_frac_read_head * f_read_head = NULL;
-
+    t_euphoria_pfx_sample * f_pfx_sample = NULL;
     t_euphoria_poly_voice * f_voice = plugin_data->data[n];
 
     //Run things that aren't per-channel like envelopes
@@ -713,8 +718,8 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
     //Calculating and summing all of the interpolated samples for this note
     while(i_loaded_samples < f_voice->sample_indexes_count)
     {
-        plugin_data->current_sample =
-            (f_voice->sample_indexes[i_loaded_samples]);
+        plugin_data->current_sample = f_voice->sample_indexes[i_loaded_samples];
+        f_pfx_sample = &f_voice->samples[plugin_data->current_sample];
         if(ratio_function_ptrs[(plugin_data->current_sample)](plugin_data, n)
                 == 1)
         {
@@ -724,29 +729,24 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
 
         float f_fade_vol = 1.0f;
         f_sample = &plugin_data->samples[plugin_data->current_sample];
-        f_read_head =
-            &f_voice->sample_read_heads[(plugin_data->current_sample)];
+        f_read_head = &f_pfx_sample->sample_read_heads;
 
-        if(f_voice->sample_read_heads[plugin_data->current_sample].whole_number
-            < f_voice->sample_fade_in_end_sample[plugin_data->current_sample])
+        if(f_read_head->whole_number < f_pfx_sample->sample_fade_in_end_sample)
         {
-            float f_fade_in_inc =
-                f_voice->sample_fade_in_inc[plugin_data->current_sample];
+            float f_fade_in_inc = f_pfx_sample->sample_fade_in_inc;
             float f_start_pos = f_sample->sampleStartPos;
-            float f_read_head_pos =
-                (float)(f_read_head->whole_number);
+            float f_read_head_pos = (float)(f_read_head->whole_number);
 
             f_fade_vol =  (f_read_head_pos - f_start_pos) * f_fade_in_inc;
             f_fade_vol = (f_fade_vol * 18.0f) - 18.0f;
             f_fade_vol = f_db_to_linear_fast(f_fade_vol);
         }
         else if(f_read_head->whole_number >
-            f_voice->sample_fade_out_start_sample[plugin_data->current_sample])
+                f_pfx_sample->sample_fade_out_start_sample)
         {
             float f_sample_end_pos = f_sample->sampleEndPos;
             float f_read_head_pos = (float)(f_read_head->whole_number);
-            float f_fade_out_dec =
-                f_voice->sample_fade_out_dec[plugin_data->current_sample];
+            float f_fade_out_dec = f_pfx_sample->sample_fade_out_dec;
 
             f_fade_vol = (f_sample_end_pos - f_read_head_pos) * f_fade_out_dec;
             f_fade_vol = (f_fade_vol * 18.0f) - 18.0f;
@@ -886,6 +886,7 @@ static void v_euphoria_process_midi_event(
     t_euphoria_sample * f_sample = NULL;
     t_int_frac_read_head * f_read_head = NULL;
     t_euphoria_poly_voice * f_voice = NULL;
+    t_euphoria_pfx_sample * f_pfx_sample = NULL;
 
     int f_note = 60;
     int f_min_note = (int)*plugin_data->min_note;
@@ -916,11 +917,13 @@ static void v_euphoria_process_midi_event(
 
             //Figure out which samples to play and stash all relevant values
             register int i = 0;
+            int f_smp;
             while(i  < (plugin_data->loaded_samples_count))
             {
-                f_sample = &plugin_data->samples[plugin_data->loaded_samples[i]];
-                f_read_head =
-                    &f_voice->sample_read_heads[plugin_data->loaded_samples[i]];
+                f_smp = plugin_data->loaded_samples[i];
+                f_sample = &plugin_data->samples[f_smp];
+                f_pfx_sample = &f_voice->samples[f_smp];
+                f_read_head = &f_pfx_sample->sample_read_heads;
 
                 if((f_note >= ((int)(*f_sample->low_note))) &&
                 (f_note <= ((int)(*f_sample->high_note))) &&
@@ -928,11 +931,11 @@ static void v_euphoria_process_midi_event(
                 (f_voice->velocities >= ((int)(*f_sample->sample_vel_low))))
                 {
                     f_voice->sample_indexes[f_voice->sample_indexes_count] =
-                        (plugin_data->loaded_samples[i]);
+                        (f_smp);
                     ++f_voice->sample_indexes_count;
 
-                    plugin_data->sample_mfx_groups_index[(plugin_data->loaded_samples[i])] =
-                        (int)(*(plugin_data->sample_mfx_groups[(plugin_data->loaded_samples[i])]));
+                    plugin_data->sample_mfx_groups_index[(f_smp)] =
+                        (int)(*(plugin_data->sample_mfx_groups[(f_smp)]));
 
                     f_sample->sampleStartPos =
                         (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
@@ -944,10 +947,6 @@ static void v_euphoria_process_midi_event(
                         ((f_sample->wavpool_items->length) *
                         ((*f_sample->sampleLoopStarts) * .001)));
 
-                    /* If loop mode is enabled for this sample, set the sample end to be the same as the
-                       loop end.  Then, in the main loop, we'll recalculate sample_end to be the real sample end once
-                       the note_off event is fired.  Doing it this way greatly reduces the need for extra if-then-else logic
-                       in the main loop */
                     if(((int)(*f_sample->sampleLoopModes)) == 0)
                     {
                         f_sample->sampleEndPos =
@@ -971,63 +970,63 @@ static void v_euphoria_process_midi_event(
                     }
 
                     //get the fade in values
-                    f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
+                    f_pfx_sample->sample_fade_in_end_sample =
                             (int)((*f_sample->sampleFadeInEnds) * 0.001f *
                             (float)(f_sample->wavpool_items->length));
 
-                    if(f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] <
+                    if(f_pfx_sample->sample_fade_in_end_sample <
                             (f_sample->sampleStartPos))
                     {
-                        f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
+                        f_pfx_sample->sample_fade_in_end_sample =
                             (f_sample->sampleStartPos);
                     }
-                    else if(f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] >
+                    else if(f_pfx_sample->sample_fade_in_end_sample >
                             (f_sample->sampleEndPos))
                     {
-                        f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
+                        f_pfx_sample->sample_fade_in_end_sample =
                             (f_sample->sampleEndPos);
                     }
 
-                    if(f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] >
+                    if(f_pfx_sample->sample_fade_in_end_sample >
                             (f_sample->sampleStartPos))
                     {
-                            f_voice->sample_fade_in_inc[(plugin_data->loaded_samples[i])] = 1.0f /
-                                (f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] -
+                            f_pfx_sample->sample_fade_in_inc = 1.0f /
+                                (f_pfx_sample->sample_fade_in_end_sample -
                                     (f_sample->sampleStartPos));
                     }
                     else
                     {
-                        f_voice->sample_fade_in_inc[(plugin_data->loaded_samples[i])] = 1.0f;
+                        f_pfx_sample->sample_fade_in_inc = 1.0f;
                     }
 
                     //get the fade out values
-                    f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
+                    f_pfx_sample->sample_fade_out_start_sample =
                             (int)((*f_sample->sampleFadeOutStarts) * 0.001f *
                             (float)(f_sample->wavpool_items->length));
 
-                    if(f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] <
+                    if(f_pfx_sample->sample_fade_out_start_sample <
                             (f_sample->sampleStartPos))
                     {
-                        f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
+                        f_pfx_sample->sample_fade_out_start_sample =
                             (f_sample->sampleStartPos);
                     }
-                    else if(f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] >
+                    else if(f_pfx_sample->sample_fade_out_start_sample >
                             (f_sample->sampleEndPos))
                     {
-                        f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
+                        f_pfx_sample->sample_fade_out_start_sample =
                             (f_sample->sampleEndPos);
                     }
 
-                    if(f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] <
+                    if(f_pfx_sample->sample_fade_out_start_sample <
                             (f_sample->sampleEndPos))
                     {
-                            f_voice->sample_fade_out_dec[(plugin_data->loaded_samples[i])] = 1.0f /
+                            f_pfx_sample->sample_fade_out_dec = 1.0f /
                                 (f_sample->sampleEndPos -
-                                f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])]);
+                                f_pfx_sample->sample_fade_out_start_sample);
                     }
                     else
                     {
-                        f_voice->sample_fade_out_dec[(plugin_data->loaded_samples[i])] = 1.0f;
+                        f_pfx_sample->sample_fade_out_dec = 1.0f;
                     }
 
 
@@ -1040,7 +1039,7 @@ static void v_euphoria_process_midi_event(
                     v_ifh_retrigger(f_read_head,
                         (f_sample->sampleStartPos)); // 0.0f;
 
-                    f_voice->vel_sens_output[(plugin_data->loaded_samples[i])] =
+                    f_pfx_sample->vel_sens_output =
                             (1.0f - (((float)(a_event->velocity) -
                             (*f_sample->sample_vel_low))
                             /
@@ -1050,26 +1049,26 @@ static void v_euphoria_process_midi_event(
 
                     f_sample->sample_amp = f_db_to_linear(
                         (*f_sample->sample_vol) +
-                        (f_voice->vel_sens_output[(plugin_data->loaded_samples[i])]));
+                        (f_pfx_sample->vel_sens_output));
 
                     switch((int)(*f_sample->sample_interpolation_mode))
                     {
                         case 0:
-                            interpolation_modes[(plugin_data->loaded_samples[i])] =
+                            interpolation_modes[(f_smp)] =
                                 run_sampler_interpolation_sinc;
-                            ratio_function_ptrs[(plugin_data->loaded_samples[i])] =
+                            ratio_function_ptrs[(f_smp)] =
                                 calculate_ratio_sinc;
                             break;
                         case 1:
-                            interpolation_modes[(plugin_data->loaded_samples[i])] =
+                            interpolation_modes[(f_smp)] =
                                 run_sampler_interpolation_linear;
-                            ratio_function_ptrs[(plugin_data->loaded_samples[i])] =
+                            ratio_function_ptrs[(f_smp)] =
                                 calculate_ratio_linear;
                             break;
                         case 2:
-                            interpolation_modes[(plugin_data->loaded_samples[i])] =
+                            interpolation_modes[(f_smp)] =
                                 run_sampler_interpolation_none;
-                            ratio_function_ptrs[(plugin_data->loaded_samples[i])] =
+                            ratio_function_ptrs[(f_smp)] =
                                 calculate_ratio_none;
                             break;
                         default:

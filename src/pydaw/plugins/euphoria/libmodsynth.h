@@ -64,6 +64,17 @@ typedef struct
 
 typedef struct
 {
+    int sample_fade_in_end_sample;
+    float sample_fade_in_inc;
+    int sample_fade_out_start_sample;
+    float sample_fade_out_dec;
+    float sample_fade_amp;
+    t_int_frac_read_head sample_read_heads;
+    float vel_sens_output;
+}t_euphoria_pfx_sample;
+
+typedef struct
+{
     t_adsr adsr_filter;
     t_adsr adsr_amp;
     t_ramp_env glide_env;
@@ -86,6 +97,8 @@ typedef struct
     float note_f;
     float noise_sample;
 
+    t_euphoria_pfx_sample samples[EUPHORIA_MAX_SAMPLE_COUNT];
+
     t_mf3_multi multieffect[EUPHORIA_MODULAR_POLYFX_COUNT];
     fp_mf3_run fx_func_ptr[EUPHORIA_MODULAR_POLYFX_COUNT];
     fp_mf3_reset fx_reset_ptr[EUPHORIA_MODULAR_POLYFX_COUNT];
@@ -98,19 +111,8 @@ typedef struct
 
     float velocity_track;
     float keyboard_track;
-
-    int sample_fade_in_end_sample[EUPHORIA_MAX_SAMPLE_COUNT];
-    float sample_fade_in_inc[EUPHORIA_MAX_SAMPLE_COUNT];
-
-    int sample_fade_out_start_sample[EUPHORIA_MAX_SAMPLE_COUNT];
-    float sample_fade_out_dec[EUPHORIA_MAX_SAMPLE_COUNT];
-
-    float sample_fade_amp[EUPHORIA_MAX_SAMPLE_COUNT];
-
     int velocities;
-    t_int_frac_read_head sample_read_heads[EUPHORIA_MAX_SAMPLE_COUNT];
 
-    float vel_sens_output[EUPHORIA_MAX_SAMPLE_COUNT];
     //Sample indexes for each note to play
     int sample_indexes[EUPHORIA_MAX_SAMPLE_COUNT];
     //The count of sample indexes to iterate through
@@ -188,9 +190,9 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 
     for(f_i = 0; f_i < EUPHORIA_MAX_SAMPLE_COUNT; ++f_i)
     {
-        g_ifh_init(&f_voice->sample_read_heads[f_i]);
+        g_ifh_init(&f_voice->samples[f_i].sample_read_heads);
+        f_voice->samples[f_i].vel_sens_output = 0.0f;
         f_voice->sample_indexes[f_i] = 0;
-        f_voice->vel_sens_output[f_i] = 0.0f;
     }
 
     return f_voice;
