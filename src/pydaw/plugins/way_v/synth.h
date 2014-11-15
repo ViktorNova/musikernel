@@ -590,12 +590,11 @@ typedef struct
     float fs;
     t_wayv_mono_modules * mono_modules;
 
-    float sv_pitch_bend_value;
     float sv_last_note;  //For glide
-
+    float sv_pitch_bend_value;
     t_plugin_event_queue midi_queue;
-    t_plugin_event_queue atm_queue;
     float * port_table;
+    t_plugin_event_queue atm_queue;
     t_plugin_cc_map cc_map;
     PYFX_Descriptor * descriptor;
 } t_wayv;
