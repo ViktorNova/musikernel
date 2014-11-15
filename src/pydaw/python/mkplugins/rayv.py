@@ -137,7 +137,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             RAYV_OSC1_TYPE, f_osc_types,
             self.plugin_rel_callback, self.plugin_val_callback,
             _("Oscillator 1"), self.port_dict,
-            a_preset_mgr=self.preset_manager)
+            a_preset_mgr=self.preset_manager, a_default_type=1)
         self.hlayout1.addWidget(self.osc1.group_box)
         self.adsr_amp = pydaw_adsr_widget(
             f_knob_size, True, RAYV_ATTACK, RAYV_DECAY,
@@ -168,7 +168,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             RAYV_OSC2_TUNE, RAYV_OSC2_VOLUME,
             RAYV_OSC2_TYPE, f_osc_types,
             self.plugin_rel_callback, self.plugin_val_callback,
-            _("Oscillator 2"), self.port_dict, self.preset_manager, 4)
+            _("Oscillator 2"), self.port_dict, self.preset_manager)
         self.hlayout2.addWidget(self.osc2.group_box)
         self.sync_groupbox = QtGui.QGroupBox(_("Sync"))
         self.sync_groupbox.setObjectName("plugin_groupbox")

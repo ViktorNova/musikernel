@@ -759,11 +759,11 @@ PYFX_Descriptor *rayv_PYFX_descriptor(int index)
     pydaw_set_pyfx_port(f_result, RAYV_NOISE_AMP, -30.0f, -60.0f, 0.0f);
     pydaw_set_pyfx_port(f_result, RAYV_FILTER_ENV_AMT, 0.0f, -36.0f, 36.0f);
     pydaw_set_pyfx_port(f_result, RAYV_DIST_WET, 0.0f, 0.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC1_TYPE, 0.0f, 0.0f, 5.0f);
+    pydaw_set_pyfx_port(f_result, RAYV_OSC1_TYPE, 1.0f, 0.0f, 5.0f);
     pydaw_set_pyfx_port(f_result, RAYV_OSC1_PITCH, 0.0f, -36.0f, 36.0f);
     pydaw_set_pyfx_port(f_result, RAYV_OSC1_TUNE, 0.0f, -100.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV_OSC1_VOLUME, -6.0f, -30.0f, 0.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC2_TYPE, 4.0f, 0.0f, 4.0f);
+    pydaw_set_pyfx_port(f_result, RAYV_OSC2_TYPE, 0.0f, 0.0f, 5.0f);
     pydaw_set_pyfx_port(f_result, RAYV_OSC2_PITCH, 0.0f, -36.0f, 36.0f);
     pydaw_set_pyfx_port(f_result, RAYV_OSC2_TUNE, 0.0f, -100.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV_OSC2_VOLUME, -6.0f, -30.0f, 0.0f);
