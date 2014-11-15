@@ -28,9 +28,6 @@ extern "C" {
 #define WAYV_PORTS_PER_MOD_EFFECT 4
 //How many knobs per PolyFX, 3 knobs
 #define WAYV_CONTROLS_PER_MOD_EFFECT 3
-//TODO:  Delete thjs
-#define WAYV_EFFECTS_GROUPS_COUNT 1
-
 
 #define WAYV_OUTPUT0  0
 #define WAYV_OUTPUT1  1
@@ -552,15 +549,14 @@ typedef struct
 
     //Corresponds to the actual knobs on the effects themselves,
     //not the mod matrix
-    PYFX_Data *pfx_mod_knob[WAYV_EFFECTS_GROUPS_COUNT]
-            [WAYV_MODULAR_POLYFX_COUNT][WAYV_CONTROLS_PER_MOD_EFFECT];
+    PYFX_Data *pfx_mod_knob
+        [WAYV_MODULAR_POLYFX_COUNT][WAYV_CONTROLS_PER_MOD_EFFECT];
 
-    PYFX_Data *fx_combobox[WAYV_EFFECTS_GROUPS_COUNT]
-            [WAYV_MODULAR_POLYFX_COUNT];
+    PYFX_Data *fx_combobox[WAYV_MODULAR_POLYFX_COUNT];
 
     //PolyFX Mod Matrix
     //Corresponds to the mod matrix spinboxes
-    PYFX_Data *polyfx_mod_matrix[WAYV_EFFECTS_GROUPS_COUNT]
+    PYFX_Data *polyfx_mod_matrix
             [WAYV_MODULAR_POLYFX_COUNT][WAYV_MODULATOR_COUNT]
             [WAYV_CONTROLS_PER_MOD_EFFECT];
 
