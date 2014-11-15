@@ -27,7 +27,7 @@ extern "C" {
 //How many ports per PolyFX, 3 knobs and a combobox
 #define WAYV_PORTS_PER_MOD_EFFECT 4
 //How many knobs per PolyFX, 3 knobs
-#define WAYV_CONTROLS_PER_MOD_EFFECT 3
+
 
 #define WAYV_OUTPUT0  0
 #define WAYV_OUTPUT1  1
@@ -560,25 +560,8 @@ typedef struct
             [WAYV_MODULAR_POLYFX_COUNT][WAYV_MODULATOR_COUNT]
             [WAYV_CONTROLS_PER_MOD_EFFECT];
 
-    int active_polyfx[WAYV_POLYPHONY][WAYV_MODULAR_POLYFX_COUNT];
-    int active_polyfx_count[WAYV_POLYPHONY];
-
-    //The index of the control to mod, currently 0-2
-    int polyfx_mod_ctrl_indexes[WAYV_POLYPHONY][WAYV_MODULAR_POLYFX_COUNT]
-    [(WAYV_CONTROLS_PER_MOD_EFFECT * WAYV_MODULATOR_COUNT)];
-
-    //How many polyfx_mod_ptrs to iterate through for the current note
-    int polyfx_mod_counts[WAYV_POLYPHONY][WAYV_MODULAR_POLYFX_COUNT];
-
-    //The index of the modulation source(LFO, ADSR, etc...) to multiply by
-    int polyfx_mod_src_index[WAYV_POLYPHONY][WAYV_MODULAR_POLYFX_COUNT]
-    [(WAYV_CONTROLS_PER_MOD_EFFECT * WAYV_MODULATOR_COUNT)];
-
-    //The value of the mod_matrix knob, multiplied by .01
-    float polyfx_mod_matrix_values[WAYV_POLYPHONY][WAYV_MODULAR_POLYFX_COUNT]
-    [(WAYV_CONTROLS_PER_MOD_EFFECT * WAYV_MODULATOR_COUNT)];
-
     t_wayv_poly_voice * data[WAYV_POLYPHONY];
+
     t_voc_voices * voices;
 
     long         sampleNo;

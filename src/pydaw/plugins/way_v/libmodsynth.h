@@ -23,7 +23,8 @@ extern "C" {
 #define WAYV_MODULATOR_COUNT 8
 //How many modular PolyFX
 #define WAYV_MODULAR_POLYFX_COUNT 4
-
+#define WAYV_CONTROLS_PER_MOD_EFFECT 3
+    
 #define WAYV_FM_MACRO_COUNT 2
 
 #define WAYV_OSC_COUNT 6
@@ -119,6 +120,24 @@ typedef struct
 
     float amp;
     float master_vol_lin;
+
+    int active_polyfx[WAYV_MODULAR_POLYFX_COUNT];
+    int active_polyfx_count;
+
+    //The index of the control to mod, currently 0-2
+    int polyfx_mod_ctrl_indexes[WAYV_MODULAR_POLYFX_COUNT]
+    [(WAYV_CONTROLS_PER_MOD_EFFECT * WAYV_MODULATOR_COUNT)];
+
+    //How many polyfx_mod_ptrs to iterate through for the current note
+    int polyfx_mod_counts[WAYV_MODULAR_POLYFX_COUNT];
+
+    //The index of the modulation source(LFO, ADSR, etc...) to multiply by
+    int polyfx_mod_src_index[WAYV_MODULAR_POLYFX_COUNT]
+    [(WAYV_CONTROLS_PER_MOD_EFFECT * WAYV_MODULATOR_COUNT)];
+
+    //The value of the mod_matrix knob, multiplied by .01
+    float polyfx_mod_matrix_values[WAYV_MODULAR_POLYFX_COUNT]
+    [(WAYV_CONTROLS_PER_MOD_EFFECT * WAYV_MODULATOR_COUNT)];
 
 }t_wayv_poly_voice  __attribute__((aligned(16)));
 
