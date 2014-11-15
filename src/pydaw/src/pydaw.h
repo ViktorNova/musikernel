@@ -4364,7 +4364,7 @@ void v_pytrack_routing_graph_free(t_pydaw_routing_graph * self)
 
 t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
 {
-    t_pydaw_routing_graph * f_result;
+    t_pydaw_routing_graph * f_result = NULL;
     lmalloc((void**)&f_result, sizeof(t_pydaw_routing_graph));
 
     int f_i = 0;
