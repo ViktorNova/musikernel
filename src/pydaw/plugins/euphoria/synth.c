@@ -522,7 +522,6 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
         f_i2 = 0;
         while(f_i2 < EUPHORIA_MAX_SAMPLE_COUNT)
         {
-            plugin_data->sample_read_heads[f_i][f_i2] = g_ifh_get();
             plugin_data->sample_indexes[f_i][f_i2] = 0;
             plugin_data->vel_sens_output[f_i][f_i2] = 0.0f;
             ++f_i2;
@@ -537,16 +536,7 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
     plugin_data->channels = 2;
     plugin_data->mono_modules = g_euphoria_mono_init(s_rate);
     plugin_data->fs = s_rate;
-
-    f_i = 0;
-
     plugin_data->sampleNo = 0;
-
-    while (f_i < EUPHORIA_POLYPHONY)
-    {
-	plugin_data->velocities[f_i] = 0;
-        ++f_i;
-    }
 
     plugin_data->port_table = g_pydaw_get_port_table(
             (void**)plugin_data, descriptor);
@@ -570,7 +560,7 @@ static inline int check_sample_bounds(t_euphoria *__restrict plugin_data, int n)
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        plugin_data->sample_read_heads[n][(plugin_data->current_sample)];
+        &plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)];
 
     if (f_read_head->whole_number >= f_sample->sampleEndPos)
     {
@@ -601,7 +591,7 @@ static int calculate_ratio_sinc(t_euphoria *__restrict plugin_data, int n)
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        plugin_data->sample_read_heads[n][(plugin_data->current_sample)];
+        &plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)];
     plugin_data->ratio =
     f_pit_midi_note_to_ratio_fast(f_sample->adjusted_base_pitch,
         ((plugin_data->data[n]->base_pitch) //+ (plugin_data->data[n]->lfo_pitch_output)
@@ -621,7 +611,7 @@ static int calculate_ratio_linear(t_euphoria *__restrict plugin_data, int n)
 
 static int calculate_ratio_none(t_euphoria *__restrict plugin_data, int n)
 {
-    ++plugin_data->sample_read_heads[n][(plugin_data->current_sample)]->whole_number;
+    ++plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)].whole_number;
     return check_sample_bounds(plugin_data, n);
 }
 
@@ -631,7 +621,7 @@ static void run_sampler_interpolation_sinc(
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        plugin_data->sample_read_heads[n][(plugin_data->current_sample)];
+        &plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)];
 
     f_sample->sample_last_interpolated_value =
         f_sinc_interpolate2(&plugin_data->mono_modules->sinc_interpolator,
@@ -646,7 +636,7 @@ static void run_sampler_interpolation_linear(
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        plugin_data->sample_read_heads[n][(plugin_data->current_sample)];
+        &plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)];
 
     f_sample->sample_last_interpolated_value =
         f_cubic_interpolate_ptr_ifh(
@@ -661,7 +651,7 @@ static void run_sampler_interpolation_none(
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        plugin_data->sample_read_heads[n][(plugin_data->current_sample)];
+        &plugin_data->data[n]->sample_read_heads[(plugin_data->current_sample)];
 
     f_sample->sample_last_interpolated_value =
         f_sample->wavpool_items-> samples[ch][(f_read_head->whole_number)];
@@ -734,8 +724,10 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
     //Calculating and summing all of the interpolated samples for this note
     while(i_loaded_samples < (plugin_data->sample_indexes_count[n]))
     {
-        plugin_data->current_sample = (plugin_data->sample_indexes[n][i_loaded_samples]);
-        if(ratio_function_ptrs[(plugin_data->current_sample)](plugin_data, n) == 1)
+        plugin_data->current_sample =
+            (plugin_data->sample_indexes[n][i_loaded_samples]);
+        if(ratio_function_ptrs[(plugin_data->current_sample)](plugin_data, n)
+                == 1)
         {
             ++i_loaded_samples;
             continue;
@@ -744,10 +736,10 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
         float f_fade_vol = 1.0f;
         f_sample = &plugin_data->samples[plugin_data->current_sample];
         f_read_head =
-            plugin_data->sample_read_heads[n][(plugin_data->current_sample)];
+            &f_voice->sample_read_heads[(plugin_data->current_sample)];
 
-        if(plugin_data->sample_read_heads[n][plugin_data->current_sample]->whole_number <
-           f_voice->sample_fade_in_end_sample[plugin_data->current_sample])
+        if(f_voice->sample_read_heads[plugin_data->current_sample].whole_number
+            < f_voice->sample_fade_in_end_sample[plugin_data->current_sample])
         {
             float f_fade_in_inc =
                 f_voice->sample_fade_in_inc[plugin_data->current_sample];
@@ -764,7 +756,8 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
         {
             float f_sample_end_pos = f_sample->sampleEndPos;
             float f_read_head_pos = (float)(f_read_head->whole_number);
-            float f_fade_out_dec = f_voice->sample_fade_out_dec[plugin_data->current_sample];
+            float f_fade_out_dec =
+                f_voice->sample_fade_out_dec[plugin_data->current_sample];
 
             f_fade_vol = (f_sample_end_pos - f_read_head_pos) * f_fade_out_dec;
             f_fade_vol = (f_fade_vol * 18.0f) - 18.0f;
@@ -880,7 +873,7 @@ static inline void v_euphoria_slow_index(t_euphoria* plugin_data)
             while(i3 < EUPHORIA_MONO_FX_COUNT)
             {
                 plugin_data->mono_modules->fx_func_ptr[f_mono_fx_group][i3] =
-                        g_mf3_get_function_pointer((int)(*(plugin_data->mfx_comboboxes[f_mono_fx_group][i3])));
+                    g_mf3_get_function_pointer((int)(*(plugin_data->mfx_comboboxes[f_mono_fx_group][i3])));
                 ++i3;
             }
         }
@@ -902,6 +895,7 @@ static void v_euphoria_process_midi_event(
 {
     t_euphoria_sample * f_sample = NULL;
     t_int_frac_read_head * f_read_head = NULL;
+    t_euphoria_poly_voice * f_voice = NULL;
 
     int f_note = 60;
     int f_min_note = (int)*plugin_data->min_note;
@@ -918,11 +912,15 @@ static void v_euphoria_process_midi_event(
             {
                 return;
             }
-            int f_voice_num = i_pick_voice(plugin_data->voices, f_note, (plugin_data->sampleNo), a_event->tick);
-            plugin_data->velocities[f_voice_num] = a_event->velocity;
+            int f_voice_num = i_pick_voice(
+                plugin_data->voices, f_note,
+                plugin_data->sampleNo, a_event->tick);
+            f_voice = plugin_data->data[f_voice_num];
+            f_voice->velocities = a_event->velocity;
 
-            plugin_data->data[f_voice_num]->keyboard_track = ((float)(a_event->note)) * 0.007874016f;
-            plugin_data->data[f_voice_num]->velocity_track = ((float)(a_event->velocity)) * 0.007874016f;
+            f_voice->keyboard_track = ((float)(a_event->note)) * 0.007874016f;
+            f_voice->velocity_track =
+                ((float)(a_event->velocity)) * 0.007874016f;
 
             plugin_data->sample_indexes_count[f_voice_num] = 0;
 
@@ -932,14 +930,12 @@ static void v_euphoria_process_midi_event(
             {
                 f_sample = &plugin_data->samples[plugin_data->loaded_samples[i]];
                 f_read_head =
-                    plugin_data->sample_read_heads[f_voice_num][plugin_data->loaded_samples[i]];
+                    &f_voice->sample_read_heads[plugin_data->loaded_samples[i]];
 
                 if((f_note >= ((int)(*f_sample->low_note))) &&
                 (f_note <= ((int)(*f_sample->high_note))) &&
-                (plugin_data->velocities[f_voice_num] <=
-                    ((int)(*f_sample->sample_vel_high))) &&
-                (plugin_data->velocities[f_voice_num] >=
-                    ((int)(*f_sample->sample_vel_low))))
+                (f_voice->velocities <= ((int)(*f_sample->sample_vel_high))) &&
+                (f_voice->velocities >= ((int)(*f_sample->sample_vel_low))))
                 {
                     plugin_data->sample_indexes[f_voice_num][(plugin_data->sample_indexes_count[f_voice_num])] =
                         (plugin_data->loaded_samples[i]);
@@ -985,63 +981,63 @@ static void v_euphoria_process_midi_event(
                     }
 
                     //get the fade in values
-                    plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
+                    f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
                             (int)((*f_sample->sampleFadeInEnds) * 0.001f *
                             (float)(f_sample->wavpool_items->length));
 
-                    if(plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] <
+                    if(f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] <
                             (f_sample->sampleStartPos))
                     {
-                        plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
+                        f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
                             (f_sample->sampleStartPos);
                     }
-                    else if(plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] >
+                    else if(f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] >
                             (f_sample->sampleEndPos))
                     {
-                        plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
+                        f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] =
                             (f_sample->sampleEndPos);
                     }
 
-                    if(plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] >
+                    if(f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] >
                             (f_sample->sampleStartPos))
                     {
-                            plugin_data->data[f_voice_num]->sample_fade_in_inc[(plugin_data->loaded_samples[i])] = 1.0f /
-                                (plugin_data->data[f_voice_num]->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] -
+                            f_voice->sample_fade_in_inc[(plugin_data->loaded_samples[i])] = 1.0f /
+                                (f_voice->sample_fade_in_end_sample[(plugin_data->loaded_samples[i])] -
                                     (f_sample->sampleStartPos));
                     }
                     else
                     {
-                        plugin_data->data[f_voice_num]->sample_fade_in_inc[(plugin_data->loaded_samples[i])] = 1.0f;
+                        f_voice->sample_fade_in_inc[(plugin_data->loaded_samples[i])] = 1.0f;
                     }
 
                     //get the fade out values
-                    plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
+                    f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
                             (int)((*f_sample->sampleFadeOutStarts) * 0.001f *
                             (float)(f_sample->wavpool_items->length));
 
-                    if(plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] <
+                    if(f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] <
                             (f_sample->sampleStartPos))
                     {
-                        plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
+                        f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
                             (f_sample->sampleStartPos);
                     }
-                    else if(plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] >
+                    else if(f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] >
                             (f_sample->sampleEndPos))
                     {
-                        plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
+                        f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] =
                             (f_sample->sampleEndPos);
                     }
 
-                    if(plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] <
+                    if(f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])] <
                             (f_sample->sampleEndPos))
                     {
-                            plugin_data->data[f_voice_num]->sample_fade_out_dec[(plugin_data->loaded_samples[i])] = 1.0f /
+                            f_voice->sample_fade_out_dec[(plugin_data->loaded_samples[i])] = 1.0f /
                                 (f_sample->sampleEndPos -
-                                plugin_data->data[f_voice_num]->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])]);
+                                f_voice->sample_fade_out_start_sample[(plugin_data->loaded_samples[i])]);
                     }
                     else
                     {
-                        plugin_data->data[f_voice_num]->sample_fade_out_dec[(plugin_data->loaded_samples[i])] = 1.0f;
+                        f_voice->sample_fade_out_dec[(plugin_data->loaded_samples[i])] = 1.0f;
                     }
 
 
@@ -1103,13 +1099,13 @@ static void v_euphoria_process_midi_event(
             {
                 int f_pfx_combobox_index =
                     (int)(*(plugin_data->fx_combobox[0][(i_dst)]));
-                plugin_data->data[f_voice_num]->fx_func_ptr[(i_dst)] =
+                f_voice->fx_func_ptr[(i_dst)] =
                         g_mf3_get_function_pointer(f_pfx_combobox_index);
-                plugin_data->data[f_voice_num]->fx_reset_ptr[(i_dst)] =
+                f_voice->fx_reset_ptr[(i_dst)] =
                         g_mf3_get_reset_function_pointer(f_pfx_combobox_index);
 
-                plugin_data->data[f_voice_num]->fx_reset_ptr[(i_dst)](
-                    &plugin_data->data[f_voice_num]->multieffect[(i_dst)]);
+                f_voice->fx_reset_ptr[(i_dst)](
+                    &f_voice->multieffect[(i_dst)]);
 
                 if(f_pfx_combobox_index != 0)
                 {
@@ -1157,7 +1153,7 @@ static void v_euphoria_process_midi_event(
                 ++i_fx_grps;
             }
 
-            plugin_data->data[f_voice_num]->noise_index =
+            f_voice->noise_index =
                     (plugin_data->mono_modules->noise_current_index);
             ++plugin_data->mono_modules->noise_current_index;
 
@@ -1169,33 +1165,28 @@ static void v_euphoria_process_midi_event(
 
             plugin_data->amp = f_db_to_linear_fast(*(plugin_data->master_vol));
 
-            plugin_data->data[f_voice_num]->note_f = (float)f_note;
+            f_voice->note_f = (float)f_note;
 
-            plugin_data->data[f_voice_num]->target_pitch =
-                    (plugin_data->data[f_voice_num]->note_f);
+            f_voice->target_pitch =
+                    (f_voice->note_f);
 
             if(plugin_data->sv_last_note < 0.0f)
             {
-                plugin_data->data[f_voice_num]->last_pitch =
-                    (plugin_data->data[f_voice_num]->note_f);
+                f_voice->last_pitch = (f_voice->note_f);
             }
             else
             {
-                plugin_data->data[f_voice_num]->last_pitch =
-                        (plugin_data->sv_last_note);
+                f_voice->last_pitch = (plugin_data->sv_last_note);
             }
 
             v_rmp_retrigger_glide_t(
-                &plugin_data->data[f_voice_num]->glide_env,
-                (*(plugin_data->master_glide) * .01),
-                (plugin_data->data[f_voice_num]->last_pitch),
-                (plugin_data->data[f_voice_num]->target_pitch));
+                &f_voice->glide_env, (*(plugin_data->master_glide) * .01),
+                (f_voice->last_pitch), (f_voice->target_pitch));
 
             /*Retrigger ADSR envelopes and LFO*/
-            v_adsr_retrigger(&plugin_data->data[f_voice_num]->adsr_amp);
-            v_adsr_retrigger(&plugin_data->data[f_voice_num]->adsr_filter);
-            v_lfs_sync(&plugin_data->data[f_voice_num]->lfo1, 0.0f,
-                    *(plugin_data->lfo_type));
+            v_adsr_retrigger(&f_voice->adsr_amp);
+            v_adsr_retrigger(&f_voice->adsr_filter);
+            v_lfs_sync(&f_voice->lfo1, 0.0f, *(plugin_data->lfo_type));
 
             float f_attack_a = (*(plugin_data->attack) * .01);
             f_attack_a *= f_attack_a;
@@ -1203,7 +1194,7 @@ static void v_euphoria_process_midi_event(
             f_decay_a *= f_decay_a;
             float f_release_a = (*(plugin_data->release) * .01);
             f_release_a *= f_release_a;
-            v_adsr_set_adsr_db(&plugin_data->data[f_voice_num]->adsr_amp,
+            v_adsr_set_adsr_db(&f_voice->adsr_amp,
                     f_attack_a, f_decay_a, (*(plugin_data->sustain)),
                     f_release_a);
 
@@ -1213,18 +1204,18 @@ static void v_euphoria_process_midi_event(
             f_decay_f *= f_decay_f;
             float f_release_f = (*(plugin_data->release_f) * .01);
             f_release_f *= f_release_f;
-            v_adsr_set_adsr(&plugin_data->data[f_voice_num]->adsr_filter,
-                    f_attack_f, f_decay_f,
-                    (*(plugin_data->sustain_f) * .01), f_release_f);
+            v_adsr_set_adsr(&f_voice->adsr_filter,
+                f_attack_f, f_decay_f, (*(plugin_data->sustain_f) * .01),
+                f_release_f);
 
             /*Retrigger the pitch envelope*/
-            v_rmp_retrigger(&plugin_data->data[f_voice_num]->ramp_env,
+            v_rmp_retrigger(&f_voice->ramp_env,
                     (*(plugin_data->pitch_env_time) * .01), 1.0f);
 
             /*Set the last_note property, so the next note can
              * glide from it if glide is turned on*/
             plugin_data->sv_last_note =
-                    (plugin_data->data[f_voice_num]->note_f);
+                    (f_voice->note_f);
         }
         else
         {

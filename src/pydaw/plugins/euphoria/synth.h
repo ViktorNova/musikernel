@@ -138,8 +138,6 @@ typedef struct {
     float ratio; //Used per-sample;
 
     t_voc_voices * voices;
-    int         velocities[EUPHORIA_POLYPHONY];
-    t_int_frac_read_head * sample_read_heads[EUPHORIA_POLYPHONY][EUPHORIA_MAX_SAMPLE_COUNT];
     long         sampleNo;
 
     float sample[EUPHORIA_CHANNEL_COUNT];

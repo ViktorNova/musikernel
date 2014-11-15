@@ -105,6 +105,9 @@ typedef struct
 
     float sample_fade_amp[EUPHORIA_MAX_SAMPLE_COUNT];
 
+    int velocities;
+    t_int_frac_read_head sample_read_heads[EUPHORIA_MAX_SAMPLE_COUNT];
+
 }t_euphoria_poly_voice __attribute__((aligned(16)));
 
 t_euphoria_poly_voice * g_euphoria_poly_init(float);
@@ -155,6 +158,12 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
     f_voice->modulator_outputs[5] = &(f_voice->velocity_track);
 
     f_voice->noise_index = 0;
+    f_voice->velocities = 0;
+
+    for(f_i = 0; f_i < EUPHORIA_MAX_SAMPLE_COUNT; ++f_i)
+    {
+        g_ifh_init(&f_voice->sample_read_heads[f_i]);
+    }
 
     return f_voice;
 }
