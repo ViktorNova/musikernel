@@ -1430,38 +1430,40 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
     a_voice->modulex_current_sample[0] = (a_voice->current_sample);
     a_voice->modulex_current_sample[1] = (a_voice->current_sample);
 
-    int i_dst;
+    int i_dst, f_dst;
     //Modular PolyFX, processed from the index created during note_on
     for(i_dst = 0; (i_dst) < (a_voice->active_polyfx_count); ++i_dst)
     {
-        v_mf3_set(&a_voice->multieffect[(a_voice->active_polyfx[(i_dst)])],
-            *(plugin_data->pfx_mod_knob[(a_voice->active_polyfx[(i_dst)])][0]),
-                *(plugin_data->pfx_mod_knob[(a_voice->active_polyfx[(i_dst)])][1]),
-                *(plugin_data->pfx_mod_knob[(a_voice->active_polyfx[(i_dst)])][2]));
+        f_dst = a_voice->active_polyfx[(i_dst)];
+        v_mf3_set(&a_voice->multieffect[f_dst],
+            *(plugin_data->pfx_mod_knob[f_dst][0]),
+                *(plugin_data->pfx_mod_knob[f_dst][1]),
+                *(plugin_data->pfx_mod_knob[f_dst][2]));
 
         int f_mod_test;
 
         for(f_mod_test = 0;
-            f_mod_test < (a_voice->polyfx_mod_counts[(a_voice->active_polyfx[(i_dst)])]);
+            f_mod_test < (a_voice->polyfx_mod_counts[f_dst]);
             f_mod_test++)
         {
             v_mf3_mod_single(
-                &a_voice->multieffect[(a_voice->active_polyfx[(i_dst)])],
-                *(a_voice->modulator_outputs[(a_voice->polyfx_mod_src_index[(a_voice->active_polyfx[(i_dst)])][f_mod_test])]),
-                (a_voice->polyfx_mod_matrix_values[(a_voice->active_polyfx[(i_dst)])][f_mod_test]),
-                (a_voice->polyfx_mod_ctrl_indexes[(a_voice->active_polyfx[(i_dst)])][f_mod_test])
+                &a_voice->multieffect[f_dst],
+                *(a_voice->modulator_outputs[
+                    (a_voice->polyfx_mod_src_index[f_dst][f_mod_test])]),
+                (a_voice->polyfx_mod_matrix_values[f_dst][f_mod_test]),
+                (a_voice->polyfx_mod_ctrl_indexes[f_dst][f_mod_test])
                 );
         }
 
-        a_voice->fx_func_ptr[(a_voice->active_polyfx[(i_dst)])](
-            &a_voice->multieffect[(a_voice->active_polyfx[(i_dst)])],
+        a_voice->fx_func_ptr[f_dst](
+            &a_voice->multieffect[f_dst],
             (a_voice->modulex_current_sample[0]),
             (a_voice->modulex_current_sample[1]));
 
         a_voice->modulex_current_sample[0] =
-            a_voice->multieffect[(a_voice->active_polyfx[(i_dst)])].output0;
+            a_voice->multieffect[f_dst].output0;
         a_voice->modulex_current_sample[1] =
-            a_voice->multieffect[(a_voice->active_polyfx[(i_dst)])].output1;
+            a_voice->multieffect[f_dst].output1;
     }
 
     a_voice->modulex_current_sample[0] *= a_voice->lfo_amp_output;
