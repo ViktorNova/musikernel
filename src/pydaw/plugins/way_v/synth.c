@@ -925,23 +925,32 @@ static void v_wayv_process_midi_event(
                 }
             }
 
+            int f_dst;
 
             for(i_dst = 0; i_dst < f_wayv_voice->active_polyfx_count; ++i_dst)
             {
-                f_wayv_voice->polyfx_mod_counts[
-                    f_wayv_voice->active_polyfx[i_dst]] = 0;
+                f_dst = f_wayv_voice->active_polyfx[i_dst];
+                f_wayv_voice->polyfx_mod_counts[f_dst] = 0;
 
                 for(i_src = 0; i_src < WAYV_MODULATOR_COUNT; ++i_src)
                 {
-                    for(i_ctrl = 0; (i_ctrl) < WAYV_CONTROLS_PER_MOD_EFFECT; ++i_ctrl)
+                    for(i_ctrl = 0; i_ctrl < WAYV_CONTROLS_PER_MOD_EFFECT;
+                            ++i_ctrl)
                     {
-                        if((*(plugin_data->polyfx_mod_matrix[(f_wayv_voice->active_polyfx[i_dst])][i_src][i_ctrl])) != 0)
+                        if((*plugin_data->polyfx_mod_matrix[
+                            f_wayv_voice->active_polyfx[i_dst]][i_src][i_ctrl])
+                                != 0)
                         {
-                            f_wayv_voice->polyfx_mod_ctrl_indexes[(f_wayv_voice->active_polyfx[(i_dst)])][(f_wayv_voice->polyfx_mod_counts[(f_wayv_voice->active_polyfx[(i_dst)])])] = (i_ctrl);
-                            f_wayv_voice->polyfx_mod_src_index[(f_wayv_voice->active_polyfx[(i_dst)])][(f_wayv_voice->polyfx_mod_counts[(f_wayv_voice->active_polyfx[(i_dst)])])] = (i_src);
-                            f_wayv_voice->polyfx_mod_matrix_values[(f_wayv_voice->active_polyfx[(i_dst)])][(f_wayv_voice->polyfx_mod_counts[(f_wayv_voice->active_polyfx[(i_dst)])])] =
-                                    (*(plugin_data->polyfx_mod_matrix[(f_wayv_voice->active_polyfx[(i_dst)])][(i_src)][(i_ctrl)])) * .01;
-                            ++f_wayv_voice->polyfx_mod_counts[(f_wayv_voice->active_polyfx[(i_dst)])];
+                            f_wayv_voice->polyfx_mod_ctrl_indexes[f_dst][
+                                f_wayv_voice->polyfx_mod_counts[f_dst]] =
+                                    i_ctrl;
+                            f_wayv_voice->polyfx_mod_src_index[f_dst][
+                                f_wayv_voice->polyfx_mod_counts[f_dst]] = i_src;
+                            f_wayv_voice->polyfx_mod_matrix_values[f_dst][
+                                f_wayv_voice->polyfx_mod_counts[f_dst]] =
+                                    (*plugin_data->polyfx_mod_matrix[
+                                        f_dst][i_src][i_ctrl]) * .01;
+                            ++f_wayv_voice->polyfx_mod_counts[f_dst];
                         }
                     }
                 }
@@ -1329,7 +1338,8 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
                     if(a_voice->osc_macro_amp[f_i][f_osc_num] != 0.0f)
                     {
                         f_macro_amp +=
-                            plugin_data->mono_modules->fm_macro_smoother[f_i].last_value *
+                            plugin_data->mono_modules->fm_macro_smoother[
+                            f_i].last_value *
                             a_voice->osc_macro_amp[f_i][f_osc_num];
                     }
                 }

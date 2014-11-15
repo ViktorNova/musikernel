@@ -542,14 +542,16 @@ typedef void (*fp_run_sampler_interpolation)(t_euphoria *__restrict plugin_data,
         int n, int ch);
 
 static fp_calculate_ratio ratio_function_ptrs[EUPHORIA_MAX_SAMPLE_COUNT];
-static fp_run_sampler_interpolation interpolation_modes[EUPHORIA_MAX_SAMPLE_COUNT];
+static fp_run_sampler_interpolation
+        interpolation_modes[EUPHORIA_MAX_SAMPLE_COUNT];
 
-static inline int check_sample_bounds(t_euphoria *__restrict plugin_data, int n)
+static inline int check_sample_bounds(t_euphoria * plugin_data, int n)
 {
     t_euphoria_sample * f_sample =
         &plugin_data->samples[plugin_data->current_sample];
     t_int_frac_read_head * f_read_head =
-        &plugin_data->data[n]->samples[(plugin_data->current_sample)].sample_read_heads;
+        &plugin_data->data[n]->samples[
+            (plugin_data->current_sample)].sample_read_heads;
 
     if (f_read_head->whole_number >= f_sample->sampleEndPos)
     {
@@ -584,9 +586,7 @@ static int calculate_ratio_sinc(t_euphoria *__restrict plugin_data, int n)
             (plugin_data->current_sample)].sample_read_heads;
     plugin_data->ratio =
     f_pit_midi_note_to_ratio_fast(f_sample->adjusted_base_pitch,
-        ((plugin_data->data[n]->base_pitch) //+ (plugin_data->data[n]->lfo_pitch_output)
-        ), plugin_data->smp_pit_ratio)
-        *
+        plugin_data->data[n]->base_pitch, plugin_data->smp_pit_ratio) *
         f_sample->wavpool_items->ratio_orig;
 
     v_ifh_run(f_read_head, plugin_data->ratio);
@@ -761,7 +761,8 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
         ch = 0;
         while(ch < (f_sample->wavpool_items->channels))
         {
-            interpolation_modes[(plugin_data->current_sample)](plugin_data, n, ch);
+            interpolation_modes[plugin_data->current_sample](
+                plugin_data, n, ch);
 
             plugin_data->sample[ch] +=
                 f_sample->sample_last_interpolated_value * f_fade_vol;
@@ -802,7 +803,8 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
         {
             v_mf3_mod_single(
                 &f_voice->multieffect[f_dst],
-                *(f_voice->modulator_outputs[(f_voice->polyfx_mod_src_index[f_dst][f_mod_test])]),
+                *(f_voice->modulator_outputs[
+                    (f_voice->polyfx_mod_src_index[f_dst][f_mod_test])]),
                 (f_voice->polyfx_mod_matrix_values[f_dst][f_mod_test]),
                 (f_voice->polyfx_mod_ctrl_indexes[f_dst][f_mod_test])
                 );
@@ -826,7 +828,8 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
             (f_voice->modulex_current_sample[0]) * (f_voice->adsr_amp.output) *
             (plugin_data->amp);
     plugin_data->mono_fx_buffers[
-            (plugin_data->sample_mfx_groups_index[(plugin_data->current_sample)])][1] +=
+        plugin_data->sample_mfx_groups_index[(plugin_data->current_sample)]][1]
+            +=
             (f_voice->modulex_current_sample[1]) * (f_voice->adsr_amp.output) *
             (plugin_data->amp);
 }
@@ -852,20 +855,22 @@ static inline void v_euphoria_slow_index(t_euphoria* plugin_data)
         f_sample = &plugin_data->samples[plugin_data->loaded_samples[i]];
 
         int f_mono_fx_group =
-            (int)(*plugin_data->sample_mfx_groups[(plugin_data->loaded_samples[i])]);
+            (int)(*plugin_data->sample_mfx_groups[
+                plugin_data->loaded_samples[i]]);
 
         if((plugin_data->monofx_channel_index_tracker[f_mono_fx_group]) == 0)
         {
             plugin_data->monofx_channel_index_tracker[f_mono_fx_group] = 1;
-            plugin_data->monofx_channel_index[(plugin_data->monofx_channel_index_count)] =
-                f_mono_fx_group;
+            plugin_data->monofx_channel_index[
+                plugin_data->monofx_channel_index_count] = f_mono_fx_group;
             ++plugin_data->monofx_channel_index_count;
 
             i3 = 0;
             while(i3 < EUPHORIA_MONO_FX_COUNT)
             {
-                plugin_data->mono_modules->mfx[f_mono_fx_group].fx_func_ptr[i3] =
-                    g_mf3_get_function_pointer((int)(*(plugin_data->mfx_comboboxes[f_mono_fx_group][i3])));
+                plugin_data->mono_modules->mfx[f_mono_fx_group].fx_func_ptr[i3]
+                    = g_mf3_get_function_pointer(
+                    (int)(*plugin_data->mfx_comboboxes[f_mono_fx_group][i3]));
                 ++i3;
             }
         }
@@ -953,15 +958,15 @@ static void v_euphoria_process_midi_event(
                     {
                         f_sample->sampleEndPos =
                             (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
-                            ((int)(((float)((f_sample->wavpool_items->length) - 5)) *
-                            ((*f_sample->sampleEnds) * .001))));
+                            ((int)((float)(f_sample->wavpool_items->length
+                            - 5)) * (*f_sample->sampleEnds * .001)));
                     }
                     else
                     {
                         f_sample->sampleEndPos =
                             (EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 +
-                            ((int)(((float)((f_sample->wavpool_items->length) - 5)) *
-                            ((*f_sample->sampleLoopEnds) * .001))));
+                            ((int)((float)(f_sample->wavpool_items->length - 5))
+                            * (*f_sample->sampleLoopEnds * .001)));
                     }
 
                     if((f_sample->sampleEndPos) >
@@ -1121,7 +1126,8 @@ static void v_euphoria_process_midi_event(
                     i_ctrl = 0;
                     while((i_ctrl) < EUPHORIA_CONTROLS_PER_MOD_EFFECT)
                     {
-                        if((*plugin_data->polyfx_mod_matrix[f_voice->active_polyfx[i_dst]][i_src][i_ctrl]) != 0)
+                        if((*plugin_data->polyfx_mod_matrix[
+                            f_voice->active_polyfx[i_dst]][i_src][i_ctrl]) != 0)
                         {
                             f_voice->polyfx_mod_ctrl_indexes[
                                 f_dst][
@@ -1131,7 +1137,8 @@ static void v_euphoria_process_midi_event(
                                 (f_voice->polyfx_mod_counts[f_dst])] = (i_src);
                             f_voice->polyfx_mod_matrix_values[f_dst][
                                 (f_voice->polyfx_mod_counts[f_dst])] =
-                                (*(plugin_data->polyfx_mod_matrix[f_dst][(i_src)][(i_ctrl)])) * .01;
+                                (*(plugin_data->polyfx_mod_matrix[
+                                    f_dst][i_src][i_ctrl])) * .01;
 
                             ++f_voice->polyfx_mod_counts[f_dst];
                         }
@@ -1360,16 +1367,19 @@ static void v_run_lms_euphoria(
             while(i3 < EUPHORIA_MONO_FX_COUNT)
             {
                 v_mf3_set(
-                    &plugin_data->mono_modules->mfx[f_monofx_index].multieffect[i3],
+                    &plugin_data->mono_modules->mfx[
+                        f_monofx_index].multieffect[i3],
                     (*(plugin_data->mfx_knobs[f_monofx_index][i3][0])),
                     (*(plugin_data->mfx_knobs[f_monofx_index][i3][1])),
                     (*(plugin_data->mfx_knobs[f_monofx_index][i3][2])));
                 plugin_data->mono_modules->mfx[f_monofx_index].fx_func_ptr[i3](
-                    &plugin_data->mono_modules->mfx[f_monofx_index].multieffect[i3],
+                    &plugin_data->mono_modules->mfx[
+                        f_monofx_index].multieffect[i3],
                     f_temp_sample0, f_temp_sample1);
 
                 f_temp_sample0 =
-                    (plugin_data->mono_modules->mfx[f_monofx_index].multieffect[i3].output0);
+                    (plugin_data->mono_modules->mfx[
+                        f_monofx_index].multieffect[i3].output0);
                 f_temp_sample1 =
                     (plugin_data->mono_modules->mfx[
                         f_monofx_index].multieffect[i3].output1);
