@@ -15,7 +15,6 @@ GNU General Public License for more details.
 
 from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
-from libpydaw.pydaw_util import pydaw_db_to_lin
 
 
 MK_COMP_THRESHOLD = 0
