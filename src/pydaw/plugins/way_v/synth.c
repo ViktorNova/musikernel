@@ -68,7 +68,7 @@ static void v_wayv_or_prep(PYFX_Handle instance)
                 if(f_osc_on[f_i3] >= 0)
                 {
                     v_osc_wav_run_unison_core_only(
-                        &f_voice->osc_wavtable[f_i3]);
+                        &f_voice->osc[f_i3].osc_wavtable);
                 }
                 ++f_i3;
             }
@@ -710,6 +710,7 @@ static void v_wayv_process_midi_event(
                     plugin_data->sampleNo,
                     a_event->tick);
 
+            t_wayv_osc * f_pfx_osc = NULL;
             t_wayv_poly_voice * f_wayv_voice = plugin_data->data[f_voice];
 
             f_wayv_voice->amp =
@@ -754,63 +755,62 @@ static void v_wayv_process_midi_event(
             while(f_i < WAYV_OSC_COUNT)
             {
                 int f_osc_type = (int)(*plugin_data->osc_type[f_i]) - 1;
+                f_pfx_osc = &f_wayv_voice->osc[f_i];
 
                 if(f_osc_type >= 0)
                 {
-                    f_wayv_voice->osc_on[f_i] = 1;
+                    f_pfx_osc->osc_on = 1;
 
                     if(f_poly_mode == 0)
                     {
-                        v_osc_wav_note_on_sync_phases(
-                            &f_wayv_voice->osc_wavtable[f_i]);
+                        v_osc_wav_note_on_sync_phases(&f_pfx_osc->osc_wavtable);
                     }
                     v_osc_wav_set_waveform(
-                            &f_wayv_voice->osc_wavtable[f_i],
-                            plugin_data->mono_modules->
-                            wavetables->tables[f_osc_type]->wavetable,
-                            plugin_data->mono_modules->wavetables->
-                            tables[f_osc_type]->length);
+                        &f_pfx_osc->osc_wavtable,
+                        plugin_data->mono_modules->
+                        wavetables->tables[f_osc_type]->wavetable,
+                        plugin_data->mono_modules->wavetables->
+                        tables[f_osc_type]->length);
                     v_osc_wav_set_uni_voice_count(
-                            &f_wayv_voice->osc_wavtable[f_i],
-                            *plugin_data->osc_uni_voice[f_i]);
+                        &f_pfx_osc->osc_wavtable,
+                        *plugin_data->osc_uni_voice[f_i]);
                 }
                 else
                 {
-                    f_wayv_voice->osc_on[f_i] = 0;
+                    f_pfx_osc->osc_on = 0;
                     ++f_i;
                     continue;
                 }
 
-                f_wayv_voice->osc_uni_spread[f_i] =
+                f_pfx_osc->osc_uni_spread =
                     (*plugin_data->osc_uni_spread[f_i]) * 0.01f;
 
                 int f_i2 = 0;
                 while(f_i2 < WAYV_OSC_COUNT)
                 {
-                    f_wayv_voice->osc_fm[f_i][f_i2] =
-                            (*plugin_data->osc_fm[f_i][f_i2]) * 0.005f;
+                    f_pfx_osc->osc_fm[f_i2] =
+                        (*plugin_data->osc_fm[f_i][f_i2]) * 0.005f;
                     ++f_i2;
                 }
 
                 f_db = (*plugin_data->osc_vol[f_i]);
 
-                v_adsr_retrigger(&f_wayv_voice->adsr_amp_osc[f_i]);
+                v_adsr_retrigger(&f_pfx_osc->adsr_amp_osc);
 
-                f_wayv_voice->osc_linamp[f_i] = f_db_to_linear_fast(f_db);
+                f_pfx_osc->osc_linamp = f_db_to_linear_fast(f_db);
 
                 if(f_db > -29.2f)
                 {
-                    f_wayv_voice->osc_audible[f_i] = 1;
+                    f_pfx_osc->osc_audible = 1;
                 }
                 else
                 {
-                    f_wayv_voice->osc_audible[f_i] = 0;
+                    f_pfx_osc->osc_audible = 0;
                 }
 
-                f_wayv_voice->adsr_amp_on[f_i] =
-                    (int)(*(plugin_data->adsr_checked[f_i]));
+                f_pfx_osc->adsr_amp_on = (int)(*plugin_data->adsr_checked[f_i]);
 
-                if(f_wayv_voice->adsr_amp_on[f_i])
+                if(f_pfx_osc->adsr_amp_on)
                 {
                     float f_attack1 = *(plugin_data->attack[f_i]) * .01f;
                     f_attack1 = (f_attack1) * (f_attack1);
@@ -820,15 +820,15 @@ static void v_wayv_process_midi_event(
                     f_release1 = (f_release1) * (f_release1);
 
                     v_adsr_set_adsr_db(
-                        &f_wayv_voice->adsr_amp_osc[f_i],
+                        &f_pfx_osc->adsr_amp_osc,
                         (f_attack1), (f_decay1), *(plugin_data->sustain[f_i]),
                         (f_release1));
 
                     v_adsr_set_delay_time(
-                        &f_wayv_voice->adsr_amp_osc[f_i],
+                        &f_pfx_osc->adsr_amp_osc,
                         (*plugin_data->adsr_fm_delay[f_i]) * 0.01f);
                     v_adsr_set_hold_time(
-                        &f_wayv_voice->adsr_amp_osc[f_i],
+                        &f_pfx_osc->adsr_amp_osc,
                         (*plugin_data->adsr_fm_hold[f_i]) * 0.01f);
                 }
                 ++f_i;
@@ -967,8 +967,8 @@ static void v_wayv_process_midi_event(
                 int f_i2 = 0;
                 while(f_i2 < WAYV_OSC_COUNT)
                 {
-                    f_wayv_voice->osc_macro_amp[f_i][f_i2] =
-                            (*plugin_data->amp_macro_values[f_i][f_i2]);
+                    f_pfx_osc->osc_macro_amp[f_i] =
+                        (*plugin_data->amp_macro_values[f_i][f_i2]);
                     ++f_i2;
                 }
                 ++f_i;
@@ -1170,7 +1170,7 @@ static void v_run_wayv(
                     if(f_osc_type[f_i] >= 0)
                     {
                         v_osc_wav_set_waveform(
-                            &plugin_data->data[f_voice]->osc_wavtable[f_i],
+                            &plugin_data->data[f_voice]->osc[f_i].osc_wavtable,
                             plugin_data->mono_modules->wavetables->
                                 tables[f_osc_type[f_i]]->wavetable,
                             plugin_data->mono_modules->wavetables->
@@ -1295,25 +1295,24 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
     register int f_osc_num = 0;
     float f_macro_amp;
     float f_osc_amp;
+    t_wayv_osc * f_osc;
 
     while(f_osc_num < WAYV_OSC_COUNT)
     {
         f_macro_amp = 0.0f;
+        f_osc = &a_voice->osc[f_osc_num];
 
-        if(a_voice->osc_on[f_osc_num])
+        if(f_osc->osc_on)
         {
             v_osc_wav_set_unison_pitch(
-                    &a_voice->osc_wavtable[f_osc_num],
-                    (a_voice->osc_uni_spread[f_osc_num]),
-                    ((a_voice->base_pitch) +
-                    (*plugin_data->osc_pitch[f_osc_num]) +
-                    ((*plugin_data->osc_tune[f_osc_num]) * 0.01f) ));
+                &f_osc->osc_wavtable, f_osc->osc_uni_spread,
+                (a_voice->base_pitch + (*plugin_data->osc_pitch[f_osc_num]) +
+                ((*plugin_data->osc_tune[f_osc_num]) * 0.01f)));
 
             register int f_i = 0;
             while(f_i < WAYV_OSC_COUNT)
             {
-                a_voice->fm_osc_values[f_osc_num][f_i] =
-                    a_voice->osc_fm[f_osc_num][f_i];
+                f_osc->fm_osc_values[f_i] = f_osc->osc_fm[f_i];
                 ++f_i;
             }
 
@@ -1327,7 +1326,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
                     int f_i2 = 0;
                     while(f_i2 < WAYV_OSC_COUNT)
                     {
-                        a_voice->fm_osc_values[f_osc_num][f_i2] +=
+                        f_osc->fm_osc_values[f_i2] +=
                           ((*plugin_data->fm_macro_values[f_i][f_osc_num][f_i2]
                                 * 0.005f) *
                             plugin_data->mono_modules->
@@ -1335,12 +1334,11 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
                         ++f_i2;
                     }
 
-                    if(a_voice->osc_macro_amp[f_i][f_osc_num] != 0.0f)
+                    if(f_osc->osc_macro_amp[f_i] != 0.0f)
                     {
                         f_macro_amp +=
                             plugin_data->mono_modules->fm_macro_smoother[
-                            f_i].last_value *
-                            a_voice->osc_macro_amp[f_i][f_osc_num];
+                            f_i].last_value * f_osc->osc_macro_amp[f_i];
                     }
                 }
 
@@ -1351,59 +1349,51 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
 
             while(f_i < WAYV_OSC_COUNT)
             {
-                if(a_voice->fm_osc_values[f_osc_num][f_i] < 0.0f)
+                if(f_osc->fm_osc_values[f_i] < 0.0f)
                 {
-                    a_voice->fm_osc_values[f_osc_num][f_i] = 0.0f;
+                    f_osc->fm_osc_values[f_i] = 0.0f;
                 }
-                else if(a_voice->fm_osc_values[f_osc_num][f_i] > 0.5f)
+                else if(f_osc->fm_osc_values[f_i] > 0.5f)
                 {
-                    a_voice->fm_osc_values[f_osc_num][f_i] = 0.5f;
+                    f_osc->fm_osc_values[f_i] = 0.5f;
                 }
 
                 if(f_i <= f_osc_num)
                 {
-                    v_osc_wav_apply_fm(
-                        &a_voice->osc_wavtable[f_osc_num],
-                        a_voice->fm_last[f_i],
-                        a_voice->fm_osc_values[f_osc_num][f_i]);
+                    v_osc_wav_apply_fm(&f_osc->osc_wavtable,
+                        a_voice->osc[f_i].fm_last, f_osc->fm_osc_values[f_i]);
                 }
                 else
                 {
-                    v_osc_wav_apply_fm_direct(
-                        &a_voice->osc_wavtable[f_osc_num],
-                        a_voice->fm_last[f_i],
-                        a_voice->fm_osc_values[f_osc_num][f_i]);
+                    v_osc_wav_apply_fm_direct(&f_osc->osc_wavtable,
+                        a_voice->osc[f_i].fm_last, f_osc->fm_osc_values[f_i]);
                 }
 
                 ++f_i;
             }
 
-            if(a_voice->adsr_amp_on[f_osc_num])
+            if(f_osc->adsr_amp_on)
             {
-                v_adsr_run_db(&a_voice->adsr_amp_osc[f_osc_num]);
-                a_voice->fm_last[f_osc_num] =
-                    f_osc_wav_run_unison(&a_voice->osc_wavtable[f_osc_num])
-                        * (a_voice->adsr_amp_osc[f_osc_num].output);
+                v_adsr_run_db(&f_osc->adsr_amp_osc);
+                f_osc->fm_last = f_osc_wav_run_unison(&f_osc->osc_wavtable)
+                    * (f_osc->adsr_amp_osc.output);
             }
             else
             {
-                a_voice->fm_last[f_osc_num] =
-                    f_osc_wav_run_unison(&a_voice->osc_wavtable[f_osc_num]);
+                f_osc->fm_last = f_osc_wav_run_unison(&f_osc->osc_wavtable);
             }
 
-            if(a_voice->osc_audible[f_osc_num] || f_macro_amp >= 1.0f)
+            if(f_osc->osc_audible || f_macro_amp >= 1.0f)
             {
-                f_osc_amp = (a_voice->osc_linamp[f_osc_num]) *
-                        f_db_to_linear(f_macro_amp);
+                f_osc_amp = f_osc->osc_linamp * f_db_to_linear(f_macro_amp);
 
                 if(f_osc_amp > 1.0f)  //clip at 0dB
                 {
-                    a_voice->current_sample += (a_voice->fm_last[f_osc_num]);
+                    a_voice->current_sample += f_osc->fm_last;
                 }
                 else
                 {
-                    a_voice->current_sample +=
-                        (a_voice->fm_last[f_osc_num]) * f_osc_amp;
+                    a_voice->current_sample += f_osc->fm_last * f_osc_amp;
                 }
             }
         }

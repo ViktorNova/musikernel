@@ -24,7 +24,7 @@ extern "C" {
 //How many modular PolyFX
 #define WAYV_MODULAR_POLYFX_COUNT 4
 #define WAYV_CONTROLS_PER_MOD_EFFECT 3
-    
+
 #define WAYV_FM_MACRO_COUNT 2
 
 #define WAYV_OSC_COUNT 6
@@ -53,6 +53,23 @@ typedef struct
     int reset_wavetables;
 }t_wayv_mono_modules;
 
+typedef struct
+{
+    float fm_osc_values[WAYV_OSC_COUNT];
+    float fm_last;
+
+    float osc_linamp;
+    int osc_audible;
+    int osc_on;
+    float osc_uni_spread;
+    float osc_fm[WAYV_OSC_COUNT];
+    float osc_macro_amp[2];
+
+    t_osc_wav_unison osc_wavtable;
+
+    t_adsr adsr_amp_osc;
+    int adsr_amp_on;
+}t_wayv_osc;
 
 typedef struct
 {
@@ -85,20 +102,7 @@ typedef struct
     int perc_env_on;
     t_pnv_perc_env perc_env;
 
-    float fm_osc_values[WAYV_OSC_COUNT][WAYV_OSC_COUNT];
-    float fm_last[WAYV_OSC_COUNT];
-
-    float osc_linamp[WAYV_OSC_COUNT];
-    int osc_audible[WAYV_OSC_COUNT];
-    int osc_on[WAYV_OSC_COUNT];
-    float osc_uni_spread[WAYV_OSC_COUNT];
-    float osc_fm[WAYV_OSC_COUNT][WAYV_OSC_COUNT];
-    float osc_macro_amp[2][WAYV_OSC_COUNT];
-
-    t_osc_wav_unison osc_wavtable[WAYV_OSC_COUNT];
-
-    t_adsr adsr_amp_osc[WAYV_OSC_COUNT];
-    int adsr_amp_on[WAYV_OSC_COUNT];
+    t_wayv_osc osc[WAYV_OSC_COUNT];
 
     float noise_amp;
     float noise_linamp;
@@ -151,22 +155,24 @@ t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono)
     hpalloc((void**)&f_voice, sizeof(t_wayv_poly_voice));
 
     int f_i = 0;
+    t_wayv_osc * f_osc;
 
     while(f_i < WAYV_OSC_COUNT)
     {
-        g_osc_init_osc_wav_unison(&f_voice->osc_wavtable[f_i], a_sr);
-        f_voice->osc_uni_spread[f_i] = 0.0f;
-        f_voice->osc_on[f_i] = 0;
-        f_voice->fm_last[f_i] = 0.0;
-        g_adsr_init(&f_voice->adsr_amp_osc[f_i], a_sr);
-        f_voice->adsr_amp_on[f_i] = 0;
-        f_voice->osc_linamp[f_i] = 1.0f;
-        f_voice->osc_audible[f_i] = 1;
+        f_osc = &f_voice->osc[f_i];
+        g_osc_init_osc_wav_unison(&f_osc->osc_wavtable, a_sr);
+        f_osc->osc_uni_spread = 0.0f;
+        f_osc->osc_on = 0;
+        f_osc->fm_last = 0.0;
+        g_adsr_init(&f_osc->adsr_amp_osc, a_sr);
+        f_osc->adsr_amp_on = 0;
+        f_osc->osc_linamp = 1.0f;
+        f_osc->osc_audible = 1;
 
         int f_i2 = 0;
         while(f_i2 < WAYV_OSC_COUNT)
         {
-            f_voice->osc_fm[f_i][f_i2] = 0.0;
+            f_osc->osc_fm[f_i2] = 0.0;
             ++f_i2;
         }
         ++f_i;
@@ -198,17 +204,11 @@ t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono)
     f_voice->lfo_amp_output = 0.0f;
     f_voice->lfo_pitch_output = 0.0f;
 
-    int f_i2 = 0;
-    while(f_i2 < WAYV_OSC_COUNT)
+    int f_i3 = 0;
+    while(f_i3 < WAYV_OSC_COUNT)
     {
-        int f_i3 = 0;
-        while(f_i3 < WAYV_OSC_COUNT)
-        {
-            f_voice->fm_osc_values[f_i2][f_i3] = 0.0f;
-            ++f_i3;
-        }
-
-        ++f_i2;
+        f_osc->fm_osc_values[f_i3] = 0.0f;
+        ++f_i3;
     }
 
     g_adsr_init(&f_voice->adsr_amp, a_sr);
@@ -274,7 +274,7 @@ void v_wayv_poly_note_off(t_wayv_poly_voice * a_voice, int a_fast)
 
     while(f_i < WAYV_OSC_COUNT)
     {
-        v_adsr_release(&a_voice->adsr_amp_osc[f_i]);
+        v_adsr_release(&a_voice->osc[f_i].adsr_amp_osc);
         ++f_i;
     }
 
