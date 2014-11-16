@@ -22,6 +22,7 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
+// a peak meter
 typedef struct
 {
     float value[2];
@@ -29,32 +30,33 @@ typedef struct
     int dirty;
 }t_pkm_peak_meter;
 
+// a gain reduction meter
 typedef struct
 {
     float gain_redux;
     int counter;
     int count;
     int dirty;
-}t_pkm_tracker;
+}t_pkm_redux;
 
 #ifdef	__cplusplus
 }
 #endif
 
-void g_pkm_tracker_init(t_pkm_tracker * self, float a_sr)
+void g_pkm_redux_init(t_pkm_redux * self, float a_sr)
 {
     self->gain_redux = 0.0f;
     self->counter = 0;
     self->count = (int)(a_sr / 30.0f);
 }
 
-void v_pkm_reset_peak(t_pkm_tracker * self)
+void v_pkm_redux_lin_reset(t_pkm_redux * self)
 {
     self->dirty = 0;
     self->gain_redux = 1.0f;
 }
 
-void v_pkm_run_peak(t_pkm_tracker * self, float a_gain)
+void v_pkm_redux_run(t_pkm_redux * self, float a_gain)
 {
     ++self->counter;
     if(unlikely(self->counter >= self->count))

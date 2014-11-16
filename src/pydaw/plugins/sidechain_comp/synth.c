@@ -238,7 +238,7 @@ static void v_scc_run(
             sprintf(plugin_data->ui_msg_buff, "%i|gain|%f",
                 plugin_data->plugin_uid, f_cmp->peak_tracker.gain_redux);
             plugin_data->queue_func("ui", plugin_data->ui_msg_buff);
-            v_pkm_reset_peak(&f_cmp->peak_tracker);
+            v_pkm_redux_lin_reset(&f_cmp->peak_tracker);
         }
     }
 }

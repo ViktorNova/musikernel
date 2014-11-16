@@ -29,7 +29,7 @@ typedef struct
     float rms_time, rms_last, rms_sum, rms_count_recip, sr;
     int rms_counter, rms_count;
     t_enf2_env_follower env_follower;
-    t_pkm_tracker peak_tracker;
+    t_pkm_redux peak_tracker;
 }t_cmp_compressor;
 
 
@@ -54,7 +54,7 @@ void g_cmp_init(t_cmp_compressor * self, float a_sr)
     self->rms_last = 0.0f;
     self->rms_sum = 0.0f;
     g_enf_init(&self->env_follower, a_sr);
-    g_pkm_tracker_init(&self->peak_tracker, a_sr);
+    g_pkm_redux_init(&self->peak_tracker, a_sr);
 }
 
 void v_cmp_set(t_cmp_compressor * self, float thresh, float ratio,
@@ -111,7 +111,7 @@ void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
         self->output1 = a_in1;
     }
 
-    v_pkm_run_peak(&self->peak_tracker, f_vol);
+    v_pkm_redux_run(&self->peak_tracker, f_vol);
 }
 
 void v_cmp_set_rms(t_cmp_compressor * self, float rms_time)
@@ -164,7 +164,7 @@ void v_cmp_run_rms(t_cmp_compressor * self, float a_in0, float a_in1)
         self->output1 = a_in1;
     }
 
-    v_pkm_run_peak(&self->peak_tracker, f_vol);
+    v_pkm_redux_run(&self->peak_tracker, f_vol);
 }
 
 #endif	/* COMPRESSOR_H */
