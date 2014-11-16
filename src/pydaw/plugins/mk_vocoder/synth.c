@@ -118,16 +118,9 @@ static void v_mk_vocoder_process_midi_event(
     {
         assert(a_event->param >= 1 && a_event->param < 128);
 
-        plugin_data->midi_event_types[plugin_data->midi_event_count] =
-                PYDAW_EVENT_CONTROLLER;
-        plugin_data->midi_event_ticks[plugin_data->midi_event_count] =
-                a_event->tick;
-        plugin_data->midi_event_ports[plugin_data->midi_event_count] =
-                a_event->param;
-        plugin_data->midi_event_values[plugin_data->midi_event_count] =
-                a_event->value;
-
-        ++plugin_data->midi_event_count;
+        v_plugin_event_queue_add(&plugin_data->midi_queue,
+            PYDAW_EVENT_CONTROLLER, a_event->tick,
+            a_event->value, a_event->param);
     }
 }
 
@@ -140,7 +133,7 @@ static void v_mk_vocoder_process_midi(
 {
     t_mk_vocoder *plugin_data = (t_mk_vocoder*)instance;
     register int event_pos = 0;
-    plugin_data->midi_event_count = 0;
+    v_plugin_event_queue_reset(&plugin_data->midi_queue);
 
     while (event_pos < event_count)
     {
@@ -177,6 +170,7 @@ static void v_mk_vocoder_run(
         t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_mk_vocoder *plugin_data = (t_mk_vocoder*)instance;
+    t_plugin_event_queue_item * f_midi_item;
     v_mk_vocoder_process_midi(instance, events, event_count,
         atm_events, atm_event_count, ext_events, ext_event_count);
 
@@ -185,18 +179,23 @@ static void v_mk_vocoder_run(
 
     while(f_i < sample_count)
     {
-        while(midi_event_pos < plugin_data->midi_event_count &&
-            plugin_data->midi_event_ticks[midi_event_pos] == f_i)
+        while(1)
         {
-            if(plugin_data->midi_event_types[midi_event_pos] ==
-                    PYDAW_EVENT_CONTROLLER)
+            f_midi_item = v_plugin_event_queue_iter(
+                &plugin_data->midi_queue, f_i);
+            if(!f_midi_item)
+            {
+                break;
+            }
+
+            if(f_midi_item->type == PYDAW_EVENT_CONTROLLER)
             {
                 v_cc_map_translate(
                     &plugin_data->cc_map, plugin_data->descriptor,
                     plugin_data->port_table,
-                    plugin_data->midi_event_ports[midi_event_pos],
-                    plugin_data->midi_event_values[midi_event_pos]);
+                    f_midi_item->port, f_midi_item->value);
             }
+
             ++midi_event_pos;
         }
 
