@@ -38,6 +38,7 @@ extern "C" {
 #include "../plugins/xfade/synth.c"
 #include "../plugins/mk_compressor/synth.c"
 #include "../plugins/mk_vocoder/synth.c"
+#include "../plugins/mk_limiter/synth.c"
 
 
 typedef struct
@@ -125,6 +126,10 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
         case 14:
             f_result->descfn =
                 (PYFX_Descriptor_Function)mk_vocoder_PYFX_descriptor;
+            break;
+        case 15:
+            f_result->descfn =
+                (PYFX_Descriptor_Function)mk_lim_PYFX_descriptor;
             break;
         default:
             assert(0);

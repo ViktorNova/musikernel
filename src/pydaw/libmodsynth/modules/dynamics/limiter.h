@@ -25,6 +25,7 @@ extern "C" {
 #include "../filter/svf.h"
 #include <math.h>
 #include <assert.h>
+#include "../../lib/peak_meter.h"
 
 #define LMS_HOLD_TIME_DIVISOR 500.0f
 
@@ -40,6 +41,7 @@ typedef struct st_lim_limiter
     float *buffer0, *buffer1;
     int buffer_size, buffer_index, buffer_read_index;
     t_state_variable_filter filter;
+    t_pkm_redux peak_tracker;
 }t_lim_limiter;
 
 void v_lim_set(t_lim_limiter*,float, float, float);
@@ -157,6 +159,8 @@ void v_lim_run(t_lim_limiter *a_lim, float a_in0, float a_in1)
 
     a_lim->output0 = (a_lim->buffer0[(a_lim->buffer_index)]) * f_gain;
     a_lim->output1 = (a_lim->buffer1[(a_lim->buffer_index)]) * f_gain;
+
+    v_pkm_redux_run(&a_lim->peak_tracker, a_lim->gain);
 }
 
 void g_lim_init(t_lim_limiter * f_result, float a_sr, int a_huge_pages)
@@ -224,6 +228,8 @@ void g_lim_init(t_lim_limiter * f_result, float a_sr, int a_huge_pages)
     f_result->last_ceiling = 1234.4522f;
     f_result->last_release = 1234.4522f;
     f_result->last_thresh = 1234.4532f;
+
+    g_pkm_redux_init(&f_result->peak_tracker, a_sr);
 }
 
 #ifdef	__cplusplus

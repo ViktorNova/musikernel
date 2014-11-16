@@ -12,6 +12,7 @@ import mkplugins.trigger_fx
 import mkplugins.xfade
 import mkplugins.mk_compressor
 import mkplugins.mk_vocoder
+import mkplugins.mk_limiter
 
 from PyQt4 import QtGui
 from libpydaw.pydaw_util import pydaw_clip_value
@@ -20,18 +21,21 @@ PLUGIN_INSTRUMENT_COUNT = 3  # For inserting the split line into the menu
 
 PLUGIN_NAMES = [
     "Euphoria", "Ray-V", "Way-V", "MK Channel", "MK Compressor",
-    "MK Delay", "MK EQ", "MK Vocoder", "Modulex", "Sidechain Comp.",
-    "Simple Fader", "Simple Reverb", "TriggerFX", "X-Fade",
+    "MK Delay", "MK EQ", "MK Limiter", "MK Vocoder", "Modulex",
+    "Sidechain Comp.", "Simple Fader", "Simple Reverb", "TriggerFX",
+    "X-Fade",
     ]
+
 PLUGIN_UIDS = {
     "None":0, "Euphoria":1, "Ray-V":2, "Way-V":3, "Modulex":4, "MK Delay":5,
     "MK EQ":6, "Simple Fader":7, "Simple Reverb":8, "TriggerFX":9,
     "Sidechain Comp.":10, "MK Channel":11, "X-Fade":12, "MK Compressor":13,
-    "MK Vocoder":14,
+    "MK Vocoder":14, "MK Limiter":15
     }
+
 WAVE_EDITOR_PLUGIN_NAMES = [
     "None", "MK Channel", "MK Compressor", "MK Delay", "MK EQ",
-    "Modulex", "Simple Fader", "Simple Reverb"
+    "MK Limiter", "Modulex", "Simple Fader", "Simple Reverb"
     ]
 
 MIXER_PLUGIN_NAMES = ["None", "Simple Fader", "MK Channel"]
@@ -55,6 +59,7 @@ PLUGIN_UI_TYPES = {
     12:mkplugins.xfade.xfade_plugin_ui,
     13:mkplugins.mk_compressor.mk_comp_plugin_ui,
     14:mkplugins.mk_vocoder.mk_vocoder_plugin_ui,
+    15:mkplugins.mk_limiter.mk_lim_plugin_ui,
 }
 
 PORTMAP_DICT = {
@@ -72,6 +77,7 @@ PORTMAP_DICT = {
     "Sidechain Comp.":mkplugins.sidechain_comp.SCC_PORT_MAP,
     "X-Fade":mkplugins.xfade.XFADE_PORT_MAP,
     "MK Vocoder":mkplugins.mk_vocoder.MK_VOCODER_PORT_MAP,
+    "MK Limiter":mkplugins.mk_limiter.MK_LIM_PORT_MAP,
 }
 
 def get_plugin_uid_by_name(a_name):
