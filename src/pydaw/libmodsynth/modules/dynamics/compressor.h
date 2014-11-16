@@ -16,6 +16,7 @@ GNU General Public License for more details.
 
 #include "../modulation/env_follower2.h"
 #include "../../lib/amp.h"
+#include "../../lib/peak_meter.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -26,10 +27,9 @@ typedef struct
     float thresh, ratio, ratio_recip, knee, knee_thresh,
         gain, gain_lin, output0, output1;
     float rms_time, rms_last, rms_sum, rms_count_recip, sr;
-    int rms_counter, rms_count, peak_count,
-        peak_counter, peak_dirty;
-    float gain_redux;
+    int rms_counter, rms_count;
     t_enf2_env_follower env_follower;
+    t_pkm_tracker peak_tracker;
 }t_cmp_compressor;
 
 
@@ -53,10 +53,8 @@ void g_cmp_init(t_cmp_compressor * self, float a_sr)
     self->rms_time = -123.456f;
     self->rms_last = 0.0f;
     self->rms_sum = 0.0f;
-    self->gain_redux = 0.0f;
-    self->peak_counter = 0;
-    self->peak_count = (int)(a_sr / 30.0f);
     g_enf_init(&self->env_follower, a_sr);
+    v_pkm_tracker_init(&self->peak_tracker, a_sr);
 }
 
 void v_cmp_set(t_cmp_compressor * self, float thresh, float ratio,
@@ -81,26 +79,6 @@ void v_cmp_set(t_cmp_compressor * self, float thresh, float ratio,
     }
 }
 
-void v_cmp_reset_peak(t_cmp_compressor * self)
-{
-    self->peak_dirty = 0;
-    self->gain_redux = 1.0f;
-}
-
-void v_cmp_run_peak(t_cmp_compressor * self, float a_gain)
-{
-    ++self->peak_counter;
-    if(self->peak_counter >= self->peak_count)
-    {
-        self->peak_dirty = 1;
-        self->peak_counter = 0;
-    }
-
-    if(a_gain < self->gain_redux)
-    {
-        self->gain_redux = a_gain;
-    }
-}
 
 void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
 {
@@ -133,7 +111,7 @@ void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
         self->output1 = a_in1;
     }
 
-    v_cmp_run_peak(self, f_vol);
+    v_pkm_run_peak(&self->peak_tracker, f_vol);
 }
 
 void v_cmp_set_rms(t_cmp_compressor * self, float rms_time)
@@ -186,7 +164,7 @@ void v_cmp_run_rms(t_cmp_compressor * self, float a_in0, float a_in1)
         self->output1 = a_in1;
     }
 
-    v_cmp_run_peak(self, f_vol);
+    v_pkm_run_peak(&self->peak_tracker, f_vol);
 }
 
 #endif	/* COMPRESSOR_H */

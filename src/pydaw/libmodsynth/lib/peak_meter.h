@@ -29,10 +29,45 @@ typedef struct
     int dirty;
 }t_pkm_peak_meter;
 
+typedef struct
+{
+    float gain_redux;
+    int counter;
+    int count;
+    int dirty;
+}t_pkm_tracker;
 
 #ifdef	__cplusplus
 }
 #endif
+
+void v_pkm_tracker_init(t_pkm_tracker * self, float a_sr)
+{
+    self->gain_redux = 0.0f;
+    self->counter = 0;
+    self->count = (int)(a_sr / 30.0f);
+}
+
+void v_pkm_reset_peak(t_pkm_tracker * self)
+{
+    self->dirty = 0;
+    self->gain_redux = 1.0f;
+}
+
+void v_pkm_run_peak(t_pkm_tracker * self, float a_gain)
+{
+    ++self->counter;
+    if(unlikely(self->counter >= self->count))
+    {
+        self->dirty = 1;
+        self->counter = 0;
+    }
+
+    if(a_gain < self->gain_redux)
+    {
+        self->gain_redux = a_gain;
+    }
+}
 
 void g_pkm_init(t_pkm_peak_meter * f_result)
 {

@@ -231,15 +231,16 @@ static void v_mk_comp_run(
 
     if((int)(*plugin_data->peak_meter))
     {
-        if(f_cmp->peak_dirty)
+        if(f_cmp->peak_tracker.dirty)
         {
             sprintf(plugin_data->ui_msg_buff, "%i|gain|%f",
-                plugin_data->plugin_uid, f_cmp->gain_redux);
+                plugin_data->plugin_uid, f_cmp->peak_tracker.gain_redux);
             plugin_data->queue_func("ui", plugin_data->ui_msg_buff);
-            v_cmp_reset_peak(&plugin_data->mono_modules->compressor);
+            v_pkm_reset_peak(&f_cmp->peak_tracker);
         }
     }
 }
+
 
 PYFX_Descriptor *mk_comp_PYFX_descriptor(int index)
 {
