@@ -3,9 +3,9 @@
 # Paul's Extreme Sound Stretch (Paulstretch) - Python version
 # originally by Nasca Octavian PAUL, Targu Mures, Romania
 #
-# Forked to allow better integration with PyDAW, fixes, improvements, etc...
+# Forked to allow better integration with MusiKernel
 """
-This file is part of the PyDAW project, Copyright PyDAW Team
+This file is part of the MusiKernel project, Copyright MusiKernel Team
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
