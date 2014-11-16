@@ -125,6 +125,49 @@ def pydaw_scale_to_rect(a_to_scale, a_scale_to):
 CURRENT_SONG_INDEX = None
 
 class song_editor:
+    def __init__(self):
+        self.song = pydaw_song()
+        self.last_midi_dir = None
+        self.main_vlayout = QtGui.QVBoxLayout()
+        self.table_widget = QtGui.QTableWidget()
+        self.table_widget.setColumnCount(300)
+        self.table_widget.setRowCount(1)
+        self.table_widget.setFixedHeight(87)
+        self.table_widget.setHorizontalScrollMode(
+            QtGui.QAbstractItemView.ScrollPerPixel)
+        self.table_widget.verticalHeader().setVisible(False)
+        self.table_widget.setAutoScroll(True)
+        self.table_widget.setAutoScrollMargin(1)
+        self.table_widget.setRowHeight(0, 50)
+        self.table_widget.horizontalHeader().setResizeMode(
+            QtGui.QHeaderView.Fixed)
+        self.table_widget.verticalHeader().setResizeMode(
+            QtGui.QHeaderView.Fixed)
+        self.table_widget.cellClicked.connect(self.cell_clicked)
+        self.table_widget.setDragDropOverwriteMode(False)
+        self.table_widget.setDragEnabled(True)
+        self.table_widget.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+        self.table_widget.dropEvent = self.table_drop_event
+        self.table_widget.setEditTriggers(
+            QtGui.QAbstractItemView.NoEditTriggers)
+        self.main_vlayout.addWidget(self.table_widget)
+
+        self.table_widget.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
+        self.rename_action = QtGui.QAction(
+            _("Rename Region"), self.table_widget)
+        self.rename_action.triggered.connect(self.on_rename_region)
+        self.table_widget.addAction(self.rename_action)
+        self.delete_action = QtGui.QAction(
+            _("Delete Region(s)"), self.table_widget)
+        self.delete_action.triggered.connect(self.on_delete)
+        # Too often, this was being triggered by accident,
+        # making it a PITA as there
+        # was no easy way to tell which widget had focus...
+        #self.delete_action.setShortcut(QtGui.QKeySequence.Delete)
+        #self.delete_action.setShortcutContext(
+        #    QtCore.Qt.WidgetWithChildrenShortcut)
+        self.table_widget.addAction(self.delete_action)
+
     def add_qtablewidgetitem(self, a_name, a_region_num):
         """ Adds a properly formatted item.  This is not for
             creating empty items...
@@ -244,49 +287,6 @@ class song_editor:
                 REGION_EDITOR.scene.clearSelection()
                 TRANSPORT.set_region_value(y)
                 TRANSPORT.set_bar_value(0)
-
-    def __init__(self):
-        self.song = pydaw_song()
-        self.last_midi_dir = None
-        self.main_vlayout = QtGui.QVBoxLayout()
-        self.table_widget = QtGui.QTableWidget()
-        self.table_widget.setColumnCount(300)
-        self.table_widget.setRowCount(1)
-        self.table_widget.setFixedHeight(87)
-        self.table_widget.setHorizontalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
-        self.table_widget.verticalHeader().setVisible(False)
-        self.table_widget.setAutoScroll(True)
-        self.table_widget.setAutoScrollMargin(1)
-        self.table_widget.setRowHeight(0, 50)
-        self.table_widget.horizontalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
-        self.table_widget.verticalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
-        self.table_widget.cellClicked.connect(self.cell_clicked)
-        self.table_widget.setDragDropOverwriteMode(False)
-        self.table_widget.setDragEnabled(True)
-        self.table_widget.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
-        self.table_widget.dropEvent = self.table_drop_event
-        self.table_widget.setEditTriggers(
-            QtGui.QAbstractItemView.NoEditTriggers)
-        self.main_vlayout.addWidget(self.table_widget)
-
-        self.table_widget.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
-        self.rename_action = QtGui.QAction(
-            _("Rename Region"), self.table_widget)
-        self.rename_action.triggered.connect(self.on_rename_region)
-        self.table_widget.addAction(self.rename_action)
-        self.delete_action = QtGui.QAction(
-            _("Delete Region(s)"), self.table_widget)
-        self.delete_action.triggered.connect(self.on_delete)
-        # Too often, this was being triggered by accident,
-        # making it a PITA as there
-        # was no easy way to tell which widget had focus...
-        #self.delete_action.setShortcut(QtGui.QKeySequence.Delete)
-        #self.delete_action.setShortcutContext(
-        #    QtCore.Qt.WidgetWithChildrenShortcut)
-        self.table_widget.addAction(self.delete_action)
 
     def on_import_midi(self, a_index):
         self.midi_file = None
