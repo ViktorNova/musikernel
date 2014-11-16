@@ -13,6 +13,9 @@ import mkplugins.xfade
 import mkplugins.mk_compressor
 import mkplugins.mk_vocoder
 
+from PyQt4 import QtGui
+from libpydaw.pydaw_util import pydaw_clip_value
+
 PLUGIN_INSTRUMENT_COUNT = 3  # For inserting the split line into the menu
 
 PLUGIN_NAMES = [
@@ -89,3 +92,78 @@ def pydaw_load_controller_maps():
         CC_NAMES[k].sort()
 
 pydaw_load_controller_maps()
+
+def pydaw_center_widget_on_screen(a_widget):
+    f_desktop_center = QtGui.QApplication.desktop().screen().rect().center()
+    f_widget_center = a_widget.rect().center()
+    f_x = pydaw_clip_value(f_desktop_center.x() - f_widget_center.x(), 0, 300)
+    f_y = pydaw_clip_value(f_desktop_center.y() - f_widget_center.y(), 0, 200)
+    a_widget.move(f_x, f_y)
+
+class mk_plugin_ui_dict:
+    def __init__(
+    self, a_ctrl_update_callback, a_project, a_plugin_pool_dir,
+    a_stylesheet, a_configure_callback,  a_midi_learn_osc_callback,
+    a_load_cc_map_callback):
+        self.ui_dict = {}
+        self.midi_learn_control = None
+        self.ctrl_update_callback = a_ctrl_update_callback
+        self.project = a_project
+        self.plugin_pool_dir = a_plugin_pool_dir
+        self.stylesheet = a_stylesheet
+        self.configure_callback = a_configure_callback
+        self.midi_learn_osc_callback = a_midi_learn_osc_callback
+        self.load_cc_map_callback = a_load_cc_map_callback
+
+    def __contains__(self, a_plugin_uid):
+        return a_plugin_uid in self.ui_dict
+
+    def __getitem__(self, a_plugin_uid):
+        return self.ui_dict[a_plugin_uid]
+
+    def open_plugin_ui(self, a_plugin_uid, a_plugin_type, a_title,
+                              a_show=True):
+        if not a_plugin_uid in self.ui_dict:
+            f_plugin = PLUGIN_UI_TYPES[a_plugin_type](
+                self.ctrl_update_callback, self.project, self.plugin_pool_dir,
+                a_plugin_uid, a_title, self.stylesheet,
+                self.configure_callback, self.midi_learn_callback,
+                self.load_cc_map_callback)
+            pydaw_center_widget_on_screen(f_plugin.widget)
+            self.ui_dict[a_plugin_uid] = f_plugin
+            if a_show:
+                f_plugin.show_widget()
+            else:
+                return f_plugin
+        else:
+            if not a_show:
+                return self.ui_dict[a_plugin_uid]
+            if self.ui_dict[a_plugin_uid].widget.isHidden():
+                self.ui_dict[a_plugin_uid].widget.show()
+            self.ui_dict[a_plugin_uid].raise_widget()
+
+    def midi_learn_callback(self, a_plugin, a_control):
+        self.midi_learn_control = (a_plugin, a_control)
+        self.midi_learn_osc_callback()
+
+    def close_plugin_ui(self, a_track_num):
+        f_track_num = int(a_track_num)
+        if f_track_num in self.ui_dict:
+            self.ui_dict[f_track_num].widget.close()
+            self.ui_dict.pop(f_track_num)
+
+    def plugin_set_window_title(self, a_plugin_uid, a_track_name):
+        f_plugin_uid = int(a_plugin_uid)
+        if f_plugin_uid in self.ui_dict:
+            self.ui_dict[a_plugin_uid].set_window_title(a_track_name)
+
+
+    def close_all_plugin_windows(self):
+        for v in list(self.ui_dict.values()):
+            v.is_quitting = True
+            v.widget.close()
+        self.ui_dict = {}
+
+    def save_all_plugin_state(self):
+        for v in list(self.ui_dict.values()):
+            v.save_plugin_file()

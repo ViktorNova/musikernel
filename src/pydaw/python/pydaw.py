@@ -65,14 +65,6 @@ def global_update_region_time():
         f_total += pydaw_get_region_length(x) * 4.0 * f_seconds_per_beat
 
 
-def pydaw_center_widget_on_screen(a_widget):
-    f_desktop_center = QtGui.QApplication.desktop().screen().rect().center()
-    f_widget_center = a_widget.rect().center()
-    f_x = pydaw_clip_value(f_desktop_center.x() - f_widget_center.x(), 0, 300)
-    f_y = pydaw_clip_value(f_desktop_center.y() - f_widget_center.y(), 0, 200)
-    a_widget.move(f_x, f_y)
-
-
 def pydaw_print_generic_exception(a_ex):
     QtGui.QMessageBox.warning(
         MAIN_WINDOW, _("Warning"),
@@ -8015,7 +8007,7 @@ def global_open_mixer():
                 f_plugin_obj = f_plugins[f_track_index][f_send_plugin_index]
                 if f_plugin_obj.plugin_index == 0:  # None
                     continue
-                f_plugin_ui = global_open_plugin_ui(
+                f_plugin_ui = PLUGIN_UI_DICT.open_plugin_ui(
                     f_plugin_obj.plugin_uid, f_plugin_obj.plugin_index,
                     "Track:  {}".format(f_track_index), False)
                 MIXER_WIDGET.set_plugin_widget(
@@ -8137,7 +8129,7 @@ class plugin_settings_base:
         f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
         if f_index == 0 or self.plugin_uid == -1:
             return
-        global_open_plugin_ui(
+        PLUGIN_UI_DICT.open_plugin_ui(
             self.plugin_uid, f_index,
             "Track:  {}".format(self.name_callback()))
 
@@ -8450,7 +8442,7 @@ class seq_track:
         if not f_plugins:
             return
         for f_plugin in f_plugins.plugins:
-            global_plugin_set_window_title(
+            PLUGIN_UI_DICT.plugin_set_window_title(
                 f_plugin.plugin_uid,
                 _("Track: {}").format(self.name_callback()))
 
@@ -8992,63 +8984,6 @@ class transport_widget:
             self.loop_mode_combobox.setToolTip("")
             self.group_box.setToolTip("")
 
-PLUGIN_UI_DICT = {}
-
-
-def global_open_plugin_ui(a_plugin_uid, a_plugin_type, a_title,
-                          a_show=True):
-    if not a_plugin_uid in PLUGIN_UI_DICT:
-        f_plugin = PLUGIN_UI_TYPES[a_plugin_type](
-            PROJECT.this_pydaw_osc.pydaw_update_plugin_control,
-            PROJECT, PROJECT.plugin_pool_folder, a_plugin_uid,
-            a_title, MAIN_WINDOW.styleSheet(),
-            PROJECT.this_pydaw_osc.pydaw_configure_plugin,
-            midi_learn_callback,
-            PROJECT.this_pydaw_osc.pydaw_load_cc_map)
-        pydaw_center_widget_on_screen(f_plugin.widget)
-        PLUGIN_UI_DICT[a_plugin_uid] = f_plugin
-        if a_show:
-            f_plugin.show_widget()
-        else:
-            return f_plugin
-    else:
-        if not a_show:
-            return PLUGIN_UI_DICT[a_plugin_uid]
-        if PLUGIN_UI_DICT[a_plugin_uid].widget.isHidden():
-            PLUGIN_UI_DICT[a_plugin_uid].widget.show()
-        PLUGIN_UI_DICT[a_plugin_uid].raise_widget()
-
-MIDI_LEARN_CONTROL = None
-
-def midi_learn_callback(a_plugin, a_control):
-    global MIDI_LEARN_CONTROL
-    MIDI_LEARN_CONTROL = (a_plugin, a_control)
-    PROJECT.this_pydaw_osc.pydaw_midi_learn()
-
-def global_close_plugin_ui(a_track_num):
-    f_track_num = int(a_track_num)
-    if f_track_num in PLUGIN_UI_DICT:
-        PLUGIN_UI_DICT[f_track_num].widget.close()
-        PLUGIN_UI_DICT.pop(f_track_num)
-
-
-def global_plugin_set_window_title(a_plugin_uid, a_track_name):
-    f_plugin_uid = int(a_plugin_uid)
-    if f_plugin_uid in PLUGIN_UI_DICT:
-        PLUGIN_UI_DICT[a_plugin_uid].set_window_title(a_track_name)
-
-
-def global_close_all_plugin_windows():
-    global PLUGIN_UI_DICT
-    for v in list(PLUGIN_UI_DICT.values()):
-        v.is_quitting = True
-        v.widget.close()
-    PLUGIN_UI_DICT = {}
-
-def global_save_all_plugin_state():
-    for v in list(PLUGIN_UI_DICT.values()):
-        v.save_plugin_file()
-
 
 class pydaw_main_window(QtGui.QMainWindow):
     def __init__(self):
@@ -9431,7 +9366,7 @@ class pydaw_main_window(QtGui.QMainWindow):
                     if not f_new_file.endswith(
                     ".{}".format(global_pydaw_version_string)):
                         f_new_file += ".{}".format(global_pydaw_version_string)
-                    global_close_all_plugin_windows()
+                    PLUGIN_UI_DICT.close_all_plugin_windows()
                     PROJECT.save_project_as(f_new_file)
                     set_window_title()
                     pydaw_util.set_file_setting("last-project", f_new_file)
@@ -9566,7 +9501,7 @@ class pydaw_main_window(QtGui.QMainWindow):
                 _("End point is before start point."))
                 return
 
-            global_save_all_plugin_state()
+            PLUGIN_UI_DICT.save_all_plugin_state()
 
             if f_copy_to_clipboard_checkbox.isChecked():
                 self.copy_to_clipboard_checked = True
@@ -10194,8 +10129,8 @@ class pydaw_main_window(QtGui.QMainWindow):
                 f_state, f_note = a_val.split("|")
                 PIANO_ROLL_EDITOR.highlight_keys(f_state, f_note)
             elif a_key == "ml":
-                MIDI_LEARN_CONTROL[0].update_cc_map(
-                    a_val, MIDI_LEARN_CONTROL[1])
+                PLUGIN_UI_DICT.midi_learn_control[0].update_cc_map(
+                    a_val, PLUGIN_UI_DICT.midi_learn_control[1])
             elif a_key == "wec":
                 if IS_PLAYING:
                     WAVE_EDITOR.set_playback_cursor(float(a_val))
@@ -10226,7 +10161,7 @@ class pydaw_main_window(QtGui.QMainWindow):
             AUDIO_SEQ.prepare_to_quit()
             PIANO_ROLL_EDITOR.prepare_to_quit()
             time.sleep(0.5)
-            global_close_all_plugin_windows()
+            PLUGIN_UI_DICT.close_all_plugin_windows()
             if self.osc_server is not None:
                 self.osc_timer.stop()
             if global_pydaw_with_audio:
@@ -10905,11 +10840,13 @@ class pydaw_wave_editor_widget:
         self.clear_sample_graph()
         self.file_lineedit.setText("")
 
+PLUGIN_UI_DICT = None
 
 def global_close_all():
     global OPEN_ITEM_UIDS, AUDIO_ITEMS_TO_DROP
     close_pydaw_engine()
-    global_close_all_plugin_windows()
+    if PLUGIN_UI_DICT:
+        PLUGIN_UI_DICT.close_all_plugin_windows()
     REGION_SETTINGS.clear_new()
     ITEM_EDITOR.clear_new()
     SONG_EDITOR.table_widget.clearContents()
@@ -10950,13 +10887,19 @@ def set_window_title():
 #Opens or creates a new project
 def global_open_project(a_project_file, a_wait=True):
     global_close_all()
-    global PROJECT, TRACK_NAMES
+    global PROJECT, TRACK_NAMES, PLUGIN_UI_DICT
     if a_wait:
         time.sleep(3.0)
     open_pydaw_engine(a_project_file)
     PROJECT = pydaw_project(global_pydaw_with_audio)
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
+    PLUGIN_UI_DICT = mk_plugin_ui_dict(
+        PROJECT.this_pydaw_osc.pydaw_update_plugin_control, PROJECT,
+        PROJECT.plugin_pool_folder, MAIN_WINDOW.styleSheet(),
+        PROJECT.this_pydaw_osc.pydaw_configure_plugin,
+        PROJECT.this_pydaw_osc.pydaw_midi_learn,
+        PROJECT.this_pydaw_osc.pydaw_load_cc_map)
     TRACK_PANEL.open_tracks()
     WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
     SONG_EDITOR.open_song()
@@ -10981,13 +10924,19 @@ def global_open_project(a_project_file, a_wait=True):
 
 def global_new_project(a_project_file, a_wait=True):
     global_close_all()
-    global PROJECT
+    global PROJECT, PLUGIN_UI_DICT
     if a_wait:
         time.sleep(3.0)
     open_pydaw_engine(a_project_file)
     PROJECT = pydaw_project(global_pydaw_with_audio)
     PROJECT.new_project(a_project_file)
     PROJECT.save_transport(TRANSPORT.transport)
+    PLUGIN_UI_DICT = mk_plugin_ui_dict(
+        PROJECT.this_pydaw_osc.pydaw_update_plugin_control, PROJECT,
+        PROJECT.plugin_pool_folder, MAIN_WINDOW.styleSheet(),
+        PROJECT.this_pydaw_osc.pydaw_configure_plugin,
+        PROJECT.this_pydaw_osc.pydaw_midi_learn,
+        PROJECT.this_pydaw_osc.pydaw_load_cc_map)
     WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
     SONG_EDITOR.open_song()
     PROJECT.save_song(SONG_EDITOR.song)
@@ -11243,16 +11192,16 @@ not os.access(os.path.dirname(default_project_file), os.W_OK):
     exit(999)
 
 if os.path.exists(default_project_file):
-    try:
+#    try:
         global_open_project(default_project_file, a_wait=False)
-    except Exception as ex:
-        QtGui.QMessageBox.warning(
-            MAIN_WINDOW, _("Error"),
-            _("Error opening project: {}\n{}\n"
-            "Opening project recovery dialog".format(
-            default_project_file, ex)))
-        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
-        MAIN_WINDOW.prepare_to_quit()
+#    except Exception as ex:
+#        QtGui.QMessageBox.warning(
+#            MAIN_WINDOW, _("Error"),
+#            _("Error opening project: {}\n{}\n"
+#            "Opening project recovery dialog".format(
+#            default_project_file, ex)))
+#        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
+#        MAIN_WINDOW.prepare_to_quit()
 else:
     global_new_project(default_project_file, a_wait=False)
 
