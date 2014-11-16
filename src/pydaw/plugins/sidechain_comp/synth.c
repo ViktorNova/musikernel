@@ -95,6 +95,7 @@ static void v_scc_connect_port(PYFX_Handle instance, int port,
         case SCC_ATTACK: plugin->attack = data; break;
         case SCC_RELEASE: plugin->release = data; break;
         case SCC_WET: plugin->wet = data; break;
+        case SCC_UI_MSG_ENABLED: plugin->peak_meter = data; break;
     }
 }
 
@@ -162,6 +163,7 @@ static void v_scc_run(
         t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_scc *plugin_data = (t_scc*)instance;
+    t_scc_sidechain_comp * f_cmp = &plugin_data->mono_modules->sidechain_comp;
 
     int event_pos = 0;
     int midi_event_pos = 0;
@@ -215,20 +217,29 @@ static void v_scc_run(
         v_plugin_event_queue_atm_set(
             &plugin_data->atm_queue, f_i, plugin_data->port_table);
 
-        v_scc_set(&plugin_data->mono_modules->sidechain_comp,
+        v_scc_set(f_cmp,
             *plugin_data->threshold, (*plugin_data->ratio) * 0.1f,
             *plugin_data->attack * 0.001f, *plugin_data->release * 0.001f,
             *plugin_data->wet * 0.01f);
 
-        v_scc_run_comp(&plugin_data->mono_modules->sidechain_comp,
+        v_scc_run_comp(f_cmp,
             plugin_data->sc_input0[f_i], plugin_data->sc_input1[f_i],
             plugin_data->output0[f_i], plugin_data->output1[f_i]);
 
-        plugin_data->output0[f_i] =
-            plugin_data->mono_modules->sidechain_comp.output0;
-        plugin_data->output1[f_i] =
-            plugin_data->mono_modules->sidechain_comp.output1;
+        plugin_data->output0[f_i] = f_cmp->output0;
+        plugin_data->output1[f_i] = f_cmp->output1;
         ++f_i;
+    }
+
+    if((int)(*plugin_data->peak_meter))
+    {
+        if(f_cmp->peak_tracker.dirty)
+        {
+            sprintf(plugin_data->ui_msg_buff, "%i|gain|%f",
+                plugin_data->plugin_uid, f_cmp->peak_tracker.gain_redux);
+            plugin_data->queue_func("ui", plugin_data->ui_msg_buff);
+            v_pkm_reset_peak(&f_cmp->peak_tracker);
+        }
     }
 }
 
@@ -241,6 +252,7 @@ PYFX_Descriptor *scc_PYFX_descriptor(int index)
     pydaw_set_pyfx_port(f_result, SCC_ATTACK, 20.0f, 10.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, SCC_RELEASE, 50.0f, 30.0f, 300.0f);
     pydaw_set_pyfx_port(f_result, SCC_WET, 100.0f, 0.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, SCC_UI_MSG_ENABLED, 0.0f, 0.0f, 1.0f);
 
     f_result->cleanup = v_scc_cleanup;
     f_result->connect_port = v_scc_connect_port;

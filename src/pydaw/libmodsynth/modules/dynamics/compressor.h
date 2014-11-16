@@ -54,7 +54,7 @@ void g_cmp_init(t_cmp_compressor * self, float a_sr)
     self->rms_last = 0.0f;
     self->rms_sum = 0.0f;
     g_enf_init(&self->env_follower, a_sr);
-    v_pkm_tracker_init(&self->peak_tracker, a_sr);
+    g_pkm_tracker_init(&self->peak_tracker, a_sr);
 }
 
 void v_cmp_set(t_cmp_compressor * self, float thresh, float ratio,

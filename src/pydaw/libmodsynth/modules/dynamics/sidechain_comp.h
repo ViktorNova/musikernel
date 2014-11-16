@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "../../lib/lms_math.h"
 #include "../modulation/env_follower2.h"
 #include "../signal_routing/audio_xfade.h"
+#include "../../lib/peak_meter.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -28,6 +29,7 @@ typedef struct
     float pitch, ratio, thresh, wet, attack, release, output0, output1;
     t_enf2_env_follower env_follower;
     t_audio_xfade xfade;
+    t_pkm_tracker peak_tracker;
 }t_scc_sidechain_comp;
 
 #ifdef	__cplusplus
@@ -47,6 +49,7 @@ void g_scc_init(t_scc_sidechain_comp * self, float a_sr)
     self->wet = 999.99f;
     self->output0 = 0.0f;
     self->output1 = 0.0f;
+    g_pkm_tracker_init(&self->peak_tracker, a_sr);
 }
 
 void v_scc_set(t_scc_sidechain_comp *self, float a_thresh, float a_ratio,
@@ -87,11 +90,13 @@ void v_scc_run_comp(t_scc_sidechain_comp *self,
             &self->xfade, a_output0, a_output0 * f_gain);
         self->output1 = f_axf_run_xfade(
             &self->xfade, a_output1, a_output1 * f_gain);
+        v_pkm_run_peak(&self->peak_tracker, f_gain);
     }
     else
     {
         self->output0 = a_output0;
         self->output1 = a_output1;
+        v_pkm_run_peak(&self->peak_tracker, 1.0f);
     }
 }
 

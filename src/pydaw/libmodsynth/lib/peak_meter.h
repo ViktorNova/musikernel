@@ -41,7 +41,7 @@ typedef struct
 }
 #endif
 
-void v_pkm_tracker_init(t_pkm_tracker * self, float a_sr)
+void g_pkm_tracker_init(t_pkm_tracker * self, float a_sr)
 {
     self->gain_redux = 0.0f;
     self->counter = 0;

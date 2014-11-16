@@ -22,6 +22,7 @@ SCC_RATIO = 1
 SCC_ATTACK = 2
 SCC_RELEASE = 3
 SCC_WET = 4
+SCC_UI_MSG_ENABLED = 5
 
 
 SCC_PORT_MAP = {
@@ -101,16 +102,53 @@ class scc_plugin_ui(pydaw_abstract_plugin_ui):
         self.wet_knob.add_to_grid_layout(
             self.reverb_groupbox_gridlayout, 21)
 
+        self.peak_meter = peak_meter(16, False)
+        self.reverb_hlayout.addWidget(self.peak_meter.widget)
+
         self.delay_spacer_layout = QtGui.QVBoxLayout()
         self.delay_vlayout.addLayout(self.delay_spacer_layout)
         self.delay_spacer_layout.addItem(
             QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
 
+        self.ui_msg_enabled = pydaw_null_control(
+            SCC_UI_MSG_ENABLED,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            0, self.port_dict)
+
         self.open_plugin_file()
         self.set_midi_learn(SCC_PORT_MAP)
+        self.enable_ui_msg(True)
 
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(
-            "MusiKernel Sidechain Comp. - {}".format(self.track_name))
+            "Sidechain Comp. - {}".format(self.track_name))
+
+    def widget_close_event(self, a_event):
+        self.enable_ui_msg(False)
+        pydaw_abstract_plugin_ui.widget_close_event(self, a_event)
+
+    def raise_widget(self):
+        pydaw_abstract_plugin_ui.raise_widget(self)
+        self.enable_ui_msg(True)
+
+    def enable_ui_msg(self, a_enabled):
+        if a_enabled:
+            print("Enabling UI messages")
+            self.plugin_val_callback(SCC_UI_MSG_ENABLED, 1.0)
+        else:
+            print("Disabling UI messages")
+            self.plugin_val_callback(SCC_UI_MSG_ENABLED, 0.0)
+
+    def ui_message(self, a_name, a_value):
+        if a_name == "gain":
+            self.peak_meter.set_value([a_value] * 2)
+        else:
+            pydaw_abstract_plugin_ui.ui_message(a_name, a_value)
+
+    def save_plugin_file(self):
+        # Don't allow the peak meter to run at startup
+        self.ui_msg_enabled.set_value(0)
+        pydaw_abstract_plugin_ui.save_plugin_file(self)
+
 

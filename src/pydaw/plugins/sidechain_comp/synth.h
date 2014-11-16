@@ -29,11 +29,12 @@ extern "C" {
 #define SCC_ATTACK 2
 #define SCC_RELEASE 3
 #define SCC_WET 4
+#define SCC_UI_MSG_ENABLED 5
 
-#define SCC_LAST_CONTROL_PORT 4
+#define SCC_LAST_CONTROL_PORT 5
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define SCC_COUNT 5
+#define SCC_COUNT 6
 
 typedef struct
 {
@@ -48,6 +49,7 @@ typedef struct
     PYFX_Data *attack;
     PYFX_Data *release;
     PYFX_Data *wet;
+    PYFX_Data *peak_meter;
 
     float fs;
     t_scc_mono_modules * mono_modules;
@@ -64,6 +66,7 @@ typedef struct
     float * port_table;
     t_plugin_cc_map cc_map;
     PYFX_Descriptor * descriptor;
+    char ui_msg_buff[64];
 } t_scc;
 
 #ifdef	__cplusplus
