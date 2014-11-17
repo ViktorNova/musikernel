@@ -26,8 +26,9 @@ class MkMainWindow(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
         #self.setMinimumSize(1100, 600)
         self.setObjectName("mainwindow")
-        import pydaw
-        self.edm_next_window = pydaw.MAIN_WINDOW
+        import edmnext
+        self.edm_next_module = edmnext
+        self.edm_next_window = edmnext.MAIN_WINDOW
         self.host_windows = (self.edm_next_window,)
         self.setCentralWidget(self.edm_next_window)
         self.ignore_close_event = True
