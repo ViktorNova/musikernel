@@ -16,6 +16,7 @@ GNU General Public License for more details.
 # hosts can access them from this module
 MAIN_WINDOW = None
 APP = None
+IS_PLAYING = False
 
 class AbstractIPC:
     """ Abstract class containing the minimum contract

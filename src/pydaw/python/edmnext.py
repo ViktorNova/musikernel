@@ -27,9 +27,7 @@ from mkplugins import *
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
 import libpydaw.strings
-
-IS_PLAYING = False
-
+import libmk
 
 def pydaw_get_current_region_length():
     if CURRENT_REGION is None:
@@ -195,7 +193,7 @@ class song_editor:
 
     def cell_clicked(self, x, y):
         f_is_playing = False
-        if IS_PLAYING and \
+        if libmk.IS_PLAYING and \
         TRANSPORT.follow_checkbox.isChecked():
             f_is_playing = True
             TRANSPORT.follow_checkbox.setChecked(False)
@@ -589,7 +587,7 @@ class region_settings:
     def update_region_length(self, a_value=None):
         f_region_name = str(self.region_name_lineedit.text())
         global CURRENT_REGION
-        if not IS_PLAYING and \
+        if not libmk.IS_PLAYING and \
         CURRENT_REGION is not None and f_region_name != "":
             if not self.enabled or CURRENT_REGION is None:
                 return
@@ -637,7 +635,7 @@ class region_settings:
 
 
     def on_shift(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
 
         def ok_handler():
@@ -678,7 +676,7 @@ class region_settings:
 
 
     def on_split(self):
-        if CURRENT_REGION is None or IS_PLAYING or \
+        if CURRENT_REGION is None or libmk.IS_PLAYING or \
         CURRENT_REGION.region_length_bars == 1:
             return
 
@@ -2878,7 +2876,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         return(f_pos_bars, f_pos_beats)
 
     def start_handle_mouseClickEvent(self, a_event):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         self.check_selected_status()
         a_event.setAccepted(True)
@@ -2891,7 +2889,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                                False)
 
     def length_handle_mouseClickEvent(self, a_event):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         self.check_selected_status()
         a_event.setAccepted(True)
@@ -2903,7 +2901,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                                False)
 
     def fade_in_handle_mouseClickEvent(self, a_event):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         self.check_selected_status()
         a_event.setAccepted(True)
@@ -2913,7 +2911,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 f_item.is_fading_in = True
 
     def fade_out_handle_mouseClickEvent(self, a_event):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         self.check_selected_status()
         a_event.setAccepted(True)
@@ -2923,7 +2921,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 f_item.is_fading_out = True
 
     def stretch_handle_mouseClickEvent(self, a_event):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         self.check_selected_status()
         a_event.setAccepted(True)
@@ -3549,7 +3547,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         AUDIO_SEQ_WIDGET.open_file_in_browser(f_path)
 
     def mousePressEvent(self, a_event):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
 
         if a_event.modifiers() == (QtCore.Qt.AltModifier |
@@ -3749,7 +3747,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         self.label.setText("{}dB".format(self.audio_item.vol))
 
     def mouseMoveEvent(self, a_event):
-        if IS_PLAYING or self.event_pos_orig is None:
+        if libmk.IS_PLAYING or self.event_pos_orig is None:
             return
         if self.is_amp_curving or self.is_amp_dragging:
             f_pos = a_event.pos()
@@ -3874,7 +3872,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                         f_item.is_moving = True
 
     def mouseReleaseEvent(self, a_event):
-        if IS_PLAYING or self.event_pos_orig is None:
+        if libmk.IS_PLAYING or self.event_pos_orig is None:
             return
         QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
         QtGui.QApplication.restoreOverrideCursor()
@@ -4216,7 +4214,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
         a_event.setDropAction(QtCore.Qt.CopyAction)
 
     def check_running(self):
-        if pydaw_current_region_is_none() or IS_PLAYING:
+        if pydaw_current_region_is_none() or libmk.IS_PLAYING:
             return True
         return False
 
@@ -4372,7 +4370,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
         pydaw_set_audio_seq_zoom(self.h_zoom, self.v_zoom)
 
     def ruler_click_event(self, a_event):
-        if not IS_PLAYING:
+        if not libmk.IS_PLAYING:
             f_val = int(a_event.pos().x() / AUDIO_PX_PER_BAR)
             TRANSPORT.set_bar_value(f_val)
 
@@ -4672,7 +4670,7 @@ class time_pitch_dialog_widget:
 
 
     def ok_handler(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             QtGui.QMessageBox.warning(
                 self.widget, _("Error"),
                 _("Cannot edit audio items during playback"))
@@ -4810,7 +4808,7 @@ class fade_vol_dialog_widget:
         self.fadeout_vol_checkbox.setChecked(True)
 
     def ok_handler(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             QtGui.QMessageBox.warning(
                 self.widget, _("Error"),
                 _("Cannot edit audio items during playback"))
@@ -5009,18 +5007,18 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         DEFAULT_AUDIO_TRACK = a_val
 
     def on_select_all(self):
-        if CURRENT_REGION is None or IS_PLAYING:
+        if CURRENT_REGION is None or libmk.IS_PLAYING:
             return
         for f_item in AUDIO_SEQ.audio_items:
             f_item.setSelected(True)
 
     def on_glue_selected(self):
-        if CURRENT_REGION is None or IS_PLAYING:
+        if CURRENT_REGION is None or libmk.IS_PLAYING:
             return
         AUDIO_SEQ.glue_selected()
 
     def on_delete_selected(self):
-        if CURRENT_REGION is None or IS_PLAYING:
+        if CURRENT_REGION is None or libmk.IS_PLAYING:
             return
         AUDIO_SEQ.delete_selected()
 
@@ -5063,7 +5061,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
             self.modulex.clear_effects()
 
     def on_copy(self):
-        if CURRENT_REGION is None or IS_PLAYING:
+        if CURRENT_REGION is None or libmk.IS_PLAYING:
             return 0
         self.audio_items_clipboard = []
         f_per_item_fx_dict = PROJECT.get_audio_per_item_fx_region(
@@ -5085,7 +5083,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
             self.on_delete_selected()
 
     def on_paste(self):
-        if CURRENT_REGION is None or IS_PLAYING:
+        if CURRENT_REGION is None or libmk.IS_PLAYING:
             return
         if not self.audio_items_clipboard:
             QtGui.QMessageBox.warning(self.widget, _("Error"),
@@ -5122,7 +5120,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         AUDIO_SEQ.reset_selection()
 
     def on_clone(self):
-        if CURRENT_REGION is None or IS_PLAYING:
+        if CURRENT_REGION is None or libmk.IS_PLAYING:
             return
         def ok_handler():
             f_region_name = str(f_region_combobox.currentText())
@@ -5193,7 +5191,7 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
                         continue
                     AUDIO_SEQ.draw_item(k, v, f_graph)
                 except:
-                    if IS_PLAYING:
+                    if libmk.IS_PLAYING:
                         print(_("Exception while loading {}".format(v.uid)))
                     else:
                         f_path = PROJECT.get_wav_path_by_uid(v.uid)
@@ -8380,7 +8378,7 @@ class seq_track:
     def control_changed(self, a_val=None):
         self.set_cc_num()
         self.ccs_in_use_combobox.setCurrentIndex(0)
-        if not IS_PLAYING:
+        if not libmk.IS_PLAYING:
             REGION_EDITOR.open_region()
 
     def set_cc_num(self, a_val=None):
@@ -8453,7 +8451,7 @@ class seq_track:
         self.automation_plugin = int(a_plugin)
         self.automation_plugin_name = str(a_name)
         self.plugin_changed()
-        if not IS_PLAYING:
+        if not libmk.IS_PLAYING:
             REGION_EDITOR.open_region()
 
     def save_callback(self):
@@ -8719,8 +8717,7 @@ class transport_widget:
         AUDIO_SEQ_WIDGET.on_play()
         self.bar_spinbox.setEnabled(False)
         self.region_spinbox.setEnabled(False)
-        global IS_PLAYING
-        IS_PLAYING = True
+        libmk.IS_PLAYING = True
         self.is_playing = True
         self.init_playback_cursor()
         self.last_region_num = self.get_region_value()
@@ -8752,8 +8749,7 @@ class transport_widget:
             PROJECT.this_pydaw_osc.pydaw_wn_playback(0)
         else:
             PROJECT.this_pydaw_osc.pydaw_en_playback(0)
-        global IS_PLAYING
-        IS_PLAYING = False
+        libmk.IS_PLAYING = False
         SONG_EDITOR.table_widget.setEnabled(True)
         REGION_SETTINGS.on_stop()
         AUDIO_SEQ_WIDGET.on_stop()
@@ -8865,8 +8861,8 @@ class transport_widget:
         self.bar_spinbox.setEnabled(False)
         self.region_spinbox.setEnabled(False)
         self.overdub_checkbox.setEnabled(False)
-        global IS_PLAYING, MREC_EVENTS
-        IS_PLAYING = True
+        global MREC_EVENTS
+        libmk.IS_PLAYING = True
         MREC_EVENTS = []
         self.init_playback_cursor()
         self.is_recording = True
@@ -9257,7 +9253,7 @@ class pydaw_main_window(QtGui.QScrollArea):
 
 
     def on_new(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         try:
             while True:
@@ -9279,7 +9275,7 @@ class pydaw_main_window(QtGui.QScrollArea):
             pydaw_print_generic_exception(ex)
 
     def on_open(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         try:
             f_file = QtGui.QFileDialog.getOpenFileName(
@@ -9312,7 +9308,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         PROJECT.create_backup()
 
     def on_save_as(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         def ok_handler():
             f_name = str(f_lineedit.text()).strip()
@@ -9339,7 +9335,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         f_window.exec_()
 
     def on_save_copy(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         try:
             while True:
@@ -9682,7 +9678,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         f_window.exec_()
 
     def on_undo(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         if PROJECT.undo():
             global_ui_refresh_callback()
@@ -9690,13 +9686,13 @@ class pydaw_main_window(QtGui.QScrollArea):
             self.on_undo_history()
 
     def on_redo(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         PROJECT.redo()
         global_ui_refresh_callback()
 
     def on_undo_history(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         PROJECT.flush_history()
         f_window = QtGui.QDialog(MAIN_WINDOW)
@@ -9712,7 +9708,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         f_window.exec_()
 
     def on_verify_history(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         f_str = PROJECT.verify_history()
         f_window = QtGui.QDialog(MAIN_WINDOW)
@@ -9789,9 +9785,9 @@ class pydaw_main_window(QtGui.QScrollArea):
 
     def tab_changed(self):
         f_index = self.main_tabwidget.currentIndex()
-        if not IS_PLAYING and f_index != 2:
+        if not libmk.IS_PLAYING and f_index != 2:
             WAVE_EDITOR.enabled_checkbox.setChecked(False)
-        if f_index == 0 and not IS_PLAYING:
+        if f_index == 0 and not libmk.IS_PLAYING:
             REGION_EDITOR.open_region()
         elif f_index == 1:
             ITEM_EDITOR.tab_changed()
@@ -10099,7 +10095,7 @@ class pydaw_main_window(QtGui.QScrollArea):
                 f_plugin_uid, f_port, f_val = a_val.split("|")
                 f_pc_dict[(f_plugin_uid, f_port)] = f_val
             elif a_key == "cur":
-                if IS_PLAYING:
+                if libmk.IS_PLAYING:
                     f_region, f_bar, f_beat = a_val.split("|")
                     TRANSPORT.set_pos_from_cursor(f_region, f_bar, f_beat)
                     for f_editor in (AUDIO_SEQ, REGION_EDITOR):
@@ -10121,7 +10117,7 @@ class pydaw_main_window(QtGui.QScrollArea):
                 PLUGIN_UI_DICT.midi_learn_control[0].update_cc_map(
                     a_val, PLUGIN_UI_DICT.midi_learn_control[1])
             elif a_key == "wec":
-                if IS_PLAYING:
+                if libmk.IS_PLAYING:
                     WAVE_EDITOR.set_playback_cursor(float(a_val))
             elif a_key == "ready":
                 for f_widget in (TRANSPORT, MIDI_DEVICES_DIALOG):
@@ -10668,7 +10664,7 @@ class pydaw_wave_editor_widget:
         PROJECT.this_pydaw_osc.pydaw_stop_preview()
 
     def on_file_open(self):
-        if IS_PLAYING:
+        if libmk.IS_PLAYING:
             return
         f_file = self.file_browser.files_selected()
         if not f_file:

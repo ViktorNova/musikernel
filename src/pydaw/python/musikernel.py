@@ -31,6 +31,8 @@ class MkMainWindow(QtGui.QMainWindow):
         import edmnext
         self.edm_next_module = edmnext
         self.edm_next_window = edmnext.MAIN_WINDOW
+        self.current_module = self.edm_next_module
+        self.current_window = self.edm_next_window
         self.host_windows = (self.edm_next_window,)
         self.setCentralWidget(self.edm_next_window)
         self.ignore_close_event = True
@@ -55,8 +57,8 @@ class MkMainWindow(QtGui.QMainWindow):
     def closeEvent(self, event):
         if self.ignore_close_event:
             event.ignore()
-#            if IS_PLAYING:
-#                return
+            if libmk.IS_PLAYING:
+                return
             self.setEnabled(False)
             f_reply = QtGui.QMessageBox.question(
                 self, _('Message'), _("Are you sure you want to quit?"),
