@@ -280,6 +280,11 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/mkplugins/mk_limiter.pyc
 /usr/lib/{0}/pydaw/python/mkplugins/mk_limiter.pyo
 
+/usr/lib/{0}/pydaw/python/libmk/__init__.py
+/usr/lib/{0}/pydaw/python/libmk/__init__.pyc
+/usr/lib/{0}/pydaw/python/libmk/__init__.pyo
+
+
 %doc
 
 """.format(global_pydaw_version_string, global_version_fedora,
