@@ -113,7 +113,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755, root, root) /usr/bin/{0}-engine-dbg
 %attr(755, root, root) /usr/bin/{0}-engine-no-root
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/libpydaw/pydaw_paulstretch.py
-%attr(755, root, root) /usr/lib/{0}/pydaw/python/pydaw.py
+%attr(755, root, root) /usr/lib/{0}/pydaw/python/edmnext.py
 %attr(755, root, root) /usr/lib/{0}/rubberband/bin/rubberband
 %attr(755, root, root) /usr/lib/{0}/sbsms/bin/sbsms
 
@@ -206,8 +206,8 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/staging.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/super_formant_maker.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/super_formant_maker.pyo
-/usr/lib/{0}/pydaw/python/pydaw.pyc
-/usr/lib/{0}/pydaw/python/pydaw.pyo
+/usr/lib/{0}/pydaw/python/edmnext.pyc
+/usr/lib/{0}/pydaw/python/edmnext.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/translate.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/translate.pyo
 /usr/lib/{0}/pydaw/python/wavefile/__init__.pyc
@@ -271,6 +271,14 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/mkplugins/mk_vocoder.py
 /usr/lib/{0}/pydaw/python/mkplugins/mk_vocoder.pyc
 /usr/lib/{0}/pydaw/python/mkplugins/mk_vocoder.pyo
+
+/usr/lib/{0}/pydaw/python/musikernel.py
+/usr/lib/{0}/pydaw/python/musikernel.pyc
+/usr/lib/{0}/pydaw/python/musikernel.pyo
+
+/usr/lib/{0}/pydaw/python/mkplugins/mk_limiter.py
+/usr/lib/{0}/pydaw/python/mkplugins/mk_limiter.pyc
+/usr/lib/{0}/pydaw/python/mkplugins/mk_limiter.pyo
 
 %doc
 
