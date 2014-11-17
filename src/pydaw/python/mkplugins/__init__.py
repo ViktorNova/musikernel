@@ -107,19 +107,20 @@ def pydaw_center_widget_on_screen(a_widget):
     a_widget.move(f_x, f_y)
 
 class mk_plugin_ui_dict:
-    def __init__(
-    self, a_ctrl_update_callback, a_project, a_plugin_pool_dir,
-    a_stylesheet, a_configure_callback,  a_midi_learn_osc_callback,
-    a_load_cc_map_callback):
+    def __init__(self, a_project, a_ipc, a_stylesheet):
+        """ a_project:    libmk.AbstractProject
+            a_ipc:        libmk.AbstractIPC
+            a_stylesheet: Qt-CSS string
+        """
         self.ui_dict = {}
         self.midi_learn_control = None
-        self.ctrl_update_callback = a_ctrl_update_callback
+        self.ctrl_update_callback = a_ipc.pydaw_update_plugin_control
         self.project = a_project
-        self.plugin_pool_dir = a_plugin_pool_dir
+        self.plugin_pool_dir = a_project.plugin_pool_folder
         self.stylesheet = a_stylesheet
-        self.configure_callback = a_configure_callback
-        self.midi_learn_osc_callback = a_midi_learn_osc_callback
-        self.load_cc_map_callback = a_load_cc_map_callback
+        self.configure_callback = a_ipc.pydaw_configure_plugin
+        self.midi_learn_osc_callback = a_ipc.pydaw_midi_learn
+        self.load_cc_map_callback = a_ipc.pydaw_load_cc_map
 
     def __contains__(self, a_plugin_uid):
         return a_plugin_uid in self.ui_dict

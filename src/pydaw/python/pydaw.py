@@ -10895,11 +10895,7 @@ def global_open_project(a_project_file, a_wait=True):
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
     PLUGIN_UI_DICT = mk_plugin_ui_dict(
-        PROJECT.this_pydaw_osc.pydaw_update_plugin_control, PROJECT,
-        PROJECT.plugin_pool_folder, MAIN_WINDOW.styleSheet(),
-        PROJECT.this_pydaw_osc.pydaw_configure_plugin,
-        PROJECT.this_pydaw_osc.pydaw_midi_learn,
-        PROJECT.this_pydaw_osc.pydaw_load_cc_map)
+        PROJECT, PROJECT.this_pydaw_osc, MAIN_WINDOW.styleSheet())
     TRACK_PANEL.open_tracks()
     WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
     SONG_EDITOR.open_song()
@@ -10932,11 +10928,7 @@ def global_new_project(a_project_file, a_wait=True):
     PROJECT.new_project(a_project_file)
     PROJECT.save_transport(TRANSPORT.transport)
     PLUGIN_UI_DICT = mk_plugin_ui_dict(
-        PROJECT.this_pydaw_osc.pydaw_update_plugin_control, PROJECT,
-        PROJECT.plugin_pool_folder, MAIN_WINDOW.styleSheet(),
-        PROJECT.this_pydaw_osc.pydaw_configure_plugin,
-        PROJECT.this_pydaw_osc.pydaw_midi_learn,
-        PROJECT.this_pydaw_osc.pydaw_load_cc_map)
+        PROJECT, PROJECT.this_pydaw_osc, MAIN_WINDOW.styleSheet())
     WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
     SONG_EDITOR.open_song()
     PROJECT.save_song(SONG_EDITOR.song)
