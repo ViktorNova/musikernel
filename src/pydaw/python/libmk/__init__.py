@@ -12,6 +12,11 @@ GNU General Public License for more details.
 
 """
 
+# These are dynamically assigned by musikernel.py so that
+# hosts can access them from this module
+MAIN_WINDOW = None
+APP = None
+
 class AbstractIPC:
     """ Abstract class containing the minimum contract
         to run MK Plugins for host communication to the

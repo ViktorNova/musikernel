@@ -20,10 +20,12 @@ from libpydaw import pydaw_util
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
 import gc
+import libmk
 
 class MkMainWindow(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
+        libmk.MAIN_WINDOW = self
         #self.setMinimumSize(1100, 600)
         self.setObjectName("mainwindow")
         import edmnext
@@ -39,6 +41,7 @@ class MkMainWindow(QtGui.QMainWindow):
             for f_host in self.host_windows:
                 f_host.prepare_to_quit()
             self.ignore_close_event = False
+            libmk.MAIN_WINDOW = None
             f_quit_timer = QtCore.QTimer(self)
             f_quit_timer.setSingleShot(True)
             f_quit_timer.timeout.connect(self.close)
@@ -68,13 +71,13 @@ class MkMainWindow(QtGui.QMainWindow):
             event.accept()
 
 
-APP = QtGui.QApplication(sys.argv)
+libmk.APP = QtGui.QApplication(sys.argv)
 
-APP.setWindowIcon(
+libmk.APP.setWindowIcon(
     QtGui.QIcon("{}/share/pixmaps/{}.png".format(
     pydaw_util.global_pydaw_install_prefix, global_pydaw_version_string)))
 
-APP.setStyleSheet(global_stylesheet)
+libmk.APP.setStyleSheet(global_stylesheet)
 
 QtCore.QTextCodec.setCodecForLocale(QtCore.QTextCodec.codecForName("UTF-8"))
 
@@ -102,8 +105,8 @@ def final_gc():
 
 def flush_events():
     for f_i in range(1, 10):
-        if APP.hasPendingEvents():
-            APP.processEvents()
+        if libmk.APP.hasPendingEvents():
+            libmk.APP.processEvents()
             time.sleep(0.1)
         else:
             print("Successfully processed all pending events "
@@ -114,14 +117,14 @@ def flush_events():
 MAIN_WINDOW = MkMainWindow()
 MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
 
-APP.lastWindowClosed.connect(APP.quit)
-APP.setStyle(QtGui.QStyleFactory.create("Fusion"))
-APP.exec_()
+libmk.APP.lastWindowClosed.connect(libmk.APP.quit)
+libmk.APP.setStyle(QtGui.QStyleFactory.create("Fusion"))
+libmk.APP.exec_()
 time.sleep(0.6)
 flush_events()
-APP.deleteLater()
+libmk.APP.deleteLater()
 time.sleep(0.6)
-APP = None
+libmk.APP = None
 time.sleep(0.6)
 final_gc()
 
