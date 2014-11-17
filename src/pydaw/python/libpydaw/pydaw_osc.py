@@ -15,6 +15,8 @@ import sys
 from libpydaw.pydaw_util import bool_to_int, pydaw_wait_for_finished_file, \
     pydaw_get_wait_file_path, global_pydaw_install_prefix, global_stylesheet
 
+import libmk
+
 try:
     import libpydaw.liblo as liblo
 except ImportError:
@@ -56,7 +58,7 @@ except ImportError:
         sys.exit(app.exec_())
 
 
-class pydaw_osc:
+class pydaw_osc(libmk.AbstractIPC):
     def __init__(self, a_with_audio=False):
         if not a_with_audio:
             self.with_osc = False

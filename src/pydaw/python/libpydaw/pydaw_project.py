@@ -19,6 +19,8 @@ import subprocess
 import tarfile
 import json
 
+import libmk
+
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
 
@@ -85,7 +87,7 @@ pydaw_min_note_length = 4.0 / 129.0
 pydaw_terminating_char = "\\"
 
 
-class pydaw_project:
+class pydaw_project(libmk.AbstractProject):
     def create_file(self, a_folder, a_file, a_text):
         """  Call save_file only if the file doesn't exist... """
         if not os.path.isfile("{}/{}/{}".format(
