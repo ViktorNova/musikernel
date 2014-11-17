@@ -18,6 +18,7 @@ import time
 from libpydaw import *
 from libpydaw import pydaw_util
 from libpydaw.pydaw_util import *
+from libpydaw.translate import _
 import gc
 
 class MkMainWindow(QtGui.QMainWindow):
@@ -26,8 +27,44 @@ class MkMainWindow(QtGui.QMainWindow):
         #self.setMinimumSize(1100, 600)
         self.setObjectName("mainwindow")
         import pydaw
-        self.setCentralWidget(pydaw.MAIN_WINDOW)
+        self.edm_next_window = pydaw.MAIN_WINDOW
+        self.host_windows = (self.edm_next_window,)
+        self.setCentralWidget(self.edm_next_window)
+        self.ignore_close_event = True
         self.show()
+
+    def prepare_to_quit(self):
+        try:
+            for f_host in self.host_windows:
+                f_host.prepare_to_quit()
+            self.ignore_close_event = False
+            f_quit_timer = QtCore.QTimer(self)
+            f_quit_timer.setSingleShot(True)
+            f_quit_timer.timeout.connect(self.close)
+            f_quit_timer.start(1000)
+        except Exception as ex:
+            print("Exception thrown while attempting to exit, "
+                "forcing MusiKernel to exit")
+            print("Exception:  {}".format(ex))
+            exit(999)
+
+    def closeEvent(self, event):
+        if self.ignore_close_event:
+            event.ignore()
+#            if IS_PLAYING:
+#                return
+            self.setEnabled(False)
+            f_reply = QtGui.QMessageBox.question(
+                self, _('Message'), _("Are you sure you want to quit?"),
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel,
+                QtGui.QMessageBox.Cancel)
+            if f_reply == QtGui.QMessageBox.Cancel:
+                self.setEnabled(True)
+                return
+            else:
+                self.prepare_to_quit()
+        else:
+            event.accept()
 
 
 APP = QtGui.QApplication(sys.argv)

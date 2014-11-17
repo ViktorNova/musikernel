@@ -9231,7 +9231,6 @@ class pydaw_main_window(QtGui.QScrollArea):
             self.subprocess_timer.timeout.connect(self.subprocess_monitor)
             self.subprocess_timer.setSingleShot(False)
             self.subprocess_timer.start(1000)
-        self.ignore_close_event = True
 
     def check_for_empty_directory(self, a_file):
         """ Return true if directory is empty, show error message and
@@ -10162,34 +10161,13 @@ class pydaw_main_window(QtGui.QScrollArea):
                 PROJECT.flush_history()
             if self.osc_server is not None:
                 self.osc_server.free()
-            self.ignore_close_event = False
-            f_quit_timer = QtCore.QTimer(self)
-            f_quit_timer.setSingleShot(True)
-            f_quit_timer.timeout.connect(self.close)
-            f_quit_timer.start(1000)
         except Exception as ex:
             print("Exception thrown while attempting to exit, "
                 "forcing MusiKernel to exit")
             print("Exception:  {}".format(ex))
             exit(999)
 
-    def closeEvent(self, event):
-        if self.ignore_close_event:
-            event.ignore()
-            if IS_PLAYING:
-                return
-            self.setEnabled(False)
-            f_reply = QtGui.QMessageBox.question(
-                self, _('Message'), _("Are you sure you want to quit?"),
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel,
-                QtGui.QMessageBox.Cancel)
-            if f_reply == QtGui.QMessageBox.Cancel:
-                self.setEnabled(True)
-                return
-            else:
-                self.prepare_to_quit()
-        else:
-            event.accept()
+
 
 def global_update_peak_meters(a_val):
     for f_val in a_val.split("|"):
