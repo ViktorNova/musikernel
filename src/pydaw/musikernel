@@ -14,7 +14,8 @@ if len(sys.argv) > 1:
         try:
             f_proc.kill()
         except Exception as ex:
-            print("Exception while trying to kill engine from helper script: {}".format(ex))
+            print("Exception while trying to kill engine from "
+                "helper script: {}".format(ex))
 
     signal.signal(signal.SIGTERM, sig_handle)
     signal.signal(signal.SIGINT, sig_handle)
@@ -28,7 +29,8 @@ if len(sys.argv) > 1:
     sys.exit(f_proc.returncode)
 else:
     f_prefix_dir = os.path.dirname(__file__)
-    f_path = "{}/../lib/{}/pydaw/python/pydaw.py".format(f_prefix_dir, pydaw_version)
+    f_path = "{}/../lib/{}/pydaw/python/musikernel.py".format(
+        f_prefix_dir, pydaw_version)
     f_path = os.path.abspath(f_path)
     print(f_path)
     subprocess.Popen(['python3', f_path])

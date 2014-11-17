@@ -1,0 +1,89 @@
+#!/usr/bin/python3
+"""
+This file is part of the MusiKernel project, Copyright MusiKernel Team
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+"""
+
+from PyQt4 import QtGui, QtCore
+import time
+from libpydaw import *
+from libpydaw import pydaw_util
+from libpydaw.pydaw_util import *
+import gc
+
+class MkMainWindow(QtGui.QMainWindow):
+    def __init__(self):
+        QtGui.QMainWindow.__init__(self)
+        #self.setMinimumSize(1100, 600)
+        self.setObjectName("mainwindow")
+        import pydaw
+        self.setCentralWidget(pydaw.MAIN_WINDOW)
+        self.show()
+
+
+APP = QtGui.QApplication(sys.argv)
+
+APP.setWindowIcon(
+    QtGui.QIcon("{}/share/pixmaps/{}.png".format(
+    pydaw_util.global_pydaw_install_prefix, global_pydaw_version_string)))
+
+APP.setStyleSheet(global_stylesheet)
+
+QtCore.QTextCodec.setCodecForLocale(QtCore.QTextCodec.codecForName("UTF-8"))
+
+def final_gc():
+    """ Brute-force garbage collect all possible objects to
+        prevent the infamous PyQt SEGFAULT-on-exit...
+    """
+    f_last_unreachable = gc.collect()
+    if not f_last_unreachable:
+        print("Successfully garbage collected all objects")
+        return
+    for f_i in range(2, 12):
+        time.sleep(0.1)
+        f_unreachable = gc.collect()
+        if f_unreachable == 0:
+            print("Successfully garbage collected all objects "
+                "in {} iterations".format(f_i))
+            return
+        elif f_unreachable >= f_last_unreachable:
+            break
+        else:
+            f_last_unreachable = f_unreachable
+    print("gc.collect() returned {} unreachable objects "
+        "after {} iterations".format(f_unreachable, f_i))
+
+def flush_events():
+    for f_i in range(1, 10):
+        if APP.hasPendingEvents():
+            APP.processEvents()
+            time.sleep(0.1)
+        else:
+            print("Successfully processed all pending events "
+                "in {} iterations".format(f_i))
+            return
+    print("Could not process all events")
+
+MAIN_WINDOW = MkMainWindow()
+MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
+
+APP.lastWindowClosed.connect(APP.quit)
+APP.setStyle(QtGui.QStyleFactory.create("Fusion"))
+APP.exec_()
+time.sleep(0.6)
+flush_events()
+APP.deleteLater()
+time.sleep(0.6)
+APP = None
+time.sleep(0.6)
+final_gc()
+

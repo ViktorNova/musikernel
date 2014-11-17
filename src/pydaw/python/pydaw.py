@@ -18,7 +18,6 @@ import os
 import subprocess
 import time
 import random
-import gc
 
 from PyQt4 import QtGui, QtCore
 from libpydaw import *
@@ -8985,31 +8984,23 @@ class transport_widget:
             self.group_box.setToolTip("")
 
 
-class pydaw_main_window(QtGui.QMainWindow):
+class pydaw_main_window(QtGui.QScrollArea):
     def __init__(self):
-        QtGui.QMainWindow.__init__(self)
-        #self.setMinimumSize(1100, 600)
-        self.setObjectName("mainwindow")
-
-        APP.setStyleSheet(global_stylesheet)
+        QtGui.QScrollArea.__init__(self)
         self.first_offline_render = True
         self.last_offline_dir = global_home
         self.last_ac_dir = global_home
         self.copy_to_clipboard_checked = True
         self.last_midi_dir = None
 
-        self.central_widget = QtGui.QScrollArea()
-        self.central_widget.setObjectName("plugin_ui")
-        self.central_widget.setMinimumSize(500, 500)
+        self.setObjectName("plugin_ui")
+        self.setMinimumSize(500, 500)
         self.widget = QtGui.QWidget()
         self.widget.setObjectName("plugin_ui")
-        self.setCentralWidget(self.central_widget)
-        self.central_widget.setWidget(self.widget)
-        self.central_widget.setWidgetResizable(True)
-        self.central_widget.setHorizontalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAsNeeded)
-        self.central_widget.setVerticalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAsNeeded)
+        self.setWidget(self.widget)
+        self.setWidgetResizable(True)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
 
         self.main_layout = QtGui.QVBoxLayout()
         self.main_layout.setMargin(2)
@@ -9240,7 +9231,6 @@ class pydaw_main_window(QtGui.QMainWindow):
             self.subprocess_timer.timeout.connect(self.subprocess_monitor)
             self.subprocess_timer.setSingleShot(False)
             self.subprocess_timer.start(1000)
-        self.show()
         self.ignore_close_event = True
 
     def check_for_empty_directory(self, a_file):
@@ -9892,7 +9882,7 @@ class pydaw_main_window(QtGui.QMainWindow):
                     f_proc_list.append((f_proc, f_out))
                 for f_proc, f_out in f_proc_list:
                     f_status_label.setText(f_out)
-                    APP.processEvents()
+                    QtGui.QApplication.processEvents()
                     f_proc.communicate()
             else:
                 f_cmd = get_cmd(f_input_file, f_output_file)
@@ -10945,8 +10935,6 @@ def global_new_project(a_project_file, a_wait=True):
 
 PROJECT = pydaw_project(global_pydaw_with_audio)
 
-APP = QtGui.QApplication(sys.argv)
-
 TIMESTRETCH_MODES = [
     _("None"), _("Pitch(affecting time)"), _("Time(affecting pitch)"),
     "Rubberband", "Rubberband(formants)", "SBSMS", "Paulstretch"]
@@ -10960,10 +10948,6 @@ TRACK_NAMES = ["Master" if x == 0 else "track{}".format(x)
 
 SUPPRESS_TRACK_COMBOBOX_CHANGES = False
 AUDIO_TRACK_COMBOBOXES = []
-
-APP.setWindowIcon(
-    QtGui.QIcon("{}/share/pixmaps/{}.png".format(
-    pydaw_util.global_pydaw_install_prefix, global_pydaw_version_string)))
 
 PB_EDITOR = automation_viewer(a_is_cc=False)
 CC_EDITOR = automation_viewer()
@@ -11159,7 +11143,7 @@ TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
 # Must call this after instantiating the other widgets,
 # as it relies on them existing
 MAIN_WINDOW = pydaw_main_window()
-MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
+
 PIANO_ROLL_EDITOR.verticalScrollBar().setSliderPosition(
     PIANO_ROLL_EDITOR.scene.height() * 0.4)
 PIANO_ROLL_EDITOR_WIDGET.snap_combobox.setCurrentIndex(4)
@@ -11197,48 +11181,4 @@ if os.path.exists(default_project_file):
 else:
     global_new_project(default_project_file, a_wait=False)
 
-QtCore.QTextCodec.setCodecForLocale(QtCore.QTextCodec.codecForName("UTF-8"))
 
-def final_gc():
-    """ Brute-force garbage collect all possible objects to
-        prevent the infamous PyQt SEGFAULT-on-exit...
-    """
-    f_last_unreachable = gc.collect()
-    if not f_last_unreachable:
-        print("Successfully garbage collected all objects")
-        return
-    for f_i in range(2, 12):
-        time.sleep(0.1)
-        f_unreachable = gc.collect()
-        if f_unreachable == 0:
-            print("Successfully garbage collected all objects "
-                "in {} iterations".format(f_i))
-            return
-        elif f_unreachable >= f_last_unreachable:
-            break
-        else:
-            f_last_unreachable = f_unreachable
-    print("gc.collect() returned {} unreachable objects "
-        "after {} iterations".format(f_unreachable, f_i))
-
-def flush_events():
-    for f_i in range(1, 10):
-        if APP.hasPendingEvents():
-            APP.processEvents()
-            time.sleep(0.1)
-        else:
-            print("Successfully processed all pending events "
-                "in {} iterations".format(f_i))
-            return
-    print("Could not process all events")
-
-APP.lastWindowClosed.connect(APP.quit)
-APP.setStyle(QtGui.QStyleFactory.create("Fusion"))
-APP.exec_()
-time.sleep(0.6)
-flush_events()
-APP.deleteLater()
-time.sleep(0.6)
-APP = None
-time.sleep(0.6)
-final_gc()
