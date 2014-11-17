@@ -12,11 +12,15 @@ GNU General Public License for more details.
 
 """
 
+from libpydaw import pydaw_util
+
 # These are dynamically assigned by musikernel.py so that
 # hosts can access them from this module
 MAIN_WINDOW = None
 APP = None
+TRANSPORT = None
 IS_PLAYING = False
+TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
 
 class AbstractIPC:
     """ Abstract class containing the minimum contract
@@ -53,4 +57,7 @@ class AbstractProject:
 
     def flush_history(self):
         raise NotImplementedError
+
+class AbstractTransport:
+    pass
 

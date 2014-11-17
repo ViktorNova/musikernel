@@ -85,14 +85,13 @@ def global_get_audio_file_from_clipboard():
                 _("{} is not a valid file").format(f_path))
     return None
 
-TOOLTIPS_ENABLED = False
+libmk.TOOLTIPS_ENABLED = False
 
 def pydaw_set_tooltips_enabled(a_enabled):
     """ Set extensive tooltips as an alternative to
         maintaining a separate user manual
     """
-    global TOOLTIPS_ENABLED
-    TOOLTIPS_ENABLED = a_enabled
+    libmk.TOOLTIPS_ENABLED = a_enabled
 
     f_list = [SONG_EDITOR, AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR, MAIN_WINDOW,
               WAVE_EDITOR, AUDIO_SEQ, TRANSPORT,
@@ -2662,7 +2661,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         self.width_orig = None
         self.vol_linear = pydaw_db_to_lin(self.audio_item.vol)
         self.quantize_offset = 0.0
-        if TOOLTIPS_ENABLED:
+        if libmk.TOOLTIPS_ENABLED:
             self.set_tooltips(True)
         self.draw()
 
@@ -8504,7 +8503,7 @@ class seq_track:
 
 MREC_EVENTS = []
 
-class transport_widget:
+class transport_widget(libmk.AbstractTransport):
     def __init__(self):
         self.suppress_osc = True
         self.is_recording = False
@@ -8519,19 +8518,6 @@ class transport_widget:
         self.group_box.setLayout(self.vlayout)
         self.hlayout1 = QtGui.QHBoxLayout()
         self.vlayout.addLayout(self.hlayout1)
-        self.play_button = QtGui.QRadioButton()
-        self.play_button.setObjectName("play_button")
-        self.play_button.clicked.connect(self.on_play)
-        self.hlayout1.addWidget(self.play_button)
-        self.stop_button = QtGui.QRadioButton()
-        self.stop_button.setChecked(True)
-        self.stop_button.setObjectName("stop_button")
-        self.stop_button.clicked.connect(self.on_stop)
-        self.hlayout1.addWidget(self.stop_button)
-        self.rec_button = QtGui.QRadioButton()
-        self.rec_button.setObjectName("rec_button")
-        self.rec_button.clicked.connect(self.on_rec)
-        self.hlayout1.addWidget(self.rec_button)
         self.playback_menu_button = QtGui.QPushButton("")
         self.playback_menu_button.setMaximumWidth(21)
         self.playback_menu_button.setSizePolicy(
@@ -8558,14 +8544,6 @@ class transport_widget:
         self.bar_spinbox.setRange(1, 8)
         self.bar_spinbox.valueChanged.connect(self.on_bar_changed)
         self.grid_layout1.addWidget(self.bar_spinbox, 1, 20)
-
-        f_time_label = QtGui.QLabel(_("Time"))
-        f_time_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.grid_layout1.addWidget(f_time_label, 0, 27)
-        self.time_label = QtGui.QLabel(_("0:00"))
-        self.time_label.setMinimumWidth(90)
-        self.time_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.grid_layout1.addWidget(self.time_label, 1, 27)
 
         self.playback_menu = QtGui.QMenu(self.playback_menu_button)
         self.playback_menu_button.setMenu(self.playback_menu)
@@ -8594,32 +8572,8 @@ class transport_widget:
         self.playback_vlayout.addLayout(MIDI_DEVICES_DIALOG.layout)
         self.active_devices = []
 
-        self.menu_button = QtGui.QPushButton(_("Menu"))
-        self.grid_layout1.addWidget(self.menu_button, 1, 50)
-        self.panic_button = QtGui.QPushButton(_("Panic"))
-        self.panic_button.pressed.connect(self.on_panic)
-        self.grid_layout1.addWidget(self.panic_button, 0, 50)
-        self.master_vol_knob = pydaw_widgets.pydaw_pixmap_knob(60, -480, 0)
-        self.hlayout1.addWidget(self.master_vol_knob)
-        self.master_vol_knob.valueChanged.connect(self.master_vol_changed)
-        self.master_vol_knob.sliderReleased.connect(self.master_vol_released)
         self.last_region_num = -99
         self.suppress_osc = False
-
-    def master_vol_released(self):
-        pydaw_util.set_file_setting(
-            "master_vol", self.master_vol_knob.value())
-
-    def load_master_vol(self):
-        self.master_vol_knob.setValue(
-            pydaw_util.get_file_setting("master_vol", int, 0))
-
-    def master_vol_changed(self, a_val):
-        if a_val == 0:
-            f_result = 1.0
-        else:
-            f_result = pydaw_util.pydaw_db_to_lin(float(a_val) * 0.1)
-        PROJECT.this_pydaw_osc.pydaw_master_vol(f_result)
 
     def set_time(self, a_region, a_bar, a_beat):
         f_seconds = REGION_TIME[a_region]
@@ -8629,7 +8583,7 @@ class transport_widget:
         f_seconds = str(round(f_seconds % 60, 1))
         f_seconds, f_frac = f_seconds.split('.', 1)
         f_text = "{}:{}.{}".format(f_minutes, str(f_seconds).zfill(2), f_frac)
-        self.time_label.setText(f_text)
+        libmk.TRANSPORT.set_time(f_text)
 
     def set_region_value(self, a_val):
         self.region_spinbox.setValue(int(a_val) + 1)
@@ -8691,12 +8645,6 @@ class transport_widget:
             REGION_EDITOR.clearSelection()
         SONG_EDITOR.table_widget.selectColumn(self.get_region_value())
 
-    def on_spacebar(self):
-        if self.is_playing or self.is_recording:
-            self.stop_button.click()
-        else:
-            self.play_button.click()
-
     def on_play(self):
         if self.is_recording:
             self.rec_button.setChecked(True)
@@ -8732,9 +8680,6 @@ class transport_widget:
         else:
             PROJECT.this_pydaw_osc.pydaw_en_playback(
                 1, self.get_region_value(), self.get_bar_value())
-
-    def on_ready(self):
-        self.master_vol_changed(self.master_vol_knob.value())
 
     def trigger_audio_playback(self):
         if not self.follow_checkbox.isChecked():
@@ -8941,14 +8886,10 @@ class transport_widget:
         self.transport = PROJECT.get_transport()
         self.tempo_spinbox.setValue(int(self.transport.bpm))
         self.suppress_osc = False
-        self.load_master_vol()
 
     def on_overdub_changed(self, a_val=None):
         PROJECT.this_pydaw_osc.pydaw_set_overdub_mode(
             self.overdub_checkbox.isChecked())
-
-    def on_panic(self):
-        PROJECT.this_pydaw_osc.pydaw_panic()
 
     def reset(self):
         self.loop_mode_combobox.setCurrentIndex(0)
@@ -8956,9 +8897,6 @@ class transport_widget:
 
     def set_tooltips(self, a_enabled):
         if a_enabled:
-            self.panic_button.setToolTip(
-                _("Panic button:   Sends a note-off signal on every "
-                "note to every instrument\nYou can also use CTRL+P"))
             self.overdub_checkbox.setToolTip(
                 _("Checking this box causes recording to "
                 "unlink existing items and append new events to the "
@@ -8970,10 +8908,8 @@ class transport_widget:
                 _("Use this to toggle between normal playback "
                 "and looping a region.\nYou can toggle between "
                 "settings with CTRL+L"))
-            self.group_box.setToolTip(
-                libpydaw.strings.transport)
+            self.group_box.setToolTip(libpydaw.strings.transport)
         else:
-            self.panic_button.setToolTip("")
             self.overdub_checkbox.setToolTip("")
             self.follow_checkbox.setToolTip("")
             self.loop_mode_combobox.setToolTip("")
@@ -9001,138 +8937,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.main_layout = QtGui.QVBoxLayout()
         self.main_layout.setMargin(2)
         self.widget.setLayout(self.main_layout)
-        self.transport_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.main_layout.addWidget(self.transport_splitter)
-
-        self.spacebar_action = QtGui.QAction(self)
-        self.addAction(self.spacebar_action)
-        self.spacebar_action.triggered.connect(self.on_spacebar)
-        self.spacebar_action.setShortcut(
-            QtGui.QKeySequence(QtCore.Qt.Key_Space))
-
-        #The menus
-        self.menu_bar = QtGui.QMenu(self)
-        # Dirty hack, rather than moving the methods to the transport
-        TRANSPORT.menu_button.setMenu(self.menu_bar)
-        self.menu_file = self.menu_bar.addMenu(_("File"))
-
-        self.new_action = self.menu_file.addAction(_("New..."))
-        self.new_action.triggered.connect(self.on_new)
-        self.new_action.setShortcut(QtGui.QKeySequence.New)
-
-        self.open_action = self.menu_file.addAction(_("Open..."))
-        self.open_action.triggered.connect(self.on_open)
-        self.open_action.setShortcut(QtGui.QKeySequence.Open)
-
-        self.save_action = self.menu_file.addAction(
-            _("Save (projects are automatically saved, "
-            "this creates a timestamped backup)"))
-        self.save_action.triggered.connect(self.on_save)
-        self.save_action.setShortcut(QtGui.QKeySequence.Save)
-
-        self.save_as_action = self.menu_file.addAction(
-            _("Save As...(this creates a named backup)"))
-        self.save_as_action.triggered.connect(self.on_save_as)
-        self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
-
-        self.save_copy_action = self.menu_file.addAction(
-            _("Save Copy...("
-            "This creates a full copy of the project directory)"))
-        self.save_copy_action.triggered.connect(self.on_save_copy)
-
-        self.menu_file.addSeparator()
-
-        self.project_history_action = self.menu_file.addAction(
-            _("Project History...("
-            "This shows a tree of all backups)"))
-        self.project_history_action.triggered.connect(self.on_project_history)
-
-        self.menu_file.addSeparator()
-
-        self.offline_render_action = self.menu_file.addAction(
-            _("Offline Render..."))
-        self.offline_render_action.triggered.connect(self.on_offline_render)
-
-        self.audio_device_action = self.menu_file.addAction(
-            _("Hardware Settings..."))
-        self.audio_device_action.triggered.connect(
-            self.on_change_audio_settings)
-        self.menu_file.addSeparator()
-
-        self.kill_engine_action = self.menu_file.addAction(
-            _("Kill Audio Engine"))
-        self.kill_engine_action.triggered.connect(self.on_kill_engine)
-        self.menu_file.addSeparator()
-
-        self.quit_action = self.menu_file.addAction(_("Quit"))
-        self.quit_action.triggered.connect(self.close)
-        self.quit_action.setShortcut(QtGui.QKeySequence.Quit)
-
-        self.menu_edit = self.menu_bar.addMenu(_("Edit"))
-
-        self.undo_action = self.menu_edit.addAction(_("Undo"))
-        self.undo_action.triggered.connect(self.on_undo)
-        self.undo_action.setShortcut(QtGui.QKeySequence.Undo)
-
-        self.redo_action = self.menu_edit.addAction(_("Redo"))
-        self.redo_action.triggered.connect(self.on_redo)
-        self.redo_action.setShortcut(QtGui.QKeySequence.Redo)
-
-        self.menu_edit.addSeparator()
-
-        self.undo_history_action = self.menu_edit.addAction(
-            _("Undo History..."))
-        self.undo_history_action.triggered.connect(self.on_undo_history)
-
-        self.verify_history_action = self.menu_edit.addAction(
-            _("Verify History DB..."))
-        self.verify_history_action.triggered.connect(self.on_verify_history)
-
-        self.menu_appearance = self.menu_bar.addMenu(_("Appearance"))
-
-        self.collapse_splitters_action = self.menu_appearance.addAction(
-            _("Collapse Transport and Song Editor"))
-        self.collapse_splitters_action.triggered.connect(
-            self.on_collapse_splitters)
-        self.collapse_splitters_action.setShortcut(
-            QtGui.QKeySequence("CTRL+Up"))
-
-        self.restore_splitters_action = self.menu_appearance.addAction(
-            _("Restore Transport and Song Editor"))
-        self.restore_splitters_action.triggered.connect(
-            self.on_restore_splitters)
-        self.restore_splitters_action.setShortcut(
-            QtGui.QKeySequence("CTRL+Down"))
-
-        self.menu_appearance.addSeparator()
-
-        self.open_theme_action = self.menu_appearance.addAction(
-            _("Open Theme..."))
-        self.open_theme_action.triggered.connect(self.on_open_theme)
-
-        self.menu_tools = self.menu_bar.addMenu(_("Tools"))
-
-        self.ac_action = self.menu_tools.addAction(_("MP3 Converter..."))
-        self.ac_action.triggered.connect(self.mp3_converter_dialog)
-
-        self.ac_action = self.menu_tools.addAction(_("Ogg Converter..."))
-        self.ac_action.triggered.connect(self.ogg_converter_dialog)
-
-        self.menu_help = self.menu_bar.addMenu(_("Help"))
-
-        self.troubleshoot_action = self.menu_help.addAction(
-            _("Troubleshooting..."))
-        self.troubleshoot_action.triggered.connect(self.on_troubleshoot)
-
-        self.version_action = self.menu_help.addAction(_("Version Info..."))
-        self.version_action.triggered.connect(self.on_version)
-
-        self.menu_bar.addSeparator()
-
-        self.tooltips_action = self.menu_bar.addAction(_("Show Tooltips"))
-        self.tooltips_action.setCheckable(True)
-        self.tooltips_action.setChecked(TOOLTIPS_ENABLED)
-        self.tooltips_action.triggered.connect(self.set_tooltips_enabled)
 
         self.loop_mode_action = QtGui.QAction(self)
         self.addAction(self.loop_mode_action)
@@ -9140,23 +8944,9 @@ class pydaw_main_window(QtGui.QScrollArea):
             QtGui.QKeySequence.fromString("CTRL+L"))
         self.loop_mode_action.triggered.connect(TRANSPORT.toggle_loop_mode)
 
-        self.panic_action = QtGui.QAction(self)
-        self.addAction(self.panic_action)
-        self.panic_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+P"))
-        self.panic_action.triggered.connect(TRANSPORT.on_panic)
-
-        self.transport_widget = QtGui.QWidget()
-        self.transport_hlayout = QtGui.QHBoxLayout(self.transport_widget)
-        self.transport_hlayout.setMargin(2)
-        self.transport_splitter.addWidget(self.transport_widget)
-        self.transport_widget.setSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-
-        self.transport_hlayout.addWidget(
-            TRANSPORT.group_box, alignment=QtCore.Qt.AlignLeft)
         #The tabs
         self.main_tabwidget = QtGui.QTabWidget()
-        self.transport_splitter.addWidget(self.main_tabwidget)
+        self.main_layout.addWidget(self.main_tabwidget)
 
         self.regions_tab_widget = QtGui.QTabWidget()
         self.song_region_tab = QtGui.QWidget()
@@ -9208,20 +8998,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.main_tabwidget.addTab(self.notes_tab, _("Project Notes"))
         self.main_tabwidget.currentChanged.connect(self.tab_changed)
 
-        try:
-            self.osc_server = liblo.Server(30321)
-        except liblo.ServerError as err:
-            print("Error creating OSC server: {}".format(err))
-            self.osc_server = None
-        if self.osc_server is not None:
-            print(self.osc_server.get_url())
-            self.osc_server.add_method(
-                "musikernel/ui_configure", 's', self.configure_callback)
-            self.osc_server.add_method(None, None, self.osc_fallback)
-            self.osc_timer = QtCore.QTimer(self)
-            self.osc_timer.setSingleShot(False)
-            self.osc_timer.timeout.connect(self.osc_time_callback)
-            self.osc_timer.start(0)
         if global_pydaw_with_audio:
             self.subprocess_timer = QtCore.QTimer(self)
             self.subprocess_timer.timeout.connect(self.subprocess_monitor)
@@ -9250,116 +9026,6 @@ class pydaw_main_window(QtGui.QScrollArea):
             return False
         else:
             return True
-
-
-    def on_new(self):
-        if libmk.IS_PLAYING:
-            return
-        try:
-            while True:
-                f_file = QtGui.QFileDialog.getSaveFileName(
-                    parent=self, caption=_('New Project'),
-                    directory="{}/default.{}".format(
-                        global_home, global_pydaw_version_string),
-                    filter=global_pydaw_file_type_string)
-                if not f_file is None and not str(f_file) == "":
-                    f_file = str(f_file)
-                    if not self.check_for_empty_directory(f_file) or \
-                    not self.check_for_rw_perms(f_file):
-                        continue
-                    if not f_file.endswith("." + global_pydaw_version_string):
-                        f_file += "." + global_pydaw_version_string
-                    global_new_project(f_file)
-                break
-        except Exception as ex:
-            pydaw_print_generic_exception(ex)
-
-    def on_open(self):
-        if libmk.IS_PLAYING:
-            return
-        try:
-            f_file = QtGui.QFileDialog.getOpenFileName(
-                parent=self, caption=_('Open Project'),
-                directory=global_default_project_folder,
-                filter=global_pydaw_file_type_string)
-            if f_file is None:
-                return
-            f_file_str = str(f_file)
-            if f_file_str == "":
-                return
-            if not self.check_for_rw_perms(f_file):
-                return
-            global_open_project(f_file_str)
-        except Exception as ex:
-            pydaw_print_generic_exception(ex)
-
-    def on_project_history(self):
-        f_result = QtGui.QMessageBox.warning(
-            self, _("Warning"), _("This will close the application, "
-            "restart the application after you're done with the "
-            "project history editor"),
-            buttons=QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
-        if f_result == QtGui.QMessageBox.Ok:
-            PROJECT.show_project_history()
-            self.ignore_close_event = False
-            self.prepare_to_quit()
-
-    def on_save(self):
-        PROJECT.create_backup()
-
-    def on_save_as(self):
-        if libmk.IS_PLAYING:
-            return
-        def ok_handler():
-            f_name = str(f_lineedit.text()).strip()
-            f_name = f_name.replace("/", "")
-            if f_name:
-                PROJECT.create_backup(f_name)
-                f_window.close()
-
-        f_window = QtGui.QDialog()
-        f_window.setWindowTitle(_("Save As..."))
-        f_layout = QtGui.QVBoxLayout(f_window)
-        f_lineedit = QtGui.QLineEdit()
-        f_lineedit.setMinimumWidth(240)
-        f_lineedit.setMaxLength(48)
-        f_layout.addWidget(f_lineedit)
-        f_ok_layout = QtGui.QHBoxLayout()
-        f_layout.addLayout(f_ok_layout)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_ok_button.pressed.connect(ok_handler)
-        f_ok_layout.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
-        f_ok_layout.addWidget(f_cancel_button)
-        f_cancel_button.pressed.connect(f_window.close)
-        f_window.exec_()
-
-    def on_save_copy(self):
-        if libmk.IS_PLAYING:
-            return
-        try:
-            while True:
-                f_new_file = QtGui.QFileDialog.getSaveFileName(
-                    self, _("Save copy of project as..."),
-                    directory="{}/{}.{}".format(global_default_project_folder,
-                    PROJECT.project_file, global_pydaw_version_string))
-                if not f_new_file is None and not str(f_new_file) == "":
-                    f_new_file = str(f_new_file)
-                    if not self.check_for_empty_directory(f_new_file) or \
-                    not self.check_for_rw_perms(f_new_file):
-                        continue
-                    if not f_new_file.endswith(
-                    ".{}".format(global_pydaw_version_string)):
-                        f_new_file += ".{}".format(global_pydaw_version_string)
-                    PLUGIN_UI_DICT.close_all_plugin_windows()
-                    PROJECT.save_project_as(f_new_file)
-                    set_window_title()
-                    pydaw_util.set_file_setting("last-project", f_new_file)
-                    break
-                else:
-                    break
-        except Exception as ex:
-            pydaw_print_generic_exception(ex)
 
     def show_offline_rendering_wait_window(self, a_file_name):
         f_file_name = "{}.finished".format(a_file_name)
@@ -9691,98 +9357,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         PROJECT.redo()
         global_ui_refresh_callback()
 
-    def on_undo_history(self):
-        if libmk.IS_PLAYING:
-            return
-        PROJECT.flush_history()
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Undo history"))
-        f_layout = QtGui.QVBoxLayout()
-        f_window.setLayout(f_layout)
-        f_widget = pydaw_history_log_widget(
-            PROJECT.history, global_ui_refresh_callback)
-        f_widget.populate_table()
-        f_layout.addWidget(f_widget)
-        f_window.setGeometry(
-            QtCore.QRect(f_window.x(), f_window.y(), 900, 720))
-        f_window.exec_()
-
-    def on_verify_history(self):
-        if libmk.IS_PLAYING:
-            return
-        f_str = PROJECT.verify_history()
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Verify Project History Database"))
-        f_window.setFixedSize(800, 600)
-        f_layout = QtGui.QVBoxLayout()
-        f_window.setLayout(f_layout)
-        f_text = QtGui.QTextEdit(f_str)
-        f_text.setReadOnly(True)
-        f_layout.addWidget(f_text)
-        f_window.exec_()
-
-    def on_change_audio_settings(self):
-        f_dialog = pydaw_device_dialog.pydaw_device_dialog(True)
-        f_dialog.show_device_dialog(a_notify=True)
-
-    def on_kill_engine(self):
-        PROJECT.this_pydaw_osc.pydaw_kill_engine()
-
-    def on_open_theme(self):
-        try:
-            f_file = QtGui.QFileDialog.getOpenFileName(self,
-                _("Open a theme file"), "{}/lib/{}/themes".format(
-                pydaw_util.global_pydaw_install_prefix,
-                global_pydaw_version_string), "MusiKernel Style(*.pytheme)")
-            if f_file is not None and str(f_file) != "":
-                f_file = str(f_file)
-                f_style = pydaw_read_file_text(f_file)
-                f_dir = os.path.dirname(f_file)
-                f_style = pydaw_escape_stylesheet(f_style, f_dir)
-                pydaw_write_file_text(global_user_style_file, f_file)
-                QtGui.QMessageBox.warning(
-                    MAIN_WINDOW, _("Theme Applied..."),
-                    _("Please restart MusiKernel to update the UI"))
-        except Exception as ex:
-            pydaw_print_generic_exception(ex)
-
-    def on_version(self):
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Version Info"))
-        f_window.setFixedSize(420, 150)
-        f_layout = QtGui.QVBoxLayout()
-        f_window.setLayout(f_layout)
-        f_minor_version = pydaw_read_file_text(
-            "{}/lib/{}/minor-version.txt".format(
-                pydaw_util.global_pydaw_install_prefix,
-                global_pydaw_version_string))
-        f_version = QtGui.QLabel(
-            "{}-{}".format(global_pydaw_version_string, f_minor_version))
-        f_version.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        f_layout.addWidget(f_version)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_layout.addWidget(f_ok_button)
-        f_ok_button.pressed.connect(f_window.close)
-        f_window.exec_()
-
-    def on_troubleshoot(self):
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Troubleshooting"))
-        f_window.setFixedSize(640, 460)
-        f_layout = QtGui.QVBoxLayout()
-        f_window.setLayout(f_layout)
-        f_label = QtGui.QTextEdit(libpydaw.strings.troubleshooting)
-        f_label.setReadOnly(True)
-        f_layout.addWidget(f_label)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_layout.addWidget(f_ok_button)
-        f_ok_button.pressed.connect(f_window.close)
-        f_window.exec_()
-
-
-    def on_spacebar(self):
-        TRANSPORT.on_spacebar()
-
     def tab_changed(self):
         f_index = self.main_tabwidget.currentIndex()
         if not libmk.IS_PLAYING and f_index != 2:
@@ -9797,250 +9371,9 @@ class pydaw_main_window(QtGui.QScrollArea):
         elif f_index == 4:
             global_open_mixer()
 
-    def on_collapse_splitters(self):
-        self.song_region_splitter.setSizes([0, 9999])
-        self.transport_splitter.setSizes([0, 9999])
-
-    def on_restore_splitters(self):
-        self.song_region_splitter.setSizes([100, 9999])
-        self.transport_splitter.setSizes([100, 9999])
-
     def on_edit_notes(self, a_event=None):
         QtGui.QTextEdit.leaveEvent(self.notes_tab, a_event)
         PROJECT.write_notes(self.notes_tab.toPlainText())
-
-    def mp3_converter_dialog(self):
-        if pydaw_which("avconv") is None and \
-        pydaw_which("ffmpeg") is not None:
-            f_avconv = "ffmpeg"
-        else:
-            f_avconv = "avconv"
-        f_lame = "lame"
-        for f_app in (f_avconv, f_lame):
-            if pydaw_which(f_app) is None:
-                QtGui.QMessageBox.warning(self, _("Error"),
-                    libpydaw.strings.avconv_error.format(f_app))
-                return
-        self.audio_converter_dialog("lame", "avconv", "mp3")
-
-    def ogg_converter_dialog(self):
-        if pydaw_which("oggenc") is None or \
-        pydaw_which("oggdec") is None:
-            QtGui.QMessageBox.warning(self, _("Error"),
-                _("Error, vorbis-tools are not installed"))
-            return
-        self.audio_converter_dialog("oggenc", "oggdec", "ogg")
-
-    def audio_converter_dialog(self, a_enc, a_dec, a_label):
-        def get_cmd(f_input_file, f_output_file):
-            if f_wav_radiobutton.isChecked():
-                if a_dec == "avconv" or a_dec == "ffmpeg":
-                    f_cmd = [a_dec, "-i", f_input_file, f_output_file]
-                elif a_dec == "oggdec":
-                    f_cmd = [a_dec, "--output", f_output_file, f_input_file]
-            else:
-                if a_enc == "oggenc":
-                    f_cmd = [a_enc, "-b",
-                         "{}k".format(f_mp3_br_combobox.currentText()),
-                         "-o", f_output_file, f_input_file]
-                elif a_enc == "lame":
-                    f_cmd = [a_enc, "-b", str(f_mp3_br_combobox.currentText()),
-                         f_input_file, f_output_file]
-            return f_cmd
-
-        def ok_handler():
-            f_input_file = str(f_name.text())
-            f_output_file = str(f_output_name.text())
-            if f_input_file == "" or f_output_file == "":
-                QtGui.QMessageBox.warning(f_window, _("Error"),
-                                          _("File names cannot be empty"))
-                return
-            if f_batch_checkbox.isChecked():
-                if f_wav_radiobutton.isChecked():
-                    f_ext = ".{}".format(a_label)
-                else:
-                    f_ext = ".wav"
-                f_ext = f_ext.upper()
-                f_list = [x for x in os.listdir(f_input_file)
-                    if x.upper().endswith(f_ext)]
-                if not f_list:
-                    QtGui.QMessageBox.warning(f_window, _("Error"),
-                          _("No {} files in {}".format(f_ext, f_input_file)))
-                    return
-                f_proc_list = []
-                for f_file in f_list:
-                    f_in = "{}/{}".format(f_input_file, f_file)
-                    f_out = "{}/{}{}".format(f_output_file,
-                        f_file.rsplit(".", 1)[0], self.ac_ext)
-                    f_cmd = get_cmd(f_in, f_out)
-                    f_proc = subprocess.Popen(f_cmd)
-                    f_proc_list.append((f_proc, f_out))
-                for f_proc, f_out in f_proc_list:
-                    f_status_label.setText(f_out)
-                    QtGui.QApplication.processEvents()
-                    f_proc.communicate()
-            else:
-                f_cmd = get_cmd(f_input_file, f_output_file)
-                f_proc = subprocess.Popen(f_cmd)
-                f_proc.communicate()
-            if f_close_checkbox.isChecked():
-                f_window.close()
-            QtGui.QMessageBox.warning(self, _("Success"), _("Created file(s)"))
-
-        def cancel_handler():
-            f_window.close()
-
-        def set_output_file_name():
-            if str(f_output_name.text()) == "":
-                f_file = str(f_name.text())
-                if f_file:
-                    f_file_name = f_file.rsplit('.')[0] + self.ac_ext
-                    f_output_name.setText(f_file_name)
-
-        def file_name_select():
-            try:
-                if not os.path.isdir(self.last_ac_dir):
-                    self.last_ac_dir = global_home
-                if f_batch_checkbox.isChecked():
-                    f_dir = QtGui.QFileDialog.getExistingDirectory(f_window,
-                        _("Open Folder"), self.last_ac_dir)
-                    if f_dir is None:
-                        return
-                    f_dir = str(f_dir)
-                    if f_dir == "":
-                        return
-                    f_name.setText(f_dir)
-                    self.last_ac_dir = f_dir
-                else:
-                    f_file_name = QtGui.QFileDialog.getOpenFileName(
-                        f_window, _("Select a file name to save to..."),
-                        self.last_ac_dir,
-                        filter=_("Audio Files {}").format(
-                        '(*.wav *.{})'.format(a_label)))
-                    if not f_file_name is None and str(f_file_name) != "":
-                        f_name.setText(str(f_file_name))
-                        self.last_ac_dir = os.path.dirname(f_file_name)
-                        if f_file_name.lower().endswith(".{}".format(a_label)):
-                            f_wav_radiobutton.setChecked(True)
-                        elif f_file_name.lower().endswith(".wav"):
-                            f_mp3_radiobutton.setChecked(True)
-                        set_output_file_name()
-                        self.last_ac_dir = os.path.dirname(f_file_name)
-            except Exception as ex:
-                pydaw_print_generic_exception(ex)
-
-        def file_name_select_output():
-            try:
-                if not os.path.isdir(self.last_ac_dir):
-                    self.last_ac_dir = global_home
-                if f_batch_checkbox.isChecked():
-                    f_dir = QtGui.QFileDialog.getExistingDirectory(f_window,
-                        _("Open Folder"), self.last_ac_dir)
-                    if f_dir is None:
-                        return
-                    f_dir = str(f_dir)
-                    if f_dir == "":
-                        return
-                    f_output_name.setText(f_dir)
-                    self.last_ac_dir = f_dir
-                else:
-                    f_file_name = QtGui.QFileDialog.getSaveFileName(
-                        f_window, _("Select a file name to save to..."),
-                        self.last_ac_dir)
-                    if not f_file_name is None and str(f_file_name) != "":
-                        f_file_name = str(f_file_name)
-                        if not f_file_name.endswith(self.ac_ext):
-                            f_file_name += self.ac_ext
-                        f_output_name.setText(f_file_name)
-                        self.last_ac_dir = os.path.dirname(f_file_name)
-            except Exception as ex:
-                pydaw_print_generic_exception(ex)
-
-        def format_changed(a_val=None):
-            if f_wav_radiobutton.isChecked():
-                self.ac_ext = ".wav"
-            else:
-                self.ac_ext = ".{}".format(a_label)
-            if not f_batch_checkbox.isChecked():
-                f_str = str(f_output_name.text()).strip()
-                if f_str != "" and not f_str.endswith(self.ac_ext):
-                    f_arr = f_str.rsplit(".")
-                    f_output_name.setText(f_arr[0] + self.ac_ext)
-
-        def batch_changed(a_val=None):
-            f_name.setText("")
-            f_output_name.setText("")
-
-        self.ac_ext = ".wav"
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-
-        f_window.setWindowTitle(_("{} Converter".format(a_label)))
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-
-        f_name = QtGui.QLineEdit()
-        f_name.setReadOnly(True)
-        f_name.setMinimumWidth(480)
-        f_layout.addWidget(QtGui.QLabel(_("Input:")), 0, 0)
-        f_layout.addWidget(f_name, 0, 1)
-        f_select_file = QtGui.QPushButton(_("Select"))
-        f_select_file.pressed.connect(file_name_select)
-        f_layout.addWidget(f_select_file, 0, 2)
-
-        f_output_name = QtGui.QLineEdit()
-        f_output_name.setReadOnly(True)
-        f_output_name.setMinimumWidth(480)
-        f_layout.addWidget(QtGui.QLabel(_("Output:")), 1, 0)
-        f_layout.addWidget(f_output_name, 1, 1)
-        f_select_file_output = QtGui.QPushButton(_("Select"))
-        f_select_file_output.pressed.connect(file_name_select_output)
-        f_layout.addWidget(f_select_file_output, 1, 2)
-
-        f_layout.addWidget(QtGui.QLabel(_("Convert to:")), 2, 1)
-        f_rb_group = QtGui.QButtonGroup()
-        f_wav_radiobutton = QtGui.QRadioButton("wav")
-        f_wav_radiobutton.setChecked(True)
-        f_rb_group.addButton(f_wav_radiobutton)
-        f_wav_layout = QtGui.QHBoxLayout()
-        f_wav_layout.addWidget(f_wav_radiobutton)
-        f_layout.addLayout(f_wav_layout, 3, 1)
-        f_wav_radiobutton.toggled.connect(format_changed)
-
-        f_mp3_radiobutton = QtGui.QRadioButton(a_label)
-        f_rb_group.addButton(f_mp3_radiobutton)
-        f_mp3_layout = QtGui.QHBoxLayout()
-        f_mp3_layout.addWidget(f_mp3_radiobutton)
-        f_mp3_radiobutton.toggled.connect(format_changed)
-        f_mp3_br_combobox = QtGui.QComboBox()
-        f_mp3_br_combobox.addItems(["320", "256", "192", "160", "128"])
-        f_mp3_layout.addWidget(QtGui.QLabel(_("Bitrate")))
-        f_mp3_layout.addWidget(f_mp3_br_combobox)
-        f_layout.addLayout(f_mp3_layout, 4, 1)
-
-        f_batch_checkbox = QtGui.QCheckBox(_("Batch convert entire folder?"))
-        f_batch_checkbox.stateChanged.connect(batch_changed)
-        f_layout.addWidget(f_batch_checkbox, 6, 1)
-
-        f_close_checkbox = QtGui.QCheckBox("Close on finish?")
-        f_close_checkbox.setChecked(True)
-        f_layout.addWidget(f_close_checkbox, 9, 1)
-
-        f_ok_layout = QtGui.QHBoxLayout()
-        f_ok_layout.addItem(
-            QtGui.QSpacerItem(
-            10, 10, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
-        f_ok = QtGui.QPushButton(_("OK"))
-        f_ok.setMinimumWidth(75)
-        f_ok.pressed.connect(ok_handler)
-        f_ok_layout.addWidget(f_ok)
-        f_layout.addLayout(f_ok_layout, 9, 2)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
-        f_cancel.setMinimumWidth(75)
-        f_cancel.pressed.connect(cancel_handler)
-        f_ok_layout.addWidget(f_cancel)
-        f_status_label = QtGui.QLabel("")
-        f_layout.addWidget(f_status_label, 15, 1)
-        f_window.exec_()
 
     def set_tooltips(self, a_on):
         if a_on:
@@ -10059,8 +9392,8 @@ class pydaw_main_window(QtGui.QScrollArea):
         QtGui.QScrollArea.scrollContentsBy(self.midi_scroll_area, x, y)
         REGION_EDITOR.set_header_pos()
 
-    def set_tooltips_enabled(self):
-        pydaw_set_tooltips_enabled(self.tooltips_action.isChecked())
+    def set_tooltips_enabled(self, a_val):
+        pydaw_set_tooltips_enabled(a_val)
 
     def subprocess_monitor(self):
         try:
@@ -10075,15 +9408,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         except Exception as ex:
             print("subprocess_monitor: {}".format(ex))
 
-    def osc_time_callback(self):
-        self.osc_server.recv(1)
-
-    def osc_fallback(self, path, args, types, src):
-        print("got unknown message '{}' from '{}'".format(path, src))
-        for a, t in zip(args, types):
-            print("argument of type '{}': {}".format(t, a))
-
-    def configure_callback(self, path, arr):
+    def configure_callback(self, arr):
         f_pc_dict = {}
         f_ui_dict = {}
         f_cc_dict = {}
@@ -10147,16 +9472,12 @@ class pydaw_main_window(QtGui.QScrollArea):
             PIANO_ROLL_EDITOR.prepare_to_quit()
             time.sleep(0.5)
             PLUGIN_UI_DICT.close_all_plugin_windows()
-            if self.osc_server is not None:
-                self.osc_timer.stop()
             if global_pydaw_with_audio:
                 self.subprocess_timer.stop()
                 if not "--debug" in sys.argv:
                     close_pydaw_engine()
             else:
                 PROJECT.flush_history()
-            if self.osc_server is not None:
-                self.osc_server.free()
         except Exception as ex:
             print("Exception thrown while attempting to exit, "
                 "forcing MusiKernel to exit")
@@ -11112,8 +10433,6 @@ def routing_graph_toggle_callback(a_src, a_dest, a_sidechain):
 ROUTING_GRAPH_WIDGET = pydaw_widgets.routing_graph_widget(
     routing_graph_toggle_callback)
 
-TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
-
 # Must call this after instantiating the other widgets,
 # as it relies on them existing
 MAIN_WINDOW = pydaw_main_window()
@@ -11122,8 +10441,8 @@ PIANO_ROLL_EDITOR.verticalScrollBar().setSliderPosition(
     PIANO_ROLL_EDITOR.scene.height() * 0.4)
 PIANO_ROLL_EDITOR_WIDGET.snap_combobox.setCurrentIndex(4)
 
-if TOOLTIPS_ENABLED:
-    pydaw_set_tooltips_enabled(TOOLTIPS_ENABLED)
+if libmk.TOOLTIPS_ENABLED:
+    pydaw_set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
 
 
 default_project_file = pydaw_util.get_file_setting("last-project", str, None)
