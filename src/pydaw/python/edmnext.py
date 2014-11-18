@@ -10153,7 +10153,7 @@ def global_open_project(a_project_file):
     PLUGIN_UI_DICT = mk_plugin_ui_dict(
         PROJECT, PROJECT.this_pydaw_osc, MAIN_WINDOW.styleSheet())
     TRACK_PANEL.open_tracks()
-    WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
+    WAVE_EDITOR.last_offline_dir = libmk.PROJECT.user_folder
     SONG_EDITOR.open_song()
     REGION_EDITOR.clear_drawn_items()
     TRANSPORT.open_transport()
@@ -10165,7 +10165,7 @@ def global_open_project(a_project_file):
         PIANO_ROLL_EDITOR_WIDGET.scale_key_combobox.setCurrentIndex(f_scale[0])
         PIANO_ROLL_EDITOR_WIDGET.scale_combobox.setCurrentIndex(f_scale[1])
     SONG_EDITOR.open_first_region()
-    MAIN_WINDOW.last_offline_dir = PROJECT.user_folder
+    MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText(PROJECT.get_notes())
     WAVE_EDITOR.open_project()
     global_update_region_time()
@@ -10180,13 +10180,13 @@ def global_new_project(a_project_file):
     PROJECT.save_transport(TRANSPORT.transport)
     PLUGIN_UI_DICT = mk_plugin_ui_dict(
         PROJECT, PROJECT.this_pydaw_osc, MAIN_WINDOW.styleSheet())
-    WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
+    WAVE_EDITOR.last_offline_dir = libmk.PROJECT.user_folder
     SONG_EDITOR.open_song()
     PROJECT.save_song(SONG_EDITOR.song)
     TRANSPORT.open_transport()
     global_update_track_comboboxes()
     set_window_title()
-    MAIN_WINDOW.last_offline_dir = PROJECT.user_folder
+    MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText("")
     WAVE_EDITOR.open_project()
     global_update_region_time()

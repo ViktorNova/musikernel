@@ -16,7 +16,8 @@ GNU General Public License for more details.
 import os
 import math
 from . import pydaw_util
-from libpydaw.pydaw_project import pydaw_audio_item_fx, pydaw_folder_plugins
+from libpydaw.pydaw_project import pydaw_audio_item_fx
+from libmk.mkproject import pydaw_folder_plugins
 from libpydaw.translate import _
 from PyQt4 import QtGui, QtCore
 import numpy

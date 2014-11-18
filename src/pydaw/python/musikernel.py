@@ -148,12 +148,6 @@ class transport_widget:
         MAIN_WINDOW.current_module.TRANSPORT.on_rec()
         self.menu_button.setEnabled(False)
 
-    def open_transport(self, a_notify_osc=False):
-        if not a_notify_osc:
-            self.suppress_osc = True
-        self.suppress_osc = False
-        self.load_master_vol()
-
     def on_panic(self):
         MAIN_WINDOW.current_module.TRANSPORT.on_panic()
 
@@ -529,6 +523,7 @@ class MkMainWindow(QtGui.QMainWindow):
             libmk.OSC = None
             libmk.MAIN_WINDOW = None
             libmk.TRANSPORT = None
+            libmk.PROJECT = None
             f_quit_timer = QtCore.QTimer(self)
             f_quit_timer.setSingleShot(True)
             f_quit_timer.timeout.connect(self.close)
@@ -1124,28 +1119,14 @@ def global_open_project(a_project_file, a_wait=True):
 
 def global_new_project(a_project_file, a_wait=True):
     global_close_all()
-    global PROJECT, PLUGIN_UI_DICT
     if a_wait:
         time.sleep(3.0)
     open_pydaw_engine(a_project_file)
-    PROJECT = pydaw_project(global_pydaw_with_audio)
-    PROJECT.new_project(a_project_file)
-    PROJECT.save_transport(TRANSPORT.transport)
-    PLUGIN_UI_DICT = mk_plugin_ui_dict(
-        PROJECT, PROJECT.this_pydaw_osc, MAIN_WINDOW.styleSheet())
-    WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
-    SONG_EDITOR.open_song()
-    PROJECT.save_song(SONG_EDITOR.song)
-    TRANSPORT.open_transport()
+    libmk.PROJECT = mkproject.MkProject()
+    libmk.PROJECT.new_project(a_project_file)
     pydaw_util.set_file_setting("last-project", a_project_file)
-    global_update_track_comboboxes()
     set_window_title()
-    MAIN_WINDOW.last_offline_dir = PROJECT.user_folder
-    MAIN_WINDOW.notes_tab.setText("")
-    WAVE_EDITOR.open_project()
-    global_update_region_time()
-    ROUTING_GRAPH_WIDGET.scene.clear()
-    global_open_mixer()
+    MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
 
 
 if not os.access(global_pydaw_home, os.W_OK):

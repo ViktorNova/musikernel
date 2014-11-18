@@ -210,8 +210,6 @@ class pydaw_project(libmk.AbstractProject):
             self.track_pool_folder, self.wn_track_pool_folder,
             self.regions_atm_folder,]
 
-        pydaw_clear_sample_graph_cache()
-
     def open_project(self, a_project_file, a_notify_osc=True):
         self.set_project_folders(a_project_file)
         if not os.path.exists(a_project_file):
@@ -220,7 +218,6 @@ class pydaw_project(libmk.AbstractProject):
             self.new_project(a_project_file)
         else:
             self.history = pydaw_history.pydaw_history(self.edmnext_folder)
-            self.open_stretch_dicts()
         if a_notify_osc:
             self.this_pydaw_osc.pydaw_open_song(self.project_folder)
 
@@ -233,19 +230,7 @@ class pydaw_project(libmk.AbstractProject):
                 os.makedirs(project_dir)
         self.history = pydaw_history.pydaw_history(self.edmnext_folder)
 
-        self.create_file(
-            "", "version.txt",
-            "Created with {}-{}".format(global_pydaw_version_string,
-            pydaw_read_file_text("{}/lib/{}/minor-version.txt".format(
-            global_pydaw_install_prefix, global_pydaw_version_string))))
-        self.create_file(
-            "", os.path.basename(a_project_file),
-            "This file is not supposed to contain any data, it is "
-            "only a placeholder for saving and opening the project")
         self.create_file("", pydaw_file_pyregions, pydaw_terminating_char)
-        self.create_file("", pydaw_file_pywavs, pydaw_terminating_char)
-        self.create_file("", pydaw_file_pystretch_map, pydaw_terminating_char)
-        self.create_file("", pydaw_file_pystretch, pydaw_terminating_char)
         self.create_file("", pydaw_file_pyitems, pydaw_terminating_char)
         self.create_file("", pydaw_file_pysong, pydaw_terminating_char)
         self.create_file("", pydaw_file_pytransport, str(pydaw_transport()))
@@ -256,7 +241,6 @@ class pydaw_project(libmk.AbstractProject):
                 a_name="Master" if i == 0 else "track{}".format(i)))
         self.create_file("", pydaw_file_pytracks, str(f_tracks))
 
-        self.open_stretch_dicts()
         self.commit("Created project")
         if a_notify_osc:
             self.this_pydaw_osc.pydaw_open_song(self.project_folder)

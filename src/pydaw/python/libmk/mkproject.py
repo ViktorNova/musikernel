@@ -84,6 +84,42 @@ class MkProject:
             self.glued_folder, self.user_folder, self.projects_folder,
             self.backups_folder, self.plugin_pool_folder]
 
+        pydaw_clear_sample_graph_cache()
+
+    def open_project(self, a_project_file, a_notify_osc=True):
+        self.set_project_folders(a_project_file)
+        if not os.path.exists(a_project_file):
+            print("project file {} does not exist, creating as "
+                "new project".format(a_project_file))
+            self.new_project(a_project_file)
+        else:
+            self.open_stretch_dicts()
+
+    def new_project(self, a_project_file, a_notify_osc=True):
+        self.set_project_folders(a_project_file)
+
+        for project_dir in self.project_folders:
+            print(project_dir)
+            if not os.path.isdir(project_dir):
+                os.makedirs(project_dir)
+
+        self.create_file(
+            "", "version.txt",
+            "Created with {}-{}".format(global_pydaw_version_string,
+            pydaw_read_file_text("{}/lib/{}/minor-version.txt".format(
+            global_pydaw_install_prefix, global_pydaw_version_string))))
+        self.create_file(
+            "", os.path.basename(a_project_file),
+            "This file is not supposed to contain any data, it is "
+            "only a placeholder for saving and opening the project")
+        self.create_file("", pydaw_file_pywavs, pydaw_terminating_char)
+        self.create_file("", pydaw_file_pystretch_map, pydaw_terminating_char)
+        self.create_file("", pydaw_file_pystretch, pydaw_terminating_char)
+
+        self.open_stretch_dicts()
+        self.commit("Created project")
+
+
     def get_next_plugin_uid(self):
         if os.path.isfile(self.plugin_uid_file):
             with open(self.plugin_uid_file) as f_handle:
