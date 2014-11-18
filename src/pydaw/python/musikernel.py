@@ -68,11 +68,6 @@ class transport_widget:
         self.rec_button.setObjectName("rec_button")
         self.rec_button.clicked.connect(self.on_rec)
         self.hlayout1.addWidget(self.rec_button)
-        self.playback_menu_button = QtGui.QPushButton("")
-        self.playback_menu_button.setMaximumWidth(21)
-        self.playback_menu_button.setSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.hlayout1.addWidget(self.playback_menu_button)
         self.grid_layout1 = QtGui.QGridLayout()
         self.hlayout1.addLayout(self.grid_layout1)
 
@@ -83,14 +78,6 @@ class transport_widget:
         self.time_label.setMinimumWidth(90)
         self.time_label.setAlignment(QtCore.Qt.AlignCenter)
         self.grid_layout1.addWidget(self.time_label, 1, 27)
-
-        self.playback_menu = QtGui.QMenu(self.playback_menu_button)
-        self.playback_menu_button.setMenu(self.playback_menu)
-        self.playback_widget_action = QtGui.QWidgetAction(self.playback_menu)
-        self.playback_widget = QtGui.QWidget()
-        self.playback_widget_action.setDefaultWidget(self.playback_widget)
-        self.playback_vlayout = QtGui.QVBoxLayout(self.playback_widget)
-        self.playback_menu.addAction(self.playback_widget_action)
 
         self.menu_button = QtGui.QPushButton(_("Menu"))
         self.grid_layout1.addWidget(self.menu_button, 1, 50)
@@ -195,12 +182,14 @@ class MkMainWindow(QtGui.QMainWindow):
             libmk.OSC = None
         libmk.IPC = MkIpc()
         libmk.TRANSPORT = transport_widget()
-        #self.setMinimumSize(1100, 600)
         self.setObjectName("mainwindow")
+        self.setObjectName("plugin_ui")
+        self.setMinimumSize(500, 500)
         self.widget = QtGui.QWidget()
+        self.widget.setObjectName("plugin_ui")
         self.setCentralWidget(self.widget)
         self.main_layout = QtGui.QVBoxLayout(self.widget)
-        self.main_layout.setMargin(2)
+        self.main_layout.setMargin(0)
         self.transport_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.main_layout.addWidget(self.transport_splitter)
 
@@ -514,7 +503,10 @@ class MkMainWindow(QtGui.QMainWindow):
             for f_host in self.host_windows:
                 f_host.prepare_to_quit()
             self.ignore_close_event = False
+            libmk.IPC = None
+            libmk.OSC = None
             libmk.MAIN_WINDOW = None
+            libmk.TRANSPORT = None
             f_quit_timer = QtCore.QTimer(self)
             f_quit_timer.setSingleShot(True)
             f_quit_timer.timeout.connect(self.close)

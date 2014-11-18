@@ -8925,7 +8925,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.last_midi_dir = None
 
         self.setObjectName("plugin_ui")
-        self.setMinimumSize(500, 500)
         self.widget = QtGui.QWidget()
         self.widget.setObjectName("plugin_ui")
         self.setWidget(self.widget)
