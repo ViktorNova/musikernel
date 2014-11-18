@@ -10110,7 +10110,6 @@ PLUGIN_UI_DICT = None
 
 def global_close_all():
     global OPEN_ITEM_UIDS, AUDIO_ITEMS_TO_DROP
-    close_pydaw_engine()
     if PLUGIN_UI_DICT:
         PLUGIN_UI_DICT.close_all_plugin_windows()
     REGION_SETTINGS.clear_new()
@@ -10146,12 +10145,8 @@ def global_ui_refresh_callback(a_restore_all=False):
         PROJECT.project_folder, a_restore_all)
 
 #Opens or creates a new project
-def global_open_project(a_project_file, a_wait=True):
-    global_close_all()
+def global_open_project(a_project_file):
     global PROJECT, TRACK_NAMES, PLUGIN_UI_DICT
-    if a_wait:
-        time.sleep(3.0)
-    open_pydaw_engine(a_project_file)
     PROJECT = pydaw_project(global_pydaw_with_audio)
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
@@ -10162,7 +10157,6 @@ def global_open_project(a_project_file, a_wait=True):
     SONG_EDITOR.open_song()
     REGION_EDITOR.clear_drawn_items()
     TRANSPORT.open_transport()
-    pydaw_util.set_file_setting("last-project", a_project_file)
     global_update_track_comboboxes()
     set_window_title()
     PROJECT.suppress_updates = False
@@ -10179,12 +10173,8 @@ def global_open_project(a_project_file, a_wait=True):
         PROJECT.get_routing_graph(), TRACK_PANEL.get_track_names())
     global_open_mixer()
 
-def global_new_project(a_project_file, a_wait=True):
-    global_close_all()
+def global_new_project(a_project_file):
     global PROJECT, PLUGIN_UI_DICT
-    if a_wait:
-        time.sleep(3.0)
-    open_pydaw_engine(a_project_file)
     PROJECT = pydaw_project(global_pydaw_with_audio)
     PROJECT.new_project(a_project_file)
     PROJECT.save_transport(TRANSPORT.transport)
@@ -10194,7 +10184,6 @@ def global_new_project(a_project_file, a_wait=True):
     SONG_EDITOR.open_song()
     PROJECT.save_song(SONG_EDITOR.song)
     TRANSPORT.open_transport()
-    pydaw_util.set_file_setting("last-project", a_project_file)
     global_update_track_comboboxes()
     set_window_title()
     MAIN_WINDOW.last_offline_dir = PROJECT.user_folder
@@ -10225,13 +10214,6 @@ CC_EDITOR = automation_viewer()
 CC_EDITOR_WIDGET = automation_viewer_widget(CC_EDITOR)
 
 WAVE_EDITOR = pydaw_wave_editor_widget()
-
-if not os.access(global_pydaw_home, os.W_OK):
-    QtGui.QMessageBox.warning(
-        WAVE_EDITOR.widget, _("Error"),
-        _("You do not have read+write permissions to {}, please correct "
-        "this and restart MusiKernel".format(global_pydaw_home)))
-    exit(999)
 
 SONG_EDITOR = song_editor()
 REGION_SETTINGS = region_settings()

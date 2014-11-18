@@ -220,6 +220,7 @@ class MkMainWindow(QtGui.QMainWindow):
         self.transport_splitter.addWidget(self.edm_next_window)
 
         self.host_windows = (self.edm_next_window,)
+        self.host_modules = (self.edm_next_module,)
 
         self.ignore_close_event = True
 
@@ -453,12 +454,12 @@ class MkMainWindow(QtGui.QMainWindow):
             "project history editor"),
             buttons=QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
         if f_result == QtGui.QMessageBox.Ok:
-            PROJECT.show_project_history()
+            libmk.PROJECT.show_project_history()
             self.ignore_close_event = False
             self.prepare_to_quit()
 
     def on_save(self):
-        PROJECT.create_backup()
+        libmk.PROJECT.create_backup()
 
     def on_save_as(self):
         if libmk.IS_PLAYING:
@@ -467,7 +468,7 @@ class MkMainWindow(QtGui.QMainWindow):
             f_name = str(f_lineedit.text()).strip()
             f_name = f_name.replace("/", "")
             if f_name:
-                PROJECT.create_backup(f_name)
+                libmk.PROJECT.create_backup(f_name)
                 f_window.close()
 
         f_window = QtGui.QDialog()
@@ -495,7 +496,7 @@ class MkMainWindow(QtGui.QMainWindow):
                 f_new_file = QtGui.QFileDialog.getSaveFileName(
                     self, _("Save copy of project as..."),
                     directory="{}/{}.{}".format(global_default_project_folder,
-                    PROJECT.project_file, global_pydaw_version_string))
+                    libmk.PROJECT.project_file, global_pydaw_version_string))
                 if not f_new_file is None and not str(f_new_file) == "":
                     f_new_file = str(f_new_file)
                     if not self.check_for_empty_directory(f_new_file) or \
@@ -505,7 +506,7 @@ class MkMainWindow(QtGui.QMainWindow):
                     ".{}".format(global_pydaw_version_string)):
                         f_new_file += ".{}".format(global_pydaw_version_string)
                     PLUGIN_UI_DICT.close_all_plugin_windows()
-                    PROJECT.save_project_as(f_new_file)
+                    libmk.PROJECT.save_project_as(f_new_file)
                     set_window_title()
                     pydaw_util.set_file_setting("last-project", f_new_file)
                     break
@@ -560,13 +561,14 @@ class MkMainWindow(QtGui.QMainWindow):
     def on_undo_history(self):
         if libmk.IS_PLAYING:
             return
-        PROJECT.flush_history()
+        self.current_module.PROJECT.flush_history()
         f_window = QtGui.QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Undo history"))
         f_layout = QtGui.QVBoxLayout()
         f_window.setLayout(f_layout)
         f_widget = pydaw_history_log_widget(
-            PROJECT.history, global_ui_refresh_callback)
+            self.current_module.PROJECT.history,
+            self.current_module.global_ui_refresh_callback)
         f_widget.populate_table()
         f_layout.addWidget(f_widget)
         f_window.setGeometry(
@@ -576,7 +578,7 @@ class MkMainWindow(QtGui.QMainWindow):
     def on_verify_history(self):
         if libmk.IS_PLAYING:
             return
-        f_str = PROJECT.verify_history()
+        f_str = self.current_module.PROJECT.verify_history()
         f_window = QtGui.QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Verify Project History Database"))
         f_window.setFixedSize(800, 600)
@@ -971,7 +973,8 @@ def close_pydaw_engine():
     doesn't exit on it's own"""
     global PYDAW_SUBPROCESS
     if PYDAW_SUBPROCESS is not None:
-        PROJECT.quit_handler()
+        for PROJECT in (x.PROJECT for x in MAIN_WINDOW.host_modules):
+            PROJECT.quit_handler()
         f_exited = False
         for i in range(20):
             if PYDAW_SUBPROCESS.poll() == None:
@@ -1092,6 +1095,65 @@ def open_pydaw_engine(a_project_path):
     print(f_cmd)
     PYDAW_SUBPROCESS = subprocess.Popen([f_cmd], shell=True)
 
+def global_close_all():
+    close_pydaw_engine()
+    for f_module in MAIN_WINDOW.host_modules:
+        f_module.global_close_all()
+
+def global_ui_refresh_callback(a_restore_all=False):
+    """ Use this to re-open all existing items/regions/song in
+        their editors when the files have been changed externally
+    """
+    for f_module in MAIN_WINDOW.host_modules:
+        f_module.global_ui_refresh_callback(a_restore_all)
+
+#Opens or creates a new project
+def global_open_project(a_project_file, a_wait=True):
+    global_close_all()
+    if a_wait:
+        time.sleep(3.0)
+    open_pydaw_engine(a_project_file)
+    libmk.PROJECT = mkproject.MkProject()
+    libmk.PROJECT.suppress_updates = True
+    libmk.PROJECT.open_project(a_project_file, False)
+    pydaw_util.set_file_setting("last-project", a_project_file)
+    set_window_title()
+    libmk.PROJECT.suppress_updates = False
+    for f_module in MAIN_WINDOW.host_modules:
+        f_module.global_open_project(a_project_file)
+
+def global_new_project(a_project_file, a_wait=True):
+    global_close_all()
+    global PROJECT, PLUGIN_UI_DICT
+    if a_wait:
+        time.sleep(3.0)
+    open_pydaw_engine(a_project_file)
+    PROJECT = pydaw_project(global_pydaw_with_audio)
+    PROJECT.new_project(a_project_file)
+    PROJECT.save_transport(TRANSPORT.transport)
+    PLUGIN_UI_DICT = mk_plugin_ui_dict(
+        PROJECT, PROJECT.this_pydaw_osc, MAIN_WINDOW.styleSheet())
+    WAVE_EDITOR.last_offline_dir = PROJECT.user_folder
+    SONG_EDITOR.open_song()
+    PROJECT.save_song(SONG_EDITOR.song)
+    TRANSPORT.open_transport()
+    pydaw_util.set_file_setting("last-project", a_project_file)
+    global_update_track_comboboxes()
+    set_window_title()
+    MAIN_WINDOW.last_offline_dir = PROJECT.user_folder
+    MAIN_WINDOW.notes_tab.setText("")
+    WAVE_EDITOR.open_project()
+    global_update_region_time()
+    ROUTING_GRAPH_WIDGET.scene.clear()
+    global_open_mixer()
+
+
+if not os.access(global_pydaw_home, os.W_OK):
+    QtGui.QMessageBox.warning(
+        WAVE_EDITOR.widget, _("Error"),
+        _("You do not have read+write permissions to {}, please correct "
+        "this and restart MusiKernel".format(global_pydaw_home)))
+    exit(999)
 
 default_project_file = pydaw_util.get_file_setting("last-project", str, None)
 
