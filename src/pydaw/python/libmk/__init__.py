@@ -70,14 +70,7 @@ class AbstractProject:
     def __init__(self):
         self.plugin_pool_folder = None
 
-    def save_file(a_plugins_folder, a_plugin_uid, a_file):
-        raise NotImplementedError
 
-    def commit(self, a_message):
-        raise NotImplementedError
-
-    def flush_history(self):
-        raise NotImplementedError
 
 class AbstractTransport:
     pass
