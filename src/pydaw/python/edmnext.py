@@ -2544,7 +2544,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         self.audio_item = a_audio_item
         self.orig_string = str(a_audio_item)
         self.track_num = a_track_num
-        f_graph = PROJECT.get_sample_graph_by_uid(
+        f_graph = libmk.PROJECT.get_sample_graph_by_uid(
             self.audio_item.uid)
         self.painter_paths = f_graph.create_sample_graph(True)
         self.y_inc = AUDIO_ITEM_HEIGHT / len(self.painter_paths)
@@ -3135,10 +3135,10 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
         for f_stretch_item in f_stretched_items:
             f_stretch_item[2].wait()
-            PROJECT.get_wav_uid_by_name(
+            libmk.PROJECT.get_wav_uid_by_name(
                 f_stretch_item[0], a_uid=f_stretch_item[1])
         for f_audio_item in AUDIO_SEQ.get_selected():
-            f_new_graph = PROJECT.get_sample_graph_by_uid(
+            f_new_graph = libmk.PROJECT.get_sample_graph_by_uid(
                 f_audio_item.audio_item.uid)
             f_audio_item.audio_item.clip_at_region_end(
                 pydaw_get_current_region_length(),
@@ -3357,14 +3357,14 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
                 #print("{} {}".format(f_item.pitch_shift,
                 #   f_item.pitch_shift_end))
-                f_ts_result = PROJECT.timestretch_audio_item(f_item)
+                f_ts_result = libmk.PROJECT.timestretch_audio_item(f_item)
                 if f_ts_result is not None:
                     f_stretched_items.append(f_ts_result)
 
-            PROJECT.save_stretch_dicts()
+            libmk.PROJECT.save_stretch_dicts()
             for f_stretch_item in f_stretched_items:
                 f_stretch_item[2].wait()
-                PROJECT.get_wav_uid_by_name(
+                libmk.PROJECT.get_wav_uid_by_name(
                     f_stretch_item[0], a_uid=f_stretch_item[1])
             PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
             PROJECT.commit(_("Pitchbend audio items"))
@@ -3438,7 +3438,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
     def replace_with_path_in_clipboard(self):
         f_path = global_get_audio_file_from_clipboard()
         if f_path is not None:
-            self.audio_item.uid = PROJECT.get_wav_uid_by_name(
+            self.audio_item.uid = libmk.PROJECT.get_wav_uid_by_name(
                 f_path)
             PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
             PROJECT.commit(_("Replace audio item"))
@@ -4001,10 +4001,10 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 PROJECT.save_stretch_dicts()
                 for f_stretch_item in f_stretched_items:
                     f_stretch_item[2].wait()
-                    PROJECT.get_wav_uid_by_name(
+                    libmk.PROJECT.get_wav_uid_by_name(
                         f_stretch_item[0], a_uid=f_stretch_item[1])
                 for f_audio_item in AUDIO_SEQ.get_selected():
-                    f_new_graph = PROJECT.get_sample_graph_by_uid(
+                    f_new_graph = libmk.PROJECT.get_sample_graph_by_uid(
                         f_audio_item.audio_item.uid)
                     f_audio_item.audio_item.clip_at_region_end(
                         pydaw_get_current_region_length(),
@@ -4261,13 +4261,13 @@ class audio_items_viewer(QtGui.QGraphicsView):
                     "max per region is {}").format(MAX_AUDIO_ITEM_COUNT))
                     break
                 else:
-                    f_uid = PROJECT.get_wav_uid_by_name(f_file_name_str)
+                    f_uid = libmk.PROJECT.get_wav_uid_by_name(f_file_name_str)
                     f_item = pydaw_audio_item(
                         f_uid, a_start_bar=f_pos_bars,
                         a_start_beat=f_beat_frac, a_lane_num=f_lane_num,
                         a_output_track=DEFAULT_AUDIO_TRACK)
                     f_items.add_item(f_index, f_item)
-                    f_graph = PROJECT.get_sample_graph_by_uid(f_uid)
+                    f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_uid)
                     f_audio_item = AUDIO_SEQ.draw_item(
                         f_index, f_item, f_graph)
                     f_audio_item.clip_at_region_end()
@@ -4314,7 +4314,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
             f_items.remove_item(f_index)
             f_paif.clear_row_if_exists(f_index)
         f_index = f_items.get_next_index()
-        f_uid = PROJECT.get_wav_uid_by_name(f_path)
+        f_uid = libmk.PROJECT.get_wav_uid_by_name(f_path)
         f_item = pydaw_audio_item(
             f_uid, a_start_bar=f_start_bar, a_lane_num=f_lane,
             a_output_track=f_audio_track_num)
@@ -4746,9 +4746,9 @@ class time_pitch_dialog_widget:
                 PROJECT.save_stretch_dicts()
                 for f_stretch_item, f_audio_item in f_stretched_items:
                     f_stretch_item[2].wait()
-                    f_new_uid = PROJECT.get_wav_uid_by_name(
+                    f_new_uid = libmk.PROJECT.get_wav_uid_by_name(
                         f_stretch_item[0], a_uid=f_stretch_item[1])
-                    f_graph = PROJECT.get_sample_graph_by_uid(f_new_uid)
+                    f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_new_uid)
                     f_audio_item.clip_at_region_end(
                         f_current_region_length, f_global_tempo,
                         f_graph.length_in_seconds)
@@ -5099,7 +5099,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
             f_item = pydaw_audio_item.from_str(f_str)
             f_start = f_item.start_bar + (f_item.start_beat * 0.25)
             if f_start < f_current_region_length:
-                f_graph = PROJECT.get_sample_graph_by_uid(f_item.uid)
+                f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_item.uid)
                 f_item.clip_at_region_end(
                     f_current_region_length, f_global_tempo,
                     f_graph.length_in_seconds)
@@ -5182,7 +5182,7 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
         if AUDIO_ITEMS:
             for k, v in AUDIO_ITEMS.items.items():
                 try:
-                    f_graph = PROJECT.get_sample_graph_by_uid(v.uid)
+                    f_graph = libmk.PROJECT.get_sample_graph_by_uid(v.uid)
                     if f_graph is None:
                         print(_("Error drawing item for {}, could not get "
                         "sample graph object").format(v.uid))
@@ -8064,7 +8064,7 @@ class plugin_settings_base:
         self.set_value(PLUGIN_SETTINGS_COPY_OBJ)
         global PLUGIN_SETTINGS_CUT
         if not PLUGIN_SETTINGS_CUT:
-            self.plugin_uid = PROJECT.get_next_plugin_uid()
+            self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
             PROJECT.copy_plugin(
                 PLUGIN_SETTINGS_COPY_OBJ.plugin_uid, self.plugin_uid)
         PLUGIN_SETTINGS_CUT = False
@@ -8100,7 +8100,7 @@ class plugin_settings_base:
         if f_index == 0:
             self.plugin_uid = -1
         elif self.plugin_uid == -1 or self.plugin_index != f_index:
-            self.plugin_uid = PROJECT.get_next_plugin_uid()
+            self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
             self.plugin_index = f_index
         PROJECT.this_pydaw_osc.pydaw_set_plugin(
             self.host_index, self.track_num, self.index, f_index,
@@ -9451,11 +9451,7 @@ class pydaw_main_window(QtGui.QScrollArea):
             PIANO_ROLL_EDITOR.prepare_to_quit()
             time.sleep(0.5)
             PLUGIN_UI_DICT.close_all_plugin_windows()
-            if global_pydaw_with_audio:
-                self.subprocess_timer.stop()
-                if not "--debug" in sys.argv:
-                    close_pydaw_engine()
-            else:
+            if not global_pydaw_with_audio:
                 PROJECT.flush_history()
         except Exception as ex:
             print("Exception thrown while attempting to exit, "
@@ -9670,7 +9666,7 @@ class pydaw_wave_editor_widget:
     def copy_audio_item(self):
         if self.graph_object is None:
             return
-        f_uid = PROJECT.get_wav_uid_by_name(self.current_file)
+        f_uid = libmk.PROJECT.get_wav_uid_by_name(self.current_file)
         f_item = self.get_audio_item(f_uid)
         AUDIO_SEQ_WIDGET.audio_items_clipboard = [(str(f_item), None)]
 
@@ -10151,14 +10147,14 @@ def global_open_project(a_project_file):
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
     PLUGIN_UI_DICT = mk_plugin_ui_dict(
-        PROJECT, PROJECT.this_pydaw_osc, MAIN_WINDOW.styleSheet())
+        libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
     TRACK_PANEL.open_tracks()
     WAVE_EDITOR.last_offline_dir = libmk.PROJECT.user_folder
     SONG_EDITOR.open_song()
     REGION_EDITOR.clear_drawn_items()
     TRANSPORT.open_transport()
     global_update_track_comboboxes()
-    set_window_title()
+    libmk.set_window_title("EDM-Next")
     PROJECT.suppress_updates = False
     f_scale = PROJECT.get_midi_scale()
     if f_scale is not None:
@@ -10179,13 +10175,13 @@ def global_new_project(a_project_file):
     PROJECT.new_project(a_project_file)
     PROJECT.save_transport(TRANSPORT.transport)
     PLUGIN_UI_DICT = mk_plugin_ui_dict(
-        PROJECT, PROJECT.this_pydaw_osc, MAIN_WINDOW.styleSheet())
+        libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
     WAVE_EDITOR.last_offline_dir = libmk.PROJECT.user_folder
     SONG_EDITOR.open_song()
     PROJECT.save_song(SONG_EDITOR.song)
     TRANSPORT.open_transport()
     global_update_track_comboboxes()
-    set_window_title()
+    libmk.set_window_title("EDM-Next")
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText("")
     WAVE_EDITOR.open_project()

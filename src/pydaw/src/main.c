@@ -819,25 +819,6 @@ int osc_debug_handler(const char *path, const char *types, lo_arg **argv,
     return 1;
 }
 
-void v_mk_configure(const char* a_key, const char* a_value)
-{
-    printf("v_mk_configure:  key: \"%s\", value: \"%s\"\n", a_key, a_value);
-
-    if(!strcmp(a_key, CONFIGURE_KEY_KILL_ENGINE))
-    {
-        pthread_spin_lock(&musikernel->main_lock);
-        assert(0);
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_EXIT))
-    {
-        exiting = 1;
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_MASTER_VOL))
-    {
-        MASTER_VOL = atof(a_value);
-    }
-}
-
 int osc_message_handler(const char *path, const char *types, lo_arg **argv,
                         int argc, void *data, void *user_data)
 {

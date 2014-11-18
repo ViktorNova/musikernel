@@ -12,7 +12,7 @@ GNU General Public License for more details.
 
 """
 
-import sys
+import os
 from libpydaw import pydaw_util
 from libpydaw import liblo
 
@@ -27,9 +27,9 @@ OSC = None
 PROJECT = None
 TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
 
-def set_window_title():
-    MAIN_WINDOW.setWindowTitle('MusiKernel | EDM-Next - {}/{}.{}'.format(
-        PROJECT.project_folder, PROJECT.project_file,
+def set_window_title(a_host_name):
+    MAIN_WINDOW.setWindowTitle('MusiKernel | {} - {}/{}.{}'.format(
+        a_host_name, PROJECT.project_folder, PROJECT.project_file,
         pydaw_util.global_pydaw_version_string))
 
 class AbstractIPC:
@@ -73,6 +73,31 @@ class AbstractProject:
     """
     def __init__(self):
         self.plugin_pool_folder = None
+
+    def create_file(self, a_folder, a_file, a_text):
+        """  Call save_file only if the file doesn't exist... """
+        if not os.path.isfile("{}/{}/{}".format(
+        self.project_folder, a_folder, a_file)):
+            self.save_file(a_folder, a_file, a_text)
+        else:
+            assert(False)
+
+    def save_file(self, a_folder, a_file, a_text, a_force_new=False):
+        """ Writes a file to disk and updates the project
+            history to reflect the changes
+        """
+        f_full_path = "{}/{}/{}".format(self.project_folder, a_folder, a_file)
+        if not a_force_new and os.path.isfile(f_full_path):
+            f_old = pydaw_util.pydaw_read_file_text(f_full_path)
+            if f_old == a_text:
+                return None
+            f_existed = 1
+        else:
+            f_old = ""
+            f_existed = 0
+        pydaw_util.pydaw_write_file_text(f_full_path, a_text)
+        return f_existed, f_old
+
 
 
 

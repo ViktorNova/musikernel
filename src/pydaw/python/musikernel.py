@@ -40,6 +40,38 @@ class MkIpc(libmk.AbstractIPC):
     def pydaw_master_vol(self, a_vol):
         self.send_configure("mvol", str(round(a_vol, 8)))
 
+    def pydaw_update_plugin_control(self, a_plugin_uid, a_port, a_val):
+        self.send_configure(
+            "pc", "|".join(str(x) for x in (a_plugin_uid, a_port, a_val)))
+
+    def pydaw_configure_plugin(self, a_plugin_uid, a_key, a_message):
+        self.send_configure(
+            "co", "|".join(str(x) for x in (a_plugin_uid, a_key, a_message)))
+
+    def pydaw_midi_learn(self):
+        self.send_configure("ml", "")
+
+    def pydaw_load_cc_map(self, a_plugin_uid, a_str):
+        self.send_configure(
+            "cm", "|".join(str(x) for x in (a_plugin_uid, a_str)))
+
+    def pydaw_add_to_wav_pool(self, a_file, a_uid):
+        self.send_configure("wp", "|".join(str(x) for x in (a_uid, a_file)))
+
+    def pydaw_rate_env(self, a_in_file, a_out_file, a_start, a_end):
+        f_wait_file = pydaw_get_wait_file_path(a_out_file)
+        self.send_configure(
+            "renv", "{}\n{}\n{}|{}".format(a_in_file, a_out_file,
+            a_start, a_end))
+        pydaw_wait_for_finished_file(f_wait_file)
+
+    def pydaw_pitch_env(self, a_in_file, a_out_file, a_start, a_end):
+        f_wait_file = pydaw_get_wait_file_path(a_out_file)
+        self.send_configure(
+            "penv", "{}\n{}\n{}|{}".format(a_in_file, a_out_file,
+            a_start, a_end))
+        pydaw_wait_for_finished_file(f_wait_file)
+
 
 class transport_widget:
     def __init__(self):
@@ -501,7 +533,7 @@ class MkMainWindow(QtGui.QMainWindow):
                         f_new_file += ".{}".format(global_pydaw_version_string)
                     PLUGIN_UI_DICT.close_all_plugin_windows()
                     libmk.PROJECT.save_project_as(f_new_file)
-                    set_window_title()
+                    libmk.set_window_title("")
                     pydaw_util.set_file_setting("last-project", f_new_file)
                     break
                 else:
@@ -524,6 +556,9 @@ class MkMainWindow(QtGui.QMainWindow):
             libmk.MAIN_WINDOW = None
             libmk.TRANSPORT = None
             libmk.PROJECT = None
+            self.subprocess_timer.stop()
+            #if not "--debug" in sys.argv:
+            close_pydaw_engine()
             f_quit_timer = QtCore.QTimer(self)
             f_quit_timer.setSingleShot(True)
             f_quit_timer.timeout.connect(self.close)
@@ -1112,7 +1147,6 @@ def global_open_project(a_project_file, a_wait=True):
     libmk.PROJECT.suppress_updates = True
     libmk.PROJECT.open_project(a_project_file, False)
     pydaw_util.set_file_setting("last-project", a_project_file)
-    set_window_title()
     libmk.PROJECT.suppress_updates = False
     for f_module in MAIN_WINDOW.host_modules:
         f_module.global_open_project(a_project_file)
@@ -1125,8 +1159,9 @@ def global_new_project(a_project_file, a_wait=True):
     libmk.PROJECT = mkproject.MkProject()
     libmk.PROJECT.new_project(a_project_file)
     pydaw_util.set_file_setting("last-project", a_project_file)
-    set_window_title()
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
+    for f_module in MAIN_WINDOW.host_modules:
+        f_module.global_new_project(a_project_file)
 
 
 if not os.access(global_pydaw_home, os.W_OK):

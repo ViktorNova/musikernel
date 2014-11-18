@@ -24,7 +24,7 @@ from libpydaw.translate import _
 
 from libpydaw.pydaw_osc import pydaw_osc
 
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from libpydaw import pydaw_history
 
 TRACK_COUNT_ALL = 32
@@ -71,37 +71,20 @@ class pydaw_project(libmk.AbstractProject):
         self.last_region_number = 1
         self.history_files = []
         self.history_commits = []
-        self.cached_audio_files = []
         self.history_undo_cursor = 0
         self.this_pydaw_osc = pydaw_osc(a_with_audio)
-        self.glued_name_index = 0
         self.suppress_updates = False
 
-    def create_file(self, a_folder, a_file, a_text):
-        """  Call save_file only if the file doesn't exist... """
-        if not os.path.isfile("{}/{}/{}".format(
-        self.project_folder, a_folder, a_file)):
-            self.save_file(a_folder, a_file, a_text)
-
     def save_file(self, a_folder, a_file, a_text, a_force_new=False):
-        """ Writes a file to disk and updates the project
-            history to reflect the changes
-        """
-        f_full_path = "{}/{}/{}".format(self.project_folder, a_folder, a_file)
-        if not a_force_new and os.path.isfile(f_full_path):
-            f_old = pydaw_read_file_text(f_full_path)
-            if f_old == a_text:
-                return
-            f_existed = 1
-        else:
-            f_old = ""
-            f_existed = 0
-        pydaw_write_file_text(f_full_path, a_text)
-        f_history_file = pydaw_history.pydaw_history_file(
-            a_folder, a_file, a_text, f_old, f_existed)
-        self.history_files.append(f_history_file)
-        #TODO:  debug/verbose mode this output...
-        print(str(f_history_file))
+        f_result = libmk.AbstractProject.save_file(
+            self, a_folder, a_file, a_text, a_force_new)
+        if f_result:
+            f_existed, f_old = f_result
+            f_history_file = pydaw_history.pydaw_history_file(
+                a_folder, a_file, a_text, f_old, f_existed)
+            self.history_files.append(f_history_file)
+            #TODO:  debug/verbose mode this output...
+            print(str(f_history_file))
 
     def commit(self, a_message):
         """ Commit the project history """
@@ -937,6 +920,39 @@ class pydaw_project(libmk.AbstractProject):
         f_file.write(a_message)
         f_file.close()
 
+    def check_audio_files(self):
+        """ Verify that all audio files exist  """
+        f_result = []
+        f_regions = self.get_regions_dict()
+        f_wav_pool = self.get_wavs_dict()
+        f_to_delete = []
+        f_commit = False
+        for k, v in list(f_wav_pool.name_lookup.items()):
+            if not os.path.isfile(v):
+                f_to_delete.append(k)
+        if len(f_to_delete) > 0:
+            f_commit = True
+            for f_key in f_to_delete:
+                f_wav_pool.name_lookup.pop(f_key)
+            self.save_wavs_dict(f_wav_pool)
+            self.error_log_write("Removed missing audio item(s) from wav_pool")
+        for f_uid in list(f_regions.uid_lookup.values()):
+            f_to_delete = []
+            f_region = self.get_audio_region(f_uid)
+            for k, v in list(f_region.items.items()):
+                if not f_wav_pool.uid_exists(v.uid):
+                    f_to_delete.append(k)
+            if len(f_to_delete) > 0:
+                f_commit = True
+                for f_key in f_to_delete:
+                    f_region.remove_item(f_key)
+                f_result += f_to_delete
+                self.save_audio_region(f_uid, f_region)
+                self.error_log_write("Removed missing audio item(s) "
+                    "from region {}".format(f_uid))
+        if f_commit:
+            self.commit("")
+        return f_result
 
 class pydaw_song:
     def __init__(self):

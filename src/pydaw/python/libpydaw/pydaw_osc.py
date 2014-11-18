@@ -88,19 +88,12 @@ class pydaw_osc(libmk.AbstractIPC):
     def pydaw_reload_audio_items(self, a_region_uid):
         self.send_configure("ai", str(a_region_uid))
 
-    def pydaw_add_to_wav_pool(self, a_file, a_uid):
-        self.send_configure("wp", "|".join(str(x) for x in (a_uid, a_file)))
-
     def pydaw_update_audio_inputs(self):
         self.send_configure("ua", "")
 
     def pydaw_set_overdub_mode(self, a_is_on):
         """ a_is_on should be a bool """
         self.send_configure("od", bool_to_int(a_is_on))
-
-    def pydaw_load_cc_map(self, a_plugin_uid, a_str):
-        self.send_configure(
-            "cm", "|".join(str(x) for x in (a_plugin_uid, a_str)))
 
     def pydaw_ab_open(self, a_file):
         self.send_configure("abo", str(a_file))
@@ -120,20 +113,6 @@ class pydaw_osc(libmk.AbstractIPC):
     def pydaw_panic(self):
         self.send_configure("panic", "")
 
-    def pydaw_rate_env(self, a_in_file, a_out_file, a_start, a_end):
-        f_wait_file = pydaw_get_wait_file_path(a_out_file)
-        self.send_configure(
-            "renv", "{}\n{}\n{}|{}".format(a_in_file, a_out_file,
-            a_start, a_end))
-        pydaw_wait_for_finished_file(f_wait_file)
-
-    def pydaw_pitch_env(self, a_in_file, a_out_file, a_start, a_end):
-        f_wait_file = pydaw_get_wait_file_path(a_out_file)
-        self.send_configure(
-            "penv", "{}\n{}\n{}|{}".format(a_in_file, a_out_file,
-            a_start, a_end))
-        pydaw_wait_for_finished_file(f_wait_file)
-
     def pydaw_audio_per_item_fx(self, a_region_uid, a_item_index,
                                 a_port_num, a_val):
         self.send_configure(
@@ -142,14 +121,6 @@ class pydaw_osc(libmk.AbstractIPC):
 
     def pydaw_audio_per_item_fx_region(self, a_region_uid):
         self.send_configure("par", str(a_region_uid))
-
-    def pydaw_update_plugin_control(self, a_plugin_uid, a_port, a_val):
-        self.send_configure(
-            "pc", "|".join(str(x) for x in (a_plugin_uid, a_port, a_val)))
-
-    def pydaw_configure_plugin(self, a_plugin_uid, a_key, a_message):
-        self.send_configure(
-            "co", "|".join(str(x) for x in (a_plugin_uid, a_key, a_message)))
 
     def pydaw_glue_audio(self, a_file_name, a_region_index, a_start_bar_index,
                          a_end_bar_index, a_item_indexes):
@@ -160,9 +131,6 @@ class pydaw_osc(libmk.AbstractIPC):
         if self.with_osc:
             f_wait_file = pydaw_get_wait_file_path(a_file_name)
             pydaw_wait_for_finished_file(f_wait_file)
-
-    def pydaw_midi_learn(self):
-        self.send_configure("ml", "")
 
     def pydaw_midi_device(self, a_is_on, a_device_num, a_track_num):
         self.send_configure(

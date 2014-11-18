@@ -15,6 +15,7 @@ GNU General Public License for more details.
 from PyQt4 import QtGui, QtCore
 from libpydaw import *
 from libpydaw.pydaw_util import *
+import libmk
 import numpy
 import scipy
 import scipy.signal
@@ -39,13 +40,16 @@ pydaw_file_pystretch_map = "audio/stretch_map.txt"
 pydaw_file_backups = "backups.json"
 
 
-class MkProject:
+class MkProject(libmk.AbstractProject):
     def __init__(self):
-        pass
+        self.cached_audio_files = []
+        self.glued_name_index = 0
 
     def set_project_folders(self, a_project_file):
         #folders
         self.project_folder = os.path.dirname(a_project_file)
+        self.project_file = os.path.splitext(
+            os.path.basename(a_project_file))[0]
 
         self.audio_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_audio)
@@ -117,7 +121,7 @@ class MkProject:
         self.create_file("", pydaw_file_pystretch, pydaw_terminating_char)
 
         self.open_stretch_dicts()
-        self.commit("Created project")
+        #self.commit("Created project")
 
 
     def get_next_plugin_uid(self):
@@ -478,45 +482,12 @@ class MkProject:
                         break
             f_result += "\n".join(f_points)
             f_result += "\nmeta|count|{}\n\\".format(f_count)
-        self.this_pydaw_osc.pydaw_add_to_wav_pool(f_path, f_uid)
+        libmk.IPC.pydaw_add_to_wav_pool(f_path, f_uid)
         f_pygraph_file = "{}/{}".format(self.samplegraph_folder, f_uid)
         with open(f_pygraph_file, "w") as f_handle:
             f_handle.write(f_result)
 
 
-    def check_audio_files(self):
-        """ Verify that all audio files exist  """
-        f_result = []
-        f_regions = self.get_regions_dict()
-        f_wav_pool = self.get_wavs_dict()
-        f_to_delete = []
-        f_commit = False
-        for k, v in list(f_wav_pool.name_lookup.items()):
-            if not os.path.isfile(v):
-                f_to_delete.append(k)
-        if len(f_to_delete) > 0:
-            f_commit = True
-            for f_key in f_to_delete:
-                f_wav_pool.name_lookup.pop(f_key)
-            self.save_wavs_dict(f_wav_pool)
-            self.error_log_write("Removed missing audio item(s) from wav_pool")
-        for f_uid in list(f_regions.uid_lookup.values()):
-            f_to_delete = []
-            f_region = self.get_audio_region(f_uid)
-            for k, v in list(f_region.items.items()):
-                if not f_wav_pool.uid_exists(v.uid):
-                    f_to_delete.append(k)
-            if len(f_to_delete) > 0:
-                f_commit = True
-                for f_key in f_to_delete:
-                    f_region.remove_item(f_key)
-                f_result += f_to_delete
-                self.save_audio_region(f_uid, f_region)
-                self.error_log_write("Removed missing audio item(s) "
-                    "from region {}".format(f_uid))
-        if f_commit:
-            self.commit("")
-        return f_result
 
 #From old sample_graph..py
 pydaw_audio_item_scene_height = 1200.0

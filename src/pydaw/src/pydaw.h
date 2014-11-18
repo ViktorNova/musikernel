@@ -50,16 +50,11 @@ GNU General Public License for more details.
 #define CONFIGURE_KEY_WE_SET "we"
 #define CONFIGURE_KEY_WE_EXPORT "wex"
 #define CONFIGURE_KEY_PANIC "panic"
-#define CONFIGURE_KEY_PITCH_ENV "penv"
-#define CONFIGURE_KEY_RATE_ENV "renv"
 //Update a single control for a per-audio-item-fx
 #define CONFIGURE_KEY_PER_AUDIO_ITEM_FX "paif"
 //Reload entire region for per-audio-item-fx
 #define CONFIGURE_KEY_PER_AUDIO_ITEM_FX_REGION "par"
-#define CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL "pc"
-#define CONFIGURE_KEY_CONFIGURE_PLUGIN "co"
 #define CONFIGURE_KEY_GLUE_AUDIO_ITEMS "ga"
-#define CONFIGURE_KEY_EXIT "exit"
 
 #define CONFIGURE_KEY_MIDI_LEARN "ml"
 #define CONFIGURE_KEY_LOAD_CC_MAP "cm"
@@ -252,8 +247,6 @@ typedef struct
     int bus_count[EN_TRACK_COUNT];
 }t_pydaw_routing_graph;
 
-float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
-
 typedef struct
 {
     float tempo;
@@ -326,7 +319,6 @@ typedef struct
     char * per_audio_item_fx_folder;
     void * main_thread_args;
     int audio_glue_indexes[PYDAW_MAX_AUDIO_ITEM_COUNT];
-    int midi_learn;  //0 to disable, 1 to enable sending CC events to the UI
     int f_region_length_bars;
     long f_next_current_sample;
     t_midi_device_list * midi_devices;
@@ -2110,9 +2102,9 @@ void v_pydaw_process_external_midi(t_pydaw_data * self,
         {
             int controller = events[f_i2].param;
 
-            if(self->midi_learn)
+            if(musikernel->midi_learn)
             {
-                self->midi_learn = 0;
+                musikernel->midi_learn = 0;
                 sprintf(f_osc_msg, "%i", controller);
                 v_queue_osc_message("ml", f_osc_msg);
             }
@@ -3312,7 +3304,6 @@ t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
     pthread_mutex_init(&musikernel->audio_inputs_mutex, NULL);
 
     f_result->midi_devices = a_midi_devices;
-    f_result->midi_learn = 0;
     f_result->current_sample = 0;
     f_result->current_bar = 0;
     f_result->current_region = 0;
@@ -4490,56 +4481,7 @@ void v_en_configure(t_pydaw_data* self,
 {
     printf("v_en_configure:  key: \"%s\", value: \"%s\"\n", a_key, a_value);
 
-    if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL))
-    {
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 3,
-                PYDAW_TINY_STRING);
-
-        int f_plugin_uid = atoi(f_val_arr->array[0]);
-
-        int f_port = atoi(f_val_arr->array[1]);
-        float f_value = atof(f_val_arr->array[2]);
-
-        t_pydaw_plugin * f_instance;
-        pthread_spin_lock(&musikernel->main_lock);
-
-        f_instance = musikernel->plugin_pool[f_plugin_uid];
-
-        if(f_instance)
-        {
-            f_instance->descriptor->set_port_value(
-                f_instance->PYFX_handle, f_port, f_value);
-        }
-        else
-        {
-            printf("Error, no valid plugin instance\n");
-        }
-        pthread_spin_unlock(&musikernel->main_lock);
-        g_free_1d_char_array(f_val_arr);
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_CONFIGURE_PLUGIN))
-    {
-        t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 3,
-                PYDAW_LARGE_STRING);
-        int f_plugin_uid = atoi(f_val_arr->array[0]);
-        char * f_key = f_val_arr->array[1];
-        char * f_message = f_val_arr->array[2];
-
-        t_pydaw_plugin * f_instance = musikernel->plugin_pool[f_plugin_uid];
-
-        if(f_instance)
-        {
-            f_instance->descriptor->configure(
-                f_instance->PYFX_handle, f_key, f_message, &musikernel->main_lock);
-        }
-        else
-        {
-            printf("Error, no valid plugin instance\n");
-        }
-
-        g_free_1d_char_array(f_val_arr);
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_PER_AUDIO_ITEM_FX))
+    if(!strcmp(a_key, CONFIGURE_KEY_PER_AUDIO_ITEM_FX))
     {
         t_1d_char_array * f_arr = c_split_str(a_value, '|', 4,
                 PYDAW_SMALL_STRING);
@@ -4661,15 +4603,6 @@ void v_en_configure(t_pydaw_data* self,
         pthread_spin_unlock(&musikernel->main_lock);
         v_paif_region_free(f_old);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_ADD_TO_WAV_POOL))
-    {
-        t_key_value_pair * f_kvp = g_kvp_get(a_value);
-        printf("v_wav_pool_add_item(musikernel->wav_pool, %i, \"%s\")\n",
-                atoi(f_kvp->key), f_kvp->value);
-        v_wav_pool_add_item(musikernel->wav_pool, atoi(f_kvp->key),
-                f_kvp->value);
-        free(f_kvp);
-    }
     else if(!strcmp(a_key, CONFIGURE_KEY_LOOP)) //Set loop mode
     {
         int f_value = atoi(a_value);
@@ -4762,15 +4695,33 @@ void v_en_configure(t_pydaw_data* self,
         self->overdub_mode = f_bool;
         pthread_spin_unlock(&musikernel->main_lock);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_CC_MAP))
+    else if(!strcmp(a_key, CONFIGURE_KEY_GLUE_AUDIO_ITEMS))
     {
-        t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 2,
-                PYDAW_SMALL_STRING);
-        int f_plugin_uid = atoi(f_val_arr->array[0]);
-        musikernel->plugin_pool[f_plugin_uid]->descriptor->set_cc_map(
-            musikernel->plugin_pool[f_plugin_uid]->PYFX_handle,
-            f_val_arr->array[1]);
-        g_free_1d_char_array(f_val_arr);
+        t_pydaw_line_split * f_val_arr = g_split_line('|', a_value);
+        char * f_path = f_val_arr->str_arr[0];  //Don't free this
+        int f_region_index = atoi(f_val_arr->str_arr[1]);
+        int f_start_bar = atoi(f_val_arr->str_arr[2]);
+        int f_end_bar = atoi(f_val_arr->str_arr[3]);
+        int f_i = 0;
+        while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
+        {
+            self->audio_glue_indexes[f_i] = 0;
+            ++f_i;
+        }
+
+        f_i = 4;
+        while(f_i < f_val_arr->count)
+        {
+            int f_index = atoi(f_val_arr->str_arr[f_i]);
+            self->audio_glue_indexes[f_index] = 1;
+            ++f_i;
+        }
+
+        v_pydaw_offline_render(self, f_region_index, f_start_bar,
+                f_region_index, f_end_bar, f_path, 1, 1);
+
+        v_free_split_line(f_val_arr);
+
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_AB_OPEN))
     {
@@ -4814,124 +4765,6 @@ void v_en_configure(t_pydaw_data* self,
         pthread_spin_unlock(&musikernel->main_lock);
 
         g_free_1d_char_array(f_val_arr);
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_RATE_ENV))
-    {
-        t_2d_char_array * f_arr = g_get_2d_array(PYDAW_SMALL_STRING);
-        char f_tmp_char[PYDAW_SMALL_STRING];
-        sprintf(f_tmp_char, "%s", a_value);
-        f_arr->array = f_tmp_char;
-        char * f_in_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
-        v_iterate_2d_char_array(f_arr);
-        strcpy(f_in_file, f_arr->current_str);
-        char * f_out_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
-        v_iterate_2d_char_array(f_arr);
-        strcpy(f_out_file, f_arr->current_str);
-        v_iterate_2d_char_array(f_arr);
-        float f_start = atof(f_arr->current_str);
-        v_iterate_2d_char_array(f_arr);
-        float f_end = atof(f_arr->current_str);
-
-        v_pydaw_rate_envelope(f_in_file, f_out_file, f_start, f_end);
-
-        free(f_in_file);
-        free(f_out_file);
-
-        f_arr->array = 0;
-        g_free_2d_char_array(f_arr);
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_PITCH_ENV))
-    {
-        t_2d_char_array * f_arr = g_get_2d_array(PYDAW_SMALL_STRING);
-        char f_tmp_char[PYDAW_SMALL_STRING];
-        sprintf(f_tmp_char, "%s", a_value);
-        f_arr->array = f_tmp_char;
-        char * f_in_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
-        v_iterate_2d_char_array(f_arr);
-        strcpy(f_in_file, f_arr->current_str);
-        char * f_out_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
-        v_iterate_2d_char_array(f_arr);
-        strcpy(f_out_file, f_arr->current_str);
-        v_iterate_2d_char_array(f_arr);
-        float f_start = atof(f_arr->current_str);
-        v_iterate_2d_char_array(f_arr);
-        float f_end = atof(f_arr->current_str);
-
-        v_pydaw_pitch_envelope(f_in_file, f_out_file, f_start, f_end);
-
-        free(f_in_file);
-        free(f_out_file);
-
-        f_arr->array = 0;
-        g_free_2d_char_array(f_arr);
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_GLUE_AUDIO_ITEMS))
-    {
-        t_pydaw_line_split * f_val_arr = g_split_line('|', a_value);
-        char * f_path = f_val_arr->str_arr[0];  //Don't free this
-        int f_region_index = atoi(f_val_arr->str_arr[1]);
-        int f_start_bar = atoi(f_val_arr->str_arr[2]);
-        int f_end_bar = atoi(f_val_arr->str_arr[3]);
-        int f_i = 0;
-        while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
-        {
-            self->audio_glue_indexes[f_i] = 0;
-            ++f_i;
-        }
-
-        f_i = 4;
-        while(f_i < f_val_arr->count)
-        {
-            int f_index = atoi(f_val_arr->str_arr[f_i]);
-            self->audio_glue_indexes[f_index] = 1;
-            ++f_i;
-        }
-
-        v_pydaw_offline_render(self, f_region_index, f_start_bar,
-                f_region_index, f_end_bar, f_path, 1, 1);
-
-        v_free_split_line(f_val_arr);
-
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD))
-    {
-        int f_uid = atoi(a_value);
-        t_wav_pool_item * f_old =
-                g_wav_pool_get_item_by_uid(musikernel->wav_pool, f_uid);
-        t_wav_pool_item * f_new =
-                g_wav_pool_item_get(f_uid, f_old->path,
-                musikernel->wav_pool->sample_rate);
-
-        float * f_old_samples[2];
-        f_old_samples[0] = f_old->samples[0];
-        f_old_samples[1] = f_old->samples[1];
-
-        pthread_spin_lock(&musikernel->main_lock);
-
-        f_old->channels = f_new->channels;
-        f_old->length = f_new->length;
-        f_old->ratio_orig = f_new->ratio_orig;
-        f_old->sample_rate = f_new->sample_rate;
-        f_old->samples[0] = f_new->samples[0];
-        f_old->samples[1] = f_new->samples[1];
-
-        pthread_spin_unlock(&musikernel->main_lock);
-
-        if(f_old_samples[0])
-        {
-            free(f_old_samples[0]);
-        }
-
-        if(f_old_samples[1])
-        {
-            free(f_old_samples[1]);
-        }
-
-        free(f_new);
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_MIDI_LEARN))
-    {
-        pydaw_data->midi_learn = 1;
     }
     else if(!strcmp(a_key, CONFIGURE_KEY_MIDI_DEVICE))
     {

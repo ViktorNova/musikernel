@@ -19,7 +19,14 @@ GNU General Public License for more details.
 #define PYDAW_MIDI_NOTE_COUNT 128
 #define MAX_PLUGIN_COUNT 10
 
+#define CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL "pc"
+#define CONFIGURE_KEY_CONFIGURE_PLUGIN "co"
+#define CONFIGURE_KEY_EXIT "exit"
+#define CONFIGURE_KEY_PITCH_ENV "penv"
+#define CONFIGURE_KEY_RATE_ENV "renv"
+
 volatile int exiting = 0;
+float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
 
 #ifdef	__cplusplus
 extern "C" {
@@ -96,6 +103,7 @@ typedef struct
     pthread_t osc_queue_thread;
     //Threads must hold this to write OSC messages
     pthread_spinlock_t ui_spinlock;
+    int midi_learn;
 }t_musikernel;
 
 void g_musikernel_get(float);
@@ -124,6 +132,7 @@ void g_musikernel_get(float a_sr)
     musikernel->wav_pool = g_wav_pool_get(a_sr);
     musikernel->ab_mode = 0;
     musikernel->is_ab_ing = 0;
+    musikernel->midi_learn = 0;
     musikernel->is_offline_rendering = 0;
     pthread_spin_init(&musikernel->main_lock, 0);
     musikernel->project_folder = (char*)malloc(sizeof(char) * 1024);
@@ -419,6 +428,189 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
     }
 
     return (void*)1;
+}
+
+
+void v_mk_configure(const char* a_key, const char* a_value)
+{
+    printf("v_mk_configure:  key: \"%s\", value: \"%s\"\n", a_key, a_value);
+
+    if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL))
+    {
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 3,
+                PYDAW_TINY_STRING);
+
+        int f_plugin_uid = atoi(f_val_arr->array[0]);
+
+        int f_port = atoi(f_val_arr->array[1]);
+        float f_value = atof(f_val_arr->array[2]);
+
+        t_pydaw_plugin * f_instance;
+        pthread_spin_lock(&musikernel->main_lock);
+
+        f_instance = musikernel->plugin_pool[f_plugin_uid];
+
+        if(f_instance)
+        {
+            f_instance->descriptor->set_port_value(
+                f_instance->PYFX_handle, f_port, f_value);
+        }
+        else
+        {
+            printf("Error, no valid plugin instance\n");
+        }
+        pthread_spin_unlock(&musikernel->main_lock);
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_CONFIGURE_PLUGIN))
+    {
+        t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 3,
+                PYDAW_LARGE_STRING);
+        int f_plugin_uid = atoi(f_val_arr->array[0]);
+        char * f_key = f_val_arr->array[1];
+        char * f_message = f_val_arr->array[2];
+
+        t_pydaw_plugin * f_instance = musikernel->plugin_pool[f_plugin_uid];
+
+        if(f_instance)
+        {
+            f_instance->descriptor->configure(
+                f_instance->PYFX_handle, f_key, f_message, &musikernel->main_lock);
+        }
+        else
+        {
+            printf("Error, no valid plugin instance\n");
+        }
+
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_KILL_ENGINE))
+    {
+        pthread_spin_lock(&musikernel->main_lock);
+        assert(0);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_EXIT))
+    {
+        exiting = 1;
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_MASTER_VOL))
+    {
+        MASTER_VOL = atof(a_value);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_CC_MAP))
+    {
+        t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 2,
+                PYDAW_SMALL_STRING);
+        int f_plugin_uid = atoi(f_val_arr->array[0]);
+        musikernel->plugin_pool[f_plugin_uid]->descriptor->set_cc_map(
+            musikernel->plugin_pool[f_plugin_uid]->PYFX_handle,
+            f_val_arr->array[1]);
+        g_free_1d_char_array(f_val_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_MIDI_LEARN))
+    {
+        musikernel->midi_learn = 1;
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_ADD_TO_WAV_POOL))
+    {
+        t_key_value_pair * f_kvp = g_kvp_get(a_value);
+        printf("v_wav_pool_add_item(musikernel->wav_pool, %i, \"%s\")\n",
+                atoi(f_kvp->key), f_kvp->value);
+        v_wav_pool_add_item(musikernel->wav_pool, atoi(f_kvp->key),
+                f_kvp->value);
+        free(f_kvp);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_RATE_ENV))
+    {
+        t_2d_char_array * f_arr = g_get_2d_array(PYDAW_SMALL_STRING);
+        char f_tmp_char[PYDAW_SMALL_STRING];
+        sprintf(f_tmp_char, "%s", a_value);
+        f_arr->array = f_tmp_char;
+        char * f_in_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_in_file, f_arr->current_str);
+        char * f_out_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_out_file, f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_start = atof(f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_end = atof(f_arr->current_str);
+
+        v_pydaw_rate_envelope(f_in_file, f_out_file, f_start, f_end);
+
+        free(f_in_file);
+        free(f_out_file);
+
+        f_arr->array = 0;
+        g_free_2d_char_array(f_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_PITCH_ENV))
+    {
+        t_2d_char_array * f_arr = g_get_2d_array(PYDAW_SMALL_STRING);
+        char f_tmp_char[PYDAW_SMALL_STRING];
+        sprintf(f_tmp_char, "%s", a_value);
+        f_arr->array = f_tmp_char;
+        char * f_in_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_in_file, f_arr->current_str);
+        char * f_out_file = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+        v_iterate_2d_char_array(f_arr);
+        strcpy(f_out_file, f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_start = atof(f_arr->current_str);
+        v_iterate_2d_char_array(f_arr);
+        float f_end = atof(f_arr->current_str);
+
+        v_pydaw_pitch_envelope(f_in_file, f_out_file, f_start, f_end);
+
+        free(f_in_file);
+        free(f_out_file);
+
+        f_arr->array = 0;
+        g_free_2d_char_array(f_arr);
+    }
+    else if(!strcmp(a_key, CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD))
+    {
+        int f_uid = atoi(a_value);
+        t_wav_pool_item * f_old =
+                g_wav_pool_get_item_by_uid(musikernel->wav_pool, f_uid);
+        t_wav_pool_item * f_new =
+                g_wav_pool_item_get(f_uid, f_old->path,
+                musikernel->wav_pool->sample_rate);
+
+        float * f_old_samples[2];
+        f_old_samples[0] = f_old->samples[0];
+        f_old_samples[1] = f_old->samples[1];
+
+        pthread_spin_lock(&musikernel->main_lock);
+
+        f_old->channels = f_new->channels;
+        f_old->length = f_new->length;
+        f_old->ratio_orig = f_new->ratio_orig;
+        f_old->sample_rate = f_new->sample_rate;
+        f_old->samples[0] = f_new->samples[0];
+        f_old->samples[1] = f_new->samples[1];
+
+        pthread_spin_unlock(&musikernel->main_lock);
+
+        if(f_old_samples[0])
+        {
+            free(f_old_samples[0]);
+        }
+
+        if(f_old_samples[1])
+        {
+            free(f_old_samples[1]);
+        }
+
+        free(f_new);
+    }
+    else
+    {
+        printf("Unknown configure message key: %s, value %s\n", a_key, a_value);
+    }
+
 }
 
 #endif	/* MUSIKERNEL_H */

@@ -4554,9 +4554,9 @@ class pydaw_abstract_plugin_ui:
                 self.port_dict, self.configure_dict, self.cc_map)
             self.pydaw_project.save_file(
                 pydaw_folder_plugins, self.plugin_uid, str(f_file))
-            self.pydaw_project.commit(
-                _("Update controls for {}").format(self.track_name))
-            self.pydaw_project.flush_history()
+#            self.pydaw_project.commit(
+#                _("Update controls for {}").format(self.track_name))
+#            self.pydaw_project.flush_history()
 
     def widget_close_event(self, a_event):
         if self.save_file_on_exit:
