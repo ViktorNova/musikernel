@@ -284,6 +284,9 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libmk/__init__.pyc
 /usr/lib/{0}/pydaw/python/libmk/__init__.pyo
 
+/usr/lib/{0}/pydaw/python/libmk/mkproject.py
+/usr/lib/{0}/pydaw/python/libmk/mkproject.pyc
+/usr/lib/{0}/pydaw/python/libmk/mkproject.pyo
 
 %doc
 
