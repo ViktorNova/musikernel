@@ -12,7 +12,9 @@ GNU General Public License for more details.
 
 """
 
+import sys
 from libpydaw import pydaw_util
+from libpydaw import liblo
 
 # These are dynamically assigned by musikernel.py so that
 # hosts can access them from this module
@@ -20,15 +22,34 @@ MAIN_WINDOW = None
 APP = None
 TRANSPORT = None
 IS_PLAYING = False
+IPC = None
+OSC = None
 TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
+
+
 
 class AbstractIPC:
     """ Abstract class containing the minimum contract
         to run MK Plugins for host communication to the
         MusiKernel engine
     """
-    def __init__(self):
-        pass
+    def __init__(self, a_with_audio=False,
+             a_configure_path="/musikernel/edmnext"):
+        if not a_with_audio:
+            self.with_osc = False
+            return
+        else:
+            self.with_osc = True
+            self.m_suppressHostUpdate = False
+            self.configure_path = a_configure_path
+
+    def send_configure(self, key, value):
+        if self.with_osc:
+            liblo.send(OSC, self.configure_path, key, value)
+        else:
+            print("Running standalone UI without OSC.  "
+                "Would've sent configure message: key: \""
+                "{}\" value: \"{}\"".format(key, value))
 
     def pydaw_update_plugin_control(self, a_plugin_uid, a_port, a_val):
         raise NotImplementedError

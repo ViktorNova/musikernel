@@ -11,88 +11,16 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-import sys
-from libpydaw.pydaw_util import bool_to_int, pydaw_wait_for_finished_file, \
-    pydaw_get_wait_file_path, global_pydaw_install_prefix, global_stylesheet
+from libpydaw.pydaw_util import bool_to_int, \
+    pydaw_wait_for_finished_file, pydaw_get_wait_file_path
 
 import libmk
 
-try:
-    import libpydaw.liblo as liblo
-except ImportError:
-    try:
-        import liblo
-    except ImportError:
-        from PyQt4 import QtGui
-        import locale
-        import gettext
-
-        try:
-            global_locale, global_encoding = locale.getdefaultlocale()
-            global_language = gettext.translation("musikernel",
-                "{}/share/locale".format(global_pydaw_install_prefix),
-                [global_locale])
-            global_language.install()
-        except Exception as ex:
-            print("Exception while setting locale, falling back to "
-                "English (hopefully)")
-            def _(a_string): return a_string
-
-        app = QtGui.QApplication(sys.argv)
-        f_error_dialog = QtGui.QDialog()
-        f_error_dialog.setStyleSheet(global_stylesheet)
-        f_error_layout = QtGui.QVBoxLayout(f_error_dialog)
-        f_error_label = QtGui.QLabel(_(
-            "Error, cannot import liblo.  This probably means that "
-            "you installed the \nwrong "
-            "package version.  You must use the version that "
-            "corresponds to your version of \n"
-            "Ubuntu (or if using Fedora or something else, it must "
-            "be compiled against the \n"
-            "same version of Python3 that your OS uses).  "
-            "If you are unsure, it is probably \n"
-            "best to compile MusiKernel from the source code "
-            "package yourself.\n\nCan't open MusiKernel."))
-        f_error_layout.addWidget(f_error_label)
-        f_error_dialog.show()
-        sys.exit(app.exec_())
-
 
 class pydaw_osc(libmk.AbstractIPC):
-    def __init__(self, a_with_audio=False):
-        if not a_with_audio:
-            self.with_osc = False
-            return
-        else:
-            self.with_osc = True
-            self.m_suppressHostUpdate = False
-
-            try:
-                self.target = liblo.Address(19271)
-            except liblo.AddressError as err:
-                print((str(err)))
-                sys.exit()
-            except:
-                print("Unable to start OSC with {}".format(19271))
-                self.with_osc = False
-                return
-
-            self.configure_path = "/musikernel/edmnext"
-
-    def stop_server(self):
-        print("stop_server called")
-        if self.with_osc:
-            self.send_configure("exit", "")
-
-    def send_configure(self, key, value):
-        if self.with_osc:
-            liblo.send(self.target, self.configure_path, key, value)
-        else:
-            print("Running standalone UI without OSC.  "
-                "Would've sent configure message: key: \""
-                "{}\" value: \"{}\"".format(key, value))
-
-    #methods for sending MusiKernel OSC messages
+    def __init__(self, a_with_audio=False,
+             a_configure_path="/musikernel/edmnext"):
+        libmk.AbstractIPC.__init__(self, a_with_audio, a_configure_path)
 
     def pydaw_save_song(self):
         self.send_configure("ss", "")
@@ -243,12 +171,6 @@ class pydaw_osc(libmk.AbstractIPC):
 
     def pydaw_reload_wavpool_item(self, a_uid):
         self.send_configure("wr", str(a_uid))
-
-    def pydaw_master_vol(self, a_vol):
-        self.send_configure("mvol", str(round(a_vol, 8)))
-
-    def pydaw_kill_engine(self):
-        self.send_configure("abort", "")
 
     def pydaw_set_pos(self, a_region, a_bar):
         self.send_configure("pos", "|".join(str(x) for x in (a_region, a_bar)))

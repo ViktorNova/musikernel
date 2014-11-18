@@ -4929,14 +4929,6 @@ void v_en_configure(t_pydaw_data* self,
 
         free(f_new);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_MASTER_VOL))
-    {
-        MASTER_VOL = atof(a_value);
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_EXIT))
-    {
-        exiting = 1;
-    }
     else if(!strcmp(a_key, CONFIGURE_KEY_MIDI_LEARN))
     {
         pydaw_data->midi_learn = 1;
@@ -4967,11 +4959,6 @@ void v_en_configure(t_pydaw_data* self,
             v_adsr_release(&musikernel->preview_audio_item->adsrs[0]);
             pthread_spin_unlock(&musikernel->main_lock);
         }
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_KILL_ENGINE))
-    {
-        pthread_spin_lock(&musikernel->main_lock);
-        assert(0);
     }
     else
     {

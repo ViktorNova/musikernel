@@ -20,7 +20,25 @@ from libpydaw import pydaw_util
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
 import gc
+import sys
 import libmk
+
+class MkIpc(libmk.AbstractIPC):
+    def __init__(self):
+        libmk.AbstractIPC.__init__(self, True, "/musikernel/master")
+
+    def stop_server(self):
+        print("stop_server called")
+        if self.with_osc:
+            self.send_configure("exit", "")
+
+    def pydaw_kill_engine(self):
+        self.send_configure("abort", "")
+
+    def pydaw_master_vol(self, a_vol):
+        self.send_configure("mvol", str(round(a_vol, 8)))
+
+
 
 class transport_widget:
     def __init__(self):
@@ -99,7 +117,7 @@ class transport_widget:
             f_result = 1.0
         else:
             f_result = pydaw_util.pydaw_db_to_lin(float(a_val) * 0.1)
-        PROJECT.this_pydaw_osc.pydaw_master_vol(f_result)
+        libmk.IPC.pydaw_master_vol(f_result)
 
     def set_time(self, a_text):
         self.time_label.setText(a_text)
@@ -116,7 +134,7 @@ class transport_widget:
             return
         libmk.IS_PLAYING = True
         self.is_playing = True
-        WAVE_EDITOR.on_play()
+        MAIN_WINDOW.current_module.TRANSPORT.on_play()
         self.menu_button.setEnabled(False)
 
     def on_ready(self):
@@ -126,7 +144,7 @@ class transport_widget:
         if not self.is_playing and not self.is_recording:
             return
         libmk.IS_PLAYING = False
-
+        MAIN_WINDOW.current_module.TRANSPORT.on_stop()
         self.is_playing = False
         self.menu_button.setEnabled(True)
         time.sleep(0.1)
@@ -139,9 +157,7 @@ class transport_widget:
             return
         libmk.IS_PLAYING = True
         self.is_recording = True
-        PROJECT.this_pydaw_osc.pydaw_en_playback(
-            2, a_region_num=self.get_region_value(),
-            a_bar=self.get_bar_value())
+        MAIN_WINDOW.current_module.TRANSPORT.on_rec()
         self.menu_button.setEnabled(False)
 
     def open_transport(self, a_notify_osc=False):
@@ -151,7 +167,7 @@ class transport_widget:
         self.load_master_vol()
 
     def on_panic(self):
-        PROJECT.this_pydaw_osc.pydaw_panic()
+        MAIN_WINDOW.current_module.TRANSPORT.on_panic()
 
     def set_tooltips(self, a_enabled):
         if a_enabled:
@@ -169,12 +185,22 @@ class MkMainWindow(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         libmk.MAIN_WINDOW = self
+        try:
+            libmk.OSC = liblo.Address(19271)
+        except liblo.AddressError as err:
+            print((str(err)))
+            sys.exit()
+        except:
+            print("Unable to start OSC with {}".format(19271))
+            libmk.OSC = None
+        libmk.IPC = MkIpc()
         libmk.TRANSPORT = transport_widget()
         #self.setMinimumSize(1100, 600)
         self.setObjectName("mainwindow")
         self.widget = QtGui.QWidget()
         self.setCentralWidget(self.widget)
         self.main_layout = QtGui.QVBoxLayout(self.widget)
+        self.main_layout.setMargin(2)
         self.transport_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.main_layout.addWidget(self.transport_splitter)
 
@@ -350,7 +376,8 @@ class MkMainWindow(QtGui.QMainWindow):
         if self.osc_server is not None:
             print(self.osc_server.get_url())
             self.osc_server.add_method(
-                "musikernel/ui_configure", 's', self.configure_callback)
+                "musikernel/ui_configure", 's',
+                self.edm_next_window.configure_callback)
             self.osc_server.add_method(None, None, self.osc_fallback)
             self.osc_timer = QtCore.QTimer(self)
             self.osc_timer.setSingleShot(False)
@@ -367,10 +394,6 @@ class MkMainWindow(QtGui.QMainWindow):
         print("got unknown message '{}' from '{}'".format(path, src))
         for a, t in zip(args, types):
             print("argument of type '{}': {}".format(t, a))
-
-    def configure_callback(self, path, arr):
-        self.osc_paths = {'musikernel/ui_configure':self.edm_next_window}
-        self.osc_paths[path].configure_callback(arr)
 
     def on_new(self):
         if libmk.IS_PLAYING:
@@ -487,6 +510,7 @@ class MkMainWindow(QtGui.QMainWindow):
             if self.osc_server is not None:
                 self.osc_timer.stop()
                 self.osc_server.free()
+            libmk.IPC.stop_server()
             for f_host in self.host_windows:
                 f_host.prepare_to_quit()
             self.ignore_close_event = False
@@ -555,7 +579,7 @@ class MkMainWindow(QtGui.QMainWindow):
         f_dialog.show_device_dialog(a_notify=True)
 
     def on_kill_engine(self):
-        PROJECT.this_pydaw_osc.pydaw_kill_engine()
+        libmk.IPC.pydaw_kill_engine()
 
     def on_open_theme(self):
         try:

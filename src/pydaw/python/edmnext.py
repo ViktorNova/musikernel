@@ -21,7 +21,6 @@ import random
 
 from PyQt4 import QtGui, QtCore
 from libpydaw import *
-import libpydaw.liblo as liblo
 from mkplugins import *
 
 from libpydaw.pydaw_util import *
@@ -8575,6 +8574,9 @@ class transport_widget(libmk.AbstractTransport):
         self.last_region_num = -99
         self.suppress_osc = False
 
+    def on_panic(self):
+        PROJECT.this_pydaw_osc.pydaw_panic()
+
     def set_time(self, a_region, a_bar, a_beat):
         f_seconds = REGION_TIME[a_region]
         f_seconds_per_beat = 60.0 / float(self.tempo_spinbox.value())
@@ -8673,7 +8675,6 @@ class transport_widget(libmk.AbstractTransport):
         self.last_bar = self.get_bar_value()
         self.trigger_audio_playback()
         WAVE_EDITOR.on_play()
-        self.menu_button.setEnabled(False)
         AUDIO_SEQ.set_playback_clipboard()
         if WAVE_EDITOR.enabled_checkbox.isChecked():
             PROJECT.this_pydaw_osc.pydaw_wn_playback(1)
@@ -8731,7 +8732,6 @@ class transport_widget(libmk.AbstractTransport):
         else:
             REGION_SETTINGS.clear_items()
         WAVE_EDITOR.on_stop()
-        self.menu_button.setEnabled(True)
         AUDIO_SEQ.stop_playback(self.last_bar)
         time.sleep(0.1)
 
@@ -8819,7 +8819,6 @@ class transport_widget(libmk.AbstractTransport):
             a_bar=self.get_bar_value())
         self.trigger_audio_playback()
         AUDIO_SEQ.set_playback_clipboard()
-        self.menu_button.setEnabled(False)
 
     def on_tempo_changed(self, a_tempo):
         self.transport.bpm = a_tempo
@@ -9408,7 +9407,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         except Exception as ex:
             print("subprocess_monitor: {}".format(ex))
 
-    def configure_callback(self, arr):
+    def configure_callback(self, path, arr):
         f_pc_dict = {}
         f_ui_dict = {}
         f_cc_dict = {}
@@ -9445,7 +9444,7 @@ class pydaw_main_window(QtGui.QScrollArea):
                 if libmk.IS_PLAYING:
                     WAVE_EDITOR.set_playback_cursor(float(a_val))
             elif a_key == "ready":
-                for f_widget in (TRANSPORT, MIDI_DEVICES_DIALOG):
+                for f_widget in (libmk.TRANSPORT, MIDI_DEVICES_DIALOG):
                     f_widget.on_ready()
         #This prevents multiple events from moving the same control,
         #only the last goes through

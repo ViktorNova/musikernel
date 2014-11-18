@@ -1352,7 +1352,6 @@ class pydaw_project(libmk.AbstractProject):
         return sorted(f_result.uid_lookup.keys())
 
     def quit_handler(self):
-        self.this_pydaw_osc.stop_server()
         self.flush_history()
 
     def check_audio_files(self):
