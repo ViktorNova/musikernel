@@ -24,9 +24,13 @@ TRANSPORT = None
 IS_PLAYING = False
 IPC = None
 OSC = None
+PROJECT = None
 TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
 
-
+def set_window_title():
+    MAIN_WINDOW.setWindowTitle('MusiKernel | EDM-Next - {}/{}.{}'.format(
+        PROJECT.project_folder, PROJECT.project_file,
+        pydaw_util.global_pydaw_version_string))
 
 class AbstractIPC:
     """ Abstract class containing the minimum contract

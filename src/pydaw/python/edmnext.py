@@ -8996,12 +8996,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.main_tabwidget.addTab(self.notes_tab, _("Project Notes"))
         self.main_tabwidget.currentChanged.connect(self.tab_changed)
 
-        if global_pydaw_with_audio:
-            self.subprocess_timer = QtCore.QTimer(self)
-            self.subprocess_timer.timeout.connect(self.subprocess_monitor)
-            self.subprocess_timer.setSingleShot(False)
-            self.subprocess_timer.start(1000)
-
     def check_for_empty_directory(self, a_file):
         """ Return true if directory is empty, show error message and
             return False if not
@@ -9392,19 +9386,6 @@ class pydaw_main_window(QtGui.QScrollArea):
 
     def set_tooltips_enabled(self, a_val):
         pydaw_set_tooltips_enabled(a_val)
-
-    def subprocess_monitor(self):
-        try:
-            if PYDAW_SUBPROCESS.poll() != None:
-                self.subprocess_timer.stop()
-                exitCode = PYDAW_SUBPROCESS.returncode
-                if exitCode != 0:
-                    QtGui.QMessageBox.warning(
-                        self, _("Error"),
-                        _("The audio engine died with error code {}, "
-                        "please try restarting MusiKernel").format(exitCode))
-        except Exception as ex:
-            print("subprocess_monitor: {}".format(ex))
 
     def configure_callback(self, path, arr):
         f_pc_dict = {}
@@ -10001,14 +9982,16 @@ class pydaw_wave_editor_widget:
         if len(f_text) < 1000 and os.path.isfile(f_text):
             self.open_file(f_text)
         else:
-            QtGui.QMessageBox.warning(self.widget, _("Error"),
-                                      _("No file path in the clipboard"))
+            QtGui.QMessageBox.warning(
+                self.widget, _("Error"),
+                _("No file path in the clipboard"))
 
     def open_file(self, a_file):
         f_file = str(a_file)
         if not os.path.exists(f_file):
-            QtGui.QMessageBox.warning(self.widget, _("Error"),
-                                      _("{} does not exist".format(f_file)))
+            QtGui.QMessageBox.warning(
+                self.widget, _("Error"),
+                _("{} does not exist".format(f_file)))
             return
         self.clear_sample_graph()
         self.current_file = f_file
@@ -10162,11 +10145,6 @@ def global_ui_refresh_callback(a_restore_all=False):
     PROJECT.this_pydaw_osc.pydaw_open_song(
         PROJECT.project_folder, a_restore_all)
 
-def set_window_title():
-    MAIN_WINDOW.setWindowTitle('MusiKernel | EDM-Next - {}/{}.{}'.format(
-        PROJECT.project_folder, PROJECT.project_file,
-        global_pydaw_version_string))
-
 #Opens or creates a new project
 def global_open_project(a_project_file, a_wait=True):
     global_close_all()
@@ -10274,146 +10252,6 @@ get_mixer_peak_meters()
 
 MIDI_EDITORS = (PIANO_ROLL_EDITOR, CC_EDITOR, PB_EDITOR)
 
-def global_check_device():
-    f_device_dialog = pydaw_device_dialog.pydaw_device_dialog(
-        a_is_running=True)
-    f_device_dialog.check_device()
-
-    if not pydaw_util.global_device_val_dict:
-        print("It appears that the user did not select "
-            "an audio device, quitting...")
-        sys.exit(999)
-
-global_check_device()
-
-PYDAW_SUBPROCESS = None
-
-def close_pydaw_engine():
-    """ Ask the engine to gracefully stop itself, then kill the process if it
-    doesn't exit on it's own"""
-    global PYDAW_SUBPROCESS
-    if PYDAW_SUBPROCESS is not None:
-        PROJECT.quit_handler()
-        f_exited = False
-        for i in range(20):
-            if PYDAW_SUBPROCESS.poll() == None:
-                f_exited = True
-                break
-            else:
-                time.sleep(0.3)
-        if not f_exited:
-            try:
-                if pydaw_util.global_pydaw_is_sandboxed:
-                    print("PYDAW_SUBPROCESS did not exit on it's own, "
-                          "sending SIGTERM to helper script...")
-                    PYDAW_SUBPROCESS.terminate()
-                else:
-                    print("PYDAW_SUBPROCESS did not exit on it's "
-                        "own, sending SIGKILL...")
-                    PYDAW_SUBPROCESS.kill()
-            except Exception as ex:
-                print("Exception raised while trying to kill process: "
-                    "{}".format(ex))
-        PYDAW_SUBPROCESS = None
-
-def kill_pydaw_engine():
-    """ Kill any zombie instances of the engine if they exist. Otherwise, the
-    UI won't be able to control the engine"""
-    try:
-        f_val = subprocess.check_output(['ps', '-ef'])
-    except Exception as ex:
-        print("kill_pydaw_engine raised Exception during process search, "
-              "assuming no zombie processes {}\n".format(ex))
-        return
-    f_engine_name = "{}-engine".format(global_pydaw_version_string)
-    f_val = f_val.decode()
-    f_result = []
-    for f_line in f_val.split("\n"):
-        #print(f_line)
-        if f_engine_name in f_line:
-            try:
-                f_arr = f_line.split()
-                f_result.append(int(f_arr[1]))
-            except Exception as ex:
-                print("kill_pydaw_engine Exception adding PID {}\n\t"
-                    "{}".format(f_arr[1], ex))
-
-    if len(f_result) > 0:
-        f_answer = QtGui.QMessageBox.warning(
-            PIANO_ROLL_EDITOR_WIDGET.widget, _("Warning"),
-            libpydaw.strings.multiple_instances_warning,
-            buttons=QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
-        if f_answer == QtGui.QMessageBox.Cancel:
-            exit(1)
-        else:
-            for f_pid in set(f_result):
-                try:
-                    f_kill = ["kill", "-9", f_arr[1]]
-                    print(f_kill)
-                    f_result = subprocess.check_output(f_kill)
-                    print(f_result)
-                except Exception as ex:
-                    print("kill_pydaw_engine : Exception: {}".format(ex))
-            time.sleep(3.0)
-
-def open_pydaw_engine(a_project_path):
-    if not global_pydaw_with_audio:
-        print(_("Not starting audio because of the audio engine setting, "
-              "you can change this in File->HardwareSettings"))
-        return
-
-    kill_pydaw_engine() #ensure no running instances of the engine
-    f_project_dir = os.path.dirname(a_project_path)
-    f_pid = os.getpid()
-    print(_("Starting audio engine with {}").format(a_project_path))
-    global PYDAW_SUBPROCESS
-    if pydaw_util.pydaw_which("pasuspender") is not None:
-        f_pa_suspend = True
-    else:
-        f_pa_suspend = False
-
-    if int(pydaw_util.global_device_val_dict["audioEngine"]) >= 3 \
-    and pydaw_util.pydaw_which("x-terminal-emulator") is not None:
-        f_sleep = "--sleep"
-        if int(pydaw_util.global_device_val_dict["audioEngine"]) == 4 and \
-        pydaw_util.pydaw_which("gdb") is not None:
-            f_run_with = " gdb "
-            f_sleep = ""
-        elif int(pydaw_util.global_device_val_dict["audioEngine"]) == 5 and \
-        pydaw_util.pydaw_which("valgrind") is not None:
-            f_run_with = " valgrind "
-            f_sleep = ""
-        else:
-            f_run_with = ""
-        if f_pa_suspend:
-            f_cmd = (
-                """pasuspender -- x-terminal-emulator -e """
-                """bash -c 'ulimit -c unlimited ; """
-                """{} "{}" "{}" "{}" {} {} {}; read' """.format(
-                f_run_with, pydaw_util.global_pydaw_bin_path,
-                global_pydaw_install_prefix, f_project_dir, f_pid,
-                pydaw_util.USE_HUGEPAGES, f_sleep))
-        else:
-            f_cmd = (
-                """x-terminal-emulator -e bash -c 'ulimit -c unlimited ; """
-                """{} "{}" "{}" "{}" {} {} {}; read' """.format(
-                f_run_with, pydaw_util.global_pydaw_bin_path,
-                pydaw_util.global_pydaw_install_prefix, f_project_dir,
-                f_pid, pydaw_util.USE_HUGEPAGES, f_sleep))
-    else:
-        if f_pa_suspend:
-            f_cmd = 'pasuspender -- "{}" "{}" "{}" {} {}'.format(
-                pydaw_util.global_pydaw_bin_path,
-                pydaw_util.global_pydaw_install_prefix,
-                f_project_dir, f_pid, pydaw_util.USE_HUGEPAGES)
-        else:
-            f_cmd = '"{}" "{}" "{}" {} {}'.format(
-                pydaw_util.global_pydaw_bin_path,
-                pydaw_util.global_pydaw_install_prefix,
-                f_project_dir, f_pid, pydaw_util.USE_HUGEPAGES)
-    print(f_cmd)
-    PYDAW_SUBPROCESS = subprocess.Popen([f_cmd], shell=True)
-
 MIDI_DEVICES_DIALOG = midi_devices_dialog()
 TRANSPORT = transport_widget()
 AUDIO_SEQ_WIDGET = audio_items_viewer_widget()
@@ -10441,35 +10279,4 @@ PIANO_ROLL_EDITOR_WIDGET.snap_combobox.setCurrentIndex(4)
 
 if libmk.TOOLTIPS_ENABLED:
     pydaw_set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
-
-
-default_project_file = pydaw_util.get_file_setting("last-project", str, None)
-
-if not default_project_file or not os.path.exists(default_project_file):
-    default_project_file = "{}/default-project/default.{}".format(
-        global_pydaw_home, global_pydaw_version_string)
-
-if os.path.exists(default_project_file) and \
-not os.access(os.path.dirname(default_project_file), os.W_OK):
-    QtGui.QMessageBox.warning(
-        WAVE_EDITOR.widget, _("Error"),
-        _("You do not have read+write permissions to {}, please correct "
-        "this and restart MusiKernel".format(
-        os.path.dirname(default_project_file))))
-    exit(999)
-
-if os.path.exists(default_project_file):
-#    try:
-        global_open_project(default_project_file, a_wait=False)
-#    except Exception as ex:
-#        QtGui.QMessageBox.warning(
-#            MAIN_WINDOW, _("Error"),
-#            _("Error opening project: {}\n{}\n"
-#            "Opening project recovery dialog".format(
-#            default_project_file, ex)))
-#        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
-#        MAIN_WINDOW.prepare_to_quit()
-else:
-    global_new_project(default_project_file, a_wait=False)
-
 
