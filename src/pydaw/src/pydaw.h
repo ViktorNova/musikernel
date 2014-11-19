@@ -81,6 +81,8 @@ GNU General Public License for more details.
 #define STATUS_PROCESSING 1
 #define STATUS_PROCESSED 2
 
+#define MAX_WORKER_THREADS 8
+
 #define MAX_ROUTING_COUNT 4
 #define MAX_PLUGIN_TOTAL_COUNT (MAX_PLUGIN_COUNT + MAX_ROUTING_COUNT)
 
@@ -239,11 +241,12 @@ t_pytrack_routing;
 
 typedef struct
 {
-    int track_pool_sorted[EN_TRACK_COUNT];
-    int track_pool_sorted_count;
+    int track_pool_sorted[MAX_WORKER_THREADS][EN_TRACK_COUNT]
+        __attribute__((aligned(64)));
     t_pytrack_routing routes[EN_TRACK_COUNT][MAX_ROUTING_COUNT]
         __attribute__((aligned(64)));
     int bus_count[EN_TRACK_COUNT];
+    int track_pool_sorted_count;
 }t_pydaw_routing_graph;
 
 typedef struct
@@ -890,28 +893,25 @@ void * v_pydaw_osc_send_thread(void* a_arg)
 
     while(!musikernel->audio_recording_quit_notifier)
     {
-        f_i = 0;
-
         f_tmp1[0] = '\0';
         f_tmp2[0] = '\0';
 
         f_pkm = self->track_pool[0]->peak_meter;
         sprintf(f_tmp2, "%i:%f:%f", 0, f_pkm->value[0], f_pkm->value[1]);
         v_pkm_reset(f_pkm);
+        int f_count = self->routing_graph->track_pool_sorted_count;
 
-        while(f_i < self->routing_graph->track_pool_sorted_count)
+        for(f_i = 0; f_i < f_count; ++f_i)
         {
-            f_track_index = self->routing_graph->track_pool_sorted[f_i];
+            f_track_index = self->routing_graph->track_pool_sorted[
+                MAX_WORKER_THREADS - 1][f_i];
             f_pkm = self->track_pool[f_track_index]->peak_meter;
 
             sprintf(f_tmp1, "|%i:%f:%f",
                 f_track_index, f_pkm->value[0], f_pkm->value[1]);
 
             v_pkm_reset(f_pkm);
-
             strcat(f_tmp2, f_tmp1);
-
-            ++f_i;
         }
 
         //kludge to get the wave editor peak meter working
@@ -1570,9 +1570,8 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
     t_pydaw_data * self = pydaw_data;
     int f_i = f_args->thread_num;
     int f_sorted_count = self->routing_graph->track_pool_sorted_count;
-    int f_sorted[EN_TRACK_COUNT];
-    memcpy(f_sorted, self->routing_graph->track_pool_sorted,
-        sizeof(self->routing_graph->track_pool_sorted));
+    int * f_sorted = self->routing_graph->track_pool_sorted[f_args->thread_num];
+
 
     while(f_i < f_sorted_count)
     {
@@ -4307,19 +4306,20 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
     lmalloc((void**)&f_result, sizeof(t_pydaw_routing_graph));
 
     int f_i = 0;
-    while(f_i < EN_TRACK_COUNT)
-    {
-        f_result->track_pool_sorted[f_i] = 0;
-        f_result->bus_count[f_i] = 0;
+    int f_i2 = 0;
 
-        int f_i2 = 0;
-        while(f_i2 < MAX_ROUTING_COUNT)
+    for(f_i = 0; f_i < EN_TRACK_COUNT; ++f_i)
+    {
+        for(f_i2 = 0; f_i2 < MAX_WORKER_THREADS; ++f_i2)
         {
-            f_result->routes[f_i][f_i2].active = 0;
-            ++f_i2;
+            f_result->track_pool_sorted[f_i2][f_i] = 0;
+            f_result->bus_count[f_i] = 0;
         }
 
-        ++f_i;
+        for(f_i2 = 0; f_i2 < MAX_ROUTING_COUNT; ++f_i2)
+        {
+            f_result->routes[f_i][f_i2].active = 0;
+        }
     }
 
     f_result->track_pool_sorted_count = 0;
@@ -4348,7 +4348,10 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
                 v_iterate_2d_char_array(f_2d_array);
                 int f_index = atoi(f_2d_array->current_str);
 
-                f_result->track_pool_sorted[f_index] = f_track_num;
+                for(f_i = 0; f_i < MAX_WORKER_THREADS; ++f_i)
+                {
+                    f_result->track_pool_sorted[f_i][f_index] = f_track_num;
+                }
 
             }
             else if(f_2d_array->current_str[0] == 's')
