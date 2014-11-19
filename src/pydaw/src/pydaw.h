@@ -3497,7 +3497,8 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
 void v_open_project(t_pydaw_data* self, const char* a_project_folder,
         int a_first_load)
 {
-    clock_t f_start = clock();
+    struct timespec f_start, f_finish;
+    clock_gettime(CLOCK_REALTIME, &f_start);
 
     sprintf(musikernel->project_folder, "%s", a_project_folder);
     sprintf(self->item_folder, "%s/projects/edmnext/items/",
@@ -3621,7 +3622,9 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
 
     v_pydaw_set_is_soloed(self);
 
-    v_pydaw_print_benchmark("v_open_project", f_start);
+    clock_gettime(CLOCK_REALTIME, &f_finish);
+
+    v_pydaw_print_benchmark("v_open_project", f_start, f_finish);
 }
 
 /* void v_set_playback_mode(t_pydaw_data * self,
@@ -4073,7 +4076,8 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
 
     printf("\nSuccessfully opened SNDFILE\n\n");
 
-    clock_t f_start = clock();
+    struct timespec f_start, f_finish;
+    clock_gettime(CLOCK_REALTIME, &f_start);
 
     int f_current_bar = 999;  //For printing the current region/bar
 
@@ -4131,7 +4135,8 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
         }
     }
 
-    v_pydaw_print_benchmark("v_pydaw_offline_render ", f_start);
+    clock_gettime(CLOCK_REALTIME, &f_finish);
+    v_pydaw_print_benchmark("v_pydaw_offline_render ", f_start, f_finish);
     printf("f_size = %ld\nf_sample_count_long = %ld\n(f_sample_count_long"
             " - f_size) = %ld\n",
             f_size, f_sample_count_long, (f_sample_count_long - f_size));

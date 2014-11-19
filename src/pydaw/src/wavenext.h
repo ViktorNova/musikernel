@@ -162,7 +162,8 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
 
     printf("\nSuccessfully opened SNDFILE\n\n");
 
-    clock_t f_start = clock();
+    struct timespec f_start, f_finish;
+    clock_gettime(CLOCK_REALTIME, &f_start);
 
     while((self->ab_audio_item->sample_read_heads[0].whole_number) <
             (self->ab_audio_item->sample_end_offset))
@@ -193,7 +194,9 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
         sf_writef_float(f_sndfile, f_output, f_block_size);
     }
 
-    v_pydaw_print_benchmark("v_pydaw_offline_render ", f_start);
+    clock_gettime(CLOCK_REALTIME, &f_finish);
+
+    v_pydaw_print_benchmark("v_pydaw_offline_render ", f_start, f_finish);
     printf("f_size = %ld\n", f_size);
 
     v_wn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_OFF, 0);
