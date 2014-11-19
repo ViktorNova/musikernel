@@ -158,7 +158,8 @@ class transport_widget:
         self.menu_button.setEnabled(False)
 
     def on_ready(self):
-        self.master_vol_changed(self.master_vol_knob.value())
+        self.load_master_vol()
+        #self.master_vol_changed(self.master_vol_knob.value())
 
     def on_stop(self):
         if not self.is_playing and not self.is_recording:

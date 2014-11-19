@@ -27,6 +27,7 @@ from libpydaw.pydaw_util import *
 from libpydaw.translate import _
 import libpydaw.strings
 import libmk
+from libmk import mkproject
 
 def pydaw_get_current_region_length():
     if CURRENT_REGION is None:
@@ -2552,14 +2553,15 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         self.path_items = []
         for f_painter_path in self.painter_paths:
             f_path_item = QtGui.QGraphicsPathItem(f_painter_path)
-            f_path_item.setBrush(pydaw_audio_item_scene_gradient)
+            f_path_item.setBrush(
+                mkproject.pydaw_audio_item_scene_gradient)
             f_path_item.setParentItem(self)
             f_path_item.mapToParent(0.0, 0.0)
             self.path_items.append(f_path_item)
             f_y_pos += self.y_inc
-        f_file_name = PROJECT.get_wav_name_by_uid(
+        f_file_name = libmk.PROJECT.get_wav_name_by_uid(
             self.audio_item.uid)
-        f_file_name = PROJECT.timestretch_lookup_orig_path(
+        f_file_name = libmk.PROJECT.timestretch_lookup_orig_path(
             f_file_name)
         f_name_arr = f_file_name.rsplit("/", 1)
         f_name = f_name_arr[-1]
@@ -2754,7 +2756,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                         self.sample_start_offset_px,
                         f_y_offset + (f_y_inc * f_i))
                 f_x_scale, f_y_scale = pydaw_scale_to_rect(
-                    pydaw_audio_item_scene_rect, self.rect_orig)
+                    mkproject.pydaw_audio_item_scene_rect, self.rect_orig)
                 f_y_scale *= self.vol_linear
                 f_path_item.scale(f_x_scale, f_y_scale)
                 f_i += f_i_inc
@@ -3534,14 +3536,14 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             if not f_file.endswith(".wav"):
                 f_file += ".wav"
             LAST_AUDIO_ITEM_DIR = os.path.dirname(f_file)
-            f_orig_path = PROJECT.get_wav_name_by_uid(
+            f_orig_path = libmk.PROJECT.get_wav_name_by_uid(
                 self.audio_item.uid)
             f_cmd = "cp '{}' '{}'".format(f_orig_path, f_file)
             print(f_cmd)
             os.system(f_cmd)
 
     def open_item_folder(self):
-        f_path = PROJECT.get_wav_name_by_uid(self.audio_item.uid)
+        f_path = libmk.PROJECT.get_wav_name_by_uid(self.audio_item.uid)
         AUDIO_SEQ_WIDGET.open_file_in_browser(f_path)
 
     def mousePressEvent(self, a_event):
