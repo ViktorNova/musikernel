@@ -36,9 +36,6 @@ GNU General Public License for more details.
 #define CONFIGURE_KEY_SOLO "solo"
 #define CONFIGURE_KEY_MUTE "mute"
 
-#define CONFIGURE_KEY_PREVIEW_SAMPLE "preview"
-#define CONFIGURE_KEY_STOP_PREVIEW "spr"
-
 #define CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL "ai"
 #define CONFIGURE_KEY_ADD_TO_WAV_POOL "wp"
 
@@ -4179,53 +4176,6 @@ void v_pydaw_set_ab_mode(t_pydaw_data * self, int a_mode)
     pthread_spin_unlock(&musikernel->main_lock);
 }
 
-void v_pydaw_set_preview_file(const char * a_file)
-{
-    t_wav_pool_item * f_result = g_wav_pool_item_get(0, a_file,
-            musikernel->sample_rate);
-
-    if(f_result)
-    {
-        if(i_wav_pool_item_load(f_result, 0))
-        {
-            t_wav_pool_item * f_old = musikernel->preview_wav_item;
-
-            pthread_spin_lock(&musikernel->main_lock);
-
-            musikernel->preview_wav_item = f_result;
-
-            musikernel->preview_audio_item->ratio =
-                    musikernel->preview_wav_item->ratio_orig;
-
-            musikernel->is_previewing = 1;
-
-            v_ifh_retrigger(
-                &musikernel->preview_audio_item->sample_read_heads[0],
-                PYDAW_AUDIO_ITEM_PADDING_DIV2);
-            v_adsr_retrigger(&musikernel->preview_audio_item->adsrs[0]);
-
-            pthread_spin_unlock(&musikernel->main_lock);
-
-            if(f_old)
-            {
-                v_wav_pool_item_free(f_old);
-            }
-        }
-        else
-        {
-            printf("i_wav_pool_item_load(f_result) failed in "
-                    "v_pydaw_set_preview_file\n");
-        }
-    }
-    else
-    {
-        musikernel->is_previewing = 0;
-        printf("g_wav_pool_item_get returned zero. could not load "
-                "preview item.\n");
-    }
-}
-
-
 void v_pydaw_set_plugin_index(int a_host_index, int a_track_num,
         int a_index, int a_plugin_index, int a_plugin_uid,
         int a_power, int a_lock)
@@ -4662,10 +4612,6 @@ void v_en_configure(t_pydaw_data* self,
     {
         v_pydaw_update_audio_inputs(self);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_PREVIEW_SAMPLE))
-    {
-        v_pydaw_set_preview_file(a_value);
-    }
     else if(!strcmp(a_key, CONFIGURE_KEY_PLUGIN_INDEX))
     {
         t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 6,
@@ -4783,15 +4729,6 @@ void v_en_configure(t_pydaw_data* self,
     else if(!strcmp(a_key, CONFIGURE_KEY_WE_EXPORT))
     {
         v_pydaw_we_export(wavenext, a_value);
-    }
-    else if(!strcmp(a_key, CONFIGURE_KEY_STOP_PREVIEW))
-    {
-        if(musikernel->is_previewing)
-        {
-            pthread_spin_lock(&musikernel->main_lock);
-            v_adsr_release(&musikernel->preview_audio_item->adsrs[0]);
-            pthread_spin_unlock(&musikernel->main_lock);
-        }
     }
     else
     {

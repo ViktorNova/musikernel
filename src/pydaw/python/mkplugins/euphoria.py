@@ -17,6 +17,7 @@ from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
 import time
 import os
+import libmk
 
 #Euphoria
 EUPHORIA_FILES_STRING_DELIMITER = '|'
@@ -1652,7 +1653,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         path = str(self.file_selector.file_path.text()).strip()
         if path != "":
             f_uid = self.pydaw_project.get_wav_uid_by_name(path)
-            self.pydaw_project.this_pydaw_osc.pydaw_reload_wavpool_item(f_uid)
+            libmk.IPC.pydaw_reload_wavpool_item(f_uid)
 
 
     def selectionChanged(self):
@@ -1688,10 +1689,10 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
     def file_browser_preview_button_pressed(self):
         f_list = self.file_browser.files_selected()
         if len(f_list) > 0:
-            self.pydaw_project.this_pydaw_osc.pydaw_preview_audio(f_list[0])
+            libmk.IPC.pydaw_preview_audio(f_list[0])
 
     def file_browser_stop_preview(self):
-        self.pydaw_project.this_pydaw_osc.pydaw_stop_preview()
+        libmk.IPC.pydaw_stop_preview()
 
     def sample_selected_monofx_groupChanged(self, a_value):
         self.mono_fx0.knobs[0].set_value(

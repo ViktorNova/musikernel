@@ -72,6 +72,11 @@ class MkIpc(libmk.AbstractIPC):
             a_start, a_end))
         pydaw_wait_for_finished_file(f_wait_file)
 
+    def pydaw_preview_audio(self, a_file):
+        self.send_configure("preview", str(a_file))
+
+    def pydaw_stop_preview(self):
+        self.send_configure("spr", "")
 
 class transport_widget:
     def __init__(self):

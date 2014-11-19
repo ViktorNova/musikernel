@@ -104,12 +104,6 @@ class pydaw_osc(libmk.AbstractIPC):
     def pydaw_we_set(self, a_val):
         self.send_configure("we", str(a_val))
 
-    def pydaw_preview_audio(self, a_file):
-        self.send_configure("preview", str(a_file))
-
-    def pydaw_stop_preview(self):
-        self.send_configure("spr", "")
-
     def pydaw_panic(self):
         self.send_configure("panic", "")
 

@@ -5025,11 +5025,11 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
     def on_preview(self):
         f_list = self.list_file.selectedItems()
         if f_list:
-            PROJECT.this_pydaw_osc.pydaw_preview_audio(
+            libmk.IPC.pydaw_preview_audio(
                 "{}/{}".format(self.last_open_dir, f_list[0].text()))
 
     def on_stop_preview(self):
-        PROJECT.this_pydaw_osc.pydaw_stop_preview()
+        libmk.IPC.pydaw_stop_preview()
 
     def on_modulex_copy(self):
         if CURRENT_AUDIO_ITEM_INDEX is not None and \
@@ -9956,10 +9956,10 @@ class pydaw_wave_editor_widget:
     def on_preview(self):
         f_list = self.file_browser.files_selected()
         if f_list:
-            PROJECT.this_pydaw_osc.pydaw_preview_audio(f_list[0])
+            libmk.IPC.pydaw_preview_audio(f_list[0])
 
     def on_stop_preview(self):
-        PROJECT.this_pydaw_osc.pydaw_stop_preview()
+        libmk.IPC.pydaw_stop_preview()
 
     def on_file_open(self):
         if libmk.IS_PLAYING:

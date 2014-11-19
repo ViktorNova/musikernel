@@ -285,13 +285,13 @@ class MkProject(libmk.AbstractProject):
 
             f_cmd = None
             if a_audio_item.time_stretch_mode == 1:
-                self.this_pydaw_osc.pydaw_pitch_env(
+                libmk.IPC.pydaw_pitch_env(
                     f_src_path, f_dest_path, a_audio_item.pitch_shift,
                     a_audio_item.pitch_shift_end)
                 #add it to the pool
                 self.get_wav_uid_by_name(f_dest_path, a_uid=f_uid)
             elif a_audio_item.time_stretch_mode == 2:
-                self.this_pydaw_osc.pydaw_rate_env(
+                libmk.IPC.pydaw_rate_env(
                     f_src_path, f_dest_path, a_audio_item.timestretch_amt,
                     a_audio_item.timestretch_amt_end)
                 #add it to the pool
