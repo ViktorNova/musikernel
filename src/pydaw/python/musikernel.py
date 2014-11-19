@@ -19,6 +19,7 @@ from libpydaw import *
 from libpydaw import pydaw_util
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
+import libpydaw.strings
 import gc
 import sys
 import libmk
@@ -1029,6 +1030,7 @@ PYDAW_SUBPROCESS = None
 def close_pydaw_engine():
     """ Ask the engine to gracefully stop itself, then kill the process if it
     doesn't exit on it's own"""
+    libmk.IPC.stop_server()
     global PYDAW_SUBPROCESS
     if PYDAW_SUBPROCESS is not None:
         for PROJECT in (x.PROJECT for x in MAIN_WINDOW.host_modules):
@@ -1078,6 +1080,7 @@ def kill_pydaw_engine():
                     "{}".format(f_arr[1], ex))
 
     if len(f_result) > 0:
+        print(f_result)
         f_answer = QtGui.QMessageBox.warning(
             MAIN_WINDOW, _("Warning"),
             libpydaw.strings.multiple_instances_warning,
