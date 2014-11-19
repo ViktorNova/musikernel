@@ -233,6 +233,7 @@ typedef struct
     int output;
     int active;
     int sidechain;
+    char padding[4];
 }
 t_pytrack_routing;
 
@@ -240,7 +241,8 @@ typedef struct
 {
     int track_pool_sorted[EN_TRACK_COUNT];
     int track_pool_sorted_count;
-    t_pytrack_routing routes[EN_TRACK_COUNT][MAX_ROUTING_COUNT];
+    t_pytrack_routing routes[EN_TRACK_COUNT][MAX_ROUTING_COUNT]
+        __attribute__((aligned(64)));
     int bus_count[EN_TRACK_COUNT];
 }t_pydaw_routing_graph;
 
@@ -1400,15 +1402,14 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
     }
 
 
-    int f_i3 = 0;
+    int f_i3;
 
-    while(f_i3 < MAX_ROUTING_COUNT)
+    for(f_i3 = 0; f_i3 < MAX_ROUTING_COUNT; ++f_i3)
     {
         f_route = &self->routing_graph->routes[a_track->track_num][f_i3];
 
         if(!f_route->active)
         {
-            ++f_i3;
             continue;
         }
 
@@ -1416,7 +1417,6 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
 
         if(f_bus_num < 0)
         {
-            ++f_i3;
             continue;
         }
 
@@ -1464,8 +1464,6 @@ void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
         }
 
         --f_bus->bus_counter;
-
-        ++f_i3;
     }
 }
 
@@ -1571,10 +1569,14 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
     int f_track_index;
     t_pydaw_data * self = pydaw_data;
     int f_i = f_args->thread_num;
+    int f_sorted_count = self->routing_graph->track_pool_sorted_count;
+    int f_sorted[EN_TRACK_COUNT];
+    memcpy(f_sorted, self->routing_graph->track_pool_sorted,
+        sizeof(self->routing_graph->track_pool_sorted));
 
-    while(f_i < self->routing_graph->track_pool_sorted_count)
+    while(f_i < f_sorted_count)
     {
-        f_track_index = self->routing_graph->track_pool_sorted[f_i];
+        f_track_index = f_sorted[f_i];
         f_track = self->track_pool[f_track_index];
 
         if(f_track->status != STATUS_NOT_PROCESSED)
@@ -1989,6 +1991,8 @@ void v_pydaw_process_midi(t_pydaw_data * self, int f_i, int sample_count)
 void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
 {
     t_pytrack * f_track = self->track_pool[f_i];
+    long f_current_sample = self->current_sample;
+    long f_next_current_sample = self->f_next_current_sample;
 
     register int f_i2 = 0;
     long f_note_off;
@@ -1996,15 +2000,15 @@ void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
     while(f_i2 < PYDAW_MIDI_NOTE_COUNT)
     {
         f_note_off = f_track->note_offs[f_i2];
-        if(f_note_off >= (self->current_sample) &&
-           f_note_off < self->f_next_current_sample)
+        if(f_note_off >=  f_current_sample &&
+           f_note_off < f_next_current_sample)
         {
             t_pydaw_seq_event * f_event =
                 &f_track->event_buffer[f_track->period_event_index];
             v_pydaw_ev_clear(f_event);
 
             v_pydaw_ev_set_noteoff(f_event, 0, f_i2, 0);
-            f_event->tick = f_note_off - self->current_sample;
+            f_event->tick = f_note_off - f_current_sample;
             ++f_track->period_event_index;
             f_track->note_offs[f_i2] = -1;
         }
