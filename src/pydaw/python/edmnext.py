@@ -13,7 +13,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-import sys
 import os
 import subprocess
 import time
@@ -60,12 +59,6 @@ def global_update_region_time():
     for x in range(300):
         REGION_TIME.append(f_total)
         f_total += pydaw_get_region_length(x) * 4.0 * f_seconds_per_beat
-
-
-def pydaw_print_generic_exception(a_ex):
-    QtGui.QMessageBox.warning(
-        MAIN_WINDOW, _("Warning"),
-        _("The following error happened:\n{}").format(a_ex))
 
 def global_get_audio_file_from_clipboard():
     f_clipboard = QtGui.QApplication.clipboard()
@@ -8998,29 +8991,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.main_tabwidget.addTab(self.notes_tab, _("Project Notes"))
         self.main_tabwidget.currentChanged.connect(self.tab_changed)
 
-    def check_for_empty_directory(self, a_file):
-        """ Return true if directory is empty, show error message and
-            return False if not
-        """
-        f_parent_dir = os.path.dirname(a_file)
-        if not os.listdir(f_parent_dir) == []:
-            QtGui.QMessageBox.warning(self, _("Error"),
-            _("You must save the project file to an empty directory, use "
-            "the 'Create Folder' button to create a directory."))
-            return False
-        else:
-            return True
-
-    def check_for_rw_perms(self, a_file):
-        if not os.access(os.path.dirname(str(a_file)), os.W_OK):
-            QtGui.QMessageBox.warning(
-                self, _("Error"),
-                _("You do not have read+write permissions to "
-                "{}".format(global_pydaw_home)))
-            return False
-        else:
-            return True
-
     def show_offline_rendering_wait_window(self, a_file_name):
         f_file_name = "{}.finished".format(a_file_name)
         def ok_handler():
@@ -9215,7 +9185,7 @@ class pydaw_main_window(QtGui.QScrollArea):
                         f_name.setText(f_file_name)
                     self.last_offline_dir = os.path.dirname(f_file_name)
             except Exception as ex:
-                pydaw_print_generic_exception(ex)
+                libmk.pydaw_print_generic_exception(ex)
 
         if self.first_offline_render:
             self.first_offline_render = False
@@ -9894,7 +9864,7 @@ class pydaw_wave_editor_widget:
                         f_name.setText(f_file_name)
                     self.last_offline_dir = os.path.dirname(f_file_name)
             except Exception as ex:
-                pydaw_print_generic_exception(ex)
+                libmk.pydaw_print_generic_exception(ex)
 
         def on_overwrite(a_val=None):
             f_name.setText(self.file_lineedit.text())

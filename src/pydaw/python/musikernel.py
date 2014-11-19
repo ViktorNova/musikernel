@@ -416,6 +416,28 @@ class MkMainWindow(QtGui.QMainWindow):
         self.on_restore_splitters()
         self.show()
 
+    def check_for_empty_directory(self, a_file):
+        """ Return true if directory is empty, show error message and
+            return False if not
+        """
+        f_parent_dir = os.path.dirname(a_file)
+        if os.listdir(f_parent_dir):
+            QtGui.QMessageBox.warning(self, _("Error"),
+            _("You must save the project file to an empty directory, use "
+            "the 'Create Folder' button to create a directory."))
+            return False
+        else:
+            return True
+
+    def check_for_rw_perms(self, a_file):
+        if not os.access(os.path.dirname(str(a_file)), os.W_OK):
+            QtGui.QMessageBox.warning(
+                self, _("Error"),
+                _("You do not have read+write permissions to "
+                "{}".format(global_pydaw_home)))
+            return False
+        else:
+            return True
 
     def subprocess_monitor(self):
         try:
@@ -458,7 +480,7 @@ class MkMainWindow(QtGui.QMainWindow):
                     global_new_project(f_file)
                 break
         except Exception as ex:
-            pydaw_print_generic_exception(ex)
+            libmk.pydaw_print_generic_exception(ex)
 
     def on_open(self):
         if libmk.IS_PLAYING:
@@ -477,7 +499,7 @@ class MkMainWindow(QtGui.QMainWindow):
                 return
             global_open_project(f_file_str)
         except Exception as ex:
-            pydaw_print_generic_exception(ex)
+            libmk.pydaw_print_generic_exception(ex)
 
     def on_project_history(self):
         f_result = QtGui.QMessageBox.warning(
@@ -545,7 +567,7 @@ class MkMainWindow(QtGui.QMainWindow):
                 else:
                     break
         except Exception as ex:
-            pydaw_print_generic_exception(ex)
+            libmk.pydaw_print_generic_exception(ex)
 
 
     def prepare_to_quit(self):
@@ -648,7 +670,7 @@ class MkMainWindow(QtGui.QMainWindow):
                     MAIN_WINDOW, _("Theme Applied..."),
                     _("Please restart MusiKernel to update the UI"))
         except Exception as ex:
-            pydaw_print_generic_exception(ex)
+            libmk.pydaw_print_generic_exception(ex)
 
     def on_version(self):
         f_window = QtGui.QDialog(MAIN_WINDOW)
@@ -814,7 +836,7 @@ class MkMainWindow(QtGui.QMainWindow):
                         set_output_file_name()
                         self.last_ac_dir = os.path.dirname(f_file_name)
             except Exception as ex:
-                pydaw_print_generic_exception(ex)
+                libmk.pydaw_print_generic_exception(ex)
 
         def file_name_select_output():
             try:
@@ -841,7 +863,7 @@ class MkMainWindow(QtGui.QMainWindow):
                         f_output_name.setText(f_file_name)
                         self.last_ac_dir = os.path.dirname(f_file_name)
             except Exception as ex:
-                pydaw_print_generic_exception(ex)
+                libmk.pydaw_print_generic_exception(ex)
 
         def format_changed(a_val=None):
             if f_wav_radiobutton.isChecked():
@@ -1057,7 +1079,7 @@ def kill_pydaw_engine():
 
     if len(f_result) > 0:
         f_answer = QtGui.QMessageBox.warning(
-            PIANO_ROLL_EDITOR_WIDGET.widget, _("Warning"),
+            MAIN_WINDOW, _("Warning"),
             libpydaw.strings.multiple_instances_warning,
             buttons=QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
         if f_answer == QtGui.QMessageBox.Cancel:

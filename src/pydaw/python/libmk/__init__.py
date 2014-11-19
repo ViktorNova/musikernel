@@ -15,6 +15,8 @@ GNU General Public License for more details.
 import os
 from libpydaw import pydaw_util
 from libpydaw import liblo
+from PyQt4 import QtGui
+from libpydaw.translate import _
 
 # These are dynamically assigned by musikernel.py so that
 # hosts can access them from this module
@@ -31,6 +33,11 @@ def set_window_title(a_host_name):
     MAIN_WINDOW.setWindowTitle('MusiKernel | {} - {}/{}.{}'.format(
         a_host_name, PROJECT.project_folder, PROJECT.project_file,
         pydaw_util.global_pydaw_version_string))
+
+def pydaw_print_generic_exception(a_ex):
+    QtGui.QMessageBox.warning(
+        MAIN_WINDOW, _("Warning"),
+        _("The following error happened:\n{}").format(a_ex))
 
 class AbstractIPC:
     """ Abstract class containing the minimum contract
