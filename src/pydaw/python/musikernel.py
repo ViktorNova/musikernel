@@ -580,11 +580,7 @@ class MkMainWindow(QtGui.QMainWindow):
             for f_host in self.host_windows:
                 f_host.prepare_to_quit()
             self.ignore_close_event = False
-            libmk.IPC = None
-            libmk.OSC = None
-            libmk.MAIN_WINDOW = None
-            libmk.TRANSPORT = None
-            libmk.PROJECT = None
+            libmk.prepare_to_quit()
             self.subprocess_timer.stop()
             #if not "--debug" in sys.argv:
             close_pydaw_engine()

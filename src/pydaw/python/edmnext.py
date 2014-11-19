@@ -3122,11 +3122,11 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_stretched_items = []
         for f_item in a_list:
             if f_item.time_stretch_mode >= 3:
-                f_ts_result = PROJECT.timestretch_audio_item(f_item)
+                f_ts_result = libmk.PROJECT.timestretch_audio_item(f_item)
                 if f_ts_result is not None:
                     f_stretched_items.append(f_ts_result)
 
-        PROJECT.save_stretch_dicts()
+        libmk.PROJECT.save_stretch_dicts()
 
         for f_stretch_item in f_stretched_items:
             f_stretch_item[2].wait()
@@ -3940,7 +3940,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 if f_item.time_stretch_mode >= 3 and \
                 f_audio_item.orig_string != str(f_item):
                     f_was_stretching = True
-                    f_ts_result = PROJECT.timestretch_audio_item(f_item)
+                    f_ts_result = libmk.PROJECT.timestretch_audio_item(f_item)
                     if f_ts_result is not None:
                         f_stretched_items.append(f_ts_result)
                 f_audio_item.setRect(0.0, 0.0, f_x, AUDIO_ITEM_HEIGHT)
@@ -3993,7 +3993,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 PROJECT.this_pydaw_osc.pydaw_audio_per_item_fx_region(
                     CURRENT_REGION.uid)
             if f_was_stretching:
-                PROJECT.save_stretch_dicts()
+                libmk.PROJECT.save_stretch_dicts()
                 for f_stretch_item in f_stretched_items:
                     f_stretch_item[2].wait()
                     libmk.PROJECT.get_wav_uid_by_name(
@@ -4300,8 +4300,8 @@ class audio_items_viewer(QtGui.QGraphicsView):
         if len(f_indexes) == 0:
             print(_("No audio items selected, not glueing"))
             return
-        f_path = PROJECT.get_next_glued_file_name()
-        PROJECT.this_pydaw_osc.pydaw_glue_audio(
+        f_path = libmk.PROJECT.get_next_glued_file_name()
+        libmk.IPC.pydaw_glue_audio(
             f_path, CURRENT_SONG_INDEX, f_start_bar, f_end_bar, f_indexes)
         f_items = PROJECT.get_audio_region(f_region_uid)
         f_paif = PROJECT.get_audio_per_item_fx_region(f_region_uid)
@@ -4709,7 +4709,7 @@ class time_pitch_dialog_widget:
                 (f_new_ts_mode == 1 and f_new_ps == f_new_ps_end) or \
                 (f_new_ts_mode == 2 and f_new_ts == f_new_ts_end)):
                     f_item.audio_item.uid = \
-                        PROJECT.timestretch_get_orig_file_uid(
+                        libmk.PROJECT.timestretch_get_orig_file_uid(
                             f_item.audio_item.uid)
 
                 f_item.audio_item.time_stretch_mode = f_new_ts_mode
@@ -4724,7 +4724,7 @@ class time_pitch_dialog_widget:
                 (f_new_ts_mode == 2 and f_new_ts != f_new_ts_end) and \
                 (f_item.orig_string != str(f_item.audio_item)):
                     f_was_stretching = True
-                    f_ts_result = PROJECT.timestretch_audio_item(
+                    f_ts_result = libmk.PROJECT.timestretch_audio_item(
                         f_item.audio_item)
                     if f_ts_result is not None:
                         f_stretched_items.append(
@@ -4738,7 +4738,7 @@ class time_pitch_dialog_widget:
             if f_was_stretching:
                 f_current_region_length = pydaw_get_current_region_length()
                 f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
-                PROJECT.save_stretch_dicts()
+                libmk.PROJECT.save_stretch_dicts()
                 for f_stretch_item, f_audio_item in f_stretched_items:
                     f_stretch_item[2].wait()
                     f_new_uid = libmk.PROJECT.get_wav_uid_by_name(
