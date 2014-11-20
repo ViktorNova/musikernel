@@ -940,7 +940,7 @@ void * v_pydaw_osc_send_thread(void* a_arg)
                 if(!musikernel->is_offline_rendering)
                 {
                     sprintf(f_msg, "%i|%i|%f", self->current_region,
-                        self->current_bar, self->ml_current_period_beats);
+                        self->current_bar, self->ml_current_beat);
                     v_queue_osc_message("cur", f_msg);
                 }
             }
