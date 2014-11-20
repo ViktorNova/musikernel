@@ -975,18 +975,6 @@ class MkMainWindow(QtGui.QMainWindow):
         for f_window in self.host_windows:
             f_window.set_tooltips_enabled(self.tooltips_action.isChecked())
 
-
-
-libmk.APP = QtGui.QApplication(sys.argv)
-
-libmk.APP.setWindowIcon(
-    QtGui.QIcon("{}/share/pixmaps/{}.png".format(
-    pydaw_util.global_pydaw_install_prefix, global_pydaw_version_string)))
-
-libmk.APP.setStyleSheet(global_stylesheet)
-
-QtCore.QTextCodec.setCodecForLocale(QtCore.QTextCodec.codecForName("UTF-8"))
-
 def final_gc():
     """ Brute-force garbage collect all possible objects to
         prevent the infamous PyQt SEGFAULT-on-exit...
@@ -1020,8 +1008,6 @@ def flush_events():
             return
     print("Could not process all events")
 
-MAIN_WINDOW = MkMainWindow()
-MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
 
 def global_check_device():
     f_device_dialog = pydaw_device_dialog.pydaw_device_dialog(
@@ -1033,9 +1019,6 @@ def global_check_device():
             "an audio device, quitting...")
         sys.exit(999)
 
-global_check_device()
-
-PYDAW_SUBPROCESS = None
 
 def close_pydaw_engine():
     """ Ask the engine to gracefully stop itself, then kill the process if it
@@ -1197,12 +1180,32 @@ def global_new_project(a_project_file, a_wait=True):
         f_module.global_new_project(a_project_file)
 
 
+#########  Setup and run #########
+
+libmk.APP = QtGui.QApplication(sys.argv)
+
+libmk.APP.setWindowIcon(
+    QtGui.QIcon("{}/share/pixmaps/{}.png".format(
+    pydaw_util.global_pydaw_install_prefix, global_pydaw_version_string)))
+
+libmk.APP.setStyleSheet(global_stylesheet)
+
+QtCore.QTextCodec.setCodecForLocale(QtCore.QTextCodec.codecForName("UTF-8"))
+MAIN_WINDOW = MkMainWindow()
+MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
+
+global_check_device()
+
+PYDAW_SUBPROCESS = None
+
+libmk.APP.lastWindowClosed.connect(libmk.APP.quit)
+
 if not os.access(global_pydaw_home, os.W_OK):
     QtGui.QMessageBox.warning(
-        WAVE_EDITOR.widget, _("Error"),
+        MAIN_WINDOW.widget, _("Error"),
         _("You do not have read+write permissions to {}, please correct "
         "this and restart MusiKernel".format(global_pydaw_home)))
-    exit(999)
+    MAIN_WINDOW.prepare_to_quit()
 
 default_project_file = pydaw_util.get_file_setting("last-project", str, None)
 
@@ -1218,25 +1221,24 @@ not os.access(os.path.dirname(default_project_file), os.W_OK):
         _("You do not have read+write permissions to {}, please correct "
         "this and restart MusiKernel".format(
         os.path.dirname(default_project_file))))
-    exit(999)
+    MAIN_WINDOW.prepare_to_quit()
 
 if os.path.exists(default_project_file):
-#    try:
+    try:
         global_open_project(default_project_file)
-#    except Exception as ex:
-#        QtGui.QMessageBox.warning(
-#            MAIN_WINDOW, _("Error"),
-#            _("Error opening project: {}\n{}\n"
-#            "Opening project recovery dialog".format(
-#            default_project_file, ex)))
-#        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
-#        MAIN_WINDOW.prepare_to_quit()
+    except Exception as ex:
+        QtGui.QMessageBox.warning(
+            MAIN_WINDOW, _("Error"),
+            _("Error opening project: {}\n{}\n"
+            "Opening project recovery dialog".format(
+            default_project_file, ex)))
+        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
+        MAIN_WINDOW.prepare_to_quit()
 else:
     global_new_project(default_project_file)
 
 RESPAWN = False
 
-libmk.APP.lastWindowClosed.connect(libmk.APP.quit)
 libmk.APP.setStyle(QtGui.QStyleFactory.create("Fusion"))
 libmk.APP.exec_()
 time.sleep(0.6)
