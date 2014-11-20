@@ -22,6 +22,7 @@ from libpydaw.translate import _
 import libpydaw.strings
 import gc
 import sys
+import subprocess
 import libmk
 from libmk import mkproject
 
@@ -257,7 +258,7 @@ class MkMainWindow(QtGui.QMainWindow):
 
         self.ignore_close_event = True
 
-                #The menus
+        #The menus
         self.menu_bar = QtGui.QMenu(self)
         # Dirty hack, rather than moving the methods to the transport
         libmk.TRANSPORT.menu_button.setMenu(self.menu_bar)
@@ -478,7 +479,11 @@ class MkMainWindow(QtGui.QMainWindow):
                         continue
                     if not f_file.endswith("." + global_pydaw_version_string):
                         f_file += "." + global_pydaw_version_string
-                    global_new_project(f_file)
+                    #global_new_project(f_file)
+                    pydaw_util.set_file_setting("last-project", f_file)
+                    global RESPAWN
+                    RESPAWN = True
+                    self.prepare_to_quit()
                 break
         except Exception as ex:
             libmk.pydaw_print_generic_exception(ex)
@@ -498,7 +503,11 @@ class MkMainWindow(QtGui.QMainWindow):
                 return
             if not self.check_for_rw_perms(f_file):
                 return
-            global_open_project(f_file_str)
+            #global_open_project(f_file_str)
+            pydaw_util.set_file_setting("last-project", f_file_str)
+            global RESPAWN
+            RESPAWN = True
+            self.prepare_to_quit()
         except Exception as ex:
             libmk.pydaw_print_generic_exception(ex)
 
@@ -564,6 +573,9 @@ class MkMainWindow(QtGui.QMainWindow):
                     libmk.PROJECT.save_project_as(f_new_file)
                     libmk.set_window_title("")
                     pydaw_util.set_file_setting("last-project", f_new_file)
+                    global RESPAWN
+                    RESPAWN = True
+                    self.prepare_to_quit()
                     break
                 else:
                     break
@@ -1168,26 +1180,18 @@ def global_ui_refresh_callback(a_restore_all=False):
 
 #Opens or creates a new project
 def global_open_project(a_project_file, a_wait=True):
-    global_close_all()
-    if a_wait:
-        time.sleep(3.0)
     open_pydaw_engine(a_project_file)
     libmk.PROJECT = mkproject.MkProject()
     libmk.PROJECT.suppress_updates = True
     libmk.PROJECT.open_project(a_project_file, False)
-    pydaw_util.set_file_setting("last-project", a_project_file)
     libmk.PROJECT.suppress_updates = False
     for f_module in MAIN_WINDOW.host_modules:
         f_module.global_open_project(a_project_file)
 
 def global_new_project(a_project_file, a_wait=True):
-    global_close_all()
-    if a_wait:
-        time.sleep(3.0)
     open_pydaw_engine(a_project_file)
     libmk.PROJECT = mkproject.MkProject()
     libmk.PROJECT.new_project(a_project_file)
-    pydaw_util.set_file_setting("last-project", a_project_file)
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     for f_module in MAIN_WINDOW.host_modules:
         f_module.global_new_project(a_project_file)
@@ -1202,14 +1206,15 @@ if not os.access(global_pydaw_home, os.W_OK):
 
 default_project_file = pydaw_util.get_file_setting("last-project", str, None)
 
-if not default_project_file or not os.path.exists(default_project_file):
+if not default_project_file: # or not os.path.exists(default_project_file):
     default_project_file = "{}/default-project/default.{}".format(
         global_pydaw_home, global_pydaw_version_string)
+    print("No default project using {}".format(default_project_file))
 
 if os.path.exists(default_project_file) and \
 not os.access(os.path.dirname(default_project_file), os.W_OK):
     QtGui.QMessageBox.warning(
-        WAVE_EDITOR.widget, _("Error"),
+        MAIN_WINDOW, _("Error"),
         _("You do not have read+write permissions to {}, please correct "
         "this and restart MusiKernel".format(
         os.path.dirname(default_project_file))))
@@ -1217,7 +1222,7 @@ not os.access(os.path.dirname(default_project_file), os.W_OK):
 
 if os.path.exists(default_project_file):
 #    try:
-        global_open_project(default_project_file, a_wait=False)
+        global_open_project(default_project_file)
 #    except Exception as ex:
 #        QtGui.QMessageBox.warning(
 #            MAIN_WINDOW, _("Error"),
@@ -1227,8 +1232,9 @@ if os.path.exists(default_project_file):
 #        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
 #        MAIN_WINDOW.prepare_to_quit()
 else:
-    global_new_project(default_project_file, a_wait=False)
+    global_new_project(default_project_file)
 
+RESPAWN = False
 
 libmk.APP.lastWindowClosed.connect(libmk.APP.quit)
 libmk.APP.setStyle(QtGui.QStyleFactory.create("Fusion"))
@@ -1238,6 +1244,13 @@ flush_events()
 libmk.APP.deleteLater()
 time.sleep(0.6)
 libmk.APP = None
+
+if RESPAWN:
+    print("Spawning child process")
+    subprocess.Popen(
+        sys.argv, shell=True, stdin=None, stdout=None, stderr=None,
+        close_fds=True)
+    print("Parent process exiting")
+
 time.sleep(0.6)
 final_gc()
-

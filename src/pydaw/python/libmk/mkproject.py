@@ -123,6 +123,24 @@ class MkProject(libmk.AbstractProject):
         self.open_stretch_dicts()
         #self.commit("Created project")
 
+    def save_project_as(self, a_file_name):
+        f_file_name = str(a_file_name)
+        print("Saving project as {} ...".format(f_file_name))
+        f_new_project_folder = os.path.dirname(f_file_name)
+        #The below is safe because we already checked that the folder
+        #should be empty before calling this
+        f_cmd = "rm -rf '{}'".format(f_new_project_folder)
+        print(f_cmd)
+        os.system(f_cmd)
+        f_cmd = "cp -rf '{}' '{}'".format(
+            self.project_folder, f_new_project_folder)
+        print(f_cmd)
+        os.system(f_cmd)
+        print("{}/{} | {}".format(
+            f_new_project_folder, self.project_file, a_file_name))
+#        self.set_project_folders(f_file_name)
+#        self.this_pydaw_osc.pydaw_open_song(self.project_folder)
+#        self.history = pydaw_history.pydaw_history(self.edmnext_folder)
 
     def get_next_plugin_uid(self):
         if os.path.isfile(self.plugin_uid_file):
