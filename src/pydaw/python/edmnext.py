@@ -6338,12 +6338,6 @@ class piano_roll_editor_widget:
             return
         ITEM_EDITOR.velocity_dialog(PIANO_ROLL_EDITOR.has_selected)
 
-    def clear_notes(self):
-        if not ITEM_EDITOR.enabled:
-            ITEM_EDITOR.show_not_enabled_warning()
-            return
-        ITEM_EDITOR.clear_notes(False)
-
     def select_all(self):
         if not ITEM_EDITOR.enabled:
             ITEM_EDITOR.show_not_enabled_warning()
@@ -6523,12 +6517,6 @@ class piano_roll_editor_widget:
         self.open_last_action.triggered.connect(self.open_last)
         self.open_last_action.setShortcut(
             QtGui.QKeySequence.fromString("ALT+F"))
-
-        self.edit_menu.addSeparator()
-
-        self.clear_action = QtGui.QAction(_("Clear All"), self.widget)
-        self.edit_menu.addAction(self.clear_action)
-        self.clear_action.triggered.connect(self.clear_notes)
 
         self.controls_grid_layout.addItem(
             QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding), 0, 31)
