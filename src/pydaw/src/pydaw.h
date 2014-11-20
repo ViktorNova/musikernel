@@ -888,7 +888,6 @@ void * v_pydaw_osc_send_thread(void* a_arg)
     f_tmp2[0] = '\0';
     f_msg[0] = '\0';
 
-    int f_track_index;
     t_pkm_peak_meter * f_pkm;
 
     while(!musikernel->audio_recording_quit_notifier)
@@ -899,26 +898,23 @@ void * v_pydaw_osc_send_thread(void* a_arg)
         f_pkm = self->track_pool[0]->peak_meter;
         sprintf(f_tmp2, "%i:%f:%f", 0, f_pkm->value[0], f_pkm->value[1]);
         v_pkm_reset(f_pkm);
-        int f_count = self->routing_graph->track_pool_sorted_count;
 
-        for(f_i = 0; f_i < f_count; ++f_i)
+        for(f_i = 1; f_i < EN_TRACK_COUNT; ++f_i)
         {
-            f_track_index = self->routing_graph->track_pool_sorted[
-                MAX_WORKER_THREADS - 1][f_i];
-            f_pkm = self->track_pool[f_track_index]->peak_meter;
-
-            sprintf(f_tmp1, "|%i:%f:%f",
-                f_track_index, f_pkm->value[0], f_pkm->value[1]);
-
-            v_pkm_reset(f_pkm);
-            strcat(f_tmp2, f_tmp1);
+            f_pkm = self->track_pool[f_i]->peak_meter;
+            if(!f_pkm->dirty)  //has ran since last v_pkm_reset())
+            {
+                sprintf(f_tmp1, "|%i:%f:%f",
+                    f_i, f_pkm->value[0], f_pkm->value[1]);
+                v_pkm_reset(f_pkm);
+                strcat(f_tmp2, f_tmp1);
+            }
         }
 
         //kludge to get the wave editor peak meter working
-        f_track_index = EN_TRACK_COUNT;
+        f_i = EN_TRACK_COUNT;
         f_pkm = wavenext->track_pool[0]->peak_meter;
-        sprintf(f_tmp1, "|%i:%f:%f",
-            f_track_index, f_pkm->value[0], f_pkm->value[1]);
+        sprintf(f_tmp1, "|%i:%f:%f", f_i, f_pkm->value[0], f_pkm->value[1]);
         v_pkm_reset(f_pkm);
         strcat(f_tmp2, f_tmp1);
 

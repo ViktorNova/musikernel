@@ -25,9 +25,9 @@ extern "C" {
 // a peak meter
 typedef struct
 {
-    float value[2];
+    volatile float value[2];
     int buffer_pos;
-    int dirty;
+    volatile int dirty;
 }t_pkm_peak_meter;
 
 // a gain reduction meter
