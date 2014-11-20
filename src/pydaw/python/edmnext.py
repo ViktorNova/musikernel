@@ -8903,7 +8903,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         QtGui.QScrollArea.__init__(self)
         self.first_offline_render = True
         self.last_offline_dir = global_home
-        self.last_ac_dir = global_home
         self.copy_to_clipboard_checked = True
         self.last_midi_dir = None
 
