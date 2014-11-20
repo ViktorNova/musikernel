@@ -3511,7 +3511,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             global_open_audio_items(True)
 
     def get_file_path(self):
-        return PROJECT.get_wav_path_by_uid(self.audio_item.uid)
+        return libmk.PROJECT.get_wav_path_by_uid(self.audio_item.uid)
 
     def copy_file_path_to_clipboard(self):
         f_path = self.get_file_path()
@@ -5187,7 +5187,7 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
                     if libmk.IS_PLAYING:
                         print(_("Exception while loading {}".format(v.uid)))
                     else:
-                        f_path = PROJECT.get_wav_path_by_uid(v.uid)
+                        f_path = libmk.PROJECT.get_wav_path_by_uid(v.uid)
                         if os.path.isfile(f_path):
                             f_error_msg = _(
                                 "Unknown error loading sample f_path {}, "
@@ -10061,8 +10061,8 @@ class pydaw_wave_editor_widget:
                 self.sample_graph.fade_out_marker.value)
 
     def set_sample_graph(self, a_file_name):
-        PROJECT.delete_sample_graph_by_name(a_file_name)
-        self.graph_object = PROJECT.get_sample_graph_by_name(
+        libmk.PROJECT.delete_sample_graph_by_name(a_file_name)
+        self.graph_object = libmk.PROJECT.get_sample_graph_by_name(
             a_file_name, a_cp=False)
         self.sample_graph.draw_item(
             self.graph_object, 0.0, 1000.0, 0.0, 1000.0)

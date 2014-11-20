@@ -30,8 +30,8 @@ PROJECT = None
 TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
 
 def prepare_to_quit():
-    global MAIN_WINDOW, APP, TRANSPORT, IS_PLAYING, IPC, OSC, PROJECT
-    MAIN_WINDOW = APP = TRANSPORT = IS_PLAYING = IPC = OSC = PROJECT = None
+    global MAIN_WINDOW, TRANSPORT, IPC, OSC, PROJECT
+    MAIN_WINDOW = TRANSPORT = IPC = OSC = PROJECT = None
 
 def set_window_title(a_host_name):
     MAIN_WINDOW.setWindowTitle('MusiKernel | {} - {}/{}.{}'.format(

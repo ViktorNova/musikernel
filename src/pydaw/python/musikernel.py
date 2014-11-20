@@ -573,17 +573,15 @@ class MkMainWindow(QtGui.QMainWindow):
 
     def prepare_to_quit(self):
         try:
+            close_pydaw_engine()
             if self.osc_server is not None:
                 self.osc_timer.stop()
                 self.osc_server.free()
-            libmk.IPC.stop_server()
             for f_host in self.host_windows:
                 f_host.prepare_to_quit()
             self.ignore_close_event = False
-            libmk.prepare_to_quit()
             self.subprocess_timer.stop()
-            #if not "--debug" in sys.argv:
-            close_pydaw_engine()
+            libmk.prepare_to_quit()
             f_quit_timer = QtCore.QTimer(self)
             f_quit_timer.setSingleShot(True)
             f_quit_timer.timeout.connect(self.close)
