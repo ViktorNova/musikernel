@@ -86,8 +86,7 @@ class transport_widget:
         self.is_playing = False
         self.start_region = 0
         self.last_bar = 0
-        self.last_open_dir = global_home
-        self.transport = pydaw_transport()
+        self.last_open_dir = pydaw_util.global_home
         self.group_box = QtGui.QGroupBox()
         self.group_box.setObjectName("transport_panel")
         self.vlayout = QtGui.QVBoxLayout()
@@ -219,6 +218,7 @@ class MkMainWindow(QtGui.QMainWindow):
         self.setObjectName("mainwindow")
         self.setObjectName("plugin_ui")
         self.setMinimumSize(500, 500)
+        self.last_ac_dir = pydaw_util.global_home
         self.widget = QtGui.QWidget()
         self.widget.setObjectName("plugin_ui")
         self.setCentralWidget(self.widget)
@@ -744,12 +744,16 @@ class MkMainWindow(QtGui.QMainWindow):
                     f_cmd = [a_dec, "--output", f_output_file, f_input_file]
             else:
                 if a_enc == "oggenc":
-                    f_cmd = [a_enc, "-b",
-                         "{}k".format(f_mp3_br_combobox.currentText()),
+                    f_quality = float(str(f_mp3_br_combobox.currentText()))
+                    f_quality = (320.0 / f_quality) * 10.0
+                    f_quality = pydaw_util.pydaw_clip_value(
+                        f_quality, 3.0, 10.0)
+                    f_cmd = [a_enc, "-q", str(f_quality),
                          "-o", f_output_file, f_input_file]
                 elif a_enc == "lame":
                     f_cmd = [a_enc, "-b", str(f_mp3_br_combobox.currentText()),
                          f_input_file, f_output_file]
+            print(f_cmd)
             return f_cmd
 
         def ok_handler():
