@@ -1244,13 +1244,14 @@ flush_events()
 libmk.APP.deleteLater()
 time.sleep(0.6)
 libmk.APP = None
-
-if RESPAWN:
-    print("Spawning child process")
-    subprocess.Popen(
-        sys.argv, shell=True, stdin=None, stdout=None, stderr=None,
-        close_fds=True)
-    print("Parent process exiting")
-
 time.sleep(0.6)
 final_gc()
+
+if RESPAWN:
+    CMD = ["python3", __file__]
+    print("Spawning child UI process {}".format(CMD))
+    CHILD_PROC = subprocess.Popen(CMD)
+        #, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
+    #CHILD_PROC.wait()
+    time.sleep(6.0)
+    print("Parent UI process exiting")
