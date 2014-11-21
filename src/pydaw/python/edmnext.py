@@ -4301,7 +4301,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
             print(_("No audio items selected, not glueing"))
             return
         f_path = libmk.PROJECT.get_next_glued_file_name()
-        libmk.IPC.pydaw_glue_audio(
+        PROJECT.this_pydaw_osc.pydaw_glue_audio(
             f_path, CURRENT_SONG_INDEX, f_start_bar, f_end_bar, f_indexes)
         f_items = PROJECT.get_audio_region(f_region_uid)
         f_paif = PROJECT.get_audio_per_item_fx_region(f_region_uid)

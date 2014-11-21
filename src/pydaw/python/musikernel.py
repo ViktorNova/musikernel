@@ -80,6 +80,7 @@ class MkIpc(libmk.AbstractIPC):
     def pydaw_stop_preview(self):
         self.send_configure("spr", "")
 
+
 class transport_widget:
     def __init__(self):
         self.suppress_osc = True
