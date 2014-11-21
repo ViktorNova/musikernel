@@ -570,7 +570,6 @@ class MkMainWindow(QtGui.QMainWindow):
                     if not f_new_file.endswith(
                     ".{}".format(global_pydaw_version_string)):
                         f_new_file += ".{}".format(global_pydaw_version_string)
-                    PLUGIN_UI_DICT.close_all_plugin_windows()
                     libmk.PROJECT.save_project_as(f_new_file)
                     libmk.set_window_title("")
                     pydaw_util.set_file_setting("last-project", f_new_file)
