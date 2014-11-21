@@ -3082,16 +3082,16 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_dialog.widget.exec_()
 
     def copy_as_cc_automation(self):
-        CC_EDITOR.clipboard = self.graph_object.envelope_to_automation(
-            True, TRANSPORT.tempo_spinbox.value())
+        CC_EDITOR.clipboard = libpydaw.envelope_to_automation(
+            self.graph_object, True, TRANSPORT.tempo_spinbox.value())
 
     def copy_as_pb_automation(self):
-        PB_EDITOR.clipboard = self.graph_object.envelope_to_automation(
-            False, TRANSPORT.tempo_spinbox.value())
+        PB_EDITOR.clipboard = libpydaw.envelope_to_automation(
+            self.graph_object, False, TRANSPORT.tempo_spinbox.value())
 
     def copy_as_notes(self):
-        PIANO_ROLL_EDITOR.clipboard = self.graph_object.envelope_to_notes(
-            TRANSPORT.tempo_spinbox.value())
+        PIANO_ROLL_EDITOR.clipboard = libpydaw.envelope_to_notes(
+            self.graph_object, TRANSPORT.tempo_spinbox.value())
 
     def output_menu_triggered(self, a_action):
         f_index = TRACK_NAMES.index(str(a_action.text()))
