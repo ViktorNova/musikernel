@@ -27,7 +27,7 @@ from libpydaw.pydaw_util import *
 from libpydaw.translate import _
 from libpydaw.pydaw_widgets import pydaw_modulex_settings
 
-from libpydaw.pydaw_osc import pydaw_osc
+from libedmnext.en_osc import EdmNextOsc
 
 from PyQt4 import QtGui
 from libpydaw import pydaw_history
@@ -60,14 +60,14 @@ pydaw_file_wave_editor_bookmarks = "projects/edmnext/wave_editor_bookmarks.txt"
 pydaw_min_note_length = 4.0 / 129.0
 
 
-class pydaw_project(libmk.AbstractProject):
+class EdmNextProject(libmk.AbstractProject):
     def __init__(self, a_with_audio):
         self.last_item_number = 1
         self.last_region_number = 1
         self.history_files = []
         self.history_commits = []
         self.history_undo_cursor = 0
-        self.this_pydaw_osc = pydaw_osc(a_with_audio)
+        self.en_osc = EdmNextOsc(a_with_audio)
         self.suppress_updates = False
 
     def save_file(self, a_folder, a_file, a_text, a_force_new=False):
@@ -178,7 +178,7 @@ class pydaw_project(libmk.AbstractProject):
         else:
             self.history = pydaw_history.pydaw_history(self.edmnext_folder)
         if a_notify_osc:
-            self.this_pydaw_osc.pydaw_open_song(self.project_folder)
+            self.en_osc.pydaw_open_song(self.project_folder)
 
     def new_project(self, a_project_file, a_notify_osc=True):
         self.set_project_folders(a_project_file)
@@ -202,7 +202,7 @@ class pydaw_project(libmk.AbstractProject):
 
         self.commit("Created project")
         if a_notify_osc:
-            self.this_pydaw_osc.pydaw_open_song(self.project_folder)
+            self.en_osc.pydaw_open_song(self.project_folder)
 
     def get_notes(self):
         if os.path.isfile(self.pynotes_file):
@@ -256,7 +256,7 @@ class pydaw_project(libmk.AbstractProject):
 
     def save_routing_graph(self, a_graph):
         self.save_file("", pydaw_file_routing_graph, str(a_graph))
-        self.this_pydaw_osc.pydaw_update_track_send()
+        self.en_osc.pydaw_update_track_send()
 
     def get_midi_routing(self):
         if os.path.isfile(self.midi_routing_file):
@@ -324,7 +324,7 @@ class pydaw_project(libmk.AbstractProject):
 
     def save_atm_region(self, a_region, a_uid):
         self.save_file(pydaw_folder_regions_atm, a_uid, str(a_region))
-        self.this_pydaw_osc.pydaw_save_atm_region(a_uid)
+        self.en_osc.pydaw_save_atm_region(a_uid)
 
     def rename_items(self, a_item_names, a_new_item_name):
         f_items_dict = self.get_items_dict()
@@ -444,7 +444,7 @@ class pydaw_project(libmk.AbstractProject):
                 if f_audio_item.uid == f_uid:
                     f_paif.set_row(f_index, a_paif)
                     self.save_audio_per_item_fx_region(f_region_uid, f_paif)
-                    self.this_pydaw_osc.pydaw_audio_per_item_fx_region(
+                    self.en_osc.pydaw_audio_per_item_fx_region(
                         f_region_uid)
                     f_changed = True
             if f_changed:
@@ -713,7 +713,7 @@ class pydaw_project(libmk.AbstractProject):
 
     def create_empty_region(self, a_region_name):
         # TODO:  Check for uniqueness, from
-        # a pydaw_project.check_for_uniqueness method...
+        # a EdmNextProject.check_for_uniqueness method...
         f_regions_dict = self.get_regions_dict()
         f_uid = f_regions_dict.add_new_item(a_region_name)
         self.save_file(pydaw_folder_regions, f_uid, pydaw_terminating_char)
@@ -728,7 +728,7 @@ class pydaw_project(libmk.AbstractProject):
         f_items_dict = self.get_items_dict()
         f_uid = f_items_dict.add_new_item(a_item_name)
         self.save_file(pydaw_folder_items, str(f_uid), pydaw_terminating_char)
-        self.this_pydaw_osc.pydaw_save_item(f_uid)
+        self.en_osc.pydaw_save_item(f_uid)
         self.save_items_dict(f_items_dict)
         return f_uid
 
@@ -767,9 +767,9 @@ class pydaw_project(libmk.AbstractProject):
             self.save_file(
                 pydaw_folder_audio_per_item_fx, str(a_dest_region_uid),
                 pydaw_read_file_text(f_paif_file))
-            self.this_pydaw_osc.pydaw_audio_per_item_fx_region(
+            self.en_osc.pydaw_audio_per_item_fx_region(
                 a_dest_region_uid)
-        self.this_pydaw_osc.pydaw_reload_audio_items(a_dest_region_uid)
+        self.en_osc.pydaw_reload_audio_items(a_dest_region_uid)
         self.commit("Clone audio from region {}".format(a_src_region_name))
 
     def copy_item(self, a_old_item, a_new_item):
@@ -778,7 +778,7 @@ class pydaw_project(libmk.AbstractProject):
         f_old_uid = f_items_dict.get_uid_by_name(a_old_item)
         self.save_file(pydaw_folder_items,  str(f_uid), pydaw_read_file_text(
             "{}/{}".format(self.items_folder, f_old_uid)))
-        self.this_pydaw_osc.pydaw_save_item(f_uid)
+        self.en_osc.pydaw_save_item(f_uid)
         self.save_items_dict(f_items_dict)
         return f_uid
 
@@ -787,26 +787,26 @@ class pydaw_project(libmk.AbstractProject):
             f_items_dict = self.get_items_dict()
             f_uid = f_items_dict.get_uid_by_name(a_name)
             self.save_file(pydaw_folder_items, str(f_uid), str(a_item))
-            self.this_pydaw_osc.pydaw_save_item(f_uid)
+            self.en_osc.pydaw_save_item(f_uid)
 
     def save_item_by_uid(self, a_uid, a_item, a_new_item=False):
         if not self.suppress_updates:
             f_uid = int(a_uid)
             self.save_file(
                 pydaw_folder_items, str(f_uid), str(a_item), a_new_item)
-            self.this_pydaw_osc.pydaw_save_item(f_uid)
+            self.en_osc.pydaw_save_item(f_uid)
 
     def save_region(self, a_name, a_region):
         if not self.suppress_updates:
             f_regions_dict = self.get_regions_dict()
             f_uid = f_regions_dict.get_uid_by_name(a_name)
             self.save_file(pydaw_folder_regions, str(f_uid), str(a_region))
-            self.this_pydaw_osc.pydaw_save_region(f_uid)
+            self.en_osc.pydaw_save_region(f_uid)
 
     def save_song(self, a_song):
         if not self.suppress_updates:
             self.save_file("", pydaw_file_pysong, str(a_song))
-            self.this_pydaw_osc.pydaw_save_song()
+            self.en_osc.pydaw_save_song()
 
     def save_tracks(self, a_tracks):
         if not self.suppress_updates:
@@ -831,7 +831,7 @@ class pydaw_project(libmk.AbstractProject):
         if not self.suppress_updates:
             self.save_file(
                 pydaw_folder_regions_audio, str(a_region_uid), str(a_tracks))
-            self.this_pydaw_osc.pydaw_reload_audio_items(a_region_uid)
+            self.en_osc.pydaw_reload_audio_items(a_region_uid)
 
     def item_exists(self, a_item_name, a_name_dict=None):
         if a_name_dict is None:

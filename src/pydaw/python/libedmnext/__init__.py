@@ -11,7 +11,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-from libpydaw.pydaw_util import *
-from libpydaw.pydaw_widgets import *
-from . import pydaw_device_dialog
+from libedmnext.en_project import *
+from libedmnext.en_gradients import *
 

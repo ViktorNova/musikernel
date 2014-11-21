@@ -1310,7 +1310,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             f_file_name = str(self.sample_table.item(
                 self.selected_row_index, SMP_TB_FILE_PATH_INDEX).text())
             if f_file_name != "":
-                f_graph = self.pydaw_project.get_sample_graph_by_name(
+                f_graph = self.mk_project.get_sample_graph_by_name(
                     f_file_name)
                 f_note = self.loop_tune_note_selector.get_value()
                 f_hz = pydaw_util.pydaw_pitch_to_hz(f_note)
@@ -1337,7 +1337,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                 self.sample_table.item(self.selected_row_index,
                                        SMP_TB_FILE_PATH_INDEX).text())
             if f_file_name != "":
-                f_graph = self.pydaw_project.get_sample_graph_by_name(
+                f_graph = self.mk_project.get_sample_graph_by_name(
                     f_file_name)
                 self.sample_graph.draw_item(
                     f_graph,
@@ -1403,7 +1403,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                 if f_arr[f_i] == "":
                     f_path = ""
                 else:
-                    f_path = self.pydaw_project.get_wav_path_by_uid(f_arr[f_i])
+                    f_path = self.mk_project.get_wav_path_by_uid(f_arr[f_i])
                 f_table_item = QtGui.QTableWidgetItem(f_path)
                 self.sample_table.setItem(
                     f_i, SMP_TB_FILE_PATH_INDEX, f_table_item)
@@ -1602,7 +1602,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                             self, _("Error"),
                             _("File '{}' cannot be read.").format(path))
                         continue
-                    self.pydaw_project.get_wav_uid_by_name(path)
+                    self.mk_project.get_wav_uid_by_name(path)
                     self.set_selected_sample_combobox_item(
                         f_sample_index_to_load, path.rsplit("/", 1)[1])
                     f_item = QtGui.QTableWidgetItem()
@@ -1627,7 +1627,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             f_item = self.sample_table.item(f_i, SMP_TB_FILE_PATH_INDEX)
             if f_item is not None and str(f_item.text()).strip() != "":
-                f_uid = self.pydaw_project.get_wav_uid_by_name(
+                f_uid = self.mk_project.get_wav_uid_by_name(
                     str(f_item.text()))
                 self.files_string += str(f_uid)
             if f_i < EUPHORIA_MAX_SAMPLE_COUNT - 1:
@@ -1652,7 +1652,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
     def reloadSample(self):
         path = str(self.file_selector.file_path.text()).strip()
         if path != "":
-            f_uid = self.pydaw_project.get_wav_uid_by_name(path)
+            f_uid = self.mk_project.get_wav_uid_by_name(path)
             libmk.IPC.pydaw_reload_wavpool_item(f_uid)
 
 
@@ -1782,7 +1782,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             f_proc_list = []
             f_file_list = []
 
-            f_dir = self.pydaw_project.audio_tmp_folder
+            f_dir = self.mk_project.audio_tmp_folder
             f_selected_index = self.selected_row_index
             f_uid = pydaw_util.pydaw_gen_uid()
 
@@ -1935,7 +1935,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                 continue
             if not os.path.exists(f_current_file_path):
                 f_current_file_path = "{}/{}".format(
-                    self.pydaw_project.samples_folder, f_current_file_path)
+                    self.mk_project.samples_folder, f_current_file_path)
                 if not os.path.exists(f_current_file_path):
                     print("File no longer exists on disk or"
                     " in cache, skipping {}".format(f_current_file_path))
@@ -2142,7 +2142,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     self.set_selected_sample_combobox_item(
                         f_index, f_path_sections[-1])
 
-                    f_graph = self.pydaw_project.get_sample_graph_by_name(
+                    f_graph = self.mk_project.get_sample_graph_by_name(
                         f_new_file_path)
                     f_frame_count = float(f_graph.frame_count)
 

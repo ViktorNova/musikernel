@@ -17,7 +17,7 @@ from libpydaw.pydaw_util import bool_to_int, \
 import libmk
 
 
-class pydaw_osc(libmk.AbstractIPC):
+class EdmNextOsc(libmk.AbstractIPC):
     def __init__(self, a_with_audio=False,
              a_configure_path="/musikernel/edmnext"):
         libmk.AbstractIPC.__init__(self, a_with_audio, a_configure_path)

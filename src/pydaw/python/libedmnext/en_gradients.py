@@ -13,7 +13,7 @@ GNU General Public License for more details.
 """
 
 from PyQt4 import QtGui, QtCore
-from libpydaw.pydaw_project import TRACK_COUNT_ALL
+from libedmnext.en_project import TRACK_COUNT_ALL
 
 pydaw_track_gradients = []
 

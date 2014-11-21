@@ -4435,7 +4435,7 @@ class pydaw_abstract_plugin_ui:
         self.plugin_uid = int(a_plugin_uid)
         self.folder = str(a_folder)
         self.can_resize = a_can_resize
-        self.pydaw_project = a_project
+        self.mk_project = a_project
         self.val_callback = a_val_callback
         self.configure_callback = a_configure_callback
         self.midi_learn_callback = a_midi_learn_callback
@@ -4569,11 +4569,11 @@ class pydaw_abstract_plugin_ui:
         if self.folder is not None:
             f_file = pydaw_plugin_file.from_dict(
                 self.port_dict, self.configure_dict, self.cc_map)
-            self.pydaw_project.save_file(
+            self.mk_project.save_file(
                 pydaw_folder_plugins, self.plugin_uid, str(f_file))
-#            self.pydaw_project.commit(
+#            self.mk_project.commit(
 #                _("Update controls for {}").format(self.track_name))
-#            self.pydaw_project.flush_history()
+#            self.mk_project.flush_history()
 
     def widget_close_event(self, a_event):
         if self.save_file_on_exit:

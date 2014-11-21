@@ -27,6 +27,7 @@ from libpydaw.translate import _
 import libpydaw.strings
 import libmk
 from libmk import mkproject
+from libedmnext import *
 
 def pydaw_get_current_region_length():
     if CURRENT_REGION is None:
@@ -3521,7 +3522,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             if f_save_paif:
                 PROJECT.save_audio_per_item_fx_region(
                     CURRENT_REGION.uid, f_per_item_fx_dict, False)
-                PROJECT.this_pydaw_osc.pydaw_audio_per_item_fx_region(
+                PROJECT.en_osc.pydaw_audio_per_item_fx_region(
                     CURRENT_REGION.uid)
             PROJECT.commit(_("Split audio item"))
             global_open_audio_items(True)
@@ -3905,7 +3906,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             if f_was_copying:
                 PROJECT.save_audio_per_item_fx_region(
                     CURRENT_REGION.uid, f_per_item_fx_dict, False)
-                PROJECT.this_pydaw_osc.pydaw_audio_per_item_fx_region(
+                PROJECT.en_osc.pydaw_audio_per_item_fx_region(
                     CURRENT_REGION.uid)
             if f_was_stretching:
                 libmk.PROJECT.save_stretch_dicts()
@@ -4216,7 +4217,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
             print(_("No audio items selected, not glueing"))
             return
         f_path = libmk.PROJECT.get_next_glued_file_name()
-        PROJECT.this_pydaw_osc.pydaw_glue_audio(
+        PROJECT.en_osc.pydaw_glue_audio(
             f_path, CURRENT_SONG_INDEX, f_start_bar, f_end_bar, f_indexes)
         f_items = PROJECT.get_audio_region(f_region_uid)
         f_paif = PROJECT.get_audio_per_item_fx_region(f_region_uid)
@@ -4232,7 +4233,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
 
         PROJECT.save_audio_region(f_region_uid, f_items)
         PROJECT.save_audio_per_item_fx_region(f_region_uid, f_paif)
-        PROJECT.this_pydaw_osc.pydaw_audio_per_item_fx_region(f_region_uid)
+        PROJECT.en_osc.pydaw_audio_per_item_fx_region(f_region_uid)
         PROJECT.commit(_("Glued audio items"))
         global_open_audio_items()
 
@@ -4758,7 +4759,7 @@ CURRENT_AUDIO_ITEM_INDEX = None
 def global_paif_val_callback(a_port, a_val):
     if CURRENT_REGION is not None and \
     CURRENT_AUDIO_ITEM_INDEX is not None:
-        PROJECT.this_pydaw_osc.pydaw_audio_per_item_fx(
+        PROJECT.en_osc.pydaw_audio_per_item_fx(
             CURRENT_REGION.uid, CURRENT_AUDIO_ITEM_INDEX, a_port, a_val)
 
 def global_paif_rel_callback(a_port, a_val):
@@ -4953,7 +4954,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
                 if f_item.isSelected():
                     f_paif.set_row(f_item.track_num, self.modulex_clipboard)
             PROJECT.save_audio_per_item_fx_region(CURRENT_REGION.uid, f_paif)
-            PROJECT.this_pydaw_osc.pydaw_audio_per_item_fx_region(
+            PROJECT.en_osc.pydaw_audio_per_item_fx_region(
                 CURRENT_REGION.uid)
             AUDIO_SEQ_WIDGET.modulex.set_from_list(self.modulex_clipboard)
 
@@ -4964,7 +4965,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
                 if f_item.isSelected():
                     f_paif.clear_row(f_item.track_num)
             PROJECT.save_audio_per_item_fx_region(CURRENT_REGION.uid, f_paif)
-            PROJECT.this_pydaw_osc.pydaw_audio_per_item_fx_region(
+            PROJECT.en_osc.pydaw_audio_per_item_fx_region(
                 CURRENT_REGION.uid)
             self.modulex.clear_effects()
 
@@ -5020,7 +5021,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
         PROJECT.save_audio_per_item_fx_region(
             CURRENT_REGION.uid, f_per_item_fx_dict, False)
-        PROJECT.this_pydaw_osc.pydaw_audio_per_item_fx_region(
+        PROJECT.en_osc.pydaw_audio_per_item_fx_region(
             CURRENT_REGION.uid)
         PROJECT.commit(_("Paste audio items"))
         global_open_audio_items(True)
@@ -7832,7 +7833,7 @@ class midi_device:
     def device_changed(self, a_val=None):
         if SUPPRESS_TRACK_COMBOBOX_CHANGES:
             return
-        PROJECT.this_pydaw_osc.pydaw_midi_device(
+        PROJECT.en_osc.pydaw_midi_device(
             self.record_checkbox.isChecked(), self.index,
             self.track_combobox.currentIndex())
         self.save_callback()
@@ -8000,7 +8001,7 @@ class plugin_settings_base:
         elif self.plugin_uid == -1 or self.plugin_index != f_index:
             self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
             self.plugin_index = f_index
-        PROJECT.this_pydaw_osc.pydaw_set_plugin(
+        PROJECT.en_osc.pydaw_set_plugin(
             self.host_index, self.track_num, self.index, f_index,
             self.plugin_uid, self.power_checkbox.isChecked())
         self.save_callback()
@@ -8010,7 +8011,7 @@ class plugin_settings_base:
     def on_power_changed(self, a_val=None):
         f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
         if f_index:
-            PROJECT.this_pydaw_osc.pydaw_set_plugin(
+            PROJECT.en_osc.pydaw_set_plugin(
                 self.host_index, self.track_num, self.index, f_index,
                 self.plugin_uid, self.power_checkbox.isChecked())
             self.save_callback()
@@ -8307,7 +8308,7 @@ class seq_track:
 
     def on_solo(self, value):
         if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_solo(
+            PROJECT.en_osc.pydaw_set_solo(
                 self.track_number, self.solo_checkbox.isChecked())
             PROJECT.save_tracks(TRACK_PANEL.get_tracks())
             PROJECT.commit(_("Set solo for track {} to {}").format(
@@ -8315,7 +8316,7 @@ class seq_track:
 
     def on_mute(self, value):
         if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_mute(
+            PROJECT.en_osc.pydaw_set_mute(
                 self.track_number, self.mute_checkbox.isChecked())
             PROJECT.save_tracks(TRACK_PANEL.get_tracks())
             PROJECT.commit(_("Set mute for track {} to {}").format(
@@ -8473,7 +8474,7 @@ class transport_widget(libmk.AbstractTransport):
         self.suppress_osc = False
 
     def on_panic(self):
-        PROJECT.this_pydaw_osc.pydaw_panic()
+        PROJECT.en_osc.pydaw_panic()
 
     def set_time(self, a_region, a_bar, a_beat):
         f_seconds = REGION_TIME[a_region]
@@ -8575,9 +8576,9 @@ class transport_widget(libmk.AbstractTransport):
         WAVE_EDITOR.on_play()
         AUDIO_SEQ.set_playback_clipboard()
         if WAVE_EDITOR.enabled_checkbox.isChecked():
-            PROJECT.this_pydaw_osc.pydaw_wn_playback(1)
+            PROJECT.en_osc.pydaw_wn_playback(1)
         else:
-            PROJECT.this_pydaw_osc.pydaw_en_playback(
+            PROJECT.en_osc.pydaw_en_playback(
                 1, self.get_region_value(), self.get_bar_value())
 
     def trigger_audio_playback(self):
@@ -8590,9 +8591,9 @@ class transport_widget(libmk.AbstractTransport):
         if not self.is_playing and not self.is_recording:
             return
         if WAVE_EDITOR.enabled_checkbox.isChecked():
-            PROJECT.this_pydaw_osc.pydaw_wn_playback(0)
+            PROJECT.en_osc.pydaw_wn_playback(0)
         else:
-            PROJECT.this_pydaw_osc.pydaw_en_playback(0)
+            PROJECT.en_osc.pydaw_en_playback(0)
         libmk.IS_PLAYING = False
         SONG_EDITOR.table_widget.setEnabled(True)
         REGION_SETTINGS.on_stop()
@@ -8712,7 +8713,7 @@ class transport_widget(libmk.AbstractTransport):
         self.last_region_num = self.get_region_value()
         self.start_region = self.get_region_value()
         self.last_bar = self.get_bar_value()
-        PROJECT.this_pydaw_osc.pydaw_en_playback(
+        PROJECT.en_osc.pydaw_en_playback(
             2, a_region_num=self.get_region_value(),
             a_bar=self.get_bar_value())
         self.trigger_audio_playback()
@@ -8724,14 +8725,14 @@ class transport_widget(libmk.AbstractTransport):
         if CURRENT_REGION is not None:
             global_open_audio_items()
         if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_tempo(a_tempo)
+            PROJECT.en_osc.pydaw_set_tempo(a_tempo)
             PROJECT.save_transport(self.transport)
             PROJECT.commit(_("Set project tempo to {}").format(a_tempo))
         global_update_region_time()
 
     def on_loop_mode_changed(self, a_loop_mode):
         if not self.suppress_osc:
-            PROJECT.this_pydaw_osc.pydaw_set_loop_mode(a_loop_mode)
+            PROJECT.en_osc.pydaw_set_loop_mode(a_loop_mode)
 
     def toggle_loop_mode(self):
         f_index = self.loop_mode_combobox.currentIndex() + 1
@@ -8745,7 +8746,7 @@ class transport_widget(libmk.AbstractTransport):
         not self.is_recording:
             for f_editor in (AUDIO_SEQ, REGION_EDITOR):
                 f_editor.set_playback_pos(self.get_bar_value())
-            PROJECT.this_pydaw_osc.pydaw_set_pos(
+            PROJECT.en_osc.pydaw_set_pos(
                 self.get_region_value(), self.get_bar_value())
         self.set_time(self.get_region_value(), self.get_bar_value(), 0.0)
 
@@ -8755,7 +8756,7 @@ class transport_widget(libmk.AbstractTransport):
         if not self.is_playing and not self.is_recording:
             for f_editor in (AUDIO_SEQ, REGION_EDITOR):
                 f_editor.set_playback_pos(self.get_bar_value())
-            PROJECT.this_pydaw_osc.pydaw_set_pos(
+            PROJECT.en_osc.pydaw_set_pos(
                 self.get_region_value(), self.get_bar_value())
         self.set_time(self.get_region_value(), self.get_bar_value(), 0.0)
 
@@ -8785,7 +8786,7 @@ class transport_widget(libmk.AbstractTransport):
         self.suppress_osc = False
 
     def on_overdub_changed(self, a_val=None):
-        PROJECT.this_pydaw_osc.pydaw_set_overdub_mode(
+        PROJECT.en_osc.pydaw_set_overdub_mode(
             self.overdub_checkbox.isChecked())
 
     def reset(self):
@@ -9740,7 +9741,7 @@ class pydaw_wave_editor_widget:
                 self.copy_to_clipboard_checked = False
 
             f_file_name = str(f_name.text())
-            PROJECT.this_pydaw_osc.pydaw_we_export(f_file_name)
+            PROJECT.en_osc.pydaw_we_export(f_file_name)
             self.last_offline_dir = os.path.dirname(f_file_name)
             self.open_exported = f_open_exported.isChecked()
             f_window.close()
@@ -9817,7 +9818,7 @@ class pydaw_wave_editor_widget:
         pass
 
     def enabled_changed(self, a_val=None):
-        PROJECT.this_pydaw_osc.pydaw_ab_set(
+        PROJECT.en_osc.pydaw_ab_set(
             self.enabled_checkbox.isChecked())
 
     def vol_changed(self, a_val=None):
@@ -9877,7 +9878,7 @@ class pydaw_wave_editor_widget:
         for f_path in reversed(self.history):
             f_menu.addAction(f_path)
         self.history_button.setMenu(f_menu)
-        PROJECT.this_pydaw_osc.pydaw_ab_open(a_file)
+        PROJECT.en_osc.pydaw_ab_open(a_file)
         self.marker_callback()
 
     def get_audio_item(self, a_uid=0):
@@ -9918,7 +9919,7 @@ class pydaw_wave_editor_widget:
     def marker_callback(self, a_val=None):
         if self.callbacks_enabled:
             f_item = self.get_audio_item()
-            PROJECT.this_pydaw_osc.pydaw_we_set(
+            PROJECT.en_osc.pydaw_we_set(
                 "0|{}".format(f_item))
             f_start = self.sample_graph.start_marker.value
             self.set_time_label(f_start * 0.001, True)
@@ -10011,13 +10012,13 @@ def global_ui_refresh_callback(a_restore_all=False):
         global_open_items()
     SONG_EDITOR.open_song()
     TRANSPORT.open_transport()
-    PROJECT.this_pydaw_osc.pydaw_open_song(
+    PROJECT.en_osc.pydaw_open_song(
         PROJECT.project_folder, a_restore_all)
 
 #Opens or creates a new project
 def global_open_project(a_project_file):
     global PROJECT, TRACK_NAMES, PLUGIN_UI_DICT
-    PROJECT = pydaw_project(global_pydaw_with_audio)
+    PROJECT = EdmNextProject(global_pydaw_with_audio)
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
     PLUGIN_UI_DICT = mk_plugin_ui_dict(
@@ -10045,7 +10046,7 @@ def global_open_project(a_project_file):
 
 def global_new_project(a_project_file):
     global PROJECT, PLUGIN_UI_DICT
-    PROJECT = pydaw_project(global_pydaw_with_audio)
+    PROJECT = EdmNextProject(global_pydaw_with_audio)
     PROJECT.new_project(a_project_file)
     PROJECT.save_transport(TRANSPORT.transport)
     PLUGIN_UI_DICT = mk_plugin_ui_dict(
@@ -10063,7 +10064,7 @@ def global_new_project(a_project_file):
     ROUTING_GRAPH_WIDGET.scene.clear()
     global_open_mixer()
 
-PROJECT = pydaw_project(global_pydaw_with_audio)
+PROJECT = EdmNextProject(global_pydaw_with_audio)
 
 TIMESTRETCH_MODES = [
     _("None"), _("Pitch(affecting time)"), _("Time(affecting pitch)"),
