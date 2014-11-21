@@ -25,6 +25,7 @@ import libmk
 
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
+from libpydaw.pydaw_widgets import pydaw_modulex_settings
 
 from libpydaw.pydaw_osc import pydaw_osc
 
@@ -32,14 +33,6 @@ from PyQt4 import QtGui
 from libpydaw import pydaw_history
 
 TRACK_COUNT_ALL = 32
-
-
-def proj_file_str(a_val):
-    f_val = a_val
-    if isinstance(f_val, float):
-        f_val = round(a_val, 6)
-    return str(f_val)
-
 MAX_AUDIO_ITEM_COUNT = 256
 MAX_REGION_LENGTH = 64 #bars
 
@@ -65,8 +58,6 @@ pydaw_file_wave_editor_bookmarks = "projects/edmnext/wave_editor_bookmarks.txt"
 
 #Anything smaller gets deleted when doing a transform
 pydaw_min_note_length = 4.0 / 129.0
-
-pydaw_terminating_char = "\\"
 
 
 class pydaw_project(libmk.AbstractProject):
@@ -1014,88 +1005,6 @@ class pydaw_song:
                 f_region = f_line.split("|")
                 f_result.add_region_ref_by_uid(f_region[0], f_region[1])
         return f_result
-
-class pydaw_name_uid_dict:
-    def gen_file_name_uid(self):
-        while self.high_uid in self.name_lookup:
-            self.high_uid += 1
-        return self.high_uid
-
-    def __init__(self):
-        self.high_uid = 0
-        self.name_lookup = {}
-        self.uid_lookup = {}
-
-    def add_item(self, a_uid, a_name):
-        f_uid = int(a_uid)
-        self.name_lookup[f_uid] = str(a_name)
-        self.uid_lookup[a_name] = f_uid
-        if f_uid > self.high_uid:
-            self.high_uid = f_uid
-
-    def add_new_item(self, a_name, a_uid=None):
-        if a_name in self.uid_lookup:
-            raise Exception
-        if a_uid is None:
-            f_uid = self.gen_file_name_uid()
-        else:
-            f_uid = a_uid
-        self.add_item(f_uid, a_name)
-        return f_uid
-
-    def get_uid_by_name(self, a_name):
-        return self.uid_lookup[str(a_name)]
-
-    def get_name_by_uid(self, a_uid):
-        return self.name_lookup[int(a_uid)]
-
-    def rename_item(self, a_old_name, a_new_name):
-        f_uid = self.get_uid_by_name(a_old_name)
-        f_new_name = str(a_new_name)
-        f_old_name = self.name_lookup[f_uid]
-        self.uid_lookup.pop(f_old_name)
-        self.add_item(f_uid, f_new_name)
-
-    def uid_exists(self, a_uid):
-        return int(a_uid) in self.name_lookup
-
-    def name_exists(self, a_name):
-        return str(a_name) in self.uid_lookup
-
-    def get_takes(self):
-        f_result = {}
-        for k in self.uid_lookup:
-            f_regex = re.search("[0-9]+$", k)
-            if f_regex:
-                f_int = f_regex.group()
-                f_str = k[:f_regex.start()]
-                if f_str in f_result:
-                    f_result[f_str].append(f_int)
-                else:
-                    f_result[f_str] = [f_int]
-        return {k:sorted(v, key=lambda x: int(x))
-            for k, v in f_result.items() if len(v) > 1}
-
-    @staticmethod
-    def from_str(a_str):
-        f_result = pydaw_name_uid_dict()
-        f_lines = a_str.split("\n")
-        for f_line in f_lines:
-            if f_line == pydaw_terminating_char:
-                break
-            f_arr = f_line.split("|", 1)
-            f_uid = int(f_arr[0])
-            f_name = f_arr[1]
-            f_result.add_item(f_uid, f_name)
-        return f_result
-
-    def __str__(self):
-        f_result = []
-        for k in sorted(self.name_lookup.keys()):
-            v = self.name_lookup[k]
-            f_result.append("|".join((str(k), v)))
-        f_result.append(pydaw_terminating_char)
-        return "\n".join(f_result)
 
 class pydaw_region:
     def __init__(self, a_uid):
@@ -2418,7 +2327,7 @@ class pydaw_audio_item_fx_region:
             else:
                 f_result = []
                 for f_i in range(8):
-                    f_result.append(pydaw_audio_item_fx(64, 64, 64, 0))
+                    f_result.append(pydaw_modulex_settings(64, 64, 64, 0))
                 return f_result
 
     @staticmethod
@@ -2437,27 +2346,9 @@ class pydaw_audio_item_fx_region:
                 a_knob0, a_knob1, a_knob2, a_type = f_vals_arr[
                     f_index:f_index_end]
                 f_items_arr.append(
-                    pydaw_audio_item_fx(a_knob0, a_knob1, a_knob2, a_type))
+                    pydaw_modulex_settings(a_knob0, a_knob1, a_knob2, a_type))
             f_result.set_row(f_item_index, f_items_arr)
         return f_result
-
-class pydaw_audio_item_fx:
-    def __init__(self, a_knob0, a_knob1, a_knob2, a_type):
-        self.knobs = []
-        self.knobs.append(int(a_knob0))
-        self.knobs.append(int(a_knob1))
-        self.knobs.append(int(a_knob2))
-        self.fx_type = int(a_type)
-
-    def __lt__(self, other):
-        if self.index > other.index:
-            return False
-        else:
-            return self.fx_num < other.fx_num
-
-    def __str__(self):
-        return "|{}".format("|".join(map(proj_file_str,
-            (self.knobs[0], self.knobs[1], self.knobs[2], self.fx_type))))
 
 class pydaw_audio_input_tracks:
     def add_track(self, a_index, a_track):

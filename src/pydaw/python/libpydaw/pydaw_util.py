@@ -21,6 +21,8 @@ from math import log, pow
 from multiprocessing import cpu_count
 import numpy
 
+pydaw_terminating_char = "\\"
+
 global_pydaw_version_string = "musikernel"
 global_pydaw_file_type_string = 'MusiKernel Project (default.musikernel)'
 global_euphoria_file_type_string = 'Euphoria Sample File (*.u4ia4)'
@@ -776,4 +778,92 @@ def pydaw_rgb_plus(a_rgb, a_amt):
     for f_color in a_rgb:
         f_result.append(pydaw_clip_max(f_color + a_amt, 255))
     return f_result
+
+class pydaw_name_uid_dict:
+    def gen_file_name_uid(self):
+        while self.high_uid in self.name_lookup:
+            self.high_uid += 1
+        return self.high_uid
+
+    def __init__(self):
+        self.high_uid = 0
+        self.name_lookup = {}
+        self.uid_lookup = {}
+
+    def add_item(self, a_uid, a_name):
+        f_uid = int(a_uid)
+        self.name_lookup[f_uid] = str(a_name)
+        self.uid_lookup[a_name] = f_uid
+        if f_uid > self.high_uid:
+            self.high_uid = f_uid
+
+    def add_new_item(self, a_name, a_uid=None):
+        if a_name in self.uid_lookup:
+            raise Exception
+        if a_uid is None:
+            f_uid = self.gen_file_name_uid()
+        else:
+            f_uid = a_uid
+        self.add_item(f_uid, a_name)
+        return f_uid
+
+    def get_uid_by_name(self, a_name):
+        return self.uid_lookup[str(a_name)]
+
+    def get_name_by_uid(self, a_uid):
+        return self.name_lookup[int(a_uid)]
+
+    def rename_item(self, a_old_name, a_new_name):
+        f_uid = self.get_uid_by_name(a_old_name)
+        f_new_name = str(a_new_name)
+        f_old_name = self.name_lookup[f_uid]
+        self.uid_lookup.pop(f_old_name)
+        self.add_item(f_uid, f_new_name)
+
+    def uid_exists(self, a_uid):
+        return int(a_uid) in self.name_lookup
+
+    def name_exists(self, a_name):
+        return str(a_name) in self.uid_lookup
+
+    def get_takes(self):
+        f_result = {}
+        for k in self.uid_lookup:
+            f_regex = re.search("[0-9]+$", k)
+            if f_regex:
+                f_int = f_regex.group()
+                f_str = k[:f_regex.start()]
+                if f_str in f_result:
+                    f_result[f_str].append(f_int)
+                else:
+                    f_result[f_str] = [f_int]
+        return {k:sorted(v, key=lambda x: int(x))
+            for k, v in f_result.items() if len(v) > 1}
+
+    @staticmethod
+    def from_str(a_str):
+        f_result = pydaw_name_uid_dict()
+        f_lines = a_str.split("\n")
+        for f_line in f_lines:
+            if f_line == pydaw_terminating_char:
+                break
+            f_arr = f_line.split("|", 1)
+            f_uid = int(f_arr[0])
+            f_name = f_arr[1]
+            f_result.add_item(f_uid, f_name)
+        return f_result
+
+    def __str__(self):
+        f_result = []
+        for k in sorted(self.name_lookup.keys()):
+            v = self.name_lookup[k]
+            f_result.append("|".join((str(k), v)))
+        f_result.append(pydaw_terminating_char)
+        return "\n".join(f_result)
+
+def proj_file_str(a_val):
+    f_val = a_val
+    if isinstance(f_val, float):
+        f_val = round(a_val, 6)
+    return str(f_val)
 

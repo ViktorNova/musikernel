@@ -16,7 +16,6 @@ GNU General Public License for more details.
 import os
 import math
 from . import pydaw_util
-from libpydaw.pydaw_project import pydaw_audio_item_fx
 from libmk.mkproject import pydaw_folder_plugins
 from libpydaw.translate import _
 from PyQt4 import QtGui, QtCore
@@ -3971,6 +3970,24 @@ MODULEX_EFFECTS_LIST = [
     "Monofier", "LP<-->HP", "Growl Filter",
     "Screech LP", "Metal Comb", "Notch-D/W", "Foldback"]
 
+class pydaw_modulex_settings:
+    def __init__(self, a_knob0, a_knob1, a_knob2, a_type):
+        self.knobs = []
+        self.knobs.append(int(a_knob0))
+        self.knobs.append(int(a_knob1))
+        self.knobs.append(int(a_knob2))
+        self.fx_type = int(a_type)
+
+    def __lt__(self, other):
+        if self.index > other.index:
+            return False
+        else:
+            return self.fx_num < other.fx_num
+
+    def __str__(self):
+        return "|{}".format("|".join(pydaw_util.proj_file_str(x) for x in
+            (self.knobs[0], self.knobs[1], self.knobs[2], self.fx_type)))
+
 class pydaw_modulex_single:
     def __init__(self, a_title, a_port_k1, a_rel_callback, a_val_callback,
                  a_port_dict=None, a_preset_mgr=None, a_knob_size=51):
@@ -4058,19 +4075,19 @@ class pydaw_modulex_single:
         self.reset_settings()
 
     def reset_settings(self):
-        self.set_from_class(pydaw_audio_item_fx(64, 64, 64, 0))
+        self.set_from_class(pydaw_modulex_settings(64, 64, 64, 0))
         self.update_all_values()
 
     def set_from_class(self, a_class):
-        """ a_class is a pydaw_audio_item_fx instance """
+        """ a_class is a pydaw_modulex_settings instance """
         self.knobs[0].set_value(a_class.knobs[0])
         self.knobs[1].set_value(a_class.knobs[1])
         self.knobs[2].set_value(a_class.knobs[2])
         self.combobox.set_value(a_class.fx_type)
 
     def get_class(self):
-        """ return a pydaw_audio_item_fx instance """
-        return pydaw_audio_item_fx(
+        """ return a pydaw_modulex_settings instance """
+        return pydaw_modulex_settings(
             self.knobs[0].control.value(),
             self.knobs[1].control.value(),
             self.knobs[2].control.value(),
@@ -4394,12 +4411,12 @@ class pydaw_per_audio_item_fx_widget:
         self.scroll_area.setWidget(self.widget)
 
     def set_from_list(self, a_list):
-        """ a_class is a pydaw_audio_item_fx instance """
+        """ a_class is a pydaw_modulex_settings instance """
         for f_i in range(len(a_list)):
             self.effects[f_i].set_from_class(a_list[f_i])
 
     def get_list(self):
-        """ return a list of pydaw_audio_item_fx instances """
+        """ return a list of pydaw_modulex_settings instances """
         f_result = []
         for f_effect in self.effects:
             f_result.append(f_effect.get_class())
