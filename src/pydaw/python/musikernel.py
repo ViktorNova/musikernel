@@ -1209,7 +1209,7 @@ if not os.access(global_pydaw_home, os.W_OK):
 
 default_project_file = pydaw_util.get_file_setting("last-project", str, None)
 
-if not default_project_file: # or not os.path.exists(default_project_file):
+if not default_project_file:
     default_project_file = "{}/default-project/default.{}".format(
         global_pydaw_home, global_pydaw_version_string)
     print("No default project using {}".format(default_project_file))
