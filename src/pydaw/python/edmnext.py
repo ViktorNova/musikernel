@@ -3007,8 +3007,6 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_volume_action.triggered.connect(self.volume_dialog)
         f_normalize_action = f_properties_menu.addAction(_("Normalize..."))
         f_normalize_action.triggered.connect(self.normalize_dialog)
-        f_pitchbend_action = f_properties_menu.addAction(_("Pitchbend..."))
-        f_pitchbend_action.triggered.connect(self.pitchbend_selected)
         f_reset_fades_action = f_properties_menu.addAction(_("Reset Fades"))
         f_reset_fades_action.triggered.connect(self.reset_fades)
         f_reset_end_action = f_properties_menu.addAction(_("Reset End"))
@@ -3305,89 +3303,6 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_cancel_button.pressed.connect(cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_dialog.exec_()
-
-    def pitchbend_selected(self):
-        def ok_handler():
-            f_start = f_start_pitch.value()
-            f_end = f_end_pitch.value()
-            f_stretched_items = []
-            f_tempo = TRANSPORT.tempo_spinbox.value()
-            f_list = [(x.audio_item, x.graph_object.length_in_seconds)
-                for x in AUDIO_SEQ.audio_items if x.isSelected()]
-            f_start_beat = 999999999.0
-            f_end_beat = 0.0
-
-            for f_item, f_seconds in f_list:
-                f_item_start = (f_item.start_bar * 4.0) + f_item.start_beat
-                f_sample_start_seconds = (f_item.sample_start * 0.001 *
-                    f_seconds)
-                f_item_start -= pydaw_util.seconds_to_beats(
-                    f_tempo, f_sample_start_seconds)
-                if f_item_start < f_start_beat:
-                    f_start_beat = f_item_start
-                f_item_end = pydaw_util.seconds_to_beats(f_tempo, f_seconds)
-                f_item_end += f_item_start
-                if f_item_end > f_end_beat:
-                    f_end_beat = f_item_end
-                f_item.x_start = f_item_start
-                f_item.x_end = f_item_end
-
-            f_length = f_end_beat - f_start_beat
-
-            for f_item, f_seconds in f_list:
-                f_item.time_stretch_mode = 5
-                f_item.x_start -= f_start_beat
-                f_item.x_end -= f_start_beat
-                #print("{} {}".format(f_item.x_start, f_item.x_end))
-
-                f_item.pitch_shift = pydaw_util.linear_interpolate(
-                    f_start, f_end, f_item.x_start / f_length)
-                f_item.pitch_shift = pydaw_util.pydaw_clip_value(
-                    f_item.pitch_shift, -36, 36)
-
-                f_item.pitch_shift_end = pydaw_util.linear_interpolate(
-                    f_start, f_end, f_item.x_end / f_length)
-                f_item.pitch_shift_end = pydaw_util.pydaw_clip_value(
-                    f_item.pitch_shift_end, -36, 36)
-
-                #print("{} {}".format(f_item.pitch_shift,
-                #   f_item.pitch_shift_end))
-                f_ts_result = libmk.PROJECT.timestretch_audio_item(f_item)
-                if f_ts_result is not None:
-                    f_stretched_items.append(f_ts_result)
-
-            libmk.PROJECT.save_stretch_dicts()
-            for f_stretch_item in f_stretched_items:
-                f_stretch_item[2].wait()
-                libmk.PROJECT.get_wav_uid_by_name(
-                    f_stretch_item[0], a_uid=f_stretch_item[1])
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
-            PROJECT.commit(_("Pitchbend audio items"))
-            global_open_audio_items()
-            f_dialog.close()
-
-        def cancel_handler():
-            f_dialog.close()
-
-        f_dialog = QtGui.QDialog(MAIN_WINDOW)
-        f_layout = QtGui.QGridLayout(f_dialog)
-        f_layout.setAlignment(QtCore.Qt.AlignCenter)
-        f_layout.addWidget(QtGui.QLabel("Start:"), 1, 0)
-        f_start_pitch = QtGui.QSpinBox()
-        f_layout.addWidget(f_start_pitch, 1, 1)
-        f_start_pitch.setRange(-36, 36)
-        f_layout.addWidget(QtGui.QLabel("End:"), 5, 0)
-        f_end_pitch = QtGui.QSpinBox()
-        f_layout.addWidget(f_end_pitch, 5, 1)
-        f_end_pitch.setRange(-36, 36)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_layout.addWidget(f_ok_button, 10, 0)
-        f_ok_button.pressed.connect(ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
-        f_layout.addWidget(f_cancel_button, 10, 1)
-        f_cancel_button.pressed.connect(cancel_handler)
-        f_dialog.exec_()
-
 
     def reverse(self):
         f_list = AUDIO_SEQ.get_selected()
