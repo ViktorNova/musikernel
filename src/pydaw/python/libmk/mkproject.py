@@ -16,9 +16,6 @@ from PyQt4 import QtGui, QtCore
 from libpydaw import *
 from libpydaw.pydaw_util import *
 import libmk
-import numpy
-import scipy
-import scipy.signal
 import tarfile
 import json
 import wavefile
