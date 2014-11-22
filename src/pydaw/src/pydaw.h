@@ -4169,7 +4169,11 @@ void v_pydaw_set_ab_mode(t_pydaw_data * self, int a_mode)
     pthread_spin_unlock(&musikernel->main_lock);
 }
 
-void v_pydaw_set_plugin_index(int a_host_index, int a_track_num,
+/* Disable the optimizer for this function because it causes a
+ * SEGFAULT on ARM (which could not be reproduced on x86)
+ * This is not a performance-critical function. */
+__attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
+        int a_host_index, int a_track_num,
         int a_index, int a_plugin_index, int a_plugin_uid,
         int a_power, int a_lock)
 {
