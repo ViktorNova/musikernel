@@ -1224,16 +1224,16 @@ not os.access(os.path.dirname(default_project_file), os.W_OK):
     MAIN_WINDOW.prepare_to_quit()
 
 if os.path.exists(default_project_file):
-#    try:
+    try:
         global_open_project(default_project_file)
-#    except Exception as ex:
-#        QtGui.QMessageBox.warning(
-#            MAIN_WINDOW, _("Error"),
-#            _("Error opening project: {}\n{}\n"
-#            "Opening project recovery dialog".format(
-#            default_project_file, ex)))
-#        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
-#        MAIN_WINDOW.prepare_to_quit()
+    except Exception as ex:
+        QtGui.QMessageBox.warning(
+            MAIN_WINDOW, _("Error"),
+            _("Error opening project: {}\n{}\n"
+            "Opening project recovery dialog".format(
+            default_project_file, ex)))
+        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
+        MAIN_WINDOW.prepare_to_quit()
 else:
     global_new_project(default_project_file)
 
