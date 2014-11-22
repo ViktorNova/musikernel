@@ -3011,7 +3011,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_normalize_action.triggered.connect(self.normalize_dialog)
         f_reset_fades_action = f_properties_menu.addAction(_("Reset Fades"))
         f_reset_fades_action.triggered.connect(self.reset_fades)
-        f_reset_end_action = f_properties_menu.addAction(_("Reset End"))
+        f_reset_end_action = f_properties_menu.addAction(_("Reset Ends"))
         f_reset_end_action.triggered.connect(self.reset_end)
         f_move_to_end_action = f_properties_menu.addAction(
             _("Move to Region End"))
@@ -3340,11 +3340,12 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
     def reset_end(self):
         f_list = AUDIO_SEQ.get_selected()
         for f_item in f_list:
+            f_item.audio_item.sample_start = 0.0
             f_item.audio_item.sample_end = 1000.0
             self.draw()
             self.clip_at_region_end()
         PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
-        PROJECT.commit(_("Reset sample end for audio item(s)"))
+        PROJECT.commit(_("Reset sample ends for audio item(s)"))
         global_open_audio_items()
 
     def replace_with_path_in_clipboard(self):
