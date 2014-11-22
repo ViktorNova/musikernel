@@ -179,10 +179,12 @@ class transport_widget:
         if libmk.IS_PLAYING:
             self.play_button.setChecked(True)
             return
-        MAIN_WINDOW.current_module.TRANSPORT.on_rec()
-        libmk.IS_PLAYING = True
-        libmk.IS_RECORDING = True
-        self.menu_button.setEnabled(False)
+        if MAIN_WINDOW.current_module.TRANSPORT.on_rec():
+            libmk.IS_PLAYING = True
+            libmk.IS_RECORDING = True
+            self.menu_button.setEnabled(False)
+        else:
+            self.stop_button.setChecked(True)
 
     def on_panic(self):
         MAIN_WINDOW.current_module.TRANSPORT.on_panic()
