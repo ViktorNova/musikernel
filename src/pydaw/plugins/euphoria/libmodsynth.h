@@ -38,8 +38,6 @@ extern "C" {
 
 #define EUPHORIA_CHANNEL_COUNT 2
 
-// The number of noise modules to use.  This saves a lot of memory vs.
-// having one per voice
 #define EUPHORIA_NOISE_COUNT 16
 
 typedef struct
@@ -48,6 +46,14 @@ typedef struct
     fp_mf3_run fx_func_ptr[EUPHORIA_MONO_FX_COUNT];
     t_eq6 eqs;
 }t_euphoria_mfx_group;
+
+typedef struct
+{
+    fp_mf3_run fx_func_ptr;
+    fp_mf3_reset fx_reset_ptr;
+    t_mf3_multi multieffect;
+    int polyfx_mod_counts;
+}t_euphoria_pfx_group;
 
 typedef struct
 {
@@ -99,9 +105,7 @@ typedef struct
 
     t_euphoria_pfx_sample samples[EUPHORIA_MAX_SAMPLE_COUNT];
 
-    t_mf3_multi multieffect[EUPHORIA_MODULAR_POLYFX_COUNT];
-    fp_mf3_run fx_func_ptr[EUPHORIA_MODULAR_POLYFX_COUNT];
-    fp_mf3_reset fx_reset_ptr[EUPHORIA_MODULAR_POLYFX_COUNT];
+    t_euphoria_pfx_group effects [EUPHORIA_MODULAR_POLYFX_COUNT];
 
     float modulex_current_sample[2];
 
@@ -122,8 +126,6 @@ typedef struct
      //The index of the control to mod, currently 0-2
     int polyfx_mod_ctrl_indexes[EUPHORIA_MODULAR_POLYFX_COUNT][
         (EUPHORIA_CONTROLS_PER_MOD_EFFECT * EUPHORIA_MODULATOR_COUNT)];
-     //How many polyfx_mod_ptrs to iterate through for the current note
-    int polyfx_mod_counts[EUPHORIA_MODULAR_POLYFX_COUNT];
     //The index of the modulation source(LFO, ADSR, etc...) to multiply by
     int polyfx_mod_src_index[EUPHORIA_MODULAR_POLYFX_COUNT][
         (EUPHORIA_CONTROLS_PER_MOD_EFFECT * EUPHORIA_MODULATOR_COUNT)];
@@ -173,8 +175,8 @@ t_euphoria_poly_voice * g_euphoria_poly_init(float a_sr)
 
     for(f_i = 0; f_i < EUPHORIA_MODULAR_POLYFX_COUNT; ++f_i)
     {
-        g_mf3_init(&f_voice->multieffect[f_i], a_sr, 1);
-        f_voice->fx_func_ptr[f_i] = v_mf3_run_off;
+        g_mf3_init(&f_voice->effects[f_i].multieffect, a_sr, 1);
+        f_voice->effects[f_i].fx_func_ptr = v_mf3_run_off;
     }
 
     f_voice->modulator_outputs[0] = &(f_voice->adsr_amp.output);

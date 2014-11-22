@@ -785,24 +785,25 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
         ++i_loaded_samples;
     }
 
+    t_euphoria_pfx_group * f_pfx_group;
     int f_dst;
     //Modular PolyFX, processed from the index created during note_on
     register int i_dst = 0;
     while(i_dst < f_voice->active_polyfx_count)
     {
         f_dst = f_voice->active_polyfx[(i_dst)];
-        v_mf3_set(&f_voice->multieffect[f_dst],
+        f_pfx_group = &f_voice->effects[f_dst];
+
+        v_mf3_set(&f_pfx_group->multieffect,
             *(plugin_data->pfx_mod_knob[f_dst][0]),
             *(plugin_data->pfx_mod_knob[f_dst][1]),
             *(plugin_data->pfx_mod_knob[f_dst][2]));
 
         int f_mod_test = 0;
 
-        while(f_mod_test <
-            (f_voice->polyfx_mod_counts[f_dst]))
+        while(f_mod_test < f_pfx_group->polyfx_mod_counts)
         {
-            v_mf3_mod_single(
-                &f_voice->multieffect[f_dst],
+            v_mf3_mod_single(&f_pfx_group->multieffect,
                 *(f_voice->modulator_outputs[
                     (f_voice->polyfx_mod_src_index[f_dst][f_mod_test])]),
                 (f_voice->polyfx_mod_matrix_values[f_dst][f_mod_test]),
@@ -811,15 +812,12 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
             ++f_mod_test;
         }
 
-        f_voice->fx_func_ptr[f_dst](
-                &f_voice->multieffect[f_dst],
-                (f_voice->modulex_current_sample[0]),
-                (f_voice->modulex_current_sample[1]));
+        f_pfx_group->fx_func_ptr(&f_pfx_group->multieffect,
+            (f_voice->modulex_current_sample[0]),
+            (f_voice->modulex_current_sample[1]));
 
-        f_voice->modulex_current_sample[0] =
-            f_voice->multieffect[f_dst].output0;
-        f_voice->modulex_current_sample[1] =
-            f_voice->multieffect[f_dst].output1;
+        f_voice->modulex_current_sample[0] = f_pfx_group->multieffect.output0;
+        f_voice->modulex_current_sample[1] = f_pfx_group->multieffect.output1;
         ++i_dst;
     }
 
@@ -1094,13 +1092,13 @@ static void v_euphoria_process_midi_event(
             {
                 int f_pfx_combobox_index =
                     (int)(*plugin_data->fx_combobox[(i_dst)]);
-                f_voice->fx_func_ptr[(i_dst)] =
+                f_voice->effects[i_dst].fx_func_ptr =
                         g_mf3_get_function_pointer(f_pfx_combobox_index);
-                f_voice->fx_reset_ptr[(i_dst)] =
+                f_voice->effects[i_dst].fx_reset_ptr =
                         g_mf3_get_reset_function_pointer(f_pfx_combobox_index);
 
-                f_voice->fx_reset_ptr[(i_dst)](
-                    &f_voice->multieffect[(i_dst)]);
+                f_voice->effects[i_dst].fx_reset_ptr(
+                    &f_voice->effects[i_dst].multieffect);
 
                 if(f_pfx_combobox_index != 0)
                 {
@@ -1117,8 +1115,8 @@ static void v_euphoria_process_midi_event(
             while((i_dst) < (f_voice->active_polyfx_count))
             {
                 f_dst = f_voice->active_polyfx[i_dst];
-                f_voice->polyfx_mod_counts[f_voice->active_polyfx[i_dst]]
-                    = 0;
+                f_voice->effects[
+                    f_voice->active_polyfx[i_dst]].polyfx_mod_counts = 0;
 
                 i_src = 0;
                 while((i_src) < EUPHORIA_MODULATOR_COUNT)
@@ -1131,16 +1129,17 @@ static void v_euphoria_process_midi_event(
                         {
                             f_voice->polyfx_mod_ctrl_indexes[
                                 f_dst][
-                                (f_voice->polyfx_mod_counts[
-                                f_dst])] = (i_ctrl);
+                                f_voice->effects[f_dst].polyfx_mod_counts] =
+                                i_ctrl;
                             f_voice->polyfx_mod_src_index[f_dst][
-                                (f_voice->polyfx_mod_counts[f_dst])] = (i_src);
+                                (f_voice->effects[f_dst].polyfx_mod_counts)] =
+                                i_src;
                             f_voice->polyfx_mod_matrix_values[f_dst][
-                                (f_voice->polyfx_mod_counts[f_dst])] =
+                                f_voice->effects[f_dst].polyfx_mod_counts] =
                                 (*(plugin_data->polyfx_mod_matrix[
                                     f_dst][i_src][i_ctrl])) * .01;
 
-                            ++f_voice->polyfx_mod_counts[f_dst];
+                            ++f_voice->effects[f_dst].polyfx_mod_counts;
                         }
                         ++i_ctrl;
                     }
