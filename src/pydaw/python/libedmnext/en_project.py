@@ -94,7 +94,7 @@ class EdmNextProject(libmk.AbstractProject):
 
     def undo(self):
         if self.history_undo_cursor >= len(self.history_commits):
-            return False #meaning show the window
+            return False
         self.history_undo_cursor += 1
         self.history_commits[-1 * self.history_undo_cursor].undo(
             self.project_folder)
@@ -102,10 +102,11 @@ class EdmNextProject(libmk.AbstractProject):
 
     def redo(self):
         if self.history_undo_cursor == 0:
-            return
+            return False
         self.history_commits[-1 * self.history_undo_cursor].redo(
             self.project_folder)
         self.history_undo_cursor -= 1
+        return True
 
     def get_files_dict(self, a_folder, a_ext=None):
         f_result = {}

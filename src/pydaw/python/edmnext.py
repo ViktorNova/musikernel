@@ -9196,13 +9196,17 @@ class pydaw_main_window(QtGui.QScrollArea):
         if PROJECT.undo():
             global_ui_refresh_callback()
         else:
-            print("No more undo history left")
+            QtGui.QMessageBox.warning(
+                MAIN_WINDOW, "Error", "No more undo history left")
 
     def on_redo(self):
         if libmk.IS_PLAYING:
             return
-        PROJECT.redo()
-        global_ui_refresh_callback()
+        if PROJECT.redo():
+            global_ui_refresh_callback()
+        else:
+            QtGui.QMessageBox.warning(
+                MAIN_WINDOW, "Error", "Already at the latest commit")
 
     def tab_changed(self):
         f_index = self.main_tabwidget.currentIndex()
