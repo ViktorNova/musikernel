@@ -69,8 +69,6 @@ GNU General Public License for more details.
 #define PA_SAMPLE_TYPE paFloat32
 #define DEFAULT_FRAMES_PER_BUFFER 512
 
-static float sample_rate;
-
 static float **pluginOutputBuffers;
 
 //t_midi_device MIDI_DEVICE  __attribute__((aligned(16)));
@@ -243,6 +241,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         exit(9996);
     }
 
+    float sample_rate = 44100.0f;
     int f_thread_count = 0;
     int f_thread_affinity = 0;
     int f_performance = 0;
@@ -363,9 +362,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             sizeof(float) * FRAMES_PER_BUFFER);
         ++f_i;
     }
-
-    sample_rate = 44100.0f;
-
 
     /*Initialize Portaudio*/
     PaStreamParameters inputParameters, outputParameters;
@@ -679,6 +675,11 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         printf("Actual output latency:\n\tseconds:  %f\n\tsamples:  %i\n",
             (float)f_stream_info->outputLatency,
             (int)(f_stream_info->outputLatency * f_stream_info->sampleRate));
+        if((int)f_stream_info->sampleRate != (int)sample_rate)
+        {
+            printf("Warning:  Samplerate reported by the device does not "
+                "match the selected sample rate.\n");
+        }
     }
     else
     {
