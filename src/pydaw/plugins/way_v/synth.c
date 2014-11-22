@@ -914,7 +914,7 @@ static void v_wayv_process_midi_event(
             {
                 int f_pfx_combobox_index =
                     (int)(*(plugin_data->fx_combobox[(i_dst)]));
-                f_wayv_voice->fx_func_ptr[(i_dst)] =
+                f_wayv_voice->effects[i_dst].fx_func_ptr =
                     g_mf3_get_function_pointer(f_pfx_combobox_index);
 
                 if(f_pfx_combobox_index != 0)
@@ -1430,12 +1430,15 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
     a_voice->modulex_current_sample[0] = (a_voice->current_sample);
     a_voice->modulex_current_sample[1] = (a_voice->current_sample);
 
+    t_wayv_pfx_group * f_pfx_group;
     int i_dst, f_dst;
     //Modular PolyFX, processed from the index created during note_on
     for(i_dst = 0; (i_dst) < (a_voice->active_polyfx_count); ++i_dst)
     {
         f_dst = a_voice->active_polyfx[(i_dst)];
-        v_mf3_set(&a_voice->multieffect[f_dst],
+        f_pfx_group = &a_voice->effects[f_dst];
+
+        v_mf3_set(&f_pfx_group->multieffect,
             *(plugin_data->pfx_mod_knob[f_dst][0]),
                 *(plugin_data->pfx_mod_knob[f_dst][1]),
                 *(plugin_data->pfx_mod_knob[f_dst][2]));
@@ -1447,7 +1450,7 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
             f_mod_test++)
         {
             v_mf3_mod_single(
-                &a_voice->multieffect[f_dst],
+                &f_pfx_group->multieffect,
                 *(a_voice->modulator_outputs[
                     (a_voice->polyfx_mod_src_index[f_dst][f_mod_test])]),
                 (a_voice->polyfx_mod_matrix_values[f_dst][f_mod_test]),
@@ -1455,15 +1458,13 @@ static void v_run_wayv_voice(t_wayv *plugin_data,
                 );
         }
 
-        a_voice->fx_func_ptr[f_dst](
-            &a_voice->multieffect[f_dst],
+        f_pfx_group->fx_func_ptr(
+            &f_pfx_group->multieffect,
             (a_voice->modulex_current_sample[0]),
             (a_voice->modulex_current_sample[1]));
 
-        a_voice->modulex_current_sample[0] =
-            a_voice->multieffect[f_dst].output0;
-        a_voice->modulex_current_sample[1] =
-            a_voice->multieffect[f_dst].output1;
+        a_voice->modulex_current_sample[0] = f_pfx_group->multieffect.output0;
+        a_voice->modulex_current_sample[1] = f_pfx_group->multieffect.output1;
     }
 
     a_voice->modulex_current_sample[0] *= a_voice->lfo_amp_output;

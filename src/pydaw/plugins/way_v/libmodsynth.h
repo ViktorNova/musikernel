@@ -73,6 +73,12 @@ typedef struct
 
 typedef struct
 {
+    t_mf3_multi multieffect;
+    fp_mf3_run fx_func_ptr;
+}t_wayv_pfx_group;
+
+typedef struct
+{
     t_adsr adsr_main;
     /*This corresponds to the current sample being processed on this voice.
      * += this to the output buffer when finished.*/
@@ -117,8 +123,8 @@ typedef struct
     float velocity_track;
     float keyboard_track;
 
-    t_mf3_multi multieffect[WAYV_MODULAR_POLYFX_COUNT];
-    fp_mf3_run fx_func_ptr[WAYV_MODULAR_POLYFX_COUNT];
+    t_wayv_pfx_group effects[WAYV_MODULAR_POLYFX_COUNT];
+
     float modulex_current_sample[2];
     float * modulator_outputs[WAYV_MODULATOR_COUNT];
 
@@ -230,8 +236,8 @@ t_wayv_poly_voice * g_wayv_poly_init(float a_sr, t_wayv_mono_modules* a_mono)
 
     for(f_i = 0; f_i < WAYV_MODULAR_POLYFX_COUNT; f_i++)
     {
-        g_mf3_init(&f_voice->multieffect[f_i], a_sr, 1);
-        f_voice->fx_func_ptr[f_i] = v_mf3_run_off;
+        g_mf3_init(&f_voice->effects[f_i].multieffect, a_sr, 1);
+        f_voice->effects[f_i].fx_func_ptr = v_mf3_run_off;
     }
 
     f_voice->modulator_outputs[0] = &(f_voice->adsr_amp.output);
