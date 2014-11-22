@@ -8668,8 +8668,7 @@ class transport_widget(libmk.AbstractTransport):
             if x.record_checkbox.isChecked()]
         if not self.active_devices:
             QtGui.QMessageBox.warning(
-                self.group_box, _("Error"),
-                _("No track record-armed"))
+                self.group_box, _("Error"), _("No track record-armed"))
             return False
         if self.overdub_checkbox.isChecked() and \
         self.loop_mode_combobox.currentIndex() > 0:
