@@ -8676,13 +8676,11 @@ class transport_widget(libmk.AbstractTransport):
             QtGui.QMessageBox.warning(
                 self.group_box, _("Error"),
                 _("Cannot use overdub mode with loop mode to record"))
-            self.stop_button.setChecked(True)
             return False
         if WAVE_EDITOR.enabled_checkbox.isChecked():
             QtGui.QMessageBox.warning(
                 self.group_box, _("Error"),
                 _("The wave editor does not yet support recording."))
-            self.stop_button.setChecked(True)
             return False
         SONG_EDITOR.table_widget.setEnabled(False)
         WAVE_EDITOR.on_play()
