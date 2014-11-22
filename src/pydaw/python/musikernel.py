@@ -326,16 +326,6 @@ class MkMainWindow(QtGui.QMainWindow):
         self.redo_action.triggered.connect(self.on_redo)
         self.redo_action.setShortcut(QtGui.QKeySequence.Redo)
 
-        self.menu_edit.addSeparator()
-
-        self.undo_history_action = self.menu_edit.addAction(
-            _("Undo History..."))
-        self.undo_history_action.triggered.connect(self.on_undo_history)
-
-        self.verify_history_action = self.menu_edit.addAction(
-            _("Verify History DB..."))
-        self.verify_history_action.triggered.connect(self.on_verify_history)
-
         self.menu_appearance = self.menu_bar.addMenu(_("Appearance"))
 
         self.collapse_splitters_action = self.menu_appearance.addAction(
@@ -620,38 +610,6 @@ class MkMainWindow(QtGui.QMainWindow):
                 self.prepare_to_quit()
         else:
             event.accept()
-
-
-    def on_undo_history(self):
-        if libmk.IS_PLAYING:
-            return
-        self.current_module.PROJECT.flush_history()
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Undo history"))
-        f_layout = QtGui.QVBoxLayout()
-        f_window.setLayout(f_layout)
-        f_widget = pydaw_history_log_widget(
-            self.current_module.PROJECT.history,
-            self.current_module.global_ui_refresh_callback)
-        f_widget.populate_table()
-        f_layout.addWidget(f_widget)
-        f_window.setGeometry(
-            QtCore.QRect(f_window.x(), f_window.y(), 900, 720))
-        f_window.exec_()
-
-    def on_verify_history(self):
-        if libmk.IS_PLAYING:
-            return
-        f_str = self.current_module.PROJECT.verify_history()
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Verify Project History Database"))
-        f_window.setFixedSize(800, 600)
-        f_layout = QtGui.QVBoxLayout()
-        f_window.setLayout(f_layout)
-        f_text = QtGui.QTextEdit(f_str)
-        f_text.setReadOnly(True)
-        f_layout.addWidget(f_text)
-        f_window.exec_()
 
     def on_change_audio_settings(self):
         f_dialog = pydaw_device_dialog.pydaw_device_dialog(True)
@@ -1025,8 +983,6 @@ def close_pydaw_engine():
     libmk.IPC.stop_server()
     global PYDAW_SUBPROCESS
     if PYDAW_SUBPROCESS is not None:
-        for PROJECT in (x.PROJECT for x in MAIN_WINDOW.host_modules):
-            PROJECT.quit_handler()
         f_exited = False
         for i in range(20):
             if PYDAW_SUBPROCESS.poll() == None:

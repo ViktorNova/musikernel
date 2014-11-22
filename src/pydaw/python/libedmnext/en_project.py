@@ -121,12 +121,6 @@ class EdmNextProject(libmk.AbstractProject):
                 "{}/{}".format(a_folder, f_file))
         return f_result
 
-    def flush_history(self):
-        for f_commit in self.history_commits:
-            self.history.commit(f_commit)
-        self.history_commits = []
-        self.history_undo_cursor = 0
-
     def set_project_folders(self, a_project_file):
         #folders
         self.project_folder = os.path.dirname(a_project_file)
@@ -175,8 +169,7 @@ class EdmNextProject(libmk.AbstractProject):
             print("project file {} does not exist, creating as "
                 "new project".format(a_project_file))
             self.new_project(a_project_file)
-        else:
-            self.history = pydaw_history.pydaw_history(self.edmnext_folder)
+
         if a_notify_osc:
             self.en_osc.pydaw_open_song(self.project_folder)
 
@@ -187,7 +180,6 @@ class EdmNextProject(libmk.AbstractProject):
             print(project_dir)
             if not os.path.isdir(project_dir):
                 os.makedirs(project_dir)
-        self.history = pydaw_history.pydaw_history(self.edmnext_folder)
 
         self.create_file("", pydaw_file_pyregions, pydaw_terminating_char)
         self.create_file("", pydaw_file_pyitems, pydaw_terminating_char)
@@ -687,10 +679,6 @@ class EdmNextProject(libmk.AbstractProject):
             if a_commit:
                 self.commit("Update per-audio-item effects")
 
-    def verify_history(self):
-        self.flush_history()
-        return self.history.verify_history()
-
     def get_transport(self):
         try:
             f_file = open(
@@ -887,9 +875,6 @@ class EdmNextProject(libmk.AbstractProject):
     def get_region_list(self):
         f_result = self.get_regions_dict()
         return sorted(f_result.uid_lookup.keys())
-
-    def quit_handler(self):
-        self.flush_history()
 
     def error_log_write(self, a_message):
         f_file = open("{}/error.log".format(self.project_folder), "a")

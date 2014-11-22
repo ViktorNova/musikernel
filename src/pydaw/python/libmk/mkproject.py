@@ -137,7 +137,6 @@ class MkProject(libmk.AbstractProject):
             f_new_project_folder, self.project_file, a_file_name))
 #        self.set_project_folders(f_file_name)
 #        self.this_pydaw_osc.pydaw_open_song(self.project_folder)
-#        self.history = pydaw_history.pydaw_history(self.edmnext_folder)
 
     def get_next_plugin_uid(self):
         if os.path.isfile(self.plugin_uid_file):

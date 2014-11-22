@@ -3351,8 +3351,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
     def replace_with_path_in_clipboard(self):
         f_path = global_get_audio_file_from_clipboard()
         if f_path is not None:
-            self.audio_item.uid = libmk.PROJECT.get_wav_uid_by_name(
-                f_path)
+            self.audio_item.uid = libmk.PROJECT.get_wav_uid_by_name(f_path)
             PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
             PROJECT.commit(_("Replace audio item"))
             global_open_audio_items(True)
@@ -8603,9 +8602,6 @@ class transport_widget(libmk.AbstractTransport):
 
         self.set_region_value(self.start_region)
         if libmk.IS_RECORDING:
-            # As the history will be referenced when the
-            # recorded items are added to history
-            PROJECT.flush_history()
             self.show_save_items_dialog()
             if CURRENT_REGION is not None and \
             REGION_SETTINGS.enabled:
@@ -9200,7 +9196,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         if PROJECT.undo():
             global_ui_refresh_callback()
         else:
-            self.on_undo_history()
+            print("No more undo history left")
 
     def on_redo(self):
         if libmk.IS_PLAYING:
@@ -9310,8 +9306,6 @@ class pydaw_main_window(QtGui.QScrollArea):
             PIANO_ROLL_EDITOR.prepare_to_quit()
             time.sleep(0.5)
             PLUGIN_UI_DICT.close_all_plugin_windows()
-            if not global_pydaw_with_audio:
-                PROJECT.flush_history()
         except Exception as ex:
             print("Exception thrown while attempting to exit, "
                 "forcing MusiKernel to exit")
