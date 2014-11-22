@@ -325,87 +325,87 @@ typedef struct
     long f_next_current_sample;
     t_midi_device_list * midi_devices;
     t_pydaw_midi_routing_list midi_routing;
-}t_pydaw_data;
+}t_edmnext;
 
 typedef struct
 {
     int thread_num;
 }t_pydaw_thread_args;
 
-void g_pysong_get(t_pydaw_data*, int);
+void g_pysong_get(t_edmnext*, int);
 t_pytrack_routing * g_pytrack_routing_get();
-t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data *);
+t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_edmnext *);
 void v_pytrack_routing_graph_free(t_pydaw_routing_graph*);
 void v_pytrack_routing_set(t_pytrack_routing *, int, int);
 void v_pytrack_routing_free(t_pytrack_routing *);
-t_pyregion * g_pyregion_get(t_pydaw_data*, const int);
-t_pydaw_atm_region * g_atm_region_get(t_pydaw_data*, int);
+t_pyregion * g_pyregion_get(t_edmnext*, const int);
+t_pydaw_atm_region * g_atm_region_get(t_edmnext*, int);
 void v_atm_region_free(t_pydaw_atm_region*);
-void g_pyitem_get(t_pydaw_data*, int);
+void g_pyitem_get(t_edmnext*, int);
 
 t_pydaw_seq_event * g_pycc_get(int, float, float);
 t_pydaw_seq_event * g_pypitchbend_get(float a_start, float a_value);
 t_pydaw_seq_event * g_pynote_get(int a_note, int a_vel, float a_start,
                                  float a_length);
-t_pydaw_data * g_pydaw_data_get(t_midi_device_list*);
-int i_get_region_index_from_name(t_pydaw_data *, int);
-void v_open_project(t_pydaw_data*, const char*, int);
-void v_set_tempo(t_pydaw_data*,float);
-void v_pydaw_set_is_soloed(t_pydaw_data * self);
-void v_set_loop_mode(t_pydaw_data * self, int a_mode);
-void v_set_playback_cursor(t_pydaw_data * self, int a_region,
+t_edmnext * g_pydaw_data_get(t_midi_device_list*);
+int i_get_region_index_from_name(t_edmnext *, int);
+void v_open_project(t_edmnext*, const char*, int);
+void v_set_tempo(t_edmnext*,float);
+void v_pydaw_set_is_soloed(t_edmnext * self);
+void v_set_loop_mode(t_edmnext * self, int a_mode);
+void v_set_playback_cursor(t_edmnext * self, int a_region,
                            int a_bar);
-int i_get_song_index_from_region_uid(t_pydaw_data*, int);
-void v_save_pysong_to_disk(t_pydaw_data * self);
-void v_save_pyitem_to_disk(t_pydaw_data * self, int a_index);
-void v_save_pyregion_to_disk(t_pydaw_data * self, int a_region_num);
+int i_get_song_index_from_region_uid(t_edmnext*, int);
+void v_save_pysong_to_disk(t_edmnext * self);
+void v_save_pyitem_to_disk(t_edmnext * self, int a_index);
+void v_save_pyregion_to_disk(t_edmnext * self, int a_region_num);
 void v_pydaw_set_plugin_index(int a_host_index, int a_track_num,
         int a_index, int a_plugin_index, int a_plugin_uid,
         int a_power, int a_lock);
-void v_pydaw_update_track_send(t_pydaw_data * self, int a_lock);
+void v_pydaw_update_track_send(t_edmnext * self, int a_lock);
 void * v_pydaw_worker_thread(void*);
-void v_pydaw_init_worker_threads(t_pydaw_data*, int, int);
-void v_pydaw_process_external_midi(t_pydaw_data * pydaw_data,
+void v_pydaw_init_worker_threads(t_edmnext*, int, int);
+void v_pydaw_process_external_midi(t_edmnext * pydaw_data,
         t_pytrack * a_track, int sample_count);
-inline void v_pydaw_run_main_loop(t_pydaw_data * pydaw_data, int sample_count,
+inline void v_pydaw_run_main_loop(t_edmnext * pydaw_data, int sample_count,
         long f_next_current_sample, float **output, float **a_input_buffers);
-void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
+void v_pydaw_offline_render(t_edmnext * self, int a_start_region,
         int a_start_bar, int a_end_region, int a_end_bar, char * a_file_out,
         int a_is_audio_glue, int a_create_file);
 void v_pydaw_audio_items_run(
-    t_pydaw_data*, int, float**, float**, int, int, int*);
-void v_pydaw_update_audio_inputs(t_pydaw_data * self);
-inline float v_pydaw_count_beats(t_pydaw_data * self,
+    t_edmnext*, int, float**, float**, int, int, int*);
+void v_pydaw_update_audio_inputs(t_edmnext * self);
+inline float v_pydaw_count_beats(t_edmnext * self,
         int a_start_region, int a_start_bar, float a_start_beat,
         int a_end_region, int a_end_bar, float a_end_beat);
-t_pydaw_audio_items * v_audio_items_load_all(t_pydaw_data * self,
+t_pydaw_audio_items * v_audio_items_load_all(t_edmnext * self,
         int a_region_uid);
 
-void v_pydaw_set_ab_mode(t_pydaw_data * self, int a_mode);
+void v_pydaw_set_ab_mode(t_edmnext * self, int a_mode);
 
 t_pydaw_per_audio_item_fx_region * g_paif_region_get();
 void v_paif_region_free(t_pydaw_per_audio_item_fx_region*);
-t_pydaw_per_audio_item_fx_region * g_paif_region_open(t_pydaw_data*, int);
-t_pydaw_per_audio_item_fx_item * g_paif_item_get(t_pydaw_data *);
-void v_paif_set_control(t_pydaw_data *, int, int, int, float);
+t_pydaw_per_audio_item_fx_region * g_paif_region_open(t_edmnext*, int);
+t_pydaw_per_audio_item_fx_item * g_paif_item_get(t_edmnext *);
+void v_paif_set_control(t_edmnext *, int, int, int, float);
 
 void v_pysong_free(t_pysong *);
-void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i);
-void v_pydaw_process_midi(t_pydaw_data * self,
+void v_pydaw_process_note_offs(t_edmnext * self, int f_i);
+void v_pydaw_process_midi(t_edmnext * self,
         int f_i, int sample_count);
-void v_pydaw_zero_all_buffers(t_pydaw_data * self);
-void v_pydaw_panic(t_pydaw_data * self);
+void v_pydaw_zero_all_buffers(t_edmnext * self);
+void v_pydaw_panic(t_edmnext * self);
 
 void v_pydaw_process_atm(
-    t_pydaw_data * self, int f_track_num, int f_index, int sample_count);
+    t_edmnext * self, int f_track_num, int f_index, int sample_count);
 
-void v_pydaw_set_midi_device(t_pydaw_data*, int, int, int);
+void v_pydaw_set_midi_device(t_edmnext*, int, int, int);
 
 #ifdef	__cplusplus
 }
 #endif
 
-t_pydaw_data * pydaw_data;
+t_edmnext * pydaw_data;
 
 
 
@@ -531,7 +531,7 @@ inline float f_pydaw_samples_to_beat_count(int a_sample_count, float a_tempo,
     return f_seconds / f_seconds_per_beat;
 }
 
-void v_pydaw_reset_audio_item_read_heads(t_pydaw_data * self,
+void v_pydaw_reset_audio_item_read_heads(t_edmnext * self,
         int a_region, int a_start_bar)
 {
     if(a_start_bar == 0)
@@ -587,7 +587,7 @@ void v_pydaw_reset_audio_item_read_heads(t_pydaw_data * self,
 
 /* void v_pydaw_zero_all_buffers(t_pydaw_data * self)
  */
-void v_pydaw_zero_all_buffers(t_pydaw_data * self)
+void v_pydaw_zero_all_buffers(t_edmnext * self)
 {
     int f_i = 0;
     float ** f_buff;
@@ -602,7 +602,7 @@ void v_pydaw_zero_all_buffers(t_pydaw_data * self)
 /* void v_pydaw_panic(t_pydaw_data * self)
  *
  */
-void v_pydaw_panic(t_pydaw_data * self)
+void v_pydaw_panic(t_edmnext * self)
 {
     register int f_i = 0;
     register int f_i2 = 0;
@@ -707,7 +707,7 @@ void v_paif_region_free(t_pydaw_per_audio_item_fx_region * a_paif)
 /* t_pydaw_per_audio_item_fx_region *
  * g_paif_region_open(t_pydaw_data * self, int a_region_uid) */
 t_pydaw_per_audio_item_fx_region * g_paif_region_open(
-        t_pydaw_data * self, int a_region_uid)
+        t_edmnext * self, int a_region_uid)
 {
     t_pydaw_per_audio_item_fx_region * f_result = g_paif_region_get();
 
@@ -764,7 +764,7 @@ t_pydaw_per_audio_item_fx_region * g_paif_region_open(
     return f_result;
 }
 
-t_pydaw_per_audio_item_fx_item * g_paif_item_get(t_pydaw_data * self)
+t_pydaw_per_audio_item_fx_item * g_paif_item_get(t_edmnext * self)
 {
     t_pydaw_per_audio_item_fx_item * f_result =
             (t_pydaw_per_audio_item_fx_item*)malloc(
@@ -783,7 +783,7 @@ t_pydaw_per_audio_item_fx_item * g_paif_item_get(t_pydaw_data * self)
     return f_result;
 }
 
-void v_paif_set_control(t_pydaw_data * self, int a_region_uid,
+void v_paif_set_control(t_edmnext * self, int a_region_uid,
         int a_item_index, int a_port, float a_val)
 {
     int f_effect_index = a_port / 4;
@@ -863,7 +863,7 @@ void v_paif_set_control(t_pydaw_data * self, int a_region_uid,
 
 void * v_pydaw_osc_send_thread(void* a_arg)
 {
-    t_pydaw_data * self = (t_pydaw_data*)a_arg;
+    t_edmnext * self = (t_edmnext*)a_arg;
 
     int f_i = 0;
 
@@ -1097,7 +1097,7 @@ __attribute__((optimize("-O0"))) void v_self_set_thread_affinity()
     pthread_attr_destroy(&threadAttr);
 }
 
-void v_pydaw_init_worker_threads(t_pydaw_data * self,
+void v_pydaw_init_worker_threads(t_edmnext * self,
         int a_thread_count, int a_set_thread_affinity)
 {
     int f_cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
@@ -1276,7 +1276,7 @@ void v_pydaw_init_worker_threads(t_pydaw_data * self,
 
 
 void v_pydaw_set_control_from_atm(
-        t_pydaw_seq_event *event, t_pydaw_data * self,
+        t_pydaw_seq_event *event, t_edmnext * self,
         int a_plugin_uid, int a_track_num)
 {
     t_pytrack * f_track = self->track_pool[a_track_num];
@@ -1291,7 +1291,7 @@ void v_pydaw_set_control_from_atm(
 }
 
 void v_pydaw_set_control_from_cc(
-        t_pydaw_seq_event *event, t_pydaw_data * self, int a_track_num)
+        t_pydaw_seq_event *event, t_edmnext * self, int a_track_num)
 {
     t_pytrack * f_track = self->track_pool[a_track_num];
 
@@ -1318,7 +1318,7 @@ inline void v_buffer_mix(
 }
 
 
-void v_pydaw_sum_track_outputs(t_pydaw_data * self, t_pytrack * a_track)
+void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
 {
     int f_bus_num;
     register int f_i2;
@@ -1495,7 +1495,7 @@ __attribute__((optimize("-O0"))) void v_wait_for_bus(t_pytrack * a_track)
     }
 }
 
-void v_pydaw_process_track(t_pydaw_data * self, int a_global_track_num)
+void v_pydaw_process_track(t_edmnext * self, int a_global_track_num)
 {
     t_pytrack * f_track = self->track_pool[a_global_track_num];
     t_pydaw_plugin * f_plugin;
@@ -1563,7 +1563,7 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
 {
     t_pytrack * f_track;
     int f_track_index;
-    t_pydaw_data * self = pydaw_data;
+    t_edmnext * self = pydaw_data;
     int f_i = f_args->thread_num;
     int f_sorted_count = self->routing_graph->track_pool_sorted_count;
     int * f_sorted = self->routing_graph->track_pool_sorted[f_args->thread_num];
@@ -1609,7 +1609,7 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
 void * v_pydaw_worker_thread(void* a_arg)
 {
     t_pydaw_thread_args * f_args = (t_pydaw_thread_args*)(a_arg);
-    t_pydaw_data * self = pydaw_data;
+    t_edmnext * self = pydaw_data;
     int f_thread_num = f_args->thread_num;
     pthread_cond_t * f_track_cond = &self->track_cond[f_thread_num];
     pthread_mutex_t * f_track_block_mutex =
@@ -1636,7 +1636,7 @@ void * v_pydaw_worker_thread(void* a_arg)
 }
 
 inline void v_pydaw_process_atm(
-    t_pydaw_data * self, int f_track_num, int f_index, int sample_count)
+    t_edmnext * self, int f_track_num, int f_index, int sample_count)
 {
     t_pytrack * f_track = self->track_pool[f_track_num];
     t_pydaw_plugin * f_plugin = f_track->plugins[f_index];
@@ -1777,7 +1777,7 @@ inline void v_pydaw_process_atm(
     }
 }
 
-void v_pydaw_process_midi(t_pydaw_data * self, int f_i, int sample_count)
+void v_pydaw_process_midi(t_edmnext * self, int f_i, int sample_count)
 {
     t_pytrack * f_track = self->track_pool[f_i];
     f_track->period_event_index = 0;
@@ -1983,7 +1983,7 @@ void v_pydaw_process_midi(t_pydaw_data * self, int f_i, int sample_count)
     }
 }
 
-void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
+void v_pydaw_process_note_offs(t_edmnext * self, int f_i)
 {
     t_pytrack * f_track = self->track_pool[f_i];
     long f_current_sample = self->current_sample;
@@ -2011,7 +2011,7 @@ void v_pydaw_process_note_offs(t_pydaw_data * self, int f_i)
     }
 }
 
-void v_pydaw_process_external_midi(t_pydaw_data * self,
+void v_pydaw_process_external_midi(t_edmnext * self,
         t_pytrack * a_track, int sample_count)
 {
     if(!a_track->midi_device)
@@ -2135,7 +2135,7 @@ void v_pydaw_process_external_midi(t_pydaw_data * self,
 }
 
 
-inline void v_pydaw_set_time_params(t_pydaw_data * self,
+inline void v_pydaw_set_time_params(t_edmnext * self,
         int sample_count)
 {
     self->ml_sample_period_inc =
@@ -2200,7 +2200,7 @@ inline void v_pydaw_set_time_params(t_pydaw_data * self,
     }
 }
 
-inline void v_pydaw_finish_time_params(t_pydaw_data * self,
+inline void v_pydaw_finish_time_params(t_edmnext * self,
         int a_region_length_bars)
 {
     self->playback_cursor = (self->ml_next_playback_cursor);
@@ -2252,7 +2252,7 @@ void v_wait_for_threads()
     }
 }
 
-inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
+inline void v_pydaw_run_engine(t_edmnext * self, int sample_count,
         long f_next_current_sample, float **output, float **a_input_buffers)
 {
     //notify the worker threads to wake up
@@ -2351,7 +2351,7 @@ inline void v_pydaw_run_engine(t_pydaw_data * self, int sample_count,
     }
 }
 
-inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
+inline void v_pydaw_run_main_loop(t_edmnext * self, int sample_count,
         long f_next_current_sample, float ** a_buffers,
         PYFX_Data **a_input_buffers)
 {
@@ -2446,7 +2446,7 @@ inline void v_pydaw_run_main_loop(t_pydaw_data * self, int sample_count,
 
 
 
-void v_pydaw_audio_items_run(t_pydaw_data * self,
+void v_pydaw_audio_items_run(t_edmnext * self,
     int a_sample_count, float** a_buff, float ** a_sc_buff,
     int a_audio_track_num, int a_is_audio_glue, int * a_sc_dirty)
 {
@@ -2888,7 +2888,7 @@ t_pydaw_seq_event * g_pypitchbend_get(float a_start, float a_value)
     return f_result;
 }
 
-void g_pysong_get(t_pydaw_data* self, int a_lock)
+void g_pysong_get(t_edmnext* self, int a_lock)
 {
     t_pysong * f_result = (t_pysong*)malloc(sizeof(t_pysong));
 
@@ -2960,7 +2960,7 @@ void g_pysong_get(t_pydaw_data* self, int a_lock)
 }
 
 
-int i_get_song_index_from_region_uid(t_pydaw_data* self, int a_uid)
+int i_get_song_index_from_region_uid(t_edmnext* self, int a_uid)
 {
     int f_i = 0;
 
@@ -2978,7 +2978,7 @@ int i_get_song_index_from_region_uid(t_pydaw_data* self, int a_uid)
     return -1;
 }
 
-t_pydaw_atm_region * g_atm_region_get(t_pydaw_data * self, int a_uid)
+t_pydaw_atm_region * g_atm_region_get(t_edmnext * self, int a_uid)
 {
     t_pydaw_atm_region * f_result = 0;
 
@@ -3106,7 +3106,7 @@ void v_atm_region_free(t_pydaw_atm_region * self)
     free(self);
 }
 
-t_pyregion * g_pyregion_get(t_pydaw_data* self, int a_uid)
+t_pyregion * g_pyregion_get(t_edmnext* self, int a_uid)
 {
     t_pyregion * f_result = (t_pyregion*)malloc(sizeof(t_pyregion));
 
@@ -3201,7 +3201,7 @@ t_pyregion * g_pyregion_get(t_pydaw_data* self, int a_uid)
 }
 
 
-void g_pyitem_get(t_pydaw_data* self, int a_uid)
+void g_pyitem_get(t_edmnext* self, int a_uid)
 {
     t_pyitem * f_result;
     lmalloc((void**)&f_result, sizeof(t_pyitem));
@@ -3281,10 +3281,10 @@ void g_pyitem_get(t_pydaw_data* self, int a_uid)
     self->item_pool[a_uid] = f_result;
 }
 
-t_pydaw_data * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
+t_edmnext * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
 {
-    t_pydaw_data * f_result;
-    hpalloc((void**)&f_result, sizeof(t_pydaw_data));
+    t_edmnext * f_result;
+    hpalloc((void**)&f_result, sizeof(t_edmnext));
 
     pthread_mutex_init(&musikernel->audio_inputs_mutex, NULL);
 
@@ -3422,7 +3422,7 @@ void v_pydaw_open_track(int a_host_index, int a_index)
 }
 
 
-void v_pydaw_open_tracks(t_pydaw_data * self)
+void v_pydaw_open_tracks(t_edmnext * self)
 {
     char f_file_name[1024];
     sprintf(f_file_name, "%s/projects/edmnext/tracks.txt",
@@ -3482,7 +3482,7 @@ void v_pydaw_open_tracks(t_pydaw_data * self)
     v_pydaw_open_track(1, 0);
 }
 
-void v_open_project(t_pydaw_data* self, const char* a_project_folder,
+void v_open_project(t_edmnext* self, const char* a_project_folder,
         int a_first_load)
 {
     struct timespec f_start, f_finish;
@@ -3620,7 +3620,7 @@ void v_open_project(t_pydaw_data* self, const char* a_project_folder,
  * int a_region, //The region index to start playback on
  * int a_bar) //The bar index (with a_region) to start playback on
  */
-void v_set_playback_mode(t_pydaw_data * self, int a_mode,
+void v_set_playback_mode(t_edmnext * self, int a_mode,
         int a_region, int a_bar, int a_lock)
 {
     switch(a_mode)
@@ -3733,7 +3733,7 @@ void v_set_playback_mode(t_pydaw_data * self, int a_mode,
 
 
 /*Load/Reload samples from file...*/
-t_pydaw_audio_items * v_audio_items_load_all(t_pydaw_data * self,
+t_pydaw_audio_items * v_audio_items_load_all(t_edmnext * self,
         int a_region_uid)
 {
     t_pydaw_audio_items * f_result =
@@ -3797,7 +3797,7 @@ t_pydaw_audio_items * v_audio_items_load_all(t_pydaw_data * self,
 }
 
 
-void v_set_playback_cursor(t_pydaw_data * self, int a_region, int a_bar)
+void v_set_playback_cursor(t_edmnext * self, int a_region, int a_bar)
 {
     self->current_bar = a_bar;
     self->current_region = a_region;
@@ -3831,7 +3831,7 @@ void v_set_playback_cursor(t_pydaw_data * self, int a_region, int a_bar)
     }
 }
 
-void v_pydaw_set_is_soloed(t_pydaw_data * self)
+void v_pydaw_set_is_soloed(t_edmnext * self)
 {
     int f_i = 0;
     self->is_soloed = 0;
@@ -3847,12 +3847,12 @@ void v_pydaw_set_is_soloed(t_pydaw_data * self)
     }
 }
 
-void v_set_loop_mode(t_pydaw_data * self, int a_mode)
+void v_set_loop_mode(t_edmnext * self, int a_mode)
 {
     self->loop_mode = a_mode;
 }
 
-void v_set_tempo(t_pydaw_data * self, float a_tempo)
+void v_set_tempo(t_edmnext * self, float a_tempo)
 {
     self->tempo = a_tempo;
     self->playback_inc = ( (1.0f/(musikernel->sample_rate)) /
@@ -3861,7 +3861,7 @@ void v_set_tempo(t_pydaw_data * self, float a_tempo)
             (a_tempo/60.0f);
 }
 
-void v_pydaw_update_audio_inputs(t_pydaw_data * self)
+void v_pydaw_update_audio_inputs(t_edmnext * self)
 {
     char f_inputs_file[1024];
     sprintf(f_inputs_file, "%s/projects/edmnext/input.txt",
@@ -3935,7 +3935,7 @@ void v_pydaw_update_audio_inputs(t_pydaw_data * self)
 }
 
 /*Count the number of beats between 2 points in time...*/
-inline float v_pydaw_count_beats(t_pydaw_data * self,
+inline float v_pydaw_count_beats(t_edmnext * self,
         int a_start_region, int a_start_bar, float a_start_beat,
         int a_end_region, int a_end_bar, float a_end_beat)
 {
@@ -3964,7 +3964,7 @@ inline float v_pydaw_count_beats(t_pydaw_data * self,
     return ((float)(f_beat_total)) + (a_end_beat - a_start_beat);
 }
 
-void v_pydaw_offline_render_prep(t_pydaw_data * self)
+void v_pydaw_offline_render_prep(t_edmnext * self)
 {
     printf("Warming up plugins for offline rendering...\n");
     register int f_i = 0;
@@ -3990,7 +3990,7 @@ void v_pydaw_offline_render_prep(t_pydaw_data * self)
     printf("Finished warming up plugins\n");
 }
 
-void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
+void v_pydaw_offline_render(t_edmnext * self, int a_start_region,
         int a_start_bar, int a_end_region,
         int a_end_bar, char * a_file_out, int a_is_audio_glue,
         int a_create_file)
@@ -4155,7 +4155,7 @@ void v_pydaw_offline_render(t_pydaw_data * self, int a_start_region,
     musikernel->ab_mode = f_ab_old;
 }
 
-void v_pydaw_set_ab_mode(t_pydaw_data * self, int a_mode)
+void v_pydaw_set_ab_mode(t_edmnext * self, int a_mode)
 {
     pthread_spin_lock(&musikernel->main_lock);
 
@@ -4244,7 +4244,7 @@ __attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
 }
 
 
-void v_pydaw_update_track_send(t_pydaw_data * self, int a_lock)
+void v_pydaw_update_track_send(t_edmnext * self, int a_lock)
 {
     t_pydaw_routing_graph * f_graph = g_pydaw_routing_graph_get(self);
     t_pydaw_routing_graph * f_old = self->routing_graph;
@@ -4300,7 +4300,7 @@ void v_pytrack_routing_graph_free(t_pydaw_routing_graph * self)
     free(self);
 }
 
-t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
+t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_edmnext * self)
 {
     t_pydaw_routing_graph * f_result = NULL;
     lmalloc((void**)&f_result, sizeof(t_pydaw_routing_graph));
@@ -4391,7 +4391,7 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_pydaw_data * self)
 }
 
 void v_pydaw_set_midi_device(
-    t_pydaw_data *self, int a_on, int a_device, int a_output)
+    t_edmnext *self, int a_on, int a_device, int a_output)
 {
     /* Interim logic to get a minimum viable product working
      * TODO:  Make it modular and able to support multiple devices
@@ -4427,7 +4427,7 @@ void v_pydaw_set_midi_device(
     }
 }
 
-void v_en_configure(t_pydaw_data* self,
+void v_en_configure(t_edmnext* self,
         const char* a_key, const char* a_value)
 {
     printf("v_en_configure:  key: \"%s\", value: \"%s\"\n", a_key, a_value);
