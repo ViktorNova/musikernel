@@ -19,7 +19,6 @@ extern "C" {
 #endif
 
 #include "../include/pydaw_plugin.h"
-#include "pydaw.h"
 #include <stdlib.h>
 #include <assert.h>
 

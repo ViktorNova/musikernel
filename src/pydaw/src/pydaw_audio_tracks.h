@@ -25,7 +25,7 @@ GNU General Public License for more details.
 #include "../libmodsynth/modules/filter/svf.h"
 #include "../include/pydaw_plugin.h"
 #include "pydaw_files.h"
-#include "pydaw.h"
+
 
 #define PYDAW_MAX_AUDIO_ITEM_COUNT 256
 #define PYDAW_MAX_WAV_POOL_ITEM_COUNT 500
