@@ -14,17 +14,19 @@ GNU General Public License for more details.
 """
 
 from PyQt4 import QtGui, QtCore
-import time
-from libpydaw import *
-from libpydaw import pydaw_util
+
+from libpydaw import liblo, pydaw_util, pydaw_widgets, pydaw_device_dialog
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
+import libmk
+from libmk import mkproject
 import libpydaw.strings
+
+import time
 import gc
 import sys
 import subprocess
-import libmk
-from libmk import mkproject
+
 
 
 class MkIpc(libmk.AbstractIPC):
@@ -194,8 +196,7 @@ class transport_widget:
             self.panic_button.setToolTip(
                 _("Panic button:   Sends a note-off signal on every "
                 "note to every instrument\nYou can also use CTRL+P"))
-            self.group_box.setToolTip(
-                libpydaw.strings.transport)
+            self.group_box.setToolTip(libpydaw.strings.transport)
         else:
             self.panic_button.setToolTip("")
             self.group_box.setToolTip("")
