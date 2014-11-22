@@ -8634,7 +8634,10 @@ class transport_widget(libmk.AbstractTransport):
             PROJECT.save_recorded_items(
                 f_file_name, MREC_EVENTS, self.overdub_checkbox.isChecked(),
                 self.tempo_spinbox.value(), pydaw_util.SAMPLE_RATE)
-            global_ui_refresh_callback()
+            SONG_EDITOR.open_song()
+            if not CURRENT_REGION:
+                SONG_EDITOR.open_first_region()
+            REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
             f_window.close()
 
         def text_edit_handler(a_val=None):
