@@ -24,6 +24,7 @@ MAIN_WINDOW = None
 APP = None
 TRANSPORT = None
 IS_PLAYING = False
+IS_RECORDING = False
 IPC = None
 OSC = None
 PROJECT = None

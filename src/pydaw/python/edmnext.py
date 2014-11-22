@@ -8404,8 +8404,6 @@ MREC_EVENTS = []
 class transport_widget(libmk.AbstractTransport):
     def __init__(self):
         self.suppress_osc = True
-        self.is_recording = False
-        self.is_playing = False
         self.start_region = 0
         self.last_bar = 0
         self.last_open_dir = global_home
@@ -8499,7 +8497,7 @@ class transport_widget(libmk.AbstractTransport):
         return self.bar_spinbox.value() - 1
 
     def set_pos_from_cursor(self, a_region, a_bar, a_beat):
-        if self.is_playing or self.is_recording:
+        if libmk.IS_PLAYING or libmk.IS_RECORDING:
             f_region = int(a_region)
             f_bar = int(a_bar)
             f_beat = float(a_beat)
@@ -8547,10 +8545,7 @@ class transport_widget(libmk.AbstractTransport):
         SONG_EDITOR.table_widget.selectColumn(self.get_region_value())
 
     def on_play(self):
-        if self.is_recording:
-            self.rec_button.setChecked(True)
-            return
-        if self.is_playing:
+        if libmk.IS_PLAYING:
             self.set_region_value(self.start_region)
             self.set_bar_value(self.last_bar)
         else:
@@ -8566,8 +8561,6 @@ class transport_widget(libmk.AbstractTransport):
         AUDIO_SEQ_WIDGET.on_play()
         self.bar_spinbox.setEnabled(False)
         self.region_spinbox.setEnabled(False)
-        libmk.IS_PLAYING = True
-        self.is_playing = True
         self.init_playback_cursor()
         self.last_region_num = self.get_region_value()
         self.start_region = self.get_region_value()
@@ -8588,8 +8581,6 @@ class transport_widget(libmk.AbstractTransport):
         AUDIO_SEQ.start_playback(self.tempo_spinbox.value())
 
     def on_stop(self):
-        if not self.is_playing and not self.is_recording:
-            return
         if WAVE_EDITOR.enabled_checkbox.isChecked():
             PROJECT.en_osc.pydaw_wn_playback(0)
         else:
@@ -8609,8 +8600,7 @@ class transport_widget(libmk.AbstractTransport):
         self.overdub_checkbox.setEnabled(True)
 
         self.set_region_value(self.start_region)
-        if self.is_recording:
-            self.is_recording = False
+        if libmk.IS_RECORDING:
             # As the history will be referenced when the
             # recorded items are added to history
             PROJECT.flush_history()
@@ -8619,7 +8609,6 @@ class transport_widget(libmk.AbstractTransport):
             REGION_SETTINGS.enabled:
                 REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
             SONG_EDITOR.open_song()
-        self.is_playing = False
         self.init_playback_cursor(a_start=False)
         self.set_bar_value(self.last_bar)
         f_song_table_item = SONG_EDITOR.table_widget.item(
@@ -8672,18 +8661,12 @@ class transport_widget(libmk.AbstractTransport):
         f_window.exec_()
 
     def on_rec(self):
-        if self.is_playing:
-            self.play_button.setChecked(True)
-            return
-        if self.is_recording:
-            return
         self.active_devices = [x for x in MIDI_DEVICES_DIALOG.devices
             if x.record_checkbox.isChecked()]
         if not self.active_devices:
             QtGui.QMessageBox.warning(
                 self.group_box, _("Error"),
                 _("No track record-armed"))
-            self.stop_button.setChecked(True)
             return
         if self.overdub_checkbox.isChecked() and \
         self.loop_mode_combobox.currentIndex() > 0:
@@ -8706,10 +8689,8 @@ class transport_widget(libmk.AbstractTransport):
         self.region_spinbox.setEnabled(False)
         self.overdub_checkbox.setEnabled(False)
         global MREC_EVENTS
-        libmk.IS_PLAYING = True
         MREC_EVENTS = []
         self.init_playback_cursor()
-        self.is_recording = True
         self.last_region_num = self.get_region_value()
         self.start_region = self.get_region_value()
         self.last_bar = self.get_bar_value()
@@ -8742,8 +8723,8 @@ class transport_widget(libmk.AbstractTransport):
 
     def on_bar_changed(self, a_bar):
         if not self.suppress_osc and \
-        not self.is_playing and \
-        not self.is_recording:
+        not libmk.IS_PLAYING and \
+        not libmk.IS_RECORDING:
             for f_editor in (AUDIO_SEQ, REGION_EDITOR):
                 f_editor.set_playback_pos(self.get_bar_value())
             PROJECT.en_osc.pydaw_set_pos(
@@ -8753,7 +8734,7 @@ class transport_widget(libmk.AbstractTransport):
     def on_region_changed(self, a_region):
         #self.bar_spinbox.setRange(1, pydaw_get_region_length(a_region - 1))
         self.bar_spinbox.setRange(1, pydaw_get_current_region_length())
-        if not self.is_playing and not self.is_recording:
+        if not libmk.IS_PLAYING and not libmk.IS_RECORDING:
             for f_editor in (AUDIO_SEQ, REGION_EDITOR):
                 f_editor.set_playback_pos(self.get_bar_value())
             PROJECT.en_osc.pydaw_set_pos(
@@ -8769,11 +8750,11 @@ class transport_widget(libmk.AbstractTransport):
                 REGION_EDITOR.clear_items()
             SONG_EDITOR.table_widget.selectColumn(self.get_region_value())
             REGION_EDITOR.table_widget.selectColumn(self.get_bar_value())
-            if self.is_playing or self.is_recording:
+            if libmk.IS_PLAYING or libmk.IS_RECORDING:
                 self.trigger_audio_playback()
         else:
             REGION_EDITOR.table_widget.clearSelection()
-            if self.is_playing or self.is_recording:
+            if libmk.IS_PLAYING or libmk.IS_RECORDING:
                 AUDIO_SEQ.stop_playback(0)
             else:
                 AUDIO_SEQ.stop_playback()

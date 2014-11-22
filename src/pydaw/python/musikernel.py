@@ -84,8 +84,6 @@ class MkIpc(libmk.AbstractIPC):
 class transport_widget:
     def __init__(self):
         self.suppress_osc = True
-        self.is_recording = False
-        self.is_playing = False
         self.start_region = 0
         self.last_bar = 0
         self.last_open_dir = pydaw_util.global_home
@@ -150,42 +148,40 @@ class transport_widget:
         self.time_label.setText(a_text)
 
     def on_spacebar(self):
-        if self.is_playing or self.is_recording:
+        if libmk.IS_PLAYING:
             self.stop_button.click()
         else:
             self.play_button.click()
 
     def on_play(self):
-        if self.is_recording:
+        if libmk.IS_RECORDING:
             self.rec_button.setChecked(True)
             return
-        libmk.IS_PLAYING = True
-        self.is_playing = True
         MAIN_WINDOW.current_module.TRANSPORT.on_play()
+        libmk.IS_PLAYING = True
         self.menu_button.setEnabled(False)
 
     def on_ready(self):
         self.load_master_vol()
-        #self.master_vol_changed(self.master_vol_knob.value())
 
     def on_stop(self):
-        if not self.is_playing and not self.is_recording:
+        if not libmk.IS_PLAYING and not libmk.IS_RECORDING:
             return
-        libmk.IS_PLAYING = False
         MAIN_WINDOW.current_module.TRANSPORT.on_stop()
-        self.is_playing = False
+        libmk.IS_PLAYING = False
+        libmk.IS_RECORDING = False
         self.menu_button.setEnabled(True)
         time.sleep(0.1)
 
     def on_rec(self):
-        if self.is_playing:
+        if libmk.IS_RECORDING:
+            return
+        if libmk.IS_PLAYING:
             self.play_button.setChecked(True)
             return
-        if self.is_recording:
-            return
-        libmk.IS_PLAYING = True
-        self.is_recording = True
         MAIN_WINDOW.current_module.TRANSPORT.on_rec()
+        libmk.IS_PLAYING = True
+        libmk.IS_RECORDING = True
         self.menu_button.setEnabled(False)
 
     def on_panic(self):
