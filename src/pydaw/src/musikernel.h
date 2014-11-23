@@ -14,18 +14,26 @@ GNU General Public License for more details.
 #ifndef MUSIKERNEL_H
 #define	MUSIKERNEL_H
 
+#include "pydaw_files.h"
 #include "../libmodsynth/lib/lmalloc.h"
 
 #define PYDAW_MIDI_NOTE_COUNT 128
 #define MAX_PLUGIN_COUNT 10
 
-#define CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL "pc"
-#define CONFIGURE_KEY_CONFIGURE_PLUGIN "co"
-#define CONFIGURE_KEY_EXIT "exit"
-#define CONFIGURE_KEY_PITCH_ENV "penv"
-#define CONFIGURE_KEY_RATE_ENV "renv"
-#define CONFIGURE_KEY_PREVIEW_SAMPLE "preview"
-#define CONFIGURE_KEY_STOP_PREVIEW "spr"
+#define MK_CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL "pc"
+#define MK_CONFIGURE_KEY_CONFIGURE_PLUGIN "co"
+#define MK_CONFIGURE_KEY_EXIT "exit"
+#define MK_CONFIGURE_KEY_PITCH_ENV "penv"
+#define MK_CONFIGURE_KEY_RATE_ENV "renv"
+#define MK_CONFIGURE_KEY_PREVIEW_SAMPLE "preview"
+#define MK_CONFIGURE_KEY_STOP_PREVIEW "spr"
+#define MK_CONFIGURE_KEY_KILL_ENGINE "abort"
+#define MK_CONFIGURE_KEY_MASTER_VOL "mvol"
+#define MK_CONFIGURE_KEY_LOAD_CC_MAP "cm"
+#define MK_CONFIGURE_KEY_MIDI_LEARN "ml"
+#define MK_CONFIGURE_KEY_ADD_TO_WAV_POOL "wp"
+#define MK_CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD "wr"
+
 
 volatile int exiting = 0;
 float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
@@ -490,7 +498,7 @@ void v_mk_configure(const char* a_key, const char* a_value)
 {
     printf("v_mk_configure:  key: \"%s\", value: \"%s\"\n", a_key, a_value);
 
-    if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL))
+    if(!strcmp(a_key, MK_CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL))
     {
         t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 3,
                 PYDAW_TINY_STRING);
@@ -517,7 +525,7 @@ void v_mk_configure(const char* a_key, const char* a_value)
         pthread_spin_unlock(&musikernel->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_CONFIGURE_PLUGIN))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_CONFIGURE_PLUGIN))
     {
         t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 3,
                 PYDAW_LARGE_STRING);
@@ -530,7 +538,8 @@ void v_mk_configure(const char* a_key, const char* a_value)
         if(f_instance)
         {
             f_instance->descriptor->configure(
-                f_instance->PYFX_handle, f_key, f_message, &musikernel->main_lock);
+                f_instance->PYFX_handle, f_key, f_message,
+                &musikernel->main_lock);
         }
         else
         {
@@ -539,20 +548,20 @@ void v_mk_configure(const char* a_key, const char* a_value)
 
         g_free_1d_char_array(f_val_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_KILL_ENGINE))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_KILL_ENGINE))
     {
         pthread_spin_lock(&musikernel->main_lock);
         assert(0);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_EXIT))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_EXIT))
     {
         exiting = 1;
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_MASTER_VOL))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_MASTER_VOL))
     {
         MASTER_VOL = atof(a_value);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_CC_MAP))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_LOAD_CC_MAP))
     {
         t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 2,
                 PYDAW_SMALL_STRING);
@@ -562,11 +571,11 @@ void v_mk_configure(const char* a_key, const char* a_value)
             f_val_arr->array[1]);
         g_free_1d_char_array(f_val_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_MIDI_LEARN))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_MIDI_LEARN))
     {
         musikernel->midi_learn = 1;
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_ADD_TO_WAV_POOL))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_ADD_TO_WAV_POOL))
     {
         t_key_value_pair * f_kvp = g_kvp_get(a_value);
         printf("v_wav_pool_add_item(musikernel->wav_pool, %i, \"%s\")\n",
@@ -575,11 +584,11 @@ void v_mk_configure(const char* a_key, const char* a_value)
                 f_kvp->value);
         free(f_kvp);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_PREVIEW_SAMPLE))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_PREVIEW_SAMPLE))
     {
         v_pydaw_set_preview_file(a_value);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_STOP_PREVIEW))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_STOP_PREVIEW))
     {
         if(musikernel->is_previewing)
         {
@@ -588,7 +597,7 @@ void v_mk_configure(const char* a_key, const char* a_value)
             pthread_spin_unlock(&musikernel->main_lock);
         }
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_RATE_ENV))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_RATE_ENV))
     {
         t_2d_char_array * f_arr = g_get_2d_array(PYDAW_SMALL_STRING);
         char f_tmp_char[PYDAW_SMALL_STRING];
@@ -613,7 +622,7 @@ void v_mk_configure(const char* a_key, const char* a_value)
         f_arr->array = 0;
         g_free_2d_char_array(f_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_PITCH_ENV))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_PITCH_ENV))
     {
         t_2d_char_array * f_arr = g_get_2d_array(PYDAW_SMALL_STRING);
         char f_tmp_char[PYDAW_SMALL_STRING];
@@ -638,7 +647,7 @@ void v_mk_configure(const char* a_key, const char* a_value)
         f_arr->array = 0;
         g_free_2d_char_array(f_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD))
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD))
     {
         int f_uid = atoi(a_value);
         t_wav_pool_item * f_old =

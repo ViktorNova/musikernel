@@ -12,8 +12,8 @@ GNU General Public License for more details.
 */
 
 
-#ifndef PYDAW_H
-#define	PYDAW_H
+#ifndef EDMNEXT_H
+#define	EDMNEXT_H
 
 //Required for sched.h
 #ifndef __USE_GNU
@@ -24,46 +24,40 @@ GNU General Public License for more details.
 #define _GNU_SOURCE
 #endif
 
-#define CONFIGURE_KEY_SS "ss"
-#define CONFIGURE_KEY_OS "os"
-#define CONFIGURE_KEY_SI "si"
-#define CONFIGURE_KEY_SR "sr"
-#define CONFIGURE_KEY_SAVE_ATM "sa"
-#define CONFIGURE_KEY_EN_PLAYBACK "enp"
-#define CONFIGURE_KEY_WN_PLAYBACK "wnp"
-#define CONFIGURE_KEY_LOOP "loop"
-#define CONFIGURE_KEY_TEMPO "tempo"
-#define CONFIGURE_KEY_SOLO "solo"
-#define CONFIGURE_KEY_MUTE "mute"
+#define EN_CONFIGURE_KEY_SS "ss"
+#define EN_CONFIGURE_KEY_OS "os"
+#define EN_CONFIGURE_KEY_SI "si"
+#define EN_CONFIGURE_KEY_SR "sr"
+#define EN_CONFIGURE_KEY_SAVE_ATM "sa"
+#define EN_CONFIGURE_KEY_EN_PLAYBACK "enp"
+#define EN_CONFIGURE_KEY_WN_PLAYBACK "wnp"
+#define EN_CONFIGURE_KEY_LOOP "loop"
+#define EN_CONFIGURE_KEY_TEMPO "tempo"
+#define EN_CONFIGURE_KEY_SOLO "solo"
+#define EN_CONFIGURE_KEY_MUTE "mute"
 
-#define CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL "ai"
-#define CONFIGURE_KEY_ADD_TO_WAV_POOL "wp"
+#define EN_CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL "ai"
 
-#define CONFIGURE_KEY_UPDATE_AUDIO_INPUTS "ua"
-#define CONFIGURE_KEY_SET_OVERDUB_MODE "od"
+#define EN_CONFIGURE_KEY_UPDATE_AUDIO_INPUTS "ua"
+#define EN_CONFIGURE_KEY_SET_OVERDUB_MODE "od"
 
-#define CONFIGURE_KEY_LOAD_AB_OPEN "abo"
-#define CONFIGURE_KEY_LOAD_AB_SET "abs"
-#define CONFIGURE_KEY_WE_SET "we"
-#define CONFIGURE_KEY_WE_EXPORT "wex"
-#define CONFIGURE_KEY_PANIC "panic"
+#define EN_CONFIGURE_KEY_LOAD_AB_OPEN "abo"
+#define EN_CONFIGURE_KEY_LOAD_AB_SET "abs"
+#define EN_CONFIGURE_KEY_WE_SET "we"
+#define EN_CONFIGURE_KEY_WE_EXPORT "wex"
+#define EN_CONFIGURE_KEY_PANIC "panic"
 //Update a single control for a per-audio-item-fx
-#define CONFIGURE_KEY_PER_AUDIO_ITEM_FX "paif"
+#define EN_CONFIGURE_KEY_PER_AUDIO_ITEM_FX "paif"
 //Reload entire region for per-audio-item-fx
-#define CONFIGURE_KEY_PER_AUDIO_ITEM_FX_REGION "par"
-#define CONFIGURE_KEY_GLUE_AUDIO_ITEMS "ga"
+#define EN_CONFIGURE_KEY_PER_AUDIO_ITEM_FX_REGION "par"
+#define EN_CONFIGURE_KEY_GLUE_AUDIO_ITEMS "ga"
 
-#define CONFIGURE_KEY_MIDI_LEARN "ml"
-#define CONFIGURE_KEY_LOAD_CC_MAP "cm"
-#define CONFIGURE_KEY_MIDI_DEVICE "md"
+#define EN_CONFIGURE_KEY_MIDI_DEVICE "md"
 
-#define CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD "wr"
-#define CONFIGURE_KEY_MASTER_VOL "mvol"
-#define CONFIGURE_KEY_KILL_ENGINE "abort"
-#define CONFIGURE_KEY_SET_POS "pos"
+#define EN_CONFIGURE_KEY_SET_POS "pos"
 
-#define CONFIGURE_KEY_PLUGIN_INDEX "pi"
-#define CONFIGURE_KEY_UPDATE_SEND "ts"
+#define EN_CONFIGURE_KEY_PLUGIN_INDEX "pi"
+#define EN_CONFIGURE_KEY_UPDATE_SEND "ts"
 
 #define PYDAW_LOOP_MODE_OFF 0
 #define PYDAW_LOOP_MODE_REGION 1
@@ -4432,7 +4426,7 @@ void v_en_configure(t_edmnext* self,
 {
     printf("v_en_configure:  key: \"%s\", value: \"%s\"\n", a_key, a_value);
 
-    if(!strcmp(a_key, CONFIGURE_KEY_PER_AUDIO_ITEM_FX))
+    if(!strcmp(a_key, EN_CONFIGURE_KEY_PER_AUDIO_ITEM_FX))
     {
         t_1d_char_array * f_arr = c_split_str(a_value, '|', 4,
                 PYDAW_SMALL_STRING);
@@ -4444,7 +4438,7 @@ void v_en_configure(t_edmnext* self,
         v_paif_set_control(self, f_region_uid, f_item_index,
                 f_port_num, f_port_val);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_EN_PLAYBACK))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_EN_PLAYBACK))
     {
         t_1d_char_array * f_arr = c_split_str(a_value, '|', 3,
                 PYDAW_SMALL_STRING);
@@ -4455,13 +4449,13 @@ void v_en_configure(t_edmnext* self,
         v_set_playback_mode(self, f_mode, f_region, f_bar, 1);
         g_free_1d_char_array(f_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_WN_PLAYBACK))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_WN_PLAYBACK))
     {
         int f_mode = atoi(a_value);
         assert(f_mode >= 0 && f_mode <= 2);
         v_wn_set_playback_mode(wavenext, f_mode, 1);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_SR))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_SR))
     {
         //Ensure that a project isn't being loaded right now
         pthread_spin_lock(&musikernel->main_lock);
@@ -4491,17 +4485,17 @@ void v_en_configure(t_edmnext* self,
             printf("region %i is not in song, not loading...", f_uid);
         }
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_SI)) //Save Item
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_SI)) //Save Item
     {
         pthread_spin_lock(&musikernel->main_lock);
         g_pyitem_get(self, atoi(a_value));
         pthread_spin_unlock(&musikernel->main_lock);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_SS))  //Save Song
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_SS))  //Save Song
     {
         g_pysong_get(self, 1);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_SAVE_ATM))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_SAVE_ATM))
     {
         int f_uid = atoi(a_value);
         t_pydaw_atm_region * f_result = g_atm_region_get(self, f_uid);
@@ -4527,7 +4521,7 @@ void v_en_configure(t_edmnext* self,
             printf("region %i is not in song, not loading...", f_uid);
         }
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL))
     {
         int f_uid = atoi(a_value);
         //t_pydaw_audio_items * f_old;
@@ -4540,7 +4534,7 @@ void v_en_configure(t_edmnext* self,
         pthread_spin_unlock(&musikernel->main_lock);
         //v_pydaw_audio_items_free(f_old); //Method needs to be re-thought...
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_PER_AUDIO_ITEM_FX_REGION))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_PER_AUDIO_ITEM_FX_REGION))
     {
         int f_uid = atoi(a_value);
         t_pydaw_per_audio_item_fx_region * f_result =
@@ -4554,7 +4548,7 @@ void v_en_configure(t_edmnext* self,
         pthread_spin_unlock(&musikernel->main_lock);
         v_paif_region_free(f_old);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_LOOP)) //Set loop mode
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_LOOP)) //Set loop mode
     {
         int f_value = atoi(a_value);
 
@@ -4562,13 +4556,13 @@ void v_en_configure(t_edmnext* self,
         v_set_loop_mode(self, f_value);
         pthread_spin_unlock(&musikernel->main_lock);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_OS)) //Open Song
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_OS)) //Open Song
     {
         t_key_value_pair * f_kvp = g_kvp_get(a_value);
         int f_first_open = atoi(f_kvp->key);
         v_open_project(self, f_kvp->value, f_first_open);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_TEMPO)) //Change tempo
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_TEMPO)) //Change tempo
     {
         pthread_spin_lock(&musikernel->main_lock);
         v_set_tempo(self, atof(a_value));
@@ -4576,7 +4570,7 @@ void v_en_configure(t_edmnext* self,
         //To reload audio items when tempo changed
         //g_pysong_get(self);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_SOLO)) //Set track solo
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_SOLO)) //Set track solo
     {
         t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
                 PYDAW_TINY_STRING);
@@ -4594,7 +4588,7 @@ void v_en_configure(t_edmnext* self,
         pthread_spin_unlock(&musikernel->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_MUTE)) //Set track mute
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_MUTE)) //Set track mute
     {
         t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
                 PYDAW_TINY_STRING);
@@ -4609,11 +4603,11 @@ void v_en_configure(t_edmnext* self,
         pthread_spin_unlock(&musikernel->main_lock);
         g_free_1d_char_array(f_val_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_AUDIO_INPUTS))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_UPDATE_AUDIO_INPUTS))
     {
         v_pydaw_update_audio_inputs(self);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_PLUGIN_INDEX))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_PLUGIN_INDEX))
     {
         t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 6,
                 PYDAW_TINY_STRING);
@@ -4630,11 +4624,11 @@ void v_en_configure(t_edmnext* self,
 
         g_free_1d_char_array(f_val_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_UPDATE_SEND))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_UPDATE_SEND))
     {
         v_pydaw_update_track_send(self, 1);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_SET_OVERDUB_MODE))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_SET_OVERDUB_MODE))
     {
         int f_bool = atoi(a_value);
         assert(f_bool == 0 || f_bool == 1);
@@ -4642,7 +4636,7 @@ void v_en_configure(t_edmnext* self,
         self->overdub_mode = f_bool;
         pthread_spin_unlock(&musikernel->main_lock);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_GLUE_AUDIO_ITEMS))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_GLUE_AUDIO_ITEMS))
     {
         t_pydaw_line_split * f_val_arr = g_split_line('|', a_value);
         char * f_path = f_val_arr->str_arr[0];  //Don't free this
@@ -4670,20 +4664,20 @@ void v_en_configure(t_edmnext* self,
         v_free_split_line(f_val_arr);
 
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_AB_OPEN))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_LOAD_AB_OPEN))
     {
         v_pydaw_set_ab_file(wavenext, a_value);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_LOAD_AB_SET))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_LOAD_AB_SET))
     {
         int f_mode = atoi(a_value);
         v_pydaw_set_ab_mode(self, f_mode);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_WE_SET))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_WE_SET))
     {
         v_pydaw_set_wave_editor_item(wavenext, a_value);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_PANIC))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_PANIC))
     {
         pthread_spin_lock(&musikernel->main_lock);
         musikernel->is_offline_rendering = 1;
@@ -4696,7 +4690,7 @@ void v_en_configure(t_edmnext* self,
         pthread_spin_unlock(&musikernel->main_lock);
 
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_SET_POS))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_SET_POS))
     {
         if(musikernel->playback_mode != 0)
         {
@@ -4713,7 +4707,7 @@ void v_en_configure(t_edmnext* self,
 
         g_free_1d_char_array(f_val_arr);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_MIDI_DEVICE))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_MIDI_DEVICE))
     {
         t_pydaw_line_split * f_val_arr = g_split_line('|', a_value);
         int f_on = atoi(f_val_arr->str_arr[0]);
@@ -4727,7 +4721,7 @@ void v_en_configure(t_edmnext* self,
 
         pthread_spin_unlock(&musikernel->main_lock);
     }
-    else if(!strcmp(a_key, CONFIGURE_KEY_WE_EXPORT))
+    else if(!strcmp(a_key, EN_CONFIGURE_KEY_WE_EXPORT))
     {
         v_pydaw_we_export(wavenext, a_value);
     }
@@ -4737,5 +4731,5 @@ void v_en_configure(t_edmnext* self,
     }
 }
 
-#endif	/* PYDAW_H */
+#endif	/* EDMNEXT_H */
 
