@@ -41,14 +41,15 @@ t_wavenext * wavenext;
 
 void g_wavenext_get()
 {
+    float f_sample_rate = musikernel->thread_storage[0].sample_rate;
     hpalloc((void**)&wavenext, sizeof(t_wavenext));
     wavenext->ab_wav_item = 0;
-    wavenext->ab_audio_item = g_pydaw_audio_item_get(musikernel->sample_rate);
+    wavenext->ab_audio_item = g_pydaw_audio_item_get(f_sample_rate);
     wavenext->tracks_folder = (char*)malloc(sizeof(char) * 1024);
     int f_i = 0;
     while(f_i < 1)
     {
-        wavenext->track_pool[f_i] = g_pytrack_get(f_i, musikernel->sample_rate);
+        wavenext->track_pool[f_i] = g_pytrack_get(f_i, f_sample_rate);
         ++f_i;
     }
 }
@@ -129,6 +130,8 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
     musikernel->is_offline_rendering = 1;
     pthread_spin_unlock(&musikernel->main_lock);
 
+    float f_sample_rate = musikernel->thread_storage[0].sample_rate;
+
     musikernel->input_buffers_active = 0;
 
     long f_size = 0;
@@ -150,13 +153,12 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
 
     v_wn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_PLAY, 0);
 
-    printf("\nOpening SNDFILE with sample rate %f\n",
-            musikernel->sample_rate);
+    printf("\nOpening SNDFILE with sample rate %f\n", f_sample_rate);
 
     SF_INFO f_sf_info;
     f_sf_info.channels = 2;
     f_sf_info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
-    f_sf_info.samplerate = (int)(musikernel->sample_rate);
+    f_sf_info.samplerate = (int)(f_sample_rate);
 
     SNDFILE * f_sndfile = sf_open(a_file_out, SFM_WRITE, &f_sf_info);
 
@@ -224,7 +226,7 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
 void v_pydaw_set_ab_file(t_wavenext * self, const char * a_file)
 {
     t_wav_pool_item * f_result = g_wav_pool_item_get(0, a_file,
-            musikernel->sample_rate);
+        musikernel->thread_storage[0].sample_rate);
 
     if(i_wav_pool_item_load(f_result, 0))
     {
@@ -262,7 +264,7 @@ void v_pydaw_set_wave_editor_item(t_wavenext * self,
     sprintf(f_current_string->array, "%s", a_val);
     t_pydaw_audio_item * f_old = self->ab_audio_item;
     t_pydaw_audio_item * f_result = g_audio_item_load_single(
-            musikernel->sample_rate, f_current_string, 0, 0,
+            musikernel->thread_storage[0].sample_rate, f_current_string, 0, 0,
             self->ab_wav_item);
 
     pthread_spin_lock(&musikernel->main_lock);

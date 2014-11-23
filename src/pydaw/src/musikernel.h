@@ -18,6 +18,8 @@ GNU General Public License for more details.
 #include "../libmodsynth/lib/lmalloc.h"
 #include "pydaw_plugin_wrapper.h"
 
+#define MAX_WORKER_THREADS 8
+
 #define PYDAW_MIDI_NOTE_COUNT 128
 #define MAX_PLUGIN_COUNT 10
 
@@ -77,13 +79,18 @@ typedef struct
 
 typedef struct
 {
-    t_pydaw_plugin plugin_pool[MAX_PLUGIN_POOL_COUNT];
+    float sample_rate;
+    char padding[60];
+}t_mk_thread_storage;
+
+typedef struct
+{
+    t_mk_thread_storage thread_storage[MAX_WORKER_THREADS];
     t_wav_pool * wav_pool;
     pthread_spinlock_t main_lock;
     int ab_mode;  //0 == off, 1 == on
     int is_ab_ing;  //Set this to self->ab_mode on playback
     int is_offline_rendering;
-    float sample_rate;
     //set from the audio device buffer size every time the main loop is called.
     int sample_count;
     char * project_folder;
@@ -117,6 +124,7 @@ typedef struct
     //Threads must hold this to write OSC messages
     pthread_spinlock_t ui_spinlock;
     int midi_learn;
+    t_pydaw_plugin plugin_pool[MAX_PLUGIN_POOL_COUNT];
 }t_musikernel;
 
 void g_musikernel_get(float);
@@ -155,12 +163,10 @@ void g_musikernel_get(float a_sr)
     musikernel->samples_folder = (char*)malloc(sizeof(char) * 1024);
     musikernel->wav_pool_file = (char*)malloc(sizeof(char) * 1024);
     musikernel->plugins_folder = (char*)malloc(sizeof(char) * 1024);
-    musikernel->sample_rate = a_sr;
     musikernel->input_buffers_active = 0;
 
     musikernel->preview_wav_item = 0;
-    musikernel->preview_audio_item =
-            g_pydaw_audio_item_get(musikernel->sample_rate);
+    musikernel->preview_audio_item = g_pydaw_audio_item_get(a_sr);
     musikernel->preview_start = 0.0f;
     musikernel->preview_amp_lin = 1.0f;
     musikernel->is_previewing = 0;
@@ -174,6 +180,11 @@ void g_musikernel_get(float a_sr)
         musikernel->audio_inputs[f_i]->input_port[0] = f_i * 2;
         musikernel->audio_inputs[f_i]->input_port[1] = (f_i * 2) + 1;
         ++f_i;
+    }
+
+    for(f_i = 0; f_i < MAX_WORKER_THREADS; ++f_i)
+    {
+        musikernel->thread_storage[f_i].sample_rate = a_sr;
     }
 
     /* Create OSC thread */
@@ -332,7 +343,7 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
 void v_pydaw_set_preview_file(const char * a_file)
 {
     t_wav_pool_item * f_result = g_wav_pool_item_get(0, a_file,
-            musikernel->sample_rate);
+            musikernel->thread_storage[0].sample_rate);
 
     if(f_result)
     {
