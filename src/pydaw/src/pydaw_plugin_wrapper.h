@@ -53,7 +53,7 @@ typedef struct
     int pool_uid;
     int atm_count;
     int atm_pos;  //position within the automation region
-    t_pydaw_seq_event atm_buffer[512];
+    t_pydaw_seq_event * atm_buffer;
 }t_pydaw_plugin __attribute__((aligned(64)));
 
 
@@ -67,6 +67,8 @@ void g_pydaw_plugin_init(t_pydaw_plugin * f_result,
     f_result->pool_uid = a_plugin_uid;
     f_result->atm_pos = 0;
     f_result->atm_count = 0;
+
+    hpalloc((void**)&f_result->atm_buffer, sizeof(t_pydaw_seq_event) * 512);
 
     switch(a_index)
     {
