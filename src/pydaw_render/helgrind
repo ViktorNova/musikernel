@@ -1,8 +1,0 @@
-PYDAW_VERSION=$(cat ../major-version.txt)
-BIN=$PYDAW_VERSION"_render-dbg"
-PROJECT=$HOME/$PYDAW_VERSION/default-project
-
-make clean && make debug && \
-valgrind --tool=helgrind --alignment=16 \
-./$BIN $PROJECT "test.wav" 0 0 23 3 44100 512 0 0
-
