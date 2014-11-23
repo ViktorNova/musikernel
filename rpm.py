@@ -128,10 +128,10 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/portmidi.py
 /usr/lib/{0}/pydaw/python/libpydaw/project_recover.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.py
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_gradients.py
+/usr/lib/{0}/pydaw/python/libedmnext/en_gradients.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_history.py
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_osc.py
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_project.py
+/usr/lib/{0}/pydaw/python/libedmnext/en_osc.py
+/usr/lib/{0}/pydaw/python/libedmnext/en_project.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_util.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_widgets.py
 /usr/lib/{0}/pydaw/python/libpydaw/staging.py
@@ -188,16 +188,16 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/project_recover.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.pyo
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_gradients.pyc
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_gradients.pyo
+/usr/lib/{0}/pydaw/python/libedmnext/en_gradients.pyc
+/usr/lib/{0}/pydaw/python/libedmnext/en_gradients.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_history.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_history.pyo
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_osc.pyc
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_osc.pyo
+/usr/lib/{0}/pydaw/python/libedmnext/en_osc.pyc
+/usr/lib/{0}/pydaw/python/libedmnext/en_osc.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_paulstretch.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_paulstretch.pyo
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_project.pyc
-/usr/lib/{0}/pydaw/python/libpydaw/pydaw_project.pyo
+/usr/lib/{0}/pydaw/python/libedmnext/en_project.pyc
+/usr/lib/{0}/pydaw/python/libedmnext/en_project.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_util.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_util.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_widgets.pyc
@@ -287,6 +287,10 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libmk/mkproject.py
 /usr/lib/{0}/pydaw/python/libmk/mkproject.pyc
 /usr/lib/{0}/pydaw/python/libmk/mkproject.pyo
+
+/usr/lib/{0}/pydaw/python/libedmnext/__init__.py
+/usr/lib/{0}/pydaw/python/libedmnext/__init__.pyc
+/usr/lib/{0}/pydaw/python/libedmnext/__init__.pyo
 
 %doc
 
