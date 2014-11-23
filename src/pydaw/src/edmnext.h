@@ -3823,10 +3823,7 @@ void v_set_playback_cursor(t_edmnext * self, int a_region, int a_bar)
 
     while(f_i < MAX_PLUGIN_TOTAL_COUNT)
     {
-        if(musikernel->plugin_pool[f_i])
-        {
-            musikernel->plugin_pool[f_i]->atm_pos = 0;
-        }
+        musikernel->plugin_pool[f_i].atm_pos = 0;
         ++f_i;
     }
 }
@@ -4192,14 +4189,14 @@ __attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
 
     if(a_plugin_index)
     {
-        f_plugin = musikernel->plugin_pool[a_plugin_uid];
+        f_plugin = &musikernel->plugin_pool[a_plugin_uid];
 
-        if(!f_plugin)
+        if(!f_plugin->active)
         {
-            f_plugin = g_pydaw_plugin_get((int)(musikernel->sample_rate),
+            g_pydaw_plugin_init(f_plugin, (int)(musikernel->sample_rate),
                     a_plugin_index, g_pydaw_wavpool_item_get,
                     a_plugin_uid, v_queue_osc_message);
-            musikernel->plugin_pool[a_plugin_uid] = f_plugin;
+
             int f_i = 0;
             while(f_i < f_track->channels)
             {

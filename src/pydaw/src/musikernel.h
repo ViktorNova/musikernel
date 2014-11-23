@@ -16,6 +16,7 @@ GNU General Public License for more details.
 
 #include "pydaw_files.h"
 #include "../libmodsynth/lib/lmalloc.h"
+#include "pydaw_plugin_wrapper.h"
 
 #define PYDAW_MIDI_NOTE_COUNT 128
 #define MAX_PLUGIN_COUNT 10
@@ -76,7 +77,7 @@ typedef struct
 
 typedef struct
 {
-    t_pydaw_plugin * plugin_pool[MAX_PLUGIN_POOL_COUNT];
+    t_pydaw_plugin plugin_pool[MAX_PLUGIN_POOL_COUNT];
     t_wav_pool * wav_pool;
     pthread_spinlock_t main_lock;
     int ab_mode;  //0 == off, 1 == on
@@ -195,11 +196,10 @@ void g_musikernel_get(float a_sr)
     musikernel->uiTarget = lo_address_new_from_url(
         "osc.udp://localhost:30321/");
 
-    f_i = 0;
-    while(f_i < MAX_PLUGIN_POOL_COUNT)
+
+    for(f_i = 0; f_i < MAX_PLUGIN_POOL_COUNT; ++f_i)
     {
-        musikernel->plugin_pool[f_i] = 0;
-        ++f_i;
+        musikernel->plugin_pool[f_i].active = 0;
     }
 }
 
@@ -511,7 +511,7 @@ void v_mk_configure(const char* a_key, const char* a_value)
         t_pydaw_plugin * f_instance;
         pthread_spin_lock(&musikernel->main_lock);
 
-        f_instance = musikernel->plugin_pool[f_plugin_uid];
+        f_instance = &musikernel->plugin_pool[f_plugin_uid];
 
         if(f_instance)
         {
@@ -533,7 +533,7 @@ void v_mk_configure(const char* a_key, const char* a_value)
         char * f_key = f_val_arr->array[1];
         char * f_message = f_val_arr->array[2];
 
-        t_pydaw_plugin * f_instance = musikernel->plugin_pool[f_plugin_uid];
+        t_pydaw_plugin * f_instance = &musikernel->plugin_pool[f_plugin_uid];
 
         if(f_instance)
         {
@@ -566,8 +566,8 @@ void v_mk_configure(const char* a_key, const char* a_value)
         t_1d_char_array * f_val_arr = c_split_str_remainder(a_value, '|', 2,
                 PYDAW_SMALL_STRING);
         int f_plugin_uid = atoi(f_val_arr->array[0]);
-        musikernel->plugin_pool[f_plugin_uid]->descriptor->set_cc_map(
-            musikernel->plugin_pool[f_plugin_uid]->PYFX_handle,
+        musikernel->plugin_pool[f_plugin_uid].descriptor->set_cc_map(
+            musikernel->plugin_pool[f_plugin_uid].PYFX_handle,
             f_val_arr->array[1]);
         g_free_1d_char_array(f_val_arr);
     }

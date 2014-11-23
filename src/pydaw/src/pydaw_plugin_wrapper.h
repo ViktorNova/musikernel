@@ -42,6 +42,7 @@ extern "C" {
 
 typedef struct
 {
+    int active;
     PYFX_Handle PYFX_handle;
     PYFX_Descriptor_Function descfn;
     PYFX_Descriptor *descriptor;
@@ -53,16 +54,15 @@ typedef struct
     int atm_count;
     int atm_pos;  //position within the automation region
     t_pydaw_seq_event atm_buffer[512];
-}t_pydaw_plugin;
+}t_pydaw_plugin __attribute__((aligned(64)));
 
 
-t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
+void g_pydaw_plugin_init(t_pydaw_plugin * f_result,
+        int a_sample_rate, int a_index,
         fp_get_wavpool_item_from_host a_host_wavpool_func,
         int a_plugin_uid, fp_queue_message a_queue_func)
 {
-    t_pydaw_plugin * f_result;
-    hpalloc((void**)&f_result, sizeof(t_pydaw_plugin));
-
+    f_result->active = 0;
     f_result->uid = a_index;
     f_result->pool_uid = a_plugin_uid;
     f_result->atm_pos = 0;
@@ -143,8 +143,6 @@ t_pydaw_plugin * g_pydaw_plugin_get(int a_sample_rate, int a_index,
     f_result->solo = 0;
     f_result->mute = 0;
     f_result->power = 1;
-
-    return f_result;
 }
 
 /*
