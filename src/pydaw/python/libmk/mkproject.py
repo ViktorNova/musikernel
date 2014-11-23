@@ -501,6 +501,15 @@ class MkProject(libmk.AbstractProject):
         with open(f_pygraph_file, "w") as f_handle:
             f_handle.write(f_result)
 
+    def copy_plugin(self, a_old, a_new):
+        f_old_path = "{}/{}".format(self.plugin_pool_folder, a_old)
+        if os.path.exists(f_old_path):
+            with open(f_old_path) as file_handle:
+                self.save_file(
+                    pydaw_folder_plugins, a_new, file_handle.read())
+                #self.commit("Copy plugin UID {} to {}".format(a_old, a_new))
+        else:
+            print("{} does not exist, not copying".format(f_old_path))
 
 
 #From old sample_graph..py

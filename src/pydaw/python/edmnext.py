@@ -7882,7 +7882,6 @@ class midi_devices_dialog:
 
 
 PLUGIN_SETTINGS_COPY_OBJ = None
-PLUGIN_SETTINGS_CUT = False
 
 def global_open_mixer():
     f_graph = PROJECT.get_routing_graph()
@@ -7962,12 +7961,9 @@ class plugin_settings_base:
         if PLUGIN_SETTINGS_COPY_OBJ is None:
             return
         self.set_value(PLUGIN_SETTINGS_COPY_OBJ)
-        global PLUGIN_SETTINGS_CUT
-        if not PLUGIN_SETTINGS_CUT:
-            self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
-            PROJECT.copy_plugin(
-                PLUGIN_SETTINGS_COPY_OBJ.plugin_uid, self.plugin_uid)
-        PLUGIN_SETTINGS_CUT = False
+        self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
+        libmk.PROJECT.copy_plugin(
+            PLUGIN_SETTINGS_COPY_OBJ.plugin_uid, self.plugin_uid)
         self.on_plugin_change()
 
     def automation_check_changed(self):
@@ -7982,6 +7978,7 @@ class plugin_settings_base:
         f_name = PLUGIN_UIDS_REVERSE[a_val.plugin_index]
         self.plugin_combobox.setCurrentIndex(
             self.plugin_combobox.findText(f_name))
+        self.plugin_index = a_val.plugin_index
         self.plugin_uid = a_val.plugin_uid
         self.power_checkbox.setChecked(a_val.power == 1)
         self.suppress_osc = False
