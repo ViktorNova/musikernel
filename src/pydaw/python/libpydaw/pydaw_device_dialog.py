@@ -57,20 +57,27 @@ No Audio:  No audio or MIDI, mostly useful for attaching an external debugger.
 """)
 
 THREADS_TOOLTIP = _(
-"""This control sets the number of worker threads for processing
+"""This sets the number of worker threads for processing
 plugins and effects.
-Setting to 1 can result in the best latency.
-If your projects require more CPU power than one CPU core can
-provide, for best latency it is recommended that you only add
-the required number of cores, and not more than one thread
-per CPU core.
-(Intel hyperthreading should NOT be considered additional cores).
+
+Setting to 1 can result in the best latency, but
+may (or may not) provide enough CPU power depending
+on your CPU's single-threaded performance.
+
+It is recommended that you not more than one thread
+per CPU core. (Intel hyperthreading should NOT be
+considered additional cores).
+
 Auto attempts to pick a sane number of worker threads
 automatically based on your CPU.
+
 If you're not sure how to use this setting, you should
 leave it on 'Auto'.
-It is also recommended that you leave one or more cores unused
-to power the UI and operating system, for example:
+
+It is also recommended that you leave one or more
+cores unused to power the UI and operating system,
+for example:
+
 dual-core:  1 worker thread
 quad-core:  1 - 3 worker threads
 """)
