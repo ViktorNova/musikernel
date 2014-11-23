@@ -41,6 +41,7 @@ TOOLS = {
     "profile": "make clean && make gprof && "
         "./{BIN} {PROJECT} test.wav 0 0 3 3 44100 512 {CORES} 1 "
         "&& gprof ./{BIN} > profile.txt && gedit profile.txt",
+    "pahole": "make clean && make debug && pahole {BIN}",
 }
 
 os.system(TOOLS[TOOL].format(BIN=BIN, PROJECT=PROJECT, CORES=CORES))
