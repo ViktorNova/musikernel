@@ -614,6 +614,10 @@ class MkMainWindow(QtGui.QMainWindow):
     def on_change_audio_settings(self):
         f_dialog = pydaw_device_dialog.pydaw_device_dialog(True)
         f_dialog.show_device_dialog(a_notify=True)
+        if f_dialog.dialog_result:
+            global RESPAWN
+            RESPAWN = True
+            self.prepare_to_quit()
 
     def on_kill_engine(self):
         libmk.IPC.pydaw_kill_engine()

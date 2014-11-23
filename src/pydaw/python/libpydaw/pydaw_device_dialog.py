@@ -195,8 +195,8 @@ class pydaw_device_dialog:
                     a_exit_on_cancel=True)
 
 
-    def show_device_dialog(self, a_msg=None, a_notify=False,
-                           a_exit_on_cancel=False):
+    def show_device_dialog(
+    self, a_msg=None, a_notify=False, a_exit_on_cancel=False):
         self.dialog_result = False
         self.open_devices()
         if self.is_running:
@@ -397,13 +397,19 @@ class pydaw_device_dialog:
                 f_file.close()
                 self.close_devices()
 
+                self.dialog_result = True
+
                 if a_notify:
-                    QtGui.QMessageBox.warning(f_window, _("Settings changed"),
-                      _("Hardware settings have been changed, and will be "
-                      "applied next time you start MusiKernel."))
+                    f_notify_result = QtGui.QMessageBox.question(
+                        f_window, _("Settings changed"),
+                        _("Hardware settings have been changed, and will be "
+                        "applied next time you start MusiKernel.  Restart "
+                        "MusiKernel now?"),
+                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+                    self.dialog_result = \
+                        f_notify_result == QtGui.QMessageBox.Yes
                 time.sleep(1.0)
                 pydaw_util.pydaw_read_device_config()
-                self.dialog_result = True
                 f_window.close()
 
             except Exception as ex:
