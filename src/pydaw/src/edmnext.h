@@ -2017,6 +2017,7 @@ void v_pydaw_process_external_midi(t_edmnext * self,
     int f_sample_count = musikernel->sample_count;
     int f_playback_mode = musikernel->playback_mode;
     int f_midi_learn = musikernel->midi_learn;
+    float f_tempo = self->tempo;
 
     midiDeviceRead(a_track->midi_device, f_sample_rate, f_sample_count);
 
@@ -2043,7 +2044,7 @@ void v_pydaw_process_external_midi(t_edmnext * self,
             {
                 float f_beat = self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
-                        self->tempo, f_sample_rate);
+                        f_tempo, f_sample_rate);
 
                 sprintf(
                     f_osc_msg,
@@ -2065,7 +2066,7 @@ void v_pydaw_process_external_midi(t_edmnext * self,
             {
                 float f_beat = self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
-                        self->tempo, f_sample_rate);
+                        f_tempo, f_sample_rate);
 
                 sprintf(
                     f_osc_msg,
@@ -2085,7 +2086,7 @@ void v_pydaw_process_external_midi(t_edmnext * self,
             {
                 float f_beat = self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
-                        self->tempo, f_sample_rate);
+                        f_tempo, f_sample_rate);
 
                 sprintf(
                     f_osc_msg,
@@ -2119,7 +2120,7 @@ void v_pydaw_process_external_midi(t_edmnext * self,
                 float f_beat =
                     self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(
-                        events[f_i2].tick, self->tempo,
+                        events[f_i2].tick, f_tempo,
                         f_sample_rate);
 
                 sprintf(f_osc_msg,
