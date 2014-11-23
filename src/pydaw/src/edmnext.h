@@ -1321,6 +1321,7 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
     t_pydaw_plugin * f_plugin = 0;
     float ** f_buff;
     float ** f_track_buff = a_track->buffers;
+    int f_sample_count = musikernel->sample_count;
 
     if((pydaw_data->routing_graph->bus_count[a_track->track_num])
         ||
@@ -1361,7 +1362,7 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
     }
     else if(a_track->fade_state == FADE_STATE_FADING)
     {
-        while(f_i2 < musikernel->sample_count)
+        while(f_i2 < f_sample_count)
         {
             f_rmp_run_ramp(&a_track->fade_env);
 
@@ -1377,7 +1378,7 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
     }
     else if(a_track->fade_state == FADE_STATE_RETURNING)
     {
-        while(f_i2 < musikernel->sample_count)
+        while(f_i2 < f_sample_count)
         {
             f_rmp_run_ramp(&a_track->fade_env);
             f_track_buff[0][f_i2] *= a_track->fade_env.output;
@@ -1438,10 +1439,9 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
             if(f_plugin && f_plugin->power)
             {
                 v_pydaw_process_atm(
-                    self, a_track->track_num, f_plugin_index,
-                    musikernel->sample_count);
+                    self, a_track->track_num, f_plugin_index, f_sample_count);
                 f_plugin->descriptor->run_mixing(
-                    f_plugin->PYFX_handle, musikernel->sample_count,
+                    f_plugin->PYFX_handle, f_sample_count,
                     f_buff, 2, a_track->event_buffer,
                     a_track->period_event_index,
                     f_plugin->atm_buffer, f_plugin->atm_count,
@@ -2013,8 +2013,12 @@ void v_pydaw_process_external_midi(t_edmnext * self,
         return;
     }
 
-    midiDeviceRead(a_track->midi_device, musikernel->sample_rate,
-        musikernel->sample_count);
+    float f_sample_rate = musikernel->sample_rate;
+    int f_sample_count = musikernel->sample_count;
+    int f_playback_mode = musikernel->playback_mode;
+    int f_midi_learn = musikernel->midi_learn;
+
+    midiDeviceRead(a_track->midi_device, f_sample_rate, f_sample_count);
 
     int f_extern_midi_count = *a_track->extern_midi_count;
     t_pydaw_seq_event * events = a_track->extern_midi;
@@ -2035,11 +2039,11 @@ void v_pydaw_process_external_midi(t_edmnext * self,
 
         if(events[f_i2].type == PYDAW_EVENT_NOTEON)
         {
-            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            if(f_playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat = self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
-                        self->tempo, musikernel->sample_rate);
+                        self->tempo, f_sample_rate);
 
                 sprintf(
                     f_osc_msg,
@@ -2057,11 +2061,11 @@ void v_pydaw_process_external_midi(t_edmnext * self,
         }
         else if(events[f_i2].type == PYDAW_EVENT_NOTEOFF)
         {
-            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            if(f_playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat = self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
-                        self->tempo, musikernel->sample_rate);
+                        self->tempo, f_sample_rate);
 
                 sprintf(
                     f_osc_msg,
@@ -2077,11 +2081,11 @@ void v_pydaw_process_external_midi(t_edmnext * self,
         }
         else if(events[f_i2].type == PYDAW_EVENT_PITCHBEND)
         {
-            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            if(f_playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat = self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
-                        self->tempo, musikernel->sample_rate);
+                        self->tempo, f_sample_rate);
 
                 sprintf(
                     f_osc_msg,
@@ -2095,9 +2099,10 @@ void v_pydaw_process_external_midi(t_edmnext * self,
         {
             int controller = events[f_i2].param;
 
-            if(musikernel->midi_learn)
+            if(f_midi_learn)
             {
                 musikernel->midi_learn = 0;
+                f_midi_learn = 0;
                 sprintf(f_osc_msg, "%i", controller);
                 v_queue_osc_message("ml", f_osc_msg);
             }
@@ -2109,13 +2114,13 @@ void v_pydaw_process_external_midi(t_edmnext * self,
             v_pydaw_set_control_from_cc(
                 &events[f_i2], self, a_track->track_num);
 
-            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            if(f_playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat =
                     self->ml_current_period_beats +
                     f_pydaw_samples_to_beat_count(
                         events[f_i2].tick, self->tempo,
-                        musikernel->sample_rate);
+                        f_sample_rate);
 
                 sprintf(f_osc_msg,
                     "cc|%i|%i|%f|%i|%i|%f",
@@ -3731,7 +3736,7 @@ t_pydaw_audio_items * v_audio_items_load_all(t_edmnext * self,
         int a_region_uid)
 {
     t_pydaw_audio_items * f_result =
-            g_pydaw_audio_items_get(musikernel->sample_rate);
+        g_pydaw_audio_items_get(musikernel->sample_rate);
     char f_file[1024] = "\0";
     sprintf(f_file, "%s%i", self->region_audio_folder, a_region_uid);
     int f_i, f_i2;
@@ -3746,8 +3751,8 @@ t_pydaw_audio_items * v_audio_items_load_all(t_edmnext * self,
         for(f_i = 0; f_i < PYDAW_MAX_AUDIO_ITEM_COUNT; ++f_i)
         {
             t_pydaw_audio_item * f_new =
-                    g_audio_item_load_single(musikernel->sample_rate,
-                    f_current_string, 0, musikernel->wav_pool, 0);
+                g_audio_item_load_single(musikernel->sample_rate,
+                f_current_string, 0, musikernel->wav_pool, 0);
             if(!f_new)  //EOF'd...
             {
                 break;
@@ -3849,10 +3854,9 @@ void v_set_loop_mode(t_edmnext * self, int a_mode)
 void v_set_tempo(t_edmnext * self, float a_tempo)
 {
     self->tempo = a_tempo;
-    self->playback_inc = ( (1.0f/(musikernel->sample_rate)) /
-            (60.0f/(a_tempo * 0.25f)) );
-    self->samples_per_beat = (musikernel->sample_rate) /
-            (a_tempo/60.0f);
+    self->playback_inc = ( (1.0f / (musikernel->sample_rate)) /
+        (60.0f / (a_tempo * 0.25f)) );
+    self->samples_per_beat = (musikernel->sample_rate) / (a_tempo/60.0f);
 }
 
 void v_pydaw_update_audio_inputs(t_edmnext * self)
