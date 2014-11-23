@@ -384,12 +384,12 @@ void v_paif_set_control(t_edmnext *, int, int, int, float);
 void v_pysong_free(t_pysong *);
 void v_pydaw_process_note_offs(t_edmnext * self, int f_i);
 void v_pydaw_process_midi(t_edmnext * self,
-        int f_i, int sample_count);
+        int f_i, int sample_count, int a_playback_mode);
 void v_pydaw_zero_all_buffers(t_edmnext * self);
 void v_pydaw_panic(t_edmnext * self);
 
-void v_pydaw_process_atm(
-    t_edmnext * self, int f_track_num, int f_index, int sample_count);
+void v_pydaw_process_atm(t_edmnext * self, int f_track_num,
+    int f_index, int sample_count, int a_playback_mode);
 
 void v_pydaw_set_midi_device(t_edmnext*, int, int, int);
 
@@ -1311,7 +1311,7 @@ inline void v_buffer_mix(int a_count,
 
 
 void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
-        int a_sample_count)
+        int a_sample_count, int a_playback_mode)
 {
     int f_bus_num;
     register int f_i2;
@@ -1436,8 +1436,8 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
         {
             if(f_plugin && f_plugin->power)
             {
-                v_pydaw_process_atm(
-                    self, a_track->track_num, f_plugin_index, a_sample_count);
+                v_pydaw_process_atm(self, a_track->track_num,
+                    f_plugin_index, a_sample_count, a_playback_mode);
                 f_plugin->descriptor->run_mixing(
                     f_plugin->PYFX_handle, a_sample_count,
                     f_buff, 2, a_track->event_buffer,
@@ -1488,15 +1488,15 @@ __attribute__((optimize("-O0"))) void v_wait_for_bus(t_pytrack * a_track)
 }
 
 void v_pydaw_process_track(t_edmnext * self, int a_global_track_num,
-        int a_thread_num, int a_sample_count)
+        int a_thread_num, int a_sample_count, int a_playback_mode)
 {
     t_pytrack * f_track = self->track_pool[a_global_track_num];
     t_pydaw_plugin * f_plugin;
 
-    if(musikernel->playback_mode > 0)
+    if(a_playback_mode > 0)
     {
         v_pydaw_process_midi(
-            self, a_global_track_num, a_sample_count);
+            self, a_global_track_num, a_sample_count, a_playback_mode);
     }
     else
     {
@@ -1520,8 +1520,8 @@ void v_pydaw_process_track(t_edmnext * self, int a_global_track_num,
         f_plugin = f_track->plugins[f_i];
         if(f_plugin && f_plugin->power)
         {
-            v_pydaw_process_atm(
-                self, a_global_track_num, f_i, a_sample_count);
+            v_pydaw_process_atm(self, a_global_track_num,
+                f_i, a_sample_count, a_playback_mode);
             f_plugin->descriptor->run_replacing(
                 f_plugin->PYFX_handle, a_sample_count,
                 f_track->event_buffer, f_track->period_event_index,
@@ -1533,7 +1533,8 @@ void v_pydaw_process_track(t_edmnext * self, int a_global_track_num,
 
     if(a_global_track_num)
     {
-        v_pydaw_sum_track_outputs(self, f_track, a_sample_count);
+        v_pydaw_sum_track_outputs(self, f_track,
+            a_sample_count, a_playback_mode);
     }
 
     v_pkm_run(f_track->peak_meter, f_track->buffers[0],
@@ -1560,6 +1561,7 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
     int f_sorted_count = self->routing_graph->track_pool_sorted_count;
     int * f_sorted = self->routing_graph->track_pool_sorted[f_args->thread_num];
     int f_sample_count = musikernel->sample_count;
+    int f_playback_mode = musikernel->playback_mode;
 
 
     while(f_i < f_sorted_count)
@@ -1589,7 +1591,7 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
         pthread_spin_unlock(&f_track->lock);
 
         v_pydaw_process_track(self, f_track->track_num, f_args->thread_num,
-            f_sample_count);
+            f_sample_count, f_playback_mode);
 
         f_track->status = STATUS_PROCESSED;
 
@@ -1630,7 +1632,8 @@ void * v_pydaw_worker_thread(void* a_arg)
 }
 
 inline void v_pydaw_process_atm(
-    t_edmnext * self, int f_track_num, int f_index, int sample_count)
+    t_edmnext * self, int f_track_num, int f_index, int sample_count,
+    int a_playback_mode)
 {
     t_pytrack * f_track = self->track_pool[f_track_num];
     t_pydaw_plugin * f_plugin = f_track->plugins[f_index];
@@ -1642,7 +1645,7 @@ inline void v_pydaw_process_atm(
 
     f_plugin->atm_count = 0;
 
-    if((!self->overdub_mode) && (musikernel->playback_mode == 2) &&
+    if((!self->overdub_mode) && (a_playback_mode == 2) &&
         (f_track->extern_midi))
     {
         return;
@@ -1771,7 +1774,8 @@ inline void v_pydaw_process_atm(
     }
 }
 
-void v_pydaw_process_midi(t_edmnext * self, int f_i, int sample_count)
+void v_pydaw_process_midi(t_edmnext * self, int f_i, int sample_count,
+        int a_playback_mode)
 {
     t_pytrack * f_track = self->track_pool[f_i];
     f_track->period_event_index = 0;
@@ -1783,7 +1787,7 @@ void v_pydaw_process_midi(t_edmnext * self, int f_i, int sample_count)
     float f_track_next_period_beats = (self->ml_next_period_beats);
     float f_track_beats_offset = 0.0f;
 
-    if((!self->overdub_mode) && (musikernel->playback_mode == 2) &&
+    if((!self->overdub_mode) && (a_playback_mode == 2) &&
         (f_track->extern_midi))
     {
 
@@ -2014,12 +2018,11 @@ void v_pydaw_process_external_midi(t_edmnext * self,
     }
 
     float f_sample_rate = musikernel->thread_storage[a_thread_num].sample_rate;
-    int f_sample_count = musikernel->sample_count;
     int f_playback_mode = musikernel->playback_mode;
     int f_midi_learn = musikernel->midi_learn;
     float f_tempo = self->tempo;
 
-    midiDeviceRead(a_track->midi_device, f_sample_rate, f_sample_count);
+    midiDeviceRead(a_track->midi_device, f_sample_rate, sample_count);
 
     int f_extern_midi_count = *a_track->extern_midi_count;
     t_pydaw_seq_event * events = a_track->extern_midi;
@@ -2335,7 +2338,7 @@ inline void v_pydaw_run_engine(t_edmnext * self, int sample_count,
     //wait for the other threads to finish
     v_wait_for_threads();
 
-    v_pydaw_process_track(self, 0, 0, sample_count);
+    v_pydaw_process_track(self, 0, 0, sample_count, musikernel->playback_mode);
 
     for(f_i = 0; f_i < sample_count; ++f_i)
     {
