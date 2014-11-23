@@ -1296,12 +1296,12 @@ void v_pydaw_set_control_from_cc(
     }
 }
 
-inline void v_buffer_mix(
+inline void v_buffer_mix(int a_count,
     float ** __restrict__ a_buffer_src, float ** __restrict__ a_buffer_dest)
 {
     register int f_i2 = 0;
-    int f_count = musikernel->sample_count;
-    while(f_i2 < f_count)
+
+    while(f_i2 < a_count)
     {
         a_buffer_dest[0][f_i2] += a_buffer_src[0][f_i2];
         a_buffer_dest[1][f_i2] += a_buffer_src[1][f_i2];
@@ -1310,7 +1310,8 @@ inline void v_buffer_mix(
 }
 
 
-void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
+void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
+        int a_sample_count)
 {
     int f_bus_num;
     register int f_i2;
@@ -1319,7 +1320,6 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
     t_pydaw_plugin * f_plugin = 0;
     float ** f_buff;
     float ** f_track_buff = a_track->buffers;
-    int f_sample_count = musikernel->sample_count;
 
     if((pydaw_data->routing_graph->bus_count[a_track->track_num])
         ||
@@ -1360,7 +1360,7 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
     }
     else if(a_track->fade_state == FADE_STATE_FADING)
     {
-        while(f_i2 < f_sample_count)
+        while(f_i2 < a_sample_count)
         {
             f_rmp_run_ramp(&a_track->fade_env);
 
@@ -1376,7 +1376,7 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
     }
     else if(a_track->fade_state == FADE_STATE_RETURNING)
     {
-        while(f_i2 < f_sample_count)
+        while(f_i2 < a_sample_count)
         {
             f_rmp_run_ramp(&a_track->fade_env);
             f_track_buff[0][f_i2] *= a_track->fade_env.output;
@@ -1437,9 +1437,9 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
             if(f_plugin && f_plugin->power)
             {
                 v_pydaw_process_atm(
-                    self, a_track->track_num, f_plugin_index, f_sample_count);
+                    self, a_track->track_num, f_plugin_index, a_sample_count);
                 f_plugin->descriptor->run_mixing(
-                    f_plugin->PYFX_handle, f_sample_count,
+                    f_plugin->PYFX_handle, a_sample_count,
                     f_buff, 2, a_track->event_buffer,
                     a_track->period_event_index,
                     f_plugin->atm_buffer, f_plugin->atm_count,
@@ -1447,7 +1447,7 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track)
             }
             else
             {
-                v_buffer_mix(f_track_buff, f_buff);
+                v_buffer_mix(a_sample_count, f_track_buff, f_buff);
             }
         }
 
@@ -1488,29 +1488,28 @@ __attribute__((optimize("-O0"))) void v_wait_for_bus(t_pytrack * a_track)
 }
 
 void v_pydaw_process_track(t_edmnext * self, int a_global_track_num,
-        int a_thread_num)
+        int a_thread_num, int a_sample_count)
 {
     t_pytrack * f_track = self->track_pool[a_global_track_num];
     t_pydaw_plugin * f_plugin;
-    int f_sample_count = musikernel->sample_count;
 
     if(musikernel->playback_mode > 0)
     {
         v_pydaw_process_midi(
-            self, a_global_track_num, f_sample_count);
+            self, a_global_track_num, a_sample_count);
     }
     else
     {
         f_track->period_event_index = 0;
     }
 
-    v_pydaw_process_external_midi(self, f_track, f_sample_count, a_thread_num);
+    v_pydaw_process_external_midi(self, f_track, a_sample_count, a_thread_num);
 
     v_pydaw_process_note_offs(self, a_global_track_num);
 
     v_wait_for_bus(f_track);
 
-    v_pydaw_audio_items_run(self, f_sample_count,
+    v_pydaw_audio_items_run(self, a_sample_count,
         f_track->buffers, f_track->sc_buffers, a_global_track_num, 0,
         &f_track->sc_buffers_dirty);
 
@@ -1522,9 +1521,9 @@ void v_pydaw_process_track(t_edmnext * self, int a_global_track_num,
         if(f_plugin && f_plugin->power)
         {
             v_pydaw_process_atm(
-                self, a_global_track_num, f_i, f_sample_count);
+                self, a_global_track_num, f_i, a_sample_count);
             f_plugin->descriptor->run_replacing(
-                f_plugin->PYFX_handle, f_sample_count,
+                f_plugin->PYFX_handle, a_sample_count,
                 f_track->event_buffer, f_track->period_event_index,
                 f_plugin->atm_buffer, f_plugin->atm_count,
                 f_track->extern_midi, *f_track->extern_midi_count);
@@ -1534,21 +1533,21 @@ void v_pydaw_process_track(t_edmnext * self, int a_global_track_num,
 
     if(a_global_track_num)
     {
-        v_pydaw_sum_track_outputs(self, f_track);
+        v_pydaw_sum_track_outputs(self, f_track, a_sample_count);
     }
 
     v_pkm_run(f_track->peak_meter, f_track->buffers[0],
-        f_track->buffers[1], f_sample_count);
+        f_track->buffers[1], a_sample_count);
 
     if(a_global_track_num)
     {
-        v_pydaw_zero_buffer(f_track->buffers, f_sample_count);
+        v_pydaw_zero_buffer(f_track->buffers, a_sample_count);
     }
 
     if(f_track->sc_buffers_dirty)
     {
         f_track->sc_buffers_dirty = 0;
-        v_pydaw_zero_buffer(f_track->sc_buffers, f_sample_count);
+        v_pydaw_zero_buffer(f_track->sc_buffers, a_sample_count);
     }
 }
 
@@ -1560,6 +1559,7 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
     int f_i = f_args->thread_num;
     int f_sorted_count = self->routing_graph->track_pool_sorted_count;
     int * f_sorted = self->routing_graph->track_pool_sorted[f_args->thread_num];
+    int f_sample_count = musikernel->sample_count;
 
 
     while(f_i < f_sorted_count)
@@ -1588,7 +1588,8 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
 
         pthread_spin_unlock(&f_track->lock);
 
-        v_pydaw_process_track(self, f_track->track_num, f_args->thread_num);
+        v_pydaw_process_track(self, f_track->track_num, f_args->thread_num,
+            f_sample_count);
 
         f_track->status = STATUS_PROCESSED;
 
@@ -2334,7 +2335,7 @@ inline void v_pydaw_run_engine(t_edmnext * self, int sample_count,
     //wait for the other threads to finish
     v_wait_for_threads();
 
-    v_pydaw_process_track(self, 0, 0);
+    v_pydaw_process_track(self, 0, 0, sample_count);
 
     for(f_i = 0; f_i < sample_count; ++f_i)
     {
