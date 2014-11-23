@@ -543,6 +543,7 @@ void v_pydaw_reset_audio_item_read_heads(t_edmnext * self,
     float f_start_beats = (float)(a_start_bar * 4);
     float f_sr = musikernel->thread_storage[0].sample_rate;
     t_pydaw_audio_item * f_audio_item;
+    float f_tempo = self->tempo;
 
     for(f_i = 0; f_i < PYDAW_MAX_AUDIO_ITEM_COUNT; ++f_i)
     {
@@ -557,13 +558,13 @@ void v_pydaw_reset_audio_item_read_heads(t_edmnext * self,
                 f_start_beat + f_pydaw_samples_to_beat_count(
                     (f_audio_item->sample_end_offset -
                      f_audio_item->sample_start_offset),
-                    self->tempo, f_sr);
+                    f_tempo, f_sr);
 
             if((f_start_beats > f_start_beat) && (f_start_beats < f_end_beat))
             {
                 float f_beats_offset = (f_start_beats - f_start_beat);
                 int f_sample_start = i_pydaw_beat_count_to_samples(
-                        f_beats_offset, self->tempo, f_sr);
+                        f_beats_offset, f_tempo, f_sr);
 
                 for(f_i2 = 0; f_i2 < EN_AUDIO_ITEM_SEND_COUNT; ++f_i2)
                 {
@@ -782,17 +783,19 @@ void v_paif_set_control(t_edmnext * self, int a_region_uid,
     int f_control_index = a_port % 4;
     int f_song_index = i_get_song_index_from_region_uid(
         self, a_region_uid);
+    t_pydaw_per_audio_item_fx_region * f_region =
+        self->pysong->per_audio_item_fx[f_song_index];
+    t_pydaw_per_audio_item_fx_item * f_item;
 
-    if(!self->pysong->per_audio_item_fx[f_song_index])
+    if(!f_region)
     {
-        t_pydaw_per_audio_item_fx_region * f_region = g_paif_region_get();
-
+        f_region = g_paif_region_get();
         pthread_spin_lock(&musikernel->main_lock);
         self->pysong->per_audio_item_fx[f_song_index] = f_region;
         pthread_spin_unlock(&musikernel->main_lock);
     }
 
-    if(!self->pysong->per_audio_item_fx[f_song_index]->loaded[a_item_index])
+    if(!f_region->loaded[a_item_index])
     {
         t_pydaw_per_audio_item_fx_item * f_items[8];
         int f_i = 0;
@@ -805,48 +808,33 @@ void v_paif_set_control(t_edmnext * self, int a_region_uid,
         f_i = 0;
         while(f_i < 8)
         {
-            self->pysong->per_audio_item_fx[f_song_index]->
-                    items[a_item_index][f_i] = f_items[f_i];
+            f_region->items[a_item_index][f_i] = f_items[f_i];
             ++f_i;
         }
-        self->pysong->per_audio_item_fx[f_song_index]->loaded[a_item_index] = 1;
+        f_region->loaded[a_item_index] = 1;
         pthread_spin_unlock(&musikernel->main_lock);
     }
+
+    f_item = f_region->items[a_item_index][f_effect_index];
 
     pthread_spin_lock(&musikernel->main_lock);
 
     if(f_control_index == 3)
     {
         int f_fx_index = (int)a_val;
-        self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->fx_type = f_fx_index;
-        self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->func_ptr =
-                        g_mf3_get_function_pointer(f_fx_index);
+        f_item->fx_type = f_fx_index;
+        f_item->func_ptr = g_mf3_get_function_pointer(f_fx_index);
 
-        v_mf3_set(self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->mf3,
-            self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->a_knobs[0],
-            self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->a_knobs[1],
-            self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->a_knobs[2]);
+        v_mf3_set(f_item->mf3, f_item->a_knobs[0],
+            f_item->a_knobs[1], f_item->a_knobs[2]);
     }
     else
     {
-        self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->
-                        a_knobs[f_control_index] = a_val;
+        f_region->items[a_item_index][
+            f_effect_index]->a_knobs[f_control_index] = a_val;
 
-        v_mf3_set(self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->mf3,
-            self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->a_knobs[0],
-            self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->a_knobs[1],
-            self->pysong->per_audio_item_fx[f_song_index]->
-                items[a_item_index][f_effect_index]->a_knobs[2]);
+        v_mf3_set(f_item->mf3, f_item->a_knobs[0],
+            f_item->a_knobs[1], f_item->a_knobs[2]);
     }
 
     pthread_spin_unlock(&musikernel->main_lock);
