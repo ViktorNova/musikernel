@@ -39,11 +39,12 @@ Elevated(sandbox):  Same as "Elevated", but works around GTK+'s decision
 to prevent executing code with elevated rights by using a helper program
 to launch the engine. (USE THIS OPTION IF POSSIBLE)
 
-OPTIONS BELOW ARE DEVELOPER OPTIONS THAT NORMAL USERS SHOULD NEVER USE
+Debug:  Run an unoptimized binary with debug symbols and create a
+core dump on crashing. This is useful for diagnosing the cause of a crash,
+but consumes much more CPU and RAM, and is not recommended for normal use
+unless the audio engine is crashing on your platform.
 
-Debug:  Run with debug symbols and create a core dump on crashing.
-This is useful for diagnosing the cause of a crash, but consumes
-much more CPU and RAM, and is not recommended for normal use.
+OPTIONS BELOW ARE DEVELOPER OPTIONS THAT NORMAL USERS SHOULD NEVER USE
 
 GDB:  Open in the GDB debugger with no audio or external MIDI to allow setting
       breakpoints and pausing execution.
