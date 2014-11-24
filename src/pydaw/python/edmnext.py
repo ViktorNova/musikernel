@@ -27,7 +27,7 @@ from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
 import libpydaw.strings
 import libmk
-from libmk import mkproject
+from libmk import mk_project
 from libedmnext import *
 
 def pydaw_get_current_region_length():
@@ -2549,7 +2549,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         for f_painter_path in self.painter_paths:
             f_path_item = QtGui.QGraphicsPathItem(f_painter_path)
             f_path_item.setBrush(
-                mkproject.pydaw_audio_item_scene_gradient)
+                mk_project.pydaw_audio_item_scene_gradient)
             f_path_item.setParentItem(self)
             f_path_item.mapToParent(0.0, 0.0)
             self.path_items.append(f_path_item)
@@ -2751,7 +2751,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                         self.sample_start_offset_px,
                         f_y_offset + (f_y_inc * f_i))
                 f_x_scale, f_y_scale = pydaw_scale_to_rect(
-                    mkproject.pydaw_audio_item_scene_rect, self.rect_orig)
+                    mk_project.pydaw_audio_item_scene_rect, self.rect_orig)
                 f_y_scale *= self.vol_linear
                 f_path_item.scale(f_x_scale, f_y_scale)
                 f_i += f_i_inc

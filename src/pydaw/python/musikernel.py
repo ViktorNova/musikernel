@@ -19,7 +19,7 @@ from libpydaw import liblo, pydaw_util, pydaw_widgets, pydaw_device_dialog
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
 import libmk
-from libmk import mkproject
+from libmk import mk_project
 import libpydaw.strings
 
 import time
@@ -1123,7 +1123,7 @@ def global_ui_refresh_callback(a_restore_all=False):
 #Opens or creates a new project
 def global_open_project(a_project_file, a_wait=True):
     open_pydaw_engine(a_project_file)
-    libmk.PROJECT = mkproject.MkProject()
+    libmk.PROJECT = mk_project.MkProject()
     libmk.PROJECT.suppress_updates = True
     libmk.PROJECT.open_project(a_project_file, False)
     libmk.PROJECT.suppress_updates = False
@@ -1132,7 +1132,7 @@ def global_open_project(a_project_file, a_wait=True):
 
 def global_new_project(a_project_file, a_wait=True):
     open_pydaw_engine(a_project_file)
-    libmk.PROJECT = mkproject.MkProject()
+    libmk.PROJECT = mk_project.MkProject()
     libmk.PROJECT.new_project(a_project_file)
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     for f_module in MAIN_WINDOW.host_modules:
