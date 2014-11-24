@@ -2037,11 +2037,9 @@ void v_pydaw_process_external_midi(t_edmnext * self,
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
                         f_tempo, f_sample_rate);
 
-                sprintf(
-                    f_osc_msg,
-                    "on|%i|%i|%f|%i|%i|%i|%ld", self->current_region,
-                    self->current_bar, f_beat, a_track->track_num,
-                    events[f_i2].note,
+                sprintf(f_osc_msg, "on|%i|%i|%f|%i|%i|%i|%ld",
+                    self->current_region, self->current_bar, f_beat,
+                    a_track->track_num, events[f_i2].note,
                     events[f_i2].velocity,
                     self->current_sample + events[f_i2].tick);
                 v_queue_osc_message("mrec", f_osc_msg);
@@ -2059,11 +2057,9 @@ void v_pydaw_process_external_midi(t_edmnext * self,
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
                         f_tempo, f_sample_rate);
 
-                sprintf(
-                    f_osc_msg,
-                    "off|%i|%i|%f|%i|%i|%ld", self->current_region,
-                    self->current_bar, f_beat, a_track->track_num,
-                    events[f_i2].note,
+                sprintf(f_osc_msg, "off|%i|%i|%f|%i|%i|%ld",
+                    self->current_region, self->current_bar, f_beat,
+                    a_track->track_num, events[f_i2].note,
                     self->current_sample + events[f_i2].tick);
                 v_queue_osc_message("mrec", f_osc_msg);
             }
@@ -2079,11 +2075,10 @@ void v_pydaw_process_external_midi(t_edmnext * self,
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
                         f_tempo, f_sample_rate);
 
-                sprintf(
-                    f_osc_msg,
-                    "pb|%i|%i|%f|%i|%f", self->current_region,
-                    self->current_bar, f_beat,
-                    a_track->track_num, events[f_i2].value);
+                sprintf(f_osc_msg, "pb|%i|%i|%f|%i|%f|%ld",
+                    self->current_region, self->current_bar, f_beat,
+                    a_track->track_num, events[f_i2].value,
+                    self->current_sample + events[f_i2].tick);
                 v_queue_osc_message("mrec", f_osc_msg);
             }
         }
@@ -2220,8 +2215,11 @@ inline void v_pydaw_finish_time_params(t_edmnext * self,
             {
                 float f_beat = self->ml_current_period_beats;
 
-                sprintf(musikernel->osc_cursor_message, "loop|%i|%i|%f|-1",
-                    self->current_region, self->current_bar, f_beat);
+                sprintf(musikernel->osc_cursor_message, "loop|%i|%i|%f|%ld",
+                    self->current_region, self->current_bar, f_beat,
+                    self->current_sample +
+                    i_pydaw_beat_count_to_samples(4.0 - f_beat, self->tempo,
+                        musikernel->thread_storage[0].sample_rate));
                 v_queue_osc_message("mrec", musikernel->osc_cursor_message);
             }
         }

@@ -466,9 +466,12 @@ class EdmNextProject(libmk.AbstractProject):
 
     def save_recorded_items(
             self, a_item_name, a_mrec_list, a_overdub, a_tempo, a_sr):
+        print("\n".join(a_mrec_list))
         # TODO:  Ensure that the user can't switch MIDI device/track during
         # recording, but can during playback...
         f_mrec_items = [x.split("|") for x in a_mrec_list]
+        f_mrec_items.sort(key=lambda x: int(x[-1]))
+        print("\n".join(f_mrec_items))
         f_song = self.get_song()
         f_note_tracker = {}
         f_items_to_save = {}
@@ -528,11 +531,23 @@ class EdmNextProject(libmk.AbstractProject):
             else:
                 new_item(a_bar, a_track_num)
 
-        def set_note_length(a_track_num, f_note_num):
+        def pos_subtract(a_start_bar, a_start_beat, a_end_bar, a_end_beat):
+            return (float(a_end_bar - a_start_bar)
+                * 4.0) + (a_end_beat - a_start_beat)
+
+        def set_note_length(a_track_num, f_note_num,
+        f_end_bar, f_end_beat, f_tick):
             f_note = f_note_tracker[a_track_num][f_note_num]
-            f_sample_count = f_tick - f_note.start_sample
-            f_seconds = float(f_sample_count) / float(a_sr)
-            f_note.length = f_seconds * f_beats_per_second
+            f_length = pos_subtract(
+                f_note.bar, f_note.start, f_end_bar, f_end_beat)
+            if f_length > 0.0:
+                print("Using beat length for:")
+                f_note.set_length(f_length)
+            else:
+                print("Using tick length for:")
+                f_sample_count = f_tick - f_note.start_sample
+                f_seconds = float(f_sample_count) / float(a_sr)
+                f_note.set_length(f_seconds * f_beats_per_second)
             print(f_note_tracker[a_track_num].pop(f_note_num))
 
         for f_event in f_mrec_items:
@@ -574,15 +589,20 @@ class EdmNextProject(libmk.AbstractProject):
                 f_note_num, f_velocity, f_tick = (int(x) for x in f_event[5:])
                 print("New note: {} {} {}".format(f_bar, f_beat, f_note_num))
                 f_note = pydaw_note(f_beat, 1.0, f_note_num, f_velocity)
+                f_note.bar = f_bar
                 f_note.start_sample = f_tick
                 if f_note_num in f_note_tracker[f_track]:
-                    set_note_length(f_track, f_note_num)
+                    print("Terminating note early: {}".format(
+                        (f_track, f_note_num, f_tick)))
+                    set_note_length(
+                        f_track, f_note_num, f_bar, f_beat, f_tick)
                 f_note_tracker[f_track][f_note_num] = f_note
                 self.rec_item.add_note(f_note, a_check=False)
             elif f_type == "off":
                 f_note_num, f_tick = (int(x) for x in f_event[5:])
                 if f_note_num in f_note_tracker[f_track]:
-                    set_note_length(f_track, f_note_num)
+                    set_note_length(
+                        f_track, f_note_num, f_bar, f_beat, f_tick)
                 else:
                     print("Error:  note event not in note tracker")
             elif f_type == "cc":
@@ -612,7 +632,6 @@ class EdmNextProject(libmk.AbstractProject):
 
         self.save_song(f_song)
         self.commit("Record MIDI")
-        print("\n".join(a_mrec_list))
 
     def get_tracks_string(self):
         try:
