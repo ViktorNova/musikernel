@@ -2445,7 +2445,7 @@ class pydaw_midi_file_to_items:
     """ Convert the MIDI file at a_file to a dict of pydaw_item's with keys
         in the format (track#, channel#, bar#)"""
     def __init__(self, a_file):
-        f_midi_comp = "{}/midicomp".format(
+        f_midi_comp = "{}/../libpydaw/midicomp".format(
             os.path.dirname(os.path.abspath(__file__)))
         f_midi_text_arr = subprocess.check_output(
             [f_midi_comp, str(a_file)]).decode("utf-8").split("\n")
@@ -2524,9 +2524,7 @@ class pydaw_midi_file_to_items:
         self.channel_count = self.get_channel_count()
 
         #Nested dict in format [channel][bar]
-        self.track_map = {}
-        for f_i in range(pydaw_midi_track_count):
-            self.track_map[f_i] = {}
+        self.track_map = {x:{} for x in range(TRACK_COUNT_ALL)}
 
         for k, v in list(self.result_dict.items()):
             f_channel, f_bar = k
@@ -2568,7 +2566,7 @@ class pydaw_midi_file_to_items:
                     if f_bar >= MAX_REGION_LENGTH:
                         break
                 f_actual_track_num += 1
-                if f_actual_track_num >= pydaw_midi_track_count:
+                if f_actual_track_num >= TRACK_COUNT_ALL:
                     break
         a_project.save_region(f_region_name, f_result_region)
         return True
