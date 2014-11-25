@@ -328,9 +328,13 @@ class pydaw_device_dialog:
                 f_midi_device.contents.output, f_midi_device.contents.opened))
             if f_midi_device.contents.input == 1:
                 f_checkbox = QtGui.QCheckBox(f_midi_device_name)
-                f_window_layout.addWidget(f_checkbox, f_midi_in_pos, 1)
-                f_midi_in_pos += 1
                 self.midi_in_checkboxes[f_midi_device_name] = f_checkbox
+
+        for f_cbox in sorted(
+        self.midi_in_checkboxes, key=lambda x: x.lower()):
+            f_window_layout.addWidget(
+                self.midi_in_checkboxes[f_cbox], f_midi_in_pos, 1)
+            f_midi_in_pos += 1
 
         def latency_changed(a_self=None, a_val=None):
             f_sample_rate = float(str(f_samplerate_combobox.currentText()))
