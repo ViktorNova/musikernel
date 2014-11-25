@@ -471,7 +471,7 @@ class EdmNextProject(libmk.AbstractProject):
         # recording, but can during playback...
         f_mrec_items = [x.split("|") for x in a_mrec_list]
         f_mrec_items.sort(key=lambda x: int(x[-1]))
-        print("\n".join(f_mrec_items))
+        print("\n".join(str(x) for x in f_mrec_items))
         f_song = self.get_song()
         f_note_tracker = {}
         f_items_to_save = {}
@@ -494,7 +494,7 @@ class EdmNextProject(libmk.AbstractProject):
                         return f_item.item_uid
             return None
 
-        def new_take(a_track_num):
+        def new_take():
             self.rec_take = {}
 
         def copy_take(a_track_num):
@@ -577,11 +577,16 @@ class EdmNextProject(libmk.AbstractProject):
             f_last_region != f_region or \
             f_last_bar != f_bar:
                 if f_is_looping or f_region != f_last_region:
-                    new_take(f_track)
-                if not f_track in self.rec_take:
-                    copy_take(f_track)
+                    new_take()
                 f_last_region = f_region
                 f_last_bar = f_bar
+
+            if f_type == "loop":
+                print("Loop event")
+                continue
+
+            if not f_track in self.rec_take:
+                    copy_take(f_track)
 
             self.rec_item = self.rec_take[f_track][f_bar]
 
@@ -614,8 +619,6 @@ class EdmNextProject(libmk.AbstractProject):
             elif f_type == "pb":
                 f_pb = pydaw_pitchbend(f_beat, float(f_event[4]) / 8192.0)
                 self.rec_item.add_pb(f_pb)
-            elif f_type == "loop":
-                print("Loop event")
             else:
                 print("Invalid mrec event type {}".format(f_type))
 
