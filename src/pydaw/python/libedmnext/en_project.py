@@ -1568,7 +1568,7 @@ class pydaw_item:
                 f_quantize_multiple) * f_quantized_value
             if f_new_length == 0.0:
                 f_new_length = f_quantized_value
-            note.length = f_new_length
+            note.set_length(f_new_length)
             f_result.append("{}|{}".format(a_index, note))
 
         self.fix_overlaps()

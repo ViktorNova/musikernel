@@ -5727,7 +5727,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
             if f_note.note_item.length < min_split_size:
                 continue
             f_half = f_note.note_item.length * 0.5
-            f_note.note_item.length = f_half
+            f_note.note_item.set_length(f_half)
             f_new_start = f_note.note_item.start + f_half
             f_index = f_note.item_index
             f_note_num = f_note.note_item.note_num
