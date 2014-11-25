@@ -54,10 +54,12 @@ typedef struct
     int atm_count;
     int atm_pos;  //position within the automation region
     t_pydaw_seq_event * atm_buffer;
-}t_pydaw_plugin __attribute__((aligned(64)));
+    char padding[16];
+}t_pydaw_plugin;
 
 
-void g_pydaw_plugin_init(t_pydaw_plugin * f_result,
+__attribute__((optimize("-O0"))) void g_pydaw_plugin_init(
+        t_pydaw_plugin * f_result,
         int a_sample_rate, int a_index,
         fp_get_wavpool_item_from_host a_host_wavpool_func,
         int a_plugin_uid, fp_queue_message a_queue_func)
@@ -74,23 +76,23 @@ void g_pydaw_plugin_init(t_pydaw_plugin * f_result,
     {
         case 1:
             f_result->descfn =
-                    (PYFX_Descriptor_Function)euphoria_PYFX_descriptor;
+                (PYFX_Descriptor_Function)euphoria_PYFX_descriptor;
             break;
         case 2:
             f_result->descfn =
-                    (PYFX_Descriptor_Function)rayv_PYFX_descriptor;
+                (PYFX_Descriptor_Function)rayv_PYFX_descriptor;
             break;
         case 3:
             f_result->descfn =
-                    (PYFX_Descriptor_Function)wayv_PYFX_descriptor;
+                (PYFX_Descriptor_Function)wayv_PYFX_descriptor;
             break;
         case 4:
             f_result->descfn =
-                    (PYFX_Descriptor_Function)modulex_PYFX_descriptor;
+                (PYFX_Descriptor_Function)modulex_PYFX_descriptor;
             break;
         case 5:
             f_result->descfn =
-                    (PYFX_Descriptor_Function)mkdelay_PYFX_descriptor;
+                (PYFX_Descriptor_Function)mkdelay_PYFX_descriptor;
             break;
         case 6:
             f_result->descfn =
@@ -98,15 +100,15 @@ void g_pydaw_plugin_init(t_pydaw_plugin * f_result,
             break;
         case 7:
             f_result->descfn =
-                    (PYFX_Descriptor_Function)sfader_PYFX_descriptor;
+                (PYFX_Descriptor_Function)sfader_PYFX_descriptor;
             break;
         case 8:
             f_result->descfn =
-                    (PYFX_Descriptor_Function)sreverb_PYFX_descriptor;
+                (PYFX_Descriptor_Function)sreverb_PYFX_descriptor;
             break;
         case 9:
             f_result->descfn =
-                    (PYFX_Descriptor_Function)triggerfx_PYFX_descriptor;
+                (PYFX_Descriptor_Function)triggerfx_PYFX_descriptor;
             break;
         case 10:
             f_result->descfn =
