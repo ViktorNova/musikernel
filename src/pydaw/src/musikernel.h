@@ -114,7 +114,6 @@ typedef struct
     int audio_recording_quit_notifier __attribute__((aligned(16)));
     int playback_mode;  //0 == Stop, 1 == Play, 2 == Rec
     lo_server_thread serverThread;
-    char * osc_url;
     lo_address uiTarget;
     char * osc_cursor_message;
     int osc_queue_index;
@@ -193,20 +192,9 @@ void g_musikernel_get(float a_sr)
     musikernel->osc_queue_index = 0;
     musikernel->osc_cursor_message = (char*)malloc(sizeof(char) * 1024);
 
-    char *tmp;
-
-    char osc_path_tmp[1024];
-
     musikernel->serverThread = lo_server_thread_new(NULL, pydaw_osc_error);
-    snprintf(osc_path_tmp, 31, "/dssi/pydaw_plugins");
-    tmp = lo_server_thread_get_url(musikernel->serverThread);
-    musikernel->osc_url = (char *)malloc(strlen(tmp) + strlen(osc_path_tmp));
-    sprintf(musikernel->osc_url, "%s%s", tmp, osc_path_tmp + 1);
-    free(tmp);
-
     musikernel->uiTarget = lo_address_new_from_url(
         "osc.udp://localhost:30321/");
-
 
     for(f_i = 0; f_i < MAX_PLUGIN_POOL_COUNT; ++f_i)
     {
