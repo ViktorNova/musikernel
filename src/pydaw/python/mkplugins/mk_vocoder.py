@@ -16,13 +16,20 @@ GNU General Public License for more details.
 from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
 
-MK_VOCODER_PORT_MAP = {}
+MK_VOCODER_WET = 0
+MK_VOCODER_MODULATOR = 1
+MK_VOCODER_CARRIER = 2
+
+MK_VOCODER_PORT_MAP = {
+    "Wet":MK_VOCODER_WET,
+    "Modulator":MK_VOCODER_MODULATOR,
+    "Carrier":MK_VOCODER_CARRIER,
+}
 
 MK_VOCODER_TEXT = _(
-"""This plugin has no controls.
-Route the carrier signal to the plugin's main input,
-and route the modulator signal to the track's sidechain input.
-""")
+"""Route the carrier signal to the plugin's main input,
+and route the modulator signal to the track's
+sidechain input.""")
 
 
 class mk_vocoder_plugin_ui(pydaw_abstract_plugin_ui):
@@ -39,9 +46,31 @@ class mk_vocoder_plugin_ui(pydaw_abstract_plugin_ui):
         self.is_instrument = False
         #self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
         f_knob_size = 48
+
+        self.groupbox_gridlayout = QtGui.QGridLayout()
+        self.layout.addLayout(self.groupbox_gridlayout)
+
+        self.wet_knob = pydaw_knob_control(
+            f_knob_size, _("Wet"), MK_VOCODER_WET,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            -500, 0, 0, KC_TENTH, self.port_dict)
+        self.wet_knob.add_to_grid_layout(self.groupbox_gridlayout, 3)
+
+        self.modulator_knob = pydaw_knob_control(
+            f_knob_size, _("Modulator"), MK_VOCODER_MODULATOR,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            -500, 0, -500, KC_TENTH, self.port_dict)
+        self.modulator_knob.add_to_grid_layout(self.groupbox_gridlayout, 9)
+
+        self.carrier_knob = pydaw_knob_control(
+            f_knob_size, _("Carrier"), MK_VOCODER_CARRIER,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            -500, 0, -500, KC_TENTH, self.port_dict)
+        self.carrier_knob.add_to_grid_layout(self.groupbox_gridlayout, 6)
+
         self.layout.addWidget(QtGui.QLabel(MK_VOCODER_TEXT))
-        self.scrollarea_widget.setFixedHeight(90)
-        self.scrollarea_widget.setFixedWidth(480)
+        self.scrollarea_widget.setFixedHeight(240)
+        self.scrollarea_widget.setFixedWidth(360)
         self.open_plugin_file()
         self.set_midi_learn(MK_VOCODER_PORT_MAP)
 

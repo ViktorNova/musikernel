@@ -21,15 +21,22 @@ extern "C" {
 #include "../../include/pydaw_plugin.h"
 #include "libmodsynth.h"
 
+#define MK_VOCODER_WET 0
+#define MK_VOCODER_MODULATOR 1
+#define MK_VOCODER_CARRIER 2
+
 #define MK_VOCODER_FIRST_CONTROL_PORT 0
 
-#define MK_VOCODER_LAST_CONTROL_PORT 0
+#define MK_VOCODER_LAST_CONTROL_PORT 2
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define MK_VOCODER_COUNT 0
+#define MK_VOCODER_COUNT 3
 
 typedef struct
 {
+    PYFX_Data * wet;
+    PYFX_Data * modulator;
+    PYFX_Data * carrier;
     float * buffers[2];
     float * sc_buffers[2];
     float fs;

@@ -19,11 +19,15 @@ extern "C" {
 #endif
 
 #include "../../libmodsynth/constants.h"
+#include "../../libmodsynth/lib/smoother-linear.h"
 #include "../../libmodsynth/modules/filter/vocoder.h"
 
 typedef struct
 {
+    t_smoother_linear carrier_smoother;
+    t_smoother_linear wet_smoother;
     t_vdr_vocoder vocoder;
+    t_smoother_linear modulator_smoother;
 }t_mk_vocoder_mono_modules;
 
 t_mk_vocoder_mono_modules * v_mk_vocoder_mono_init(float, int);
@@ -32,7 +36,11 @@ t_mk_vocoder_mono_modules * v_mk_vocoder_mono_init(float a_sr, int a_plugin_uid)
 {
     t_mk_vocoder_mono_modules * a_mono;
     hpalloc((void**)&a_mono, sizeof(t_mk_vocoder_mono_modules));
+    g_sml_init(&a_mono->wet_smoother, a_sr, 0.0f, -500.0f, 0.1f);
     g_vdr_init(&a_mono->vocoder, a_sr);
+    g_sml_init(&a_mono->carrier_smoother, a_sr, 0.0f, -500.0f, 0.1f);
+    g_sml_init(&a_mono->modulator_smoother, a_sr, 0.0f, -500.0f, 0.1f);
+
     return a_mono;
 }
 

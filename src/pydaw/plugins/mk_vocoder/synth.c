@@ -61,15 +61,15 @@ static void v_mk_vocoder_connect_buffer(PYFX_Handle instance, int a_index,
 static void v_mk_vocoder_connect_port(PYFX_Handle instance, int port,
         PYFX_Data * data)
 {
-    /*
-    t_mk_vocoder *plugin;
-
-    plugin = (t_mk_vocoder *) instance;
+    t_mk_vocoder *plugin = (t_mk_vocoder*)instance;
 
     switch (port)
     {
+        case MK_VOCODER_WET: plugin->wet = data; break;
+        case MK_VOCODER_MODULATOR: plugin->modulator = data; break;
+        case MK_VOCODER_CARRIER: plugin->carrier = data; break;
+        default: assert(0); break;
     }
-    */
 }
 
 static PYFX_Handle g_mk_vocoder_instantiate(PYFX_Descriptor * descriptor,
@@ -177,6 +177,15 @@ static void v_mk_vocoder_run(
     int midi_event_pos = 0;
     int f_i = 0;
 
+    t_smoother_linear * f_wet_smoother =
+        &plugin_data->mono_modules->wet_smoother;
+    t_smoother_linear * f_carrier_smoother =
+        &plugin_data->mono_modules->carrier_smoother;
+    t_smoother_linear * f_modulator_smoother =
+        &plugin_data->mono_modules->modulator_smoother;
+
+    float f_amp;
+
     while(f_i < sample_count)
     {
         while(1)
@@ -206,10 +215,30 @@ static void v_mk_vocoder_run(
             plugin_data->sc_buffers[0][f_i], plugin_data->sc_buffers[1][f_i],
             plugin_data->buffers[0][f_i], plugin_data->buffers[1][f_i]);
 
-        plugin_data->buffers[0][f_i] =
-            plugin_data->mono_modules->vocoder.output0;
-        plugin_data->buffers[1][f_i] =
-            plugin_data->mono_modules->vocoder.output1;
+        v_sml_run(f_carrier_smoother, *plugin_data->carrier);
+        f_amp = f_db_to_linear_fast(
+            f_carrier_smoother->last_value * 0.1f);
+        plugin_data->buffers[0][f_i] *= f_amp;
+        plugin_data->buffers[1][f_i] *= f_amp;
+
+        v_sml_run(f_wet_smoother, *plugin_data->wet);
+        f_amp = f_db_to_linear_fast(f_wet_smoother->last_value * 0.1f);
+
+        plugin_data->buffers[0][f_i] +=
+            plugin_data->mono_modules->vocoder.output0 * f_amp;
+        plugin_data->buffers[1][f_i] +=
+            plugin_data->mono_modules->vocoder.output1 * f_amp;
+
+        if(*plugin_data->modulator >= -499.0f)
+        {
+            v_sml_run(f_modulator_smoother, *plugin_data->modulator);
+            f_amp = f_db_to_linear_fast(
+                f_modulator_smoother->last_value * 0.1f);
+            plugin_data->buffers[0][f_i] +=
+                plugin_data->sc_buffers[0][f_i] * f_amp;
+            plugin_data->buffers[1][f_i] +=
+                plugin_data->sc_buffers[1][f_i] * f_amp;
+        }
 
         ++f_i;
     }
@@ -218,6 +247,10 @@ static void v_mk_vocoder_run(
 PYFX_Descriptor *mk_vocoder_PYFX_descriptor(int index)
 {
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(MK_VOCODER_COUNT);
+
+    pydaw_set_pyfx_port(f_result, MK_VOCODER_WET, 0.0f, -500.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, MK_VOCODER_MODULATOR, -500.0f, -500.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, MK_VOCODER_CARRIER, -500.0f, -500.0f, 0.0f);
 
     f_result->cleanup = v_mk_vocoder_cleanup;
     f_result->connect_port = v_mk_vocoder_connect_port;
