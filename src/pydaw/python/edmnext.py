@@ -9014,13 +9014,7 @@ class pydaw_main_window(QtGui.QScrollArea):
             f_eb = f_end_bar.value() - 1
             f_samp_rate = f_sample_rate.currentText()
             f_buff_size = pydaw_util.global_device_val_dict["bufferSize"]
-            #f_thread_count = pydaw_util.global_device_val_dict["threads"]
-
-            # There is currently a race condition when using
-            # multiple threads to render, so just use one for now
-            # and enjoy crash-free data integrity
-            # while suffereing a little slownesss
-            f_thread_count = 1
+            f_thread_count = pydaw_util.global_device_val_dict["threads"]
 
             self.start_reg = f_start_region.value()
             self.end_reg = f_end_region.value()
