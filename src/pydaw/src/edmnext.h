@@ -4034,7 +4034,6 @@ void v_pydaw_offline_render(t_edmnext * self, int a_start_region,
 
     float f_sample_count =
         self->samples_per_beat * ((float)f_beat_total);
-    long f_sample_count_long = (((long)f_sample_count) * 2) + 6000000;
 
     long f_size = 0;
     long f_block_size = (musikernel->sample_count);
@@ -4132,10 +4131,19 @@ void v_pydaw_offline_render(t_edmnext * self, int a_start_region,
 
     clock_gettime(CLOCK_REALTIME, &f_finish);
     float f_elapsed = (float)v_pydaw_print_benchmark(
-        "v_pydaw_offline_render ", f_start, f_finish);
+        "v_pydaw_offline_render", f_start, f_finish);
     float f_realtime = f_sample_count / f_sample_rate;
+
     printf("Realtime: %f\n", f_realtime);
-    printf("Ratio:  %f\n\n", f_elapsed / f_realtime);
+
+    if(f_elapsed > 0.0f)
+    {
+        printf("Ratio:  %f : 1\n\n", f_realtime / f_elapsed);
+    }
+    else
+    {
+        printf("Ratio:  infinity : 1");
+    }
 
     v_set_playback_mode(self, PYDAW_PLAYBACK_MODE_OFF, a_start_region,
             a_start_bar, 0);
