@@ -1447,7 +1447,9 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
             }
         }
 
+        pthread_spin_lock(&f_bus->lock);
         --f_bus->bus_counter;
+        pthread_spin_unlock(&f_bus->lock);
     }
 }
 
@@ -1456,17 +1458,21 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
 __attribute__((optimize("-O0"))) void v_wait_for_bus(t_pytrack * a_track)
 {
     int f_bus_count = pydaw_data->routing_graph->bus_count[a_track->track_num];
-    int f_i = 0;
+    int f_i;
 
     if(a_track->track_num && f_bus_count)
     {
-        while(f_i < 100000000)
+        for(f_i = 0; f_i < 100000000; ++f_i)
         {
+            pthread_spin_lock(&a_track->lock);
+
             if(a_track->bus_counter <= 0)
             {
+                pthread_spin_unlock(&a_track->lock);
                 break;
             }
-            ++f_i;
+
+            pthread_spin_unlock(&a_track->lock);
         }
 
         if(f_i == 100000000)
