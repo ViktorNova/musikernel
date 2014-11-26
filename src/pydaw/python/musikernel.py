@@ -237,30 +237,35 @@ class MkMainWindow(QtGui.QMainWindow):
 
         self.transport_hlayout.addWidget(
             libmk.TRANSPORT.group_box, alignment=QtCore.Qt.AlignLeft)
-
-        import edmnext
-
+        self.transport_stack = QtGui.QStackedWidget()
         self.transport_hlayout.addWidget(
-            edmnext.TRANSPORT.group_box, alignment=QtCore.Qt.AlignLeft)
-
+            self.transport_stack, alignment=QtCore.Qt.AlignLeft)
         self.transport_hlayout.addItem(QtGui.QSpacerItem(
             1, 1, QtGui.QSizePolicy.Expanding))
 
-        self.edm_next_module = edmnext
+        self.main_stack = QtGui.QStackedWidget()
+        self.transport_splitter.addWidget(self.main_stack)
+
+        import edmnext
+
+        self.host_modules = (edmnext,)
+        self.host_windows = tuple(x.MAIN_WINDOW for x in self.host_modules)
+
+        # TODO:  Get rid of this when the OSC server
+        # doesn't rely on it anymore
         self.edm_next_window = edmnext.MAIN_WINDOW
-        self.current_module = self.edm_next_module
+
+        self.current_module = edmnext
         self.current_window = self.edm_next_window
 
-        self.transport_splitter.addWidget(self.edm_next_window)
-
-        self.host_windows = (self.edm_next_window,)
-        self.host_modules = (self.edm_next_module,)
+        for f_module in self.host_modules:
+            self.transport_stack.addWidget(edmnext.TRANSPORT.group_box)
+            self.main_stack.addWidget(self.edm_next_window)
 
         self.ignore_close_event = True
 
-        #The menus
         self.menu_bar = QtGui.QMenu(self)
-        # Dirty hack, rather than moving the methods to the transport
+
         libmk.TRANSPORT.menu_button.setMenu(self.menu_bar)
         self.menu_file = self.menu_bar.addMenu(_("File"))
 
@@ -407,6 +412,10 @@ class MkMainWindow(QtGui.QMainWindow):
 
         self.on_restore_splitters()
         self.show()
+
+    def set_host(self, a_index):
+        self.transport_stack.setCurrentIndex(a_index)
+        self.main_stack.setCurrentIndex(a_index)
 
     def check_for_empty_directory(self, a_file):
         """ Return true if directory is empty, show error message and
