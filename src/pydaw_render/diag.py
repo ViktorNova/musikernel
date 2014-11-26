@@ -22,26 +22,39 @@ BIN = "{}_render".format(PYDAW_VERSION)
 PROJECT = "{}/{}/default-project".format(
     os.path.expanduser("~"), PYDAW_VERSION)
 
-print(locals())
-
-TOOL, CORES = sys.argv[1:]
-
 TOOLS = {
     "benchmark": "make clean && make release && "
-        "./{BIN} {PROJECT} test.wav 0 0 3 0 44100 512 {CORES} 1 --no-file",
+        "./{BIN} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 --no-file",
     "valgrind": "make clean && make debug && "
         "valgrind --alignment=16 --track-origins=yes "
-        "./{BIN}-dbg {PROJECT} test.wav 0 0 3 3 44100 512 1 0 --no-file",
+        "./{BIN}-dbg '{PROJECT}' test.wav 0 0 3 3 {SR} 512 1 0 --no-file",
     "perf": "make clean && make release && "
         "perf stat -e cache-references,cache-misses,dTLB-loads,"
         "dTLB-load-misses,iTLB-loads,iTLB-load-misses,L1-dcache-loads,"
         "L1-dcache-load-misses,L1-icache-loads,L1-icache-load-misses,"
         "branch-misses,LLC-loads,LLC-load-misses "
-        "./{BIN} {PROJECT} test.wav 0 0 3 0 44100 512 {CORES} 1 --no-file",
+        "./{BIN} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 --no-file",
     "profile": "make clean && make gprof && "
-        "./{BIN} {PROJECT} test.wav 0 0 3 3 44100 512 {CORES} 1 "
+        "./{BIN} '{PROJECT}' test.wav 0 0 3 3 {SR} 512 {CORES} 1 "
         "&& gprof ./{BIN} > profile.txt && gedit profile.txt",
     "pahole": "make clean && make debug && pahole {BIN}",
 }
 
-os.system(TOOLS[TOOL].format(BIN=BIN, PROJECT=PROJECT, CORES=CORES))
+if len(sys.argv) < 2 or sys.argv[1] not in TOOLS:
+    print("Usage: {} {} [CORES=1] [SAMPLE_RATE=44100]".format(
+        os.path.basename(__file__), "|".join(TOOLS)))
+    exit(1)
+
+TOOL = sys.argv[1]
+
+if len(sys.argv) >= 3:
+    CORES = sys.argv[2]
+else:
+    CORES = 1
+
+if len(sys.argv) >= 4:
+    SR = sys.argv[3]
+else:
+    SR = 44100
+
+os.system(TOOLS[TOOL].format(BIN=BIN, PROJECT=PROJECT, CORES=CORES, SR=SR))
