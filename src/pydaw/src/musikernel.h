@@ -129,7 +129,7 @@ typedef struct
 void g_musikernel_get(float);
 t_pytrack * g_pytrack_get(int, float);
 inline void v_pydaw_zero_buffer(float**, int);
-void v_pydaw_print_benchmark(char * a_message,
+double v_pydaw_print_benchmark(char * a_message,
         struct timespec a_start, struct timespec a_finish);
 void * v_pydaw_audio_recording_thread(void* a_arg);
 void v_queue_osc_message(char*, char*);
@@ -231,7 +231,7 @@ void v_pydaw_activate_osc_thread(lo_method_handler osc_message_handler)
 
 /* Create a clock_t with clock() when beginning some work,
  * and use this function to print the completion time*/
-inline void v_pydaw_print_benchmark(char * a_message,
+inline double v_pydaw_print_benchmark(char * a_message,
     struct timespec f_start, struct timespec f_finish)
 {
     double elapsed;
@@ -239,6 +239,8 @@ inline void v_pydaw_print_benchmark(char * a_message,
     elapsed += (f_finish.tv_nsec - f_start.tv_nsec) / 1000000000.0;
 
     printf ( "\n\nCompleted %s in %lf seconds\n", a_message, elapsed);
+
+    return elapsed;
 }
 
 inline void v_pydaw_zero_buffer(float ** a_buffers, int a_count)

@@ -4131,10 +4131,11 @@ void v_pydaw_offline_render(t_edmnext * self, int a_start_region,
     }
 
     clock_gettime(CLOCK_REALTIME, &f_finish);
-    v_pydaw_print_benchmark("v_pydaw_offline_render ", f_start, f_finish);
-    printf("f_size = %ld\nf_sample_count_long = %ld\n(f_sample_count_long"
-            " - f_size) = %ld\n",
-            f_size, f_sample_count_long, (f_sample_count_long - f_size));
+    float f_elapsed = (float)v_pydaw_print_benchmark(
+        "v_pydaw_offline_render ", f_start, f_finish);
+    float f_realtime = f_sample_count / f_sample_rate;
+    printf("Realtime: %f\n", f_realtime);
+    printf("Ratio:  %f\n\n", f_elapsed / f_realtime);
 
     v_set_playback_mode(self, PYDAW_PLAYBACK_MODE_OFF, a_start_region,
             a_start_bar, 0);
