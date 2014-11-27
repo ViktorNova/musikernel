@@ -178,9 +178,11 @@ class transport_widget:
         if libmk.IS_RECORDING:
             self.rec_button.setChecked(True)
             return
-        MAIN_WINDOW.current_module.TRANSPORT.on_play()
-        libmk.IS_PLAYING = True
-        self.enable_controls(False)
+        if MAIN_WINDOW.current_module.TRANSPORT.on_play():
+            libmk.IS_PLAYING = True
+            self.enable_controls(False)
+        else:
+            self.stop_button.setChecked(True)
 
     def on_ready(self):
         self.load_master_vol()

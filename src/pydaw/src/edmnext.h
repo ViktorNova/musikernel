@@ -352,9 +352,6 @@ int i_get_song_index_from_region_uid(t_edmnext*, int);
 void v_save_pysong_to_disk(t_edmnext * self);
 void v_save_pyitem_to_disk(t_edmnext * self, int a_index);
 void v_save_pyregion_to_disk(t_edmnext * self, int a_region_num);
-void v_pydaw_set_plugin_index(int a_host_index, int a_track_num,
-        int a_index, int a_plugin_index, int a_plugin_uid,
-        int a_power, int a_lock);
 void v_pydaw_update_track_send(t_edmnext * self, int a_lock);
 void * v_pydaw_worker_thread(void*);
 void v_pydaw_init_worker_threads(t_edmnext*, int, int);
@@ -592,11 +589,6 @@ void v_pydaw_panic(t_edmnext * self)
     v_pydaw_zero_all_buffers(self);
 }
 
-/*Function for passing to plugins that re-use the wav pool*/
-t_wav_pool_item * g_pydaw_wavpool_item_get(int a_uid)
-{
-    return g_wav_pool_get_item_by_uid(musikernel->wav_pool, a_uid);
-}
 
 void v_pysong_free(t_pysong * a_pysong)
 {
@@ -3318,6 +3310,7 @@ t_edmnext * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
 void v_pydaw_open_track(int a_host_index, int a_index)
 {
     char f_file_name[1024];
+    t_pytrack * f_track;
 
     if(a_host_index == 0)
     {
@@ -3357,8 +3350,21 @@ void v_pydaw_open_track(int a_host_index, int a_index)
                 v_iterate_2d_char_array(f_2d_array);
                 int f_power = atoi(f_2d_array->current_str);
 
-                v_pydaw_set_plugin_index(a_host_index, a_index, f_index,
-                    f_plugin_index, f_plugin_uid, f_power, 0);
+                if(a_host_index == 0)
+                {
+                    f_track = pydaw_data->track_pool[a_index];
+                }
+                else if(a_host_index == 1)
+                {
+                    f_track = wavenext->track_pool[a_index];
+                }
+                else
+                {
+                    assert(0);
+                }
+
+                v_pydaw_set_plugin_index( f_track, f_index, f_plugin_index,
+                    f_plugin_uid, f_power, 0);
 
             }
             else
@@ -4121,81 +4127,6 @@ void v_pydaw_offline_render(t_edmnext * self, int a_start_region,
     musikernel->ab_mode = f_ab_old;
 }
 
-/* Disable the optimizer for this function because it causes a
- * SEGFAULT on ARM (which could not be reproduced on x86)
- * This is not a performance-critical function. */
-__attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
-        int a_host_index, int a_track_num,
-        int a_index, int a_plugin_index, int a_plugin_uid,
-        int a_power, int a_lock)
-{
-    t_pytrack ** f_track_pool;
-
-    if(a_host_index == 0)
-    {
-        f_track_pool = pydaw_data->track_pool;
-    }
-    else if(a_host_index == 1)
-    {
-        f_track_pool = wavenext->track_pool;
-    }
-
-    t_pytrack * f_track = f_track_pool[a_track_num];
-    t_pydaw_plugin * f_plugin = 0;
-
-    if(a_plugin_index)
-    {
-        f_plugin = &musikernel->plugin_pool[a_plugin_uid];
-
-        if(!f_plugin->active)
-        {
-            g_pydaw_plugin_init(f_plugin,
-                    (int)(musikernel->thread_storage[0].sample_rate),
-                    a_plugin_index, g_pydaw_wavpool_item_get,
-                    a_plugin_uid, v_queue_osc_message);
-
-            int f_i = 0;
-            while(f_i < f_track->channels)
-            {
-                f_plugin->descriptor->connect_buffer(
-                    f_plugin->PYFX_handle, f_i, f_track->buffers[f_i], 0);
-                f_plugin->descriptor->connect_buffer(
-                    f_plugin->PYFX_handle, f_i, f_track->sc_buffers[f_i], 1);
-                ++f_i;
-            }
-            char f_file_name[1024];
-            sprintf(f_file_name, "%s%i",
-                musikernel->plugins_folder, a_plugin_uid);
-
-            if(i_pydaw_file_exists(f_file_name))
-            {
-                printf("v_pydaw_open_plugin:  plugin exists %s , loading\n",
-                    f_file_name);
-
-                f_plugin->descriptor->load(f_plugin->PYFX_handle,
-                    f_plugin->descriptor, f_file_name);
-            }
-        }
-    }
-
-    if(f_plugin)
-    {
-        f_plugin->power = a_power;
-    }
-
-    if(a_lock)
-    {
-        pthread_spin_lock(&musikernel->main_lock);
-    }
-
-    f_track->plugins[a_index] = f_plugin;
-
-    if(a_lock)
-    {
-        pthread_spin_unlock(&musikernel->main_lock);
-    }
-}
-
 
 void v_pydaw_update_track_send(t_edmnext * self, int a_lock)
 {
@@ -4570,9 +4501,10 @@ void v_en_configure(t_edmnext* self,
         int f_plugin_uid = atoi(f_val_arr->array[3]);
         int f_power = atoi(f_val_arr->array[4]);
 
+        t_pytrack * f_track = pydaw_data->track_pool[f_track_num];
+
         v_pydaw_set_plugin_index(
-            0, f_track_num, f_index,
-            f_plugin_index, f_plugin_uid, f_power, 1);
+            f_track, f_index, f_plugin_index, f_plugin_uid, f_power, 1);
 
         g_free_1d_char_array(f_val_arr);
     }

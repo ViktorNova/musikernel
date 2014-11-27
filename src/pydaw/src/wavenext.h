@@ -422,9 +422,10 @@ void v_wn_configure(const char* a_key, const char* a_value)
         int f_plugin_uid = atoi(f_val_arr->array[3]);
         int f_power = atoi(f_val_arr->array[4]);
 
+        t_pytrack * f_track = wavenext->track_pool[f_track_num];
+
         v_pydaw_set_plugin_index(
-            1, f_track_num, f_index,
-            f_plugin_index, f_plugin_uid, f_power, 1);
+            f_track, f_index, f_plugin_index, f_plugin_uid, f_power, 1);
 
         g_free_1d_char_array(f_val_arr);
     }

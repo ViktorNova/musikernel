@@ -8544,6 +8544,7 @@ class transport_widget(libmk.AbstractTransport):
         AUDIO_SEQ.set_playback_clipboard()
         PROJECT.en_osc.pydaw_en_playback(
             1, self.get_region_value(), self.get_bar_value())
+        return True
 
     def trigger_audio_playback(self):
         if not self.follow_checkbox.isChecked():

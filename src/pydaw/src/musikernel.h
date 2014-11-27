@@ -711,5 +711,75 @@ void v_mk_configure(const char* a_key, const char* a_value)
 
 }
 
+
+/*Function for passing to plugins that re-use the wav pool*/
+t_wav_pool_item * g_pydaw_wavpool_item_get(int a_uid)
+{
+    return g_wav_pool_get_item_by_uid(musikernel->wav_pool, a_uid);
+}
+
+
+/* Disable the optimizer for this function because it causes a
+ * SEGFAULT on ARM (which could not be reproduced on x86)
+ * This is not a performance-critical function. */
+__attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
+        t_pytrack * f_track, int a_index, int a_plugin_index, int a_plugin_uid,
+        int a_power, int a_lock)
+{
+    t_pydaw_plugin * f_plugin = NULL;
+
+    if(a_plugin_index)
+    {
+        f_plugin = &musikernel->plugin_pool[a_plugin_uid];
+
+        if(!f_plugin->active)
+        {
+            g_pydaw_plugin_init(f_plugin,
+                    (int)(musikernel->thread_storage[0].sample_rate),
+                    a_plugin_index, g_pydaw_wavpool_item_get,
+                    a_plugin_uid, v_queue_osc_message);
+
+            int f_i = 0;
+            while(f_i < f_track->channels)
+            {
+                f_plugin->descriptor->connect_buffer(
+                    f_plugin->PYFX_handle, f_i, f_track->buffers[f_i], 0);
+                f_plugin->descriptor->connect_buffer(
+                    f_plugin->PYFX_handle, f_i, f_track->sc_buffers[f_i], 1);
+                ++f_i;
+            }
+            char f_file_name[1024];
+            sprintf(f_file_name, "%s%i",
+                musikernel->plugins_folder, a_plugin_uid);
+
+            if(i_pydaw_file_exists(f_file_name))
+            {
+                printf("v_pydaw_open_plugin:  plugin exists %s , loading\n",
+                    f_file_name);
+
+                f_plugin->descriptor->load(f_plugin->PYFX_handle,
+                    f_plugin->descriptor, f_file_name);
+            }
+        }
+    }
+
+    if(f_plugin)
+    {
+        f_plugin->power = a_power;
+    }
+
+    if(a_lock)
+    {
+        pthread_spin_lock(&musikernel->main_lock);
+    }
+
+    f_track->plugins[a_index] = f_plugin;
+
+    if(a_lock)
+    {
+        pthread_spin_unlock(&musikernel->main_lock);
+    }
+}
+
 #endif	/* MUSIKERNEL_H */
 

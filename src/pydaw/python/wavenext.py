@@ -310,8 +310,11 @@ class transport_widget(libmk.AbstractTransport):
         libmk.TRANSPORT.set_time(f_text)
 
     def on_play(self):
+        if not WAVE_EDITOR.current_file:
+            return False
         WAVE_EDITOR.on_play()
         PROJECT.wn_osc.pydaw_wn_playback(1)
+        return True
 
     def on_stop(self):
         PROJECT.wn_osc.pydaw_wn_playback(0)
