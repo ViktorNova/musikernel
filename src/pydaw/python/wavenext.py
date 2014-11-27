@@ -303,9 +303,11 @@ def normalize_dialog():
     f_hlayout = QtGui.QHBoxLayout()
     f_layout.addLayout(f_hlayout)
     f_hlayout.addWidget(QtGui.QLabel("dB"))
-    f_db_spinbox = QtGui.QSpinBox()
+    f_db_spinbox = QtGui.QDoubleSpinBox()
     f_hlayout.addWidget(f_db_spinbox)
-    f_db_spinbox.setRange(-18, 0)
+    f_db_spinbox.setRange(-18.0, 0.0)
+    f_db_spinbox.setDecimals(1)
+    f_db_spinbox.setValue(0.0)
     f_ok_button = QtGui.QPushButton(_("OK"))
     f_ok_cancel_layout = QtGui.QHBoxLayout()
     f_layout.addLayout(f_ok_cancel_layout)
@@ -552,8 +554,7 @@ class pydaw_main_window(QtGui.QScrollArea):
                 if libmk.IS_PLAYING:
                     WAVE_EDITOR.set_playback_cursor(float(a_val))
             elif a_key == "ready":
-                for f_widget in (libmk.TRANSPORT, MIDI_DEVICES_DIALOG):
-                    f_widget.on_ready()
+                pass
         #This prevents multiple events from moving the same control,
         #only the last goes through
         for k, f_val in f_ui_dict.items():
@@ -696,12 +697,12 @@ class pydaw_wave_editor_widget:
         self.vol_layout = QtGui.QVBoxLayout()
         self.edit_hlayout.addLayout(self.vol_layout)
         self.vol_slider = QtGui.QSlider(QtCore.Qt.Vertical)
-        self.vol_slider.setRange(-24, 12)
+        self.vol_slider.setRange(-240, 120)
         self.vol_slider.setValue(0)
         self.vol_slider.valueChanged.connect(self.vol_changed)
         self.vol_layout.addWidget(self.vol_slider)
-        self.vol_label = QtGui.QLabel("0db")
-        self.vol_label.setMinimumWidth(51)
+        self.vol_label = QtGui.QLabel("0.0db")
+        self.vol_label.setMinimumWidth(75)
         self.vol_layout.addWidget(self.vol_label)
         self.peak_meter = pydaw_widgets.peak_meter(28, a_text=True)
         ALL_PEAK_METERS[0] = [self.peak_meter]
@@ -831,7 +832,7 @@ class pydaw_wave_editor_widget:
 
     def normalize(self, a_value):
         f_val = self.graph_object.normalize(a_value)
-        self.vol_slider.setValue(f_val)
+        self.vol_slider.setValue(int(f_val * 10.0))
 
     def reset_markers(self):
         self.sample_graph.reset_markers()
@@ -1049,7 +1050,7 @@ class pydaw_wave_editor_widget:
         pass
 
     def vol_changed(self, a_val=None):
-        f_result = self.vol_slider.value()
+        f_result = round(self.vol_slider.value()  * 0.1, 1)
         self.marker_callback()
         self.vol_label.setText("{}dB".format(f_result))
 
@@ -1120,7 +1121,7 @@ class pydaw_wave_editor_widget:
 
         return pydaw_audio_item(
             a_uid, a_sample_start=f_start, a_sample_end=f_end,
-            a_vol=self.vol_slider.value(),
+            a_vol=self.vol_slider.value() * 0.1,
             a_fade_in=f_fade_in, a_fade_out=f_fade_out,
             a_fadein_vol=self.fade_in_start.value(),
             a_fadeout_vol=self.fade_out_end.value())
@@ -1137,7 +1138,7 @@ class pydaw_wave_editor_widget:
         f_fade_out = (f_diff * (a_item.fade_out / 1000.0)) + f_start
         self.sample_graph.fade_in_marker.set_value(f_fade_in)
         self.sample_graph.fade_out_marker.set_value(f_fade_out)
-        self.vol_slider.setValue(a_item.vol)
+        self.vol_slider.setValue(int(a_item.vol * 10.0))
         self.fade_in_start.setValue(a_item.fadein_vol)
         self.fade_out_end.setValue(a_item.fadeout_vol)
         self.callbacks_enabled = True

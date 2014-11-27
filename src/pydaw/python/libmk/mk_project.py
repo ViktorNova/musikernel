@@ -661,7 +661,7 @@ class pydaw_sample_graph:
             return 0.0
         f_norm_lin = pydaw_db_to_lin(a_db)
         f_diff = f_norm_lin / self.peak
-        f_result = int(pydaw_lin_to_db(f_diff))
+        f_result = round(pydaw_lin_to_db(f_diff), 1)
         f_result = pydaw_clip_value(f_result, -24, 24)
         return f_result
 
