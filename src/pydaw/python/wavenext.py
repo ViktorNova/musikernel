@@ -56,10 +56,10 @@ class WaveNextOsc(libmk.AbstractIPC):
         self.send_configure("wnp", str(a_mode))
 
     def pydaw_set_plugin(
-    self, a_host_index, a_track_num, a_index, a_plugin_index, a_uid, a_on):
+    self, a_track_num, a_index, a_plugin_index, a_uid, a_on):
         self.send_configure(
             "pi", "|".join(str(x) for x in
-            (a_host_index, a_track_num, a_index, a_plugin_index,
+            (a_track_num, a_index, a_plugin_index,
              a_uid, bool_to_int(a_on))))
 
     def pydaw_save_tracks(self):
@@ -167,9 +167,7 @@ PLUGIN_SETTINGS_COPY_OBJ = None
 class plugin_settings_base:
     def __init__(self, a_index, a_track_num,
                  a_layout, a_save_callback, a_name_callback,
-                 a_automation_callback, a_offset=0, a_send=None,
-                 a_host_index=0):
-        self.host_index = a_host_index
+                 a_automation_callback, a_offset=0, a_send=None):
         self.suppress_osc = False
         self.save_callback = a_save_callback
         self.name_callback = a_name_callback
@@ -253,7 +251,7 @@ class plugin_settings_base:
             self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
             self.plugin_index = f_index
         PROJECT.wn_osc.pydaw_set_plugin(
-            self.host_index, self.track_num, self.index, f_index,
+            self.track_num, self.index, f_index,
             self.plugin_uid, self.power_checkbox.isChecked())
         self.save_callback()
         if self.automation_callback:
@@ -263,7 +261,7 @@ class plugin_settings_base:
         f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
         if f_index:
             PROJECT.wn_osc.pydaw_set_plugin(
-                self.host_index, self.track_num, self.index, f_index,
+                self.track_num, self.index, f_index,
                 self.plugin_uid, self.power_checkbox.isChecked())
             self.save_callback()
 
@@ -274,7 +272,7 @@ class plugin_settings_base:
         f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
         if f_index == 0 or self.plugin_uid == -1:
             return
-        PLUGIN_UI_DICT.open_plugin_ui(
+        libmk.PLUGIN_UI_DICT.open_plugin_ui(
             self.plugin_uid, f_index,
             "Track:  {}".format(self.name_callback()))
 
@@ -286,7 +284,7 @@ class plugin_settings_wave_editor(plugin_settings_base):
         plugin_settings_base.__init__(
             self, a_index, a_track_num, a_layout,
             a_save_callback, a_name_callback,
-            a_automation_callback, a_offset, a_send, a_host_index=1)
+            a_automation_callback, a_offset, a_send)
 
 class transport_widget(libmk.AbstractTransport):
     def __init__(self):
@@ -514,8 +512,8 @@ class pydaw_main_window(QtGui.QScrollArea):
                 f_state, f_note = a_val.split("|")
                 PIANO_ROLL_EDITOR.highlight_keys(f_state, f_note)
             elif a_key == "ml":
-                PLUGIN_UI_DICT.midi_learn_control[0].update_cc_map(
-                    a_val, PLUGIN_UI_DICT.midi_learn_control[1])
+                libmk.PLUGIN_UI_DICT.midi_learn_control[0].update_cc_map(
+                    a_val, libmk.PLUGIN_UI_DICT.midi_learn_control[1])
             elif a_key == "wec":
                 if libmk.IS_PLAYING:
                     WAVE_EDITOR.set_playback_cursor(float(a_val))
@@ -526,30 +524,23 @@ class pydaw_main_window(QtGui.QScrollArea):
         #only the last goes through
         for k, f_val in f_ui_dict.items():
             f_plugin_uid, f_name = k
-            if int(f_plugin_uid) in PLUGIN_UI_DICT:
-                PLUGIN_UI_DICT[int(f_plugin_uid)].ui_message(
+            if int(f_plugin_uid) in libmk.PLUGIN_UI_DICT:
+                libmk.PLUGIN_UI_DICT[int(f_plugin_uid)].ui_message(
                     f_name, f_val)
         for k, f_val in f_pc_dict.items():
             f_plugin_uid, f_port = (int(x) for x in k)
-            if f_plugin_uid in PLUGIN_UI_DICT:
-                PLUGIN_UI_DICT[f_plugin_uid].set_control_val(
+            if f_plugin_uid in libmk.PLUGIN_UI_DICT:
+                libmk.PLUGIN_UI_DICT[f_plugin_uid].set_control_val(
                     f_port, float(f_val))
         for k, f_val in f_cc_dict.items():
             f_track_num, f_cc = (int(x) for x in k)
             for f_plugin_uid in \
             TRACK_PANEL.tracks[f_track_num].get_plugin_uids():
-                if f_plugin_uid in PLUGIN_UI_DICT:
-                    PLUGIN_UI_DICT[f_plugin_uid].set_cc_val(f_cc, f_val)
+                if f_plugin_uid in libmk.PLUGIN_UI_DICT:
+                    libmk.PLUGIN_UI_DICT[f_plugin_uid].set_cc_val(f_cc, f_val)
 
     def prepare_to_quit(self):
-        try:
-            time.sleep(0.5)
-            PLUGIN_UI_DICT.close_all_plugin_windows()
-        except Exception as ex:
-            print("Exception thrown while attempting to exit, "
-                "forcing MusiKernel to exit")
-            print("Exception:  {}".format(ex))
-            exit(999)
+        pass
 
 def global_update_peak_meters(a_val):
     for f_val in a_val.split("|"):
@@ -733,9 +724,6 @@ class pydaw_wave_editor_widget:
         f_result = libmk.pydaw_track_plugins()
         f_result.plugins = [x.get_value() for x in self.plugins]
         PROJECT.save_track_plugins(self.track_number, f_result)
-        PROJECT.commit(
-            "Update track plugins for '{}', {}".format(
-            self.name_callback(), self.track_number))
 
     def open_plugins(self):
         f_plugins = PROJECT.get_track_plugins(self.track_number)
@@ -1183,23 +1171,17 @@ class pydaw_wave_editor_widget:
         self.clear_sample_graph()
         self.file_lineedit.setText("")
 
-PLUGIN_UI_DICT = None
 
 def global_close_all():
     global OPEN_ITEM_UIDS, AUDIO_ITEMS_TO_DROP
-    if PLUGIN_UI_DICT:
-        PLUGIN_UI_DICT.close_all_plugin_windows()
     WAVE_EDITOR.clear()
-
 
 #Opens or creates a new project
 def global_open_project(a_project_file):
-    global PROJECT, TRACK_NAMES, PLUGIN_UI_DICT
+    global PROJECT, TRACK_NAMES
     PROJECT = WaveNextProject(global_pydaw_with_audio)
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
-    PLUGIN_UI_DICT = mk_plugin_ui_dict(
-        libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
     WAVE_EDITOR.last_offline_dir = libmk.PROJECT.user_folder
     libmk.set_window_title("Wave-Next")
     PROJECT.suppress_updates = False
@@ -1209,11 +1191,9 @@ def global_open_project(a_project_file):
 
 
 def global_new_project(a_project_file):
-    global PROJECT, PLUGIN_UI_DICT
+    global PROJECT
     PROJECT = WaveNextProject(global_pydaw_with_audio)
     PROJECT.new_project(a_project_file)
-    PLUGIN_UI_DICT = mk_plugin_ui_dict(
-        libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
     WAVE_EDITOR.last_offline_dir = libmk.PROJECT.user_folder
     libmk.set_window_title("Wave-Next")
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder

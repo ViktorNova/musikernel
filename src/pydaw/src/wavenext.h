@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #define WN_CONFIGURE_KEY_WE_SET "we"
 #define WN_CONFIGURE_KEY_WE_EXPORT "wex"
 #define WN_CONFIGURE_KEY_WN_PLAYBACK "wnp"
+#define WN_CONFIGURE_KEY_PLUGIN_INDEX "pi"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -410,6 +411,22 @@ void v_wn_configure(const char* a_key, const char* a_value)
         int f_mode = atoi(a_value);
         assert(f_mode >= 0 && f_mode <= 2);
         v_wn_set_playback_mode(wavenext, f_mode, 1);
+    }
+    else if(!strcmp(a_key, WN_CONFIGURE_KEY_PLUGIN_INDEX))
+    {
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 5,
+                PYDAW_TINY_STRING);
+        int f_track_num = atoi(f_val_arr->array[0]);
+        int f_index = atoi(f_val_arr->array[1]);
+        int f_plugin_index = atoi(f_val_arr->array[2]);
+        int f_plugin_uid = atoi(f_val_arr->array[3]);
+        int f_power = atoi(f_val_arr->array[4]);
+
+        v_pydaw_set_plugin_index(
+            1, f_track_num, f_index,
+            f_plugin_index, f_plugin_uid, f_power, 1);
+
+        g_free_1d_char_array(f_val_arr);
     }
     else
     {

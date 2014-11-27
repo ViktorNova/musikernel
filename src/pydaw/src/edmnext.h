@@ -4562,17 +4562,16 @@ void v_en_configure(t_edmnext* self,
     }
     else if(!strcmp(a_key, EN_CONFIGURE_KEY_PLUGIN_INDEX))
     {
-        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 6,
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 5,
                 PYDAW_TINY_STRING);
-        int f_host_index = atoi(f_val_arr->array[0]);
-        int f_track_num = atoi(f_val_arr->array[1]);
-        int f_index = atoi(f_val_arr->array[2]);
-        int f_plugin_index = atoi(f_val_arr->array[3]);
-        int f_plugin_uid = atoi(f_val_arr->array[4]);
-        int f_power = atoi(f_val_arr->array[5]);
+        int f_track_num = atoi(f_val_arr->array[0]);
+        int f_index = atoi(f_val_arr->array[1]);
+        int f_plugin_index = atoi(f_val_arr->array[2]);
+        int f_plugin_uid = atoi(f_val_arr->array[3]);
+        int f_power = atoi(f_val_arr->array[4]);
 
         v_pydaw_set_plugin_index(
-            f_host_index, f_track_num, f_index,
+            0, f_track_num, f_index,
             f_plugin_index, f_plugin_uid, f_power, 1);
 
         g_free_1d_char_array(f_val_arr);

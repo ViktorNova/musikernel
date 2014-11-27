@@ -21,6 +21,7 @@ from libpydaw.translate import _
 import libmk
 from libmk import mk_project
 import libpydaw.strings
+from mkplugins import mk_plugin_ui_dict
 
 import time
 import gc
@@ -607,6 +608,7 @@ class MkMainWindow(QtGui.QMainWindow):
     def prepare_to_quit(self):
         try:
             close_pydaw_engine()
+            libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
             if self.osc_server is not None:
                 self.osc_timer.stop()
                 self.osc_server.free()
@@ -1141,6 +1143,7 @@ def open_pydaw_engine(a_project_path):
     PYDAW_SUBPROCESS = subprocess.Popen([f_cmd], shell=True)
 
 def global_close_all():
+    libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
     close_pydaw_engine()
     for f_module in MAIN_WINDOW.host_modules:
         f_module.global_close_all()
@@ -1159,6 +1162,8 @@ def global_open_project(a_project_file, a_wait=True):
     libmk.PROJECT.suppress_updates = True
     libmk.PROJECT.open_project(a_project_file, False)
     libmk.PROJECT.suppress_updates = False
+    libmk.PLUGIN_UI_DICT = mk_plugin_ui_dict(
+        libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
     for f_module in MAIN_WINDOW.host_modules:
         f_module.global_open_project(a_project_file)
 
@@ -1167,6 +1172,8 @@ def global_new_project(a_project_file, a_wait=True):
     libmk.PROJECT = mk_project.MkProject()
     libmk.PROJECT.new_project(a_project_file)
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
+    libmk.PLUGIN_UI_DICT = mk_plugin_ui_dict(
+        libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
     for f_module in MAIN_WINDOW.host_modules:
         f_module.global_new_project(a_project_file)
 
