@@ -4241,8 +4241,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
         else:
             f_bar = int(a_bar)
         f_beat = float(a_beat)
-        f_pos = (f_bar * AUDIO_PX_PER_BAR) + (f_beat *
-            AUDIO_PX_PER_BEAT)
+        f_pos = (f_bar * AUDIO_PX_PER_BAR) + (f_beat * AUDIO_PX_PER_BEAT)
         self.playback_cursor.setPos(f_pos, 0.0)
 
     def set_playback_clipboard(self):
@@ -8490,8 +8489,6 @@ class transport_widget(libmk.AbstractTransport):
                 self.set_region_value(f_region)
                 self.set_bar_value(f_bar)
                 if self.follow_checkbox.isChecked():
-                    for f_editor in (AUDIO_SEQ, REGION_EDITOR):
-                        f_editor.set_playback_pos(f_bar)
                     if f_region != self.last_region_num:
                         self.last_region_num = f_region
                         f_item = SONG_EDITOR.table_widget.item(0, f_region)
@@ -8756,6 +8753,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.last_offline_dir = global_home
         self.copy_to_clipboard_checked = True
         self.last_midi_dir = None
+        self.last_bar = 0
 
         self.setObjectName("plugin_ui")
         self.widget = QtGui.QWidget()
@@ -9205,6 +9203,11 @@ class pydaw_main_window(QtGui.QScrollArea):
             elif a_key == "cur":
                 if libmk.IS_PLAYING:
                     f_region, f_bar, f_beat = a_val.split("|")
+                    f_region, f_bar = (int(x) for x in (f_region, f_bar))
+                    f_beat = float(f_beat)
+                    if self.last_bar != f_bar or f_beat >= 4.0:
+                        f_beat = 0.0
+                    self.last_bar = f_bar
                     TRANSPORT.set_pos_from_cursor(f_region, f_bar, f_beat)
                     for f_editor in (AUDIO_SEQ, REGION_EDITOR):
                         f_editor.set_playback_pos(f_bar, f_beat)
