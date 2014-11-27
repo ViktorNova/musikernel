@@ -22,6 +22,15 @@ GNU General Public License for more details.
 
 #define PYDAW_MIDI_NOTE_COUNT 128
 #define MAX_PLUGIN_COUNT 10
+#define MAX_PLUGIN_POOL_COUNT 1000
+
+#define PYDAW_AUDIO_INPUT_TRACK_COUNT 0
+#define PYDAW_VERSION "musikernel"
+
+#define PYDAW_OSC_SEND_QUEUE_SIZE 256
+#define PYDAW_OSC_MAX_MESSAGE_SIZE 65536
+
+#define FRAMES_PER_BUFFER 4096
 
 #define MK_CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL "pc"
 #define MK_CONFIGURE_KEY_CONFIGURE_PLUGIN "co"
@@ -54,6 +63,11 @@ typedef struct
     char osc_queue_keys[PYDAW_OSC_SEND_QUEUE_SIZE][12];
     char * osc_queue_vals[PYDAW_OSC_SEND_QUEUE_SIZE];
 }t_osc_send_data;
+
+typedef struct
+{
+    int thread_num;
+}t_pydaw_thread_args;
 
 typedef struct
 {
@@ -98,7 +112,19 @@ typedef struct
     t_mk_thread_storage thread_storage[MAX_WORKER_THREADS];
     t_wav_pool * wav_pool;
     pthread_spinlock_t main_lock;
-    int ab_mode;  //0 == off, 1 == on
+
+    //For broadcasting to the threads that it's time to process the tracks
+    pthread_cond_t * track_cond;
+    //For preventing the main thread from continuing until the workers finish
+    pthread_mutex_t * track_block_mutexes;
+    pthread_spinlock_t * thread_locks;
+    pthread_t * track_worker_threads;
+    int track_worker_thread_count;
+    int * track_thread_quit_notifier;
+    volatile int * track_thread_is_finished;
+    void * main_thread_args;
+
+    int ab_mode;  //0 == edmnext, 1 == wavenext
     int is_ab_ing;  //Set this to self->ab_mode on playback
     int is_offline_rendering;
     //set from the audio device buffer size every time the main loop is called.

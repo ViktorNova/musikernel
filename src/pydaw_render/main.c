@@ -27,7 +27,7 @@ GNU General Public License for more details.
 #include <limits.h>
 
 #include "../pydaw/src/compiler.h"
-#include "../pydaw/src/edmnext.h"
+#include "../pydaw/src/mk_threads.h"
 #include "../pydaw/include/pydaw_plugin.h"
 #include "../pydaw/libmodsynth/lib/lmalloc.h"
 #include <unistd.h>

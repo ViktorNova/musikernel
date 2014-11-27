@@ -58,8 +58,7 @@ GNU General Public License for more details.
 #include "pydaw_files.h"
 #include "../include/pydaw_plugin.h"
 #include "../libmodsynth/lib/lmalloc.h"
-#include "edmnext.h"
-#include "wavenext.h"
+#include "mk_threads.h"
 #include "midi_device.h"
 
 
