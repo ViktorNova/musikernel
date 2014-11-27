@@ -440,7 +440,10 @@ class MkMainWindow(QtGui.QMainWindow):
 
     def open_in_wave_editor(self, a_file):
         libmk.TRANSPORT.host_combobox.setCurrentIndex(1)
+        self.main_stack.repaint()
         self.wave_editor_module.WAVE_EDITOR.open_file(a_file)
+        #self.wave_editor_module.WAVE_EDITOR.sample_graph.repaint()
+
 
     def set_host(self, a_index):
         self.transport_stack.setCurrentIndex(a_index)
