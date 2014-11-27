@@ -654,9 +654,6 @@ class pydaw_wave_editor_widget:
         self.file_lineedit = QtGui.QLineEdit()
         self.file_lineedit.setReadOnly(True)
         self.file_hlayout.addWidget(self.file_lineedit)
-        self.time_label = QtGui.QLabel("0:00")
-        self.time_label.setMinimumWidth(60)
-        self.file_hlayout.addWidget(self.time_label)
         self.vlayout.addLayout(self.file_hlayout)
         self.edit_tab = QtGui.QWidget()
         self.file_browser.folders_tab_widget.addTab(self.edit_tab, _("Edit"))
@@ -1065,8 +1062,8 @@ class pydaw_wave_editor_widget:
         self.current_file = f_file
         self.file_lineedit.setText(f_file)
         self.set_sample_graph(f_file)
-        self.duration = self.graph_object.frame_count / \
-            self.graph_object.sample_rate
+        self.duration = float(self.graph_object.frame_count) / float(
+            self.graph_object.sample_rate)
         if f_file in self.history:
             self.history.remove(f_file)
         self.history.append(f_file)
@@ -1131,8 +1128,11 @@ class pydaw_wave_editor_widget:
         if self.history and (a_override or self.time_label_enabled):
             f_seconds = self.duration * a_value
             f_minutes = int(f_seconds * self.sixty_recip)
-            f_seconds = str(int(f_seconds % 60.0)).zfill(2)
-            self.time_label.setText("{}:{}".format(f_minutes, f_seconds))
+            f_seconds %= 60.0
+            f_tenths = round(f_seconds - float(int(f_seconds)), 1)
+            f_seconds = str(int(f_seconds)).zfill(2)
+            libmk.TRANSPORT.set_time("{}:{}.{}".format(
+                f_minutes, f_seconds, str(f_tenths)[2]))
 
     def on_play(self):
         for f_control in self.controls_to_disable:
