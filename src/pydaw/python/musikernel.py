@@ -270,6 +270,8 @@ class MkMainWindow(QtGui.QMainWindow):
         import edmnext
         import wavenext
 
+        self.wave_editor_module = wavenext
+
         self.host_modules = (edmnext, wavenext)
         self.host_windows = tuple(x.MAIN_WINDOW for x in self.host_modules)
 
@@ -435,6 +437,10 @@ class MkMainWindow(QtGui.QMainWindow):
 
         self.on_restore_splitters()
         self.show()
+
+    def open_in_wave_editor(self, a_file):
+        libmk.TRANSPORT.host_combobox.setCurrentIndex(1)
+        self.wave_editor_module.WAVE_EDITOR.open_file(a_file)
 
     def set_host(self, a_index):
         self.transport_stack.setCurrentIndex(a_index)

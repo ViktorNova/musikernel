@@ -585,10 +585,10 @@ class pydaw_wave_editor_widget:
         self.copy_action = self.menu.addAction(_("Copy File to Clipboard"))
         self.copy_action.triggered.connect(self.copy_file_to_clipboard)
         self.copy_action.setShortcut(QtGui.QKeySequence.Copy)
-        self.copy_item_action = self.menu.addAction(_("Copy as Audio Item"))
-        self.copy_item_action.triggered.connect(self.copy_audio_item)
-        self.copy_item_action.setShortcut(
-            QtGui.QKeySequence.fromString("ALT+C"))
+#        self.copy_item_action = self.menu.addAction(_("Copy as Audio Item"))
+#        self.copy_item_action.triggered.connect(self.copy_audio_item)
+#        self.copy_item_action.setShortcut(
+#            QtGui.QKeySequence.fromString("ALT+C"))
         self.paste_action = self.menu.addAction(
             _("Paste File from Clipboard"))
         self.paste_action.triggered.connect(self.open_file_from_clipboard)
@@ -738,11 +738,12 @@ class pydaw_wave_editor_widget:
         return "Wave-Next"
 
     def copy_audio_item(self):
-        if self.graph_object is None:
-            return
-        f_uid = libmk.PROJECT.get_wav_uid_by_name(self.current_file)
-        f_item = self.get_audio_item(f_uid)
-        raise NotImplementedError
+        pass
+#        if self.graph_object is None:
+#            return
+#        f_uid = libmk.PROJECT.get_wav_uid_by_name(self.current_file)
+#        f_item = self.get_audio_item(f_uid)
+#        raise NotImplementedError
 
     def bookmark_file(self):
         if self.graph_object is None:

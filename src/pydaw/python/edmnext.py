@@ -3357,7 +3357,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
     def open_in_wave_editor(self):
         f_path = self.get_file_path()
-        raise NotImplemented
+        libmk.MAIN_WINDOW.open_in_wave_editor(f_path)
 
     def edit_paif(self):
         AUDIO_SEQ.scene.clearSelection()
