@@ -152,6 +152,16 @@ class WaveNextProject(libmk.AbstractProject):
         else:
             return []
 
+    def get_track_plugins(self,  a_track_num):
+        f_folder = self.wn_track_pool_folder
+        f_path = "{}/{}".format(f_folder, a_track_num)
+        if os.path.isfile(f_path):
+            with open(f_path) as f_handle:
+                f_str = f_handle.read()
+            return libmk.pydaw_track_plugins.from_str(f_str)
+        else:
+            return None
+
 PLUGIN_SETTINGS_COPY_OBJ = None
 
 class plugin_settings_base:
@@ -193,7 +203,7 @@ class plugin_settings_base:
         self.power_checkbox.clicked.connect(self.on_power_changed)
 
     def clear(self):
-        self.set_value(pydaw_track_plugin(self.index, 0, -1))
+        self.set_value(libmk.pydaw_track_plugin(self.index, 0, -1))
         self.on_plugin_change()
 
     def copy(self):
@@ -227,7 +237,7 @@ class plugin_settings_base:
         self.suppress_osc = False
 
     def get_value(self):
-        return pydaw_track_plugin(
+        return libmk.pydaw_track_plugin(
             self.index, get_plugin_uid_by_name(
                 self.plugin_combobox.currentText()),
             self.plugin_uid,
@@ -720,15 +730,15 @@ class pydaw_wave_editor_widget:
             self.bookmark_button, self.fade_in_start, self.fade_out_end)
 
     def save_callback(self):
-        f_result = pydaw_track_plugins()
+        f_result = libmk.pydaw_track_plugins()
         f_result.plugins = [x.get_value() for x in self.plugins]
-        PROJECT.save_track_plugins(1, self.track_number, f_result)
+        PROJECT.save_track_plugins(self.track_number, f_result)
         PROJECT.commit(
             "Update track plugins for '{}', {}".format(
             self.name_callback(), self.track_number))
 
     def open_plugins(self):
-        f_plugins = PROJECT.get_track_plugins(1, self.track_number)
+        f_plugins = PROJECT.get_track_plugins(self.track_number)
         if f_plugins:
             for f_plugin in f_plugins.plugins:
                 self.plugins[f_plugin.index].set_value(f_plugin)

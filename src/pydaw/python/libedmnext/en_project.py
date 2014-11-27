@@ -631,18 +631,13 @@ class EdmNextProject(libmk.AbstractProject):
     def get_tracks(self):
         return pydaw_tracks.from_str(self.get_tracks_string())
 
-    def get_track_plugins(self, a_host_index, a_track_num):
-        if a_host_index == 0:
-            f_folder = self.track_pool_folder
-        elif a_host_index == 1:
-            f_folder = self.wn_track_pool_folder
-        else:
-            assert(False)
+    def get_track_plugins(self, a_track_num):
+        f_folder = self.track_pool_folder
         f_path = "{}/{}".format(f_folder, a_track_num)
         if os.path.isfile(f_path):
             with open(f_path) as f_handle:
                 f_str = f_handle.read()
-            return pydaw_track_plugins.from_str(f_str)
+            return libmk.pydaw_track_plugins.from_str(f_str)
         else:
             return None
 
@@ -1907,21 +1902,6 @@ class pydaw_track:
             (self.track_uid, bool_to_int(self.solo), bool_to_int(self.mute),
             self.track_pos, self.name))))
 
-class pydaw_track_plugin:
-    def __init__(self, a_index, a_plugin_index, a_plugin_uid,
-                 a_mute=0, a_solo=0, a_power=1):
-        self.index = int(a_index)
-        self.plugin_index = int(a_plugin_index)
-        self.plugin_uid = int(a_plugin_uid)
-        self.mute = int(a_mute)
-        self.solo = int(a_solo)
-        self.power = int(a_power)
-
-    def __str__(self):
-        return "|".join(str(x) for x in
-            ("p", self.index, self.plugin_index,
-             self.plugin_uid, self.mute, self.solo, self.power))
-
 
 class pydaw_routing_graph:
     def __init__(self):
@@ -2049,27 +2029,6 @@ class pydaw_track_send:
     def __lt__(self, other):
         return self.index < other.index
 
-class pydaw_track_plugins:
-    def __init__(self):
-        self.plugins = []
-
-    def __str__(self):
-        return "\n".join(str(x) for x in
-            self.plugins + [pydaw_terminating_char])
-
-    @staticmethod
-    def from_str(a_str):
-        f_result = pydaw_track_plugins()
-        f_str = str(a_str)
-        for f_line in f_str.split():
-            if f_line == pydaw_terminating_char:
-                break
-            f_line_arr = f_line.split("|")
-            if f_line_arr[0] == "p":
-                f_result.plugins.append(pydaw_track_plugin(*f_line_arr[1:]))
-            else:
-                assert(False)
-        return f_result
 
 class pydaw_audio_region:
     def __init__(self):

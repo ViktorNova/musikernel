@@ -111,8 +111,43 @@ class AbstractProject:
         return f_existed, f_old
 
 
-
-
 class AbstractTransport:
     pass
 
+
+class pydaw_track_plugin:
+    def __init__(self, a_index, a_plugin_index, a_plugin_uid,
+                 a_mute=0, a_solo=0, a_power=1):
+        self.index = int(a_index)
+        self.plugin_index = int(a_plugin_index)
+        self.plugin_uid = int(a_plugin_uid)
+        self.mute = int(a_mute)
+        self.solo = int(a_solo)
+        self.power = int(a_power)
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("p", self.index, self.plugin_index,
+             self.plugin_uid, self.mute, self.solo, self.power))
+
+
+class pydaw_track_plugins:
+    def __init__(self):
+        self.plugins = []
+
+    def __str__(self):
+        return "\n".join(str(x) for x in self.plugins + ["\\"])
+
+    @staticmethod
+    def from_str(a_str):
+        f_result = pydaw_track_plugins()
+        f_str = str(a_str)
+        for f_line in f_str.split():
+            if f_line == "\\":
+                break
+            f_line_arr = f_line.split("|")
+            if f_line_arr[0] == "p":
+                f_result.plugins.append(pydaw_track_plugin(*f_line_arr[1:]))
+            else:
+                assert(False)
+        return f_result
