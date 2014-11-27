@@ -292,6 +292,10 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libedmnext/__init__.pyc
 /usr/lib/{0}/pydaw/python/libedmnext/__init__.pyo
 
+/usr/lib/{0}/pydaw/python/wavenext.py
+/usr/lib/{0}/pydaw/python/wavenext.pyc
+/usr/lib/{0}/pydaw/python/wavenext.pyo
+
 %doc
 
 """.format(global_pydaw_version_string, global_version_fedora,
