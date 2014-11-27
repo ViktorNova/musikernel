@@ -814,15 +814,14 @@ typedef struct
 void v_wn_osc_send(t_osc_send_data * a_buffers)
 {
     int f_i;
-    //kludge to get the wave editor peak meter working
-    /*
-    f_i = EN_TRACK_COUNT;
-    f_pkm = wavenext->track_pool[0]->peak_meter;
-    sprintf(a_buffers->f_tmp1, "|%i:%f:%f",
+
+    f_i = 0;
+    t_pkm_peak_meter * f_pkm = wavenext->track_pool[0]->peak_meter;
+    sprintf(a_buffers->f_tmp1, "%i:%f:%f",
         f_i, f_pkm->value[0], f_pkm->value[1]);
     v_pkm_reset(f_pkm);
-    strcat(a_buffers->f_tmp2, a_buffers->f_tmp1);
-    */
+
+    v_queue_osc_message("peak", a_buffers->f_tmp1);
 
     if(musikernel->playback_mode > 0)
     {
