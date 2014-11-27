@@ -48,6 +48,15 @@ extern "C" {
 
 typedef struct
 {
+    char * f_tmp1;
+    char * f_tmp2;
+    char * f_msg;
+    char osc_queue_keys[PYDAW_OSC_SEND_QUEUE_SIZE][12];
+    char * osc_queue_vals[PYDAW_OSC_SEND_QUEUE_SIZE];
+}t_osc_send_data;
+
+typedef struct
+{
     /*This is reset to bus_count each cycle and the
      * bus track processed when count reaches 0*/
     volatile int bus_counter;
