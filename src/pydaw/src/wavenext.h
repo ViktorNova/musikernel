@@ -292,9 +292,9 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
     t_pydaw_plugin * f_plugin;
     int f_global_track_num = 0;
     t_pytrack * f_track = self->track_pool[f_global_track_num];
-    int f_i = 0;
+    register int f_i;
 
-    while(f_i < sample_count)
+    for(f_i = 0; f_i < sample_count; ++f_i)
     {
         if((self->ab_audio_item->sample_read_heads[0].whole_number) >=
             (self->ab_audio_item->sample_end_offset))
@@ -348,24 +348,20 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
                 v_adsr_release(&self->ab_audio_item->adsrs[0]);
             }
         }
-        ++f_i;
     }
 
     float ** f_buff = f_track->buffers;
 
-    f_i = 0;
-    while(f_i < sample_count)
+    for(f_i = 0; f_i < sample_count; ++f_i)
     {
         f_buff[0][f_i] = output[0][f_i];
         f_buff[1][f_i] = output[1][f_i];
-        ++f_i;
     }
 
-    f_i = 0;
-    while(f_i < MAX_PLUGIN_COUNT)
+    for(f_i = 0; f_i < MAX_PLUGIN_COUNT; ++f_i)
     {
         f_plugin = f_track->plugins[f_i];
-        if(f_plugin)
+        if(f_plugin && f_plugin->power)
         {
             f_plugin->descriptor->run_replacing(
                 f_plugin->PYFX_handle, sample_count,
@@ -373,15 +369,12 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
                 f_plugin->atm_buffer, f_plugin->atm_count,
                 f_track->extern_midi, *f_track->extern_midi_count);
         }
-        ++f_i;
     }
 
-    f_i = 0;
-    while(f_i < sample_count)
+    for(f_i = 0; f_i < sample_count; ++f_i)
     {
         output[0][f_i] = f_buff[0][f_i];
         output[1][f_i] = f_buff[1][f_i];
-        ++f_i;
     }
 
     v_pkm_run(f_track->peak_meter, f_buff[0], f_buff[1],
