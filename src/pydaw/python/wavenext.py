@@ -286,6 +286,37 @@ class plugin_settings_wave_editor(plugin_settings_base):
             a_save_callback, a_name_callback,
             a_automation_callback, a_offset, a_send)
 
+def normalize_dialog():
+    def on_ok():
+        f_window.f_result = f_db_spinbox.value()
+        f_window.close()
+
+    def on_cancel():
+        f_window.close()
+
+    f_window = QtGui.QDialog(MAIN_WINDOW)
+    f_window.f_result = None
+    f_window.setWindowTitle(_("Normalize"))
+    f_window.setFixedSize(150, 90)
+    f_layout = QtGui.QVBoxLayout()
+    f_window.setLayout(f_layout)
+    f_hlayout = QtGui.QHBoxLayout()
+    f_layout.addLayout(f_hlayout)
+    f_hlayout.addWidget(QtGui.QLabel("dB"))
+    f_db_spinbox = QtGui.QSpinBox()
+    f_hlayout.addWidget(f_db_spinbox)
+    f_db_spinbox.setRange(-18, 0)
+    f_ok_button = QtGui.QPushButton(_("OK"))
+    f_ok_cancel_layout = QtGui.QHBoxLayout()
+    f_layout.addLayout(f_ok_cancel_layout)
+    f_ok_cancel_layout.addWidget(f_ok_button)
+    f_ok_button.pressed.connect(on_ok)
+    f_cancel_button = QtGui.QPushButton(_("Cancel"))
+    f_ok_cancel_layout.addWidget(f_cancel_button)
+    f_cancel_button.pressed.connect(on_cancel)
+    f_window.exec_()
+    return f_window.f_result
+
 class transport_widget(libmk.AbstractTransport):
     def __init__(self):
         self.suppress_osc = True
