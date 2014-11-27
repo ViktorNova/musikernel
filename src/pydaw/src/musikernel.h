@@ -36,6 +36,7 @@ GNU General Public License for more details.
 #define MK_CONFIGURE_KEY_MIDI_LEARN "ml"
 #define MK_CONFIGURE_KEY_ADD_TO_WAV_POOL "wp"
 #define MK_CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD "wr"
+#define MK_CONFIGURE_KEY_LOAD_AB_SET "abs"
 
 
 volatile int exiting = 0;
@@ -220,6 +221,20 @@ void v_queue_osc_message(
         ++musikernel->osc_queue_index;
         pthread_spin_unlock(&musikernel->ui_spinlock);
     }
+}
+
+void v_pydaw_set_ab_mode(int a_mode)
+{
+    pthread_spin_lock(&musikernel->main_lock);
+
+    musikernel->ab_mode = a_mode;
+
+    if(!a_mode)
+    {
+        musikernel->is_ab_ing = 0;
+    }
+
+    pthread_spin_unlock(&musikernel->main_lock);
 }
 
 void v_pydaw_activate_osc_thread(lo_method_handler osc_message_handler)
@@ -622,6 +637,11 @@ void v_mk_configure(const char* a_key, const char* a_value)
 
         f_arr->array = 0;
         g_free_2d_char_array(f_arr);
+    }
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_LOAD_AB_SET))
+    {
+        int f_mode = atoi(a_value);
+        v_pydaw_set_ab_mode(f_mode);
     }
     else if(!strcmp(a_key, MK_CONFIGURE_KEY_PITCH_ENV))
     {

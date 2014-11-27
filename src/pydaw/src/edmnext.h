@@ -30,7 +30,6 @@ GNU General Public License for more details.
 #define EN_CONFIGURE_KEY_SR "sr"
 #define EN_CONFIGURE_KEY_SAVE_ATM "sa"
 #define EN_CONFIGURE_KEY_EN_PLAYBACK "enp"
-#define EN_CONFIGURE_KEY_WN_PLAYBACK "wnp"
 #define EN_CONFIGURE_KEY_LOOP "loop"
 #define EN_CONFIGURE_KEY_TEMPO "tempo"
 #define EN_CONFIGURE_KEY_SOLO "solo"
@@ -41,10 +40,7 @@ GNU General Public License for more details.
 #define EN_CONFIGURE_KEY_UPDATE_AUDIO_INPUTS "ua"
 #define EN_CONFIGURE_KEY_SET_OVERDUB_MODE "od"
 
-#define EN_CONFIGURE_KEY_LOAD_AB_OPEN "abo"
-#define EN_CONFIGURE_KEY_LOAD_AB_SET "abs"
-#define EN_CONFIGURE_KEY_WE_SET "we"
-#define EN_CONFIGURE_KEY_WE_EXPORT "wex"
+
 #define EN_CONFIGURE_KEY_PANIC "panic"
 //Update a single control for a per-audio-item-fx
 #define EN_CONFIGURE_KEY_PER_AUDIO_ITEM_FX "paif"
@@ -365,8 +361,6 @@ void v_pydaw_init_worker_threads(t_edmnext*, int, int);
 void v_pydaw_process_external_midi(t_edmnext * pydaw_data,
         t_pytrack * a_track, int sample_count, int a_thread_num,
         t_en_thread_storage * a_ts);
-inline void v_pydaw_run_main_loop(t_edmnext * pydaw_data, int sample_count,
-        long f_next_current_sample, float **output, float **a_input_buffers);
 void v_pydaw_offline_render(t_edmnext * self, int a_start_region,
         int a_start_bar, int a_end_region, int a_end_bar, char * a_file_out,
         int a_is_audio_glue, int a_create_file);
@@ -378,8 +372,6 @@ inline float v_pydaw_count_beats(t_edmnext * self,
         int a_end_region, int a_end_bar, float a_end_beat);
 t_pydaw_audio_items * v_audio_items_load_all(t_edmnext * self,
         int a_region_uid);
-
-void v_pydaw_set_ab_mode(t_edmnext * self, int a_mode);
 
 t_pydaw_per_audio_item_fx_region * g_paif_region_get();
 void v_paif_region_free(t_pydaw_per_audio_item_fx_region*);
@@ -421,37 +413,6 @@ void v_pydaw_activate(int a_thread_count,
 
     v_pydaw_init_worker_threads(pydaw_data, a_thread_count,
             a_set_thread_affinity);
-}
-
-void v_pydaw_run(float ** buffers, int sample_count)
-{
-    pthread_spin_lock(&musikernel->main_lock);
-
-    if(!musikernel->is_offline_rendering)
-    {
-        musikernel->input_buffers_active = 1;
-        long f_next_current_sample =
-            ((pydaw_data->current_sample) + sample_count);
-        v_pydaw_run_main_loop(
-                pydaw_data, sample_count, f_next_current_sample,
-                buffers, NULL);
-        pydaw_data->current_sample = f_next_current_sample;
-    }
-    else
-    {
-        /*Clear the output buffer*/
-        musikernel->input_buffers_active = 0;
-        register int f_i = 0;
-
-        while(f_i < sample_count)
-        {
-            buffers[0][f_i] = 0.0f;
-            buffers[1][f_i] = 0.0f;
-            ++f_i;
-        }
-    }
-
-    pthread_spin_unlock(&musikernel->main_lock);
 }
 
 void v_pydaw_destructor()
@@ -849,135 +810,212 @@ void v_paif_set_control(t_edmnext * self, int a_region_uid,
 
 }
 
-void * v_pydaw_osc_send_thread(void* a_arg)
+typedef struct
 {
-    t_edmnext * self = (t_edmnext*)a_arg;
-
-    int f_i = 0;
-
+    char * f_tmp1;
+    char * f_tmp2;
+    char * f_msg;
     char osc_queue_keys[PYDAW_OSC_SEND_QUEUE_SIZE][12];
     char * osc_queue_vals[PYDAW_OSC_SEND_QUEUE_SIZE];
+}t_osc_send_data;
+
+void v_wn_osc_send(t_osc_send_data * a_buffers)
+{
+    int f_i;
+    //kludge to get the wave editor peak meter working
+    /*
+    f_i = EN_TRACK_COUNT;
+    f_pkm = wavenext->track_pool[0]->peak_meter;
+    sprintf(a_buffers->f_tmp1, "|%i:%f:%f",
+        f_i, f_pkm->value[0], f_pkm->value[1]);
+    v_pkm_reset(f_pkm);
+    strcat(a_buffers->f_tmp2, a_buffers->f_tmp1);
+    */
+
+    if(musikernel->playback_mode > 0)
+    {
+        float f_frac =
+        (float)(wavenext->ab_audio_item->sample_read_heads[
+            0].whole_number)
+        / (float)(wavenext->ab_audio_item->wav_pool_item->length);
+
+        sprintf(a_buffers->f_msg, "%f", f_frac);
+        v_queue_osc_message("wec", a_buffers->f_msg);
+    }
+
+        if(musikernel->osc_queue_index > 0)
+    {
+        f_i = 0;
+
+        while(f_i < musikernel->osc_queue_index)
+        {
+            strcpy(a_buffers->osc_queue_keys[f_i],
+                musikernel->osc_queue_keys[f_i]);
+            strcpy(a_buffers->osc_queue_vals[f_i],
+                musikernel->osc_queue_vals[f_i]);
+            ++f_i;
+        }
+
+        pthread_spin_lock(&musikernel->main_lock);
+
+        //Now grab any that may have been written since the previous copy
+
+        while(f_i < musikernel->osc_queue_index)
+        {
+            strcpy(a_buffers->osc_queue_keys[f_i],
+                musikernel->osc_queue_keys[f_i]);
+            strcpy(a_buffers->osc_queue_vals[f_i],
+                musikernel->osc_queue_vals[f_i]);
+            ++f_i;
+        }
+
+        int f_index = musikernel->osc_queue_index;
+        musikernel->osc_queue_index = 0;
+
+        pthread_spin_unlock(&musikernel->main_lock);
+
+        f_i = 0;
+
+        a_buffers->f_tmp1[0] = '\0';
+
+        while(f_i < f_index)
+        {
+            sprintf(a_buffers->f_tmp2, "%s|%s\n",
+                a_buffers->osc_queue_keys[f_i],
+                a_buffers->osc_queue_vals[f_i]);
+            strcat(a_buffers->f_tmp1, a_buffers->f_tmp2);
+            ++f_i;
+        }
+
+        if(!musikernel->is_offline_rendering)
+        {
+            lo_send(musikernel->uiTarget,
+                "musikernel/wavenext", "s", a_buffers->f_tmp1);
+        }
+    }
+}
+
+void v_en_osc_send(t_osc_send_data * a_buffers)
+{
+    int f_i;
+    t_pkm_peak_meter * f_pkm;
+
+    a_buffers->f_tmp1[0] = '\0';
+    a_buffers->f_tmp2[0] = '\0';
+
+    f_pkm = pydaw_data->track_pool[0]->peak_meter;
+    sprintf(a_buffers->f_tmp2, "%i:%f:%f", 0, f_pkm->value[0], f_pkm->value[1]);
+    v_pkm_reset(f_pkm);
+
+    for(f_i = 1; f_i < EN_TRACK_COUNT; ++f_i)
+    {
+        f_pkm = pydaw_data->track_pool[f_i]->peak_meter;
+        if(!f_pkm->dirty)  //has ran since last v_pkm_reset())
+        {
+            sprintf(a_buffers->f_tmp1, "|%i:%f:%f",
+                f_i, f_pkm->value[0], f_pkm->value[1]);
+            v_pkm_reset(f_pkm);
+            strcat(a_buffers->f_tmp2, a_buffers->f_tmp1);
+        }
+    }
+
+    v_queue_osc_message("peak", a_buffers->f_tmp2);
+
+    a_buffers->f_tmp1[0] = '\0';
+    a_buffers->f_tmp2[0] = '\0';
+
+    if(musikernel->playback_mode > 0 && !musikernel->is_offline_rendering)
+    {
+        sprintf(a_buffers->f_msg, "%i|%i|%f",
+            pydaw_data->current_region, pydaw_data->current_bar,
+            pydaw_data->ts[0].ml_current_beat);
+        v_queue_osc_message("cur", a_buffers->f_msg);
+    }
+
+    if(musikernel->osc_queue_index > 0)
+    {
+        f_i = 0;
+
+        while(f_i < musikernel->osc_queue_index)
+        {
+            strcpy(a_buffers->osc_queue_keys[f_i],
+                musikernel->osc_queue_keys[f_i]);
+            strcpy(a_buffers->osc_queue_vals[f_i],
+                musikernel->osc_queue_vals[f_i]);
+            ++f_i;
+        }
+
+        pthread_spin_lock(&musikernel->main_lock);
+
+        //Now grab any that may have been written since the previous copy
+
+        while(f_i < musikernel->osc_queue_index)
+        {
+            strcpy(a_buffers->osc_queue_keys[f_i],
+                musikernel->osc_queue_keys[f_i]);
+            strcpy(a_buffers->osc_queue_vals[f_i],
+                musikernel->osc_queue_vals[f_i]);
+            ++f_i;
+        }
+
+        int f_index = musikernel->osc_queue_index;
+        musikernel->osc_queue_index = 0;
+
+        pthread_spin_unlock(&musikernel->main_lock);
+
+        f_i = 0;
+
+        a_buffers->f_tmp1[0] = '\0';
+
+        while(f_i < f_index)
+        {
+            sprintf(a_buffers->f_tmp2, "%s|%s\n",
+                a_buffers->osc_queue_keys[f_i],
+                a_buffers->osc_queue_vals[f_i]);
+            strcat(a_buffers->f_tmp1, a_buffers->f_tmp2);
+            ++f_i;
+        }
+
+        if(!musikernel->is_offline_rendering)
+        {
+            lo_send(musikernel->uiTarget,
+                "musikernel/edmnext", "s", a_buffers->f_tmp1);
+        }
+    }
+}
+
+void * v_pydaw_osc_send_thread(void* a_arg)
+{
+    t_osc_send_data f_send_data;
+    int f_i = 0;
 
     while(f_i < PYDAW_OSC_SEND_QUEUE_SIZE)
     {
-        hpalloc((void**)&osc_queue_vals[f_i],
+        hpalloc((void**)&f_send_data.osc_queue_vals[f_i],
             sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
         ++f_i;
     }
 
-    char * f_tmp1 = NULL;
-    hpalloc((void**)&f_tmp1, sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
-    char * f_tmp2 = NULL;
-    hpalloc((void**)&f_tmp2, sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
-    char * f_msg = NULL;
-    hpalloc((void**)&f_msg, sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
+    hpalloc((void**)&f_send_data.f_tmp1,
+        sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
+    hpalloc((void**)&f_send_data.f_tmp2,
+        sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
+    hpalloc((void**)&f_send_data.f_msg,
+        sizeof(char) * PYDAW_OSC_MAX_MESSAGE_SIZE);
 
-    f_tmp1[0] = '\0';
-    f_tmp2[0] = '\0';
-    f_msg[0] = '\0';
-
-    t_pkm_peak_meter * f_pkm;
+    f_send_data.f_tmp1[0] = '\0';
+    f_send_data.f_tmp2[0] = '\0';
+    f_send_data.f_msg[0] = '\0';
 
     while(!musikernel->audio_recording_quit_notifier)
     {
-        f_tmp1[0] = '\0';
-        f_tmp2[0] = '\0';
-
-        f_pkm = self->track_pool[0]->peak_meter;
-        sprintf(f_tmp2, "%i:%f:%f", 0, f_pkm->value[0], f_pkm->value[1]);
-        v_pkm_reset(f_pkm);
-
-        for(f_i = 1; f_i < EN_TRACK_COUNT; ++f_i)
+        if(musikernel->is_ab_ing == 0)
         {
-            f_pkm = self->track_pool[f_i]->peak_meter;
-            if(!f_pkm->dirty)  //has ran since last v_pkm_reset())
-            {
-                sprintf(f_tmp1, "|%i:%f:%f",
-                    f_i, f_pkm->value[0], f_pkm->value[1]);
-                v_pkm_reset(f_pkm);
-                strcat(f_tmp2, f_tmp1);
-            }
+            v_en_osc_send(&f_send_data);
         }
-
-        //kludge to get the wave editor peak meter working
-        f_i = EN_TRACK_COUNT;
-        f_pkm = wavenext->track_pool[0]->peak_meter;
-        sprintf(f_tmp1, "|%i:%f:%f", f_i, f_pkm->value[0], f_pkm->value[1]);
-        v_pkm_reset(f_pkm);
-        strcat(f_tmp2, f_tmp1);
-
-        v_queue_osc_message("peak", f_tmp2);
-
-        f_tmp1[0] = '\0';
-        f_tmp2[0] = '\0';
-
-        if(musikernel->playback_mode > 0)
+        else if(musikernel->is_ab_ing == 1)
         {
-            if(musikernel->is_ab_ing)
-            {
-                float f_frac =
-                (float)(wavenext->ab_audio_item->sample_read_heads[
-                    0].whole_number)
-                / (float)(wavenext->ab_audio_item->wav_pool_item->length);
-
-                sprintf(f_msg, "%f", f_frac);
-                v_queue_osc_message("wec", f_msg);
-            }
-            else
-            {
-                if(!musikernel->is_offline_rendering)
-                {
-                    sprintf(f_msg, "%i|%i|%f", self->current_region,
-                        self->current_bar, self->ts[0].ml_current_beat);
-                    v_queue_osc_message("cur", f_msg);
-                }
-            }
-        }
-
-        if(musikernel->osc_queue_index > 0)
-        {
-            f_i = 0;
-
-            while(f_i < musikernel->osc_queue_index)
-            {
-                strcpy(osc_queue_keys[f_i], musikernel->osc_queue_keys[f_i]);
-                strcpy(osc_queue_vals[f_i], musikernel->osc_queue_vals[f_i]);
-                ++f_i;
-            }
-
-            pthread_spin_lock(&musikernel->main_lock);
-
-            //Now grab any that may have been written since the previous copy
-
-            while(f_i < musikernel->osc_queue_index)
-            {
-                strcpy(osc_queue_keys[f_i], musikernel->osc_queue_keys[f_i]);
-                strcpy(osc_queue_vals[f_i], musikernel->osc_queue_vals[f_i]);
-                ++f_i;
-            }
-
-            int f_index = musikernel->osc_queue_index;
-            musikernel->osc_queue_index = 0;
-
-            pthread_spin_unlock(&musikernel->main_lock);
-
-            f_i = 0;
-
-            f_tmp1[0] = '\0';
-
-            while(f_i < f_index)
-            {
-                sprintf(f_tmp2, "%s|%s\n", osc_queue_keys[f_i],
-                        osc_queue_vals[f_i]);
-                strcat(f_tmp1, f_tmp2);
-                ++f_i;
-            }
-
-            if(!musikernel->is_offline_rendering)
-            {
-                lo_send(musikernel->uiTarget,
-                    "musikernel/ui_configure", "s", f_tmp1);
-            }
+            v_wn_osc_send(&f_send_data);
         }
 
         usleep(20000);
@@ -2362,100 +2400,6 @@ inline void v_pydaw_run_engine(t_edmnext * self, int sample_count,
         v_pydaw_finish_time_params(self, self->f_region_length_bars);
     }
 }
-
-inline void v_pydaw_run_main_loop(t_edmnext * self, int sample_count,
-        long f_next_current_sample, float ** a_buffers,
-        PYFX_Data **a_input_buffers)
-{
-    if(musikernel->is_ab_ing)
-    {
-        v_pydaw_run_wave_editor(wavenext, sample_count, a_buffers);
-    }
-    else
-    {
-        v_pydaw_run_engine(
-            self, sample_count, f_next_current_sample,
-            a_buffers, a_input_buffers);
-    }
-
-    if(musikernel->is_previewing)
-    {
-        register int f_i = 0;
-        t_pydaw_audio_item * f_audio_item = musikernel->preview_audio_item;
-        t_wav_pool_item * f_wav_item = musikernel->preview_wav_item;
-        while(f_i < sample_count)
-        {
-            if(f_audio_item->sample_read_heads[0].whole_number >=
-                f_wav_item->length)
-            {
-                musikernel->is_previewing = 0;
-                break;
-            }
-            else
-            {
-                v_adsr_run_db(&f_audio_item->adsrs[0]);
-                if(f_wav_item->channels == 1)
-                {
-                    float f_tmp_sample = f_cubic_interpolate_ptr_ifh(
-                    (f_wav_item->samples[0]),
-                    (f_audio_item->sample_read_heads[0].whole_number),
-                    (f_audio_item->sample_read_heads[0].fraction)) *
-                    (f_audio_item->adsrs[0].output) *
-                    (musikernel->preview_amp_lin); // *
-                    //(f_audio_item->fade_vol);
-
-                    a_buffers[0][f_i] = f_tmp_sample;
-                    a_buffers[1][f_i] = f_tmp_sample;
-                }
-                else if(f_wav_item->channels > 1)
-                {
-                    a_buffers[0][f_i] = f_cubic_interpolate_ptr_ifh(
-                    (f_wav_item->samples[0]),
-                    (f_audio_item->sample_read_heads[0].whole_number),
-                    (f_audio_item->sample_read_heads[0].fraction)) *
-                    (f_audio_item->adsrs[0].output) *
-                    (musikernel->preview_amp_lin); // *
-                    //(f_audio_item->fade_vol);
-
-                    a_buffers[1][f_i] = f_cubic_interpolate_ptr_ifh(
-                    (f_wav_item->samples[1]),
-                    (f_audio_item->sample_read_heads[0].whole_number),
-                    (f_audio_item->sample_read_heads[0].fraction)) *
-                    (f_audio_item->adsrs[0].output) *
-                    (musikernel->preview_amp_lin); // *
-                    //(f_audio_item->fade_vol);
-                }
-
-                v_ifh_run(&f_audio_item->sample_read_heads[0],
-                        f_audio_item->ratio);
-
-                if((f_audio_item->sample_read_heads[0].whole_number)
-                    >= (musikernel->preview_max_sample_count))
-                {
-                    v_adsr_release(&f_audio_item->adsrs[0]);
-                }
-
-                if(f_audio_item->adsrs[0].stage == ADSR_STAGE_OFF)
-                {
-                    musikernel->is_previewing = 0;
-                    break;
-                }
-            }
-            ++f_i;
-        }
-    }
-
-    if(!musikernel->is_offline_rendering && MASTER_VOL != 1.0f)
-    {
-        register int f_i;
-        for(f_i = 0; f_i < sample_count; ++f_i)
-        {
-            a_buffers[0][f_i] *= MASTER_VOL;
-            a_buffers[1][f_i] *= MASTER_VOL;
-        }
-    }
-}
-
 
 
 void v_pydaw_audio_items_run(t_edmnext * self,
@@ -4112,7 +4056,7 @@ void v_pydaw_offline_render(t_edmnext * self, int a_start_region,
         }
         else
         {
-            v_pydaw_run_main_loop(self, f_block_size,
+            v_pydaw_run_engine(self, f_block_size,
                 f_next_sample_block, f_buffer, 0);
         }
 
@@ -4175,20 +4119,6 @@ void v_pydaw_offline_render(t_edmnext * self, int a_start_region,
     pthread_spin_unlock(&musikernel->main_lock);
 
     musikernel->ab_mode = f_ab_old;
-}
-
-void v_pydaw_set_ab_mode(t_edmnext * self, int a_mode)
-{
-    pthread_spin_lock(&musikernel->main_lock);
-
-    musikernel->ab_mode = a_mode;
-
-    if(!a_mode)
-    {
-        musikernel->is_ab_ing = 0;
-    }
-
-    pthread_spin_unlock(&musikernel->main_lock);
 }
 
 /* Disable the optimizer for this function because it causes a
@@ -4478,12 +4408,6 @@ void v_en_configure(t_edmnext* self,
         v_set_playback_mode(self, f_mode, f_region, f_bar, 1);
         g_free_1d_char_array(f_arr);
     }
-    else if(!strcmp(a_key, EN_CONFIGURE_KEY_WN_PLAYBACK))
-    {
-        int f_mode = atoi(a_value);
-        assert(f_mode >= 0 && f_mode <= 2);
-        v_wn_set_playback_mode(wavenext, f_mode, 1);
-    }
     else if(!strcmp(a_key, EN_CONFIGURE_KEY_SR))
     {
         //Ensure that a project isn't being loaded right now
@@ -4693,19 +4617,6 @@ void v_en_configure(t_edmnext* self,
         v_free_split_line(f_val_arr);
 
     }
-    else if(!strcmp(a_key, EN_CONFIGURE_KEY_LOAD_AB_OPEN))
-    {
-        v_pydaw_set_ab_file(wavenext, a_value);
-    }
-    else if(!strcmp(a_key, EN_CONFIGURE_KEY_LOAD_AB_SET))
-    {
-        int f_mode = atoi(a_value);
-        v_pydaw_set_ab_mode(self, f_mode);
-    }
-    else if(!strcmp(a_key, EN_CONFIGURE_KEY_WE_SET))
-    {
-        v_pydaw_set_wave_editor_item(wavenext, a_value);
-    }
     else if(!strcmp(a_key, EN_CONFIGURE_KEY_PANIC))
     {
         pthread_spin_lock(&musikernel->main_lock);
@@ -4749,10 +4660,6 @@ void v_en_configure(t_edmnext* self,
         v_pydaw_set_midi_device(pydaw_data, f_on, f_device, f_output);
 
         pthread_spin_unlock(&musikernel->main_lock);
-    }
-    else if(!strcmp(a_key, EN_CONFIGURE_KEY_WE_EXPORT))
-    {
-        v_pydaw_we_export(wavenext, a_value);
     }
     else
     {

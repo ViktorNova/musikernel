@@ -98,9 +98,6 @@ class EdmNextOsc(libmk.AbstractIPC):
     def pydaw_ab_open(self, a_file):
         self.send_configure("abo", str(a_file))
 
-    def pydaw_ab_set(self, a_bool):
-        self.send_configure("abs", bool_to_int(a_bool))
-
     def pydaw_we_set(self, a_val):
         self.send_configure("we", str(a_val))
 

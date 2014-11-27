@@ -16,6 +16,11 @@ GNU General Public License for more details.
 
 #include "musikernel.h"
 
+#define WN_CONFIGURE_KEY_LOAD_AB_OPEN "abo"
+#define WN_CONFIGURE_KEY_WE_SET "we"
+#define WN_CONFIGURE_KEY_WE_EXPORT "wex"
+#define WN_CONFIGURE_KEY_WN_PLAYBACK "wnp"
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -28,6 +33,7 @@ typedef struct
     char * tracks_folder;
 }t_wavenext;
 
+void v_pydaw_set_ab_mode(int a_mode);
 void v_pydaw_set_ab_file(t_wavenext * self, const char * a_file);
 void v_pydaw_set_wave_editor_item(t_wavenext * self, const char * a_string);
 inline void v_pydaw_run_wave_editor(t_wavenext * self,
@@ -381,6 +387,35 @@ inline void v_pydaw_run_wave_editor(t_wavenext * self,
         musikernel->sample_count);
 }
 
+
+
+void v_wn_configure(const char* a_key, const char* a_value)
+{
+    printf("v_wn_configure:  key: \"%s\", value: \"%s\"\n", a_key, a_value);
+
+    if(!strcmp(a_key, WN_CONFIGURE_KEY_LOAD_AB_OPEN))
+    {
+        v_pydaw_set_ab_file(wavenext, a_value);
+    }
+    else if(!strcmp(a_key, WN_CONFIGURE_KEY_WE_SET))
+    {
+        v_pydaw_set_wave_editor_item(wavenext, a_value);
+    }
+    else if(!strcmp(a_key, WN_CONFIGURE_KEY_WE_EXPORT))
+    {
+        v_pydaw_we_export(wavenext, a_value);
+    }
+    else if(!strcmp(a_key, WN_CONFIGURE_KEY_WN_PLAYBACK))
+    {
+        int f_mode = atoi(a_value);
+        assert(f_mode >= 0 && f_mode <= 2);
+        v_wn_set_playback_mode(wavenext, f_mode, 1);
+    }
+    else
+    {
+        printf("Unknown configure message key: %s, value %s\n", a_key, a_value);
+    }
+}
 
 #endif	/* WAVENEXT_H */
 

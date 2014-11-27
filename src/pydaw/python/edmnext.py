@@ -80,7 +80,6 @@ def global_get_audio_file_from_clipboard():
                 _("{} is not a valid file").format(f_path))
     return None
 
-libmk.TOOLTIPS_ENABLED = False
 
 def pydaw_set_tooltips_enabled(a_enabled):
     """ Set extensive tooltips as an alternative to
@@ -88,8 +87,8 @@ def pydaw_set_tooltips_enabled(a_enabled):
     """
     libmk.TOOLTIPS_ENABLED = a_enabled
 
-    f_list = [SONG_EDITOR, AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR, MAIN_WINDOW,
-              WAVE_EDITOR, AUDIO_SEQ, TRANSPORT,
+    f_list = [SONG_EDITOR, AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR,
+              MAIN_WINDOW, AUDIO_SEQ, TRANSPORT,
               REGION_EDITOR, MIXER_WIDGET] + list(AUTOMATION_EDITORS)
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
@@ -3358,9 +3357,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
     def open_in_wave_editor(self):
         f_path = self.get_file_path()
-        WAVE_EDITOR.open_file(f_path)
-        WAVE_EDITOR.set_audio_item(self.audio_item)
-        MAIN_WINDOW.main_tabwidget.setCurrentIndex(2)
+        raise NotImplemented
 
     def edit_paif(self):
         AUDIO_SEQ.scene.clearSelection()
@@ -8059,16 +8056,6 @@ class plugin_settings_mixer(plugin_settings_base):
         self.bus_index = a_index
         self.index += 10
 
-class plugin_settings_wave_editor(plugin_settings_base):
-    def __init__(self, a_index, a_track_num,
-                 a_layout, a_save_callback, a_name_callback,
-                 a_automation_callback, a_offset=0, a_send=None):
-        self.plugin_list = WAVE_EDITOR_PLUGIN_NAMES
-        plugin_settings_base.__init__(
-            self, a_index, a_track_num, a_layout,
-            a_save_callback, a_name_callback,
-            a_automation_callback, a_offset, a_send, a_host_index=1)
-
 
 class track_send:
     def __init__(self, a_index, a_track_num, a_layout, a_save_callback):
@@ -8525,8 +8512,7 @@ class transport_widget(libmk.AbstractTransport):
                             AUDIO_SEQ.clear_drawn_items()
 
     def init_playback_cursor(self, a_start=True):
-        if not self.follow_checkbox.isChecked() or \
-        WAVE_EDITOR.enabled_checkbox.isChecked():
+        if not self.follow_checkbox.isChecked():
             return
         if SONG_EDITOR.table_widget.item(
         0, self.get_region_value()) is not None:
@@ -8546,14 +8532,7 @@ class transport_widget(libmk.AbstractTransport):
         if libmk.IS_PLAYING:
             self.set_region_value(self.start_region)
             self.set_bar_value(self.last_bar)
-        else:
-            f_we_enabled = WAVE_EDITOR.enabled_checkbox.isChecked()
-            f_tab_index = MAIN_WINDOW.main_tabwidget.currentIndex()
-            if WAVE_EDITOR.history:
-                if f_tab_index == 2 and not f_we_enabled:
-                    WAVE_EDITOR.enabled_checkbox.setChecked(True)
-                elif f_tab_index != 2 and f_we_enabled:
-                    WAVE_EDITOR.enabled_checkbox.setChecked(False)
+
         SONG_EDITOR.table_widget.setEnabled(False)
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
@@ -8564,13 +8543,9 @@ class transport_widget(libmk.AbstractTransport):
         self.start_region = self.get_region_value()
         self.last_bar = self.get_bar_value()
         self.trigger_audio_playback()
-        WAVE_EDITOR.on_play()
         AUDIO_SEQ.set_playback_clipboard()
-        if WAVE_EDITOR.enabled_checkbox.isChecked():
-            PROJECT.en_osc.pydaw_wn_playback(1)
-        else:
-            PROJECT.en_osc.pydaw_en_playback(
-                1, self.get_region_value(), self.get_bar_value())
+        PROJECT.en_osc.pydaw_en_playback(
+            1, self.get_region_value(), self.get_bar_value())
 
     def trigger_audio_playback(self):
         if not self.follow_checkbox.isChecked():
@@ -8579,19 +8554,10 @@ class transport_widget(libmk.AbstractTransport):
         AUDIO_SEQ.start_playback(self.tempo_spinbox.value())
 
     def on_stop(self):
-        if WAVE_EDITOR.enabled_checkbox.isChecked():
-            PROJECT.en_osc.pydaw_wn_playback(0)
-        else:
-            PROJECT.en_osc.pydaw_en_playback(0)
-        libmk.IS_PLAYING = False
+        PROJECT.en_osc.pydaw_en_playback(0)
         SONG_EDITOR.table_widget.setEnabled(True)
         REGION_SETTINGS.on_stop()
         AUDIO_SEQ_WIDGET.on_stop()
-
-        f_we_enabled = WAVE_EDITOR.enabled_checkbox.isChecked()
-        f_tab_index = MAIN_WINDOW.main_tabwidget.currentIndex()
-        if f_tab_index != 2 and f_we_enabled:
-            WAVE_EDITOR.enabled_checkbox.setChecked(False)
 
         self.bar_spinbox.setEnabled(True)
         self.region_spinbox.setEnabled(True)
@@ -8614,7 +8580,6 @@ class transport_widget(libmk.AbstractTransport):
             REGION_SETTINGS.open_region(f_song_table_item_str)
         else:
             REGION_SETTINGS.clear_items()
-        WAVE_EDITOR.on_stop()
         AUDIO_SEQ.stop_playback(self.last_bar)
         time.sleep(0.1)
 
@@ -8671,13 +8636,7 @@ class transport_widget(libmk.AbstractTransport):
                 self.group_box, _("Error"),
                 _("Cannot use overdub mode with loop mode to record"))
             return False
-        if WAVE_EDITOR.enabled_checkbox.isChecked():
-            QtGui.QMessageBox.warning(
-                self.group_box, _("Error"),
-                _("The wave editor does not yet support recording."))
-            return False
         SONG_EDITOR.table_widget.setEnabled(False)
-        WAVE_EDITOR.on_play()
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
         self.bar_spinbox.setEnabled(False)
@@ -8859,8 +8818,6 @@ class pydaw_main_window(QtGui.QScrollArea):
 
         self.automation_tab = QtGui.QWidget()
         self.automation_tab.setObjectName("plugin_ui")
-
-        self.main_tabwidget.addTab(WAVE_EDITOR.widget, _("Wave Editor"))
 
         self.main_tabwidget.addTab(ROUTING_GRAPH_WIDGET, _("Routing"))
         self.main_tabwidget.addTab(MIXER_WIDGET.widget, _("Mixer"))
@@ -9201,16 +9158,14 @@ class pydaw_main_window(QtGui.QScrollArea):
 
     def tab_changed(self):
         f_index = self.main_tabwidget.currentIndex()
-        if not libmk.IS_PLAYING and f_index != 2:
-            WAVE_EDITOR.enabled_checkbox.setChecked(False)
         if f_index == 0 and not libmk.IS_PLAYING:
             REGION_EDITOR.open_region()
         elif f_index == 1:
             ITEM_EDITOR.tab_changed()
-        elif f_index == 3:
+        elif f_index == 2:
             ROUTING_GRAPH_WIDGET.draw_graph(
                 PROJECT.get_routing_graph(), TRACK_NAMES)
-        elif f_index == 4:
+        elif f_index == 3:
             global_open_mixer()
 
     def on_edit_notes(self, a_event=None):
@@ -9270,9 +9225,6 @@ class pydaw_main_window(QtGui.QScrollArea):
             elif a_key == "ml":
                 PLUGIN_UI_DICT.midi_learn_control[0].update_cc_map(
                     a_val, PLUGIN_UI_DICT.midi_learn_control[1])
-            elif a_key == "wec":
-                if libmk.IS_PLAYING:
-                    WAVE_EDITOR.set_playback_cursor(float(a_val))
             elif a_key == "ready":
                 for f_widget in (libmk.TRANSPORT, MIDI_DEVICES_DIALOG):
                     f_widget.on_ready()
@@ -9308,7 +9260,6 @@ class pydaw_main_window(QtGui.QScrollArea):
             exit(999)
 
 
-
 def global_update_peak_meters(a_val):
     for f_val in a_val.split("|"):
         f_list = f_val.split(":")
@@ -9319,636 +9270,6 @@ def global_update_peak_meters(a_val):
         else:
             print("{} not in ALL_PEAK_METERS".format(f_index))
 
-
-class pydaw_wave_editor_widget:
-    def __init__(self):
-        self.widget = QtGui.QWidget()
-        self.layout = QtGui.QVBoxLayout(self.widget)
-        self.right_widget = QtGui.QWidget()
-        self.vlayout = QtGui.QVBoxLayout(self.right_widget)
-        self.file_browser = pydaw_widgets.pydaw_file_browser_widget()
-        self.file_browser.load_button.pressed.connect(self.on_file_open)
-        self.file_browser.list_file.itemDoubleClicked.connect(
-            self.on_file_open)
-        self.file_browser.preview_button.pressed.connect(self.on_preview)
-        self.file_browser.stop_preview_button.pressed.connect(
-            self.on_stop_preview)
-        self.file_browser.list_file.setSelectionMode(
-            QtGui.QListWidget.SingleSelection)
-        self.layout.addWidget(self.file_browser.hsplitter)
-        self.file_browser.hsplitter.addWidget(self.right_widget)
-        self.file_hlayout = QtGui.QHBoxLayout()
-        self.enabled_checkbox = QtGui.QCheckBox(_("Enabled?"))
-        self.enabled_checkbox.stateChanged.connect(self.enabled_changed)
-        self.file_hlayout.addWidget(self.enabled_checkbox)
-
-        self.menu = QtGui.QMenu(self.widget)
-        self.menu_button = QtGui.QPushButton(_("Menu"))
-        self.menu_button.setMenu(self.menu)
-        self.file_hlayout.addWidget(self.menu_button)
-        self.export_action = self.menu.addAction(_("Export..."))
-        self.export_action.triggered.connect(self.on_export)
-        self.menu.addSeparator()
-        self.copy_action = self.menu.addAction(_("Copy File to Clipboard"))
-        self.copy_action.triggered.connect(self.copy_file_to_clipboard)
-        self.copy_action.setShortcut(QtGui.QKeySequence.Copy)
-        self.copy_item_action = self.menu.addAction(_("Copy as Audio Item"))
-        self.copy_item_action.triggered.connect(self.copy_audio_item)
-        self.copy_item_action.setShortcut(
-            QtGui.QKeySequence.fromString("ALT+C"))
-        self.paste_action = self.menu.addAction(
-            _("Paste File from Clipboard"))
-        self.paste_action.triggered.connect(self.open_file_from_clipboard)
-        self.paste_action.setShortcut(QtGui.QKeySequence.Paste)
-        self.open_folder_action = self.menu.addAction(
-            _("Open parent folder in browser"))
-        self.open_folder_action.triggered.connect(self.open_item_folder)
-        self.menu.addSeparator()
-        self.bookmark_action = self.menu.addAction(_("Bookmark File"))
-        self.bookmark_action.triggered.connect(self.bookmark_file)
-        self.bookmark_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+D"))
-        self.delete_bookmark_action = self.menu.addAction(
-            _("Delete Bookmark"))
-        self.delete_bookmark_action.triggered.connect(self.delete_bookmark)
-        self.delete_bookmark_action.setShortcut(
-            QtGui.QKeySequence.fromString("ALT+D"))
-        self.menu.addSeparator()
-        self.reset_markers_action = self.menu.addAction(
-            _("Reset Markers"))
-        self.reset_markers_action.triggered.connect(self.reset_markers)
-        self.normalize_action = self.menu.addAction(
-            _("Normalize (non-destructive)..."))
-        self.normalize_action.triggered.connect(self.normalize_dialog)
-        self.stretch_shift_action = self.menu.addAction(
-            _("Time-Stretch/Pitch-Shift..."))
-        self.stretch_shift_action.triggered.connect(self.stretch_shift_dialog)
-
-        self.bookmark_button = QtGui.QPushButton(_("Bookmarks"))
-        self.file_hlayout.addWidget(self.bookmark_button)
-
-        self.history_button = QtGui.QPushButton(_("History"))
-        self.file_hlayout.addWidget(self.history_button)
-
-        self.fx_button = QtGui.QPushButton(_("Effects"))
-        self.file_hlayout.addWidget(self.fx_button)
-
-        ###############################
-
-        self.fx_menu = QtGui.QMenu()
-        self.fx_menu.aboutToShow.connect(self.open_plugins)
-        self.fx_button.setMenu(self.fx_menu)
-        self.track_number = 0
-        self.plugins = []
-        self.menu_widget = QtGui.QWidget()
-        self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
-        self.menu_gridlayout = QtGui.QGridLayout()
-        self.menu_hlayout.addLayout(self.menu_gridlayout)
-        self.menu_gridlayout.addWidget(QtGui.QLabel(_("Plugins")), 0, 0)
-        self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 3)
-        for f_i in range(10):
-            f_plugin = plugin_settings_wave_editor(
-                f_i, self.track_number, self.menu_gridlayout,
-                self.save_callback, self.name_callback, None)
-            self.plugins.append(f_plugin)
-        self.action_widget = QtGui.QWidgetAction(self.fx_menu)
-        self.action_widget.setDefaultWidget(self.menu_widget)
-        self.fx_menu.addAction(self.action_widget)
-
-        ###############################
-
-        self.menu_info = QtGui.QMenu()
-        self.menu_info_button = QtGui.QPushButton(_("Info"))
-        self.menu_info_button.setMenu(self.menu_info)
-        self.file_hlayout.addWidget(self.menu_info_button)
-
-        self.file_lineedit = QtGui.QLineEdit()
-        self.file_lineedit.setReadOnly(True)
-        self.file_hlayout.addWidget(self.file_lineedit)
-        self.time_label = QtGui.QLabel("0:00")
-        self.time_label.setMinimumWidth(60)
-        self.file_hlayout.addWidget(self.time_label)
-        self.vlayout.addLayout(self.file_hlayout)
-        self.edit_tab = QtGui.QWidget()
-        self.file_browser.folders_tab_widget.addTab(self.edit_tab, _("Edit"))
-        self.edit_hlayout = QtGui.QHBoxLayout(self.edit_tab)
-        self.vol_layout = QtGui.QVBoxLayout()
-        self.edit_hlayout.addLayout(self.vol_layout)
-        self.vol_slider = QtGui.QSlider(QtCore.Qt.Vertical)
-        self.vol_slider.setRange(-24, 12)
-        self.vol_slider.setValue(0)
-        self.vol_slider.valueChanged.connect(self.vol_changed)
-        self.vol_layout.addWidget(self.vol_slider)
-        self.vol_label = QtGui.QLabel("0db")
-        self.vol_label.setMinimumWidth(51)
-        self.vol_layout.addWidget(self.vol_label)
-        self.peak_meter = pydaw_widgets.peak_meter(28, a_text=True)
-        ALL_PEAK_METERS[REGION_EDITOR_TRACK_COUNT] = [self.peak_meter]
-        self.edit_hlayout.addWidget(self.peak_meter.widget)
-        self.ctrl_vlayout = QtGui.QVBoxLayout()
-        self.edit_hlayout.addLayout(self.ctrl_vlayout)
-        self.fade_in_start = QtGui.QSpinBox()
-        self.fade_in_start.setRange(-50, -6)
-        self.fade_in_start.setValue(-24)
-        self.fade_in_start.valueChanged.connect(self.marker_callback)
-        self.ctrl_vlayout.addWidget(QtGui.QLabel(_("Fade-In")))
-        self.ctrl_vlayout.addWidget(self.fade_in_start)
-        self.fade_out_end = QtGui.QSpinBox()
-        self.fade_out_end.setRange(-50, -6)
-        self.fade_out_end.setValue(-24)
-        self.fade_out_end.valueChanged.connect(self.marker_callback)
-        self.ctrl_vlayout.addWidget(QtGui.QLabel(_("Fade-Out")))
-        self.ctrl_vlayout.addWidget(self.fade_out_end)
-        self.ctrl_vlayout.addItem(
-            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
-        self.edit_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        self.sample_graph = pydaw_audio_item_viewer_widget(
-            self.marker_callback, self.marker_callback,
-            self.marker_callback, self.marker_callback)
-        self.vlayout.addWidget(self.sample_graph)
-
-        self.label_action = QtGui.QWidgetAction(self.menu_button)
-        self.label_action.setDefaultWidget(self.sample_graph.label)
-        self.menu_info.addAction(self.label_action)
-        self.sample_graph.label.setFixedSize(210, 123)
-
-        self.orig_pos = 0
-        self.duration = None
-        self.sixty_recip = 1.0 / 60.0
-        self.playback_cursor = None
-        self.time_label_enabled = False
-        self.file_browser.hsplitter.setSizes([420, 9999])
-        self.copy_to_clipboard_checked = True
-        self.last_offline_dir = global_home
-        self.open_exported = False
-        self.history = []
-        self.graph_object = None
-        self.current_file = None
-        self.callbacks_enabled = True
-
-        self.controls_to_disable = (
-            self.file_browser.load_button, self.file_browser.preview_button,
-            self.file_browser.stop_preview_button, self.history_button,
-            self.sample_graph, self.vol_slider, self.menu_button,
-            self.enabled_checkbox, self.bookmark_button, self.fade_in_start,
-            self.fade_out_end)
-
-    def save_callback(self):
-        f_result = pydaw_track_plugins()
-        f_result.plugins = [x.get_value() for x in self.plugins]
-        PROJECT.save_track_plugins(1, self.track_number, f_result)
-        PROJECT.commit(
-            "Update track plugins for '{}', {}".format(
-            self.name_callback(), self.track_number))
-
-    def open_plugins(self):
-        f_plugins = PROJECT.get_track_plugins(1, self.track_number)
-        if f_plugins:
-            for f_plugin in f_plugins.plugins:
-                self.plugins[f_plugin.index].set_value(f_plugin)
-
-    def name_callback(self):
-        return "Wave-Next"
-
-    def copy_audio_item(self):
-        if self.graph_object is None:
-            return
-        f_uid = libmk.PROJECT.get_wav_uid_by_name(self.current_file)
-        f_item = self.get_audio_item(f_uid)
-        AUDIO_SEQ_WIDGET.audio_items_clipboard = [(str(f_item), None)]
-
-    def bookmark_file(self):
-        if self.graph_object is None:
-            return
-        f_list = self.get_bookmark_list()
-        if self.current_file not in f_list:
-            f_list.append(self.current_file)
-            PROJECT.set_we_bm(f_list)
-            self.open_project()
-
-    def get_bookmark_list(self):
-        f_list = PROJECT.get_we_bm()
-        f_resave = False
-        for f_item in f_list[:]:
-            if not os.path.isfile(f_item):
-                f_resave = True
-                f_list.remove(f_item)
-                print("os.path.isfile({}) returned False, removing "
-                    "from bookmarks".format(f_item))
-        if f_resave:
-            PROJECT.set_we_bm(f_list)
-        return sorted(f_list)
-
-    def open_project(self):
-        f_list = self.get_bookmark_list()
-        if f_list:
-            f_menu = QtGui.QMenu(self.widget)
-            f_menu.triggered.connect(self.open_file_from_action)
-            self.bookmark_button.setMenu(f_menu)
-            for f_item in f_list:
-                f_menu.addAction(f_item)
-        else:
-            self.bookmark_button.setMenu(None)
-
-    def delete_bookmark(self):
-        if self.graph_object is None:
-            return
-        f_list = PROJECT.get_we_bm()
-        if self.current_file in f_list:
-            f_list.remove(self.current_file)
-            PROJECT.set_we_bm(f_list)
-            self.open_project()
-
-    def open_item_folder(self):
-        f_path = str(self.file_lineedit.text())
-        self.file_browser.open_file_in_browser(f_path)
-
-    def normalize_dialog(self):
-        if self.graph_object is None:
-            return
-        f_val = normalize_dialog()
-        if f_val is not None:
-            self.normalize(f_val)
-
-    def normalize(self, a_value):
-        f_val = self.graph_object.normalize(a_value)
-        self.vol_slider.setValue(f_val)
-
-    def reset_markers(self):
-        self.sample_graph.reset_markers()
-
-    def set_tooltips(self, a_on):
-        if a_on:
-            self.sample_graph.setToolTip(
-                _("Load samples here by using the browser on the left "
-                "and clicking the  'Load' button"))
-            self.fx_button.setToolTip(
-                _("This button shows the Modulex effects window.  "
-                "Export the audio (using the menu button) to "
-                "permanently apply effects."))
-            self.menu_button.setToolTip(
-                _("This menu can export the audio or perform "
-                "various operations."))
-            self.history_button.setToolTip(
-                _("Use this button to view or open files that "
-                "were previously opened during this session."))
-        else:
-            self.sample_graph.setToolTip("")
-            self.fx_button.setToolTip("")
-            self.menu_button.setToolTip("")
-            self.history_button.setToolTip("")
-
-    def stretch_shift_dialog(self):
-        f_path = self.current_file
-        if f_path is None:
-            return
-
-        f_base_file_name = f_path.rsplit("/", 1)[1]
-        f_base_file_name = f_base_file_name.rsplit(".", 1)[0]
-        print(f_base_file_name)
-
-        def on_ok(a_val=None):
-            f_stretch = f_timestretch_amt.value()
-            f_crispness = f_crispness_combobox.currentIndex()
-            f_preserve_formants = f_preserve_formants_checkbox.isChecked()
-            f_algo = f_algo_combobox.currentIndex()
-            f_pitch = f_pitch_shift.value()
-
-            f_file = QtGui.QFileDialog.getSaveFileName(
-                self.widget, "Save file as...", self.last_offline_dir,
-                filter="Wav File (*.wav)")
-            if f_file is None:
-                return
-            f_file = str(f_file)
-            if f_file == "":
-                return
-            if not f_file.endswith(".wav"):
-                f_file += ".wav"
-            self.last_offline_dir = os.path.dirname(f_file)
-
-            if f_algo == 0:
-                f_proc = pydaw_util.pydaw_rubberband(
-                    f_path, f_file, f_stretch, f_pitch, f_crispness,
-                    f_preserve_formants)
-            elif f_algo == 1:
-                f_proc = pydaw_util.pydaw_sbsms(
-                    f_path, f_file, f_stretch, f_pitch)
-
-            f_proc.wait()
-            self.open_file(f_file)
-            f_window.close()
-
-        def on_cancel(a_val=None):
-            f_window.close()
-
-        f_window = QtGui.QDialog(self.widget)
-        f_window.setMinimumWidth(390)
-        f_window.setWindowTitle(_("Time-Stretch/Pitch-Shift Sample"))
-        f_layout = QtGui.QVBoxLayout()
-        f_window.setLayout(f_layout)
-
-        f_time_gridlayout = QtGui.QGridLayout()
-        f_layout.addLayout(f_time_gridlayout)
-
-        f_time_gridlayout.addWidget(QtGui.QLabel(_("Pitch(semitones):")), 0, 0)
-        f_pitch_shift = QtGui.QDoubleSpinBox()
-        f_pitch_shift.setRange(-36, 36)
-        f_pitch_shift.setValue(0.0)
-        f_pitch_shift.setDecimals(6)
-        f_time_gridlayout.addWidget(f_pitch_shift, 0, 1)
-
-        f_time_gridlayout.addWidget(QtGui.QLabel(_("Stretch:")), 3, 0)
-        f_timestretch_amt = QtGui.QDoubleSpinBox()
-        f_timestretch_amt.setRange(0.2, 4.0)
-        f_timestretch_amt.setDecimals(6)
-        f_timestretch_amt.setSingleStep(0.1)
-        f_timestretch_amt.setValue(1.0)
-        f_time_gridlayout.addWidget(f_timestretch_amt, 3, 1)
-        f_time_gridlayout.addWidget(QtGui.QLabel(_("Algorithm:")), 6, 0)
-        f_algo_combobox = QtGui.QComboBox()
-        f_algo_combobox.addItems(["Rubberband", "SBSMS"])
-        f_time_gridlayout.addWidget(f_algo_combobox, 6, 1)
-
-        f_groupbox = QtGui.QGroupBox(_("Rubberband Options"))
-        f_layout.addWidget(f_groupbox)
-        f_groupbox_layout = QtGui.QGridLayout(f_groupbox)
-        f_groupbox_layout.addWidget(QtGui.QLabel(_("Crispness")), 12, 0)
-        f_crispness_combobox = QtGui.QComboBox()
-        f_crispness_combobox.addItems(CRISPNESS_SETTINGS)
-        f_crispness_combobox.setCurrentIndex(5)
-        f_groupbox_layout.addWidget(f_crispness_combobox, 12, 1)
-        f_preserve_formants_checkbox = QtGui.QCheckBox("Preserve formants?")
-        f_preserve_formants_checkbox.setChecked(True)
-        f_groupbox_layout.addWidget(f_preserve_formants_checkbox, 18, 1)
-
-        f_hlayout2 = QtGui.QHBoxLayout()
-        f_layout.addLayout(f_hlayout2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_ok_button.pressed.connect(on_ok)
-        f_hlayout2.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
-        f_cancel_button.pressed.connect(on_cancel)
-        f_hlayout2.addWidget(f_cancel_button)
-
-        f_window.exec_()
-
-    def open_file_from_action(self, a_action):
-        self.open_file(str(a_action.text()))
-
-    def on_export(self):
-        if not self.history:
-            return
-
-        def ok_handler():
-            if str(f_name.text()) == "":
-                QtGui.QMessageBox.warning(
-                    f_window, _("Error"), _("Name cannot be empty"))
-                return
-
-            if f_copy_to_clipboard_checkbox.isChecked():
-                self.copy_to_clipboard_checked = True
-                f_clipboard = QtGui.QApplication.clipboard()
-                f_clipboard.setText(f_name.text())
-            else:
-                self.copy_to_clipboard_checked = False
-
-            f_file_name = str(f_name.text())
-            PROJECT.en_osc.pydaw_we_export(f_file_name)
-            self.last_offline_dir = os.path.dirname(f_file_name)
-            self.open_exported = f_open_exported.isChecked()
-            f_window.close()
-            MAIN_WINDOW.show_offline_rendering_wait_window(f_file_name)
-            if self.open_exported:
-                self.open_file(f_file_name)
-
-
-        def cancel_handler():
-            f_window.close()
-
-        def file_name_select():
-            try:
-                if not os.path.isdir(self.last_offline_dir):
-                    self.last_offline_dir = global_home
-                f_file_name = str(QtGui.QFileDialog.getSaveFileName(
-                    f_window, _("Select a file name to save to..."),
-                    self.last_offline_dir))
-                if not f_file_name is None and f_file_name != "":
-                    if not f_file_name.endswith(".wav"):
-                        f_file_name += ".wav"
-                    if not f_file_name is None and not str(f_file_name) == "":
-                        f_name.setText(f_file_name)
-                    self.last_offline_dir = os.path.dirname(f_file_name)
-            except Exception as ex:
-                libmk.pydaw_print_generic_exception(ex)
-
-        def on_overwrite(a_val=None):
-            f_name.setText(self.file_lineedit.text())
-
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Offline Render"))
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-
-        f_name = QtGui.QLineEdit()
-        f_name.setReadOnly(True)
-        f_name.setMinimumWidth(360)
-        f_layout.addWidget(QtGui.QLabel(_("File Name:")), 0, 0)
-        f_layout.addWidget(f_name, 0, 1)
-        f_select_file = QtGui.QPushButton(_("Select"))
-        f_select_file.pressed.connect(file_name_select)
-        f_layout.addWidget(f_select_file, 0, 2)
-
-        f_overwrite_button = QtGui.QPushButton("Overwrite\nFile")
-        f_layout.addWidget(f_overwrite_button, 3, 0)
-        f_overwrite_button.pressed.connect(on_overwrite)
-
-        f_layout.addWidget(QtGui.QLabel(
-            libpydaw.strings.export_format), 3, 1)
-        f_copy_to_clipboard_checkbox = QtGui.QCheckBox(
-        _("Copy export path to clipboard? (useful for right-click pasting "
-        "back into the audio sequencer)"))
-        f_copy_to_clipboard_checkbox.setChecked(self.copy_to_clipboard_checked)
-        f_layout.addWidget(f_copy_to_clipboard_checkbox, 4, 1)
-        f_open_exported = QtGui.QCheckBox("Open exported item?")
-        f_open_exported.setChecked(self.open_exported)
-        f_layout.addWidget(f_open_exported, 6, 1)
-        f_ok_layout = QtGui.QHBoxLayout()
-        f_ok_layout.addItem(
-            QtGui.QSpacerItem(10, 10,
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
-        f_ok = QtGui.QPushButton(_("OK"))
-        f_ok.pressed.connect(ok_handler)
-        f_ok_layout.addWidget(f_ok)
-        f_layout.addLayout(f_ok_layout, 9, 1)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
-        f_cancel.pressed.connect(cancel_handler)
-        f_layout.addWidget(f_cancel, 9, 2)
-        f_window.exec_()
-
-
-    def on_reload(self):
-        pass
-
-    def enabled_changed(self, a_val=None):
-        PROJECT.en_osc.pydaw_ab_set(
-            self.enabled_checkbox.isChecked())
-
-    def vol_changed(self, a_val=None):
-        f_result = self.vol_slider.value()
-        self.marker_callback()
-        self.vol_label.setText("{}dB".format(f_result))
-
-    def on_preview(self):
-        f_list = self.file_browser.files_selected()
-        if f_list:
-            libmk.IPC.pydaw_preview_audio(f_list[0])
-
-    def on_stop_preview(self):
-        libmk.IPC.pydaw_stop_preview()
-
-    def on_file_open(self):
-        if libmk.IS_PLAYING:
-            return
-        f_file = self.file_browser.files_selected()
-        if not f_file:
-            return
-        f_file_str = f_file[0]
-        self.open_file(f_file_str)
-
-    def copy_file_to_clipboard(self):
-        f_clipboard = QtGui.QApplication.clipboard()
-        f_clipboard.setText(str(self.file_lineedit.text()))
-
-    def open_file_from_clipboard(self):
-        f_clipboard = QtGui.QApplication.clipboard()
-        f_text = str(f_clipboard.text()).strip()
-        if len(f_text) < 1000 and os.path.isfile(f_text):
-            self.open_file(f_text)
-        else:
-            QtGui.QMessageBox.warning(
-                self.widget, _("Error"),
-                _("No file path in the clipboard"))
-
-    def open_file(self, a_file):
-        f_file = str(a_file)
-        if not os.path.exists(f_file):
-            QtGui.QMessageBox.warning(
-                self.widget, _("Error"),
-                _("{} does not exist".format(f_file)))
-            return
-        self.clear_sample_graph()
-        self.current_file = f_file
-        self.file_lineedit.setText(f_file)
-        self.set_sample_graph(f_file)
-        self.duration = self.graph_object.frame_count / \
-            self.graph_object.sample_rate
-        if f_file in self.history:
-            self.history.remove(f_file)
-        self.history.append(f_file)
-        f_menu = QtGui.QMenu(self.history_button)
-        f_menu.triggered.connect(self.open_file_from_action)
-        for f_path in reversed(self.history):
-            f_menu.addAction(f_path)
-        self.history_button.setMenu(f_menu)
-        PROJECT.en_osc.pydaw_ab_open(a_file)
-        self.marker_callback()
-
-    def get_audio_item(self, a_uid=0):
-        f_start = self.sample_graph.start_marker.value
-        f_end = self.sample_graph.end_marker.value
-        f_diff = f_end - f_start
-        f_diff = pydaw_clip_value(f_diff, 0.1, 1000.0)
-        f_fade_in = ((self.sample_graph.fade_in_marker.value - f_start) /
-            f_diff) * 1000.0
-        f_fade_out = 1000.0 - (((f_end -
-            self.sample_graph.fade_out_marker.value) / f_diff) * 1000.0)
-
-        return pydaw_audio_item(
-            a_uid, a_sample_start=f_start, a_sample_end=f_end,
-            a_vol=self.vol_slider.value(),
-            a_fade_in=f_fade_in, a_fade_out=f_fade_out,
-            a_fadein_vol=self.fade_in_start.value(),
-            a_fadeout_vol=self.fade_out_end.value())
-
-    def set_audio_item(self, a_item):
-        self.callbacks_enabled = False
-        self.sample_graph.start_marker.set_value(a_item.sample_start)
-        self.sample_graph.end_marker.set_value(a_item.sample_end)
-        f_start = self.sample_graph.start_marker.value
-        f_end = self.sample_graph.end_marker.value
-        f_diff = f_end - f_start
-        f_diff = pydaw_clip_value(f_diff, 0.1, 1000.0)
-        f_fade_in = (f_diff * (a_item.fade_in / 1000.0)) + f_start
-        f_fade_out = (f_diff * (a_item.fade_out / 1000.0)) + f_start
-        self.sample_graph.fade_in_marker.set_value(f_fade_in)
-        self.sample_graph.fade_out_marker.set_value(f_fade_out)
-        self.vol_slider.setValue(a_item.vol)
-        self.fade_in_start.setValue(a_item.fadein_vol)
-        self.fade_out_end.setValue(a_item.fadeout_vol)
-        self.callbacks_enabled = True
-        self.marker_callback()
-
-    def marker_callback(self, a_val=None):
-        if self.callbacks_enabled:
-            f_item = self.get_audio_item()
-            PROJECT.en_osc.pydaw_we_set(
-                "0|{}".format(f_item))
-            f_start = self.sample_graph.start_marker.value
-            self.set_time_label(f_start * 0.001, True)
-
-    def set_playback_cursor(self, a_pos):
-        if self.playback_cursor is not None:
-            self.playback_cursor.setPos(
-                a_pos * pydaw_widgets.AUDIO_ITEM_SCENE_WIDTH, 0.0)
-        self.set_time_label(a_pos)
-
-    def set_time_label(self, a_value, a_override=False):
-        if self.history and (a_override or self.time_label_enabled):
-            f_seconds = self.duration * a_value
-            f_minutes = int(f_seconds * self.sixty_recip)
-            f_seconds = str(int(f_seconds % 60.0)).zfill(2)
-            self.time_label.setText("{}:{}".format(f_minutes, f_seconds))
-
-    def on_play(self):
-        for f_control in self.controls_to_disable:
-            f_control.setEnabled(False)
-        if self.enabled_checkbox.isChecked():
-            self.time_label_enabled = True
-            self.playback_cursor = self.sample_graph.scene.addLine(
-                self.sample_graph.start_marker.line.line(),
-                self.sample_graph.start_marker.line.pen())
-
-    def on_stop(self):
-        for f_control in self.controls_to_disable:
-            f_control.setEnabled(True)
-        if self.playback_cursor is not None:
-            #self.sample_graph.scene.removeItem(self.playback_cursor)
-            self.playback_cursor = None
-        self.time_label_enabled = False
-        if self.history:
-            self.set_time_label(
-                self.sample_graph.start_marker.value * 0.001, True)
-        if self.graph_object is not None:
-            self.sample_graph.redraw_item(
-                self.sample_graph.start_marker.value,
-                self.sample_graph.end_marker.value,
-                self.sample_graph.fade_in_marker.value,
-                self.sample_graph.fade_out_marker.value)
-
-    def set_sample_graph(self, a_file_name):
-        libmk.PROJECT.delete_sample_graph_by_name(a_file_name)
-        self.graph_object = libmk.PROJECT.get_sample_graph_by_name(
-            a_file_name, a_cp=False)
-        self.sample_graph.draw_item(
-            self.graph_object, 0.0, 1000.0, 0.0, 1000.0)
-
-    def clear_sample_graph(self):
-        self.sample_graph.clear_drawn_items()
-
-    def clear(self):
-        self.clear_sample_graph()
-        self.file_lineedit.setText("")
 
 PLUGIN_UI_DICT = None
 
@@ -9961,7 +9282,6 @@ def global_close_all():
     SONG_EDITOR.table_widget.clearContents()
     AUDIO_SEQ.clear_drawn_items()
     PB_EDITOR.clear_drawn_items()
-    WAVE_EDITOR.clear()
     TRANSPORT.reset()
     OPEN_ITEM_UIDS = []
     AUDIO_ITEMS_TO_DROP = []
@@ -9997,7 +9317,6 @@ def global_open_project(a_project_file):
     PLUGIN_UI_DICT = mk_plugin_ui_dict(
         libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
     TRACK_PANEL.open_tracks()
-    WAVE_EDITOR.last_offline_dir = libmk.PROJECT.user_folder
     SONG_EDITOR.open_song()
     REGION_EDITOR.clear_drawn_items()
     TRANSPORT.open_transport()
@@ -10011,7 +9330,6 @@ def global_open_project(a_project_file):
     SONG_EDITOR.open_first_region()
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText(PROJECT.get_notes())
-    WAVE_EDITOR.open_project()
     global_update_region_time()
     ROUTING_GRAPH_WIDGET.draw_graph(
         PROJECT.get_routing_graph(), TRACK_PANEL.get_track_names())
@@ -10024,7 +9342,6 @@ def global_new_project(a_project_file):
     PROJECT.save_transport(TRANSPORT.transport)
     PLUGIN_UI_DICT = mk_plugin_ui_dict(
         libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
-    WAVE_EDITOR.last_offline_dir = libmk.PROJECT.user_folder
     SONG_EDITOR.open_song()
     PROJECT.save_song(SONG_EDITOR.song)
     TRANSPORT.open_transport()
@@ -10032,7 +9349,6 @@ def global_new_project(a_project_file):
     libmk.set_window_title("EDM-Next")
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText("")
-    WAVE_EDITOR.open_project()
     global_update_region_time()
     ROUTING_GRAPH_WIDGET.scene.clear()
     global_open_mixer()
@@ -10056,8 +9372,6 @@ AUDIO_TRACK_COMBOBOXES = []
 PB_EDITOR = automation_viewer(a_is_cc=False)
 CC_EDITOR = automation_viewer()
 CC_EDITOR_WIDGET = automation_viewer_widget(CC_EDITOR)
-
-WAVE_EDITOR = pydaw_wave_editor_widget()
 
 SONG_EDITOR = song_editor()
 REGION_SETTINGS = region_settings()

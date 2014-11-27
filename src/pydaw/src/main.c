@@ -88,6 +88,9 @@ int osc_message_handler(const char *path, const char *types, lo_arg **argv, int
 int osc_debug_handler(const char *path, const char *types, lo_arg **argv, int
 		      argc, void *data, void *user_data) ;
 
+inline void v_pydaw_run_main_loop(t_edmnext * pydaw_data, int sample_count,
+        float **output, float **a_input_buffers);
+
 void signalHandler(int sig)
 {
     printf("signal %d caught, trying to clean up and exit\n", sig);
@@ -141,6 +144,127 @@ static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
         ++f_i;
     }
 
+}
+
+inline void v_pydaw_run(float ** buffers, int sample_count)
+{
+    pthread_spin_lock(&musikernel->main_lock);
+
+    if(!musikernel->is_offline_rendering)
+    {
+        musikernel->input_buffers_active = 1;
+
+        v_pydaw_run_main_loop(pydaw_data, sample_count, buffers, NULL);
+    }
+    else
+    {
+        /*Clear the output buffer*/
+        musikernel->input_buffers_active = 0;
+        register int f_i = 0;
+
+        while(f_i < sample_count)
+        {
+            buffers[0][f_i] = 0.0f;
+            buffers[1][f_i] = 0.0f;
+            ++f_i;
+        }
+    }
+
+    pthread_spin_unlock(&musikernel->main_lock);
+}
+
+inline void v_pydaw_run_main_loop(t_edmnext * self, int sample_count,
+        float ** a_buffers, PYFX_Data **a_input_buffers)
+{
+    if(musikernel->is_ab_ing == 0)
+    {
+        long f_next_current_sample =
+            ((pydaw_data->current_sample) + sample_count);
+        v_pydaw_run_engine(self, sample_count, f_next_current_sample,
+            a_buffers, a_input_buffers);
+        pydaw_data->current_sample = f_next_current_sample;
+    }
+    else
+    {
+        v_pydaw_run_wave_editor(wavenext, sample_count, a_buffers);
+    }
+
+    if(musikernel->is_previewing)
+    {
+        register int f_i = 0;
+        t_pydaw_audio_item * f_audio_item = musikernel->preview_audio_item;
+        t_wav_pool_item * f_wav_item = musikernel->preview_wav_item;
+        while(f_i < sample_count)
+        {
+            if(f_audio_item->sample_read_heads[0].whole_number >=
+                f_wav_item->length)
+            {
+                musikernel->is_previewing = 0;
+                break;
+            }
+            else
+            {
+                v_adsr_run_db(&f_audio_item->adsrs[0]);
+                if(f_wav_item->channels == 1)
+                {
+                    float f_tmp_sample = f_cubic_interpolate_ptr_ifh(
+                    (f_wav_item->samples[0]),
+                    (f_audio_item->sample_read_heads[0].whole_number),
+                    (f_audio_item->sample_read_heads[0].fraction)) *
+                    (f_audio_item->adsrs[0].output) *
+                    (musikernel->preview_amp_lin); // *
+                    //(f_audio_item->fade_vol);
+
+                    a_buffers[0][f_i] = f_tmp_sample;
+                    a_buffers[1][f_i] = f_tmp_sample;
+                }
+                else if(f_wav_item->channels > 1)
+                {
+                    a_buffers[0][f_i] = f_cubic_interpolate_ptr_ifh(
+                    (f_wav_item->samples[0]),
+                    (f_audio_item->sample_read_heads[0].whole_number),
+                    (f_audio_item->sample_read_heads[0].fraction)) *
+                    (f_audio_item->adsrs[0].output) *
+                    (musikernel->preview_amp_lin); // *
+                    //(f_audio_item->fade_vol);
+
+                    a_buffers[1][f_i] = f_cubic_interpolate_ptr_ifh(
+                    (f_wav_item->samples[1]),
+                    (f_audio_item->sample_read_heads[0].whole_number),
+                    (f_audio_item->sample_read_heads[0].fraction)) *
+                    (f_audio_item->adsrs[0].output) *
+                    (musikernel->preview_amp_lin); // *
+                    //(f_audio_item->fade_vol);
+                }
+
+                v_ifh_run(&f_audio_item->sample_read_heads[0],
+                        f_audio_item->ratio);
+
+                if((f_audio_item->sample_read_heads[0].whole_number)
+                    >= (musikernel->preview_max_sample_count))
+                {
+                    v_adsr_release(&f_audio_item->adsrs[0]);
+                }
+
+                if(f_audio_item->adsrs[0].stage == ADSR_STAGE_OFF)
+                {
+                    musikernel->is_previewing = 0;
+                    break;
+                }
+            }
+            ++f_i;
+        }
+    }
+
+    if(!musikernel->is_offline_rendering && MASTER_VOL != 1.0f)
+    {
+        register int f_i;
+        for(f_i = 0; f_i < sample_count; ++f_i)
+        {
+            a_buffers[0][f_i] *= MASTER_VOL;
+            a_buffers[1][f_i] *= MASTER_VOL;
+        }
+    }
 }
 
 int THREAD_AFFINITY = 0;
@@ -831,7 +955,12 @@ int osc_message_handler(const char *path, const char *types, lo_arg **argv,
         v_en_configure(pydaw_data, key, value);
         return 0;
     }
-    if(!strcmp(path, "/musikernel/master") && !strcmp(types, "ss"))
+    if(!strcmp(path, "/musikernel/wavenext") && !strcmp(types, "ss"))
+    {
+        v_wn_configure(key, value);
+        return 0;
+    }
+    else if(!strcmp(path, "/musikernel/master") && !strcmp(types, "ss"))
     {
         v_mk_configure(key, value);
         return 0;

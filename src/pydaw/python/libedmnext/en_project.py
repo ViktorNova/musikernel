@@ -43,7 +43,6 @@ pydaw_folder_regions = "projects/edmnext/regions"
 pydaw_folder_regions_audio = "projects/edmnext/regions_audio"
 pydaw_folder_regions_atm = "projects/edmnext/regions_atm"
 pydaw_folder_tracks = "projects/edmnext/tracks"
-wavenext_folder_tracks = "projects/wavenext/tracks"
 
 pydaw_file_routing_graph = "projects/edmnext/routing.txt"
 pydaw_file_midi_routing = "projects/edmnext/midi_routing.txt"
@@ -54,7 +53,6 @@ pydaw_file_pytransport = "projects/edmnext/transport.txt"
 pydaw_file_pytracks = "projects/edmnext/tracks.txt"
 pydaw_file_pyinput = "projects/edmnext/input.txt"
 pydaw_file_notes = "projects/edmnext/notes.txt"
-pydaw_file_wave_editor_bookmarks = "projects/edmnext/wave_editor_bookmarks.txt"
 
 #Anything smaller gets deleted when doing a transform
 pydaw_min_note_length = 4.0 / 129.0
@@ -141,8 +139,6 @@ class EdmNextProject(libmk.AbstractProject):
             self.project_folder, pydaw_folder_audio_per_item_fx)
         self.track_pool_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_tracks)
-        self.wn_track_pool_folder = "{}/{}".format(
-            self.project_folder, wavenext_folder_tracks)
         #files
         self.pyregions_file = "{}/{}".format(
             self.project_folder, pydaw_file_pyregions)
@@ -151,8 +147,6 @@ class EdmNextProject(libmk.AbstractProject):
         self.pyscale_file = "{}/default.pyscale".format(self.project_folder)
         self.pynotes_file = "{}/{}".format(
             self.project_folder, pydaw_file_notes)
-        self.pywebm_file = "{}/{}".format(
-            self.project_folder, pydaw_file_wave_editor_bookmarks)
         self.routing_graph_file = "{}/{}".format(
             self.project_folder, pydaw_file_routing_graph)
         self.midi_routing_file = "{}/{}".format(
@@ -161,8 +155,7 @@ class EdmNextProject(libmk.AbstractProject):
         self.project_folders = [
             self.project_folder, self.regions_folder, self.items_folder,
             self.audio_per_item_fx_folder, self.regions_audio_folder,
-            self.track_pool_folder, self.wn_track_pool_folder,
-            self.regions_atm_folder,]
+            self.track_pool_folder, self.regions_atm_folder,]
 
     def open_project(self, a_project_file, a_notify_osc=True):
         self.set_project_folders(a_project_file)
@@ -216,17 +209,6 @@ class EdmNextProject(libmk.AbstractProject):
             return (int(f_list[0]), int(f_list[1]))
         else:
             return None
-
-    def set_we_bm(self, a_file_list):
-        f_list = [x for x in sorted(a_file_list) if len(x) < 1000]
-        pydaw_write_file_text(self.pywebm_file, "\n".join(f_list))
-
-    def get_we_bm(self):
-        if os.path.exists(self.pywebm_file):
-            f_list = pydaw_read_file_text(self.pywebm_file).split("\n")
-            return [x for x in f_list if x]
-        else:
-            return []
 
     def get_regions_dict(self):
         try:
@@ -814,13 +796,8 @@ class EdmNextProject(libmk.AbstractProject):
             self.save_file("", pydaw_file_pytracks, str(a_tracks))
             #Is there a need for a configure message here?
 
-    def save_track_plugins(self, a_host_index, a_uid, a_track):
-        if a_host_index == 0:
-            f_folder = pydaw_folder_tracks
-        elif a_host_index == 1:
-            f_folder = wavenext_folder_tracks
-        else:
-            assert(False)
+    def save_track_plugins(self, a_uid, a_track):
+        f_folder = pydaw_folder_tracks
         if not self.suppress_updates:
             self.save_file(f_folder, str(a_uid), str(a_track))
 

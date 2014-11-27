@@ -82,6 +82,9 @@ class MkIpc(libmk.AbstractIPC):
     def pydaw_stop_preview(self):
         self.send_configure("spr", "")
 
+    def pydaw_set_host(self, a_index):
+        self.send_configure("abs", str(a_index))
+
 
 class transport_widget:
     def __init__(self):
@@ -124,12 +127,27 @@ class transport_widget:
         self.panic_button = QtGui.QPushButton(_("Panic"))
         self.panic_button.pressed.connect(self.on_panic)
         self.grid_layout1.addWidget(self.panic_button, 0, 50)
+
+        self.grid_layout1.addWidget(QtGui.QLabel(_("Host")), 0, 55)
+        self.host_combobox = QtGui.QComboBox()
+        self.host_combobox.setMinimumWidth(120)
+        self.host_combobox.addItems(["EDM-Next", "Wave-Next"])
+        self.host_combobox.currentIndexChanged.connect(
+            libmk.MAIN_WINDOW.set_host)
+        self.grid_layout1.addWidget(self.host_combobox, 1, 55)
+
         self.master_vol_knob = pydaw_widgets.pydaw_pixmap_knob(60, -480, 0)
         self.hlayout1.addWidget(self.master_vol_knob)
         self.master_vol_knob.valueChanged.connect(self.master_vol_changed)
         self.master_vol_knob.sliderReleased.connect(self.master_vol_released)
         self.last_region_num = -99
         self.suppress_osc = False
+
+        self.controls_to_disable = (self.menu_button, self.host_combobox)
+
+    def enable_controls(self, a_enabled):
+        for f_control in self.controls_to_disable:
+            f_control.setEnabled(a_enabled)
 
     def master_vol_released(self):
         pydaw_util.set_file_setting(
@@ -161,7 +179,7 @@ class transport_widget:
             return
         MAIN_WINDOW.current_module.TRANSPORT.on_play()
         libmk.IS_PLAYING = True
-        self.menu_button.setEnabled(False)
+        self.enable_controls(False)
 
     def on_ready(self):
         self.load_master_vol()
@@ -172,7 +190,7 @@ class transport_widget:
         MAIN_WINDOW.current_module.TRANSPORT.on_stop()
         libmk.IS_PLAYING = False
         libmk.IS_RECORDING = False
-        self.menu_button.setEnabled(True)
+        self.enable_controls(True)
         time.sleep(0.1)
 
     def on_rec(self):
@@ -184,7 +202,7 @@ class transport_widget:
         if MAIN_WINDOW.current_module.TRANSPORT.on_rec():
             libmk.IS_PLAYING = True
             libmk.IS_RECORDING = True
-            self.menu_button.setEnabled(False)
+            self.enable_controls(False)
         else:
             self.stop_button.setChecked(True)
 
@@ -247,20 +265,19 @@ class MkMainWindow(QtGui.QMainWindow):
         self.transport_splitter.addWidget(self.main_stack)
 
         import edmnext
+        import wavenext
 
-        self.host_modules = (edmnext,)
+        self.host_modules = (edmnext, wavenext)
         self.host_windows = tuple(x.MAIN_WINDOW for x in self.host_modules)
 
-        # TODO:  Get rid of this when the OSC server
-        # doesn't rely on it anymore
-        self.edm_next_window = edmnext.MAIN_WINDOW
-
         self.current_module = edmnext
-        self.current_window = self.edm_next_window
+        self.current_window = edmnext.MAIN_WINDOW
 
         for f_module in self.host_modules:
-            self.transport_stack.addWidget(edmnext.TRANSPORT.group_box)
-            self.main_stack.addWidget(self.edm_next_window)
+            self.transport_stack.addWidget(f_module.TRANSPORT.group_box)
+
+        for f_window in self.host_windows:
+            self.main_stack.addWidget(f_window)
 
         self.ignore_close_event = True
 
@@ -396,8 +413,11 @@ class MkMainWindow(QtGui.QMainWindow):
         if self.osc_server is not None:
             print(self.osc_server.get_url())
             self.osc_server.add_method(
-                "musikernel/ui_configure", 's',
-                self.edm_next_window.configure_callback)
+                "musikernel/edmnext", 's',
+                edmnext.MAIN_WINDOW.configure_callback)
+            self.osc_server.add_method(
+                "musikernel/wavenext", 's',
+                wavenext.MAIN_WINDOW.configure_callback)
             self.osc_server.add_method(None, None, self.osc_fallback)
             self.osc_timer = QtCore.QTimer(self)
             self.osc_timer.setSingleShot(False)
@@ -416,6 +436,9 @@ class MkMainWindow(QtGui.QMainWindow):
     def set_host(self, a_index):
         self.transport_stack.setCurrentIndex(a_index)
         self.main_stack.setCurrentIndex(a_index)
+        self.current_module = self.host_modules[a_index]
+        self.current_window = self.host_windows[a_index]
+        libmk.IPC.pydaw_set_host(a_index)
 
     def check_for_empty_directory(self, a_file):
         """ Return true if directory is empty, show error message and
@@ -1192,16 +1215,16 @@ not os.access(os.path.dirname(default_project_file), os.W_OK):
     MAIN_WINDOW.prepare_to_quit()
 
 if os.path.exists(default_project_file):
-    try:
+#    try:
         global_open_project(default_project_file)
-    except Exception as ex:
-        QtGui.QMessageBox.warning(
-            MAIN_WINDOW, _("Error"),
-            _("Error opening project: {}\n{}\n"
-            "Opening project recovery dialog".format(
-            default_project_file, ex)))
-        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
-        MAIN_WINDOW.prepare_to_quit()
+#    except Exception as ex:
+#        QtGui.QMessageBox.warning(
+#            MAIN_WINDOW, _("Error"),
+#            _("Error opening project: {}\n{}\n"
+#            "Opening project recovery dialog".format(
+#            default_project_file, ex)))
+#        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
+#        MAIN_WINDOW.prepare_to_quit()
 else:
     global_new_project(default_project_file)
 
