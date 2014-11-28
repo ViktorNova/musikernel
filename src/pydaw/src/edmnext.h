@@ -39,16 +39,16 @@ GNU General Public License for more details.
 #define EN_CONFIGURE_KEY_PLUGIN_INDEX "pi"
 #define EN_CONFIGURE_KEY_UPDATE_SEND "ts"
 
-#define PYDAW_LOOP_MODE_OFF 0
-#define PYDAW_LOOP_MODE_REGION 1
+#define EN_LOOP_MODE_OFF 0
+#define EN_LOOP_MODE_REGION 1
 
-#define PYDAW_MAX_ITEM_COUNT 5000
-#define PYDAW_MAX_REGION_COUNT 300
-#define PYDAW_MAX_EVENTS_PER_ITEM_COUNT 1024
+#define EN_MAX_ITEM_COUNT 5000
+#define EN_MAX_REGION_COUNT 300
+#define EN_MAX_EVENTS_PER_ITEM_COUNT 1024
 
 #define EN_TRACK_COUNT 32
 
-#define PYDAW_MAX_REGION_SIZE 64
+#define EN_MAX_REGION_SIZE 64
 
 
 #include <string.h>
@@ -61,7 +61,6 @@ GNU General Public License for more details.
 #include <sys/stat.h>
 #include <sched.h>
 #include <unistd.h>
-#include <sndfile.h>
 #include <time.h>
 #include "../libmodsynth/lib/amp.h"
 #include "../libmodsynth/lib/lmalloc.h"
@@ -74,7 +73,6 @@ GNU General Public License for more details.
 #include <lo/lo.h>
 #include "midi_device.h"
 #include "musikernel.h"
-#include "wavenext.h"
 
 
 #ifdef	__cplusplus
@@ -94,7 +92,7 @@ typedef struct
 
 typedef struct
 {
-    t_pydaw_seq_event events[PYDAW_MAX_EVENTS_PER_ITEM_COUNT];
+    t_pydaw_seq_event events[EN_MAX_EVENTS_PER_ITEM_COUNT];
     int event_count;
     int uid;
 }t_pyitem;
@@ -102,7 +100,7 @@ typedef struct
 typedef struct
 {
     //Refers to the index of items in the master item pool
-    int item_indexes[EN_TRACK_COUNT][PYDAW_MAX_REGION_SIZE];
+    int item_indexes[EN_TRACK_COUNT][EN_MAX_REGION_SIZE];
     int uid;
     /*This flag is set to 1 if created during recording, signifying
      * that it requires a default name to be created for it*/
@@ -157,11 +155,11 @@ typedef struct
 
 typedef struct
 {
-    t_pyregion * regions[PYDAW_MAX_REGION_COUNT];
-    t_pydaw_audio_items * audio_items[PYDAW_MAX_REGION_COUNT];
-    t_pydaw_atm_region * regions_atm[PYDAW_MAX_REGION_COUNT];
+    t_pyregion * regions[EN_MAX_REGION_COUNT];
+    t_pydaw_audio_items * audio_items[EN_MAX_REGION_COUNT];
+    t_pydaw_atm_region * regions_atm[EN_MAX_REGION_COUNT];
     t_pydaw_per_audio_item_fx_region
-            *per_audio_item_fx[PYDAW_MAX_REGION_COUNT];
+            *per_audio_item_fx[EN_MAX_REGION_COUNT];
     int default_bar_length;
 }t_pysong;
 
@@ -237,7 +235,7 @@ typedef struct
     //The number of samples per beat, for calculating length
     float samples_per_beat;
 
-    t_pyitem * item_pool[PYDAW_MAX_ITEM_COUNT];
+    t_pyitem * item_pool[EN_MAX_ITEM_COUNT];
 
     int is_soloed;
 
@@ -269,10 +267,6 @@ t_pydaw_atm_region * g_atm_region_get(t_edmnext*, int);
 void v_atm_region_free(t_pydaw_atm_region*);
 void g_pyitem_get(t_edmnext*, int);
 
-t_pydaw_seq_event * g_pycc_get(int, float, float);
-t_pydaw_seq_event * g_pypitchbend_get(float a_start, float a_value);
-t_pydaw_seq_event * g_pynote_get(int a_note, int a_vel, float a_start,
-                                 float a_length);
 t_edmnext * g_pydaw_data_get(t_midi_device_list*);
 int i_get_region_index_from_name(t_edmnext *, int);
 void v_set_tempo(t_edmnext*,float);
@@ -434,7 +428,7 @@ void v_pydaw_panic(t_edmnext * self)
 void v_pysong_free(t_pysong * a_pysong)
 {
     int f_i = 0;
-    while(f_i < PYDAW_MAX_REGION_COUNT)
+    while(f_i < EN_MAX_REGION_COUNT)
     {
         if(a_pysong->audio_items[f_i])
         {
@@ -1117,7 +1111,7 @@ inline void v_pydaw_process_atm(
                     {
                         f_current_track_bar = 0;
 
-                        if(self->loop_mode != PYDAW_LOOP_MODE_REGION)
+                        if(self->loop_mode != EN_LOOP_MODE_REGION)
                         {
                             ++f_current_track_region;
                         }
@@ -1195,7 +1189,7 @@ inline void v_pydaw_process_atm(
                     f_current_track_bar = 0;
                     f_plugin->atm_pos = 0;
 
-                    if(self->loop_mode != PYDAW_LOOP_MODE_REGION)
+                    if(self->loop_mode != EN_LOOP_MODE_REGION)
                     {
                         ++f_current_track_region;
                     }
@@ -1261,7 +1255,7 @@ void v_pydaw_process_midi(t_edmnext * self, int f_i, int sample_count,
                             f_current_track_bar = 0;
 
                             if(self->loop_mode !=
-                                    PYDAW_LOOP_MODE_REGION)
+                                    EN_LOOP_MODE_REGION)
                             {
                                 ++f_current_track_region;
                             }
@@ -1400,7 +1394,7 @@ void v_pydaw_process_midi(t_edmnext * self, int f_i, int sample_count,
                     {
                         f_current_track_bar = 0;
 
-                        if(self->loop_mode != PYDAW_LOOP_MODE_REGION)
+                        if(self->loop_mode != EN_LOOP_MODE_REGION)
                         {
                             ++f_current_track_region;
                         }
@@ -1615,7 +1609,7 @@ inline void v_pydaw_set_time_params(t_edmnext * self,
         if((self->ts[0].ml_next_bar) >= f_region_length)
         {
             self->ts[0].ml_next_bar = 0;
-            if(self->loop_mode != PYDAW_LOOP_MODE_REGION)
+            if(self->loop_mode != EN_LOOP_MODE_REGION)
             {
                 ++self->ts[0].ml_next_region;
             }
@@ -1650,11 +1644,11 @@ inline void v_pydaw_finish_time_params(t_edmnext * self,
         {
             self->current_bar = 0;
 
-            if(self->loop_mode != PYDAW_LOOP_MODE_REGION)
+            if(self->loop_mode != EN_LOOP_MODE_REGION)
             {
                 ++self->current_region;
 
-                if((self->current_region) >= PYDAW_MAX_REGION_COUNT)
+                if((self->current_region) >= EN_MAX_REGION_COUNT)
                 {
                     musikernel->playback_mode = 0;
                     self->current_region = 0;
@@ -2173,7 +2167,7 @@ void g_pysong_get(t_edmnext* self, int a_lock)
 
     int f_i = 0;
 
-    while(f_i < PYDAW_MAX_REGION_COUNT)
+    while(f_i < EN_MAX_REGION_COUNT)
     {
         f_result->regions[f_i] = 0;
         f_result->regions_atm[f_i] = 0;
@@ -2193,7 +2187,7 @@ void g_pysong_get(t_edmnext* self, int a_lock)
         t_2d_char_array * f_current_string =
             g_get_2d_array_from_file(f_full_path, PYDAW_LARGE_STRING);
 
-        while(f_i < PYDAW_MAX_REGION_COUNT)
+        while(f_i < EN_MAX_REGION_COUNT)
         {
             v_iterate_2d_char_array(f_current_string);
             if(f_current_string->eof)
@@ -2243,7 +2237,7 @@ int i_get_song_index_from_region_uid(t_edmnext* self, int a_uid)
 {
     int f_i = 0;
 
-    while(f_i < PYDAW_MAX_REGION_COUNT)
+    while(f_i < EN_MAX_REGION_COUNT)
     {
         if(self->pysong->regions[f_i])
         {
@@ -2403,7 +2397,7 @@ t_pyregion * g_pyregion_get(t_edmnext* self, int a_uid)
     while(f_i < EN_TRACK_COUNT)
     {
         f_i2 = 0;
-        while(f_i2 < PYDAW_MAX_REGION_SIZE)
+        while(f_i2 < EN_MAX_REGION_SIZE)
         {
             f_result->item_indexes[f_i][f_i2] = -1;
             ++f_i2;
@@ -2465,7 +2459,7 @@ t_pyregion * g_pyregion_get(t_edmnext* self, int a_uid)
 
         v_iterate_2d_char_array(f_current_string);
         assert(f_y < EN_TRACK_COUNT);
-        assert(f_x < PYDAW_MAX_REGION_SIZE);
+        assert(f_x < EN_MAX_REGION_SIZE);
         f_result->item_indexes[f_y][f_x] = atoi(f_current_string->current_str);
         assert(self->item_pool[f_result->item_indexes[f_y][f_x]]);
 
@@ -2496,7 +2490,7 @@ void g_pyitem_get(t_edmnext* self, int a_uid)
 
     int f_i = 0;
 
-    while(f_i < PYDAW_MAX_EVENTS_PER_ITEM_COUNT)
+    while(f_i < EN_MAX_EVENTS_PER_ITEM_COUNT)
     {
         v_iterate_2d_char_array(f_current_string);
 
@@ -2518,7 +2512,7 @@ void g_pyitem_get(t_edmnext* self, int a_uid)
             int f_note = atoi(f_current_string->current_str);
             v_iterate_2d_char_array(f_current_string);
             int f_vel = atoi(f_current_string->current_str);
-            assert((f_result->event_count) < PYDAW_MAX_EVENTS_PER_ITEM_COUNT);
+            assert((f_result->event_count) < EN_MAX_EVENTS_PER_ITEM_COUNT);
             g_pynote_init(&f_result->events[(f_result->event_count)],
                     f_note, f_vel, f_start, f_length);
             ++f_result->event_count;
@@ -2628,7 +2622,7 @@ t_edmnext * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
 
     f_i = 0;
 
-    while(f_i < PYDAW_MAX_ITEM_COUNT)
+    while(f_i < EN_MAX_ITEM_COUNT)
     {
         f_result->item_pool[f_i] = 0;
         ++f_i;
@@ -3068,7 +3062,7 @@ void v_pydaw_offline_render(t_edmnext * self, int a_start_region,
 
     //We must set it back afterwards, or the UI will be wrong...
     int f_old_loop_mode = self->loop_mode;
-    v_set_loop_mode(self, PYDAW_LOOP_MODE_OFF);
+    v_set_loop_mode(self, EN_LOOP_MODE_OFF);
 
     v_set_playback_mode(self, PYDAW_PLAYBACK_MODE_PLAY,
             a_start_region, a_start_bar, 0);

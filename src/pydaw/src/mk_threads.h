@@ -137,7 +137,7 @@ void v_open_project(const char* a_project_folder, int a_first_load)
 
     int f_i = 0;
 
-    while(f_i < PYDAW_MAX_ITEM_COUNT)
+    while(f_i < EN_MAX_ITEM_COUNT)
     {
         if(edmnext->item_pool[f_i])
         {
