@@ -286,7 +286,7 @@ void v_en_audio_items_run(
 inline float f_en_count_beats(t_edmnext * self,
         int a_start_region, int a_start_bar, float a_start_beat,
         int a_end_region, int a_end_bar, float a_end_beat);
-t_pydaw_audio_items * v_audio_items_load_all(t_edmnext * self,
+t_pydaw_audio_items * v_en_audio_items_load_all(t_edmnext * self,
         int a_region_uid);
 
 t_en_per_audio_item_fx_region * g_en_paif_region_get();
@@ -2169,7 +2169,7 @@ void g_en_song_get(t_edmnext* self, int a_lock)
             f_result->regions_atm[f_pos] = g_atm_region_get(self, f_uid);
             //v_pydaw_audio_items_free(self->audio_items);
             f_result->audio_items[f_pos] =
-                v_audio_items_load_all(self, f_uid);
+                v_en_audio_items_load_all(self, f_uid);
             f_result->per_audio_item_fx[f_pos] =
                 g_en_paif_region_open(self, f_uid);
             ++f_i;
@@ -2878,7 +2878,7 @@ void v_set_playback_mode(t_edmnext * self, int a_mode,
 
 
 /*Load/Reload samples from file...*/
-t_pydaw_audio_items * v_audio_items_load_all(t_edmnext * self,
+t_pydaw_audio_items * v_en_audio_items_load_all(t_edmnext * self,
         int a_region_uid)
 {
     float f_sample_rate = musikernel->thread_storage[0].sample_rate;
@@ -2890,7 +2890,7 @@ t_pydaw_audio_items * v_audio_items_load_all(t_edmnext * self,
 
     if(i_pydaw_file_exists(f_file))
     {
-        printf("v_audio_items_load_all: loading a_file: \"%s\"\n", f_file);
+        printf("v_en_audio_items_load_all: loading a_file: \"%s\"\n", f_file);
 
         t_2d_char_array * f_current_string = g_get_2d_array_from_file(f_file,
                 PYDAW_LARGE_STRING);
@@ -2934,7 +2934,7 @@ t_pydaw_audio_items * v_audio_items_load_all(t_edmnext * self,
     }
     else
     {
-        printf("Error:  v_audio_items_load_all:  a_file: \"%s\" "
+        printf("Error:  v_en_audio_items_load_all:  a_file: \"%s\" "
                 "does not exist\n", f_file);
         assert(0);
     }
@@ -3519,7 +3519,7 @@ void v_en_configure(t_edmnext* self,
     {
         int f_uid = atoi(a_value);
         //t_pydaw_audio_items * f_old;
-        t_pydaw_audio_items * f_result = v_audio_items_load_all(self,
+        t_pydaw_audio_items * f_result = v_en_audio_items_load_all(self,
                 f_uid);
         int f_region_index = i_en_song_index_from_region_uid(self,
                 f_uid);
