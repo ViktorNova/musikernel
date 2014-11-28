@@ -852,6 +852,9 @@ void v_en_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
             {
                 v_en_process_atm(self, a_track->track_num,
                     f_plugin_index, a_sample_count, a_playback_mode, a_ts);
+
+                pthread_spin_lock(&f_bus->lock);
+
                 f_plugin->descriptor->run_mixing(
                     f_plugin->PYFX_handle, a_sample_count,
                     f_buff, 2, a_track->event_buffer,
@@ -861,11 +864,16 @@ void v_en_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
             }
             else
             {
+                pthread_spin_lock(&f_bus->lock);
+
                 v_buffer_mix(a_sample_count, f_track_buff, f_buff);
             }
         }
+        else
+        {
+            pthread_spin_lock(&f_bus->lock);
+        }
 
-        pthread_spin_lock(&f_bus->lock);
         --f_bus->bus_counter;
         pthread_spin_unlock(&f_bus->lock);
     }
