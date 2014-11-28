@@ -79,14 +79,10 @@ int main(int argc, char** argv)
         }
     }
 
-    g_musikernel_get(f_sample_rate);
-    g_pydaw_instantiate(0);
-    g_wavenext_get();
-
     float** f_output;
     hpalloc((void**)&f_output, sizeof(float*) * 2);
 
-    v_pydaw_activate(f_thread_count, 0, f_project_dir);
+    v_pydaw_activate(f_thread_count, 0, f_project_dir, f_sample_rate, NULL);
 
     f_i = 0;
     while(f_i < 2)

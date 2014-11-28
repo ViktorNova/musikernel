@@ -763,18 +763,14 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     free(f_key_char);
     free(f_value_char);
 
-    /* Instantiate hosts */
-    g_musikernel_get(sample_rate);
-    g_pydaw_instantiate(&MIDI_DEVICES);
-    g_wavenext_get();
-
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
     signal(SIGHUP, signalHandler);
     signal(SIGQUIT, signalHandler);
     pthread_sigmask(SIG_UNBLOCK, &_signals, 0);
 
-    v_pydaw_activate(f_thread_count, f_thread_affinity, argv[2]);
+    v_pydaw_activate(f_thread_count, f_thread_affinity, argv[2],
+        sample_rate, &MIDI_DEVICES);
 
     v_queue_osc_message("ready", "");
 

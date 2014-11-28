@@ -39,8 +39,14 @@ void v_pydaw_init_worker_threads(int, int);
 #endif
 
 void v_pydaw_activate(int a_thread_count,
-        int a_set_thread_affinity, char * a_project_path)
+        int a_set_thread_affinity, char * a_project_path,
+        float a_sr, t_midi_device_list * a_midi_devices)
 {
+    /* Instantiate hosts */
+    g_musikernel_get(a_sr);
+    g_pydaw_instantiate(a_midi_devices);
+    g_wavenext_get();
+
     v_open_project(pydaw_data, a_project_path, 1);
 
     v_pydaw_init_worker_threads(a_thread_count, a_set_thread_affinity);
