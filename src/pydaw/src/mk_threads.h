@@ -38,6 +38,67 @@ void v_pydaw_init_worker_threads(int, int);
 }
 #endif
 
+void v_pydaw_open_tracks()
+{
+    char f_file_name[1024];
+    sprintf(f_file_name, "%s/projects/edmnext/tracks.txt",
+        musikernel->project_folder);
+
+    if(i_pydaw_file_exists(f_file_name))
+    {
+        printf("v_pydaw_open_tracks:  File exists %s , loading\n", f_file_name);
+
+        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(f_file_name,
+                PYDAW_LARGE_STRING);
+
+        while(1)
+        {
+            v_iterate_2d_char_array(f_2d_array);
+
+            if(f_2d_array->eof)
+            {
+                break;
+            }
+
+            int f_track_index = atoi(f_2d_array->current_str);
+
+            v_iterate_2d_char_array(f_2d_array);
+            int f_solo = atoi(f_2d_array->current_str);
+            v_iterate_2d_char_array(f_2d_array);
+            int f_mute = atoi(f_2d_array->current_str);
+            v_iterate_2d_char_array(f_2d_array);  //ignored
+            v_iterate_2d_char_array(f_2d_array); //ignored
+
+            assert(f_track_index >= 0 && f_track_index < EN_TRACK_COUNT);
+            assert(f_solo == 0 || f_solo == 1);
+            assert(f_mute == 0 || f_mute == 1);
+
+            v_pydaw_open_track(pydaw_data->track_pool[f_track_index],
+                pydaw_data->tracks_folder, f_track_index);
+
+            pydaw_data->track_pool[f_track_index]->solo = f_solo;
+            pydaw_data->track_pool[f_track_index]->mute = f_mute;
+        }
+
+        g_free_2d_char_array(f_2d_array);
+    }
+    else   //ensure everything is closed...
+    {
+        int f_i = 0;
+
+        while(f_i < EN_TRACK_COUNT)
+        {
+            pydaw_data->track_pool[f_i]->solo = 0;
+            pydaw_data->track_pool[f_i]->mute = 0;
+            v_pydaw_open_track(pydaw_data->track_pool[f_i],
+                pydaw_data->tracks_folder, f_i);
+            ++f_i;
+        }
+    }
+
+    //open wavenext's plugins if they exist
+    v_pydaw_open_track(wavenext->track_pool[0], wavenext->tracks_folder, 0);
+}
 
 void v_open_project(const char* a_project_folder, int a_first_load)
 {

@@ -622,6 +622,107 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
     return (void*)1;
 }
 
+inline float f_bpm_to_seconds_per_beat(float a_tempo)
+{
+    return (60.0f / a_tempo);
+}
+
+inline float f_pydaw_samples_to_beat_count(int a_sample_count, float a_tempo,
+        float a_sr)
+{
+    float f_seconds_per_beat = f_bpm_to_seconds_per_beat(a_tempo);
+    float f_seconds = (float)(a_sample_count) / a_sr;
+    return f_seconds / f_seconds_per_beat;
+}
+
+inline int i_beat_count_to_samples(float a_beat_count, float a_tempo,
+        float a_sr)
+{
+    float f_seconds = f_bpm_to_seconds_per_beat(a_tempo) * a_beat_count;
+    return (int)(f_seconds * a_sr);
+}
+
+
+inline void v_buffer_mix(int a_count,
+    float ** __restrict__ a_buffer_src, float ** __restrict__ a_buffer_dest)
+{
+    register int f_i2 = 0;
+
+    while(f_i2 < a_count)
+    {
+        a_buffer_dest[0][f_i2] += a_buffer_src[0][f_i2];
+        a_buffer_dest[1][f_i2] += a_buffer_src[1][f_i2];
+        ++f_i2;
+    }
+}
+
+void v_wait_for_threads()
+{
+    int f_i = 1;
+
+    while(f_i < (musikernel->track_worker_thread_count))
+    {
+        if(musikernel->track_thread_is_finished[f_i] == 0)
+        {
+            continue;  //spin until it is finished...
+        }
+
+        ++f_i;
+    }
+}
+
+void g_pynote_init(t_pydaw_seq_event * f_result, int a_note, int a_vel,
+        float a_start, float a_length)
+{
+    f_result->type = PYDAW_EVENT_NOTEON;
+    f_result->length = a_length;
+    f_result->note = a_note;
+    f_result->start = a_start;
+    f_result->velocity = a_vel;
+}
+
+t_pydaw_seq_event * g_pynote_get(int a_note, int a_vel,
+        float a_start, float a_length)
+{
+    t_pydaw_seq_event * f_result =
+        (t_pydaw_seq_event*)malloc(sizeof(t_pydaw_seq_event));
+    g_pynote_init(f_result, a_note, a_vel, a_start, a_length);
+    return f_result;
+}
+
+void g_pycc_init(t_pydaw_seq_event * f_result, int a_cc_num,
+    float a_cc_val, float a_start)
+{
+    f_result->type = PYDAW_EVENT_CONTROLLER;
+    f_result->param = a_cc_num;
+    f_result->value = a_cc_val;
+    f_result->start = a_start;
+}
+
+t_pydaw_seq_event * g_pycc_get(int a_cc_num, float a_cc_val, float a_start)
+{
+    t_pydaw_seq_event * f_result =
+        (t_pydaw_seq_event*)malloc(sizeof(t_pydaw_seq_event));
+    g_pycc_init(f_result, a_cc_num, a_cc_val, a_start);
+    return f_result;
+}
+
+void g_pypitchbend_init(t_pydaw_seq_event * f_result, float a_start,
+    float a_value)
+{
+    f_result->type = PYDAW_EVENT_PITCHBEND;
+    f_result->start = a_start;
+    f_result->value = a_value;
+}
+
+t_pydaw_seq_event * g_pypitchbend_get(float a_start, float a_value)
+{
+    t_pydaw_seq_event * f_result =
+        (t_pydaw_seq_event*)malloc(sizeof(t_pydaw_seq_event));
+    g_pypitchbend_init(f_result, a_start, a_value);
+    return f_result;
+}
+
 
 void v_mk_configure(const char* a_key, const char* a_value)
 {

@@ -334,28 +334,6 @@ void g_pydaw_instantiate(t_midi_device_list * a_midi_devices)
     pydaw_data = g_pydaw_data_get(a_midi_devices);
 }
 
-
-
-inline float f_bpm_to_seconds_per_beat(float a_tempo)
-{
-    return (60.0f / a_tempo);
-}
-
-inline int i_pydaw_beat_count_to_samples(float a_beat_count, float a_tempo,
-        float a_sr)
-{
-    float f_seconds = f_bpm_to_seconds_per_beat(a_tempo) * a_beat_count;
-    return (int)(f_seconds * a_sr);
-}
-
-inline float f_pydaw_samples_to_beat_count(int a_sample_count, float a_tempo,
-        float a_sr)
-{
-    float f_seconds_per_beat = f_bpm_to_seconds_per_beat(a_tempo);
-    float f_seconds = (float)(a_sample_count) / a_sr;
-    return f_seconds / f_seconds_per_beat;
-}
-
 void v_pydaw_reset_audio_item_read_heads(t_edmnext * self,
         int a_region, int a_start_bar)
 {
@@ -396,7 +374,7 @@ void v_pydaw_reset_audio_item_read_heads(t_edmnext * self,
             if((f_start_beats > f_start_beat) && (f_start_beats < f_end_beat))
             {
                 float f_beats_offset = (f_start_beats - f_start_beat);
-                int f_sample_start = i_pydaw_beat_count_to_samples(
+                int f_sample_start = i_beat_count_to_samples(
                         f_beats_offset, f_tempo, f_sr);
 
                 for(f_i2 = 0; f_i2 < EN_AUDIO_ITEM_SEND_COUNT; ++f_i2)
@@ -787,20 +765,6 @@ void v_pydaw_set_control_from_cc(
         v_queue_osc_message("cc", f_track->osc_cursor_message);
     }
 }
-
-inline void v_buffer_mix(int a_count,
-    float ** __restrict__ a_buffer_src, float ** __restrict__ a_buffer_dest)
-{
-    register int f_i2 = 0;
-
-    while(f_i2 < a_count)
-    {
-        a_buffer_dest[0][f_i2] += a_buffer_src[0][f_i2];
-        a_buffer_dest[1][f_i2] += a_buffer_src[1][f_i2];
-        ++f_i2;
-    }
-}
-
 
 void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
         int a_sample_count, int a_playback_mode, t_en_thread_storage * a_ts)
@@ -1707,26 +1671,11 @@ inline void v_pydaw_finish_time_params(t_edmnext * self,
                 sprintf(musikernel->osc_cursor_message, "loop|%i|%i|%f|%ld",
                     self->current_region, self->current_bar, f_beat,
                     self->current_sample +
-                    i_pydaw_beat_count_to_samples(4.0 - f_beat, self->tempo,
+                    i_beat_count_to_samples(4.0 - f_beat, self->tempo,
                         musikernel->thread_storage[0].sample_rate));
                 v_queue_osc_message("mrec", musikernel->osc_cursor_message);
             }
         }
-    }
-}
-
-void v_wait_for_threads()
-{
-    int f_i = 1;
-
-    while(f_i < (musikernel->track_worker_thread_count))
-    {
-        if(musikernel->track_thread_is_finished[f_i] == 0)
-        {
-            continue;  //spin until it is finished...
-        }
-
-        ++f_i;
     }
 }
 
@@ -2222,58 +2171,6 @@ void v_pydaw_audio_items_run(t_edmnext * self,
     return;
 }
 
-void g_pynote_init(t_pydaw_seq_event * f_result, int a_note, int a_vel,
-        float a_start, float a_length)
-{
-    f_result->type = PYDAW_EVENT_NOTEON;
-    f_result->length = a_length;
-    f_result->note = a_note;
-    f_result->start = a_start;
-    f_result->velocity = a_vel;
-}
-
-t_pydaw_seq_event * g_pynote_get(int a_note, int a_vel,
-        float a_start, float a_length)
-{
-    t_pydaw_seq_event * f_result =
-        (t_pydaw_seq_event*)malloc(sizeof(t_pydaw_seq_event));
-    g_pynote_init(f_result, a_note, a_vel, a_start, a_length);
-    return f_result;
-}
-
-void g_pycc_init(t_pydaw_seq_event * f_result, int a_cc_num,
-    float a_cc_val, float a_start)
-{
-    f_result->type = PYDAW_EVENT_CONTROLLER;
-    f_result->param = a_cc_num;
-    f_result->value = a_cc_val;
-    f_result->start = a_start;
-}
-
-t_pydaw_seq_event * g_pycc_get(int a_cc_num, float a_cc_val, float a_start)
-{
-    t_pydaw_seq_event * f_result =
-        (t_pydaw_seq_event*)malloc(sizeof(t_pydaw_seq_event));
-    g_pycc_init(f_result, a_cc_num, a_cc_val, a_start);
-    return f_result;
-}
-
-void g_pypitchbend_init(t_pydaw_seq_event * f_result, float a_start,
-    float a_value)
-{
-    f_result->type = PYDAW_EVENT_PITCHBEND;
-    f_result->start = a_start;
-    f_result->value = a_value;
-}
-
-t_pydaw_seq_event * g_pypitchbend_get(float a_start, float a_value)
-{
-    t_pydaw_seq_event * f_result =
-        (t_pydaw_seq_event*)malloc(sizeof(t_pydaw_seq_event));
-    g_pypitchbend_init(f_result, a_start, a_value);
-    return f_result;
-}
-
 void g_pysong_get(t_edmnext* self, int a_lock)
 {
     t_pysong * f_result = (t_pysong*)malloc(sizeof(t_pysong));
@@ -2743,69 +2640,6 @@ t_edmnext * g_pydaw_data_get(t_midi_device_list * a_midi_devices)
 
     return f_result;
 }
-
-void v_pydaw_open_tracks()
-{
-    char f_file_name[1024];
-    sprintf(f_file_name, "%s/projects/edmnext/tracks.txt",
-        musikernel->project_folder);
-
-    if(i_pydaw_file_exists(f_file_name))
-    {
-        printf("v_pydaw_open_tracks:  File exists %s , loading\n", f_file_name);
-
-        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(f_file_name,
-                PYDAW_LARGE_STRING);
-
-        while(1)
-        {
-            v_iterate_2d_char_array(f_2d_array);
-
-            if(f_2d_array->eof)
-            {
-                break;
-            }
-
-            int f_track_index = atoi(f_2d_array->current_str);
-
-            v_iterate_2d_char_array(f_2d_array);
-            int f_solo = atoi(f_2d_array->current_str);
-            v_iterate_2d_char_array(f_2d_array);
-            int f_mute = atoi(f_2d_array->current_str);
-            v_iterate_2d_char_array(f_2d_array);  //ignored
-            v_iterate_2d_char_array(f_2d_array); //ignored
-
-            assert(f_track_index >= 0 && f_track_index < EN_TRACK_COUNT);
-            assert(f_solo == 0 || f_solo == 1);
-            assert(f_mute == 0 || f_mute == 1);
-
-            v_pydaw_open_track(pydaw_data->track_pool[f_track_index],
-                pydaw_data->tracks_folder, f_track_index);
-
-            pydaw_data->track_pool[f_track_index]->solo = f_solo;
-            pydaw_data->track_pool[f_track_index]->mute = f_mute;
-        }
-
-        g_free_2d_char_array(f_2d_array);
-    }
-    else   //ensure everything is closed...
-    {
-        int f_i = 0;
-
-        while(f_i < EN_TRACK_COUNT)
-        {
-            pydaw_data->track_pool[f_i]->solo = 0;
-            pydaw_data->track_pool[f_i]->mute = 0;
-            v_pydaw_open_track(pydaw_data->track_pool[f_i],
-                pydaw_data->tracks_folder, f_i);
-            ++f_i;
-        }
-    }
-
-    //open wavenext's plugins if they exist
-    v_pydaw_open_track(wavenext->track_pool[0], wavenext->tracks_folder, 0);
-}
-
 
 /* void v_set_playback_mode(t_pydaw_data * self,
  * int a_mode, //
