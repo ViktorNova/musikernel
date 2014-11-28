@@ -259,6 +259,29 @@ void g_musikernel_get(float a_sr)
     }
 }
 
+void v_pydaw_set_control_from_atm( t_pydaw_seq_event *event,
+        int a_plugin_uid, t_pytrack * f_track)
+{
+    if(!musikernel->is_offline_rendering)
+    {
+        sprintf(
+            f_track->osc_cursor_message, "%i|%i|%f",
+            a_plugin_uid, event->port, event->value);
+        v_queue_osc_message("pc", f_track->osc_cursor_message);
+    }
+}
+
+void v_pydaw_set_control_from_cc(t_pydaw_seq_event *event, t_pytrack * f_track)
+{
+    if(!musikernel->is_offline_rendering)
+    {
+        sprintf(
+            f_track->osc_cursor_message, "%i|%i|%i",
+            f_track->track_num, event->param, (int)(event->value));
+        v_queue_osc_message("cc", f_track->osc_cursor_message);
+    }
+}
+
 void v_queue_osc_message(
     char * __restrict__ a_key, char * __restrict__ a_val)
 {

@@ -724,35 +724,6 @@ void v_en_osc_send(t_osc_send_data * a_buffers)
 }
 
 
-void v_pydaw_set_control_from_atm(
-        t_pydaw_seq_event *event, t_edmnext * self,
-        int a_plugin_uid, int a_track_num)
-{
-    t_pytrack * f_track = self->track_pool[a_track_num];
-
-    if(!musikernel->is_offline_rendering)
-    {
-        sprintf(
-            f_track->osc_cursor_message, "%i|%i|%f",
-            a_plugin_uid, event->port, event->value);
-        v_queue_osc_message("pc", f_track->osc_cursor_message);
-    }
-}
-
-void v_pydaw_set_control_from_cc(
-        t_pydaw_seq_event *event, t_edmnext * self, int a_track_num)
-{
-    t_pytrack * f_track = self->track_pool[a_track_num];
-
-    if(!musikernel->is_offline_rendering)
-    {
-        sprintf(
-            f_track->osc_cursor_message, "%i|%i|%i",
-            a_track_num, event->param, (int)(event->value));
-        v_queue_osc_message("cc", f_track->osc_cursor_message);
-    }
-}
-
 void v_en_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
         int a_sample_count, int a_playback_mode, t_en_thread_storage * a_ts)
 {
@@ -1158,7 +1129,7 @@ inline void v_en_process_atm(
                     v_pydaw_ev_set_atm(f_buff_ev, f_point->port, f_val);
                     f_buff_ev->tick = f_note_sample_offset;
                     v_pydaw_set_control_from_atm(
-                        f_buff_ev, self, f_plugin->pool_uid, f_track_num);
+                        f_buff_ev, f_plugin->pool_uid, f_track);
                     ++f_plugin->atm_count;
                 }
                 ++f_plugin->atm_pos;
@@ -1340,7 +1311,7 @@ void v_en_process_midi(t_edmnext * self, int f_i, int sample_count,
                         v_pydaw_ev_set_controller(
                             f_buff_ev, 0, controller, f_event->value);
 
-                        v_pydaw_set_control_from_cc(f_buff_ev, self, f_i);
+                        v_pydaw_set_control_from_cc(f_buff_ev, f_track);
 
                         f_buff_ev->tick = f_note_sample_offset;
 
@@ -1538,8 +1509,7 @@ void v_en_process_external_midi(t_edmnext * self,
                 ((self->playback_cursor) +
                 ((((float)(events[f_i2].tick)) / ((float)sample_count))
                 * (self->playback_inc))) * 4.0f;*/
-            v_pydaw_set_control_from_cc(
-                &events[f_i2], self, a_track->track_num);
+            v_pydaw_set_control_from_cc(&events[f_i2], a_track);
 
             if(f_playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
