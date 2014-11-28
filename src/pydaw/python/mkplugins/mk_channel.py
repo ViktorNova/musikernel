@@ -89,7 +89,7 @@ class mkchnl_plugin_ui(pydaw_abstract_plugin_ui):
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
         self.widget.setWindowTitle(
-            "Fader - {}".format(self.track_name))
+            "MK Channel - {}".format(self.track_name))
 
     def widget_close_event(self, a_event):
         a_event.accept()
