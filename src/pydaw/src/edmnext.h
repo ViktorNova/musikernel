@@ -281,11 +281,7 @@ void v_set_loop_mode(t_edmnext * self, int a_mode);
 void v_set_playback_cursor(t_edmnext * self, int a_region,
                            int a_bar);
 int i_get_song_index_from_region_uid(t_edmnext*, int);
-void v_save_pysong_to_disk(t_edmnext * self);
-void v_save_pyitem_to_disk(t_edmnext * self, int a_index);
-void v_save_pyregion_to_disk(t_edmnext * self, int a_region_num);
 void v_pydaw_update_track_send(t_edmnext * self, int a_lock);
-
 void v_pydaw_process_external_midi(t_edmnext * pydaw_data,
         t_pytrack * a_track, int sample_count, int a_thread_num,
         t_en_thread_storage * a_ts);
