@@ -6898,6 +6898,7 @@ class automation_viewer(QtGui.QGraphicsView):
             AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS
         self.clear_drawn_items()
         if not ITEM_EDITOR.enabled:
+            self.setUpdatesEnabled(True)
             return
         f_item_index = 0
         f_pen = QtGui.QPen(pydaw_note_gradient, 2.0)
@@ -7710,7 +7711,6 @@ class item_list_editor:
             f_list[f_index].draw_item()
         PIANO_ROLL_EDITOR.click_enabled = True
         #^^^^huh?
-
 
     def show_not_enabled_warning(self):
         QtGui.QMessageBox.warning(
