@@ -188,6 +188,8 @@ double v_pydaw_print_benchmark(char * a_message,
         struct timespec a_start, struct timespec a_finish);
 void * v_pydaw_audio_recording_thread(void* a_arg);
 void v_queue_osc_message(char*, char*);
+void v_pydaw_set_plugin_index(t_pytrack*, int, int, int, int, int);
+void v_open_project(const char*, int);
 
 #ifdef	__cplusplus
 }
@@ -321,6 +323,63 @@ inline void v_pydaw_zero_buffer(float ** a_buffers, int a_count)
         a_buffers[0][f_i2] = 0.0f;
         a_buffers[1][f_i2] = 0.0f;
         ++f_i2;
+    }
+}
+
+void v_pydaw_open_track(t_pytrack * a_track, char * a_tracks_folder,
+        int a_index)
+{
+    char f_file_name[1024];
+
+    sprintf(f_file_name, "%s/%i", a_tracks_folder, a_index);
+
+    if(i_pydaw_file_exists(f_file_name))
+    {
+        printf("v_pydaw_open_tracks:  File exists %s , loading\n", f_file_name);
+
+        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(f_file_name,
+                PYDAW_LARGE_STRING);
+
+        while(1)
+        {
+            v_iterate_2d_char_array(f_2d_array);
+
+            if(f_2d_array->eof)
+            {
+                break;
+            }
+
+            if(f_2d_array->current_str[0] == 'p')  //plugin
+            {
+                v_iterate_2d_char_array(f_2d_array);
+                int f_index = atoi(f_2d_array->current_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_plugin_index = atoi(f_2d_array->current_str);
+                v_iterate_2d_char_array(f_2d_array);
+                int f_plugin_uid = atoi(f_2d_array->current_str);
+                v_iterate_2d_char_array(f_2d_array); //mute
+                v_iterate_2d_char_array(f_2d_array); //solo
+                v_iterate_2d_char_array(f_2d_array);
+                int f_power = atoi(f_2d_array->current_str);
+
+                v_pydaw_set_plugin_index(a_track, f_index, f_plugin_index,
+                    f_plugin_uid, f_power, 0);
+
+            }
+            else
+            {
+                printf("Invalid track identifier '%c'\n",
+                    f_2d_array->current_str[0]);
+                assert(0);
+            }
+        }
+
+        g_free_2d_char_array(f_2d_array);
+    }
+    else
+    {
+        printf("%s does not exist, not loading anything for track %i\n",
+            f_file_name, a_index);
     }
 }
 
