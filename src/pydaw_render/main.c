@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     }
 
     musikernel->sample_count = f_buffer_size;
-    v_pydaw_offline_render_prep(edmnext);
+    v_en_offline_render_prep(edmnext);
 
     /*
     v_pydaw_set_midi_device(edmnext, 1, 0, 5);
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
     }
     */
 
-    v_pydaw_offline_render(edmnext, f_start_region, f_start_bar,
+    v_en_offline_render(edmnext, f_start_region, f_start_bar,
             f_end_region, f_end_bar, f_output_file, 0, f_create_file);
 
     /*

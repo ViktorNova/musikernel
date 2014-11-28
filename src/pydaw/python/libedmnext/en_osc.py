@@ -88,9 +88,6 @@ class EdmNextOsc(libmk.AbstractIPC):
     def pydaw_reload_audio_items(self, a_region_uid):
         self.send_configure("ai", str(a_region_uid))
 
-    def pydaw_update_audio_inputs(self):
-        self.send_configure("ua", "")
-
     def pydaw_set_overdub_mode(self, a_is_on):
         """ a_is_on should be a bool """
         self.send_configure("od", bool_to_int(a_is_on))

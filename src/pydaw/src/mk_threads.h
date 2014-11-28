@@ -83,7 +83,7 @@ void v_pydaw_activate(int a_thread_count,
 {
     /* Instantiate hosts */
     g_musikernel_get(a_sr);
-    g_pydaw_instantiate(a_midi_devices);
+    g_en_instantiate(a_midi_devices);
     g_wavenext_get();
 
     v_open_project(a_project_path, 1);
@@ -307,7 +307,7 @@ void * v_pydaw_worker_thread(void* a_arg)
             break;
         }
 
-        v_pydaw_process(f_args);
+        v_en_process(f_args);
     }
 
     return (void*)1;
