@@ -189,7 +189,7 @@ double v_pydaw_print_benchmark(char * a_message,
 void * v_pydaw_audio_recording_thread(void* a_arg);
 void v_queue_osc_message(char*, char*);
 void v_pydaw_set_plugin_index(t_pytrack*, int, int, int, int, int);
-void v_open_project(const char*, int);
+
 
 #ifdef	__cplusplus
 }

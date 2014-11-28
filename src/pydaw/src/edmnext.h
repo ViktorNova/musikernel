@@ -2233,6 +2233,170 @@ void g_pysong_get(t_edmnext* self, int a_lock)
 }
 
 
+void v_en_open_tracks()
+{
+    char f_file_name[1024];
+    sprintf(f_file_name, "%s/projects/edmnext/tracks.txt",
+        musikernel->project_folder);
+
+    if(i_pydaw_file_exists(f_file_name))
+    {
+        printf("v_pydaw_open_tracks:  File exists %s , loading\n", f_file_name);
+
+        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(f_file_name,
+                PYDAW_LARGE_STRING);
+
+        while(1)
+        {
+            v_iterate_2d_char_array(f_2d_array);
+
+            if(f_2d_array->eof)
+            {
+                break;
+            }
+
+            int f_track_index = atoi(f_2d_array->current_str);
+
+            v_iterate_2d_char_array(f_2d_array);
+            int f_solo = atoi(f_2d_array->current_str);
+            v_iterate_2d_char_array(f_2d_array);
+            int f_mute = atoi(f_2d_array->current_str);
+            v_iterate_2d_char_array(f_2d_array);  //ignored
+            v_iterate_2d_char_array(f_2d_array); //ignored
+
+            assert(f_track_index >= 0 && f_track_index < EN_TRACK_COUNT);
+            assert(f_solo == 0 || f_solo == 1);
+            assert(f_mute == 0 || f_mute == 1);
+
+            v_pydaw_open_track(edmnext->track_pool[f_track_index],
+                edmnext->tracks_folder, f_track_index);
+
+            edmnext->track_pool[f_track_index]->solo = f_solo;
+            edmnext->track_pool[f_track_index]->mute = f_mute;
+        }
+
+        g_free_2d_char_array(f_2d_array);
+    }
+    else   //ensure everything is closed...
+    {
+        int f_i = 0;
+
+        while(f_i < EN_TRACK_COUNT)
+        {
+            edmnext->track_pool[f_i]->solo = 0;
+            edmnext->track_pool[f_i]->mute = 0;
+            v_pydaw_open_track(edmnext->track_pool[f_i],
+                edmnext->tracks_folder, f_i);
+            ++f_i;
+        }
+    }
+}
+
+
+void v_en_open_project(int a_first_load)
+{
+    sprintf(edmnext->item_folder, "%s/projects/edmnext/items/",
+        musikernel->project_folder);
+    sprintf(edmnext->region_folder, "%s/projects/edmnext/regions/",
+        musikernel->project_folder);
+    sprintf(edmnext->region_audio_folder, "%s/projects/edmnext/regions_audio/",
+        musikernel->project_folder);
+    sprintf(edmnext->region_atm_folder, "%s/projects/edmnext/regions_atm/",
+        musikernel->project_folder);
+    sprintf(edmnext->per_audio_item_fx_folder,
+        "%s/projects/edmnext/audio_per_item_fx/", musikernel->project_folder);
+    sprintf(edmnext->tracks_folder, "%s/projects/edmnext/tracks",
+        musikernel->project_folder);
+
+    int f_i = 0;
+
+    while(f_i < EN_MAX_ITEM_COUNT)
+    {
+        if(edmnext->item_pool[f_i])
+        {
+            free(edmnext->item_pool[f_i]);
+            edmnext->item_pool[f_i] = 0;
+        }
+        ++f_i;
+    }
+
+    char f_song_file[1024];
+    sprintf(f_song_file,
+        "%s/projects/edmnext/song.txt", musikernel->project_folder);
+
+    struct stat f_proj_stat;
+    stat((musikernel->project_folder), &f_proj_stat);
+    struct stat f_item_stat;
+    stat((edmnext->item_folder), &f_item_stat);
+    struct stat f_reg_stat;
+    stat((edmnext->region_folder), &f_reg_stat);
+    struct stat f_song_file_stat;
+    stat(f_song_file, &f_song_file_stat);
+
+    //TODO:  This should be moved to a separate function
+    char f_transport_file[1024];
+    sprintf(f_transport_file, "%s/projects/edmnext/transport.txt",
+            musikernel->project_folder);
+
+    if(i_pydaw_file_exists(f_transport_file))
+    {
+        printf("v_open_project:  Found transport file, setting tempo\n");
+
+        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(
+                f_transport_file, PYDAW_LARGE_STRING);
+        v_iterate_2d_char_array(f_2d_array);
+        float f_tempo = atof(f_2d_array->current_str);
+
+        assert(f_tempo > 30.0f && f_tempo < 300.0f);
+        v_set_tempo(edmnext, f_tempo);
+        g_free_2d_char_array(f_2d_array);
+    }
+    else  //No transport file, set default tempo
+    {
+        printf("No transport file found, defaulting to 128.0 BPM\n");
+        v_set_tempo(edmnext, 128.0f);
+    }
+
+    if(S_ISDIR(f_proj_stat.st_mode) &&
+        S_ISDIR(f_item_stat.st_mode) &&
+        S_ISDIR(f_reg_stat.st_mode) &&
+        S_ISREG(f_song_file_stat.st_mode))
+    {
+        t_dir_list * f_item_dir_list =
+                g_get_dir_list(edmnext->item_folder);
+        f_i = 0;
+
+        while(f_i < f_item_dir_list->dir_count)
+        {
+            g_pyitem_get(edmnext, atoi(f_item_dir_list->dir_list[f_i]));
+            ++f_i;
+        }
+
+        g_pysong_get(edmnext, 0);
+
+        if(a_first_load)
+        {
+            v_en_open_tracks();
+        }
+    }
+    else
+    {
+        printf("Song file and project directory structure not found, not "
+                "loading project.  This is to be expected if launching PyDAW "
+                "for the first time\n");
+        //Loads empty...  TODO:  Make this a separate function for getting an
+        //empty pysong or loading a file into one...
+        g_pysong_get(edmnext, 0);
+    }
+
+    v_pydaw_update_track_send(edmnext, 0);
+
+    //v_pydaw_update_audio_inputs(pydaw_data);
+
+    v_pydaw_set_is_soloed(edmnext);
+}
+
+
 int i_get_song_index_from_region_uid(t_edmnext* self, int a_uid)
 {
     int f_i = 0;
@@ -3497,7 +3661,7 @@ void v_en_configure(t_edmnext* self,
     {
         t_key_value_pair * f_kvp = g_kvp_get(a_value);
         int f_first_open = atoi(f_kvp->key);
-        v_open_project(f_kvp->value, f_first_open);
+        v_en_open_project(f_first_open);
     }
     else if(!strcmp(a_key, EN_CONFIGURE_KEY_TEMPO)) //Change tempo
     {

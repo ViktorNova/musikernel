@@ -263,6 +263,16 @@ void v_pydaw_set_ab_file(t_wavenext * self, const char * a_file)
     }
 }
 
+void v_wn_open_tracks()
+{
+    v_pydaw_open_track(wavenext->track_pool[0], wavenext->tracks_folder, 0);
+}
+
+void v_wn_open_project()
+{
+    sprintf(wavenext->tracks_folder, "%s/projects/wavenext/tracks",
+        musikernel->project_folder);
+}
 
 void v_pydaw_set_wave_editor_item(t_wavenext * self,
         const char * a_val)
