@@ -15,15 +15,6 @@ GNU General Public License for more details.
 #ifndef EDMNEXT_H
 #define	EDMNEXT_H
 
-//Required for sched.h
-#ifndef __USE_GNU
-#define __USE_GNU
-#endif
-
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
 #define EN_CONFIGURE_KEY_SS "ss"
 #define EN_CONFIGURE_KEY_OS "os"
 #define EN_CONFIGURE_KEY_SI "si"
@@ -34,45 +25,22 @@ GNU General Public License for more details.
 #define EN_CONFIGURE_KEY_TEMPO "tempo"
 #define EN_CONFIGURE_KEY_SOLO "solo"
 #define EN_CONFIGURE_KEY_MUTE "mute"
-
 #define EN_CONFIGURE_KEY_AUDIO_ITEM_LOAD_ALL "ai"
-
 #define EN_CONFIGURE_KEY_UPDATE_AUDIO_INPUTS "ua"
 #define EN_CONFIGURE_KEY_SET_OVERDUB_MODE "od"
-
-
 #define EN_CONFIGURE_KEY_PANIC "panic"
 //Update a single control for a per-audio-item-fx
 #define EN_CONFIGURE_KEY_PER_AUDIO_ITEM_FX "paif"
 //Reload entire region for per-audio-item-fx
 #define EN_CONFIGURE_KEY_PER_AUDIO_ITEM_FX_REGION "par"
 #define EN_CONFIGURE_KEY_GLUE_AUDIO_ITEMS "ga"
-
 #define EN_CONFIGURE_KEY_MIDI_DEVICE "md"
-
 #define EN_CONFIGURE_KEY_SET_POS "pos"
-
 #define EN_CONFIGURE_KEY_PLUGIN_INDEX "pi"
 #define EN_CONFIGURE_KEY_UPDATE_SEND "ts"
 
 #define PYDAW_LOOP_MODE_OFF 0
 #define PYDAW_LOOP_MODE_REGION 1
-
-#define PYDAW_PLAYBACK_MODE_OFF 0
-#define PYDAW_PLAYBACK_MODE_PLAY 1
-#define PYDAW_PLAYBACK_MODE_REC 2
-
-#define FADE_STATE_OFF 0
-#define FADE_STATE_FADING 1
-#define FADE_STATE_FADED 2
-#define FADE_STATE_RETURNING 3
-
-#define STATUS_NOT_PROCESSED 0
-#define STATUS_PROCESSING 1
-#define STATUS_PROCESSED 2
-
-#define MAX_ROUTING_COUNT 4
-#define MAX_PLUGIN_TOTAL_COUNT (MAX_PLUGIN_COUNT + MAX_ROUTING_COUNT)
 
 #define PYDAW_MAX_ITEM_COUNT 5000
 #define PYDAW_MAX_REGION_COUNT 300
@@ -80,10 +48,7 @@ GNU General Public License for more details.
 
 #define EN_TRACK_COUNT 32
 
-#define PYDAW_MAX_EVENT_BUFFER_SIZE 512  //This could probably be made smaller
 #define PYDAW_MAX_REGION_SIZE 64
-#define PYDAW_MIDI_RECORD_BUFFER_LENGTH 600 //recording buffer for MIDI, in bars
-#define PYDAW_MAX_WORK_ITEMS_PER_THREAD 128
 
 
 #include <string.h>
@@ -124,7 +89,7 @@ typedef struct
 
 typedef struct
 {
-    t_pydaw_midi_routing routes[32];
+    t_pydaw_midi_routing routes[EN_TRACK_COUNT];
 }t_pydaw_midi_routing_list;
 
 typedef struct
