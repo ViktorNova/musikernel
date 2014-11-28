@@ -76,8 +76,6 @@ class WaveNextOsc(libmk.AbstractIPC):
     def pydaw_panic(self):
         self.send_configure("panic", "")
 
-    def pydaw_reload_wavpool_item(self, a_uid):
-        self.send_configure("wr", str(a_uid))
 
 wavenext_folder_tracks = "projects/wavenext/tracks"
 pydaw_file_wave_editor_bookmarks = "projects/edmnext/wave_editor_bookmarks.txt"

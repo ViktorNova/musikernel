@@ -92,12 +92,6 @@ class EdmNextOsc(libmk.AbstractIPC):
         """ a_is_on should be a bool """
         self.send_configure("od", bool_to_int(a_is_on))
 
-    def pydaw_ab_open(self, a_file):
-        self.send_configure("abo", str(a_file))
-
-    def pydaw_we_set(self, a_val):
-        self.send_configure("we", str(a_val))
-
     def pydaw_panic(self):
         self.send_configure("panic", "")
 
@@ -124,9 +118,6 @@ class EdmNextOsc(libmk.AbstractIPC):
         self.send_configure(
             "md", "|".join(str(x) for x in
             (bool_to_int(a_is_on), a_device_num, a_track_num)))
-
-    def pydaw_reload_wavpool_item(self, a_uid):
-        self.send_configure("wr", str(a_uid))
 
     def pydaw_set_pos(self, a_region, a_bar):
         self.send_configure("pos", "|".join(str(x) for x in (a_region, a_bar)))

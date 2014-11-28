@@ -86,6 +86,9 @@ class MkIpc(libmk.AbstractIPC):
     def pydaw_set_host(self, a_index):
         self.send_configure("abs", str(a_index))
 
+    def pydaw_reload_wavpool_item(self, a_uid):
+        self.send_configure("wr", str(a_uid))
+
 
 class transport_widget:
     def __init__(self):
