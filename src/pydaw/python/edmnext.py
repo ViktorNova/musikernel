@@ -26,6 +26,7 @@ from libpydaw.pydaw_util import *
 from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
 import libpydaw.strings
+import libedmnext.strings
 import libmk
 from libmk import mk_project
 from libedmnext import *
@@ -361,7 +362,7 @@ class song_editor:
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.table_widget.setToolTip(libpydaw.strings.song_editor)
+            self.table_widget.setToolTip(libedmnext.strings.song_editor)
         else:
             self.table_widget.setToolTip("")
 
@@ -1576,7 +1577,7 @@ class region_editor(QtGui.QGraphicsView):
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.setToolTip(libpydaw.strings.region_list_editor)
+            self.setToolTip(libedmnext.strings.region_list_editor)
         else:
             self.setToolTip("")
 
@@ -6666,7 +6667,7 @@ class automation_viewer(QtGui.QGraphicsView):
     def set_tooltips(self, a_enabled=False):
         if a_enabled:
             if self.is_cc:
-                f_start = _("Select the plugin/control you wish to "
+                f_start = _("Select the CC you wish to "
                     "automate using the comboboxes below\n")
             else:
                 f_start = ""
@@ -8739,7 +8740,7 @@ class transport_widget(libmk.AbstractTransport):
                 _("Use this to toggle between normal playback "
                 "and looping a region.\nYou can toggle between "
                 "settings with CTRL+L"))
-            self.group_box.setToolTip(libpydaw.strings.transport)
+            self.group_box.setToolTip(libedmnext.strings.transport)
         else:
             self.overdub_checkbox.setToolTip("")
             self.follow_checkbox.setToolTip("")
