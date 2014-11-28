@@ -140,6 +140,8 @@ __attribute__((optimize("-O0"))) void g_pydaw_plugin_init(
 
     f_result->descriptor = f_result->descfn(0);
 
+    assert(f_result->descriptor);
+
     f_result->PYFX_handle = f_result->descriptor->instantiate(
             f_result->descriptor, a_sample_rate,
             a_host_wavpool_func, a_plugin_uid, a_queue_func);

@@ -7907,77 +7907,6 @@ def global_open_mixer():
         range(len(TRACK_NAMES)), TRACK_NAMES)})
 
 
-class track_send:
-    def __init__(self, a_index, a_track_num, a_layout, a_save_callback):
-        self.save_callback = a_save_callback
-        self.suppress_osc = True
-        self.track_num = a_track_num
-        self.index = int(a_index)
-        self.bus_combobox = QtGui.QComboBox()
-        self.bus_combobox.setMinimumWidth(180)
-        self.bus_combobox.wheelEvent = self.wheel_event
-        self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
-        self.sidechain_checkbox = QtGui.QCheckBox()
-        self.sidechain_checkbox.clicked.connect(self.sidechain_toggled)
-        self.update_names()
-        a_layout.addWidget(self.bus_combobox, a_index + 1, 20)
-        a_layout.addWidget(self.sidechain_checkbox, a_index + 1, 27)
-        self.last_value = 0
-        self.plugin_uid = -1
-        self.suppress_osc = False
-
-    def on_bus_changed(self, a_value=0):
-        self.update_engine()
-
-    def sidechain_toggled(self, a_val=None):
-        self.update_engine(False)
-
-    def update_engine(self, a_check=True):
-        if not self.suppress_osc:
-            f_graph = PROJECT.get_routing_graph()
-            if not self.track_num in f_graph.graph:
-                f_graph.graph[self.track_num] = {}
-            if a_check:
-                f_feedback = f_graph.check_for_feedback(
-                    self.bus_combobox.currentIndex() - 1,
-                    self.track_num, self.index)
-                if f_feedback:
-                    QtGui.QMessageBox.warning(
-                        self.bus_combobox, _("Error"),
-                        _("Can't set the route, it would create "
-                        "a feedback loop"))
-                    self.suppress_osc = True
-                    self.bus_combobox.setCurrentIndex(self.last_value)
-                    self.suppress_osc = False
-                    return
-            f_graph.graph[self.track_num][self.index] = self.get_value()
-            PROJECT.save_routing_graph(f_graph)
-            self.last_value = self.bus_combobox.currentIndex()
-
-    def wheel_event(self, a_event=None):
-        pass
-
-    def get_value(self):
-        return pydaw_track_send(
-            self.track_num, self.index,
-            self.bus_combobox.currentIndex() - 1,
-            1 if self.sidechain_checkbox.isChecked() else 0)
-
-    def set_value(self, a_val):
-        self.suppress_osc = True
-        self.bus_combobox.setCurrentIndex(a_val.output + 1)
-        self.sidechain_checkbox.setChecked(
-            True if a_val.sidechain == 1 else False)
-        self.suppress_osc = False
-
-    def update_names(self):
-        f_index = self.bus_combobox.currentIndex()
-        self.suppress_osc = True
-        self.bus_combobox.clear()
-        self.bus_combobox.addItems(["None"] + TRACK_NAMES)
-        self.bus_combobox.setCurrentIndex(f_index)
-        self.suppress_osc = False
-
 class seq_track:
     def __init__(self, a_track_num, a_track_text=_("track")):
         self.suppress_osc = True
@@ -8041,7 +7970,7 @@ class seq_track:
         if not self.menu_created:
             self.create_menu()
         for f_send in self.sends:
-            f_send.update_names()
+            f_send.update_names(TRACK_NAMES)
         self.open_plugins()
         self.update_in_use_combobox()
 
@@ -8074,7 +8003,8 @@ class seq_track:
             for f_i in range(4):
                 f_send = track_send(
                     f_i, self.track_number, self.menu_gridlayout,
-                    self.save_callback)
+                    self.save_callback,PROJECT.get_routing_graph,
+                    PROJECT.save_routing_graph, TRACK_NAMES)
                 self.sends.append(f_send)
                 f_plugin = plugin_settings_mixer(
                     PROJECT.en_osc.pydaw_set_plugin,

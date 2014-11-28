@@ -971,10 +971,10 @@ __attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
 
         if(!f_plugin->active)
         {
-            g_pydaw_plugin_init(f_plugin,
-                    (int)(musikernel->thread_storage[0].sample_rate),
-                    a_plugin_index, g_pydaw_wavpool_item_get,
-                    a_plugin_uid, v_queue_osc_message);
+            g_pydaw_plugin_init(
+                f_plugin, (int)(musikernel->thread_storage[0].sample_rate),
+                a_plugin_index, g_pydaw_wavpool_item_get,
+                a_plugin_uid, v_queue_osc_message);
 
             int f_i = 0;
             while(f_i < f_track->channels)

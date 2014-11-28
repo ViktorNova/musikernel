@@ -272,6 +272,7 @@ void v_wn_open_project()
 {
     sprintf(wavenext->tracks_folder, "%s/projects/wavenext/tracks",
         musikernel->project_folder);
+    v_wn_open_tracks();
 }
 
 void v_pydaw_set_wave_editor_item(t_wavenext * self,

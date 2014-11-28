@@ -512,6 +512,297 @@ class MkProject(libmk.AbstractProject):
             print("{} does not exist, not copying".format(f_old_path))
 
 
+class pydaw_abstract_midi_event:
+    """ Allows inheriting classes to be sorted by .start variable
+    , which is left to the iheriter's to implement"""
+    def __lt__(self, other):
+        return self.start < other.start
+
+class pydaw_note(pydaw_abstract_midi_event):
+    def __init__(self, a_start, a_length, a_note_number, a_velocity):
+        self.start = float(a_start)
+        self.length = float(a_length)
+        self.velocity = int(a_velocity)
+        self.note_num = int(a_note_number)
+        self.is_selected = False
+        self.set_end()
+
+    def __eq__(self, other):
+        return(
+            (self.start == other.start) and \
+            (self.note_num == other.note_num) and \
+            (self.length == other.length) and \
+            (self.velocity == other.velocity))
+
+    def set_start(self, a_start):
+        self.start = float(a_start)
+        self.set_end()
+
+    def set_length(self, a_length):
+        self.length = float(a_length)
+        self.set_end()
+
+    def set_end(self):
+        self.end = self.length + self.start
+
+    def overlaps(self, other):
+        if self.note_num == other.note_num:
+            if other.start >= self.start and other.start < self.end:
+                return True
+            elif other.start < self.start and other.end > self.start:
+                return True
+        return False
+
+    @staticmethod
+    def from_arr(a_arr):
+        f_result = pydaw_note(*a_arr)
+        return f_result
+
+    @staticmethod
+    def from_str(a_str):
+        f_arr = a_str.split("|")
+        return pydaw_note.from_arr(f_arr[1:])
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("n", round(self.start, 6), round(self.length, 6),
+             self.note_num, self.velocity))
+
+
+class pydaw_cc(pydaw_abstract_midi_event):
+    def __init__(self, a_start, a_cc_num, a_cc_val):
+        self.start = round(float(a_start), 6)
+        self.cc_num = int(a_cc_num)
+        self.cc_val = round(float(a_cc_val), 6)
+
+    def __eq__(self, other):
+        return ((self.start == other.start) and
+        (self.cc_num == other.cc_num) and (self.cc_val == other.cc_val))
+
+    def set_val(self, a_val):
+        self.cc_val = pydaw_clip_value(float(a_val), 0.0, 127.0, True)
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("c", round(self.start, 6), self.cc_num, round(self.cc_val, 6)))
+
+    @staticmethod
+    def from_arr(a_arr):
+        f_result = pydaw_cc(*a_arr)
+        return f_result
+
+    @staticmethod
+    def from_str(a_str):
+        f_arr = a_str.split("|")
+        return pydaw_cc.from_arr(f_arr[1:])
+
+    def clone(self):
+        return pydaw_cc.from_str(str(self))
+
+
+class pydaw_pitchbend(pydaw_abstract_midi_event):
+    def __init__(self, a_start, a_pb_val):
+        self.start = round(float(a_start), 6)
+        self.pb_val = round(float(a_pb_val), 6)
+
+    def __eq__(self, other):
+        #TODO:  get rid of the pb_val comparison?
+        return ((self.start == other.start) and (self.pb_val == other.pb_val))
+
+    def set_val(self, a_val):
+        self.pb_val = pydaw_clip_value(float(a_val), -1.0, 1.0, True)
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("p", self.start, round(self.pb_val, 6)))
+
+    @staticmethod
+    def from_arr(a_arr):
+        f_result = pydaw_pitchbend(*a_arr)
+        return f_result
+
+    @staticmethod
+    def from_str(a_str):
+        f_arr = a_str.split("|")
+        return pydaw_pitchbend.from_arr(f_arr[1:])
+
+    def clone(self):
+        return pydaw_pitchbend.from_str(str(self))
+
+class pydaw_tracks:
+    def __init__(self):
+        self.tracks = {}
+
+    def add_track(self, a_index, a_track):
+        self.tracks[int(a_index)] = a_track
+
+    def get_names(self):
+        return [self.tracks[k].name for k in sorted(self.tracks)]
+
+    def __str__(self):
+        f_result = "".join(str(self.tracks[k]) for k in sorted(self.tracks))
+        f_result += pydaw_terminating_char
+        return f_result
+
+    @staticmethod
+    def from_str(a_str):
+        f_result = pydaw_tracks()
+        f_arr = a_str.split("\n")
+        for f_line in f_arr:
+            if not f_line == pydaw_terminating_char:
+                f_line_arr = f_line.split("|")
+                f_result.add_track(f_line_arr[0], pydaw_track(*f_line_arr))
+        return f_result
+
+class pydaw_track:
+    def __init__(self, a_track_uid=-1, a_solo=False, a_mute=False,
+                 a_track_pos=-1, a_name="track"):
+        self.track_uid = int(a_track_uid)
+        self.name = str(a_name)
+        self.solo = int_to_bool(a_solo)
+        self.mute = int_to_bool(a_mute)
+        self.set_track_pos(a_track_pos)
+
+    # TODO:  WTH does this do???  Was this supposed to be "show at pos?"
+    def set_track_pos(self, a_track_pos):
+        self.track_pos = int(a_track_pos)
+        assert(self.track_pos >= 0)
+
+    def __str__(self):
+        return "{}\n".format("|".join(map(proj_file_str,
+            (self.track_uid, bool_to_int(self.solo), bool_to_int(self.mute),
+            self.track_pos, self.name))))
+
+
+class pydaw_routing_graph:
+    def __init__(self):
+        self.graph = {}
+
+    def set_node(self, a_index, a_dict):
+        self.graph[int(a_index)] = a_dict
+
+    def find_all_paths(self, start, end=0, path=[]):
+        path = path + [start]
+        if start == end:
+            return [path]
+        if not start in self.graph:
+            return []
+        paths = []
+        for node in (x.output for x in sorted(self.graph[start].values())):
+            if node not in path:
+                newpaths = self.find_all_paths(node, end, path)
+                for newpath in newpaths:
+                    paths.append(newpath)
+        return paths
+
+    def check_for_feedback(self, a_new, a_old, a_index=None):
+        if a_index:
+            if a_old in self.graph and a_index in self.graph[a_old]:
+                self.graph[a_old].pop(a_index)
+        return self.find_all_paths(a_old, a_new)
+
+    def toggle(self, a_src, a_dest, a_sidechain=0):
+        f_connected = a_src in self.graph and a_dest in [
+            x.output for x in self.graph[a_src].values()
+            if x.sidechain == a_sidechain]
+        if f_connected:
+            for k, v in self.graph[a_src].copy().items():
+                if v.output == a_dest and v.sidechain == a_sidechain:
+                    self.graph[a_src].pop(k)
+        else:
+            if self.check_for_feedback(a_src, a_dest):
+                return _("Can't make connection, it would create "
+                    "a feedback loop")
+            if a_src in self.graph and len(self.graph[a_src]) >= 4:
+                return _("All available sends already in use for "
+                    "track {}".format(a_src))
+            if not a_src in self.graph:
+                f_i = 0
+                self.graph[a_src] = {}
+            else:
+                for f_i in range(4):
+                    if f_i not in self.graph[a_src]:
+                        break
+            f_result = pydaw_track_send(a_src, f_i, a_dest, a_sidechain)
+            self.graph[a_src][f_i] = f_result
+            self.set_node(a_src, self.graph[a_src])
+        return None
+
+    def set_default_output(self, a_track_num, a_output=0):
+        assert(a_track_num != a_output)
+        assert(a_track_num != 0)
+        if not a_track_num in self.graph or \
+        not self.graph[a_track_num]:
+            f_send = pydaw_track_send(a_track_num, 0, a_output, 0)
+            self.set_node(a_track_num, {0:f_send})
+            return True
+        else:
+            return False
+
+    def sort_all_paths(self):
+        f_result = {}
+        for f_path in self.graph:
+            f_paths = self.find_all_paths(f_path, 0)
+            if f_paths:
+                f_result[f_path] = max(len(x) for x in f_paths)
+            else:
+                f_result[f_path] = 0
+        return sorted(f_result, key=lambda x: f_result[x], reverse=True)
+
+    def __str__(self):
+        f_result = []
+        f_sorted = self.sort_all_paths()
+        f_result.append("|".join(str(x) for x in ("c", len(f_sorted))))
+        for f_index, f_i in zip(f_sorted, range(len(f_sorted))):
+            f_result.append("|".join(str(x) for x in ("t", f_index, f_i)))
+        for k in sorted(self.graph):
+            for v in sorted(self.graph[k].values()):
+                f_result.append(str(v))
+        f_result.append("\\")
+        return "\n".join(f_result)
+
+    @staticmethod
+    def from_str(a_str):
+        f_str = str(a_str)
+        f_result = pydaw_routing_graph()
+        f_tracks = {}
+        for f_line in f_str.split("\n"):
+            if f_line == "\\":
+                break
+            f_line_arr = f_line.split("|")
+            f_uid = int(f_line_arr[1])
+            if f_line_arr[0] == "t":
+                assert(f_uid not in f_tracks)
+                f_tracks[f_uid] = {}
+            elif f_line_arr[0] == "s":
+                f_send = pydaw_track_send(*f_line_arr[1:])
+                f_tracks[f_uid][f_send.index] = f_send
+            elif f_line_arr[0] == "c":
+                pass
+            else:
+                assert(False)
+        for k, v in f_tracks.items():
+            f_result.set_node(k, v)
+        return f_result
+
+
+class pydaw_track_send:
+    def __init__(self, a_track_num, a_index, a_output, a_sidechain):
+        self.track_num = int(a_track_num)
+        self.index = int(a_index)
+        self.output = int(a_output)
+        self.sidechain = int(a_sidechain)
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("s", self.track_num, self.index, self.output, self.sidechain))
+
+    def __lt__(self, other):
+        return self.index < other.index
+
+
+
+
 #From old sample_graph..py
 pydaw_audio_item_scene_height = 1200.0
 pydaw_audio_item_scene_width = 6000.0
