@@ -81,7 +81,7 @@ def global_get_audio_file_from_clipboard():
     return None
 
 
-def pydaw_set_tooltips_enabled(a_enabled):
+def set_tooltips_enabled(a_enabled):
     """ Set extensive tooltips as an alternative to
         maintaining a separate user manual
     """
@@ -9187,9 +9187,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         QtGui.QScrollArea.scrollContentsBy(self.midi_scroll_area, x, y)
         REGION_EDITOR.set_header_pos()
 
-    def set_tooltips_enabled(self, a_val):
-        pydaw_set_tooltips_enabled(a_val)
-
     def configure_callback(self, path, arr):
         f_pc_dict = {}
         f_ui_dict = {}
@@ -9415,5 +9412,5 @@ PIANO_ROLL_EDITOR.verticalScrollBar().setSliderPosition(
 PIANO_ROLL_EDITOR_WIDGET.snap_combobox.setCurrentIndex(4)
 
 if libmk.TOOLTIPS_ENABLED:
-    pydaw_set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
+    set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
 

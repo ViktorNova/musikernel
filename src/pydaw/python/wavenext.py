@@ -14,7 +14,6 @@ GNU General Public License for more details.
 """
 
 import os
-import time
 
 from PyQt4 import QtGui, QtCore
 from libpydaw import *
@@ -27,13 +26,13 @@ import libpydaw.strings
 import libmk
 
 
-def pydaw_set_tooltips_enabled(a_enabled):
+def set_tooltips_enabled(a_enabled):
     """ Set extensive tooltips as an alternative to
         maintaining a separate user manual
     """
     libmk.TOOLTIPS_ENABLED = a_enabled
 
-    f_list = [MAIN_WINDOW, WAVE_EDITOR, TRANSPORT,]
+    f_list = [WAVE_EDITOR, TRANSPORT,]
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
 
@@ -1254,5 +1253,5 @@ TRANSPORT = transport_widget()
 MAIN_WINDOW = pydaw_main_window()
 
 if libmk.TOOLTIPS_ENABLED:
-    pydaw_set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
+    set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
 

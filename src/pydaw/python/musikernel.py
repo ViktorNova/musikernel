@@ -978,8 +978,8 @@ class MkMainWindow(QtGui.QMainWindow):
         self.current_window.on_redo()
 
     def set_tooltips_enabled(self):
-        for f_window in self.host_windows:
-            f_window.set_tooltips_enabled(self.tooltips_action.isChecked())
+        for f_module in self.host_modules:
+            f_module.set_tooltips_enabled(self.tooltips_action.isChecked())
 
 def final_gc():
     """ Brute-force garbage collect all possible objects to
