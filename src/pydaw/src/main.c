@@ -153,7 +153,7 @@ inline void v_pydaw_run(float ** buffers, int sample_count)
     {
         musikernel->input_buffers_active = 1;
 
-        v_pydaw_run_main_loop(pydaw_data, sample_count, buffers, NULL);
+        v_pydaw_run_main_loop(edmnext, sample_count, buffers, NULL);
     }
     else
     {
@@ -178,10 +178,10 @@ inline void v_pydaw_run_main_loop(t_edmnext * self, int sample_count,
     if(musikernel->is_ab_ing == 0)
     {
         long f_next_current_sample =
-            ((pydaw_data->current_sample) + sample_count);
+            ((edmnext->current_sample) + sample_count);
         v_pydaw_run_engine(self, sample_count, f_next_current_sample,
             a_buffers, a_input_buffers);
-        pydaw_data->current_sample = f_next_current_sample;
+        edmnext->current_sample = f_next_current_sample;
     }
     else
     {
@@ -947,7 +947,7 @@ int osc_message_handler(const char *path, const char *types, lo_arg **argv,
 
     if(!strcmp(path, "/musikernel/edmnext") && !strcmp(types, "ss"))
     {
-        v_en_configure(pydaw_data, key, value);
+        v_en_configure(edmnext, key, value);
         return 0;
     }
     if(!strcmp(path, "/musikernel/wavenext") && !strcmp(types, "ss"))

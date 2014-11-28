@@ -325,13 +325,13 @@ void v_pydaw_set_midi_device(t_edmnext*, int, int, int);
 }
 #endif
 
-t_edmnext * pydaw_data;
+t_edmnext * edmnext;
 
 
 
 void g_pydaw_instantiate(t_midi_device_list * a_midi_devices)
 {
-    pydaw_data = g_pydaw_data_get(a_midi_devices);
+    edmnext = g_pydaw_data_get(a_midi_devices);
 }
 
 void v_pydaw_reset_audio_item_read_heads(t_edmnext * self,
@@ -655,13 +655,13 @@ void v_en_osc_send(t_osc_send_data * a_buffers)
     a_buffers->f_tmp1[0] = '\0';
     a_buffers->f_tmp2[0] = '\0';
 
-    f_pkm = pydaw_data->track_pool[0]->peak_meter;
+    f_pkm = edmnext->track_pool[0]->peak_meter;
     sprintf(a_buffers->f_tmp2, "%i:%f:%f", 0, f_pkm->value[0], f_pkm->value[1]);
     v_pkm_reset(f_pkm);
 
     for(f_i = 1; f_i < EN_TRACK_COUNT; ++f_i)
     {
-        f_pkm = pydaw_data->track_pool[f_i]->peak_meter;
+        f_pkm = edmnext->track_pool[f_i]->peak_meter;
         if(!f_pkm->dirty)  //has ran since last v_pkm_reset())
         {
             sprintf(a_buffers->f_tmp1, "|%i:%f:%f",
@@ -679,8 +679,8 @@ void v_en_osc_send(t_osc_send_data * a_buffers)
     if(musikernel->playback_mode > 0 && !musikernel->is_offline_rendering)
     {
         sprintf(a_buffers->f_msg, "%i|%i|%f",
-            pydaw_data->current_region, pydaw_data->current_bar,
-            pydaw_data->ts[0].ml_current_beat);
+            edmnext->current_region, edmnext->current_bar,
+            edmnext->ts[0].ml_current_beat);
         v_queue_osc_message("cur", a_buffers->f_msg);
     }
 
@@ -777,7 +777,7 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
     float ** f_buff;
     float ** f_track_buff = a_track->buffers;
 
-    if((pydaw_data->routing_graph->bus_count[a_track->track_num])
+    if((edmnext->routing_graph->bus_count[a_track->track_num])
         ||
         ((!a_track->mute) && (!self->is_soloed))
         ||
@@ -917,7 +917,7 @@ void v_pydaw_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
  * WITH OPTIMIZATION!!!! */
 __attribute__((optimize("-O0"))) void v_wait_for_bus(t_pytrack * a_track)
 {
-    int f_bus_count = pydaw_data->routing_graph->bus_count[a_track->track_num];
+    int f_bus_count = edmnext->routing_graph->bus_count[a_track->track_num];
     int f_i;
 
     if(a_track->track_num && f_bus_count)
@@ -1020,18 +1020,18 @@ inline void v_pydaw_process(t_pydaw_thread_args * f_args)
 {
     t_pytrack * f_track;
     int f_track_index;
-    t_edmnext * self = pydaw_data;
+    t_edmnext * self = edmnext;
     int f_i = f_args->thread_num;
     int f_sorted_count = self->routing_graph->track_pool_sorted_count;
     int * f_sorted = self->routing_graph->track_pool_sorted[f_args->thread_num];
     int f_sample_count = musikernel->sample_count;
     int f_playback_mode = musikernel->playback_mode;
 
-    t_en_thread_storage * f_ts = &pydaw_data->ts[f_args->thread_num];
+    t_en_thread_storage * f_ts = &edmnext->ts[f_args->thread_num];
 
     if(f_args->thread_num > 0)
     {
-        memcpy(f_ts, &pydaw_data->ts[0], sizeof(t_en_thread_storage));
+        memcpy(f_ts, &edmnext->ts[0], sizeof(t_en_thread_storage));
     }
 
     while(f_i < f_sorted_count)
@@ -3564,7 +3564,7 @@ void v_en_configure(t_edmnext* self,
         int f_plugin_uid = atoi(f_val_arr->array[3]);
         int f_power = atoi(f_val_arr->array[4]);
 
-        t_pytrack * f_track = pydaw_data->track_pool[f_track_num];
+        t_pytrack * f_track = edmnext->track_pool[f_track_num];
 
         v_pydaw_set_plugin_index(
             f_track, f_index, f_plugin_index, f_plugin_uid, f_power, 1);
@@ -3651,7 +3651,7 @@ void v_en_configure(t_edmnext* self,
 
         pthread_spin_lock(&musikernel->main_lock);
 
-        v_pydaw_set_midi_device(pydaw_data, f_on, f_device, f_output);
+        v_pydaw_set_midi_device(edmnext, f_on, f_device, f_output);
 
         pthread_spin_unlock(&musikernel->main_lock);
     }

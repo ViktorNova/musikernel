@@ -73,11 +73,11 @@ void v_pydaw_open_tracks()
             assert(f_solo == 0 || f_solo == 1);
             assert(f_mute == 0 || f_mute == 1);
 
-            v_pydaw_open_track(pydaw_data->track_pool[f_track_index],
-                pydaw_data->tracks_folder, f_track_index);
+            v_pydaw_open_track(edmnext->track_pool[f_track_index],
+                edmnext->tracks_folder, f_track_index);
 
-            pydaw_data->track_pool[f_track_index]->solo = f_solo;
-            pydaw_data->track_pool[f_track_index]->mute = f_mute;
+            edmnext->track_pool[f_track_index]->solo = f_solo;
+            edmnext->track_pool[f_track_index]->mute = f_mute;
         }
 
         g_free_2d_char_array(f_2d_array);
@@ -88,10 +88,10 @@ void v_pydaw_open_tracks()
 
         while(f_i < EN_TRACK_COUNT)
         {
-            pydaw_data->track_pool[f_i]->solo = 0;
-            pydaw_data->track_pool[f_i]->mute = 0;
-            v_pydaw_open_track(pydaw_data->track_pool[f_i],
-                pydaw_data->tracks_folder, f_i);
+            edmnext->track_pool[f_i]->solo = 0;
+            edmnext->track_pool[f_i]->mute = 0;
+            v_pydaw_open_track(edmnext->track_pool[f_i],
+                edmnext->tracks_folder, f_i);
             ++f_i;
         }
     }
@@ -106,17 +106,17 @@ void v_open_project(const char* a_project_folder, int a_first_load)
     clock_gettime(CLOCK_REALTIME, &f_start);
 
     sprintf(musikernel->project_folder, "%s", a_project_folder);
-    sprintf(pydaw_data->item_folder, "%s/projects/edmnext/items/",
+    sprintf(edmnext->item_folder, "%s/projects/edmnext/items/",
         musikernel->project_folder);
-    sprintf(pydaw_data->region_folder, "%s/projects/edmnext/regions/",
+    sprintf(edmnext->region_folder, "%s/projects/edmnext/regions/",
         musikernel->project_folder);
-    sprintf(pydaw_data->region_audio_folder, "%s/projects/edmnext/regions_audio/",
+    sprintf(edmnext->region_audio_folder, "%s/projects/edmnext/regions_audio/",
         musikernel->project_folder);
-    sprintf(pydaw_data->region_atm_folder, "%s/projects/edmnext/regions_atm/",
+    sprintf(edmnext->region_atm_folder, "%s/projects/edmnext/regions_atm/",
         musikernel->project_folder);
-    sprintf(pydaw_data->per_audio_item_fx_folder,
+    sprintf(edmnext->per_audio_item_fx_folder,
         "%s/projects/edmnext/audio_per_item_fx/", musikernel->project_folder);
-    sprintf(pydaw_data->tracks_folder, "%s/projects/edmnext/tracks",
+    sprintf(edmnext->tracks_folder, "%s/projects/edmnext/tracks",
         musikernel->project_folder);
 
     sprintf(wavenext->tracks_folder, "%s/projects/wavenext/tracks",
@@ -139,10 +139,10 @@ void v_open_project(const char* a_project_folder, int a_first_load)
 
     while(f_i < PYDAW_MAX_ITEM_COUNT)
     {
-        if(pydaw_data->item_pool[f_i])
+        if(edmnext->item_pool[f_i])
         {
-            free(pydaw_data->item_pool[f_i]);
-            pydaw_data->item_pool[f_i] = 0;
+            free(edmnext->item_pool[f_i]);
+            edmnext->item_pool[f_i] = 0;
         }
         ++f_i;
     }
@@ -154,9 +154,9 @@ void v_open_project(const char* a_project_folder, int a_first_load)
     struct stat f_proj_stat;
     stat((musikernel->project_folder), &f_proj_stat);
     struct stat f_item_stat;
-    stat((pydaw_data->item_folder), &f_item_stat);
+    stat((edmnext->item_folder), &f_item_stat);
     struct stat f_reg_stat;
-    stat((pydaw_data->region_folder), &f_reg_stat);
+    stat((edmnext->region_folder), &f_reg_stat);
     struct stat f_song_file_stat;
     stat(f_song_file, &f_song_file_stat);
 
@@ -180,13 +180,13 @@ void v_open_project(const char* a_project_folder, int a_first_load)
         float f_tempo = atof(f_2d_array->current_str);
 
         assert(f_tempo > 30.0f && f_tempo < 300.0f);
-        v_set_tempo(pydaw_data, f_tempo);
+        v_set_tempo(edmnext, f_tempo);
         g_free_2d_char_array(f_2d_array);
     }
     else  //No transport file, set default tempo
     {
         printf("No transport file found, defaulting to 128.0 BPM\n");
-        v_set_tempo(pydaw_data, 128.0f);
+        v_set_tempo(edmnext, 128.0f);
     }
 
     if(S_ISDIR(f_proj_stat.st_mode) &&
@@ -195,16 +195,16 @@ void v_open_project(const char* a_project_folder, int a_first_load)
         S_ISREG(f_song_file_stat.st_mode))
     {
         t_dir_list * f_item_dir_list =
-                g_get_dir_list(pydaw_data->item_folder);
+                g_get_dir_list(edmnext->item_folder);
         f_i = 0;
 
         while(f_i < f_item_dir_list->dir_count)
         {
-            g_pyitem_get(pydaw_data, atoi(f_item_dir_list->dir_list[f_i]));
+            g_pyitem_get(edmnext, atoi(f_item_dir_list->dir_list[f_i]));
             ++f_i;
         }
 
-        g_pysong_get(pydaw_data, 0);
+        g_pysong_get(edmnext, 0);
 
         if(a_first_load)
         {
@@ -218,14 +218,14 @@ void v_open_project(const char* a_project_folder, int a_first_load)
                 "for the first time\n");
         //Loads empty...  TODO:  Make this a separate function for getting an
         //empty pysong or loading a file into one...
-        g_pysong_get(pydaw_data, 0);
+        g_pysong_get(edmnext, 0);
     }
 
-    v_pydaw_update_track_send(pydaw_data, 0);
+    v_pydaw_update_track_send(edmnext, 0);
 
     //v_pydaw_update_audio_inputs(pydaw_data);
 
-    v_pydaw_set_is_soloed(pydaw_data);
+    v_pydaw_set_is_soloed(edmnext);
 
     clock_gettime(CLOCK_REALTIME, &f_finish);
 
@@ -248,7 +248,7 @@ void v_pydaw_activate(int a_thread_count,
 
 void v_pydaw_destructor()
 {
-    if(pydaw_data)
+    if(edmnext)
     {
         musikernel->audio_recording_quit_notifier = 1;
         lo_address_free(musikernel->uiTarget);

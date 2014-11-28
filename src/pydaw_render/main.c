@@ -100,11 +100,11 @@ int main(int argc, char** argv)
     }
 
     musikernel->sample_count = f_buffer_size;
-    v_pydaw_offline_render_prep(pydaw_data);
+    v_pydaw_offline_render_prep(edmnext);
 
     /*
-    v_pydaw_set_midi_device(pydaw_data, 1, 0, 5);
-    v_set_playback_mode(pydaw_data, 1, 0, 0, 0);
+    v_pydaw_set_midi_device(edmnext, 1, 0, 5);
+    v_set_playback_mode(edmnext, 1, 0, 0, 0);
 
     t_pydaw_seq_event f_events[2];
     v_pydaw_ev_set_noteon(&f_events[0], 0, 60, 100);
@@ -116,12 +116,12 @@ int main(int argc, char** argv)
     while(f_i < 20)
     {
         v_pydaw_run_main_loop(
-            pydaw_data, 512, f_events, 2, 512 * (f_i + 1),
+            edmnext, 512, f_events, 2, 512 * (f_i + 1),
             f_engine->output0, f_engine->output1, 0);
     }
     */
 
-    v_pydaw_offline_render(pydaw_data, f_start_region, f_start_bar,
+    v_pydaw_offline_render(edmnext, f_start_region, f_start_bar,
             f_end_region, f_end_bar, f_output_file, 0, f_create_file);
 
     /*
