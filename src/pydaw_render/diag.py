@@ -48,12 +48,14 @@ if len(sys.argv) < 2 or sys.argv[1] not in TOOLS:
 TOOL = sys.argv[1]
 
 if len(sys.argv) >= 3:
-    CORES = sys.argv[2]
+    CORES = int(sys.argv[2])
+    assert(CORES >= 0 and CORES < 32)
 else:
     CORES = 1
 
 if len(sys.argv) >= 4:
-    SR = sys.argv[3]
+    SR = int(sys.argv[3])
+    assert(SR >= 11025 and SR <= 384000)
 else:
     SR = 44100
 
