@@ -159,129 +159,6 @@ class WaveNextProject(libmk.AbstractProject):
         else:
             return None
 
-PLUGIN_SETTINGS_COPY_OBJ = None
-
-class plugin_settings_base:
-    def __init__(self, a_index, a_track_num,
-                 a_layout, a_save_callback, a_name_callback,
-                 a_automation_callback, a_offset=0, a_send=None):
-        self.suppress_osc = False
-        self.save_callback = a_save_callback
-        self.name_callback = a_name_callback
-        self.automation_callback = a_automation_callback
-        self.plugin_uid = -1
-        self.track_num = a_track_num
-        self.index = a_index
-        self.send = a_send
-        self.plugin_index = None
-        self.plugin_combobox = QtGui.QComboBox()
-        self.plugin_combobox.setMinimumWidth(150)
-        self.plugin_combobox.wheelEvent = self.wheel_event
-        self.plugin_combobox.addItems(self.plugin_list)
-        self.plugin_combobox.currentIndexChanged.connect(
-            self.on_plugin_change)
-        a_layout.addWidget(self.plugin_combobox, a_index + 1, 0 + a_offset)
-        self.ui_button = QtGui.QPushButton("UI")
-        self.ui_button.released.connect(self.on_show_ui)
-        self.ui_button.setObjectName("uibutton")
-        self.ui_button.setFixedWidth(24)
-        a_layout.addWidget(self.ui_button, a_index + 1, 1 + a_offset)
-        if a_automation_callback is not None:
-            self.automation_radiobutton = QtGui.QRadioButton("")
-            a_layout.addWidget(
-                self.automation_radiobutton, a_index + 1, 2 + a_offset)
-            self.automation_radiobutton.clicked.connect(
-                self.automation_check_changed)
-        self.power_checkbox = QtGui.QCheckBox("")
-        self.power_checkbox.setChecked(True)
-        a_layout.addWidget(self.power_checkbox, a_index + 1, 3 + a_offset)
-        self.power_checkbox.clicked.connect(self.on_power_changed)
-
-    def clear(self):
-        self.set_value(libmk.pydaw_track_plugin(self.index, 0, -1))
-        self.on_plugin_change()
-
-    def copy(self):
-        global PLUGIN_SETTINGS_COPY_OBJ
-        PLUGIN_SETTINGS_COPY_OBJ = self.get_value()
-
-    def paste(self):
-        if PLUGIN_SETTINGS_COPY_OBJ is None:
-            return
-        self.set_value(PLUGIN_SETTINGS_COPY_OBJ)
-        self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
-        libmk.PROJECT.copy_plugin(
-            PLUGIN_SETTINGS_COPY_OBJ.plugin_uid, self.plugin_uid)
-        self.on_plugin_change()
-
-    def automation_check_changed(self):
-        if self.automation_radiobutton.isChecked():
-            self.automation_callback(
-                self.index,
-                get_plugin_uid_by_name(self.plugin_combobox.currentText()),
-                self.plugin_combobox.currentText())
-
-    def set_value(self, a_val):
-        self.suppress_osc = True
-        f_name = PLUGIN_UIDS_REVERSE[a_val.plugin_index]
-        self.plugin_combobox.setCurrentIndex(
-            self.plugin_combobox.findText(f_name))
-        self.plugin_index = a_val.plugin_index
-        self.plugin_uid = a_val.plugin_uid
-        self.power_checkbox.setChecked(a_val.power == 1)
-        self.suppress_osc = False
-
-    def get_value(self):
-        return libmk.pydaw_track_plugin(
-            self.index, get_plugin_uid_by_name(
-                self.plugin_combobox.currentText()),
-            self.plugin_uid,
-            a_power=1 if self.power_checkbox.isChecked() else 0)
-
-    def on_plugin_change(self, a_val=None):
-        if self.suppress_osc:
-            return
-        f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
-        if f_index == 0:
-            self.plugin_uid = -1
-        elif self.plugin_uid == -1 or self.plugin_index != f_index:
-            self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
-            self.plugin_index = f_index
-        PROJECT.wn_osc.pydaw_set_plugin(
-            self.track_num, self.index, f_index,
-            self.plugin_uid, self.power_checkbox.isChecked())
-        self.save_callback()
-        if self.automation_callback:
-            self.automation_check_changed()
-
-    def on_power_changed(self, a_val=None):
-        f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
-        if f_index:
-            PROJECT.wn_osc.pydaw_set_plugin(
-                self.track_num, self.index, f_index,
-                self.plugin_uid, self.power_checkbox.isChecked())
-            self.save_callback()
-
-    def wheel_event(self, a_event=None):
-        pass
-
-    def on_show_ui(self):
-        f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
-        if f_index == 0 or self.plugin_uid == -1:
-            return
-        libmk.PLUGIN_UI_DICT.open_plugin_ui(
-            self.plugin_uid, f_index,
-            "Track:  {}".format(self.name_callback()))
-
-class plugin_settings_wave_editor(plugin_settings_base):
-    def __init__(self, a_index, a_track_num,
-                 a_layout, a_save_callback, a_name_callback,
-                 a_automation_callback, a_offset=0, a_send=None):
-        self.plugin_list = WAVE_EDITOR_PLUGIN_NAMES
-        plugin_settings_base.__init__(
-            self, a_index, a_track_num, a_layout,
-            a_save_callback, a_name_callback,
-            a_automation_callback, a_offset, a_send)
 
 def normalize_dialog():
     def on_ok():
@@ -670,6 +547,7 @@ class pydaw_wave_editor_widget:
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 3)
         for f_i in range(10):
             f_plugin = plugin_settings_wave_editor(
+                PROJECT.wn_osc.pydaw_set_plugin,
                 f_i, self.track_number, self.menu_gridlayout,
                 self.save_callback, self.name_callback, None)
             self.plugins.append(f_plugin)
