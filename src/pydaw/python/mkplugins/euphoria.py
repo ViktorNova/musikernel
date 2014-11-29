@@ -19,8 +19,6 @@ import time
 import os
 import libmk
 
-#Euphoria
-EUPHORIA_FILES_STRING_DELIMITER = '|'
 EUPHORIA_MAX_SAMPLE_COUNT = 100
 
 #Total number of LFOs, ADSRs, other envelopes, etc...
@@ -1625,8 +1623,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     str(f_item.text()))
                 self.files_string += str(f_uid)
             if f_i < EUPHORIA_MAX_SAMPLE_COUNT - 1:
-                self.files_string += \
-                    EUPHORIA_FILES_STRING_DELIMITER
+                self.files_string += '|'
 
     def clearFile(self):
         self.find_selected_radio_button()
