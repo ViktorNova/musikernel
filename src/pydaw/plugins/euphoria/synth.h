@@ -29,6 +29,8 @@ GNU General Public License for more details.
 //How many buffers in between slow indexing operations.  Buffer == users soundcard latency settings, ie: 512 samples
 #define EUPHORIA_SLOW_INDEX_COUNT 64
 
+struct st_euphoria;
+
 typedef struct
 {
     PYFX_Data *basePitch;
@@ -50,6 +52,9 @@ typedef struct
     PYFX_Data *sample_interpolation_mode;
     PYFX_Data *noise_amp;
     PYFX_Data *noise_type;
+    //For the per-sample interpolation modes
+    int (*ratio_function_ptr)(struct st_euphoria * plugin_data, int n);
+    void (*interpolation_mode)(struct st_euphoria * plugin_data, int n, int ch);
     float       sample_last_interpolated_value;
     t_wav_pool_item * wavpool_items;
     float       sampleStartPos;
@@ -64,12 +69,15 @@ typedef struct
     float noise_linamp;
 }t_euphoria_sample;
 
-typedef struct {
+typedef struct st_euphoria
+{
     PYFX_Data *output[2];
     t_euphoria_sample samples[EUPHORIA_MAX_SAMPLE_COUNT];
 
-    PYFX_Data *mfx_knobs[EUPHORIA_MONO_FX_GROUPS_COUNT][EUPHORIA_MONO_FX_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
-    PYFX_Data *mfx_comboboxes[EUPHORIA_MONO_FX_GROUPS_COUNT][EUPHORIA_MONO_FX_COUNT];
+    PYFX_Data *mfx_knobs[EUPHORIA_MONO_FX_GROUPS_COUNT][
+        EUPHORIA_MONO_FX_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
+    PYFX_Data *mfx_comboboxes[EUPHORIA_MONO_FX_GROUPS_COUNT][
+        EUPHORIA_MONO_FX_COUNT];
 
     PYFX_Data *attack;
     PYFX_Data *decay;
@@ -96,14 +104,17 @@ typedef struct {
     PYFX_Data *min_note;
     PYFX_Data *max_note;
 
-    //Corresponds to the actual knobs on the effects themselves, not the mod matrix
-    PYFX_Data *pfx_mod_knob[EUPHORIA_MODULAR_POLYFX_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
+    //Corresponds to the actual knobs on the effects themselves,
+    //not the mod matrix
+    PYFX_Data *pfx_mod_knob[EUPHORIA_MODULAR_POLYFX_COUNT][
+        EUPHORIA_CONTROLS_PER_MOD_EFFECT];
 
     PYFX_Data *fx_combobox[EUPHORIA_MODULAR_POLYFX_COUNT];
 
     //PolyFX Mod Matrix
     //Corresponds to the mod matrix spinboxes
-    PYFX_Data *polyfx_mod_matrix[EUPHORIA_MODULAR_POLYFX_COUNT][EUPHORIA_MODULATOR_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
+    PYFX_Data *polyfx_mod_matrix[EUPHORIA_MODULAR_POLYFX_COUNT][
+        EUPHORIA_MODULATOR_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
 
     //End from PolyFX Mod Matrix
 
@@ -111,7 +122,8 @@ typedef struct {
     int         i_selected_sample;
     int          channels;
 
-    //These 2 calculate which channels are assigned to a sample and should be processed
+    //These 2 calculate which channels are assigned to a sample
+    //and should be processed
     int monofx_channel_index[EUPHORIA_MONO_FX_GROUPS_COUNT];
     int monofx_channel_index_count;
     //Tracks which indexes are in use
@@ -142,8 +154,8 @@ typedef struct {
 
     //These are used for storing the mono FX buffers from the polyphonic voices.
     float mono_fx_buffers[EUPHORIA_MONO_FX_GROUPS_COUNT][2];
-
-    int i_slow_index;  //For indexing operations that don't need to track realtime events closely
+    //For indexing operations that don't need to track realtime events closely
+    int i_slow_index;
 
     float amp;  //linear amplitude, from the master volume knob
 

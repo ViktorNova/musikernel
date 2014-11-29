@@ -533,15 +533,6 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
 }
 
 
-//For the per-sample interpolation modes
-typedef int (*fp_calculate_ratio)(t_euphoria *__restrict plugin_data, int n);
-typedef void (*fp_run_sampler_interpolation)(t_euphoria *__restrict plugin_data,
-        int n, int ch);
-
-static fp_calculate_ratio ratio_function_ptrs[EUPHORIA_MAX_SAMPLE_COUNT];
-static fp_run_sampler_interpolation
-    interpolation_modes[EUPHORIA_MAX_SAMPLE_COUNT];
-
 static inline int check_sample_bounds(t_euphoria * plugin_data, int n)
 {
     t_euphoria_sample * f_sample =
@@ -651,7 +642,7 @@ static void run_sampler_interpolation_none(
 /* void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data,
  *                                                      int n) //voice number
 */
-static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
+static void add_sample_lms_euphoria(t_euphoria * plugin_data, int n)
 {
     t_voc_single_voice * f_poly_voice = &plugin_data->voices->voices[n];
 
@@ -717,15 +708,14 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
     {
         plugin_data->current_sample = f_voice->sample_indexes[i_ls];
         f_pfx_sample = &f_voice->samples[plugin_data->current_sample];
+        f_sample = &plugin_data->samples[plugin_data->current_sample];
 
-        if(ratio_function_ptrs[
-            plugin_data->current_sample](plugin_data, n) == 1)
+        if(f_sample->ratio_function_ptr(plugin_data, n) == 1)
         {
             continue;
         }
 
         float f_fade_vol = 1.0f;
-        f_sample = &plugin_data->samples[plugin_data->current_sample];
         f_read_head = &f_pfx_sample->sample_read_heads;
 
         if(f_read_head->whole_number < f_pfx_sample->sample_fade_in_end_sample)
@@ -757,8 +747,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
 
         for(ch = 0; ch < f_sample->wavpool_items->channels; ++ch)
         {
-            interpolation_modes[plugin_data->current_sample](
-                plugin_data, n, ch);
+            f_sample->interpolation_mode(plugin_data, n, ch);
 
             plugin_data->sample[ch] +=
                 f_sample->sample_last_interpolated_value * f_fade_vol;
@@ -1052,21 +1041,21 @@ static void v_euphoria_process_midi_event(
                     switch((int)(*f_sample->sample_interpolation_mode))
                     {
                         case 0:
-                            interpolation_modes[(f_smp)] =
+                            f_sample->interpolation_mode =
                                 run_sampler_interpolation_sinc;
-                            ratio_function_ptrs[(f_smp)] =
+                            f_sample->ratio_function_ptr =
                                 calculate_ratio_sinc;
                             break;
                         case 1:
-                            interpolation_modes[(f_smp)] =
+                            f_sample->interpolation_mode =
                                 run_sampler_interpolation_linear;
-                            ratio_function_ptrs[(f_smp)] =
+                            f_sample->ratio_function_ptr =
                                 calculate_ratio_linear;
                             break;
                         case 2:
-                            interpolation_modes[(f_smp)] =
+                            f_sample->interpolation_mode =
                                 run_sampler_interpolation_none;
-                            ratio_function_ptrs[(f_smp)] =
+                            f_sample->ratio_function_ptr =
                                 calculate_ratio_none;
                             break;
                         default:
