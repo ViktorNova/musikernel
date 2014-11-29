@@ -748,11 +748,11 @@ static void v_wayv_process_midi_event(
                     (f_wayv_voice->last_pitch),
                     (f_wayv_voice->target_pitch));
 
-            int f_i = 0;
+            int f_i;
 
             float f_db;
 
-            while(f_i < WAYV_OSC_COUNT)
+            for(f_i = 0; f_i < WAYV_OSC_COUNT; ++f_i)
             {
                 int f_osc_type = (int)(*plugin_data->osc_type[f_i]) - 1;
                 f_pfx_osc = &f_wayv_voice->osc[f_i];
@@ -778,7 +778,6 @@ static void v_wayv_process_midi_event(
                 else
                 {
                     f_pfx_osc->osc_on = 0;
-                    ++f_i;
                     continue;
                 }
 
@@ -831,7 +830,12 @@ static void v_wayv_process_midi_event(
                         &f_pfx_osc->adsr_amp_osc,
                         (*plugin_data->adsr_fm_hold[f_i]) * 0.01f);
                 }
-                ++f_i;
+
+                for(f_i2 = 0; f_i2 < 2; ++f_i2)
+                {
+                    f_pfx_osc->osc_macro_amp[f_i2] =
+                        (*plugin_data->amp_macro_values[f_i2][f_i]);
+                }
             }
 
             f_wayv_voice->noise_linamp =
@@ -959,20 +963,6 @@ static void v_wayv_process_midi_event(
             //Get the noise function pointer
             f_wayv_voice->noise_func_ptr =
                     fp_get_noise_func_ptr((int)(*(plugin_data->noise_type)));
-
-            f_i = 0;
-
-            while(f_i < 2)
-            {
-                int f_i2 = 0;
-                while(f_i2 < WAYV_OSC_COUNT)
-                {
-                    f_pfx_osc->osc_macro_amp[f_i] =
-                        (*plugin_data->amp_macro_values[f_i][f_i2]);
-                    ++f_i2;
-                }
-                ++f_i;
-            }
 
             v_adsr_retrigger(&f_wayv_voice->adsr_amp);
             v_adsr_retrigger(&f_wayv_voice->adsr_filter);
