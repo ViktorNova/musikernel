@@ -1230,10 +1230,9 @@ static void v_run_lms_euphoria(
         t_pydaw_seq_event *ext_events, int ext_event_count)
 {
     t_euphoria *plugin_data = (t_euphoria*)instance;
-    register int f_i = 0;
+    register int f_i, i2, i3;
     int midi_event_pos = 0;
     t_plugin_event_queue_item * f_midi_item;
-    register int i, i2, i3;
 
     ++plugin_data->i_slow_index;
 
@@ -1244,51 +1243,41 @@ static void v_run_lms_euphoria(
         v_euphoria_slow_index(plugin_data);
     }
 
-    while (f_i < event_count) // && pos >= events[f_i].time.tick)
+    for(f_i = 0; f_i < event_count; ++f_i)
     {
         v_euphoria_process_midi_event(plugin_data, &events[f_i]);
-        ++f_i;
     }
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 
-    f_i = 0;
-
-    while(f_i < atm_event_count)
+    for(f_i = 0; f_i < atm_event_count; ++f_i)
     {
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        ++f_i;
     }
 
-    f_i = 0;
-
-    while (f_i < ext_event_count) // && pos >= events[f_i].time.tick)
+    for(f_i = 0; f_i < ext_event_count; ++f_i)
     {
         v_euphoria_process_midi_event(plugin_data, &ext_events[f_i]);
-        ++f_i;
     }
 
     float f_temp_sample0, f_temp_sample1;
 
     int f_monofx_index = 0;
 
-    i2 = 0;
-    while(i2 < (plugin_data->monofx_channel_index_count))
+    for(i2 = 0; i2 < (plugin_data->monofx_channel_index_count); ++i2)
     {
         f_monofx_index = (plugin_data->monofx_channel_index[i2]);
         v_eq6_set(&plugin_data->mono_modules->mfx[f_monofx_index].eqs);
-        ++i2;
     }
 
-    i = 0;
-    while(i < sample_count)
+    for(f_i = 0; f_i < sample_count; ++f_i)
     {
         while(1)
         {
             f_midi_item = v_plugin_event_queue_iter(
-                &plugin_data->midi_queue, i);
+                &plugin_data->midi_queue, f_i);
             if(!f_midi_item)
             {
                 break;
@@ -1310,42 +1299,36 @@ static void v_run_lms_euphoria(
         }
 
         v_plugin_event_queue_atm_set(
-            &plugin_data->atm_queue, i, plugin_data->port_table);
+            &plugin_data->atm_queue, f_i, plugin_data->port_table);
 
         v_sml_run(&plugin_data->mono_modules->pitchbend_smoother,
                 (plugin_data->sv_pitch_bend_value));
 
-        i2 = 0;
-        while(i2 < (plugin_data->monofx_channel_index_count))
+        for(i2 = 0; i2 < (plugin_data->monofx_channel_index_count); ++i2)
         {
             plugin_data->mono_fx_buffers[
                 (plugin_data->monofx_channel_index[i2])][0] = 0.0f;
             plugin_data->mono_fx_buffers[
                 (plugin_data->monofx_channel_index[i2])][1] = 0.0f;
-            ++i2;
         }
 
-        i2 = 0;
-        while(i2 < EUPHORIA_POLYPHONY)
+        for(i2 = 0; i2 < EUPHORIA_POLYPHONY; ++i2)
         {
             if(((plugin_data->data[i2]->adsr_amp.stage) != ADSR_STAGE_OFF) &&
                 (plugin_data->data[i2]->sample_indexes_count > 0))
             {
                 add_sample_lms_euphoria(plugin_data, i2);
             }
-            ++i2;
         }
 
-        i2 = 0;
-        while(i2 < (plugin_data->monofx_channel_index_count))
+        for(i2 = 0; i2 < (plugin_data->monofx_channel_index_count); ++i2)
         {
             f_monofx_index = (plugin_data->monofx_channel_index[i2]);
 
             f_temp_sample0 = (plugin_data->mono_fx_buffers[f_monofx_index][0]);
             f_temp_sample1 = (plugin_data->mono_fx_buffers[f_monofx_index][1]);
 
-            i3 = 0;
-            while(i3 < EUPHORIA_MONO_FX_COUNT)
+            for(i3 = 0; i3 < EUPHORIA_MONO_FX_COUNT; ++i3)
             {
                 v_mf3_set(
                     &plugin_data->mono_modules->mfx[
@@ -1364,21 +1347,17 @@ static void v_run_lms_euphoria(
                 f_temp_sample1 =
                     (plugin_data->mono_modules->mfx[
                         f_monofx_index].multieffect[i3].output1);
-                ++i3;
             }
 
             v_eq6_run(&plugin_data->mono_modules->mfx[f_monofx_index].eqs,
                 f_temp_sample0, f_temp_sample1);
 
-            plugin_data->output[0][i] +=
+            plugin_data->output[0][f_i] +=
                 plugin_data->mono_modules->mfx[f_monofx_index].eqs.output0;
-            plugin_data->output[1][i] +=
+            plugin_data->output[1][f_i] +=
                 plugin_data->mono_modules->mfx[f_monofx_index].eqs.output1;
-            ++i2;
         }
-
         ++plugin_data->sampleNo;
-        ++i;
     }
 }
 
