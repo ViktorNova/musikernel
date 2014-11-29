@@ -93,9 +93,6 @@ static void connectPortSampler(PYFX_Handle instance, int port,
     {
         switch (port)
         {
-            case EUPHORIA_SELECTED_SAMPLE:
-                plugin->selected_sample = data;
-                break;
             case EUPHORIA_ATTACK:
                 plugin->attack = data;
                 break;
@@ -1513,7 +1510,6 @@ PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
 {
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(EUPHORIA_PORT_COUNT);
 
-    pydaw_set_pyfx_port(f_result, EUPHORIA_SELECTED_SAMPLE, 0.0f, 0, (EUPHORIA_MAX_SAMPLE_COUNT - 1));
     pydaw_set_pyfx_port(f_result, EUPHORIA_ATTACK, 0.0f, 0.0f, 200.0f);
     pydaw_set_pyfx_port(f_result, EUPHORIA_DECAY, 50.0f, 10.0f, 200.0f);
     pydaw_set_pyfx_port(f_result, EUPHORIA_SUSTAIN, 0.0f, -60, 0);

@@ -36,10 +36,7 @@ EUPHORIA_EFFECTS_GROUPS_COUNT = 1
 #The number of mono_fx groups
 EUPHORIA_MONO_FX_GROUPS_COUNT = EUPHORIA_MAX_SAMPLE_COUNT
 EUPHORIA_MONO_FX_COUNT = 4
-EUPHORIA_OUTPUT_LEFT = 0
-EUPHORIA_OUTPUT_RIGHT = 1
-EUPHORIA_FIRST_CONTROL_PORT = 2
-EUPHORIA_SELECTED_SAMPLE = 2
+
 EUPHORIA_ATTACK = 3
 EUPHORIA_DECAY = 4
 EUPHORIA_SUSTAIN = 5
@@ -317,21 +314,21 @@ EUPHORIA_PORT_MAP = {
     "FX3 Knob2": "32",
 }
 
-_euphoria_port_mins = (EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MIN,
-                       EUPHORIA_MONO_FX1_KNOB0_PORT_RANGE_MIN,
-                       EUPHORIA_MONO_FX2_KNOB0_PORT_RANGE_MIN,
-                       EUPHORIA_MONO_FX3_KNOB0_PORT_RANGE_MIN)
+_euphoria_port_mins = (
+    EUPHORIA_MONO_FX0_KNOB0_PORT_RANGE_MIN,
+    EUPHORIA_MONO_FX1_KNOB0_PORT_RANGE_MIN,
+    EUPHORIA_MONO_FX2_KNOB0_PORT_RANGE_MIN,
+    EUPHORIA_MONO_FX3_KNOB0_PORT_RANGE_MIN)
 
 for f_fx in range(4):
     f_port_iter = _euphoria_port_mins[f_fx]
     for f_knob in range(3):
         for f_group in range(1, EUPHORIA_MAX_SAMPLE_COUNT + 1):
             f_group_str = str(f_group).zfill(3)
-            f_label = "Mono FX{} Knob{} Group {}".format(f_fx, f_knob, f_group_str)
+            f_label = "Mono FX{} Knob{} Group {}".format(
+                f_fx, f_knob, f_group_str)
             EUPHORIA_PORT_MAP[f_label] = f_port_iter
             f_port_iter += 1
-
-
 
 
 SMP_TB_RADIOBUTTON_INDEX = 0
@@ -350,10 +347,10 @@ SMP_TB_INTERPOLATION_MODE_INDEX = 11
 EUPHORIA_INSTRUMENT_CLIPBOARD = None
 
 class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
-    def __init__(self, a_val_callback,
-                 a_project, a_folder, a_plugin_uid, a_track_name,
-                 a_stylesheet, a_configure_callback, a_midi_learn_callback,
-                 a_cc_map_callback):
+    def __init__(
+            self, a_val_callback, a_project, a_folder, a_plugin_uid,
+            a_track_name, a_stylesheet, a_configure_callback,
+            a_midi_learn_callback, a_cc_map_callback):
         pydaw_abstract_plugin_ui.__init__(
             self, a_val_callback, a_project, a_plugin_uid, a_stylesheet,
             a_configure_callback, a_folder, a_midi_learn_callback,
@@ -367,8 +364,10 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.selected_row_index = 0
         self.handle_control_updates = True
         self.suppress_selected_sample_changed = False
-        self.interpolation_modes_list = [_("Pitched"), _("Percussion"),
-                                         _("No Pitch")]
+
+        self.interpolation_modes_list = [
+            _("Pitched"), _("Percussion"), _("No Pitch")]
+
         f_sample_table_columns = [
             "", #Selected row
             _("Path"), #File path
@@ -387,11 +386,6 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         ]
 
         self.noise_types_list = [_("Off"), _("White"), _("Pink")]
-
-        self.selected_sample_port = pydaw_null_control(
-            EUPHORIA_SELECTED_SAMPLE,
-            self.plugin_rel_callback, self.plugin_val_callback,
-            0, self.port_dict)
 
         self.sample_table = QtGui.QTableWidget(
             EUPHORIA_MAX_SAMPLE_COUNT, len(f_sample_table_columns))

@@ -36,11 +36,8 @@ GNU General Public License for more details.
 
 #define EUPHORIA_LABEL "Euphoria"
 
-#define EUPHORIA_OUTPUT_LEFT 0
-#define EUPHORIA_OUTPUT_RIGHT 1
+#define EUPHORIA_FIRST_CONTROL_PORT 3
 
-#define EUPHORIA_FIRST_CONTROL_PORT 2
-#define EUPHORIA_SELECTED_SAMPLE 2
 #define EUPHORIA_ATTACK  3
 #define EUPHORIA_DECAY   4
 #define EUPHORIA_SUSTAIN 5

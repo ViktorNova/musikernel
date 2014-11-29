@@ -71,8 +71,6 @@ typedef struct {
     PYFX_Data *mfx_knobs[EUPHORIA_MONO_FX_GROUPS_COUNT][EUPHORIA_MONO_FX_COUNT][EUPHORIA_CONTROLS_PER_MOD_EFFECT];
     PYFX_Data *mfx_comboboxes[EUPHORIA_MONO_FX_GROUPS_COUNT][EUPHORIA_MONO_FX_COUNT];
 
-    PYFX_Data *selected_sample;
-
     PYFX_Data *attack;
     PYFX_Data *decay;
     PYFX_Data *sustain;
