@@ -14,6 +14,7 @@ GNU General Public License for more details.
 #ifndef COMPRESSOR_H
 #define	COMPRESSOR_H
 
+#include "../filter/svf.h"
 #include "../modulation/env_follower2.h"
 #include "../../lib/amp.h"
 #include "../../lib/peak_meter.h"
@@ -25,7 +26,9 @@ extern "C" {
 typedef struct
 {
     float thresh, ratio, ratio_recip, knee, knee_thresh,
-        gain, gain_lin, output0, output1;
+        gain, gain_lin;
+    t_state_variable_filter filter;
+    float output0, output1;
     float rms_time, rms_last, rms_sum, rms_count_recip, sr;
     int rms_counter, rms_count;
     t_enf2_env_follower env_follower;
@@ -53,6 +56,10 @@ void g_cmp_init(t_cmp_compressor * self, float a_sr)
     self->rms_time = -123.456f;
     self->rms_last = 0.0f;
     self->rms_sum = 0.0f;
+    g_svf_init(&self->filter, a_sr);
+    v_svf_set_cutoff_base(&self->filter, 66.0f);
+    v_svf_set_res(&self->filter, -24.0f);
+    v_svf_set_cutoff(&self->filter);
     g_enf_init(&self->env_follower, a_sr);
     g_pkm_redux_init(&self->peak_tracker, a_sr);
 }
@@ -91,6 +98,7 @@ void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
     if(f_db > self->thresh)
     {
         f_gain = (f_db - self->thresh) * self->ratio_recip;
+        f_gain = v_svf_run_2_pole_lp(&self->filter, f_gain);
         f_vol = f_db_to_linear_fast(f_gain);
         self->output0 = a_in0 * f_vol;
         self->output1 = a_in1 * f_vol;
@@ -100,7 +108,7 @@ void v_cmp_run(t_cmp_compressor * self, float a_in0, float a_in1)
         float f_diff = (f_db - self->knee_thresh);
         float f_percent = f_diff / self->knee;
         float f_ratio = ((self->ratio - 1.0f) * f_percent) + 1.0f;
-        f_gain = f_diff / f_ratio;
+        f_gain = v_svf_run_2_pole_lp(&self->filter, f_diff / f_ratio);
         f_vol = f_db_to_linear_fast(f_gain);
         self->output0 = a_in0 * f_vol;
         self->output1 = a_in1 * f_vol;
@@ -144,6 +152,7 @@ void v_cmp_run_rms(t_cmp_compressor * self, float a_in0, float a_in1)
     if(f_db > self->thresh)
     {
         f_gain = (f_db - self->thresh) * self->ratio_recip;
+        f_gain = v_svf_run_2_pole_lp(&self->filter, f_gain);
         f_vol = f_db_to_linear_fast(f_gain);
         self->output0 = a_in0 * f_vol;
         self->output1 = a_in1 * f_vol;
@@ -154,6 +163,7 @@ void v_cmp_run_rms(t_cmp_compressor * self, float a_in0, float a_in1)
         float f_percent = f_diff / self->knee;
         float f_ratio = ((self->ratio - 1.0f) * f_percent) + 1.0f;
         f_gain = f_diff / f_ratio;
+        f_gain = v_svf_run_2_pole_lp(&self->filter, f_gain);
         f_vol = f_db_to_linear_fast(f_gain);
         self->output0 = a_in0 * f_vol;
         self->output1 = a_in1 * f_vol;
