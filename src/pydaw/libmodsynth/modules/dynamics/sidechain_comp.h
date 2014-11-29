@@ -19,6 +19,7 @@ GNU General Public License for more details.
 #include "../modulation/env_follower2.h"
 #include "../signal_routing/audio_xfade.h"
 #include "../../lib/peak_meter.h"
+#include "../filter/svf.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -26,7 +27,9 @@ extern "C" {
 
 typedef struct
 {
-    float pitch, ratio, thresh, wet, attack, release, output0, output1;
+    float pitch, ratio, thresh, wet, attack, release;
+    t_state_variable_filter filter;
+    float output0, output1;
     t_enf2_env_follower env_follower;
     t_audio_xfade xfade;
     t_pkm_redux peak_tracker;
@@ -47,6 +50,10 @@ void g_scc_init(t_scc_sidechain_comp * self, float a_sr)
     self->ratio = 999.99f;
     self->thresh = 999.99f;
     self->wet = 999.99f;
+    g_svf_init(&self->filter, a_sr);
+    v_svf_set_cutoff_base(&self->filter, 66.0f);
+    v_svf_set_res(&self->filter, -24.0f);
+    v_svf_set_cutoff(&self->filter);
     self->output0 = 0.0f;
     self->output1 = 0.0f;
     g_pkm_redux_init(&self->peak_tracker, a_sr);
@@ -85,6 +92,7 @@ void v_scc_run_comp(t_scc_sidechain_comp *self,
     if(f_gain < 0.0f)
     {
         f_gain *= self->ratio;
+        f_gain = v_svf_run_2_pole_lp(&self->filter, f_gain);
         f_gain = f_db_to_linear_fast(f_gain);
         self->output0 = f_axf_run_xfade(
             &self->xfade, a_output0, a_output0 * f_gain);
