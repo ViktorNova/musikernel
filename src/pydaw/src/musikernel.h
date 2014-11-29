@@ -66,6 +66,8 @@ GNU General Public License for more details.
 #define MK_CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD "wr"
 #define MK_CONFIGURE_KEY_LOAD_AB_SET "abs"
 
+#define MK_HOST_EDMNEXT 0
+#define MK_HOST_WAVENEXT 1
 
 volatile int exiting = 0;
 float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
@@ -143,8 +145,7 @@ typedef struct
     volatile int * track_thread_is_finished;
     void * main_thread_args;
 
-    int ab_mode;  //0 == edmnext, 1 == wavenext
-    int is_ab_ing;  //Set this to self->ab_mode on playback
+    int current_host;
     int is_offline_rendering;
     //set from the audio device buffer size every time the main loop is called.
     int sample_count;
@@ -208,8 +209,7 @@ void g_musikernel_get(float a_sr)
 {
     hpalloc((void**)&musikernel, sizeof(t_musikernel));
     musikernel->wav_pool = g_wav_pool_get(a_sr);
-    musikernel->ab_mode = 0;
-    musikernel->is_ab_ing = 0;
+    musikernel->current_host = MK_HOST_EDMNEXT;
     musikernel->midi_learn = 0;
     musikernel->is_offline_rendering = 0;
     pthread_spin_init(&musikernel->main_lock, 0);
@@ -302,16 +302,11 @@ void v_queue_osc_message(
     }
 }
 
-void v_pydaw_set_ab_mode(int a_mode)
+void v_pydaw_set_host(int a_mode)
 {
     pthread_spin_lock(&musikernel->main_lock);
 
-    musikernel->ab_mode = a_mode;
-
-    if(!a_mode)
-    {
-        musikernel->is_ab_ing = 0;
-    }
+    musikernel->current_host = a_mode;
 
     pthread_spin_unlock(&musikernel->main_lock);
 }
@@ -878,7 +873,7 @@ void v_mk_configure(const char* a_key, const char* a_value)
     else if(!strcmp(a_key, MK_CONFIGURE_KEY_LOAD_AB_SET))
     {
         int f_mode = atoi(a_value);
-        v_pydaw_set_ab_mode(f_mode);
+        v_pydaw_set_host(f_mode);
     }
     else if(!strcmp(a_key, MK_CONFIGURE_KEY_PITCH_ENV))
     {

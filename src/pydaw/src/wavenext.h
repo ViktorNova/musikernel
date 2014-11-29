@@ -72,7 +72,6 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
                 pthread_spin_lock(&musikernel->main_lock);
             }
 
-            musikernel->is_ab_ing = 0;
             musikernel->playback_mode = a_mode;
 
             if(a_lock)
@@ -91,15 +90,11 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
 
             if(wavenext->ab_wav_item)
             {
-                musikernel->is_ab_ing = musikernel->ab_mode;
-                if(musikernel->is_ab_ing)
-                {
-                    v_ifh_retrigger(
-                        &wavenext->ab_audio_item->sample_read_heads[0],
-                        wavenext->ab_audio_item->sample_start_offset);
-                    v_adsr_retrigger(&wavenext->ab_audio_item->adsrs[0]);
-                    v_svf_reset(&wavenext->ab_audio_item->lp_filters[0]);
-                }
+                v_ifh_retrigger(
+                    &wavenext->ab_audio_item->sample_read_heads[0],
+                    wavenext->ab_audio_item->sample_start_offset);
+                v_adsr_retrigger(&wavenext->ab_audio_item->adsrs[0]);
+                v_svf_reset(&wavenext->ab_audio_item->lp_filters[0]);
             }
 
             musikernel->playback_mode = a_mode;
@@ -154,9 +149,6 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
         f_buffer[f_i] = (float*)malloc(sizeof(float) * f_block_size);
         ++f_i;
     }
-
-    int f_old_ab_mode = musikernel->ab_mode;
-    musikernel->ab_mode = 1;
 
     v_wn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_PLAY, 0);
 
@@ -225,8 +217,6 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
     pthread_spin_lock(&musikernel->main_lock);
     musikernel->is_offline_rendering = 0;
     pthread_spin_unlock(&musikernel->main_lock);
-
-    musikernel->ab_mode = f_old_ab_mode;
 }
 
 
@@ -242,13 +232,7 @@ void v_pydaw_set_ab_file(t_wavenext * self, const char * a_file)
         t_wav_pool_item * f_old = self->ab_wav_item;
         self->ab_wav_item = f_result;
 
-        if(!f_result)
-        {
-            musikernel->ab_mode = 0;
-        }
-
-        self->ab_audio_item->ratio =
-                self->ab_wav_item->ratio_orig;
+        self->ab_audio_item->ratio = self->ab_wav_item->ratio_orig;
 
         pthread_spin_unlock(&musikernel->main_lock);
 

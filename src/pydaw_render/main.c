@@ -100,6 +100,8 @@ int main(int argc, char** argv)
     }
 
     musikernel->sample_count = f_buffer_size;
+    musikernel->current_host = MK_HOST_EDMNEXT;
+    
     v_en_offline_render_prep(edmnext);
 
     /*

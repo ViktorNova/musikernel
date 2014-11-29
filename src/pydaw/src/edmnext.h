@@ -3081,8 +3081,6 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
     float f_sample_rate = musikernel->thread_storage[0].sample_rate;
 
     musikernel->input_buffers_active = 0;
-    int f_ab_old = musikernel->ab_mode;
-    musikernel->ab_mode = 0;
 
     int f_bar_count = a_end_bar - a_start_bar;
 
@@ -3241,8 +3239,6 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
     pthread_spin_lock(&musikernel->main_lock);
     musikernel->is_offline_rendering = 0;
     pthread_spin_unlock(&musikernel->main_lock);
-
-    musikernel->ab_mode = f_ab_old;
 }
 
 

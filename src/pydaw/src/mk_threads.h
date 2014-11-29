@@ -170,13 +170,17 @@ void * v_pydaw_osc_send_thread(void* a_arg)
 
     while(!musikernel->audio_recording_quit_notifier)
     {
-        if(musikernel->is_ab_ing == 0)
+        if(musikernel->current_host == MK_HOST_EDMNEXT)
         {
             v_en_osc_send(&f_send_data);
         }
-        else if(musikernel->is_ab_ing == 1)
+        else if(musikernel->current_host == MK_HOST_WAVENEXT)
         {
             v_wn_osc_send(&f_send_data);
+        }
+        else
+        {
+            assert(0);
         }
 
         usleep(20000);
