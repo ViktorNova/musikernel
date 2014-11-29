@@ -540,7 +540,7 @@ typedef void (*fp_run_sampler_interpolation)(t_euphoria *__restrict plugin_data,
 
 static fp_calculate_ratio ratio_function_ptrs[EUPHORIA_MAX_SAMPLE_COUNT];
 static fp_run_sampler_interpolation
-        interpolation_modes[EUPHORIA_MAX_SAMPLE_COUNT];
+    interpolation_modes[EUPHORIA_MAX_SAMPLE_COUNT];
 
 static inline int check_sample_bounds(t_euphoria * plugin_data, int n)
 {
@@ -710,17 +710,17 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
     f_voice->modulex_current_sample[0] = 0.0f;
     f_voice->modulex_current_sample[1] = 0.0f;
 
-    register int i_loaded_samples = 0;
+    int i_ls;
 
     //Calculating and summing all of the interpolated samples for this note
-    while(i_loaded_samples < f_voice->sample_indexes_count)
+    for(i_ls = 0; i_ls < f_voice->sample_indexes_count; ++i_ls)
     {
-        plugin_data->current_sample = f_voice->sample_indexes[i_loaded_samples];
+        plugin_data->current_sample = f_voice->sample_indexes[i_ls];
         f_pfx_sample = &f_voice->samples[plugin_data->current_sample];
-        if(ratio_function_ptrs[(plugin_data->current_sample)](plugin_data, n)
-                == 1)
+
+        if(ratio_function_ptrs[
+            plugin_data->current_sample](plugin_data, n) == 1)
         {
-            ++i_loaded_samples;
             continue;
         }
 
@@ -755,8 +755,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
             &plugin_data->mono_modules->white_noise1[(f_voice->noise_index)])
             * f_sample->noise_linamp;
 
-        ch = 0;
-        while(ch < (f_sample->wavpool_items->channels))
+        for(ch = 0; ch < f_sample->wavpool_items->channels; ++ch)
         {
             interpolation_modes[plugin_data->current_sample](
                 plugin_data, n, ch);
@@ -776,10 +775,7 @@ static void add_sample_lms_euphoria(t_euphoria *__restrict plugin_data, int n)
                 f_voice->modulex_current_sample[1] += plugin_data->sample[0];
                 break;
             }
-            ++ch;
         }
-
-        ++i_loaded_samples;
     }
 
     t_euphoria_pfx_group * f_pfx_group;
