@@ -475,7 +475,6 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
 
     plugin_data->plugin_uid = a_plugin_uid;
 
-    plugin_data->i_selected_sample = 0;
     plugin_data->current_sample = 0;
     plugin_data->loaded_samples_count = 0;
     plugin_data->amp = 1.0f;
@@ -516,12 +515,9 @@ static PYFX_Handle instantiateSampler(PYFX_Descriptor * descriptor,
         ++f_i;
     }
 
-    plugin_data->sampleRate = s_rate;
     plugin_data->sv_pitch_bend_value = 0.0f;
     plugin_data->sv_last_note = -1.0f;
-    plugin_data->channels = 2;
     plugin_data->mono_modules = g_euphoria_mono_init(s_rate);
-    plugin_data->fs = s_rate;
     plugin_data->sampleNo = 0;
 
     plugin_data->port_table = g_pydaw_get_port_table(
@@ -573,9 +569,9 @@ static int calculate_ratio_sinc(t_euphoria *__restrict plugin_data, int n)
         &plugin_data->data[n]->samples[
             (plugin_data->current_sample)].sample_read_heads;
     plugin_data->ratio =
-    f_pit_midi_note_to_ratio_fast(f_sample->adjusted_base_pitch,
-        plugin_data->data[n]->base_pitch, plugin_data->smp_pit_ratio) *
-        f_sample->wavpool_items->ratio_orig;
+        f_pit_midi_note_to_ratio_fast(f_sample->adjusted_base_pitch,
+            plugin_data->data[n]->base_pitch, plugin_data->smp_pit_ratio) *
+            f_sample->wavpool_items->ratio_orig;
 
     v_ifh_run(f_read_head, plugin_data->ratio);
 

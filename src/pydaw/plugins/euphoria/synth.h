@@ -119,10 +119,6 @@ typedef struct st_euphoria
 
     //End from PolyFX Mod Matrix
 
-
-    int         i_selected_sample;
-    int          channels;
-
     //These 2 calculate which channels are assigned to a sample
     //and should be processed
     int monofx_channel_index[EUPHORIA_MONO_FX_GROUPS_COUNT];
@@ -140,14 +136,11 @@ typedef struct st_euphoria
     /*The index of the current sample being played*/
     int current_sample;
 
-    int          sampleRate;
-    float fs;    //From Ray-V
-    float ratio; //Used per-sample;
-
+    float ratio;
     t_voc_voices * voices;
     long         sampleNo;
 
-    float sample[EUPHORIA_CHANNEL_COUNT];
+    float sample[2];
 
     t_euphoria_mono_modules * mono_modules;
     t_pit_ratio * smp_pit_ratio;

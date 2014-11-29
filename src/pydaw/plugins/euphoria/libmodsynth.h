@@ -36,8 +36,6 @@ extern "C" {
 #define EUPHORIA_SINC_INTERPOLATION_POINTS 25
 #define EUPHORIA_SINC_INTERPOLATION_POINTS_DIV2 13
 
-#define EUPHORIA_CHANNEL_COUNT 2
-
 #define EUPHORIA_NOISE_COUNT 16
 
 typedef struct
@@ -59,7 +57,7 @@ typedef struct
 {
     t_smoother_linear pitchbend_smoother;
 
-    t_dco_dc_offset_filter dc_offset_filters[EUPHORIA_CHANNEL_COUNT];
+    t_dco_dc_offset_filter dc_offset_filters[2];
     t_euphoria_mfx_group mfx[EUPHORIA_MONO_FX_GROUPS_COUNT];
 
     t_white_noise white_noise1[EUPHORIA_NOISE_COUNT];
@@ -233,7 +231,7 @@ t_euphoria_mono_modules * g_euphoria_mono_init(float a_sr)
 
     int f_i;
 
-    for(f_i = 0; f_i < EUPHORIA_CHANNEL_COUNT; ++f_i)
+    for(f_i = 0; f_i < 2; ++f_i)
     {
         g_dco_init(&a_mono->dc_offset_filters[f_i], a_sr);
     }
