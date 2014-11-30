@@ -194,12 +194,12 @@ inline void v_pydaw_run_main_loop(int sample_count,
                 if(f_wav_item->channels == 1)
                 {
                     float f_tmp_sample = f_cubic_interpolate_ptr_ifh(
-                    (f_wav_item->samples[0]),
-                    (f_audio_item->sample_read_heads[0].whole_number),
-                    (f_audio_item->sample_read_heads[0].fraction)) *
-                    (f_audio_item->adsrs[0].output) *
-                    (musikernel->preview_amp_lin); // *
-                    //(f_audio_item->fade_vol);
+                        (f_wav_item->samples[0]),
+                        (f_audio_item->sample_read_heads[0].whole_number),
+                        (f_audio_item->sample_read_heads[0].fraction)) *
+                        (f_audio_item->adsrs[0].output) *
+                        (musikernel->preview_amp_lin); // *
+                        //(f_audio_item->fade_vol);
 
                     a_buffers[0][f_i] = f_tmp_sample;
                     a_buffers[1][f_i] = f_tmp_sample;
@@ -207,20 +207,20 @@ inline void v_pydaw_run_main_loop(int sample_count,
                 else if(f_wav_item->channels > 1)
                 {
                     a_buffers[0][f_i] = f_cubic_interpolate_ptr_ifh(
-                    (f_wav_item->samples[0]),
-                    (f_audio_item->sample_read_heads[0].whole_number),
-                    (f_audio_item->sample_read_heads[0].fraction)) *
-                    (f_audio_item->adsrs[0].output) *
-                    (musikernel->preview_amp_lin); // *
+                        (f_wav_item->samples[0]),
+                        (f_audio_item->sample_read_heads[0].whole_number),
+                        (f_audio_item->sample_read_heads[0].fraction)) *
+                        (f_audio_item->adsrs[0].output) *
+                        (musikernel->preview_amp_lin); // *
                     //(f_audio_item->fade_vol);
 
                     a_buffers[1][f_i] = f_cubic_interpolate_ptr_ifh(
-                    (f_wav_item->samples[1]),
-                    (f_audio_item->sample_read_heads[0].whole_number),
-                    (f_audio_item->sample_read_heads[0].fraction)) *
-                    (f_audio_item->adsrs[0].output) *
-                    (musikernel->preview_amp_lin); // *
-                    //(f_audio_item->fade_vol);
+                        (f_wav_item->samples[1]),
+                        (f_audio_item->sample_read_heads[0].whole_number),
+                        (f_audio_item->sample_read_heads[0].fraction)) *
+                        (f_audio_item->adsrs[0].output) *
+                        (musikernel->preview_amp_lin); // *
+                        //(f_audio_item->fade_vol);
                 }
 
                 v_ifh_run(&f_audio_item->sample_read_heads[0],
@@ -256,12 +256,11 @@ inline void v_pydaw_run_main_loop(int sample_count,
 int THREAD_AFFINITY = 0;
 int THREAD_AFFINITY_SET = 0;
 
-static int portaudioCallback( const void *inputBuffer,
-                              void *outputBuffer,
-                              unsigned long framesPerBuffer,
-                              const PaStreamCallbackTimeInfo* timeInfo,
-                              PaStreamCallbackFlags statusFlags,
-                              void *userData )
+static int portaudioCallback(
+        const void *inputBuffer, void *outputBuffer,
+        unsigned long framesPerBuffer,
+        const PaStreamCallbackTimeInfo* timeInfo,
+        PaStreamCallbackFlags statusFlags, void *userData)
 {
     float *out = (float*)outputBuffer;
 
@@ -645,8 +644,8 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
                 }
                 else
                 {
-                    printf("Unknown key|value pair: %s|%s\n", f_key_char,
-                            f_value_char);
+                    printf("Unknown key|value pair: %s|%s\n",
+                        f_key_char, f_value_char);
                 }
             }
 
@@ -656,10 +655,11 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         else
         {
             ++f_failure_count;
-            printf("%s does not exist, running %s\n", f_device_file_path,
-                    f_show_dialog_cmd);
+            printf("%s does not exist, running %s\n",
+                f_device_file_path, f_show_dialog_cmd);
             f_device_name[0] = '\0';
             system(f_show_dialog_cmd);
+
             if(i_pydaw_file_exists(f_device_file_path))
             {
                 continue;
@@ -675,21 +675,22 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
         if (inputParameters.device == paNoDevice)
         {
-          sprintf(f_cmd_buffer, "%s \"%s\"", f_show_dialog_cmd,
-                  "Error: No default input device.");
-          system(f_cmd_buffer);
-          continue;
+            sprintf(f_cmd_buffer, "%s \"%s\"", f_show_dialog_cmd,
+                "Error: No default input device.");
+            system(f_cmd_buffer);
+            continue;
         }
+
         inputParameters.channelCount = 0;
         inputParameters.sampleFormat = PA_SAMPLE_TYPE;
-        inputParameters.suggestedLatency =
-            Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
+        inputParameters.suggestedLatency = Pa_GetDeviceInfo(
+            inputParameters.device)->defaultLowInputLatency;
         inputParameters.hostApiSpecificStreamInfo = NULL;
 
         if (outputParameters.device == paNoDevice)
         {
-          sprintf(f_cmd_buffer, "%s \"%s\"", f_show_dialog_cmd,
-                  "Error: No default output device.");
+          sprintf(f_cmd_buffer, "%s \"%s\"",
+                f_show_dialog_cmd, "Error: No default output device.");
           system(f_cmd_buffer);
           continue;
         }
@@ -722,20 +723,18 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             continue;
         }
 
-        outputParameters.suggestedLatency =
-            Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+        outputParameters.suggestedLatency = Pa_GetDeviceInfo(
+            outputParameters.device)->defaultLowOutputLatency;
 
         err = Pa_OpenStream(
-                  &stream,
-                  0, //&inputParameters,
-                  &outputParameters,
-                  sample_rate, //SAMPLE_RATE,
-                  f_frame_count, //FRAMES_PER_BUFFER,
-                  /* we won't output out of range samples so don't bother
-                   * clipping them */
-                  0, /* paClipOff, */
-                  portaudioCallback,
-                  NULL);
+            &stream, NULL, //&inputParameters,
+            &outputParameters, sample_rate, //SAMPLE_RATE,
+            f_frame_count, //FRAMES_PER_BUFFER,
+            /* we won't output out of range samples so don't bother
+             * clipping them */
+            0, /* paClipOff, */
+            portaudioCallback, NULL);
+
         if( err != paNoError )
         {
             ++f_failure_count;
@@ -765,7 +764,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     float * f_portaudio_input_buffer;
     float * f_portaudio_output_buffer;
 
-    exiting = 0;
     if(!PYDAW_NO_HARDWARE)
     {
         err = Pa_StartStream(stream);

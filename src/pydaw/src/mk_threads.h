@@ -84,7 +84,7 @@ void v_pydaw_activate(int a_thread_count,
     /* Instantiate hosts */
     g_musikernel_get(a_sr, a_midi_devices);
 
-    musikernel->hosts[MK_HOST_EDMNEXT].run = v_pydaw_run_engine;
+    musikernel->hosts[MK_HOST_EDMNEXT].run = v_en_run_engine;
     musikernel->hosts[MK_HOST_EDMNEXT].osc_send = v_en_osc_send;
 
     musikernel->hosts[MK_HOST_WAVENEXT].run = v_pydaw_run_wave_editor;

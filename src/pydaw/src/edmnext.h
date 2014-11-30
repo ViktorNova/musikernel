@@ -1640,7 +1640,7 @@ inline void v_pydaw_finish_time_params(t_edmnext * self,
     }
 }
 
-inline void v_pydaw_run_engine(int sample_count,
+inline void v_en_run_engine(int sample_count,
         float **output, float **a_input_buffers)
 {
     t_edmnext * self = edmnext;
@@ -3129,7 +3129,7 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
     v_set_playback_mode(self, PYDAW_PLAYBACK_MODE_PLAY,
             a_start_region, a_start_bar, 0);
 
-    printf("\nOpening SNDFILE with sample rate %f\n", f_sample_rate);
+    printf("\nOpening SNDFILE with sample rate %i\n", (int)f_sample_rate);
 
     SF_INFO f_sf_info;
     f_sf_info.channels = 2;
@@ -3175,7 +3175,7 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
         }
         else
         {
-            v_pydaw_run_engine(f_block_size, f_buffer, NULL);
+            v_en_run_engine(f_block_size, f_buffer, NULL);
         }
 
         f_i = 0;

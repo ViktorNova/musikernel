@@ -14,6 +14,8 @@ GNU General Public License for more details.
 #ifndef MIDI_DEVICE_H
 #define	MIDI_DEVICE_H
 
+#include <assert.h>
+#include "../include/pydaw_plugin.h"
 #include <sys/time.h>
 #include <time.h>
 #include <portmidi.h>
@@ -53,6 +55,9 @@ typedef struct
     t_midi_device devices[8];
 }t_midi_device_list;
 
+void midiDeviceRead(t_midi_device *, float, unsigned long);
+void midiPoll(t_midi_device * self);
+
 #ifdef	__cplusplus
 }
 #endif
@@ -60,6 +65,8 @@ typedef struct
 int midiDeviceInit(t_midi_device * self, char * f_midi_device_name)
 {
     self->instanceEventCounts = 0;
+    self->midiEventReadIndex = 0;
+    self->midiEventWriteIndex = 0;
     self->loaded = 0;
     self->f_device_id = pmNoDevice;
     self->name[0] = '\0';
@@ -67,17 +74,17 @@ int midiDeviceInit(t_midi_device * self, char * f_midi_device_name)
 
     if(strcmp(f_midi_device_name, "None"))
     {
-        int f_i = 0;
-        while(f_i < Pm_CountDevices())
+        int f_i;
+        int f_count = Pm_CountDevices();
+
+        for(f_i = 0; f_i < f_count; ++f_i)
         {
             const PmDeviceInfo * f_device = Pm_GetDeviceInfo(f_i);
-            if(f_device->input && !strcmp(f_device->name,
-                    f_midi_device_name))
+            if(f_device->input && !strcmp(f_device->name, f_midi_device_name))
             {
                 self->f_device_id = f_i;
                 break;
             }
-            ++f_i;
         }
 
         if(self->f_device_id == pmNoDevice)
@@ -86,9 +93,9 @@ int midiDeviceInit(t_midi_device * self, char * f_midi_device_name)
         }
 
         printf("Opening MIDI device ID: %i\n", self->f_device_id);
-        self->f_midi_err = Pm_OpenInput(&self->f_midi_stream,
-                self->f_device_id, NULL,
-                MIDI_EVENT_BUFFER_SIZE, NULL, NULL);
+        self->f_midi_err = Pm_OpenInput(
+            &self->f_midi_stream, self->f_device_id, NULL,
+            MIDI_EVENT_BUFFER_SIZE, NULL, NULL);
 
         if(self->f_midi_err != pmNoError)
         {
