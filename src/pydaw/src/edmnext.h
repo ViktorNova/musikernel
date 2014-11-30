@@ -70,7 +70,6 @@ GNU General Public License for more details.
 #include "pydaw_audio_inputs.h"
 #include "pydaw_audio_util.h"
 #include <lo/lo.h>
-#include "midi_device.h"
 #include "musikernel.h"
 
 
@@ -250,7 +249,6 @@ typedef struct
     int audio_glue_indexes[PYDAW_MAX_AUDIO_ITEM_COUNT];
     int f_region_length_bars;
     long f_next_current_sample;
-    t_midi_device_list * midi_devices;
     t_pydaw_midi_routing_list midi_routing;
 }t_edmnext;
 
@@ -266,7 +264,7 @@ t_en_atm_region * g_atm_region_get(t_edmnext*, int);
 void v_en_atm_region_free(t_en_atm_region*);
 void g_pyitem_get(t_edmnext*, int);
 
-t_edmnext * g_edmnext_get(t_midi_device_list*);
+t_edmnext * g_edmnext_get();
 int i_en_get_region_index_from_name(t_edmnext *, int);
 void v_en_set_tempo(t_edmnext*,float);
 void v_en_set_is_soloed(t_edmnext * self);
@@ -317,9 +315,9 @@ t_edmnext * edmnext;
 
 
 
-void g_en_instantiate(t_midi_device_list * a_midi_devices)
+void g_en_instantiate()
 {
-    edmnext = g_edmnext_get(a_midi_devices);
+    edmnext = g_edmnext_get();
 }
 
 void v_en_reset_audio_item_read_heads(t_edmnext * self,
@@ -2695,14 +2693,13 @@ void g_pyitem_get(t_edmnext* self, int a_uid)
     self->item_pool[a_uid] = f_result;
 }
 
-t_edmnext * g_edmnext_get(t_midi_device_list * a_midi_devices)
+t_edmnext * g_edmnext_get()
 {
     t_edmnext * f_result;
     hpalloc((void**)&f_result, sizeof(t_edmnext));
 
     pthread_mutex_init(&musikernel->audio_inputs_mutex, NULL);
 
-    f_result->midi_devices = a_midi_devices;
     f_result->current_sample = 0;
     f_result->current_bar = 0;
     f_result->current_region = 0;
@@ -3407,13 +3404,13 @@ void v_en_set_midi_device(
     f_route->on = a_on;
     f_route->output_track = a_output;
 
-    if(f_route->on && self->midi_devices->devices[a_device].loaded)
+    if(f_route->on && musikernel->midi_devices->devices[a_device].loaded)
     {
-        f_track_new->midi_device = &self->midi_devices->devices[a_device];
+        f_track_new->midi_device = &musikernel->midi_devices->devices[a_device];
         f_track_new->extern_midi =
-            self->midi_devices->devices[a_device].instanceEventBuffers;
+            musikernel->midi_devices->devices[a_device].instanceEventBuffers;
         f_track_new->extern_midi_count =
-            &self->midi_devices->devices[a_device].instanceEventCounts;
+            &musikernel->midi_devices->devices[a_device].instanceEventCounts;
     }
     else
     {

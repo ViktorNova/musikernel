@@ -17,6 +17,7 @@ GNU General Public License for more details.
 #include "pydaw_files.h"
 #include "../libmodsynth/lib/lmalloc.h"
 #include "pydaw_plugin_wrapper.h"
+#include "midi_device.h"
 
 #define MAX_WORKER_THREADS 8
 
@@ -178,11 +179,12 @@ typedef struct
     pthread_t osc_queue_thread;
     //Threads must hold this to write OSC messages
     pthread_spinlock_t ui_spinlock;
+    t_midi_device_list * midi_devices;
     int midi_learn;
     t_pydaw_plugin plugin_pool[MAX_PLUGIN_POOL_COUNT];
 }t_musikernel;
 
-void g_musikernel_get(float);
+void g_musikernel_get(float, t_midi_device_list*);
 t_pytrack * g_pytrack_get(int, float);
 inline void v_pydaw_zero_buffer(float**, int);
 double v_pydaw_print_benchmark(char * a_message,
@@ -205,10 +207,11 @@ void pydaw_osc_error(int num, const char *msg, const char *path)
 	    num, path, msg);
 }
 
-void g_musikernel_get(float a_sr)
+void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
 {
     hpalloc((void**)&musikernel, sizeof(t_musikernel));
     musikernel->wav_pool = g_wav_pool_get(a_sr);
+    musikernel->midi_devices = a_midi_devices;
     musikernel->current_host = MK_HOST_EDMNEXT;
     musikernel->midi_learn = 0;
     musikernel->is_offline_rendering = 0;
