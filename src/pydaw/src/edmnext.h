@@ -1645,7 +1645,7 @@ inline void v_pydaw_finish_time_params(t_edmnext * self,
 }
 
 inline void v_pydaw_run_engine(t_edmnext * self, int sample_count,
-        long f_next_current_sample, float **output, float **a_input_buffers)
+        float **output, float **a_input_buffers)
 {
     //notify the worker threads to wake up
     register int f_i = 1;
@@ -1658,6 +1658,8 @@ inline void v_pydaw_run_engine(t_edmnext * self, int sample_count,
         pthread_mutex_unlock(&musikernel->track_block_mutexes[f_i]);
         ++f_i;
     }
+
+    long f_next_current_sample = edmnext->current_sample + sample_count;
 
     musikernel->sample_count = sample_count;
     musikernel->input_buffers = a_input_buffers;
@@ -1742,6 +1744,8 @@ inline void v_pydaw_run_engine(t_edmnext * self, int sample_count,
     {
         v_pydaw_finish_time_params(self, self->f_region_length_bars);
     }
+
+    edmnext->current_sample = f_next_current_sample;
 }
 
 
@@ -3112,7 +3116,6 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
 
     float * f_output = (float*)malloc(sizeof(float) * (f_block_size * 2));
 
-    long f_next_sample_block = 0;
     float ** f_buffer;
     lmalloc((void**)&f_buffer, sizeof(float*) * 2);
 
@@ -3166,8 +3169,6 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
             ++f_i;
         }
 
-        f_next_sample_block = (self->current_sample) + f_block_size;
-
         if(a_is_audio_glue)
         {
             v_pydaw_set_time_params(self, f_block_size);
@@ -3178,11 +3179,8 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
         }
         else
         {
-            v_pydaw_run_engine(self, f_block_size,
-                f_next_sample_block, f_buffer, 0);
+            v_pydaw_run_engine(self, f_block_size, f_buffer, 0);
         }
-
-        self->current_sample = f_next_sample_block;
 
         f_i = 0;
         /*Interleave the samples...*/

@@ -177,11 +177,7 @@ inline void v_pydaw_run_main_loop(t_edmnext * self, int sample_count,
 {
     if(musikernel->current_host == MK_HOST_EDMNEXT)
     {
-        long f_next_current_sample =
-                    ((edmnext->current_sample) + sample_count);
-        v_pydaw_run_engine(self, sample_count, f_next_current_sample,
-            a_buffers, a_input_buffers);
-        edmnext->current_sample = f_next_current_sample;
+        v_pydaw_run_engine(self, sample_count, a_buffers, a_input_buffers);
     }
     else if(musikernel->current_host == MK_HOST_WAVENEXT)
     {
