@@ -83,6 +83,13 @@ void v_pydaw_activate(int a_thread_count,
 {
     /* Instantiate hosts */
     g_musikernel_get(a_sr, a_midi_devices);
+
+    musikernel->hosts[MK_HOST_EDMNEXT].run = v_pydaw_run_engine;
+    musikernel->hosts[MK_HOST_EDMNEXT].osc_send = v_en_osc_send;
+
+    musikernel->hosts[MK_HOST_WAVENEXT].run = v_pydaw_run_wave_editor;
+    musikernel->hosts[MK_HOST_WAVENEXT].osc_send = v_wn_osc_send;
+
     g_en_instantiate();
     g_wavenext_get();
 
@@ -170,18 +177,7 @@ void * v_pydaw_osc_send_thread(void* a_arg)
 
     while(!musikernel->audio_recording_quit_notifier)
     {
-        if(musikernel->current_host == MK_HOST_EDMNEXT)
-        {
-            v_en_osc_send(&f_send_data);
-        }
-        else if(musikernel->current_host == MK_HOST_WAVENEXT)
-        {
-            v_wn_osc_send(&f_send_data);
-        }
-        else
-        {
-            assert(0);
-        }
+        musikernel->current_host->osc_send(&f_send_data);
 
         usleep(20000);
     }

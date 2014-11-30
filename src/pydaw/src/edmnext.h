@@ -1642,9 +1642,10 @@ inline void v_pydaw_finish_time_params(t_edmnext * self,
     }
 }
 
-inline void v_pydaw_run_engine(t_edmnext * self, int sample_count,
+inline void v_pydaw_run_engine(int sample_count,
         float **output, float **a_input_buffers)
 {
+    t_edmnext * self = edmnext;
     //notify the worker threads to wake up
     register int f_i = 1;
     while(f_i < musikernel->track_worker_thread_count)
@@ -3176,7 +3177,7 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
         }
         else
         {
-            v_pydaw_run_engine(self, f_block_size, f_buffer, 0);
+            v_pydaw_run_engine(f_block_size, f_buffer, NULL);
         }
 
         f_i = 0;
@@ -3420,9 +3421,9 @@ void v_en_set_midi_device(
     }
 }
 
-void v_en_configure(t_edmnext* self,
-        const char* a_key, const char* a_value)
+void v_en_configure(const char* a_key, const char* a_value)
 {
+    t_edmnext * self = edmnext;
     printf("v_en_configure:  key: \"%s\", value: \"%s\"\n", a_key, a_value);
 
     if(!strcmp(a_key, EN_CONFIGURE_KEY_PER_AUDIO_ITEM_FX))

@@ -70,6 +70,8 @@ GNU General Public License for more details.
 #define MK_HOST_EDMNEXT 0
 #define MK_HOST_WAVENEXT 1
 
+#define MK_HOST_COUNT 2
+
 volatile int exiting = 0;
 float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
 
@@ -125,6 +127,12 @@ typedef struct
 
 typedef struct
 {
+    void (*run)(int sample_count, float **output, float **a_input_buffers);
+    void (*osc_send)(t_osc_send_data*);
+}t_mk_host;
+
+typedef struct
+{
     float sample_rate;
     char padding[60];
 }t_mk_thread_storage;
@@ -132,6 +140,8 @@ typedef struct
 typedef struct
 {
     t_mk_thread_storage thread_storage[MAX_WORKER_THREADS];
+    t_mk_host * current_host;
+    t_mk_host hosts[MK_HOST_COUNT];
     t_wav_pool * wav_pool;
     pthread_spinlock_t main_lock;
 
@@ -146,7 +156,6 @@ typedef struct
     volatile int * track_thread_is_finished;
     void * main_thread_args;
 
-    int current_host;
     int is_offline_rendering;
     //set from the audio device buffer size every time the main loop is called.
     int sample_count;
@@ -212,7 +221,7 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     hpalloc((void**)&musikernel, sizeof(t_musikernel));
     musikernel->wav_pool = g_wav_pool_get(a_sr);
     musikernel->midi_devices = a_midi_devices;
-    musikernel->current_host = MK_HOST_EDMNEXT;
+    musikernel->current_host = &musikernel->hosts[MK_HOST_EDMNEXT];
     musikernel->midi_learn = 0;
     musikernel->is_offline_rendering = 0;
     pthread_spin_init(&musikernel->main_lock, 0);
@@ -307,9 +316,11 @@ void v_queue_osc_message(
 
 void v_pydaw_set_host(int a_mode)
 {
+    assert(a_mode >= 0 && a_mode < MK_HOST_COUNT);
+
     pthread_spin_lock(&musikernel->main_lock);
 
-    musikernel->current_host = a_mode;
+    musikernel->current_host = &musikernel->hosts[a_mode];
 
     pthread_spin_unlock(&musikernel->main_lock);
 }

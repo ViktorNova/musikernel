@@ -70,9 +70,8 @@ GNU General Public License for more details.
 
 static float **pluginOutputBuffers;
 
-//t_midi_device MIDI_DEVICE  __attribute__((aligned(16)));
+
 t_midi_device_list MIDI_DEVICES;
-//static char * osc_path_tmp = "osc.udp://localhost:19271/dssi/pydaw";
 lo_server_thread serverThread;
 
 static sigset_t _signals;
@@ -87,7 +86,7 @@ int osc_message_handler(const char *path, const char *types, lo_arg **argv, int
 int osc_debug_handler(const char *path, const char *types, lo_arg **argv, int
 		      argc, void *data, void *user_data) ;
 
-inline void v_pydaw_run_main_loop(t_edmnext * pydaw_data, int sample_count,
+inline void v_pydaw_run_main_loop(int sample_count,
         float **output, float **a_input_buffers);
 
 void signalHandler(int sig)
@@ -153,7 +152,7 @@ inline void v_pydaw_run(float ** buffers, int sample_count)
     {
         musikernel->input_buffers_active = 1;
 
-        v_pydaw_run_main_loop(edmnext, sample_count, buffers, NULL);
+        v_pydaw_run_main_loop(sample_count, buffers, NULL);
     }
     else
     {
@@ -172,21 +171,10 @@ inline void v_pydaw_run(float ** buffers, int sample_count)
     pthread_spin_unlock(&musikernel->main_lock);
 }
 
-inline void v_pydaw_run_main_loop(t_edmnext * self, int sample_count,
+inline void v_pydaw_run_main_loop(int sample_count,
         float ** a_buffers, PYFX_Data **a_input_buffers)
 {
-    if(musikernel->current_host == MK_HOST_EDMNEXT)
-    {
-        v_pydaw_run_engine(self, sample_count, a_buffers, a_input_buffers);
-    }
-    else if(musikernel->current_host == MK_HOST_WAVENEXT)
-    {
-        v_pydaw_run_wave_editor(wavenext, sample_count, a_buffers);
-    }
-    else
-    {
-        assert(0);
-    }
+    musikernel->current_host->run(sample_count, a_buffers, a_input_buffers);
 
     if(musikernel->is_previewing)
     {
@@ -945,17 +933,19 @@ int osc_message_handler(const char *path, const char *types, lo_arg **argv,
     const char *key = (const char *)&argv[0]->s;
     const char *value = (const char *)&argv[1]->s;
 
-    if(!strcmp(path, "/musikernel/edmnext") && !strcmp(types, "ss"))
+    assert(!strcmp(types, "ss"));
+
+    if(!strcmp(path, "/musikernel/edmnext"))
     {
-        v_en_configure(edmnext, key, value);
+        v_en_configure(key, value);
         return 0;
     }
-    if(!strcmp(path, "/musikernel/wavenext") && !strcmp(types, "ss"))
+    if(!strcmp(path, "/musikernel/wavenext"))
     {
         v_wn_configure(key, value);
         return 0;
     }
-    else if(!strcmp(path, "/musikernel/master") && !strcmp(types, "ss"))
+    else if(!strcmp(path, "/musikernel/master"))
     {
         v_mk_configure(key, value);
         return 0;

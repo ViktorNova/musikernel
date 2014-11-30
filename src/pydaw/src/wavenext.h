@@ -37,8 +37,8 @@ typedef struct
 void v_pydaw_set_ab_mode(int a_mode);
 void v_pydaw_set_ab_file(t_wavenext * self, const char * a_file);
 void v_pydaw_set_wave_editor_item(t_wavenext * self, const char * a_string);
-inline void v_pydaw_run_wave_editor(t_wavenext * self,
-    int sample_count, float **output);
+inline void v_pydaw_run_wave_editor(int sample_count,
+    float **output, float ** a_input);
 
 #ifdef	__cplusplus
 }
@@ -179,7 +179,7 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
             ++f_i;
         }
 
-        v_pydaw_run_wave_editor(self, f_block_size, f_buffer);
+        v_pydaw_run_wave_editor(f_block_size, f_buffer, NULL);
 
         f_i = 0;
         /*Interleave the samples...*/
@@ -281,9 +281,10 @@ void v_pydaw_set_wave_editor_item(t_wavenext * self,
 }
 
 
-inline void v_pydaw_run_wave_editor(t_wavenext * self,
-        int sample_count, float **output)
+inline void v_pydaw_run_wave_editor(int sample_count,
+        float **output, float ** a_input)
 {
+    t_wavenext * self = wavenext;
     t_pydaw_plugin * f_plugin;
     int f_global_track_num = 0;
     t_pytrack * f_track = self->track_pool[f_global_track_num];
