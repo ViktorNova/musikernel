@@ -54,7 +54,7 @@ typedef struct
     int atm_count;
     int atm_pos;  //position within the automation region
     t_pydaw_seq_event * atm_buffer;
-    char padding[16];
+    char padding[CACHE_LINE_SIZE - ((8 * 4) + (sizeof(void*) * 4))];
 }t_pydaw_plugin;
 
 

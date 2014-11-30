@@ -167,15 +167,14 @@ typedef struct
     int active;
     int sidechain;
     char padding[4];
-}
-t_pytrack_routing;
+}t_pytrack_routing;
 
 typedef struct
 {
     int track_pool_sorted[MAX_WORKER_THREADS][EN_TRACK_COUNT]
-        __attribute__((aligned(64)));
+        __attribute__((aligned(CACHE_LINE_SIZE)));
     t_pytrack_routing routes[EN_TRACK_COUNT][MAX_ROUTING_COUNT]
-        __attribute__((aligned(64)));
+        __attribute__((aligned(CACHE_LINE_SIZE)));
     int bus_count[EN_TRACK_COUNT];
     int track_pool_sorted_count;
 }t_pydaw_routing_graph;
@@ -200,8 +199,7 @@ typedef struct
     /*0 if false, or 1 if the next bar loops.  Consumers of
      * this value should check for the ->loop_mode variable..*/
     int ml_is_looping;
-
-    char padding[12];
+    char padding[CACHE_LINE_SIZE - (7 * sizeof(float)) - (6 * sizeof(int))];
 }t_en_thread_storage;
 
 typedef struct

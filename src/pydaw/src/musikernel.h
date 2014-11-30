@@ -98,9 +98,9 @@ typedef struct
     /*This is reset to bus_count each cycle and the
      * bus track processed when count reaches 0*/
     volatile int bus_counter;
-    char bus_counter_padding[60];
+    char bus_counter_padding[CACHE_LINE_SIZE - sizeof(int)];
     volatile int status;
-    char status_padding[60];
+    char status_padding[CACHE_LINE_SIZE - sizeof(int)];
     int solo;
     int mute;
     int period_event_index;
@@ -123,7 +123,7 @@ typedef struct
     t_midi_device * midi_device;
     t_pydaw_seq_event * extern_midi;
     t_pydaw_seq_event event_buffer[PYDAW_MAX_EVENT_BUFFER_SIZE];
-}t_pytrack  __attribute__((aligned(64)));
+}t_pytrack  __attribute__((aligned(CACHE_LINE_SIZE)));
 
 typedef struct
 {
@@ -134,7 +134,7 @@ typedef struct
 typedef struct
 {
     float sample_rate;
-    char padding[60];
+    char padding[CACHE_LINE_SIZE - sizeof(float)];
 }t_mk_thread_storage;
 
 typedef struct

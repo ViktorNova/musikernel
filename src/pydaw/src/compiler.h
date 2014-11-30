@@ -14,6 +14,21 @@ GNU General Public License for more details.
 #ifndef MK_COMPILER_H
 #define	MK_COMPILER_H
 
+#include <stdlib.h>
+
+#if !defined(CACHE_LINE_SIZE)
+
+#define CACHE_LINE_SIZE 64
+#warning "CACHE_LINE_SIZE not defined by compiler defaulting to 64"
+
+#elif (CACHE_LINE_SIZE < 64)
+
+#undef CACHE_LINE_SIZE
+#define CACHE_LINE_SIZE 64
+#warning "CACHE_LINE_SIZE < 64, using 64 as the cache line size"
+
+#endif
+
 #define likely(x)   __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
 

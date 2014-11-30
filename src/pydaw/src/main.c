@@ -61,7 +61,6 @@ GNU General Public License for more details.
 #include "mk_threads.h"
 #include "midi_device.h"
 
-
 #define CLOCKID CLOCK_REALTIME
 #define SIG SIGRTMIN
 

@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #define _GNU_SOURCE
 #endif
 
+#include "../pydaw/src/compiler.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sndfile.h>
@@ -100,7 +101,7 @@ int main(int argc, char** argv)
     }
 
     musikernel->sample_count = f_buffer_size;
-    
+
     v_en_offline_render_prep(edmnext);
 
     /*
