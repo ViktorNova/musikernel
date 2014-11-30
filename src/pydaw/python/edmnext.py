@@ -8610,118 +8610,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.main_tabwidget.addTab(self.notes_tab, _("Project Notes"))
         self.main_tabwidget.currentChanged.connect(self.tab_changed)
 
-    def show_offline_rendering_wait_window(self, a_file_name):
-        f_file_name = "{}.finished".format(a_file_name)
-        def ok_handler():
-            f_window.close()
-
-        def cancel_handler():
-            f_window.close()
-
-        def timeout_handler():
-            if os.path.isfile(f_file_name):
-                f_ok.setEnabled(True)
-                f_timer.stop()
-                f_time_label.setText(
-                    _("Finished in {}").format(f_time_label.text()))
-                os.system("rm -f '{}'".format(f_file_name))
-            else:
-                f_elapsed_time = time.time() - f_start_time
-                f_time_label.setText(str(round(f_elapsed_time, 1)))
-
-        f_start_time = time.time()
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Rendering to .wav, please wait"))
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-        f_time_label = QtGui.QLabel("")
-        f_time_label.setMinimumWidth(360)
-        f_layout.addWidget(f_time_label, 1, 1)
-        f_timer = QtCore.QTimer()
-        f_timer.timeout.connect(timeout_handler)
-
-        f_ok = QtGui.QPushButton(_("OK"))
-        f_ok.pressed.connect(ok_handler)
-        f_ok.setEnabled(False)
-        f_layout.addWidget(f_ok)
-        f_layout.addWidget(f_ok, 2, 2)
-        #f_cancel = QtGui.QPushButton("Cancel")
-        #f_cancel.pressed.connect(cancel_handler)
-        #f_layout.addWidget(f_cancel, 9, 2)
-        f_timer.start(100)
-        f_window.exec_()
-
-    def show_offline_rendering_wait_window_v2(self, a_cmd_list, a_file_name):
-        f_file_name = "{}.finished".format(a_file_name)
-        def ok_handler():
-            f_window.close()
-
-        def cancel_handler():
-            f_timer.stop()
-            try:
-                f_proc.kill()
-            except Exception as ex:
-                print("Exception while killing process\n{}".format(ex))
-            if os.path.exists(a_file_name):
-                os.system("rm -f '{}'".format(a_file_name))
-            if os.path.exists(f_file_name):
-                os.system("rm -f '{}'".format(f_file_name))
-            f_window.close()
-
-        def timeout_handler():
-            if f_proc.poll() != None:
-                f_timer.stop()
-                f_ok.setEnabled(True)
-                f_cancel.setEnabled(False)
-                f_time_label.setText(
-                    _("Finished in {}").format(f_time_label.text()))
-                os.system("rm -f '{}'".format(f_file_name))
-                f_proc.communicate()[0]
-                #f_output = f_proc.communicate()[0]
-                #print(f_output)
-                f_exitCode = f_proc.returncode
-                if f_exitCode != 0:
-                    f_window.close()
-                    QtGui.QMessageBox.warning(
-                        self, _("Error"),
-                        _("Offline render exited abnormally with exit "
-                        "code {}").format(f_exitCode))
-            else:
-                f_elapsed_time = time.time() - f_start_time
-                f_time_label.setText(str(round(f_elapsed_time, 1)))
-
-        f_proc = subprocess.Popen(
-            a_cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        f_start_time = time.time()
-        f_window = QtGui.QDialog(
-            MAIN_WINDOW,
-            QtCore.Qt.WindowTitleHint | QtCore.Qt.FramelessWindowHint)
-        f_window.setWindowTitle(_("Rendering to .wav, please wait"))
-        f_window.setMinimumSize(420, 210)
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-        f_time_label = QtGui.QLabel("")
-        f_time_label.setMinimumWidth(360)
-        f_layout.addWidget(f_time_label, 1, 1)
-        f_timer = QtCore.QTimer()
-        f_timer.timeout.connect(timeout_handler)
-
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
-        f_ok_cancel_layout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        f_layout.addLayout(f_ok_cancel_layout, 2, 1)
-        f_ok = QtGui.QPushButton(_("OK"))
-        f_ok.setMinimumWidth(75)
-        f_ok.pressed.connect(ok_handler)
-        f_ok.setEnabled(False)
-        f_ok_cancel_layout.addWidget(f_ok)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
-        f_cancel.setMinimumWidth(75)
-        f_cancel.pressed.connect(cancel_handler)
-        f_ok_cancel_layout.addWidget(f_cancel)
-        f_timer.start(100)
-        f_window.exec_()
-
     def on_offline_render(self):
         def ok_handler():
             if str(f_name.text()) == "":
@@ -8779,7 +8667,8 @@ class pydaw_main_window(QtGui.QScrollArea):
                      f_dir, f_out_file, f_sr, f_sb, f_er, f_eb,
                      f_samp_rate, f_buff_size, f_thread_count,
                      pydaw_util.USE_HUGEPAGES)]
-                self.show_offline_rendering_wait_window_v2(f_cmd, f_out_file)
+                libmk.MAIN_WINDOW.show_offline_rendering_wait_window_v2(
+                    f_cmd, f_out_file)
 
         def cancel_handler():
             f_window.close()

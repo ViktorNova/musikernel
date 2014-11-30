@@ -386,7 +386,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.notes_tab.leaveEvent = self.on_edit_notes
         self.main_tabwidget.addTab(self.notes_tab, _("Project Notes"))
 
-
     def on_edit_notes(self, a_event=None):
         QtGui.QTextEdit.leaveEvent(self.notes_tab, a_event)
         PROJECT.write_notes(self.notes_tab.toPlainText())
@@ -852,7 +851,7 @@ class pydaw_wave_editor_widget:
             self.last_offline_dir = os.path.dirname(f_file_name)
             self.open_exported = f_open_exported.isChecked()
             f_window.close()
-            MAIN_WINDOW.show_offline_rendering_wait_window(f_file_name)
+            libmk.MAIN_WINDOW.show_offline_rendering_wait_window(f_file_name)
             if self.open_exported:
                 self.open_file(f_file_name)
 
