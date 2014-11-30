@@ -65,9 +65,9 @@ huge_page_data HUGE_PAGE_DATA[50];
 
 /* Ensure that any pointers carved out of hugepages meet minimum
  * alignment for SIMD instructions (or maybe cache lines eventually) */
-char * hugepage_align(char * a_pos)
+char * hugepage_align(char * a_pos, int a_alignment)
 {
-    return a_pos + (HUGEPAGE_MIN_ALIGN - ((size_t)a_pos % HUGEPAGE_MIN_ALIGN));
+    return a_pos + (a_alignment - ((size_t)a_pos % a_alignment));
 }
 
 int alloc_hugepage_data()
@@ -85,7 +85,7 @@ int alloc_hugepage_data()
     }
     printf("Successfully allocated 100MB of hugepages\n");
     ++HUGE_PAGE_DATA_COUNT;
-    f_data->pos = hugepage_align(f_data->start);
+    f_data->pos = hugepage_align(f_data->start, HUGEPAGE_MIN_ALIGN);
     f_data->end = f_data->start + HUGEPAGE_ALLOC_SIZE;
     return 1;
 }
@@ -93,7 +93,8 @@ int alloc_hugepage_data()
 /* Only use for things that do not free their memory and get reclaimed
    when the process goes away.
  */
-void hpalloc(void ** a_ptr, size_t a_size)
+
+inline void hp_aligned_alloc(void ** a_ptr, size_t a_size, int a_alignment)
 {
     if(USE_HUGEPAGES)
     {
@@ -118,7 +119,7 @@ void hpalloc(void ** a_ptr, size_t a_size)
             if((f_data->end - f_data->pos) > a_size)
             {
                 *a_ptr = f_data->pos;
-                f_data->pos = hugepage_align(a_size + f_data->pos);
+                f_data->pos = hugepage_align(a_size + f_data->pos, a_alignment);
                 return;
             }
         }
@@ -126,8 +127,8 @@ void hpalloc(void ** a_ptr, size_t a_size)
         if(alloc_hugepage_data())
         {
             huge_page_data * f_data = &HUGE_PAGE_DATA[f_i];
-            *a_ptr = __builtin_assume_aligned(f_data->pos, HUGEPAGE_MIN_ALIGN);
-            f_data->pos = hugepage_align(a_size + f_data->pos);
+            *a_ptr = __builtin_assume_aligned(f_data->pos, a_alignment);
+            f_data->pos = hugepage_align(a_size + f_data->pos, a_alignment);
         }
         else
         {
@@ -140,6 +141,15 @@ void hpalloc(void ** a_ptr, size_t a_size)
     }
 }
 
+void hpalloc(void ** a_ptr, size_t a_size)
+{
+    hp_aligned_alloc(a_ptr, a_size, HUGEPAGE_MIN_ALIGN);
+}
+
+void clalloc(void ** a_ptr, size_t a_size)
+{
+    hp_aligned_alloc(a_ptr, a_size, CACHE_LINE_SIZE);
+}
 
 #endif	/* LMALLOC_H */
 

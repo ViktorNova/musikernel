@@ -437,9 +437,9 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
 
     while(f_i < f_result->channels)
     {
-        hpalloc((void**)&f_result->buffers[f_i],
+        clalloc((void**)&f_result->buffers[f_i],
             (sizeof(float) * FRAMES_PER_BUFFER));
-        hpalloc((void**)&f_result->sc_buffers[f_i],
+        clalloc((void**)&f_result->sc_buffers[f_i],
             (sizeof(float) * FRAMES_PER_BUFFER));
         ++f_i;
     }
