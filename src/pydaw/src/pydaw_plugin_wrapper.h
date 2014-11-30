@@ -43,20 +43,38 @@ extern "C" {
 typedef struct
 {
     int active;
-    PYFX_Handle PYFX_handle;
-    PYFX_Descriptor_Function descfn;
-    PYFX_Descriptor *descriptor;
-    int mute;
-    int solo;
     int power;
+    PYFX_Descriptor *descriptor;
+    PYFX_Handle PYFX_handle;
     int uid;
     int pool_uid;
     int atm_count;
     int atm_pos;  //position within the automation region
     t_pydaw_seq_event * atm_buffer;
-    char padding[CACHE_LINE_SIZE - ((8 * 4) + (sizeof(void*) * 4))];
+    PYFX_Descriptor_Function descfn;
+    int mute;
+    int solo;
+    char padding[CACHE_LINE_SIZE - ((8 * sizeof(int)) + (sizeof(void*) * 4))];
 }t_pydaw_plugin;
 
+void * PLUGIN_DESC_FUNCS[] = {
+    NULL, //0
+    euphoria_PYFX_descriptor, //1
+    rayv_PYFX_descriptor, //2
+    wayv_PYFX_descriptor, //3
+    modulex_PYFX_descriptor, //4
+    mkdelay_PYFX_descriptor, //5
+    mkeq_PYFX_descriptor, //6
+    sfader_PYFX_descriptor, //7
+    sreverb_PYFX_descriptor, //8
+    triggerfx_PYFX_descriptor, //9
+    scc_PYFX_descriptor, //10
+    mkchnl_PYFX_descriptor, //11
+    xfade_PYFX_descriptor, //12
+    mk_comp_PYFX_descriptor, //13
+    mk_vocoder_PYFX_descriptor, //14
+    mk_lim_PYFX_descriptor //15
+};
 
 __attribute__((optimize("-O0"))) void g_pydaw_plugin_init(
         t_pydaw_plugin * f_result,
@@ -72,71 +90,7 @@ __attribute__((optimize("-O0"))) void g_pydaw_plugin_init(
 
     hpalloc((void**)&f_result->atm_buffer, sizeof(t_pydaw_seq_event) * 512);
 
-    switch(a_index)
-    {
-        case 1:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)euphoria_PYFX_descriptor;
-            break;
-        case 2:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)rayv_PYFX_descriptor;
-            break;
-        case 3:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)wayv_PYFX_descriptor;
-            break;
-        case 4:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)modulex_PYFX_descriptor;
-            break;
-        case 5:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)mkdelay_PYFX_descriptor;
-            break;
-        case 6:
-            f_result->descfn =
-                    (PYFX_Descriptor_Function)mkeq_PYFX_descriptor;
-            break;
-        case 7:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)sfader_PYFX_descriptor;
-            break;
-        case 8:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)sreverb_PYFX_descriptor;
-            break;
-        case 9:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)triggerfx_PYFX_descriptor;
-            break;
-        case 10:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)scc_PYFX_descriptor;
-            break;
-        case 11:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)mkchnl_PYFX_descriptor;
-            break;
-        case 12:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)xfade_PYFX_descriptor;
-            break;
-        case 13:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)mk_comp_PYFX_descriptor;
-            break;
-        case 14:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)mk_vocoder_PYFX_descriptor;
-            break;
-        case 15:
-            f_result->descfn =
-                (PYFX_Descriptor_Function)mk_lim_PYFX_descriptor;
-            break;
-        default:
-            assert(0);
-    }
+    f_result->descfn = (PYFX_Descriptor_Function)PLUGIN_DESC_FUNCS[a_index];
 
     f_result->descriptor = f_result->descfn(0);
 
