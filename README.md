@@ -1,14 +1,10 @@
-#Warning:  pre-alpha software
+#Warning:  beta software
 
-Backwards compatibility will be broken frequently and without warning or remorse until the project is declared to be in beta phase.  Expect bugs, and don't expect your projects to load next time you update your installation.
-
-If you choose to try it anyway, you may need to delete your settings and default project folder after doing an update/reinstall by running this command:
-
-rm -rf ~/musikernel
+The project is believed to be reasonably stable, and unlikely to break backwards compatibility between now and the final release.  However, not all parts of the software have been thoroughly tested, so there may be bugs lurking around.
 
 #What is MusiKernel ?
 
-Without going into too much detail just yet, MusiKernel is DAWs, plugins, and a new approach to developing an audio software ecosystem.
+MusiKernel is DAWs, plugins, and a new approach to developing an audio software ecosystem.  By promoting centralized development and quality control, and code re-use, MusiKernel aims to avoid many of the compatibility problems that have plagued traditional host/plugin architectures.
 
 #How to build:
 
