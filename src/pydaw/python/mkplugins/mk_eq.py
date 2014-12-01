@@ -89,8 +89,7 @@ class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
 
     def set_window_title(self, a_track_name):
         self.track_name = str(a_track_name)
-        self.widget.setWindowTitle(
-            "MK EQ - {}".format(self.track_name))
+        self.widget.setWindowTitle("MK EQ - {}".format(self.track_name))
 
     def widget_close_event(self, a_event):
         self.enable_spectrum(False)
@@ -103,12 +102,10 @@ class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
     def enable_spectrum(self, a_enabled):
         if a_enabled:
             print("Enabling spectrum")
-            self.plugin_val_callback(
-                MKEQ_SPECTRUM_ENABLED, 1.0)
+            self.plugin_val_callback(MKEQ_SPECTRUM_ENABLED, 1.0)
         else:
             print("Disabling spectrum")
-            self.plugin_val_callback(
-                MKEQ_SPECTRUM_ENABLED, 0.0)
+            self.plugin_val_callback(MKEQ_SPECTRUM_ENABLED, 0.0)
 
     def ui_message(self, a_name, a_value):
         if a_name == "spectrum":
