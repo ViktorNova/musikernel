@@ -670,6 +670,7 @@ class MkMainWindow(QtGui.QMainWindow):
             self.prepare_to_quit()
 
     def on_save(self):
+        libmk.PLUGIN_UI_DICT.save_all_plugin_state()
         libmk.PROJECT.create_backup()
 
     def on_save_as(self):
@@ -679,6 +680,7 @@ class MkMainWindow(QtGui.QMainWindow):
             f_name = str(f_lineedit.text()).strip()
             f_name = f_name.replace("/", "")
             if f_name:
+                libmk.PLUGIN_UI_DICT.save_all_plugin_state()
                 if libmk.PROJECT.create_backup(f_name):
                     f_window.close()
                 else:
@@ -720,6 +722,7 @@ class MkMainWindow(QtGui.QMainWindow):
                     if not f_new_file.endswith(
                     ".{}".format(global_pydaw_version_string)):
                         f_new_file += ".{}".format(global_pydaw_version_string)
+                    libmk.PLUGIN_UI_DICT.save_all_plugin_state()
                     libmk.PROJECT.save_project_as(f_new_file)
                     libmk.set_window_title()
                     pydaw_util.set_file_setting("last-project", f_new_file)
