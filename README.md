@@ -4,7 +4,7 @@ The project is believed to be reasonably stable, and unlikely to break backwards
 
 #What is MusiKernel ?
 
-MusiKernel is DAWs, plugins, and a new approach to developing an audio software ecosystem.  By promoting centralized development and quality control, and code re-use, MusiKernel aims to avoid many of the compatibility problems that have plagued traditional host/plugin architectures.
+MusiKernel is DAWs, plugins, and a new approach to developing an audio software ecosystem.  By promoting centralized development and quality control with maximal code re-use, MusiKernel aims to avoid many of the compatibility problems that have plagued traditional host/plugin architectures.
 
 #How to build:
 
