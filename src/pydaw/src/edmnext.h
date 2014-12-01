@@ -1646,7 +1646,7 @@ inline void v_en_run_engine(int sample_count,
     t_edmnext * self = edmnext;
     //notify the worker threads to wake up
     register int f_i = 1;
-    while(f_i < musikernel->track_worker_thread_count)
+    while(f_i < musikernel->worker_thread_count)
     {
         pthread_spin_lock(&musikernel->thread_locks[f_i]);
         musikernel->track_thread_is_finished[f_i] = 0;
@@ -1712,7 +1712,7 @@ inline void v_en_run_engine(int sample_count,
 
     f_i = 1;
     //unleash the hounds
-    while(f_i < musikernel->track_worker_thread_count)
+    while(f_i < musikernel->worker_thread_count)
     {
         pthread_spin_unlock(&musikernel->thread_locks[f_i]);
         ++f_i;

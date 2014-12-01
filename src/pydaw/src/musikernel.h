@@ -150,8 +150,8 @@ typedef struct
     //For preventing the main thread from continuing until the workers finish
     pthread_mutex_t * track_block_mutexes;
     pthread_spinlock_t * thread_locks;
-    pthread_t * track_worker_threads;
-    int track_worker_thread_count;
+    pthread_t * worker_threads;
+    int worker_thread_count;
     int * track_thread_quit_notifier;
     volatile int * track_thread_is_finished;
     void * main_thread_args;
@@ -692,7 +692,7 @@ void v_wait_for_threads()
 {
     int f_i = 1;
 
-    while(f_i < (musikernel->track_worker_thread_count))
+    while(f_i < (musikernel->worker_thread_count))
     {
         if(musikernel->track_thread_is_finished[f_i] == 0)
         {

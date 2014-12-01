@@ -121,7 +121,7 @@ void v_pydaw_destructor()
     }
 
     f_i = 1;
-    while(f_i < musikernel->track_worker_thread_count)
+    while(f_i < musikernel->worker_thread_count)
     {
         //pthread_mutex_lock(&pydaw_data->track_block_mutexes[f_i]);
         musikernel->track_thread_quit_notifier[f_i] = 1;
@@ -130,7 +130,7 @@ void v_pydaw_destructor()
     }
 
     f_i = 1;
-    while(f_i < musikernel->track_worker_thread_count)
+    while(f_i < musikernel->worker_thread_count)
     {
         pthread_mutex_lock(&musikernel->track_block_mutexes[f_i]);
         pthread_cond_broadcast(&musikernel->track_cond[f_i]);
@@ -141,7 +141,7 @@ void v_pydaw_destructor()
     sleep(1);
 
     f_i = 1;
-    while(f_i < musikernel->track_worker_thread_count)
+    while(f_i < musikernel->worker_thread_count)
     {
         //abort the application rather than hang indefinitely
         assert(musikernel->track_thread_quit_notifier[f_i] == 2);
@@ -333,29 +333,37 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
 
     if(a_thread_count == 0)
     {
-        musikernel->track_worker_thread_count = 1; //f_cpu_count;
+        musikernel->worker_thread_count = f_cpu_count;
 
-        /*if((musikernel->track_worker_thread_count) > 4)
+        if((musikernel->worker_thread_count) >= 8)
         {
-            musikernel->track_worker_thread_count = 4;
+            musikernel->worker_thread_count = 7;
         }
-        else if((musikernel->track_worker_thread_count) == 4)
+        else if((musikernel->worker_thread_count) >= 3)
         {
-            musikernel->track_worker_thread_count = 3;
+            --musikernel->worker_thread_count;
         }
-        else if((musikernel->track_worker_thread_count) <= 0)
+        else if((musikernel->worker_thread_count) <= 0)
         {
-            musikernel->track_worker_thread_count = 1;
-        }*/
+            musikernel->worker_thread_count = 1;
+        }
     }
     else
     {
-        musikernel->track_worker_thread_count = a_thread_count;
+        if(a_thread_count > f_cpu_count)
+        {
+            musikernel->worker_thread_count = f_cpu_count;
+        }
+        else
+        {
+            musikernel->worker_thread_count = a_thread_count;
+        }
     }
 
-    if(!f_has_ht && ((musikernel->track_worker_thread_count * 2) <= f_cpu_count))
+    if(!f_has_ht &&
+    ((musikernel->worker_thread_count * 2) <= f_cpu_count))
     {
-        f_cpu_core_inc = f_cpu_count / musikernel->track_worker_thread_count;
+        f_cpu_core_inc = f_cpu_count / musikernel->worker_thread_count;
 
         if(f_cpu_core_inc < 2)
         {
@@ -367,27 +375,24 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
         }
     }
 
-    printf("Spawning %i worker threads\n", musikernel->track_worker_thread_count);
+    printf("Spawning %i worker threads\n",
+        musikernel->worker_thread_count);
 
-    musikernel->track_block_mutexes =
-            (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t) *
-                (musikernel->track_worker_thread_count));
-    musikernel->track_worker_threads =
-            (pthread_t*)malloc(sizeof(pthread_t) *
-                (musikernel->track_worker_thread_count));
+    musikernel->track_block_mutexes = (pthread_mutex_t*)malloc(
+        sizeof(pthread_mutex_t) * (musikernel->worker_thread_count));
+    musikernel->worker_threads = (pthread_t*)malloc(
+        sizeof(pthread_t) * (musikernel->worker_thread_count));
 
-    lmalloc((void**)&musikernel->track_thread_quit_notifier,
-            (sizeof(int) * (musikernel->track_worker_thread_count)));
-    lmalloc((void**)&musikernel->track_thread_is_finished,
-            (sizeof(int) * (musikernel->track_worker_thread_count)));
+    hpalloc((void**)&musikernel->track_thread_quit_notifier,
+        (sizeof(int) * (musikernel->worker_thread_count)));
+    hpalloc((void**)&musikernel->track_thread_is_finished,
+        (sizeof(int) * (musikernel->worker_thread_count)));
 
-    musikernel->track_cond =
-            (pthread_cond_t*)malloc(sizeof(pthread_cond_t) *
-                (musikernel->track_worker_thread_count));
+    hpalloc((void**)&musikernel->track_cond,
+        sizeof(pthread_cond_t) * (musikernel->worker_thread_count));
 
-    musikernel->thread_locks =
-        (pthread_spinlock_t*)malloc(sizeof(pthread_spinlock_t) *
-            (musikernel->track_worker_thread_count));
+    hpalloc((void**)&musikernel->thread_locks,
+        sizeof(pthread_spinlock_t) * (musikernel->worker_thread_count));
 
     pthread_attr_t threadAttr;
     struct sched_param param;
@@ -396,7 +401,7 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
             param.__sched_priority);
     pthread_attr_init(&threadAttr);
     pthread_attr_setschedparam(&threadAttr, &param);
-    pthread_attr_setstacksize(&threadAttr, 8388608);
+    pthread_attr_setstacksize(&threadAttr, (1024 * 1024 * 8));
     pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
     pthread_attr_setschedpolicy(&threadAttr, RT_SCHED);
 
@@ -415,11 +420,9 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
         }
     }
 
-
-
     int f_i = 0;
 
-    while(f_i < (musikernel->track_worker_thread_count))
+    while(f_i < (musikernel->worker_thread_count))
     {
         musikernel->track_thread_is_finished[f_i] = 0;
         musikernel->track_thread_quit_notifier[f_i] = 0;
@@ -433,7 +436,7 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
             pthread_cond_init(&musikernel->track_cond[f_i], NULL);
             pthread_spin_init(&musikernel->thread_locks[f_i], 0);
             pthread_mutex_init(&musikernel->track_block_mutexes[f_i], NULL);
-            pthread_create(&musikernel->track_worker_threads[f_i],
+            pthread_create(&musikernel->worker_threads[f_i],
                     &threadAttr, v_pydaw_worker_thread, (void*)f_args);
 
             if(a_set_thread_affinity)
@@ -441,7 +444,7 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
                 cpu_set_t cpuset;
                 CPU_ZERO(&cpuset);
                 CPU_SET(f_cpu_core, &cpuset);
-                pthread_setaffinity_np(musikernel->track_worker_threads[f_i],
+                pthread_setaffinity_np(musikernel->worker_threads[f_i],
                         sizeof(cpu_set_t), &cpuset);
                 //sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
                 f_cpu_core += f_cpu_core_inc;
@@ -449,7 +452,7 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
 
             struct sched_param param2;
             int f_applied_policy = 0;
-            pthread_getschedparam(musikernel->track_worker_threads[f_i],
+            pthread_getschedparam(musikernel->worker_threads[f_i],
                 &f_applied_policy, &param2);
 
             if(f_applied_policy == RT_SCHED)
