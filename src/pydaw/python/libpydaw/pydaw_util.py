@@ -452,7 +452,7 @@ def get_file_setting(a_name, a_type, a_default):
                 return a_type(f_file.read())
         except Exception as ex:
             print("Error in get_file_setting {}".format(ex))
-            os.system("rm -f '{}'".format(f_file_name))
+            os.remove(f_file_name)
     return a_default
 
 def set_file_setting(a_name, a_val):
@@ -474,7 +474,7 @@ def pydaw_delete_device_config():
     global global_device_val_dict
     global_device_val_dict = {}
     if os.path.exists(global_pydaw_device_config):
-        os.system("rm -f '{}'".format(global_pydaw_device_config))
+        os.remove(global_pydaw_device_config)
 
 def pydaw_read_device_config():
     global global_pydaw_bin_path, global_device_val_dict, MIDI_IN_DEVICES

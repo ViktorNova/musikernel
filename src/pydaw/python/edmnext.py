@@ -17,6 +17,7 @@ import os
 import subprocess
 import time
 import random
+import shutil
 
 from PyQt4 import QtGui, QtCore
 from libpydaw import *
@@ -3447,9 +3448,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             LAST_AUDIO_ITEM_DIR = os.path.dirname(f_file)
             f_orig_path = libmk.PROJECT.get_wav_name_by_uid(
                 self.audio_item.uid)
-            f_cmd = "cp '{}' '{}'".format(f_orig_path, f_file)
-            print(f_cmd)
-            os.system(f_cmd)
+            shutil.copy(f_orig_path, f_file)
 
     def open_item_folder(self):
         f_path = libmk.PROJECT.get_wav_name_by_uid(self.audio_item.uid)

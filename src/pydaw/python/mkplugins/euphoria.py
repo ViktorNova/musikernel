@@ -17,6 +17,7 @@ from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
 import time
 import os
+import shutil
 import libmk
 
 EUPHORIA_MAX_SAMPLE_COUNT = 100
@@ -1814,7 +1815,8 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
             self.load_files(f_file_list)
 
-            os.system("rm -rf '{}'/*".format(f_dir))
+            shutil.rmtree(f_dir)
+            os.mkdir(f_dir)
 
             f_window.close()
 
@@ -1938,8 +1940,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     "not copying:\n{}\n{}".format(
                     f_current_file_path, f_new_file_path))
             else:
-                os.system("cp -f '{}' '{}'".format(
-                    f_current_file_path, f_new_file_path))
+                shutil.copy(f_current_file_path, f_new_file_path)
                 f_result += "sample|{}|{}\n".format(i, f_file_name)
         return f_result
 

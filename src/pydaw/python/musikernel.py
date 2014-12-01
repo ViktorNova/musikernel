@@ -29,7 +29,6 @@ import sys
 import subprocess
 
 
-
 class MkIpc(libmk.AbstractIPC):
     def __init__(self):
         libmk.AbstractIPC.__init__(self, True, "/musikernel/master")
@@ -468,7 +467,7 @@ class MkMainWindow(QtGui.QMainWindow):
                 f_timer.stop()
                 f_time_label.setText(
                     _("Finished in {}").format(f_time_label.text()))
-                os.system("rm -f '{}'".format(f_file_name))
+                os.remove(f_file_name)
             else:
                 f_elapsed_time = time.time() - f_start_time
                 f_time_label.setText(str(round(f_elapsed_time, 1)))
@@ -507,9 +506,9 @@ class MkMainWindow(QtGui.QMainWindow):
             except Exception as ex:
                 print("Exception while killing process\n{}".format(ex))
             if os.path.exists(a_file_name):
-                os.system("rm -f '{}'".format(a_file_name))
+                os.remove(a_file_name)
             if os.path.exists(f_file_name):
-                os.system("rm -f '{}'".format(f_file_name))
+                os.remove(f_file_name)
             f_window.close()
 
         def timeout_handler():
@@ -519,7 +518,7 @@ class MkMainWindow(QtGui.QMainWindow):
                 f_cancel.setEnabled(False)
                 f_time_label.setText(
                     _("Finished in {}").format(f_time_label.text()))
-                os.system("rm -f '{}'".format(f_file_name))
+                os.remove(f_file_name)
                 f_proc.communicate()[0]
                 #f_output = f_proc.communicate()[0]
                 #print(f_output)

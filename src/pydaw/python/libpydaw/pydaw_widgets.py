@@ -15,6 +15,8 @@ GNU General Public License for more details.
 
 import os
 import math
+import shutil
+
 from . import pydaw_util
 from libmk.mk_project import pydaw_folder_plugins
 from libpydaw.translate import _
@@ -1377,8 +1379,7 @@ class pydaw_abstract_file_browser_widget():
             f_file = str(f_file)
             if not f_file.endswith(".pybm4"):
                 f_file += ".pybm4"
-            os.system('cp "{}" "{}"'.format(
-                pydaw_util.BOOKMARKS_FILE, f_file))
+            shutil.copy(pydaw_util.BOOKMARKS_FILE, f_file)
 
     def on_bookmark_open(self):
         f_file = QtGui.QFileDialog.getOpenFileName(
@@ -1387,8 +1388,7 @@ class pydaw_abstract_file_browser_widget():
             filter=BM_FILE_DIALOG_STRING)
         if not f_file is None and not str(f_file) == "":
             f_file = str(f_file)
-            os.system('cp "{}" "{}"'.format(
-                f_file, pydaw_util.BOOKMARKS_FILE))
+            shutil.copy(f_file, pydaw_util.BOOKMARKS_FILE)
             self.open_bookmarks()
 
     def on_refresh(self):
@@ -1892,8 +1892,7 @@ class pydaw_preset_manager_widget:
 
     def load_banks(self):
         if not os.path.isfile(self.user_factory_presets):
-            os.system("cp -f '{}' '{}'".format(
-                self.factory_preset_path, self.user_factory_presets))
+            shutil.copy(self.factory_preset_path, self.user_factory_presets)
         self.bank_combobox.clear()
         self.bank_combobox.addItems(
             sorted(x.rsplit(".", 1)[0]
@@ -1972,7 +1971,7 @@ class pydaw_preset_manager_widget:
                 pydaw_util.pydaw_write_file_text(
                     f_file, "\n".join([self.plugin_name]))
             else:
-                os.system("cp -f '{}' '{}'".format(self.preset_path, f_file))
+                shutil.copy(self.preset_path, f_file)
             self.preset_path = f_file
             pydaw_util.pydaw_write_file_text(self.bank_file, self.preset_path)
             self.load_banks()
@@ -2007,8 +2006,7 @@ class pydaw_preset_manager_widget:
             self.load_presets()
 
     def on_restore_bank(self):
-        os.system("cp -f '{}' '{}'".format(
-            self.factory_preset_path, self.user_factory_presets))
+        shutil.copy(self.factory_preset_path, self.user_factory_presets)
         self.preset_path = self.user_factory_presets
         self.bank_name = "factory"
         self.load_banks()
@@ -2037,7 +2035,7 @@ class pydaw_preset_manager_widget:
                 "one for {}").format(
             f_line_arr[0], self.plugin_name))
             if os.path.isfile(self.bank_file):
-                os.system('rm "{}"'.format(self.bank_file))
+                os.remove(self.bank_file)
             return
 
         f_line_arr = f_line_arr[1:]

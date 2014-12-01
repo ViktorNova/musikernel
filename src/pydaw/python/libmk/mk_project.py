@@ -16,10 +16,12 @@ from PyQt4 import QtGui, QtCore
 from libpydaw import *
 from libpydaw.pydaw_util import *
 import libmk
+import shutil
 import tarfile
 import json
 import wavefile
 import datetime
+import os
 
 pydaw_folder_audio = "audio/files"
 pydaw_folder_samplegraph = "audio/samplegraph"
@@ -126,13 +128,8 @@ class MkProject(libmk.AbstractProject):
         f_new_project_folder = os.path.dirname(f_file_name)
         #The below is safe because we already checked that the folder
         #should be empty before calling this
-        f_cmd = "rm -rf '{}'".format(f_new_project_folder)
-        print(f_cmd)
-        os.system(f_cmd)
-        f_cmd = "cp -rf '{}' '{}'".format(
-            self.project_folder, f_new_project_folder)
-        print(f_cmd)
-        os.system(f_cmd)
+        shutil.rmtree(f_new_project_folder)
+        shutil.copytree(self.project_folder, f_new_project_folder)
         print("{}/{} | {}".format(
             f_new_project_folder, self.project_file, a_file_name))
 #        self.set_project_folders(f_file_name)
@@ -421,9 +418,7 @@ class MkProject(libmk.AbstractProject):
         if not os.path.isdir(f_cp_dir):
             os.makedirs(f_cp_dir)
         if not os.path.isfile(f_cp_path):
-            f_cmd = "cp -f '{}' '{}'".format(a_file, f_cp_path)
-            print(f_cmd)
-            os.system(f_cmd)
+            shutil.copy(a_file, f_cp_path)
         self.cached_audio_files.append(a_file)
 
     def get_wav_name_by_uid(self, a_uid, a_uid_dict=None):
@@ -831,7 +826,7 @@ def pydaw_clear_sample_graph_cache():
 def pydaw_remove_item_from_sg_cache(a_path):
     global global_sample_graph_cache
     if os.path.exists(a_path):
-        os.system("rm -f '{}'".format(a_path))
+        os.remove(a_path)
     if a_path in global_sample_graph_cache:
         global_sample_graph_cache.pop(a_path)
     else:
