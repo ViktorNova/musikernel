@@ -680,8 +680,12 @@ class MkMainWindow(QtGui.QMainWindow):
             f_name = str(f_lineedit.text()).strip()
             f_name = f_name.replace("/", "")
             if f_name:
-                libmk.PROJECT.create_backup(f_name)
-                f_window.close()
+                if libmk.PROJECT.create_backup(f_name):
+                    f_window.close()
+                else:
+                    QtGui.QMessageBox.warning(
+                        self, _("Error"), _("This name already exists, "
+                        "please choose another name"))
 
         f_window = QtGui.QDialog()
         f_window.setWindowTitle(_("Save As..."))

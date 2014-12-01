@@ -155,9 +155,10 @@ class MkProject(libmk.AbstractProject):
     def create_backup(self, a_name=None):
         f_backup_name = a_name if a_name else \
             datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        with tarfile.open(
-        "{}/{}.tar.bz2".format(self.backups_folder, f_backup_name),
-        "w:bz2") as f_tar:
+        f_file_path = "{}/{}.tar.bz2".format(self.backups_folder, f_backup_name)
+        if os.path.exists(f_file_path):
+            return False
+        with tarfile.open(f_file_path, "w:bz2") as f_tar:
             f_tar.add(
                 self.projects_folder,
                 arcname=os.path.basename(self.projects_folder))
@@ -173,6 +174,7 @@ class MkProject(libmk.AbstractProject):
         else:
             self.save_backups_history(
                 {"NODES":{f_backup_name:{}}, "CURRENT":f_backup_name})
+        return True
 
     def get_backups_history(self):
         if os.path.exists(self.backups_file):
