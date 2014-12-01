@@ -8990,7 +8990,6 @@ def global_open_project(a_project_file):
     REGION_EDITOR.clear_drawn_items()
     TRANSPORT.open_transport()
     global_update_track_comboboxes()
-    libmk.set_window_title("EDM-Next")
     PROJECT.suppress_updates = False
     f_scale = PROJECT.get_midi_scale()
     if f_scale is not None:
@@ -9013,7 +9012,6 @@ def global_new_project(a_project_file):
     PROJECT.save_song(SONG_EDITOR.song)
     TRANSPORT.open_transport()
     global_update_track_comboboxes()
-    libmk.set_window_title("EDM-Next")
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText("")
     global_update_region_time()

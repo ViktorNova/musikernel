@@ -1093,7 +1093,6 @@ def global_open_project(a_project_file):
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
     WAVE_EDITOR.last_offline_dir = libmk.PROJECT.user_folder
-    libmk.set_window_title("Wave-Next")
     PROJECT.suppress_updates = False
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText(PROJECT.get_notes())
@@ -1105,7 +1104,6 @@ def global_new_project(a_project_file):
     PROJECT = WaveNextProject(global_pydaw_with_audio)
     PROJECT.new_project(a_project_file)
     WAVE_EDITOR.last_offline_dir = libmk.PROJECT.user_folder
-    libmk.set_window_title("Wave-Next")
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText("")
     WAVE_EDITOR.open_project()

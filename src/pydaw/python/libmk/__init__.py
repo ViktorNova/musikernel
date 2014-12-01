@@ -35,9 +35,9 @@ def prepare_to_quit():
     global MAIN_WINDOW, TRANSPORT, IPC, OSC, PROJECT
     MAIN_WINDOW = TRANSPORT = IPC = OSC = PROJECT = None
 
-def set_window_title(a_host_name):
-    MAIN_WINDOW.setWindowTitle('MusiKernel | {} - {}/{}.{}'.format(
-        a_host_name, PROJECT.project_folder, PROJECT.project_file,
+def set_window_title():
+    MAIN_WINDOW.setWindowTitle('MusiKernel - {}/{}.{}'.format(
+        PROJECT.project_folder, PROJECT.project_file,
         pydaw_util.global_pydaw_version_string))
 
 def pydaw_print_generic_exception(a_ex):
