@@ -95,6 +95,7 @@ class project_history_widget(QtGui.QTreeWidget):
             QtGui.QMessageBox.warning(
                 self, _("Complete"),
                 _("Reverted project to {}".format(f_item.node_path)))
+            self.draw_tree()
 
 
 
@@ -112,7 +113,7 @@ def project_recover_dialog(a_file):
             return None
     else:
         f_file = a_file
-    f_project_dir = os.path.dirname(f_file)
+    f_project_dir = os.path.dirname(str(f_file))
     f_backup_file = "{}/backups.json".format(f_project_dir)
     if not os.path.isfile(f_backup_file):
         QtGui.QMessageBox.warning(
