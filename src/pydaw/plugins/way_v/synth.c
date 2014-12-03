@@ -28,8 +28,6 @@ static void v_run_wayv_voice(
         t_wayv *, t_voc_single_voice*, t_wayv_poly_voice *,
         PYFX_Data *, PYFX_Data *, int, int );
 
-PYFX_Descriptor *wayv_PYFX_descriptor(int index);
-
 static void v_cleanup_wayv(PYFX_Handle instance)
 {
     free(instance);
@@ -1554,7 +1552,7 @@ void v_wayv_configure(PYFX_Handle instance, char *key,
 }
 
 
-PYFX_Descriptor *wayv_PYFX_descriptor(int index)
+PYFX_Descriptor *wayv_PYFX_descriptor()
 {
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(WAYV_COUNT);
 

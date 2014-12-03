@@ -27,8 +27,6 @@ static void v_run_rayv(
 static void v_run_rayv_voice(t_rayv *p, t_voc_single_voice * a_poly_voice,
         t_rayv_poly_voice *d, PYFX_Data *out0, PYFX_Data *out1, int a_i);
 
-PYFX_Descriptor *rayv_PYFX_descriptor(int index);
-
 static void v_cleanup_rayv(PYFX_Handle instance)
 {
     free(instance);
@@ -741,7 +739,7 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
     out1[(i_voice)] += (a_voice->current_sample);
 }
 
-PYFX_Descriptor *rayv_PYFX_descriptor(int index)
+PYFX_Descriptor *rayv_PYFX_descriptor()
 {
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(RAYV_COUNT);
 

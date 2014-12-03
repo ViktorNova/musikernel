@@ -20,8 +20,6 @@ static void v_mk_lim_run(
     PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
     t_pydaw_seq_event *, int);
 
-PYFX_Descriptor *mk_lim_PYFX_descriptor(int index);
-
 
 static void v_mk_lim_cleanup(PYFX_Handle instance)
 {
@@ -224,7 +222,7 @@ static void v_mk_lim_run(
 }
 
 
-PYFX_Descriptor *mk_lim_PYFX_descriptor(int index)
+PYFX_Descriptor *mk_lim_PYFX_descriptor()
 {
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(MK_LIM_COUNT);
 

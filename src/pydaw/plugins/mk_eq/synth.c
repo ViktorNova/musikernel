@@ -22,8 +22,6 @@ static void v_mkeq_run(
     PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
     t_pydaw_seq_event *, int);
 
-PYFX_Descriptor *mkeq_PYFX_descriptor(int index);
-
 
 static void v_mkeq_cleanup(PYFX_Handle instance)
 {
@@ -261,7 +259,7 @@ static void v_mkeq_run(
 
 }
 
-PYFX_Descriptor *mkeq_PYFX_descriptor(int index)
+PYFX_Descriptor *mkeq_PYFX_descriptor()
 {
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(MKEQ_COUNT);
 

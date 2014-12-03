@@ -22,8 +22,6 @@ static void v_mkdelay_run(
     PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
     t_pydaw_seq_event *, int);
 
-PYFX_Descriptor *mkdelay_PYFX_descriptor(int index);
-
 
 static void v_mkdelay_cleanup(PYFX_Handle instance)
 {
@@ -241,7 +239,7 @@ static void v_mkdelay_run(
     }
 }
 
-PYFX_Descriptor *mkdelay_PYFX_descriptor(int index)
+PYFX_Descriptor *mkdelay_PYFX_descriptor()
 {
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(MKDELAY_COUNT);
 

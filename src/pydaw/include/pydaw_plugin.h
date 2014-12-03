@@ -157,7 +157,7 @@ typedef struct _PYFX_Descriptor {
 
 } PYFX_Descriptor;
 
-typedef PYFX_Descriptor * (*PYFX_Descriptor_Function)(int Index);
+typedef PYFX_Descriptor * (*PYFX_Descriptor_Function)();
 
 typedef struct
 {

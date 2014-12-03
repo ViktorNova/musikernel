@@ -23,8 +23,6 @@ static void v_run_lms_euphoria(
 
 static inline void v_euphoria_slow_index(t_euphoria*);
 
-PYFX_Descriptor *euphoria_PYFX_descriptor(int index);
-
 static void cleanupSampler(PYFX_Handle instance)
 {
     t_euphoria *plugin = (t_euphoria *)instance;
@@ -1466,7 +1464,7 @@ void v_euphoria_configure(PYFX_Handle instance, char *key,
     }
 }
 
-PYFX_Descriptor *euphoria_PYFX_descriptor(int index)
+PYFX_Descriptor *euphoria_PYFX_descriptor()
 {
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(EUPHORIA_PORT_COUNT);
 

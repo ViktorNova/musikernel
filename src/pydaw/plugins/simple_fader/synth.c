@@ -25,8 +25,6 @@ static void v_sfader_run(
     PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
     t_pydaw_seq_event *, int);
 
-PYFX_Descriptor *sfader_PYFX_descriptor(int index);
-
 
 static void v_sfader_cleanup(PYFX_Handle instance)
 {
@@ -279,7 +277,7 @@ static void v_sfader_run(
     }
 }
 
-PYFX_Descriptor *sfader_PYFX_descriptor(int index)
+PYFX_Descriptor *sfader_PYFX_descriptor()
 {
     PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(SFADER_COUNT);
 
