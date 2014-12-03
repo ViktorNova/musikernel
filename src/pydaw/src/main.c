@@ -131,16 +131,21 @@ void v_pydaw_set_cpu_governor()
 
 static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
 {
-    int f_i = 0;
-    while(f_i < MIDI_DEVICES.count)
+    int f_i;
+    t_midi_device * f_device;
+
+    pthread_spin_lock(&musikernel->main_lock);
+
+    for(f_i = 0; f_i < MIDI_DEVICES.count; ++f_i)
     {
-        if(MIDI_DEVICES.devices[f_i].loaded)
+        f_device = &MIDI_DEVICES.devices[f_i];
+        if(f_device->loaded)
         {
-            midiPoll(&MIDI_DEVICES.devices[f_i]);
+            midiPoll(f_device);
         }
-        ++f_i;
     }
 
+    pthread_spin_unlock(&musikernel->main_lock);
 }
 
 inline void v_pydaw_run(float ** buffers, int sample_count)
