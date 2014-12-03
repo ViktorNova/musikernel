@@ -197,7 +197,7 @@ int i_wav_pool_item_load(t_wav_pool_item *a_wav_pool_item, int a_huge_pages)
         }
         else
         {
-            buffer_alloc((void**)&(tmpSamples[f_i]),
+            lmalloc((void**)&(tmpSamples[f_i]),
                 f_actual_array_size * sizeof(float));
         }
         ++f_i;

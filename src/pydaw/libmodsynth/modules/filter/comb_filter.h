@@ -215,7 +215,7 @@ void g_cmb_init(t_comb_filter * f_result, float a_sr, int a_huge_pages)
     }
     else
     {
-        buffer_alloc((void**)(&(f_result->input_buffer)),
+        lmalloc((void**)(&(f_result->input_buffer)),
             sizeof(float) * (f_result->buffer_size));
     }
 

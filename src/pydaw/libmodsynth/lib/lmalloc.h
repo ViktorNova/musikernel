@@ -41,23 +41,20 @@ void lmalloc(void**, size_t);
 }
 #endif
 
+void small_page_aligned_alloc(void ** a_ptr, size_t a_size, int a_alignment)
+{
+    assert(posix_memalign(a_ptr, a_alignment, a_size) == 0);
+}
+
 /* void lmalloc(void ** a_ptr, size_t a_size)
  *
  * Custom memory allocator
  */
 void lmalloc(void ** a_ptr, size_t a_size)
 {
-    assert(posix_memalign(a_ptr, 16, a_size) == 0);
+    small_page_aligned_alloc(a_ptr, a_size, HUGEPAGE_MIN_ALIGN);
 }
 
-/* void buffer_alloc(void ** a_ptr, size_t a_size)
- *
- * Custom memory allocator for audio buffers
- */
-void buffer_alloc(void ** a_ptr, size_t a_size)
-{
-    assert(posix_memalign(a_ptr, 64, a_size) == 0);
-}
 
 int USE_HUGEPAGES = 1;
 int HUGE_PAGE_DATA_COUNT = 0;
@@ -100,7 +97,7 @@ inline void hp_aligned_alloc(void ** a_ptr, size_t a_size, int a_alignment)
     {
         if(!HUGE_PAGE_DATA_COUNT && !alloc_hugepage_data())
         {
-            lmalloc(a_ptr, a_size);
+            small_page_aligned_alloc(a_ptr, a_size, a_alignment);
             return;
         }
 
@@ -108,7 +105,7 @@ inline void hp_aligned_alloc(void ** a_ptr, size_t a_size, int a_alignment)
         // munmapped...
         if(a_size >= HUGEPAGE_ALLOC_SIZE)
         {
-            lmalloc(a_ptr, a_size);
+            small_page_aligned_alloc(a_ptr, a_size, a_alignment);
             return;
         }
 
@@ -132,12 +129,12 @@ inline void hp_aligned_alloc(void ** a_ptr, size_t a_size, int a_alignment)
         }
         else
         {
-            lmalloc(a_ptr, a_size);
+            small_page_aligned_alloc(a_ptr, a_size, a_alignment);
         }
     }
     else
     {
-        lmalloc(a_ptr, a_size);
+        small_page_aligned_alloc(a_ptr, a_size, a_alignment);
     }
 }
 

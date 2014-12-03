@@ -2695,7 +2695,7 @@ void g_pyitem_get(t_edmnext* self, int a_uid)
 t_edmnext * g_edmnext_get()
 {
     t_edmnext * f_result;
-    hpalloc((void**)&f_result, sizeof(t_edmnext));
+    clalloc((void**)&f_result, sizeof(t_edmnext));
 
     pthread_mutex_init(&musikernel->audio_inputs_mutex, NULL);
 

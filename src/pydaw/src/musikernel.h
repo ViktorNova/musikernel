@@ -218,7 +218,7 @@ void pydaw_osc_error(int num, const char *msg, const char *path)
 
 void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
 {
-    hpalloc((void**)&musikernel, sizeof(t_musikernel));
+    clalloc((void**)&musikernel, sizeof(t_musikernel));
     musikernel->wav_pool = g_wav_pool_get(a_sr);
     musikernel->midi_devices = a_midi_devices;
     musikernel->current_host = &musikernel->hosts[MK_HOST_EDMNEXT];

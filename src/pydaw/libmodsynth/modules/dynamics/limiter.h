@@ -179,9 +179,9 @@ void g_lim_init(t_lim_limiter * f_result, float a_sr, int a_huge_pages)
     }
     else
     {
-        buffer_alloc((void**)&f_result->buffer0, sizeof(float) *
+        lmalloc((void**)&f_result->buffer0, sizeof(float) *
             (f_result->buffer_size));
-        buffer_alloc((void**)&f_result->buffer1, sizeof(float) *
+        lmalloc((void**)&f_result->buffer1, sizeof(float) *
             (f_result->buffer_size));
     }
 
