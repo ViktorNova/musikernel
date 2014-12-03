@@ -134,8 +134,6 @@ static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
     int f_i;
     t_midi_device * f_device;
 
-    pthread_spin_lock(&musikernel->main_lock);
-
     for(f_i = 0; f_i < MIDI_DEVICES.count; ++f_i)
     {
         f_device = &MIDI_DEVICES.devices[f_i];
@@ -144,8 +142,6 @@ static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
             midiPoll(f_device);
         }
     }
-
-    pthread_spin_unlock(&musikernel->main_lock);
 }
 
 inline void v_pydaw_run(float ** buffers, int sample_count)
