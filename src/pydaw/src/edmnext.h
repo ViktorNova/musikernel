@@ -3408,6 +3408,15 @@ void v_en_set_midi_device(
         f_track_new->midi_device = &musikernel->midi_devices->devices[a_device];
         f_track_new->extern_midi =
             musikernel->midi_devices->devices[a_device].instanceEventBuffers;
+
+        midiPoll(f_track_new->midi_device);
+        midiDeviceRead(f_track_new->midi_device,
+            musikernel->thread_storage[0].sample_rate, 512);
+
+        musikernel->midi_devices->devices[a_device].instanceEventCounts = 0;
+        musikernel->midi_devices->devices[a_device].midiEventReadIndex = 0;
+        musikernel->midi_devices->devices[a_device].midiEventWriteIndex = 0;
+
         f_track_new->extern_midi_count =
             &musikernel->midi_devices->devices[a_device].instanceEventCounts;
     }
