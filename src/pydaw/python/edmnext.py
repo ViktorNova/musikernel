@@ -187,13 +187,8 @@ class song_editor:
         self.clipboard = []
 
     def cell_clicked(self, x, y):
-        f_is_playing = False
-        if libmk.IS_PLAYING and \
-        TRANSPORT.follow_checkbox.isChecked():
-            f_is_playing = True
-            TRANSPORT.follow_checkbox.setChecked(False)
-            REGION_EDITOR.scene.clearSelection()
-            AUDIO_SEQ.stop_playback(0)
+        if libmk.IS_PLAYING:
+            return
         f_cell = self.table_widget.item(x, y)
         if f_cell is None:
             def song_ok_handler():
@@ -216,9 +211,8 @@ class song_editor:
                 CURRENT_SONG_INDEX = y
                 PROJECT.save_song(self.song)
                 PROJECT.commit(f_msg)
-                if not f_is_playing:
-                    TRANSPORT.set_region_value(y)
-                    TRANSPORT.set_bar_value(0)
+                TRANSPORT.set_region_value(y)
+                TRANSPORT.set_bar_value(0)
                 global_update_region_time()
                 f_window.close()
 
@@ -275,10 +269,9 @@ class song_editor:
             REGION_SETTINGS.open_region(str(f_cell.text()))
             global CURRENT_SONG_INDEX
             CURRENT_SONG_INDEX = y
-            if not f_is_playing:
-                REGION_EDITOR.scene.clearSelection()
-                TRANSPORT.set_region_value(y)
-                TRANSPORT.set_bar_value(0)
+            REGION_EDITOR.scene.clearSelection()
+            TRANSPORT.set_region_value(y)
+            TRANSPORT.set_bar_value(0)
 
     def on_import_midi(self, a_index):
         self.midi_file = None
@@ -8222,11 +8215,7 @@ class transport_widget(libmk.AbstractTransport):
         self.loop_mode_combobox.currentIndexChanged.connect(
             self.on_loop_mode_changed)
         self.grid_layout1.addWidget(self.loop_mode_combobox, 1, 45)
-        self.follow_checkbox = QtGui.QCheckBox(_("Follow"))
-        self.follow_checkbox.setChecked(True)
-        self.follow_checkbox.clicked.connect(
-            self.on_follow_cursor_check_changed)
-        self.playback_vlayout.addWidget(self.follow_checkbox)
+
         self.overdub_checkbox = QtGui.QCheckBox(_("Overdub"))
         self.overdub_checkbox.clicked.connect(self.on_overdub_changed)
         self.playback_vlayout.addWidget(self.overdub_checkbox)
@@ -8272,27 +8261,24 @@ class transport_widget(libmk.AbstractTransport):
             self.get_bar_value() != f_bar:
                 self.set_region_value(f_region)
                 self.set_bar_value(f_bar)
-                if self.follow_checkbox.isChecked():
-                    if f_region != self.last_region_num:
-                        self.last_region_num = f_region
-                        f_item = SONG_EDITOR.table_widget.item(0, f_region)
-                        SONG_EDITOR.table_widget.selectColumn(f_region)
-                        if not f_item is None and f_item.text() != "":
-                            REGION_SETTINGS.open_region(f_item.text())
-                        else:
-                            global CURRENT_REGION_NAME
-                            global AUDIO_ITEMS
-                            global CURRENT_REGION
-                            CURRENT_REGION_NAME = None
-                            CURRENT_REGION = None
-                            AUDIO_ITEMS = None
-                            REGION_SETTINGS.clear_items()
-                            AUDIO_SEQ.update_zoom()
-                            AUDIO_SEQ.clear_drawn_items()
+                if f_region != self.last_region_num:
+                    self.last_region_num = f_region
+                    f_item = SONG_EDITOR.table_widget.item(0, f_region)
+                    SONG_EDITOR.table_widget.selectColumn(f_region)
+                    if not f_item is None and f_item.text() != "":
+                        REGION_SETTINGS.open_region(f_item.text())
+                    else:
+                        global CURRENT_REGION_NAME
+                        global AUDIO_ITEMS
+                        global CURRENT_REGION
+                        CURRENT_REGION_NAME = None
+                        CURRENT_REGION = None
+                        AUDIO_ITEMS = None
+                        REGION_SETTINGS.clear_items()
+                        AUDIO_SEQ.update_zoom()
+                        AUDIO_SEQ.clear_drawn_items()
 
     def init_playback_cursor(self, a_start=True):
-        if not self.follow_checkbox.isChecked():
-            return
         if SONG_EDITOR.table_widget.item(
         0, self.get_region_value()) is not None:
             f_region_name = str(SONG_EDITOR.table_widget.item(
@@ -8328,8 +8314,6 @@ class transport_widget(libmk.AbstractTransport):
         return True
 
     def trigger_audio_playback(self):
-        if not self.follow_checkbox.isChecked():
-            return
         AUDIO_SEQ.set_playback_pos(self.get_bar_value())
         AUDIO_SEQ.start_playback(self.tempo_spinbox.value())
 
@@ -8476,24 +8460,6 @@ class transport_widget(libmk.AbstractTransport):
                 self.get_region_value(), self.get_bar_value())
         self.set_time(self.get_region_value(), self.get_bar_value(), 0.0)
 
-    def on_follow_cursor_check_changed(self):
-        if self.follow_checkbox.isChecked():
-            f_item = SONG_EDITOR.table_widget.item(0, self.get_region_value())
-            if not f_item is None and f_item.text() != "":
-                REGION_SETTINGS.open_region(f_item.text())
-            else:
-                REGION_EDITOR.clear_items()
-            SONG_EDITOR.table_widget.selectColumn(self.get_region_value())
-            REGION_EDITOR.table_widget.selectColumn(self.get_bar_value())
-            if libmk.IS_PLAYING or libmk.IS_RECORDING:
-                self.trigger_audio_playback()
-        else:
-            REGION_EDITOR.table_widget.clearSelection()
-            if libmk.IS_PLAYING or libmk.IS_RECORDING:
-                AUDIO_SEQ.stop_playback(0)
-            else:
-                AUDIO_SEQ.stop_playback()
-
     def open_transport(self, a_notify_osc=False):
         if not a_notify_osc:
             self.suppress_osc = True
@@ -8515,9 +8481,6 @@ class transport_widget(libmk.AbstractTransport):
                 _("Checking this box causes recording to "
                 "unlink existing items and append new events to the "
                 "existing events"))
-            self.follow_checkbox.setToolTip(
-                _("Checking this box causes the region editor "
-                "to follow playback"))
             self.loop_mode_combobox.setToolTip(
                 _("Use this to toggle between normal playback "
                 "and looping a region.\nYou can toggle between "
@@ -8525,7 +8488,6 @@ class transport_widget(libmk.AbstractTransport):
             self.group_box.setToolTip(libedmnext.strings.transport)
         else:
             self.overdub_checkbox.setToolTip("")
-            self.follow_checkbox.setToolTip("")
             self.loop_mode_combobox.setToolTip("")
             self.group_box.setToolTip("")
 
