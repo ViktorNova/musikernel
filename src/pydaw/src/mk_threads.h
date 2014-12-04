@@ -270,7 +270,7 @@ __attribute__((optimize("-O0"))) void v_self_set_thread_affinity()
             param.__sched_priority);
     pthread_attr_init(&threadAttr);
     pthread_attr_setschedparam(&threadAttr, &param);
-    pthread_attr_setstacksize(&threadAttr, 1024 * 1024 * 4);
+    pthread_attr_setstacksize(&threadAttr, 1024 * 1024);
     pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
     pthread_attr_setschedpolicy(&threadAttr, RT_SCHED);
 
@@ -401,7 +401,7 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
             param.__sched_priority);
     pthread_attr_init(&threadAttr);
     pthread_attr_setschedparam(&threadAttr, &param);
-    pthread_attr_setstacksize(&threadAttr, (1024 * 1024 * 4));
+    pthread_attr_setstacksize(&threadAttr, (1024 * 1024));
     pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
     pthread_attr_setschedpolicy(&threadAttr, RT_SCHED);
 
