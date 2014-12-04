@@ -1385,10 +1385,12 @@ time.sleep(0.6)
 final_gc()
 
 if RESPAWN:
-    CMD = ["python3", __file__]
+    CMD = [__file__]
     print("Spawning child UI process {}".format(CMD))
     CHILD_PROC = subprocess.Popen(CMD)
         #, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
     #CHILD_PROC.wait()
     time.sleep(6.0)
     print("Parent UI process exiting")
+
+exit(0)

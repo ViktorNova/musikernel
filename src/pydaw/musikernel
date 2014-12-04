@@ -33,5 +33,5 @@ else:
         f_prefix_dir, pydaw_version)
     f_path = os.path.abspath(f_path)
     print(f_path)
-    subprocess.Popen(['python3', f_path])
+    subprocess.Popen([f_path])
 
