@@ -113,10 +113,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755, root, root) /usr/bin/{0}-engine-dbg
 %attr(755, root, root) /usr/bin/{0}-engine-no-root
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/libpydaw/pydaw_paulstretch.py
-%attr(755, root, root) /usr/lib/{0}/pydaw/python/edmnext.py
+%attr(755, root, root) /usr/lib/{0}/pydaw/python/musikernel.py
 %attr(755, root, root) /usr/lib/{0}/rubberband/bin/rubberband
 %attr(755, root, root) /usr/lib/{0}/sbsms/bin/sbsms
 
+/usr/lib/{0}/pydaw/python/edmnext.py
 /usr/lib/{0}/presets/MODULEX.mkp
 /usr/lib/{0}/presets/RAYV.mkp
 /usr/lib/{0}/presets/WAYV.mkp
@@ -276,7 +277,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/mkplugins/mk_vocoder.pyc
 /usr/lib/{0}/pydaw/python/mkplugins/mk_vocoder.pyo
 
-/usr/lib/{0}/pydaw/python/musikernel.py
 /usr/lib/{0}/pydaw/python/musikernel.pyc
 /usr/lib/{0}/pydaw/python/musikernel.pyo
 
