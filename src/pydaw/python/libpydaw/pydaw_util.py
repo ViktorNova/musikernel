@@ -65,7 +65,7 @@ def pydaw_which(a_file):
     """ Python equivalent of the UNIX "which" command """
     f_path_arr = os.getenv("PATH").split(":")
     for f_path in f_path_arr:
-        f_file_path = "{}/{}".format(f_path, a_file )
+        f_file_path = os.path.join(f_path, a_file)
         if os.path.exists(f_file_path) and not os.path.isdir(f_file_path):
             return f_file_path
     return None
@@ -96,14 +96,14 @@ def case_insensitive_path(a_path, a_assert=True):
         f_path_arr = [x for x in f_path_arr if x != ""]
         f_path = ""
         for f_dir in f_path_arr:
-            if os.path.exists("{}/{}".format(f_path, f_dir)):
-                f_path = "{}/{}".format(f_path, f_dir)
+            if os.path.exists(os.path.join(f_path, f_dir)):
+                f_path = os.path.join(f_path, f_dir)
             else:
                 f_found = False
                 for f_real_dir in os.listdir(f_path):
                     if f_dir.lower() == f_real_dir.lower():
                         f_found = True
-                        f_path = "{}/{}".format(f_path, f_real_dir)
+                        f_path = os.path.join(f_path, f_real_dir)
                         break
                 if not f_found:
                     if a_assert:
@@ -432,20 +432,18 @@ global_show_create_folder_error = False
 global_is_live_mode = False
 global_home = os.path.expanduser("~")
 global_default_project_folder = global_home
-global_pydaw_home = "{}/{}".format(
-    os.path.expanduser("~"), global_pydaw_version_string)
+global_pydaw_home = os.path.join(global_home, global_pydaw_version_string)
 
-CONFIG_DIR = "{}/config".format(global_pydaw_home)
-PRESET_DIR = "{}/preset".format(CONFIG_DIR)
-CC_MAP_FOLDER = "{}/cc_maps".format(CONFIG_DIR)
+CONFIG_DIR = os.path.join(global_pydaw_home, "config")
+PRESET_DIR = os.path.join(CONFIG_DIR, "preset")
 
-for _f_dir in (global_pydaw_home, CONFIG_DIR, PRESET_DIR, CC_MAP_FOLDER):
+for _f_dir in (global_pydaw_home, CONFIG_DIR, PRESET_DIR):
     if not os.path.isdir(_f_dir):
         os.makedirs(_f_dir)
 
 
 def get_file_setting(a_name, a_type, a_default):
-    f_file_name = "{}/{}.txt".format(CONFIG_DIR, a_name)
+    f_file_name = os.path.join(CONFIG_DIR, "{}.txt".format(a_name))
     if os.path.exists(f_file_name):
         try:
             with open(f_file_name) as f_file:
@@ -456,14 +454,14 @@ def get_file_setting(a_name, a_type, a_default):
     return a_default
 
 def set_file_setting(a_name, a_val):
-    f_file_name = "{}/{}.txt".format(CONFIG_DIR, a_name)
+    f_file_name = os.path.join(CONFIG_DIR, "{}.txt".format(a_name))
     with open(f_file_name, "w") as f_file:
         f_file.write(str(a_val))
 
 USE_HUGEPAGES = 0
 
 global_device_val_dict = {}
-global_pydaw_device_config = "{}/device.txt".format(CONFIG_DIR)
+global_pydaw_device_config = os.path.join(CONFIG_DIR, "device.txt")
 
 MIDI_IN_DEVICES = []
 
@@ -506,10 +504,9 @@ def pydaw_read_device_config():
 
             f_selinux = False
             try:
-                if pydaw_which("getenforce"):
-                    if subprocess.check_output(
-                    "getenforce").strip().lower() == b"enforcing":
-                        f_selinux = True
+                if pydaw_which("getenforce") and subprocess.check_output(
+                "getenforce").strip().lower() == b"enforcing":
+                    f_selinux = True
             except Exception as ex:
                 print("Exception while checking getenforce, "
                     "assuming SELinux is enabled\n{}".format(ex))
@@ -552,9 +549,7 @@ def pydaw_read_device_config():
 
 pydaw_read_device_config()
 
-BOOKMARKS_FILE = "{}/file_browser_bookmarks.txt".format(
-    CONFIG_DIR)
-
+BOOKMARKS_FILE = os.path.join(CONFIG_DIR, "file_browser_bookmarks.txt")
 
 def global_get_file_bookmarks():
     try:
