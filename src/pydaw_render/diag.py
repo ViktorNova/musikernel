@@ -17,26 +17,33 @@ import os
 import sys
 
 with open("../major-version.txt") as f_file:
-    PYDAW_VERSION = f_file.read().strip()
-BIN = "{}_render".format(PYDAW_VERSION)
-PROJECT = "{}/{}/default-project".format(
-    os.path.expanduser("~"), PYDAW_VERSION)
+    MK_VERSION = f_file.read().strip()
+
+BIN = "./{}_render".format(MK_VERSION)
+HOME = os.path.expanduser("~")
+LAST_PROJECT = os.path.join(HOME, MK_VERSION, "config", "last-project.txt")
+
+if os.path.exists(LAST_PROJECT):
+    with open(LAST_PROJECT) as f_file:
+        PROJECT = os.path.dirname(f_file.read().strip())
+else:
+    PROJECT = os.path.join(HOME, MK_VERSION, "default-project")
 
 TOOLS = {
     "benchmark": "make clean && make release && "
-        "./{BIN} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 --no-file",
+        "{BIN} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 --no-file",
     "valgrind": "make clean && make debug && "
         "valgrind --alignment=16 --track-origins=yes "
-        "./{BIN}-dbg '{PROJECT}' test.wav 0 0 3 3 {SR} 512 1 0 --no-file",
+        "{BIN}-dbg '{PROJECT}' test.wav 0 0 3 3 {SR} 512 1 0 --no-file",
     "perf": "make clean && make release && "
         "perf stat -e cache-references,cache-misses,dTLB-loads,"
         "dTLB-load-misses,iTLB-loads,iTLB-load-misses,L1-dcache-loads,"
         "L1-dcache-load-misses,L1-icache-loads,L1-icache-load-misses,"
         "branch-misses,LLC-loads,LLC-load-misses "
-        "./{BIN} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 --no-file",
+        "{BIN} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 --no-file",
     "profile": "make clean && make gprof && "
-        "./{BIN} '{PROJECT}' test.wav 0 0 3 3 {SR} 512 {CORES} 1 "
-        "&& gprof ./{BIN} > profile.txt && gedit profile.txt",
+        "{BIN} '{PROJECT}' test.wav 0 0 3 3 {SR} 512 {CORES} 1 "
+        "&& gprof {BIN} > profile.txt && gedit profile.txt",
     "pahole": "make clean && make debug && pahole {BIN}",
 }
 
