@@ -1596,7 +1596,7 @@ class pydaw_abstract_file_browser_widget():
             self.history.append(self.last_open_dir)
         self.folder_path_lineedit.setText(self.last_open_dir)
         f_list = os.listdir(self.last_open_dir)
-        f_list.sort(key=str.lower)
+        f_list.sort(key=lambda x: x.lower())
         for f_file in f_list:
             f_full_path = os.path.join(self.last_open_dir, f_file)
             if not f_file.startswith("."):
