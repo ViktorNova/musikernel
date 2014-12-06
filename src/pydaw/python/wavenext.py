@@ -626,8 +626,8 @@ class pydaw_wave_editor_widget:
         self.controls_to_disable = (
             self.file_browser.load_button, self.file_browser.preview_button,
             self.file_browser.stop_preview_button, self.history_button,
-            self.sample_graph, self.vol_slider, self.menu_button,
-            self.bookmark_button, self.fade_in_start, self.fade_out_end)
+            self.sample_graph, self.vol_slider, self.bookmark_button,
+            self.fade_in_start, self.fade_out_end)
 
     def save_callback(self):
         f_result = libmk.pydaw_track_plugins()
@@ -698,7 +698,7 @@ class pydaw_wave_editor_widget:
         self.file_browser.open_file_in_browser(f_path)
 
     def normalize_dialog(self):
-        if self.graph_object is None:
+        if self.graph_object is None or libmk.IS_PLAYING:
             return
         f_val = normalize_dialog()
         if f_val is not None:
@@ -709,6 +709,8 @@ class pydaw_wave_editor_widget:
         self.vol_slider.setValue(int(f_val * 10.0))
 
     def reset_markers(self):
+        if libmk.IS_PLAYING:
+            return
         self.sample_graph.reset_markers()
 
     def set_tooltips(self, a_on):
@@ -734,7 +736,7 @@ class pydaw_wave_editor_widget:
 
     def stretch_shift_dialog(self):
         f_path = self.current_file
-        if f_path is None:
+        if f_path is None or libmk.IS_PLAYING:
             return
 
         f_base_file_name = f_path.rsplit("/", 1)[1]
@@ -830,7 +832,7 @@ class pydaw_wave_editor_widget:
         self.open_file(str(a_action.text()))
 
     def on_export(self):
-        if not self.history:
+        if not self.history or libmk.IS_PLAYING:
             return
 
         def ok_handler():
@@ -950,6 +952,8 @@ class pydaw_wave_editor_widget:
         f_clipboard.setText(str(self.file_lineedit.text()))
 
     def open_file_from_clipboard(self):
+        if libmk.IS_PLAYING:
+            return
         f_clipboard = QtGui.QApplication.clipboard()
         f_text = str(f_clipboard.text()).strip()
         if len(f_text) < 1000 and os.path.isfile(f_text):
