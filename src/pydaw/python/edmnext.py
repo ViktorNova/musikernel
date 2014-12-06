@@ -1204,10 +1204,13 @@ class region_editor(QtGui.QGraphicsView):
         self.paste_action.triggered.connect(self.paste_clipboard)
         self.atm_menu.addAction(self.paste_action)
 
+        self.paste_ctrl_action = self.atm_menu.addAction(
+            _("Paste Plugin Control"))
+        self.paste_ctrl_action.triggered.connect(self.paste_atm_point)
+
         self.paste_to_end_action = self.menu.addAction(
             _("Paste to Region End"))
         self.paste_to_end_action.triggered.connect(self.paste_to_region_end)
-        #self.atm_menu.addAction(self.paste_to_end_action)
 
         self.paste_to_orig_action = self.menu.addAction(
             _("Paste to Original Pos"))
@@ -1268,6 +1271,111 @@ class region_editor(QtGui.QGraphicsView):
         self.transpose_action = self.menu.addAction(_("Transpose..."))
         self.transpose_action.triggered.connect(self.transpose_dialog)
         self.addAction(self.transpose_action)
+
+    def paste_atm_point(self):
+        if libmk.IS_PLAYING:
+            return
+        if pydaw_widgets.CC_CLIPBOARD is None:
+            QtGui.QMessageBox.warning(
+                self, _("Error"),
+                _("Nothing copied to the clipboard.\n"
+                "Right-click->'Copy' on any knob on any plugin."))
+            return
+        self.add_atm_point(pydaw_widgets.CC_CLIPBOARD)
+
+    def add_atm_point(self, a_value=None):
+        if libmk.IS_PLAYING:
+            return
+
+        def ok_handler():
+            f_track = f_track_cbox.currentIndex()
+            f_port, f_index = TRACK_PANEL.has_automation(f_track)
+
+            if f_port is not None:
+                f_bar = f_bar_spinbox.value() - 1
+                f_beat = f_pos_spinbox.value() - 1.0
+                f_val = f_value_spinbox.value()
+                f_point = pydaw_atm_point(
+                    f_track, f_bar, f_beat, f_port, f_val,
+                    *TRACK_PANEL.get_atm_params(f_track))
+                ATM_REGION.add_point(f_point)
+                self.draw_point(f_point)
+                self.automation_save_callback()
+
+        def goto_start():
+            f_bar_spinbox.setValue(f_bar_spinbox.minimum())
+            f_pos_spinbox.setValue(f_pos_spinbox.minimum())
+
+        def goto_end():
+            f_bar_spinbox.setValue(f_bar_spinbox.maximum())
+            f_pos_spinbox.setValue(f_pos_spinbox.maximum())
+
+        def value_paste():
+            f_value_spinbox.setValue(pydaw_widgets.CC_CLIPBOARD)
+
+        def cancel_handler():
+            f_window.close()
+
+        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.setWindowTitle(_("Add automation point"))
+        f_layout = QtGui.QGridLayout()
+        f_window.setLayout(f_layout)
+
+        f_layout.addWidget(QtGui.QLabel(_("Track")), 0, 0)
+        f_track_cbox = QtGui.QComboBox()
+        f_track_cbox.addItems(TRACK_NAMES)
+        f_layout.addWidget(f_track_cbox, 0, 1)
+
+        f_layout.addWidget(QtGui.QLabel(_("Position (bars)")), 2, 0)
+        f_bar_spinbox = QtGui.QSpinBox()
+        f_bar_spinbox.setRange(1, pydaw_get_current_region_length())
+        f_layout.addWidget(f_bar_spinbox, 2, 1)
+
+        f_layout.addWidget(QtGui.QLabel(_("Position (beats)")), 5, 0)
+        f_pos_spinbox = QtGui.QDoubleSpinBox()
+        f_pos_spinbox.setRange(1.0, 4.99)
+        f_pos_spinbox.setDecimals(2)
+        f_pos_spinbox.setSingleStep(0.25)
+        f_layout.addWidget(f_pos_spinbox, 5, 1)
+
+        f_begin_end_layout = QtGui.QHBoxLayout()
+        f_layout.addLayout(f_begin_end_layout, 6, 1)
+        f_start_button = QtGui.QPushButton("<<")
+        f_start_button.pressed.connect(goto_start)
+        f_begin_end_layout.addWidget(f_start_button)
+        f_begin_end_layout.addItem(
+            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+        f_end_button = QtGui.QPushButton(">>")
+        f_end_button.pressed.connect(goto_end)
+        f_begin_end_layout.addWidget(f_end_button)
+
+        f_layout.addWidget(QtGui.QLabel(_("Value")), 10, 0)
+        f_value_spinbox = QtGui.QDoubleSpinBox()
+        f_value_spinbox.setRange(0.0, 127.0)
+        f_value_spinbox.setDecimals(4)
+        if a_value is not None:
+            f_value_spinbox.setValue(a_value)
+        f_layout.addWidget(f_value_spinbox, 10, 1)
+        f_value_paste = QtGui.QPushButton(_("Paste"))
+        f_layout.addWidget(f_value_paste, 10, 2)
+        f_value_paste.pressed.connect(value_paste)
+
+        if self.current_coord:
+            f_track, f_bar, f_beat, f_val = self.current_coord
+            f_track_cbox.setCurrentIndex(f_track)
+            f_bar_spinbox.setValue(f_bar + 1)
+            f_pos_spinbox.setValue(f_beat + 1.0)
+
+        f_ok = QtGui.QPushButton(_("Add"))
+        f_ok.pressed.connect(ok_handler)
+        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout.addWidget(f_ok)
+
+        f_layout.addLayout(f_ok_cancel_layout, 40, 1)
+        f_cancel = QtGui.QPushButton(_("Close"))
+        f_cancel.pressed.connect(cancel_handler)
+        f_ok_cancel_layout.addWidget(f_cancel)
+        f_window.exec_()
 
 
     def set_playback_pos(self, a_bar=None, a_beat=0.0):
@@ -6948,39 +7056,6 @@ class automation_viewer(QtGui.QGraphicsView):
 LAST_IPB_VALUE = 18  #For the 'add point' dialog to remember settings
 
 class automation_viewer_widget:
-    def control_changed(self, a_val=None):
-        self.set_cc_num()
-        self.ccs_in_use_combobox.setCurrentIndex(0)
-
-    def set_cc_num(self, a_val=None):
-        f_cc_num = int(str(self.control_combobox.currentText()))
-        self.automation_viewer.set_cc_num(f_cc_num)
-
-    def ccs_in_use_combobox_changed(self, a_val=None):
-        if not self.suppress_ccs_in_use:
-            f_str = str(self.ccs_in_use_combobox.currentText())
-            if f_str != "":
-                self.control_combobox.setCurrentIndex(
-                    self.control_combobox.findText(f_str))
-
-    def update_ccs_in_use(self, a_ccs):
-        self.suppress_ccs_in_use = True
-        self.ccs_in_use_combobox.clear()
-        self.ccs_in_use_combobox.addItem("")
-        for f_cc in sorted(a_ccs):
-            self.ccs_in_use_combobox.addItem(str(f_cc))
-        self.suppress_ccs_in_use = False
-
-    def smooth_pressed(self):
-        if self.is_cc:
-            f_cc_num = int(str(self.control_combobox.currentText()))
-            pydaw_smooth_automation_points(
-                ITEM_EDITOR.items, self.is_cc, f_cc_num)
-        else:
-            pydaw_smooth_automation_points(ITEM_EDITOR.items, self.is_cc)
-        self.automation_viewer.selected_str = []
-        global_save_and_reload_items()
-
     def __init__(self, a_viewer, a_is_cc=True):
         self.is_cc = a_is_cc
         self.widget = QtGui.QGroupBox()
@@ -7051,6 +7126,39 @@ class automation_viewer_widget:
         self.hlayout.addItem(
             QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding))
 
+    def control_changed(self, a_val=None):
+        self.set_cc_num()
+        self.ccs_in_use_combobox.setCurrentIndex(0)
+
+    def set_cc_num(self, a_val=None):
+        f_cc_num = int(str(self.control_combobox.currentText()))
+        self.automation_viewer.set_cc_num(f_cc_num)
+
+    def ccs_in_use_combobox_changed(self, a_val=None):
+        if not self.suppress_ccs_in_use:
+            f_str = str(self.ccs_in_use_combobox.currentText())
+            if f_str != "":
+                self.control_combobox.setCurrentIndex(
+                    self.control_combobox.findText(f_str))
+
+    def update_ccs_in_use(self, a_ccs):
+        self.suppress_ccs_in_use = True
+        self.ccs_in_use_combobox.clear()
+        self.ccs_in_use_combobox.addItem("")
+        for f_cc in sorted(a_ccs):
+            self.ccs_in_use_combobox.addItem(str(f_cc))
+        self.suppress_ccs_in_use = False
+
+    def smooth_pressed(self):
+        if self.is_cc:
+            f_cc_num = int(str(self.control_combobox.currentText()))
+            pydaw_smooth_automation_points(
+                ITEM_EDITOR.items, self.is_cc, f_cc_num)
+        else:
+            pydaw_smooth_automation_points(ITEM_EDITOR.items, self.is_cc)
+        self.automation_viewer.selected_str = []
+        global_save_and_reload_items()
+
     def select_all(self):
         self.automation_viewer.select_all()
 
@@ -7080,8 +7188,8 @@ class automation_viewer_widget:
                 f_value_spinbox.value())
             f_item.add_cc(f_cc)
 
-            PROJECT.save_item(ITEM_EDITOR.item_names[f_bar],
-                                         ITEM_EDITOR.items[f_bar])
+            PROJECT.save_item(
+                ITEM_EDITOR.item_names[f_bar], ITEM_EDITOR.items[f_bar])
             global_open_items()
             PROJECT.commit(_("Add automation point"))
 
@@ -7142,7 +7250,6 @@ class automation_viewer_widget:
         f_cancel.pressed.connect(cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel)
         f_window.exec_()
-
 
     def add_pb_point(self):
         if not ITEM_EDITOR.enabled:  #TODO:  Make this global...
