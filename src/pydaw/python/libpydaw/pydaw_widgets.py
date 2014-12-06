@@ -1587,8 +1587,8 @@ class pydaw_abstract_file_browser_widget():
             self.last_open_dir = str(a_folder)
         else:
             self.last_open_dir = os.path.abspath(
-                "{}/{}".format(self.last_open_dir, a_folder))
-        self.last_open_dir = self.last_open_dir.replace("//", "/")
+                os.path.join(self.last_open_dir, a_folder))
+        self.last_open_dir = os.path.normpath(self.last_open_dir)
         if self.last_open_dir != self.history[-1]:
             #don't keep more than one copy in history
             if self.last_open_dir in self.history:
@@ -1598,14 +1598,18 @@ class pydaw_abstract_file_browser_widget():
         f_list = os.listdir(self.last_open_dir)
         f_list.sort(key=str.lower)
         for f_file in f_list:
-            f_full_path = "{}/{}".format(self.last_open_dir, f_file)
-            if  not f_file.startswith("."):
+            f_full_path = os.path.join(self.last_open_dir, f_file)
+            if not f_file.startswith("."):
                 if os.path.isdir(f_full_path):
-                    self.list_folder.addItem(f_file)
+                    f_item = QtGui.QListWidgetItem(f_file)
+                    f_item.setToolTip(f_file)
+                    self.list_folder.addItem(f_item)
                 elif pydaw_util.is_audio_file(f_file) and \
                 os.path.isfile(f_full_path):
                     if not pydaw_util.pydaw_str_has_bad_chars(f_full_path):
-                        self.list_file.addItem(f_file)
+                        f_item = QtGui.QListWidgetItem(f_file)
+                        f_item.setToolTip(f_file)
+                        self.list_file.addItem(f_item)
                     else:
                         QtGui.QMessageBox.warning(_(
                         "Not adding '{}' because it contains bad chars, "
