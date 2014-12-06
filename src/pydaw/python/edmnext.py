@@ -1375,7 +1375,7 @@ class region_editor(QtGui.QGraphicsView):
         f_cancel = QtGui.QPushButton(_("Close"))
         f_cancel.pressed.connect(cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel)
-        f_window.exec_()
+        f_window.show()
 
 
     def set_playback_pos(self, a_bar=None, a_beat=0.0):
