@@ -3735,18 +3735,18 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                     f_new_vel = f_val + f_item.orig_value
                 else:
                     if f_start > self.vc_mid:
-                        f_frac =  (f_start - self.vc_mid) / \
-                            (self.vc_end - self.vc_mid)
+                        f_frac =  (f_start -
+                            self.vc_mid) / (self.vc_end - self.vc_mid)
                         f_new_vel = pydaw_util.linear_interpolate(
                             f_val, 0.3 * f_val, f_frac)
                     else:
-                        f_frac =  (f_start - self.vc_start) / \
-                            (self.vc_mid - self.vc_start)
+                        f_frac = (f_start -
+                            self.vc_start) / (self.vc_mid - self.vc_start)
                         f_new_vel = pydaw_util.linear_interpolate(
                             0.3 * f_val, f_val, f_frac)
                     f_new_vel += f_item.orig_value
-                f_new_vel = pydaw_util.pydaw_clip_value(f_new_vel, -24, 24)
-                f_new_vel = int(f_new_vel)
+                f_new_vel = pydaw_util.pydaw_clip_value(f_new_vel, -24.0, 24.0)
+                f_new_vel = round(f_new_vel, 1)
                 f_item.audio_item.vol = f_new_vel
                 f_item.set_vol_line()
             AUDIO_SEQ.setUpdatesEnabled(True)
