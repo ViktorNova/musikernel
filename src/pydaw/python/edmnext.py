@@ -1897,13 +1897,20 @@ class region_editor(QtGui.QGraphicsView):
             f_note_bar_y = (i *
                 REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
             f_note_bar.setPos(self.padding, f_note_bar_y)
-        f_beat_pen = QtGui.QPen()
-        f_beat_pen.setWidth(2)
-        f_beat_y = self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
+        f_bar_pen = QtGui.QPen()
+        f_bar_pen.setWidth(2)
+        f_beat_pen = QtGui.QPen(QtGui.QColor.fromRgb(21, 21, 21))
+        f_beat_pen.setWidth(1)
+        f_bar_y = self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
         for i in range(0, int(self.item_length)):
-            f_beat_x = (self.beat_width * i)
-            f_beat = self.scene.addLine(f_beat_x, 0, f_beat_x, f_beat_y)
-            f_beat.setPen(f_beat_pen)
+            f_bar_x = (self.beat_width * i)
+            f_bar = self.scene.addLine(f_bar_x, 0, f_bar_x, f_bar_y)
+            f_bar.setPen(f_bar_pen)
+            for i2 in range(1, 4):
+                f_beat_x = ((self.beat_width * i) +
+                    (i2 * self.beat_width * 0.25))
+                f_beat = self.scene.addLine(f_beat_x, 0, f_beat_x, f_bar_y)
+                f_beat.setPen(f_beat_pen)
             if i < self.item_length:
                 f_number = QtGui.QGraphicsSimpleTextItem(
                     str(i + 1), self.header)
