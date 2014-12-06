@@ -68,17 +68,6 @@ class AbstractIPC:
                 "Would've sent configure message: key: \""
                 "{}\" value: \"{}\"".format(key, value))
 
-    def pydaw_update_plugin_control(self, a_plugin_uid, a_port, a_val):
-        raise NotImplementedError
-
-    def pydaw_configure_plugin(self, a_plugin_uid, a_key, a_message):
-        raise NotImplementedError
-
-    def pydaw_midi_learn(self):
-        raise NotImplementedError
-
-    def pydaw_load_cc_map(self, a_plugin_uid, a_str):
-        raise NotImplementedError
 
 class AbstractProject:
     """ Abstract class containing the minimum contract
