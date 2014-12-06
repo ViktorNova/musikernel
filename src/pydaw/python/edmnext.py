@@ -1316,7 +1316,7 @@ class region_editor(QtGui.QGraphicsView):
         def cancel_handler():
             f_window.close()
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QtGui.QDialog(self)
         f_window.setWindowTitle(_("Add automation point"))
         f_layout = QtGui.QGridLayout()
         f_window.setLayout(f_layout)
