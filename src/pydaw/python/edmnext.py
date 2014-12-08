@@ -1934,7 +1934,8 @@ class region_editor(QtGui.QGraphicsView):
         f_items_dict = PROJECT.get_items_dict()
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
-        for f_item in CURRENT_REGION.items:
+        for f_item in sorted(
+        CURRENT_REGION.items, key=lambda x: x.bar_num, reverse=True):
             if f_item.bar_num < pydaw_get_current_region_length():
                 f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
                 f_new_item = self.draw_item(
