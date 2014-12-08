@@ -8997,15 +8997,12 @@ class pydaw_main_window(QtGui.QScrollArea):
 
     def prepare_to_quit(self):
         try:
-            AUDIO_SEQ.prepare_to_quit()
-            PIANO_ROLL_EDITOR.prepare_to_quit()
-            time.sleep(0.5)
-            libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
+            for f_widget in (AUDIO_SEQ, PIANO_ROLL_EDITOR,
+            CC_EDITOR, PB_EDITOR, REGION_EDITOR):
+                f_widget.prepare_to_quit()
         except Exception as ex:
-            print("Exception thrown while attempting to exit, "
-                "forcing MusiKernel to exit")
+            print("Exception thrown while attempting to close EDM-Next")
             print("Exception:  {}".format(ex))
-            exit(999)
 
 
 def global_update_peak_meters(a_val):
