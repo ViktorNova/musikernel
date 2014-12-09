@@ -203,11 +203,6 @@ typedef struct
     t_pydaw_routing_graph * routing_graph;
     int loop_mode;  //0 == Off, 1 == Bar, 2 == Region
     int overdub_mode;  //0 == Off, 1 == On
-    char * item_folder;
-    char * region_folder;
-    char * region_audio_folder;
-    char * region_atm_folder;
-    char * tracks_folder;
 
     //only refers to the fractional position within the current bar.
     float playback_cursor;
@@ -234,12 +229,18 @@ typedef struct
     /*used to prevent new audio items from playing while
      * the existing are being faded out.*/
     int suppress_new_audio_items;
-    char * per_audio_item_fx_folder;
 
     int audio_glue_indexes[PYDAW_MAX_AUDIO_ITEM_COUNT];
     int f_region_length_bars;
     long f_next_current_sample;
     t_pydaw_midi_routing_list midi_routing;
+
+    char * item_folder;
+    char * region_folder;
+    char * region_audio_folder;
+    char * region_atm_folder;
+    char * tracks_folder;
+    char * per_audio_item_fx_folder;
 }t_edmnext;
 
 

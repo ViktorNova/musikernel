@@ -159,13 +159,6 @@ typedef struct
     int is_offline_rendering;
     //set from the audio device buffer size every time the main loop is called.
     int sample_count;
-    char * project_folder;
-    char * audio_folder;
-    char * audio_tmp_folder;
-    char * samples_folder;
-    char * samplegraph_folder;
-    char * wav_pool_file;
-    char * plugins_folder;
     float ** input_buffers;
     int input_buffers_active;
     t_wav_pool_item * preview_wav_item;
@@ -191,6 +184,13 @@ typedef struct
     t_midi_device_list * midi_devices;
     int midi_learn;
     t_pydaw_plugin plugin_pool[MAX_PLUGIN_POOL_COUNT];
+    char * project_folder;
+    char * audio_folder;
+    char * audio_tmp_folder;
+    char * samples_folder;
+    char * samplegraph_folder;
+    char * wav_pool_file;
+    char * plugins_folder;
 }t_musikernel;
 
 void g_musikernel_get(float, t_midi_device_list*);
