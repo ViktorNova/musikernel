@@ -1065,13 +1065,13 @@ class pydaw_region:
 
 class pydaw_atm_region:
     def __init__(self):
-        self.tracks = {}
+        self.plugins = {}
 
     def split(self, a_index):
         f_region0 = pydaw_atm_region()
         f_region1 = pydaw_atm_region()
-        for f_plugin in self.tracks:
-            for f_list in self.tracks[f_plugin].values():
+        for f_plugin in self.plugins:
+            for f_list in self.plugins[f_plugin].values():
                 for f_item in f_list:
                     if f_item.bar >= a_index:
                         f_item.bar -= a_index
@@ -1081,34 +1081,34 @@ class pydaw_atm_region:
         return f_region0, f_region1
 
     def add_port_list(self, a_point):
-        if not a_point.index in self.tracks:
-            self.tracks[a_point.track][a_point.index] = {}
-        if not a_point.port_num in self.tracks[a_point.index]:
-            self.tracks[a_point.track][a_point.index][a_point.port_num] = []
+        if not a_point.index in self.plugins:
+            self.plugins[a_point.index] = {}
+        if not a_point.port_num in self.plugins[a_point.index]:
+            self.plugins[a_point.index][a_point.port_num] = []
 
     def add_point(self, a_point):
         self.add_port_list(a_point)
-        self.tracks[a_point.index][a_point.port_num].append(a_point)
+        self.plugins[a_point.index][a_point.port_num].append(a_point)
 
     def remove_point(self, a_point):
         #self.add_port_list(a_point)
-        self.tracks[a_point.index][a_point.port_num].remove(a_point)
+        self.plugins[a_point.index][a_point.port_num].remove(a_point)
 
     def get_ports(self, a_index):
         a_index = int(a_index)
-        if a_index not in self.tracks:
+        if a_index not in self.plugins:
             return []
         else:
-            return sorted(self.tracks[a_track_num][a_index])
+            return sorted(self.plugins[a_index])
 
     def get_points(self, a_index, a_port_num):
         a_port_num = int(a_port_num)
         a_index = int(a_index)
-        if a_index not in self.tracks[a_track_num] or \
-        a_port_num not in self.tracks[a_track_num][a_index]:
+        if a_index not in self.plugins or \
+        a_port_num not in self.plugins[a_index]:
             return []
         else:
-            f_result = self.tracks[a_track_num][a_index][a_port_num]
+            f_result = self.plugins[a_index][a_port_num]
             f_result.sort()
             return f_result
 
@@ -1121,7 +1121,7 @@ class pydaw_atm_region:
                 (x.bar < a_start_bar or x.bar > a_end_bar) or
                 (x.bar == a_start_bar and x.beat < a_start_beat) or
                 (x.bar == a_end_bar and x.beat > a_end_beat)]
-            self.tracks[a_index][a_port_num] = f_result
+            self.plugins[a_index][a_port_num] = f_result
 
     def smooth_points(
             self, a_index, a_port_num, a_plugin_index, a_points):
@@ -1133,7 +1133,7 @@ class pydaw_atm_region:
             a_index, a_port_num,
             f_start.bar, f_start.beat, f_end.bar, f_end.beat)
         f_inc = 0.0625 # 64th note
-        f_result = self.tracks[a_index][a_port_num]
+        f_result = self.plugins[a_index][a_port_num]
         for f_point, f_next in zip(a_points, a_points[1:]):
             f_bar = f_point.bar
             f_beat = f_point.beat + f_inc
@@ -1165,9 +1165,9 @@ class pydaw_atm_region:
 
     def __str__(self):
         f_result = []
-        for f_index in sorted(self.tracks):
+        for f_index in sorted(self.plugins):
             f_point_list = []
-            for f_port in self.tracks[f_index].values():
+            for f_port in self.plugins[f_index].values():
                 f_point_list.extend(f_port)
             f_point_len = len(f_point_list)
             if f_point_len == 0:
@@ -1193,7 +1193,7 @@ class pydaw_atm_region:
         return f_result
 
 class pydaw_atm_point:
-    def __init__(self, a_track, a_bar, a_beat, a_port_num, a_cc_val,
+    def __init__(self, a_bar, a_beat, a_port_num, a_cc_val,
                  a_index, a_plugin_index):
         self.bar = int(a_bar)
         self.beat = round(float(a_beat), 4)
@@ -1220,9 +1220,9 @@ class pydaw_atm_point:
 #            (self.plugin_index == other.plugin_index))
 
     def __str__(self):
-        return "|".join(str(x) for x in
-            (self.bar, self.beat, self.port_num, self.cc_val,
-             self.index, self.plugin_index))
+        return "|".join(str(x) for x in (
+            self.bar, self.beat, self.port_num, self.cc_val,
+            self.index, self.plugin_index))
 
     @staticmethod
     def from_arr(a_arr):

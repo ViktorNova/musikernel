@@ -112,7 +112,6 @@ typedef struct
 
 typedef struct
 {
-    int track;
     int bar;
     float beat;
     int port;
@@ -130,8 +129,7 @@ typedef struct
 
 typedef struct
 {
-    t_en_atm_plugin * plugins;
-    int index[MAX_WORKER_THREADS];
+    t_en_atm_plugin plugins[MAX_PLUGIN_COUNT];
 }t_en_atm_region;
 
 typedef struct
@@ -1031,12 +1029,12 @@ inline void v_en_process_atm(
     while(1)
     {
         if(self->en_song->regions_atm[f_current_track_region] &&
-            self->en_song->regions_atm[f_current_track_region]->tracks[
-                f_track_num].plugins[f_index].point_count)
+            self->en_song->regions_atm[
+                f_current_track_region]->plugins[f_index].point_count)
         {
             t_en_atm_plugin * f_current_item =
-                &self->en_song->regions_atm[f_current_track_region]->tracks[
-                    f_track_num].plugins[f_index];
+                &self->en_song->regions_atm[
+                    f_current_track_region]->plugins[f_index];
 
             if((f_plugin->atm_pos) >= (f_current_item->point_count))
             {
@@ -2375,18 +2373,11 @@ t_en_atm_region * g_atm_region_get(t_edmnext * self, int a_uid)
 
         lmalloc((void**)&f_result, sizeof(t_en_atm_region));
 
-        int f_i = 0;
-
-        while(f_i < EN_TRACK_COUNT)
+        int f_i2;
+        for(f_i2 = 0; f_i2 < MAX_PLUGIN_POOL_COUNT; ++f_i2)
         {
-            int f_i2 = 0;
-            while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
-            {
-                f_result->tracks[f_i].plugins[f_i2].point_count = 0;
-                f_result->tracks[f_i].plugins[f_i2].points = 0;
-                ++f_i2;
-            }
-            ++f_i;
+            f_result->plugins[f_i2].point_count = 0;
+            f_result->plugins[f_i2].points = NULL;
         }
 
         t_2d_char_array * f_current_string = g_get_2d_array_from_file(f_file,
@@ -2405,9 +2396,6 @@ t_en_atm_region * g_atm_region_get(t_edmnext * self, int a_uid)
             if(f_current_string->current_str[0] == 'p')
             {
                 v_iterate_2d_char_array(f_current_string);
-                int f_track = atoi(f_current_string->current_str);
-
-                v_iterate_2d_char_array(f_current_string);
                 int f_index = atoi(f_current_string->current_str);
 
                 v_iterate_2d_char_array(f_current_string);
@@ -2415,18 +2403,14 @@ t_en_atm_region * g_atm_region_get(t_edmnext * self, int a_uid)
 
                 assert(f_count >= 1 && f_count < 100000);  //sanity check
 
-                f_result->tracks[f_track].plugins[f_index].point_count =
-                    f_count;
+                f_result->plugins[f_index].point_count = f_count;
                 lmalloc(
-                    (void**)&f_result->tracks[f_track].plugins[f_index].points,
+                    (void**)&f_result->plugins[f_index].points,
                     sizeof(t_en_atm_point) * f_count);
                 f_pos = 0;
             }
             else
             {
-                int f_track = atoi(f_current_string->current_str);
-
-                v_iterate_2d_char_array(f_current_string);
                 int f_bar = atoi(f_current_string->current_str);
 
                 v_iterate_2d_char_array(f_current_string);
@@ -2444,16 +2428,13 @@ t_en_atm_region * g_atm_region_get(t_edmnext * self, int a_uid)
                 v_iterate_2d_char_array(f_current_string);
                 int f_plugin = atoi(f_current_string->current_str);
 
-                assert(f_pos <
-                    f_result->tracks[f_track].plugins[f_index].point_count);
+                assert(f_pos < f_result->plugins[f_index].point_count);
 
-                assert(f_result->tracks[f_track].plugins[f_index].points);
+                assert(f_result->plugins[f_index].points);
 
                 t_en_atm_point * f_point =
-                    &f_result->tracks[f_track].plugins[f_index].points[f_pos];
-                f_point->track = f_track;
+                    &f_result->plugins[f_index].points[f_pos];
 
-                f_point->track = f_track;
                 f_point->bar = f_bar;
                 f_point->beat = f_beat;
                 f_point->port = f_port;
@@ -2473,20 +2454,16 @@ t_en_atm_region * g_atm_region_get(t_edmnext * self, int a_uid)
 
 void v_en_atm_region_free(t_en_atm_region * self)
 {
-    int f_i = 0;
-    while(f_i < EN_TRACK_COUNT)
+    int f_i2 = 0;
+    while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
     {
-        int f_i2 = 0;
-        while(f_i2 < MAX_PLUGIN_TOTAL_COUNT)
+        if(self->plugins[f_i2].point_count)
         {
-            if(self->tracks[f_i].plugins[f_i2].point_count)
-            {
-                free(self->tracks[f_i].plugins[f_i2].points);
-            }
-            ++f_i2;
+            free(self->plugins[f_i2].points);
         }
-        ++f_i;
+        ++f_i2;
     }
+
     free(self);
 }
 

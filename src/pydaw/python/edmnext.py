@@ -1016,6 +1016,7 @@ ALL_PEAK_METERS = {}
 class tracks_widget:
     def __init__(self):
         self.tracks = {}
+        self.plugin_uid_map = {}
         self.tracks_widget = QtGui.QWidget()
         self.tracks_widget.setObjectName("plugin_ui")
         self.tracks_widget.setContentsMargins(0, 0, 0, 0)
@@ -1049,6 +1050,10 @@ class tracks_widget:
         self.automation_dict = {
             x:(self.tracks[x].port_num, self.tracks[x].automation_uid)
             for x in self.tracks}
+
+    def update_plugin_track_map(self):
+        self.plugin_uid_map = {int(y.plugin_uid):int(x)
+            for x in self.tracks.values() for y in x.plugins}
 
     def has_automation(self, a_track_num):
         return self.automation_dict[int(a_track_num)]
