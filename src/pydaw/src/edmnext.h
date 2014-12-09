@@ -139,16 +139,8 @@ typedef struct
 
 typedef struct
 {
-    float a_knobs[3];
-    int fx_type;
-    fp_mf3_run func_ptr;
-    t_mf3_multi * mf3;
-}t_en_per_audio_item_fx_item;
-
-typedef struct
-{
     int loaded[PYDAW_MAX_AUDIO_ITEM_COUNT];
-    t_en_per_audio_item_fx_item * items[PYDAW_MAX_AUDIO_ITEM_COUNT][8];
+    t_per_audio_item_fx * items[PYDAW_MAX_AUDIO_ITEM_COUNT][8];
 }t_en_per_audio_item_fx_region;
 
 typedef struct
@@ -288,7 +280,7 @@ t_pydaw_audio_items * v_en_audio_items_load_all(t_edmnext * self,
 t_en_per_audio_item_fx_region * g_en_paif_region_get();
 void v_en_paif_region_free(t_en_per_audio_item_fx_region*);
 t_en_per_audio_item_fx_region * g_en_paif_region_open(t_edmnext*, int);
-t_en_per_audio_item_fx_item * g_en_paif_item_get(t_edmnext *);
+
 void v_en_paif_set_control(t_edmnext *, int, int, int, float);
 
 void v_en_song_free(t_en_song *);
@@ -495,8 +487,10 @@ t_en_per_audio_item_fx_region * g_en_paif_region_open(
 
     int f_i = 0;
     char f_temp[1024];
-    sprintf(f_temp, "%s%i", self->per_audio_item_fx_folder,
-            a_region_uid);
+    sprintf(f_temp, "%s%i", self->per_audio_item_fx_folder, a_region_uid);
+
+    float f_sr = musikernel->thread_storage[0].sample_rate;
+
     if(i_pydaw_file_exists(f_temp))
     {
         t_2d_char_array * f_current_string =
@@ -516,7 +510,7 @@ t_en_per_audio_item_fx_region * g_en_paif_region_open(
 
             while(f_i2 < 8)
             {
-                f_result->items[f_index][f_i2] = g_en_paif_item_get(self);
+                f_result->items[f_index][f_i2] = g_paif_get(f_sr);
                 int f_i3 = 0;
                 while(f_i3 < 3)
                 {
@@ -546,25 +540,6 @@ t_en_per_audio_item_fx_region * g_en_paif_region_open(
     return f_result;
 }
 
-t_en_per_audio_item_fx_item * g_en_paif_item_get(t_edmnext * self)
-{
-    t_en_per_audio_item_fx_item * f_result =
-            (t_en_per_audio_item_fx_item*)malloc(
-                sizeof(t_en_per_audio_item_fx_item));
-
-    int f_i = 0;
-    while(f_i < 3)
-    {
-        f_result->a_knobs[f_i] = 64.0f;
-        ++f_i;
-    }
-    f_result->fx_type = 0;
-    f_result->func_ptr = v_mf3_run_off;
-    f_result->mf3 = g_mf3_get(musikernel->thread_storage[0].sample_rate);
-
-    return f_result;
-}
-
 void v_en_paif_set_control(t_edmnext * self, int a_region_uid,
         int a_item_index, int a_port, float a_val)
 {
@@ -574,7 +549,8 @@ void v_en_paif_set_control(t_edmnext * self, int a_region_uid,
         self, a_region_uid);
     t_en_per_audio_item_fx_region * f_region =
         self->en_song->per_audio_item_fx[f_song_index];
-    t_en_per_audio_item_fx_item * f_item;
+    t_per_audio_item_fx * f_item;
+    float f_sr = musikernel->thread_storage[0].sample_rate;
 
     if(!f_region)
     {
@@ -586,11 +562,11 @@ void v_en_paif_set_control(t_edmnext * self, int a_region_uid,
 
     if(!f_region->loaded[a_item_index])
     {
-        t_en_per_audio_item_fx_item * f_items[8];
+        t_per_audio_item_fx * f_items[8];
         int f_i = 0;
         while(f_i < 8)
         {
-            f_items[f_i] = g_en_paif_item_get(self);
+            f_items[f_i] = g_paif_get(f_sr);
             ++f_i;
         }
         pthread_spin_lock(&musikernel->main_lock);
@@ -1766,10 +1742,9 @@ void v_en_audio_items_run(t_edmnext * self,
     int f_region_count = 1;
     int f_playback_mode = musikernel->playback_mode;
     t_en_per_audio_item_fx_region * f_paif_region;
-    t_en_per_audio_item_fx_item * f_paif_item;
+    t_per_audio_item_fx * f_paif_item;
 
-    if(a_ts->ml_current_region != a_ts->ml_next_region ||
-            a_ts->ml_is_looping)
+    if(a_ts->ml_current_region != a_ts->ml_next_region || a_ts->ml_is_looping)
     {
         f_region_count = 2;
     }

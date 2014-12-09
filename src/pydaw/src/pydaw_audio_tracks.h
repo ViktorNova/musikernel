@@ -110,14 +110,41 @@ typedef struct
     int uid;
 } t_pydaw_audio_items;
 
+typedef struct
+{
+    float a_knobs[3];
+    int fx_type;
+    fp_mf3_run func_ptr;
+    t_mf3_multi * mf3;
+}t_per_audio_item_fx;
 
 t_pydaw_audio_item * g_pydaw_audio_item_get(float);
 t_pydaw_audio_items * g_pydaw_audio_items_get(int);
 void v_pydaw_audio_item_free(t_pydaw_audio_item *);
+t_per_audio_item_fx * g_paif_get(float);
 
 #ifdef	__cplusplus
 }
 #endif
+
+
+t_per_audio_item_fx * g_paif_get(float a_sr)
+{
+    t_per_audio_item_fx * f_result;
+    lmalloc((void**)&f_result, sizeof(t_per_audio_item_fx));
+
+    int f_i = 0;
+    while(f_i < 3)
+    {
+        f_result->a_knobs[f_i] = 64.0f;
+        ++f_i;
+    }
+    f_result->fx_type = 0;
+    f_result->func_ptr = v_mf3_run_off;
+    f_result->mf3 = g_mf3_get(a_sr);
+
+    return f_result;
+}
 
 void g_wav_pool_item_init(t_wav_pool_item *f_result,
     int a_uid, const char *a_path, float a_sr)
