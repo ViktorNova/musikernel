@@ -269,7 +269,7 @@ class plugin_settings_base:
     def automation_check_changed(self):
         if self.automation_radiobutton.isChecked():
             self.automation_callback(
-                self.index,
+                self.plugin_uid,
                 get_plugin_uid_by_name(self.plugin_combobox.currentText()),
                 self.plugin_combobox.currentText())
 

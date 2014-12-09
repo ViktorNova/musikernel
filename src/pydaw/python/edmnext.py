@@ -1043,11 +1043,11 @@ class tracks_widget:
     def get_atm_params(self, a_track_num):
         f_track = self.tracks[int(a_track_num)]
         return (
-            f_track.automation_index, f_track.automation_plugin)
+            f_track.automation_uid, f_track.automation_plugin)
 
     def update_automation(self):
         self.automation_dict = {
-            x:(self.tracks[x].port_num, self.tracks[x].automation_index)
+            x:(self.tracks[x].port_num, self.tracks[x].automation_uid)
             for x in self.tracks}
 
     def has_automation(self, a_track_num):
@@ -1297,7 +1297,7 @@ class region_editor(QtGui.QGraphicsView):
                 f_beat = f_pos_spinbox.value() - 1.0
                 f_val = f_value_spinbox.value()
                 f_point = pydaw_atm_point(
-                    f_track, f_bar, f_beat, f_port, f_val,
+                    f_bar, f_beat, f_port, f_val,
                     *TRACK_PANEL.get_atm_params(f_track))
                 ATM_REGION.add_point(f_point)
                 self.draw_point(f_point)
@@ -1846,7 +1846,7 @@ class region_editor(QtGui.QGraphicsView):
                 if f_port is not None:
                     f_track, f_bar, f_beat, f_val = self.current_coord
                     f_point = pydaw_atm_point(
-                        f_track, f_bar, f_beat, f_port, f_val,
+                        f_bar, f_beat, f_port, f_val,
                         *TRACK_PANEL.get_atm_params(f_track))
                     ATM_REGION.add_point(f_point)
                     self.draw_point(f_point)
@@ -1956,8 +1956,7 @@ class region_editor(QtGui.QGraphicsView):
         for f_track in TRACK_PANEL.tracks:
             f_port, f_index = TRACK_PANEL.has_automation(f_track)
             if f_port is not None:
-                for f_point in ATM_REGION.get_points(
-                f_track, f_index, f_port):
+                for f_point in ATM_REGION.get_points(f_index, f_port):
                     self.draw_point(f_point)
 
     def clear_drawn_items(self):
@@ -2042,7 +2041,7 @@ class region_editor(QtGui.QGraphicsView):
             return
         f_port, f_index = TRACK_PANEL.has_automation(f_track)
         f_points = [x.item for x in self.get_selected_points()]
-        ATM_REGION.smooth_points(f_track, f_index, f_port, f_plugin, f_points)
+        ATM_REGION.smooth_points(f_index, f_port, f_plugin, f_points)
         self.automation_save_callback()
         self.open_region()
 
@@ -2377,7 +2376,7 @@ class region_editor(QtGui.QGraphicsView):
                 f_point = f_item[2]
                 ATM_REGION.add_point(
                     pydaw_atm_point(
-                        f_row, f_column, f_point.beat, f_track_port_num,
+                        f_column, f_point.beat, f_track_port_num,
                         f_point.cc_val, *f_track_params))
             self.automation_save_callback()
             self.open_region()
@@ -8019,7 +8018,7 @@ def global_open_mixer():
 class seq_track:
     def __init__(self, a_track_num, a_track_text=_("track")):
         self.suppress_osc = True
-        self.automation_index = None
+        self.automation_uid = None
         self.automation_plugin = None
         self.track_number = a_track_num
         self.group_box = QtGui.QWidget()
@@ -8194,9 +8193,8 @@ class seq_track:
     def update_in_use_combobox(self):
         if self.ccs_in_use_combobox is not None:
             self.ccs_in_use_combobox.clear()
-            if self.automation_index is not None:
-                f_list = ATM_REGION.get_ports(
-                    self.track_number, self.automation_index)
+            if self.automation_uid is not None:
+                f_list = ATM_REGION.get_ports(self.automation_uid)
                 self.ccs_in_use_combobox.addItems(
                     [""] +
                     [CONTROLLER_PORT_NUM_DICT[
@@ -8240,9 +8238,9 @@ class seq_track:
     def context_menu_event(self, a_event=None):
         pass
 
-    def automation_callback(self, a_index, a_plugin, a_name):
-        self.automation_index = int(a_index)
-        self.automation_plugin = int(a_plugin)
+    def automation_callback(self, a_plugin_uid, a_plugin_type, a_name):
+        self.automation_uid = int(a_plugin_uid)
+        self.automation_plugin = int(a_plugin_type)
         self.automation_plugin_name = str(a_name)
         self.plugin_changed()
         if not libmk.IS_PLAYING:

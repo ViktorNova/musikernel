@@ -125,16 +125,13 @@ typedef struct
 {
     t_en_atm_point * points;
     int point_count;
+    char padding[CACHE_LINE_SIZE - sizeof(int) - sizeof(void*)];
 }t_en_atm_plugin;
 
 typedef struct
 {
-    t_en_atm_plugin plugins[MAX_PLUGIN_TOTAL_COUNT];
-}t_pydaw_atm_track;
-
-typedef struct
-{
-    t_pydaw_atm_track tracks[EN_TRACK_COUNT];
+    t_en_atm_plugin * plugins;
+    int index[MAX_WORKER_THREADS];
 }t_en_atm_region;
 
 typedef struct
