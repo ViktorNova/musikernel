@@ -201,6 +201,8 @@ class plugin_settings_base:
             a_layout, a_save_callback, a_name_callback,
             a_automation_callback, a_offset=0, a_send=None):
         self.set_plugin_func = a_set_plugin_func
+        self.layout = a_layout
+        self.offset = a_offset
         self.suppress_osc = False
         self.save_callback = a_save_callback
         self.name_callback = a_name_callback
@@ -216,22 +218,36 @@ class plugin_settings_base:
         self.plugin_combobox.addItems(self.plugin_list)
         self.plugin_combobox.currentIndexChanged.connect(
             self.on_plugin_change)
-        a_layout.addWidget(self.plugin_combobox, a_index + 1, 0 + a_offset)
         self.ui_button = QtGui.QPushButton("UI")
         self.ui_button.released.connect(self.on_show_ui)
         self.ui_button.setObjectName("uibutton")
         self.ui_button.setFixedWidth(24)
-        a_layout.addWidget(self.ui_button, a_index + 1, 1 + a_offset)
         if a_automation_callback is not None:
             self.automation_radiobutton = QtGui.QRadioButton("")
-            a_layout.addWidget(
-                self.automation_radiobutton, a_index + 1, 2 + a_offset)
             self.automation_radiobutton.clicked.connect(
                 self.automation_check_changed)
         self.power_checkbox = QtGui.QCheckBox("")
         self.power_checkbox.setChecked(True)
-        a_layout.addWidget(self.power_checkbox, a_index + 1, 3 + a_offset)
         self.power_checkbox.clicked.connect(self.on_power_changed)
+        self.add_to_layout()
+
+    def remove_from_layout(self):
+        self.layout.removeWidget(self.plugin_combobox)
+        self.layout.removeWidget(self.ui_button)
+        self.layout.removeWidget(self.power_checkbox)
+        if self.automation_callback is not None:
+            self.layout.removeWidget(self.automation_radiobutton)
+
+    def add_to_layout(self):
+        self.layout.addWidget(
+            self.plugin_combobox, self.index + 1, 0 + self.offset)
+        self.layout.addWidget(
+            self.ui_button, self.index + 1, 1 + self.offset)
+        self.layout.addWidget(
+            self.power_checkbox, self.index + 1, 3 + self.offset)
+        if self.automation_callback is not None:
+            self.layout.addWidget(
+                self.automation_radiobutton, self.index + 1, 2 + self.offset)
 
     def clear(self):
         self.set_value(libmk.pydaw_track_plugin(self.index, 0, -1))
@@ -274,7 +290,7 @@ class plugin_settings_base:
             self.plugin_uid,
             a_power=1 if self.power_checkbox.isChecked() else 0)
 
-    def on_plugin_change(self, a_val=None):
+    def on_plugin_change(self, a_val=None, a_save=True):
         if self.suppress_osc:
             return
         f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
@@ -286,9 +302,10 @@ class plugin_settings_base:
         self.set_plugin_func(
             self.track_num, self.index, f_index,
             self.plugin_uid, self.power_checkbox.isChecked())
-        self.save_callback()
-        if self.automation_callback:
-            self.automation_check_changed()
+        if a_save:
+            self.save_callback()
+            if self.automation_callback:
+                self.automation_check_changed()
 
     def on_power_changed(self, a_val=None):
         f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())

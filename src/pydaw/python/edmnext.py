@@ -8087,7 +8087,12 @@ class seq_track:
         self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
         self.menu_gridlayout = QtGui.QGridLayout()
         self.menu_hlayout.addLayout(self.menu_gridlayout)
-        self.menu_gridlayout.addWidget(QtGui.QLabel(_("Plugins")), 0, 0)
+        self.plugins_button = QtGui.QPushButton(_("Plugins"))
+        self.plugins_menu = QtGui.QMenu(self.menu_widget)
+        self.plugins_button.setMenu(self.plugins_menu)
+        self.plugins_order_action = self.plugins_menu.addAction(_("Order..."))
+        self.plugins_order_action.triggered.connect(self.set_plugin_order)
+        self.menu_gridlayout.addWidget(self.plugins_button, 0, 0)
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("A")), 0, 2)
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 3)
         for f_i in range(10):
@@ -8136,6 +8141,22 @@ class seq_track:
             self.ccs_in_use_combobox_changed)
         self.menu_gridlayout.addWidget(QtGui.QLabel(_("In Use:")), 10, 20)
         self.menu_gridlayout.addWidget(self.ccs_in_use_combobox, 10, 21)
+
+    def set_plugin_order(self):
+        f_labels = ["{} : {}".format(f_i, x.plugin_combobox.currentText())
+            for f_i, x in zip(range(1, 11), self.plugins)]
+        f_result = pydaw_widgets.ordered_table_dialog(
+            f_labels, self.plugins, 30, 200, MAIN_WINDOW)
+        if f_result:
+            for f_plugin in self.plugins:
+                f_plugin.remove_from_layout()
+            for f_i, f_plugin in zip(range(len(f_result)), f_result):
+                f_plugin.index = f_i
+                f_plugin.on_plugin_change(a_save=False)
+                f_plugin.add_to_layout()
+            self.plugins[0:len(f_result)] = f_result
+            self.save_callback()
+            self.open_plugins()
 
     def get_plugin_uids(self):
         return [x.plugin_uid for x in self.plugins if x.plugin_uid != -1]
