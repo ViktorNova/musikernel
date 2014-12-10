@@ -8079,6 +8079,7 @@ class seq_track:
             self.mute_checkbox.setObjectName("mute_checkbox")
             self.hlayout3.addWidget(self.mute_checkbox)
         self.plugins = []
+        self.action_widget = None
         self.automation_plugin_name = "None"
         self.port_num = None
         self.ccs_in_use_combobox = None
@@ -8093,6 +8094,9 @@ class seq_track:
         self.update_in_use_combobox()
 
     def create_menu(self):
+        self.plugins = []
+        if self.action_widget:
+            self.button_menu.removeAction(self.action_widget)
         self.menu_created = True
         self.menu_widget = QtGui.QWidget()
         self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
@@ -8167,6 +8171,7 @@ class seq_track:
                 f_plugin.add_to_layout()
             self.plugins[0:len(f_result)] = f_result
             self.save_callback()
+            self.create_menu()
             self.open_plugins()
 
     def get_plugin_uids(self):
