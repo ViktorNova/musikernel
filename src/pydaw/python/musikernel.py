@@ -1322,10 +1322,11 @@ libmk.APP.setWindowIcon(
 libmk.APP.setStyleSheet(global_stylesheet)
 
 QtCore.QTextCodec.setCodecForLocale(QtCore.QTextCodec.codecForName("UTF-8"))
-MAIN_WINDOW = MkMainWindow()
-MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
 
 global_check_device()
+
+MAIN_WINDOW = MkMainWindow()
+MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
 
 PYDAW_SUBPROCESS = None
 
