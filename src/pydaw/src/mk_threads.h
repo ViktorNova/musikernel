@@ -347,6 +347,12 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
         {
             musikernel->worker_thread_count = 1;
         }
+
+        if((geteuid() || !a_set_thread_affinity) &&
+                musikernel->worker_thread_count > 3)
+        {
+            musikernel->worker_thread_count = 3;
+        }
     }
     else
     {
