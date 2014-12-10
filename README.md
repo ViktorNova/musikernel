@@ -1,6 +1,6 @@
 #Warning:  beta software
 
-The project is believed to be reasonably stable, and unlikely to break backwards compatibility between now and the final release.  However, not all parts of the software have been thoroughly tested, so there may be bugs lurking around.
+The project is believed to be reasonably stable, BUT MAY break backwards compatibility between now and the final release, and could contain undiscovered bugs with unknown consequences.  You should wait for the final release to create any projects that you intend to keep forever.
 
 #What is MusiKernel ?
 
