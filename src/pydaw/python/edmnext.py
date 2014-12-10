@@ -1053,7 +1053,7 @@ class tracks_widget:
 
     def update_plugin_track_map(self):
         self.plugin_uid_map = {int(y.plugin_uid):int(x)
-            for x in self.tracks.values() for y in x.plugins}
+            for x in self.tracks for y in self.tracks[x].plugins}
 
     def has_automation(self, a_track_num):
         return self.automation_dict[int(a_track_num)]
@@ -1070,6 +1070,7 @@ class tracks_widget:
             self.tracks[f_track_num].track_name_lineedit.setText(f_name)
         for key, f_track in f_tracks.tracks.items():
             self.tracks[key].open_track(f_track)
+        self.update_plugin_track_map()
 
     def get_tracks(self):
         f_result = pydaw_tracks()
@@ -1459,11 +1460,12 @@ class region_editor(QtGui.QGraphicsView):
     def get_pos_from_point(self, a_point):
         f_item_width = self.viewer_width / self.item_length
         f_track_height = REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
+        f_track = TRACK_PANEL.plugin_uid_map[a_point.index]
         return QtCore.QPointF(
             (a_point.bar * f_item_width) +
             (a_point.beat * 0.25 * f_item_width),
             (f_track_height * (1.0 - (a_point.cc_val / 127.0))) +
-            (REGION_EDITOR_TRACK_HEIGHT * a_point.track) +
+            (REGION_EDITOR_TRACK_HEIGHT * f_track) +
             REGION_EDITOR_HEADER_HEIGHT)
 
     def show_cell_dialog(self):
@@ -2011,7 +2013,9 @@ class region_editor(QtGui.QGraphicsView):
         return f_item
 
     def draw_point(self, a_point):
-        f_min = (a_point.track *
+        f_track = TRACK_PANEL.plugin_uid_map[a_point.index]
+        print(f_track)
+        f_min = (f_track *
             REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
         f_max = f_min + REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
         f_item = atm_item(
@@ -8172,6 +8176,7 @@ class seq_track:
         if self.automation_plugin_name != "None":
             self.control_combobox.addItems(
                 CC_NAMES[self.automation_plugin_name])
+        TRACK_PANEL.update_plugin_track_map()
 
     def control_changed(self, a_val=None):
         self.set_cc_num()

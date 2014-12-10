@@ -1115,7 +1115,7 @@ class pydaw_atm_region:
     def clear_range(
             self, a_index, a_port_num, a_start_bar, a_start_beat,
             a_end_bar, a_end_beat):
-        f_list = self.get_points(a_track_num, a_index, a_port_num)
+        f_list = self.get_points(a_index, a_port_num)
         if f_list:
             f_result = [x for x in f_list if
                 (x.bar < a_start_bar or x.bar > a_end_bar) or
@@ -1193,8 +1193,9 @@ class pydaw_atm_region:
         return f_result
 
 class pydaw_atm_point:
-    def __init__(self, a_bar, a_beat, a_port_num, a_cc_val,
-                 a_index, a_plugin_index):
+    def __init__(
+            self, a_bar, a_beat, a_port_num, a_cc_val,
+            a_index, a_plugin_index):
         self.bar = int(a_bar)
         self.beat = round(float(a_beat), 4)
         self.port_num = int(a_port_num)

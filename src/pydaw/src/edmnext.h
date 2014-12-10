@@ -129,7 +129,7 @@ typedef struct
 
 typedef struct
 {
-    t_en_atm_plugin plugins[MAX_PLUGIN_COUNT];
+    t_en_atm_plugin plugins[MAX_PLUGIN_POOL_COUNT];
 }t_en_atm_region;
 
 typedef struct
