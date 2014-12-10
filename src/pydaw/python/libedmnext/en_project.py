@@ -1154,7 +1154,7 @@ class pydaw_atm_region:
             f_val_inc = f_val_diff / f_inc_count
             for f_i in range(f_inc_count - 1):
                 f_result.append(pydaw_atm_point(
-                    a_track_num, f_bar, f_beat, a_port_num, f_val,
+                    f_bar, f_beat, a_port_num, f_val,
                     a_index, a_plugin_index))
                 f_val += f_val_inc
                 f_beat += f_inc

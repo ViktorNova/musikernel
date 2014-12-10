@@ -1719,16 +1719,18 @@ class region_editor(QtGui.QGraphicsView):
             return None
 
     def get_all_points(self, a_track=None):
+        f_dict = TRACK_PANEL.plugin_uid_map
         if a_track is None:
             for f_point in self.automation_points:
                 yield f_point
         else:
             a_track = int(a_track)
             for f_point in self.automation_points:
-                if f_point.item.track == a_track:
+                if f_dict[f_point.item.index] == a_track:
                     yield f_point
 
     def get_selected_points(self, a_track=None):
+        f_dict = TRACK_PANEL.plugin_uid_map
         if a_track is None:
             for f_point in self.automation_points:
                 if f_point.isSelected():
@@ -1736,7 +1738,7 @@ class region_editor(QtGui.QGraphicsView):
         else:
             a_track = int(a_track)
             for f_point in self.automation_points:
-                if f_point.item.track == a_track and \
+                if f_dict[f_point.item.index] == a_track and \
                 f_point.isSelected():
                     yield f_point
 
@@ -2014,7 +2016,6 @@ class region_editor(QtGui.QGraphicsView):
 
     def draw_point(self, a_point):
         f_track = TRACK_PANEL.plugin_uid_map[a_point.index]
-        print(f_track)
         f_min = (f_track *
             REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
         f_max = f_min + REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
