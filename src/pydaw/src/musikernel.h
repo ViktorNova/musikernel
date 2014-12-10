@@ -123,7 +123,7 @@ typedef struct
     t_midi_device * midi_device;
     t_pydaw_seq_event * extern_midi;
     t_pydaw_seq_event event_buffer[PYDAW_MAX_EVENT_BUFFER_SIZE];
-}t_pytrack  __attribute__((aligned(CACHE_LINE_SIZE)));
+}t_pytrack;
 
 typedef struct
 {
@@ -420,7 +420,7 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     int f_i = 0;
 
     t_pytrack * f_result;
-    hpalloc((void**)&f_result, sizeof(t_pytrack));
+    clalloc((void**)&f_result, sizeof(t_pytrack));
 
     f_result->track_num = a_track_num;
     f_result->channels = 2;

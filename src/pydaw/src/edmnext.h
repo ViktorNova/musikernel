@@ -2362,7 +2362,7 @@ int i_en_song_index_from_region_uid(t_edmnext* self, int a_uid)
 
 t_en_atm_region * g_atm_region_get(t_edmnext * self, int a_uid)
 {
-    t_en_atm_region * f_result = 0;
+    t_en_atm_region * f_result = NULL;
 
     char f_file[1024] = "\0";
     sprintf(f_file, "%s%i", self->region_atm_folder, a_uid);
