@@ -935,7 +935,7 @@ def ordered_table_dialog(
     f_ok_cancel_layout.addWidget(f_cancel_button)
     f_cancel_button.pressed.connect(f_dialog.close)
     f_dialog.exec_()
-
+    f_table.scene.clear()
     return f_dialog.retval
 
 
