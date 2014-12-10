@@ -332,13 +332,8 @@ class plugin_settings_main(plugin_settings_base):
             a_layout, a_save_callback, a_name_callback,
             a_automation_callback, a_offset=0, a_send=None):
         self.plugin_list = ["None"] + PLUGIN_NAMES
-        plugin_settings_base.__init__(
-            self, a_set_plugin_func, a_index, a_track_num, a_layout,
-            a_save_callback, a_name_callback,
-            a_automation_callback, a_offset, a_send)
-        self.plugin_combobox.insertSeparator(PLUGIN_INSTRUMENT_COUNT + 1)
+
         self.menu_button = QtGui.QPushButton(_("Menu"))
-        a_layout.addWidget(self.menu_button, a_index + 1, 4 + a_offset)
         self.menu = QtGui.QMenu()
         self.menu_button.setMenu(self.menu)
         f_copy_action = self.menu.addAction(_("Copy"))
@@ -348,6 +343,23 @@ class plugin_settings_main(plugin_settings_base):
         self.menu.addSeparator()
         f_clear_action = self.menu.addAction(_("Clear"))
         f_clear_action.triggered.connect(self.clear)
+
+        plugin_settings_base.__init__(
+            self, a_set_plugin_func, a_index, a_track_num, a_layout,
+            a_save_callback, a_name_callback,
+            a_automation_callback, a_offset, a_send)
+
+        self.plugin_combobox.insertSeparator(PLUGIN_INSTRUMENT_COUNT + 1)
+
+    def remove_from_layout(self):
+        plugin_settings_base.remove_from_layout(self)
+        self.layout.removeWidget(self.menu_button)
+
+    def add_to_layout(self):
+        plugin_settings_base.add_to_layout(self)
+        self.layout.addWidget(
+            self.menu_button, self.index + 1, 4 + self.offset)
+
 
 class plugin_settings_mixer(plugin_settings_base):
     def __init__(
