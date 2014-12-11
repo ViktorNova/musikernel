@@ -1017,6 +1017,7 @@ inline void v_en_process_atm(
     float f_track_current_period_beats = a_ts->ml_current_period_beats;
     float f_track_next_period_beats = a_ts->ml_next_period_beats;
     float f_track_beats_offset = 0.0f;
+    int f_pool_index = f_plugin->pool_uid;
 
     f_plugin->atm_count = 0;
 
@@ -1030,11 +1031,11 @@ inline void v_en_process_atm(
     {
         if(self->en_song->regions_atm[f_current_track_region] &&
             self->en_song->regions_atm[
-                f_current_track_region]->plugins[f_index].point_count)
+                f_current_track_region]->plugins[f_pool_index].point_count)
         {
             t_en_atm_plugin * f_current_item =
                 &self->en_song->regions_atm[
-                    f_current_track_region]->plugins[f_index];
+                    f_current_track_region]->plugins[f_pool_index];
 
             if((f_plugin->atm_pos) >= (f_current_item->point_count))
             {
