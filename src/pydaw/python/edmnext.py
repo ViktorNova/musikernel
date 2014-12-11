@@ -2015,6 +2015,10 @@ class region_editor(QtGui.QGraphicsView):
         return f_item
 
     def draw_point(self, a_point):
+        if a_point.index not in TRACK_PANEL.plugin_uid_map:
+            print("{} not in {}".format(
+                a_point.index, TRACK_PANEL.plugin_uid_map))
+            return
         f_track = TRACK_PANEL.plugin_uid_map[a_point.index]
         f_min = (f_track *
             REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
