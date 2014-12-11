@@ -194,6 +194,7 @@ class mk_plugin_ui_dict:
             v.save_plugin_file()
 
 PLUGIN_SETTINGS_COPY_OBJ = None
+PLUGIN_SETTINGS_IS_CUT = False
 
 class plugin_settings_base:
     def __init__(
@@ -257,13 +258,23 @@ class plugin_settings_base:
         global PLUGIN_SETTINGS_COPY_OBJ
         PLUGIN_SETTINGS_COPY_OBJ = self.get_value()
 
+    def cut(self):
+        global PLUGIN_SETTINGS_IS_CUT
+        PLUGIN_SETTINGS_IS_CUT = True
+        self.copy()
+        self.plugin_combobox.setCurrentIndex(0)
+
     def paste(self):
         if PLUGIN_SETTINGS_COPY_OBJ is None:
             return
         self.set_value(PLUGIN_SETTINGS_COPY_OBJ)
-        self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
-        libmk.PROJECT.copy_plugin(
-            PLUGIN_SETTINGS_COPY_OBJ.plugin_uid, self.plugin_uid)
+        if PLUGIN_SETTINGS_IS_CUT:
+            global PLUGIN_SETTINGS_COPY_OBJ
+            PLUGIN_SETTINGS_COPY_OBJ = None
+        else:
+            self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
+            libmk.PROJECT.copy_plugin(
+                PLUGIN_SETTINGS_COPY_OBJ.plugin_uid, self.plugin_uid)
         self.on_plugin_change()
 
     def automation_check_changed(self):
@@ -340,6 +351,9 @@ class plugin_settings_main(plugin_settings_base):
         f_copy_action.triggered.connect(self.copy)
         f_paste_action = self.menu.addAction(_("Paste"))
         f_paste_action.triggered.connect(self.paste)
+        self.menu.addSeparator()
+        f_cut_action = self.menu.addAction(_("Cut"))
+        f_cut_action.triggered.connect(self.cut)
         self.menu.addSeparator()
         f_clear_action = self.menu.addAction(_("Clear"))
         f_clear_action.triggered.connect(self.clear)
