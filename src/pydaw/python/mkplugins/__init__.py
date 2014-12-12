@@ -177,6 +177,12 @@ class mk_plugin_ui_dict:
             self.ui_dict[f_track_num].widget.close()
             self.ui_dict.pop(f_track_num)
 
+    def hide_plugin_ui(self, a_track_num):
+        f_track_num = int(a_track_num)
+        if f_track_num in self.ui_dict:
+            f_widget = self.ui_dict[f_track_num].widget
+            f_widget.hide()
+
     def plugin_set_window_title(self, a_plugin_uid, a_track_name):
         f_plugin_uid = int(a_plugin_uid)
         if f_plugin_uid in self.ui_dict:
@@ -262,15 +268,16 @@ class plugin_settings_base:
         global PLUGIN_SETTINGS_IS_CUT
         PLUGIN_SETTINGS_IS_CUT = True
         self.copy()
+        libmk.PLUGIN_UI_DICT.hide_plugin_ui(self.plugin_uid)
         self.plugin_combobox.setCurrentIndex(0)
 
     def paste(self):
         if PLUGIN_SETTINGS_COPY_OBJ is None:
             return
         self.set_value(PLUGIN_SETTINGS_COPY_OBJ)
+        global PLUGIN_SETTINGS_IS_CUT
         if PLUGIN_SETTINGS_IS_CUT:
-            global PLUGIN_SETTINGS_COPY_OBJ
-            PLUGIN_SETTINGS_COPY_OBJ = None
+            PLUGIN_SETTINGS_IS_CUT = False
         else:
             self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
             libmk.PROJECT.copy_plugin(
