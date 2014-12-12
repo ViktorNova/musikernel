@@ -153,7 +153,6 @@ typedef struct
     pthread_t * worker_threads;
     int worker_thread_count;
     int * track_thread_quit_notifier;
-    volatile int * track_thread_is_finished;
     void * main_thread_args;
 
     int is_offline_rendering;
@@ -690,16 +689,12 @@ inline void v_buffer_mix(int a_count,
 
 void v_wait_for_threads()
 {
-    int f_i = 1;
+    int f_i;
 
-    while(f_i < (musikernel->worker_thread_count))
+    for(f_i = 1; f_i < (musikernel->worker_thread_count); ++f_i)
     {
-        if(musikernel->track_thread_is_finished[f_i] == 0)
-        {
-            continue;  //spin until it is finished...
-        }
-
-        ++f_i;
+        pthread_spin_lock(&musikernel->thread_locks[f_i]);
+        pthread_spin_unlock(&musikernel->thread_locks[f_i]);
     }
 }
 

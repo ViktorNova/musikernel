@@ -298,16 +298,18 @@ void * v_pydaw_worker_thread(void* a_arg)
     {
         pthread_cond_wait(f_track_cond, f_track_block_mutex);
         pthread_spin_lock(f_lock);
-        pthread_spin_unlock(f_lock);
 
         if(musikernel->track_thread_quit_notifier[f_thread_num])
         {
+            pthread_spin_unlock(f_lock);
             musikernel->track_thread_quit_notifier[f_thread_num] = 2;
             printf("Worker thread %i exiting...\n", f_thread_num);
             break;
         }
 
         v_en_process(f_args);
+
+        pthread_spin_unlock(f_lock);
     }
 
     return (void*)1;
@@ -391,8 +393,6 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
 
     hpalloc((void**)&musikernel->track_thread_quit_notifier,
         (sizeof(int) * (musikernel->worker_thread_count)));
-    hpalloc((void**)&musikernel->track_thread_is_finished,
-        (sizeof(int) * (musikernel->worker_thread_count)));
 
     hpalloc((void**)&musikernel->track_cond,
         sizeof(pthread_cond_t) * (musikernel->worker_thread_count));
@@ -430,7 +430,6 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
 
     while(f_i < (musikernel->worker_thread_count))
     {
-        musikernel->track_thread_is_finished[f_i] = 0;
         musikernel->track_thread_quit_notifier[f_i] = 0;
         t_pydaw_thread_args * f_args =
                 (t_pydaw_thread_args*)malloc(sizeof(t_pydaw_thread_args));

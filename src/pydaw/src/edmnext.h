@@ -1001,8 +1001,6 @@ inline void v_en_process(t_pydaw_thread_args * f_args)
 
         ++f_i;
     }
-
-    musikernel->track_thread_is_finished[f_args->thread_num] = 1;
 }
 
 
@@ -1622,7 +1620,6 @@ inline void v_en_run_engine(int sample_count,
     while(f_i < musikernel->worker_thread_count)
     {
         pthread_spin_lock(&musikernel->thread_locks[f_i]);
-        musikernel->track_thread_is_finished[f_i] = 0;
         pthread_mutex_lock(&musikernel->track_block_mutexes[f_i]);
         pthread_cond_broadcast(&musikernel->track_cond[f_i]);
         pthread_mutex_unlock(&musikernel->track_block_mutexes[f_i]);
@@ -1674,21 +1671,17 @@ inline void v_en_run_engine(int sample_count,
         }
     }
 
-    f_i = 0;
-    while(f_i < EN_TRACK_COUNT)
+    for(f_i = 0; f_i < EN_TRACK_COUNT; ++f_i)
     {
         self->track_pool[f_i]->status = STATUS_NOT_PROCESSED;
         self->track_pool[f_i]->bus_counter =
             self->routing_graph->bus_count[f_i];
-        ++f_i;
     }
 
-    f_i = 1;
     //unleash the hounds
-    while(f_i < musikernel->worker_thread_count)
+    for(f_i = 1; f_i < musikernel->worker_thread_count; ++f_i)
     {
         pthread_spin_unlock(&musikernel->thread_locks[f_i]);
-        ++f_i;
     }
 
     v_en_process((t_pydaw_thread_args*)musikernel->main_thread_args);
