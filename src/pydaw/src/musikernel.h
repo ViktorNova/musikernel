@@ -91,6 +91,7 @@ typedef struct
 typedef struct
 {
     int thread_num;
+    int stack_size;
 }t_pydaw_thread_args;
 
 typedef struct

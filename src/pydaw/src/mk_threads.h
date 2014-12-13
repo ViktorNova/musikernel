@@ -278,9 +278,26 @@ __attribute__((optimize("-O0"))) void v_self_set_thread_affinity()
     pthread_attr_destroy(&threadAttr);
 }
 
+void v_pre_fault_thread_stack(int stacksize)
+{
+    int pagesize = sysconf(_SC_PAGESIZE);
+    stacksize -= pagesize * 20;
+
+    volatile char buffer[stacksize];
+    int i;
+
+    for (i = 0; i < stacksize; i += pagesize)
+    {
+        buffer[i] = i;
+    }
+
+    if(buffer[0]){}  //avoid a compiler warning
+}
+
 void * v_pydaw_worker_thread(void* a_arg)
 {
     t_pydaw_thread_args * f_args = (t_pydaw_thread_args*)(a_arg);
+    v_pre_fault_thread_stack(f_args->stack_size);
 
     int f_thread_num = f_args->thread_num;
     pthread_cond_t * f_track_cond = &musikernel->track_cond[f_thread_num];
@@ -314,6 +331,8 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
     int f_cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
     int f_cpu_core_inc = 1;
     int f_has_ht = i_cpu_has_hyperthreading();
+
+    int f_stack_size = (1024 * 1024);
 
     if(f_has_ht)
     {
@@ -392,7 +411,7 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
             param.__sched_priority);
     pthread_attr_init(&threadAttr);
     pthread_attr_setschedparam(&threadAttr, &param);
-    pthread_attr_setstacksize(&threadAttr, (1024 * 1024));
+    pthread_attr_setstacksize(&threadAttr, f_stack_size);
     pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
     pthread_attr_setschedpolicy(&threadAttr, RT_SCHED);
 
@@ -419,6 +438,7 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
         t_pydaw_thread_args * f_args =
                 (t_pydaw_thread_args*)malloc(sizeof(t_pydaw_thread_args));
         f_args->thread_num = f_i;
+        f_args->stack_size = f_stack_size;
 
         if(f_i > 0)
         {
