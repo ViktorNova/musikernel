@@ -36,7 +36,7 @@ TOOLS = {
     "valgrind": "make clean > /dev/null 2>&1 && "
         "make debug > /dev/null 2>&1 && "
         "valgrind --alignment=16 --track-origins=yes "
-        "{BIN}-dbg '{PROJECT}' test.wav 0 0 3 3 {SR} 512 1 0 --no-file",
+        "{BIN}-dbg '{PROJECT}' test.wav 0 0 3 3 {SR} 512 {CORES} 0 --no-file",
     "perf": "make clean > /dev/null 2>&1 && "
         "make release > /dev/null 2>&1 && "
         "perf stat -e cache-references,cache-misses,dTLB-loads,"
