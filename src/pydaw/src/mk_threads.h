@@ -100,14 +100,11 @@ void v_pydaw_activate(int a_thread_count,
 
 void v_pydaw_destructor()
 {
-    musikernel->audio_recording_quit_notifier = 1;
-    lo_address_free(musikernel->uiTarget);
-
-    int f_i = 0;
+    int f_i;
 
     char tmp_sndfile_name[2048];
 
-    while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
+    for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
     {
         if(musikernel->audio_inputs[f_i]->sndfile)
         {
@@ -117,37 +114,30 @@ void v_pydaw_destructor()
             printf("Deleting %s\n", tmp_sndfile_name);
             remove(tmp_sndfile_name);
         }
-        ++f_i;
     }
 
-    f_i = 1;
-    while(f_i < musikernel->worker_thread_count)
-    {
-        //pthread_mutex_lock(&pydaw_data->track_block_mutexes[f_i]);
-        musikernel->track_thread_quit_notifier[f_i] = 1;
-        //pthread_mutex_unlock(&pydaw_data->track_block_mutexes[f_i]);
-        ++f_i;
-    }
+    pthread_spin_lock(&musikernel->main_lock);
 
-    f_i = 1;
-    while(f_i < musikernel->worker_thread_count)
+    musikernel->audio_recording_quit_notifier = 1;
+
+    for(f_i = 1; f_i < musikernel->worker_thread_count; ++f_i)
     {
         pthread_mutex_lock(&musikernel->track_block_mutexes[f_i]);
+        musikernel->track_thread_quit_notifier[f_i] = 1;
         pthread_cond_broadcast(&musikernel->track_cond[f_i]);
         pthread_mutex_unlock(&musikernel->track_block_mutexes[f_i]);
-        ++f_i;
     }
 
-    sleep(1);
+    pthread_spin_unlock(&musikernel->main_lock);
 
-    f_i = 1;
-    while(f_i < musikernel->worker_thread_count)
+    usleep(300000);
+
+    lo_address_free(musikernel->uiTarget);
+
+    //abort the application rather than hang indefinitely
+    for(f_i = 1; f_i < musikernel->worker_thread_count; ++f_i)
     {
-        //abort the application rather than hang indefinitely
         assert(musikernel->track_thread_quit_notifier[f_i] == 2);
-        //pthread_mutex_lock(&pydaw_data->track_block_mutexes[f_i]);
-        //pthread_mutex_unlock(&pydaw_data->track_block_mutexes[f_i]);
-        ++f_i;
     }
 }
 

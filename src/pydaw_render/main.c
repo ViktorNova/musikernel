@@ -180,5 +180,7 @@ int main(int argc, char** argv)
     v_pydaw_print_benchmark("Non-interleaved: ", f_start_non_interleaved);
     */
 
+    v_pydaw_destructor();
+
     return 0;
 }
