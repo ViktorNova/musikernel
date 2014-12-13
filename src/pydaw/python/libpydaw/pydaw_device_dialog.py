@@ -63,7 +63,9 @@ plugins and effects.
 
 Setting to 1 can result in the best latency, but
 may (or may not) provide enough CPU power depending
-on your CPU's single-threaded performance.
+on your CPU's single-threaded performance.  Also,
+projects with complex audio routing may perform
+better with fewer threads.
 
 It is recommended that you not more than one thread
 per CPU core. (Intel hyperthreading should NOT be
