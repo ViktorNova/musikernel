@@ -257,6 +257,8 @@ int i_cpu_has_hyperthreading()
 
 __attribute__((optimize("-O0"))) void v_self_set_thread_affinity()
 {
+    v_pre_fault_thread_stack(1024 * 1024);
+
     pthread_attr_t threadAttr;
     struct sched_param param;
     param.__sched_priority = sched_get_priority_max(RT_SCHED);
