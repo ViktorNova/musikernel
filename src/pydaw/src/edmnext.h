@@ -847,9 +847,7 @@ void v_en_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
     }
 }
 
-/* MUST KEEP THIS SEPARATE, GCC CAUSES LOCKUPS WHEN THIS IS COMPILED
- * WITH OPTIMIZATION!!!! */
-__attribute__((optimize("-O0"))) void v_en_wait_for_bus(t_pytrack * a_track)
+void v_en_wait_for_bus(t_pytrack * a_track)
 {
     int f_bus_count = edmnext->routing_graph->bus_count[a_track->track_num];
     int f_i;
