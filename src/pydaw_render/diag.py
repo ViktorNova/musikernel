@@ -30,12 +30,15 @@ else:
     PROJECT = os.path.join(HOME, MK_VERSION, "default-project")
 
 TOOLS = {
-    "benchmark": "make clean && make release && "
+    "benchmark": "make clean > /dev/null 2>&1 && "
+        "make release > /dev/null 2>&1 && "
         "{BIN} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 --no-file",
-    "valgrind": "make clean && make debug && "
+    "valgrind": "make clean > /dev/null 2>&1 && "
+        "make debug > /dev/null 2>&1 && "
         "valgrind --alignment=16 --track-origins=yes "
         "{BIN}-dbg '{PROJECT}' test.wav 0 0 3 3 {SR} 512 1 0 --no-file",
-    "perf": "make clean && make release && "
+    "perf": "make clean > /dev/null 2>&1 && "
+        "make release > /dev/null 2>&1 && "
         "perf stat -e cache-references,cache-misses,dTLB-loads,"
         "dTLB-load-misses,iTLB-loads,iTLB-load-misses,L1-dcache-loads,"
         "L1-dcache-load-misses,L1-icache-loads,L1-icache-load-misses,"
