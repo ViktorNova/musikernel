@@ -1508,7 +1508,7 @@ float * f_char_to_wavetable(char * a_char)
 
     int f_i = 1;
 
-    int f_count = atoi(f_arr->array[0]);
+    //int f_count = atoi(f_arr->array[0]);
 
     while(f_i < 1025)
     {
