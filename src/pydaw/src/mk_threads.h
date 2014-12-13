@@ -335,25 +335,17 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
 
     if(a_thread_count == 0)
     {
-        musikernel->worker_thread_count = f_cpu_count;
-
-        if((musikernel->worker_thread_count) >= 8)
-        {
-            musikernel->worker_thread_count = 7;
-        }
-        else if((musikernel->worker_thread_count) >= 3)
-        {
-            --musikernel->worker_thread_count;
-        }
-        else if((musikernel->worker_thread_count) <= 0)
-        {
-            musikernel->worker_thread_count = 1;
-        }
-
-        if((geteuid() || !a_set_thread_affinity) &&
-                musikernel->worker_thread_count > 3)
+        if(f_cpu_count > 3)
         {
             musikernel->worker_thread_count = 3;
+        }
+        else if(f_cpu_count == 3 || f_cpu_count == 2)
+        {
+            musikernel->worker_thread_count = 2;
+        }
+        else
+        {
+            musikernel->worker_thread_count = 1;
         }
     }
     else
@@ -383,8 +375,7 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
         }
     }
 
-    printf("Spawning %i worker threads\n",
-        musikernel->worker_thread_count);
+    printf("Spawning %i worker threads\n", musikernel->worker_thread_count);
 
     musikernel->track_block_mutexes = (pthread_mutex_t*)malloc(
         sizeof(pthread_mutex_t) * (musikernel->worker_thread_count));
