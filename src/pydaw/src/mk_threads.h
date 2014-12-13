@@ -24,6 +24,8 @@ GNU General Public License for more details.
 
 #endif
 
+#include <sys/mman.h>
+
 #include "edmnext.h"
 #include "wavenext.h"
 
@@ -96,6 +98,8 @@ void v_pydaw_activate(int a_thread_count,
     v_open_project(a_project_path, 1);
 
     v_pydaw_init_worker_threads(a_thread_count, a_set_thread_affinity);
+
+    mlockall(MCL_CURRENT | MCL_FUTURE);
 }
 
 void v_pydaw_destructor()
