@@ -1509,7 +1509,6 @@ float * f_char_to_wavetable(char * a_char)
     int f_i = 1;
 
     int f_count = atoi(f_arr->array[0]);
-    printf("%i\n", f_count);
 
     while(f_i < 1025)
     {
@@ -1547,7 +1546,7 @@ void v_wayv_configure(PYFX_Handle instance, char *key,
     }
     else
     {
-        printf("Way-V unhandled configure key %s\n", key);
+        //printf("Way-V unhandled configure key %s\n", key);
     }
 }
 

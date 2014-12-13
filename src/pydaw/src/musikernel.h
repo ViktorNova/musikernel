@@ -366,8 +366,6 @@ void v_pydaw_open_track(t_pytrack * a_track, char * a_tracks_folder,
 
     if(i_pydaw_file_exists(f_file_name))
     {
-        printf("v_pydaw_open_tracks:  File exists %s , loading\n", f_file_name);
-
         t_2d_char_array * f_2d_array = g_get_2d_array_from_file(f_file_name,
                 PYDAW_LARGE_STRING);
 
@@ -406,11 +404,6 @@ void v_pydaw_open_track(t_pytrack * a_track, char * a_tracks_folder,
         }
 
         g_free_2d_char_array(f_2d_array);
-    }
-    else
-    {
-        printf("%s does not exist, not loading anything for track %i\n",
-            f_file_name, a_index);
     }
 }
 
@@ -995,9 +988,6 @@ __attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
 
             if(i_pydaw_file_exists(f_file_name))
             {
-                printf("v_pydaw_open_plugin:  plugin exists %s , loading\n",
-                    f_file_name);
-
                 f_plugin->descriptor->load(f_plugin->PYFX_handle,
                     f_plugin->descriptor, f_file_name);
             }

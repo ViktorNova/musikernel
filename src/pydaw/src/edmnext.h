@@ -2180,8 +2180,6 @@ void v_en_open_tracks()
 
     if(i_pydaw_file_exists(f_file_name))
     {
-        printf("v_pydaw_open_tracks:  File exists %s , loading\n", f_file_name);
-
         t_2d_char_array * f_2d_array = g_get_2d_array_from_file(f_file_name,
                 PYDAW_LARGE_STRING);
 
@@ -2279,8 +2277,6 @@ void v_en_open_project(int a_first_load)
 
     if(i_pydaw_file_exists(f_transport_file))
     {
-        printf("v_open_project:  Found transport file, setting tempo\n");
-
         t_2d_char_array * f_2d_array = g_get_2d_array_from_file(
                 f_transport_file, PYDAW_LARGE_STRING);
         v_iterate_2d_char_array(f_2d_array);
@@ -2361,8 +2357,6 @@ t_en_atm_region * g_atm_region_get(t_edmnext * self, int a_uid)
 
     if(i_pydaw_file_exists(f_file))
     {
-        printf("g_atm_region_get: loading a_file: \"%s\"\n", f_file);
-
         lmalloc((void**)&f_result, sizeof(t_en_atm_region));
 
         int f_i2;
@@ -2840,8 +2834,6 @@ t_pydaw_audio_items * v_en_audio_items_load_all(t_edmnext * self,
 
     if(i_pydaw_file_exists(f_file))
     {
-        printf("v_en_audio_items_load_all: loading a_file: \"%s\"\n", f_file);
-
         t_2d_char_array * f_current_string = g_get_2d_array_from_file(f_file,
                 PYDAW_LARGE_STRING);
 
