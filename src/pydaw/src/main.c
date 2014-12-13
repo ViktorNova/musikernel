@@ -265,7 +265,7 @@ static int portaudioCallback(
 {
     float *out = (float*)outputBuffer;
 
-    if(framesPerBuffer > FRAMES_PER_BUFFER)
+    if(unlikely(framesPerBuffer > FRAMES_PER_BUFFER))
     {
         printf("WARNING:  Audio device requested buffer size %i, "
             "truncating to max buffer size:  %i\n",
@@ -273,10 +273,10 @@ static int portaudioCallback(
         framesPerBuffer = FRAMES_PER_BUFFER;
     }
 
-    (void) inputBuffer; //Prevent unused variable warning.
+    (void)inputBuffer; //Prevent unused variable warning.
 
     // Try one time to set thread affinity
-    if(THREAD_AFFINITY && !THREAD_AFFINITY_SET)
+    if(unlikely(THREAD_AFFINITY && !THREAD_AFFINITY_SET))
     {
         v_self_set_thread_affinity();
         THREAD_AFFINITY_SET = 1;
