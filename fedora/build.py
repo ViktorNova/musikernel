@@ -22,7 +22,7 @@ if not os.getuid() == 0:
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--de", help="Select the desktop environment, choices are:\n"
-"--de=gnome|kde|lxde|xfce|mate|qt",  default="kde")
+"--de=gnome|kde|lxde|xfce|mate",  default="kde")
 args = parser.parse_args()
 
 if args.de == "gnome":
@@ -40,9 +40,6 @@ elif args.de == "kde":
 elif args.de == "mate":
     ks_file = "/usr/share/spin-kickstarts/fedora-livecd-mate-compiz.ks"
     de_label = "Mate"
-elif args.de == "qt":
-    ks_file = "{}/fedora-livecd-qtdesktop.ks".format(os.path.dirname(__file__))
-    de_label = "QtDesktop"
 else:
     print("Invalid --de={}".format(args.de))
     parser.print_help()
