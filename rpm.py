@@ -327,7 +327,7 @@ cp_cmd = "cp ~/rpmbuild/RPMS/*/{} '{}'".format(pkg_name, orig_wd)
 print(cp_cmd)
 os.system(cp_cmd)
 
-if "--install" in sys.argv:
+if "--install" in sys.argv or "-i" in sys.argv:
     os.system("sudo rpm -e {}".format(global_pydaw_version_string))
     os.system("sudo rpm -ivh {}/{}".format(orig_wd, pkg_name))
 
