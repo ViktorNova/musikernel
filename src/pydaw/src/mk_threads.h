@@ -255,6 +255,22 @@ int i_cpu_has_hyperthreading()
 }
 #endif
 
+void v_pre_fault_thread_stack(int stacksize)
+{
+    int pagesize = sysconf(_SC_PAGESIZE);
+    stacksize -= pagesize * 20;
+
+    volatile char buffer[stacksize];
+    int i;
+
+    for (i = 0; i < stacksize; i += pagesize)
+    {
+        buffer[i] = i;
+    }
+
+    if(buffer[0]){}  //avoid a compiler warning
+}
+
 __attribute__((optimize("-O0"))) void v_self_set_thread_affinity()
 {
     v_pre_fault_thread_stack(1024 * 1024);
@@ -278,22 +294,6 @@ __attribute__((optimize("-O0"))) void v_self_set_thread_affinity()
     pthread_setaffinity_np(f_self, sizeof(cpu_set_t), &cpuset);
 
     pthread_attr_destroy(&threadAttr);
-}
-
-void v_pre_fault_thread_stack(int stacksize)
-{
-    int pagesize = sysconf(_SC_PAGESIZE);
-    stacksize -= pagesize * 20;
-
-    volatile char buffer[stacksize];
-    int i;
-
-    for (i = 0; i < stacksize; i += pagesize)
-    {
-        buffer[i] = i;
-    }
-
-    if(buffer[0]){}  //avoid a compiler warning
 }
 
 void * v_pydaw_worker_thread(void* a_arg)
