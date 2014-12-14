@@ -427,12 +427,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
     int f_current_proc_sched = sched_getscheduler(0);
 
-#ifdef SCHED_DEADLINE
-    printf("Using SCHED_DEADLINE\n");
-#else
-    printf("Using SCHED_FIFO\n");
-#endif
-
     if(f_current_proc_sched == RT_SCHED)
     {
         printf("Process scheduler already set to real-time.");

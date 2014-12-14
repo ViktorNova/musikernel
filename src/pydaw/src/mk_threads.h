@@ -16,7 +16,8 @@ GNU General Public License for more details.
 
 #ifdef SCHED_DEADLINE
 
-#define RT_SCHED SCHED_DEADLINE
+//#define RT_SCHED SCHED_DEADLINE
+#define RT_SCHED SCHED_FIFO
 
 #else
 
