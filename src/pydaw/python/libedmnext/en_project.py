@@ -620,10 +620,43 @@ class EdmNextProject(libmk.AbstractProject):
         self.save_song(f_song)
         self.commit("Record MIDI")
 
+    def reorder_tracks(self, a_dict):
+        f_tracks = self.get_tracks()
+        f_tracks.reorder(a_dict)
+        self.save_tracks(f_tracks)
+
+        f_track_plugins = {k:self.get_track_plugins(k)
+            for k in f_tracks.tracks}
+        # Delete the existing track files
+        for k in f_track_plugins:
+            f_path = os.path.join(
+                *(str(x) for x in (self.track_pool_folder, k)))
+            if os.path.exists(f_path):
+                os.remove(f_path)
+        for k, v in f_track_plugins.items():
+            if v:
+                self.save_track_plugins(a_dict[k], v)
+
+        f_graph = self.get_routing_graph()
+        f_graph.reorder(a_dict)
+        self.save_routing_graph(f_graph)
+
+        f_regions_dict = self.get_regions_dict()
+
+        for f_uid in f_regions_dict.name_lookup:
+            f_region = self.get_region_by_uid(f_uid)
+            f_region.reorder(a_dict)
+            self.save_region_by_uid(f_uid, f_region)
+            f_audio_region = self.get_audio_region(f_uid)
+            f_audio_region.reorder(a_dict)
+            self.save_audio_region(f_uid, f_audio_region)
+        self.en_osc.pydaw_open_song(self.project_folder)
+        self.commit("Re-order tracks")
+
     def get_tracks_string(self):
         try:
             f_file = open(
-                "{}/{}".format(self.project_folder, pydaw_file_pytracks))
+                os.path.join(self.project_folder, pydaw_file_pytracks))
         except:
             return pydaw_terminating_char
         f_result = f_file.read()
@@ -780,8 +813,11 @@ class EdmNextProject(libmk.AbstractProject):
         if not self.suppress_updates:
             f_regions_dict = self.get_regions_dict()
             f_uid = f_regions_dict.get_uid_by_name(a_name)
-            self.save_file(pydaw_folder_regions, str(f_uid), str(a_region))
-            self.en_osc.pydaw_save_region(f_uid)
+            self.save_region_by_uid(f_uid, a_region)
+
+    def save_region_by_uid(self, a_uid, a_region):
+        self.save_file(pydaw_folder_regions, str(a_uid), str(a_region))
+        self.en_osc.pydaw_save_region(a_uid)
 
     def save_song(self, a_song):
         if not self.suppress_updates:
@@ -984,6 +1020,10 @@ class pydaw_region:
         self.uid = a_uid
         self.region_length_bars = 0  #0 == default length for project
 
+    def reorder(self, a_dict):
+        for f_item in self.items:
+            f_item.track_num = a_dict[f_item.track_num]
+
     def split(self, a_index, a_new_uid):
         f_region0 = pydaw_region(self.uid)
         f_region1 = pydaw_region(a_new_uid)
@@ -1001,8 +1041,8 @@ class pydaw_region:
         f_region1.region_length_bars = f_length - a_index
         return f_region0, f_region1
 
-    def add_item_ref_by_name(self, a_track_num, a_bar_num,
-                             a_item_name, a_uid_dict):
+    def add_item_ref_by_name(
+            self, a_track_num, a_bar_num, a_item_name, a_uid_dict):
         f_item_uid = a_uid_dict.get_uid_by_name(a_item_name)
         self.add_item_ref_by_uid(a_track_num, a_bar_num, f_item_uid)
 
@@ -1353,8 +1393,9 @@ def pydaw_smooth_automation_points(
             a_items_list[f_i].pitchbends += f_result_arr[f_i]
             a_items_list[f_i].pitchbends.sort()
 
-def pydaw_velocity_mod(a_items, a_amt, a_line=False, a_end_amt=127,
-                       a_add=False, a_selected_only=False):
+def pydaw_velocity_mod(
+        a_items, a_amt, a_line=False, a_end_amt=127,
+        a_add=False, a_selected_only=False):
     f_start_beat = 0.0
     f_range_beats = 0.0
     f_tmp_index = 0
@@ -1739,8 +1780,18 @@ class pydaw_audio_region:
     def __init__(self):
         self.items = {}
 
-    """ Return the next available index, or -1 if none are available """
+    def reorder(self, a_dict):
+        for f_item in self.items.values():
+            f_item.output_track = a_dict[f_item.output_track]
+            if f_item.send1 != -1:
+                f_item.send1 = a_dict[f_item.send1]
+            if f_item.send2 != -1:
+                f_item.send2 = a_dict[f_item.send2]
+
     def get_next_index(self):
+        """ Return the next available index, or -1
+            if none are available
+        """
         for i in range(MAX_AUDIO_ITEM_COUNT):
             if not i in self.items:
                 return i

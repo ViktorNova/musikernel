@@ -630,6 +630,11 @@ class pydaw_tracks:
     def __init__(self):
         self.tracks = {}
 
+    def reorder(self, a_dict):
+        self.tracks = {a_dict[k]:self.tracks[k] for k in sorted(self.tracks)}
+        for k, v in self.tracks.items():
+            v.track_uid = v.track_pos = k
+
     def add_track(self, a_index, a_track):
         self.tracks[int(a_index)] = a_track
 
@@ -674,6 +679,13 @@ class pydaw_track:
 class pydaw_routing_graph:
     def __init__(self):
         self.graph = {}
+
+    def reorder(self, a_dict):
+        self.graph = {a_dict[k]:v for k, v in self.graph.items()}
+        for k, f_dict in self.graph.items():
+            for v in f_dict.values():
+                v.track_num = k
+                v.output = a_dict[v.output]
 
     def set_node(self, a_index, a_dict):
         self.graph[int(a_index)] = a_dict

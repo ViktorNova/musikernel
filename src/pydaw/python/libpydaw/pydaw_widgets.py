@@ -861,7 +861,9 @@ class OrderedTable(QtGui.QGraphicsView):
         self.scene = QtGui.QGraphicsScene()
         self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
         self.setScene(self.scene)
-        self.setFixedSize(self.item_width + 10, self.total_height + 10)
+        self.setFixedSize(
+            self.item_width + 20,
+            pydaw_util.pydaw_clip_max(self.total_height + 10, 600))
         self.item_gradient = QtGui.QLinearGradient(
             0.0, 0.0, self.item_width * 0.8, self.item_height)
         self.item_gradient.setColorAt(

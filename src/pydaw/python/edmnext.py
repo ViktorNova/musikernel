@@ -525,9 +525,11 @@ class region_settings:
         self.menu_button.setMenu(self.menu)
         self.shift_action = self.menu.addAction(_("Shift Song..."))
         self.shift_action.triggered.connect(self.on_shift)
-        self.menu.addSeparator()
         self.split_action = self.menu.addAction(_("Split Region..."))
         self.split_action.triggered.connect(self.on_split)
+        self.reorder_tracks_action = self.menu.addAction(
+            _("Reorder Tracks..."))
+        self.reorder_tracks_action.triggered.connect(self.set_track_order)
         self.menu.addSeparator()
         self.hide_inactive = False
 #        self.toggle_hide_action = self.menu.addAction(
@@ -621,7 +623,6 @@ class region_settings:
     def unmute_all(self):
         for f_track in TRACK_PANEL.tracks.values():
             f_track.mute_checkbox.setChecked(False)
-
 
     def on_shift(self):
         if libmk.IS_PLAYING:
@@ -782,6 +783,21 @@ class region_settings:
         self.length_alternate_radiobutton.setEnabled(True)
         self.length_alternate_spinbox.setEnabled(True)
 
+    def set_track_order(self):
+        f_result = pydaw_widgets.ordered_table_dialog(
+            TRACK_NAMES[1:], [x + 1 for x in range(len(TRACK_NAMES[1:]))],
+            30, 200, MAIN_WINDOW)
+        if f_result:
+            f_result = {f_result[x]:x + 1 for x in range(len(f_result))}
+            print(f_result)
+            f_result[0] = 0 # master track
+            print(f_result)
+            PROJECT.reorder_tracks(f_result)
+            TRACK_PANEL.open_tracks()
+            for k, f_track in TRACK_PANEL.tracks.items():
+                f_track.refresh()
+            if CURRENT_REGION:
+                self.open_region_by_uid(CURRENT_REGION.uid)
 
 def global_set_region_editor_zoom():
     global REGION_EDITOR_GRID_WIDTH
@@ -1066,6 +1082,7 @@ class tracks_widget:
         global TRACK_NAMES
         f_tracks = PROJECT.get_tracks()
         TRACK_NAMES = f_tracks.get_names()
+        global_update_track_comboboxes()
         for f_track_num, f_name in zip(sorted(self.tracks), TRACK_NAMES):
             self.tracks[f_track_num].track_name_lineedit.setText(f_name)
         for key, f_track in f_tracks.tracks.items():
@@ -8178,6 +8195,14 @@ class seq_track:
             self.create_menu()
             self.open_plugins()
 
+    def refresh(self):
+        self.track_name_lineedit.setText(TRACK_NAMES[self.track_number])
+        if self.menu_created:
+            for f_plugin in self.plugins:
+                f_plugin.remove_from_layout()
+            self.create_menu()
+            self.open_plugins()
+
     def get_plugin_uids(self):
         return [x.plugin_uid for x in self.plugins if x.plugin_uid != -1]
 
@@ -9103,7 +9128,6 @@ def global_open_project(a_project_file):
     SONG_EDITOR.open_song()
     REGION_EDITOR.clear_drawn_items()
     TRANSPORT.open_transport()
-    global_update_track_comboboxes()
     PROJECT.suppress_updates = False
     f_scale = PROJECT.get_midi_scale()
     if f_scale is not None:
