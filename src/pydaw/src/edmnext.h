@@ -2252,7 +2252,7 @@ void v_en_open_project(int a_first_load)
         if(edmnext->item_pool[f_i])
         {
             free(edmnext->item_pool[f_i]);
-            edmnext->item_pool[f_i] = 0;
+            edmnext->item_pool[f_i] = NULL;
         }
         ++f_i;
     }
@@ -2697,7 +2697,7 @@ t_edmnext * g_edmnext_get()
 
     while(f_i < EN_MAX_ITEM_COUNT)
     {
-        f_result->item_pool[f_i] = 0;
+        f_result->item_pool[f_i] = NULL;
         ++f_i;
     }
 
