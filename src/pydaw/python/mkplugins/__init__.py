@@ -441,10 +441,10 @@ class track_send:
             f_graph = self.get_rg_func()
             if not self.track_num in f_graph.graph:
                 f_graph.graph[self.track_num] = {}
-            if a_check:
+            f_index = self.bus_combobox.currentIndex() - 1
+            if a_check and f_index != -1:
                 f_feedback = f_graph.check_for_feedback(
-                    self.bus_combobox.currentIndex() - 1,
-                    self.track_num, self.index)
+                    f_index, self.track_num, self.index)
                 if f_feedback:
                     QtGui.QMessageBox.warning(
                         self.bus_combobox, _("Error"),
