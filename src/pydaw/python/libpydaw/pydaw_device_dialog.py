@@ -308,7 +308,7 @@ class pydaw_device_dialog:
         f_cancel_button = QtGui.QPushButton(_("Cancel"))
         f_ok_cancel_layout.addWidget(f_cancel_button)
 
-        f_count = self.pyaudio.Pa_GetHostApiCount()
+        #f_count = self.pyaudio.Pa_GetHostApiCount()
 
         f_count = self.pyaudio.Pa_GetDeviceCount()
         print("f_count == {}".format(f_count))
@@ -437,8 +437,8 @@ class pydaw_device_dialog:
                 QtGui.QMessageBox.warning(f_window, _("Error"),
                     _("Couldn't open audio device\n\n{}\n\n"
                     "This may (or may not) be because the "
-                    "device already open by "
-                    "another application such as a DAW, or Jack.").format(ex))
+                    "device is already open by another application or "
+                    "a sound daemon such as JACK.").format(ex))
 
         def on_cancel(a_self=None):
             f_window.close()
