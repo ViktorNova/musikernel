@@ -762,7 +762,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     pthread_sigmask(SIG_UNBLOCK, &_signals, 0);
 
     v_pydaw_activate(f_thread_count, f_thread_affinity, argv[2],
-        sample_rate, &MIDI_DEVICES);
+        sample_rate, &MIDI_DEVICES, 1);
 
     v_queue_osc_message("ready", "");
 
