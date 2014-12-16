@@ -23,13 +23,13 @@ extern "C" {
 #include <stdio.h>
 #include "pydaw_files.h"
 
-//8 megabyte interleaved buffer per audio input
-#define PYDAW_AUDIO_INPUT_REC_BUFFER_SIZE 8388608
+//1 megabyte interleaved buffer per audio input
+#define PYDAW_AUDIO_INPUT_REC_BUFFER_SIZE (1024 * 1024)
 
 typedef struct
 {
     int rec;
-    int stereo_mode;  //tentatively: 0 == stereo, 1 == mono-L-only...  TODO:  a mono-mixed mode also???
+    int stereo_mode;  // 0 == stereo, 1 == mono
     int output_track;
     int input_port[2];
     float vol, vol_linear;
@@ -43,19 +43,13 @@ typedef struct
     int recording_stopped;
 }t_pyaudio_input;
 
-t_pyaudio_input * g_pyaudio_input_get(float);
+void g_pyaudio_input_init(t_pyaudio_input *, float, int);
 
-t_pyaudio_input * g_pyaudio_input_get(float a_sr)
+void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr, int a_ch)
 {
-    t_pyaudio_input * f_result;
-
-    if(posix_memalign((void**)(&f_result), 16, (sizeof(t_pyaudio_input))) != 0)
-    {
-        printf("Call to posix_memalign failed for g_pydaw_audio_input_get\n");
-        return 0;
-    }
-
-    f_result->sf_info.channels = 2;
+    assert(a_ch >= 1 && a_ch <= 2);
+    
+    f_result->sf_info.channels = a_ch;
     f_result->sf_info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
     f_result->sf_info.samplerate = (int)(a_sr);
 
@@ -69,11 +63,10 @@ t_pyaudio_input * g_pyaudio_input_get(float a_sr)
     f_result->vol = 0.0f;
     f_result->vol_linear = 1.0f;
     f_result->recording_stopped = 0;
-
-    return f_result;
 }
 
-void v_pydaw_audio_input_record_set(t_pyaudio_input * a_audio_input, char * a_file_out)
+void v_pydaw_audio_input_record_set(
+        t_pyaudio_input * a_audio_input, char * a_file_out)
 {
     if(a_audio_input->sndfile)
     {
@@ -88,7 +81,8 @@ void v_pydaw_audio_input_record_set(t_pyaudio_input * a_audio_input, char * a_fi
 
     if(a_audio_input->rec)
     {
-        a_audio_input->sndfile = sf_open(a_file_out, SFM_WRITE, &a_audio_input->sf_info);
+        a_audio_input->sndfile = sf_open(
+            a_file_out, SFM_WRITE, &a_audio_input->sf_info);
     }
 }
 

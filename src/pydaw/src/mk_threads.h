@@ -111,9 +111,9 @@ void v_pydaw_destructor()
 
     for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
     {
-        if(musikernel->audio_inputs[f_i]->sndfile)
+        if(musikernel->audio_inputs[f_i].sndfile)
         {
-            sf_close(musikernel->audio_inputs[f_i]->sndfile);
+            sf_close(musikernel->audio_inputs[f_i].sndfile);
             sprintf(tmp_sndfile_name, "%s%i.wav",
                     musikernel->audio_tmp_folder, f_i);
             printf("Deleting %s\n", tmp_sndfile_name);
@@ -492,12 +492,10 @@ void v_pydaw_init_worker_threads(int a_thread_count, int a_set_thread_affinity)
     pthread_attr_t auxThreadAttr;
     pthread_attr_init(&auxThreadAttr);
     pthread_attr_setdetachstate(&auxThreadAttr, PTHREAD_CREATE_DETACHED);
+    pthread_attr_setstacksize(&auxThreadAttr, (1024 * 1024));
 
-    /*The worker thread for flushing recorded audio from memory to disk*/
-    /*No longer recording audio in PyDAW, but keeping the code here for
-     * when I bring it back...*/
-    /*pthread_create(&musikernel->audio_recording_thread, &threadAttr,
-        v_pydaw_audio_recording_thread, NULL);*/
+    pthread_create(&musikernel->audio_recording_thread, &auxThreadAttr,
+        v_pydaw_audio_recording_thread, NULL);
 
     pthread_create(&musikernel->osc_queue_thread, &auxThreadAttr,
             v_pydaw_osc_send_thread, (void*)musikernel);

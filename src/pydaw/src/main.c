@@ -724,7 +724,8 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             continue;
         }
 
-        PaDeviceInfo * f_device_info = Pa_GetDeviceInfo(inputParameters.device);
+        const PaDeviceInfo * f_device_info = 
+            Pa_GetDeviceInfo(inputParameters.device);
 
         inputParameters.suggestedLatency =
             f_device_info->defaultLowInputLatency;

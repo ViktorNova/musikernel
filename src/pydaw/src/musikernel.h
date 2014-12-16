@@ -18,6 +18,7 @@ GNU General Public License for more details.
 #include "../libmodsynth/lib/lmalloc.h"
 #include "pydaw_plugin_wrapper.h"
 #include "midi_device.h"
+#include "pydaw_audio_inputs.h"
 
 #define MAX_WORKER_THREADS 8
 
@@ -31,7 +32,7 @@ GNU General Public License for more details.
 
 #define MAX_PLUGIN_POOL_COUNT 1000
 
-#define PYDAW_AUDIO_INPUT_TRACK_COUNT 0
+int PYDAW_AUDIO_INPUT_TRACK_COUNT = 0;
 #define PYDAW_VERSION "musikernel"
 
 #define PYDAW_OSC_SEND_QUEUE_SIZE 256
@@ -167,7 +168,7 @@ typedef struct
     int is_previewing;  //Set this to self->ab_mode on playback
     float preview_amp_lin;
     int preview_max_sample_count;
-    t_pyaudio_input * audio_inputs[PYDAW_AUDIO_INPUT_TRACK_COUNT];
+    t_pyaudio_input * audio_inputs;
     pthread_mutex_t audio_inputs_mutex;
     pthread_t audio_recording_thread;
     int audio_recording_quit_notifier __attribute__((aligned(16)));
@@ -241,13 +242,16 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     musikernel->preview_max_sample_count = ((int)(a_sr)) * 30;
     musikernel->playback_mode = 0;
 
-    int f_i = 0;
-    while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
+    int f_i;
+    
+    hpalloc((void**)&musikernel->audio_inputs, 
+        sizeof(t_pyaudio_input) * PYDAW_AUDIO_INPUT_TRACK_COUNT);
+    
+    for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
     {
-        musikernel->audio_inputs[f_i] = g_pyaudio_input_get(a_sr);
-        musikernel->audio_inputs[f_i]->input_port[0] = f_i * 2;
-        musikernel->audio_inputs[f_i]->input_port[1] = (f_i * 2) + 1;
-        ++f_i;
+        g_pyaudio_input_init(&musikernel->audio_inputs[f_i], a_sr, 1);
+        musikernel->audio_inputs[f_i].input_port[0] = f_i * 2;
+        musikernel->audio_inputs[f_i].input_port[1] = (f_i * 2) + 1;
     }
 
     for(f_i = 0; f_i < MAX_WORKER_THREADS; ++f_i)
@@ -554,29 +558,27 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
 
             while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
             {
-                if((musikernel->audio_inputs[f_i]->rec) &&
-                    (musikernel->audio_inputs[f_i]->
-                        flush_last_buffer_pending))
+                if((musikernel->audio_inputs[f_i].rec) &&
+                    (musikernel->audio_inputs[f_i].flush_last_buffer_pending))
                 {
                     f_flushed_buffer = 1;
                     printf("Flushing record buffer of %i frames\n",
-                            ((musikernel->audio_inputs[f_i]->
+                            ((musikernel->audio_inputs[f_i].
                             buffer_iterator[(musikernel->
-                            audio_inputs[f_i]->buffer_to_flush)]) / 2));
+                            audio_inputs[f_i].buffer_to_flush)]) / 2));
 
-                    sf_writef_float(musikernel->audio_inputs[f_i]->sndfile,
-                            musikernel->audio_inputs[f_i]->
-                            rec_buffers[(musikernel->
-                            audio_inputs[f_i]->buffer_to_flush)],
-                            ((musikernel->audio_inputs[f_i]->
-                            buffer_iterator[(musikernel->audio_inputs[f_i]->
-                            buffer_to_flush)]) / 2) );
+                    sf_writef_float(musikernel->audio_inputs[f_i].sndfile,
+                        musikernel->audio_inputs[f_i].rec_buffers[
+                            musikernel->audio_inputs[f_i].buffer_to_flush],
+                        ((musikernel->audio_inputs[f_i].
+                        buffer_iterator[musikernel->audio_inputs[f_i].
+                        buffer_to_flush]) / 2));
 
-                    musikernel->audio_inputs[f_i]->
-                            flush_last_buffer_pending = 0;
-                    musikernel->audio_inputs[f_i]->
-                            buffer_iterator[(musikernel->audio_inputs[f_i]->
-                            buffer_to_flush)] = 0;
+                    musikernel->audio_inputs[
+                        f_i].flush_last_buffer_pending = 0;
+                    musikernel->audio_inputs[
+                        f_i].buffer_iterator[
+                            musikernel->audio_inputs[f_i].buffer_to_flush] = 0;
                 }
 
                 ++f_i;
@@ -595,19 +597,19 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                  * thread uses lockless techniques while running
                  * fast-and-loose with the data...
                  * TODO:  verify that this is safe...*/
-                if(musikernel->audio_inputs[f_i]->recording_stopped)
+                if(musikernel->audio_inputs[f_i].recording_stopped)
                 {
                     f_did_something = 1;
-                    sf_writef_float(musikernel->audio_inputs[f_i]->sndfile,
-                            musikernel->audio_inputs[f_i]->rec_buffers[
-                            (musikernel->audio_inputs[f_i]->current_buffer)],
-                            ((musikernel->audio_inputs[f_i]->
-                            buffer_iterator[(musikernel->audio_inputs[f_i]->
+                    sf_writef_float(musikernel->audio_inputs[f_i].sndfile,
+                            musikernel->audio_inputs[f_i].rec_buffers[
+                            (musikernel->audio_inputs[f_i].current_buffer)],
+                            ((musikernel->audio_inputs[f_i].
+                            buffer_iterator[(musikernel->audio_inputs[f_i].
                             current_buffer)]) / 2) );
 
-                    sf_close(musikernel->audio_inputs[f_i]->sndfile);
-                    musikernel->audio_inputs[f_i]->recording_stopped = 0;
-                    musikernel->audio_inputs[f_i]->sndfile = 0;
+                    sf_close(musikernel->audio_inputs[f_i].sndfile);
+                    musikernel->audio_inputs[f_i].recording_stopped = 0;
+                    musikernel->audio_inputs[f_i].sndfile = 0;
                 }
                 ++f_i;
             }
@@ -618,7 +620,7 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
 
             while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
             {
-                if(musikernel->audio_inputs[f_i]->rec)
+                if(musikernel->audio_inputs[f_i].rec)
                 {
                     f_did_something = 1;
 
@@ -628,7 +630,7 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                     if(!i_pydaw_file_exists(f_file_name))
                     {
                         v_pydaw_audio_input_record_set(
-                                musikernel->audio_inputs[f_i], f_file_name);
+                            &musikernel->audio_inputs[f_i], f_file_name);
                     }
                 }
                 ++f_i;
