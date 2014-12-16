@@ -199,7 +199,7 @@ class pydaw_device_dialog:
 
 
     def show_device_dialog(
-    self, a_msg=None, a_notify=False, a_exit_on_cancel=False):
+            self, a_msg=None, a_notify=False, a_exit_on_cancel=False):
         self.dialog_result = False
         self.open_devices()
         if self.is_running:
@@ -217,7 +217,17 @@ class pydaw_device_dialog:
         f_window.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         f_window.setStyleSheet(pydaw_util.global_stylesheet)
         f_window.setWindowTitle(_("Hardware Settings..."))
-        f_window_layout = QtGui.QGridLayout(f_window)
+        f_main_layout = QtGui.QVBoxLayout(f_window)
+        f_tab_widget = QtGui.QTabWidget()
+        f_main_layout.addWidget(f_tab_widget)
+        f_audio_out_tab = QtGui.QWidget()
+        f_tab_widget.addTab(f_audio_out_tab, _("Audio Out"))
+        f_window_layout = QtGui.QGridLayout(f_audio_out_tab)
+
+        f_midi_in_tab = QtGui.QTabWidget()
+        f_tab_widget.addTab(f_midi_in_tab, _("MIDI In"))
+        f_midi_in_layout = QtGui.QVBoxLayout(f_midi_in_tab)
+
         f_window_layout.addWidget(QtGui.QLabel(_("Audio Device:")), 0, 0)
         f_device_name_combobox = QtGui.QComboBox()
         f_device_name_combobox.setMinimumWidth(390)
@@ -236,7 +246,7 @@ class pydaw_device_dialog:
         f_window_layout.addWidget(QtGui.QLabel(_("Worker Threads:")), 3, 0)
         f_worker_threads_combobox = QtGui.QComboBox()
         f_worker_threads_combobox.addItems(
-            [_("Auto"), "1", "2", "3", "4", "5", "6", "7", "8"])
+            [_("Auto")] + [str(x) for x in range(1, 9)])
         f_worker_threads_combobox.setToolTip(THREADS_TOOLTIP)
         f_window_layout.addWidget(f_worker_threads_combobox, 3, 1)
         f_window_layout.addWidget(QtGui.QLabel(_("Audio Engine")), 4, 0)
@@ -291,9 +301,8 @@ class pydaw_device_dialog:
         f_hugepages_checkbox.setToolTip(_(HUGEPAGES_TOOLTIP))
         f_window_layout.addWidget(f_hugepages_checkbox, 7, 1)
 
-        f_window_layout.addWidget(QtGui.QLabel(_("MIDI In Devices:")), 15, 0)
         f_ok_cancel_layout = QtGui.QHBoxLayout()
-        f_window_layout.addLayout(f_ok_cancel_layout, 50, 1)
+        f_main_layout.addLayout(f_ok_cancel_layout)
         f_ok_button = QtGui.QPushButton(_("OK"))
         f_ok_cancel_layout.addWidget(f_ok_button)
         f_cancel_button = QtGui.QPushButton(_("Cancel"))
@@ -318,7 +327,6 @@ class pydaw_device_dialog:
             f_audio_device_names.append(f_dev_name)
 
         print("\n")
-        f_midi_in_pos = 15
         self.midi_in_checkboxes = {}
 
         for loop in range(self.pypm.Pm_CountDevices()):
@@ -334,9 +342,10 @@ class pydaw_device_dialog:
 
         for f_cbox in sorted(
         self.midi_in_checkboxes, key=lambda x: x.lower()):
-            f_window_layout.addWidget(
-                self.midi_in_checkboxes[f_cbox], f_midi_in_pos, 1)
-            f_midi_in_pos += 1
+            f_midi_in_layout.addWidget(self.midi_in_checkboxes[f_cbox])
+
+        f_midi_in_layout.addItem(
+            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
 
         def latency_changed(a_self=None, a_val=None):
             f_sample_rate = float(str(f_samplerate_combobox.currentText()))
