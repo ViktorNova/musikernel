@@ -220,9 +220,14 @@ class pydaw_device_dialog:
         f_main_layout = QtGui.QVBoxLayout(f_window)
         f_tab_widget = QtGui.QTabWidget()
         f_main_layout.addWidget(f_tab_widget)
+
         f_audio_out_tab = QtGui.QWidget()
         f_tab_widget.addTab(f_audio_out_tab, _("Audio Out"))
         f_window_layout = QtGui.QGridLayout(f_audio_out_tab)
+
+        f_audio_in_tab = QtGui.QWidget()
+        f_tab_widget.addTab(f_audio_in_tab, _("Audio In"))
+        f_audio_in_layout = QtGui.QGridLayout(f_audio_in_tab)
 
         f_midi_in_tab = QtGui.QTabWidget()
         f_tab_widget.addTab(f_midi_in_tab, _("MIDI In"))
@@ -332,6 +337,17 @@ class pydaw_device_dialog:
             f_audio_device_names.append(f_dev_name)
 
         print("\n")
+
+        f_audio_in_layout.addWidget(QtGui.QLabel(_("Input Count")), 0, 0)
+        f_audio_in_spinbox = QtGui.QSpinBox()
+        f_audio_in_spinbox.setRange(0, 0)
+        f_audio_in_layout.addWidget(f_audio_in_spinbox, 0, 1)
+
+        f_audio_in_layout.addItem(
+            QtGui.QSpacerItem(
+                1, 1, QtGui.QSizePolicy.Expanding,
+                QtGui.QSizePolicy.Expanding), 200, 0)
+
         self.midi_in_checkboxes = {}
 
         for loop in range(self.pypm.Pm_CountDevices()):
@@ -368,6 +384,8 @@ class pydaw_device_dialog:
             if f_samplerate in self.sample_rates:
                 f_samplerate_combobox.setCurrentIndex(
                     f_samplerate_combobox.findText(f_samplerate))
+            f_in_count = f_result_dict[self.device_name].maxInputChannels
+            f_audio_in_spinbox.setMaximum(f_in_count)
 
         def on_ok(a_self=None):
             f_buffer_size = int(str(f_buffer_size_combobox.currentText()))
@@ -386,6 +404,7 @@ class pydaw_device_dialog:
                 else 0
             f_performance = 1 if f_governor_checkbox.isChecked() else 0
             f_hugepages = 1 if f_hugepages_checkbox.isChecked() else 0
+            f_audio_inputs = f_audio_in_spinbox.value()
             try:
                 #This doesn't work if the device is open already,
                 #so skip the test, and if it fails the
@@ -411,6 +430,7 @@ class pydaw_device_dialog:
                 f_file.write("threadAffinity|{}\n".format(f_thread_affinity))
                 f_file.write("hugePages|{}\n".format(f_hugepages))
                 f_file.write("performance|{}\n".format(f_performance))
+                f_file.write("audioInputs|{}\n".format(f_audio_inputs))
                 for f_midi_in_device in f_midi_in_devices:
                     f_file.write("midiInDevice|{}\n".format(f_midi_in_device))
 
@@ -453,24 +473,28 @@ class pydaw_device_dialog:
         if "name" in pydaw_util.global_device_val_dict and \
         pydaw_util.global_device_val_dict["name"] in f_result_dict:
             f_device_name_combobox.setCurrentIndex(
-            f_device_name_combobox.findText(
-                pydaw_util.global_device_val_dict["name"]))
+                f_device_name_combobox.findText(
+                    pydaw_util.global_device_val_dict["name"]))
+
+        if "audioInputs" in pydaw_util.global_device_val_dict:
+            f_count = int(pydaw_util.global_device_val_dict["audioInputs"])
+            f_audio_in_spinbox.setValue(f_count)
 
         if "bufferSize" in pydaw_util.global_device_val_dict and \
         pydaw_util.global_device_val_dict["bufferSize"] in self.buffer_sizes:
             f_buffer_size_combobox.setCurrentIndex(
-            f_buffer_size_combobox.findText(
-                pydaw_util.global_device_val_dict["bufferSize"]))
+                f_buffer_size_combobox.findText(
+                    pydaw_util.global_device_val_dict["bufferSize"]))
 
         if "sampleRate" in pydaw_util.global_device_val_dict and \
         pydaw_util.global_device_val_dict["sampleRate"] in self.sample_rates:
             f_samplerate_combobox.setCurrentIndex(
-            f_samplerate_combobox.findText(
-                pydaw_util.global_device_val_dict["sampleRate"]))
+                f_samplerate_combobox.findText(
+                    pydaw_util.global_device_val_dict["sampleRate"]))
 
         if "threads" in pydaw_util.global_device_val_dict:
             f_worker_threads_combobox.setCurrentIndex(
-            int(pydaw_util.global_device_val_dict["threads"]))
+                int(pydaw_util.global_device_val_dict["threads"]))
 
         if "threadAffinity" in pydaw_util.global_device_val_dict:
             if int(pydaw_util.global_device_val_dict["threadAffinity"]) == 1:

@@ -474,7 +474,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     err = Pa_Initialize();
     //if( err != paNoError ) goto error;
     /* default input device */
-    inputParameters.device = Pa_GetDefaultInputDevice();
 
     /*Initialize Portmidi*/
     f_midi_err = Pm_Initialize();
@@ -503,6 +502,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     f_device_name[0] = '\0';
 
     int f_frame_count = DEFAULT_FRAMES_PER_BUFFER;
+    int f_audio_input_count = 0;
 
     MIDI_DEVICES.count = 0;
 
@@ -637,6 +637,13 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
                     ++MIDI_DEVICES.count;
                     f_with_midi = 1;
                 }
+                else if(!strcmp(f_key_char, "audioInputs"))
+                {
+                    f_audio_input_count = atoi(f_value_char);
+                    printf("audioInputs: %s\n", f_value_char);
+                    assert(f_audio_input_count >= 0 &&
+                        f_audio_input_count <= 128);
+                }
                 else
                 {
                     printf("Unknown key|value pair: %s|%s\n",
@@ -676,10 +683,8 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             continue;
         }
 
-        inputParameters.channelCount = 0;
+        inputParameters.channelCount = f_audio_input_count;
         inputParameters.sampleFormat = PA_SAMPLE_TYPE;
-        inputParameters.suggestedLatency = Pa_GetDeviceInfo(
-            inputParameters.device)->defaultLowInputLatency;
         inputParameters.hostApiSpecificStreamInfo = NULL;
 
         if (outputParameters.device == paNoDevice)
@@ -702,6 +707,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             if(!strcmp(f_padevice->name, f_device_name))
             {
                 outputParameters.device = f_i;
+                inputParameters.device = f_i;
                 f_found_index = 1;
                 break;
             }
@@ -711,18 +717,22 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         if(!f_found_index)
         {
             sprintf(f_cmd_buffer,
-                    "%s \"Did not find device '%s' on this system.\"",
-                    f_show_dialog_cmd, f_device_name);
+                "%s \"Did not find device '%s' on this system.\"",
+                f_show_dialog_cmd, f_device_name);
             system(f_cmd_buffer);
             ++f_failure_count;
             continue;
         }
 
-        outputParameters.suggestedLatency = Pa_GetDeviceInfo(
-            outputParameters.device)->defaultLowOutputLatency;
+        PaDeviceInfo * f_device_info = Pa_GetDeviceInfo(inputParameters.device);
+
+        inputParameters.suggestedLatency =
+            f_device_info->defaultLowInputLatency;
+        outputParameters.suggestedLatency =
+            f_device_info->defaultLowOutputLatency;
 
         err = Pa_OpenStream(
-            &stream, NULL, //&inputParameters,
+            &stream, &inputParameters,
             &outputParameters, sample_rate, //SAMPLE_RATE,
             f_frame_count, //FRAMES_PER_BUFFER,
             /* we won't output out of range samples so don't bother
@@ -730,7 +740,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             0, /* paClipOff, */
             portaudioCallback, NULL);
 
-        if( err != paNoError )
+        if(err != paNoError)
         {
             ++f_failure_count;
             sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
