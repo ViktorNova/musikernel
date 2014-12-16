@@ -193,6 +193,38 @@ def normalize_dialog():
     f_window.exec_()
     return f_window.f_result
 
+class AudioInput:
+    def __init__(self, a_num, a_layout, a_callback):
+        self.input_num = int(a_num)
+        self.callback = a_callback
+        self.checkbox = QtGui.QCheckBox(str(a_num))
+        self.checkbox.clicked.connect(self.update_engine)
+        a_layout.addWidget(self.checkbox, a_num)
+
+    def update_engine(self, a_val=None):
+        self.callback()
+
+    def get_value(self):
+        return 1 if self.checkbox.isChecked() else 0
+
+
+class AudioInputWidget:
+    def __init__(self):
+        self.widget = QtGui.QWidget()
+        self.layout = QtGui.QVBoxLayout(self.widget)
+        self.layout.addWidget(QtGui.QLabel(_("Audio Inputs")))
+        self.inputs = []
+        f_count = 0
+        if "audioInputs" in pydaw_util.global_device_val_dict:
+            f_count = int(pydaw_util.global_device_val_dict["audioInputs"])
+        for f_i in range(f_count):
+            f_input = AudioInput(f_i, self.layout, self.callback)
+            self.inputs.append(f_input)
+
+    def callback(self):
+        print([x.get_value() for x in self.inputs])
+
+
 class transport_widget(libmk.AbstractTransport):
     def __init__(self):
         self.suppress_osc = True
@@ -201,10 +233,29 @@ class transport_widget(libmk.AbstractTransport):
         self.last_open_dir = global_home
         self.group_box = QtGui.QGroupBox()
         self.group_box.setObjectName("transport_panel")
-        self.vlayout = QtGui.QVBoxLayout()
-        self.group_box.setLayout(self.vlayout)
+        self.vlayout = QtGui.QVBoxLayout(self.group_box)
         self.hlayout1 = QtGui.QHBoxLayout()
         self.vlayout.addLayout(self.hlayout1)
+
+        self.playback_menu_button = QtGui.QPushButton("")
+        self.playback_menu_button.setMaximumWidth(21)
+        self.playback_menu_button.setSizePolicy(
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.hlayout1.addWidget(self.playback_menu_button)
+
+        self.playback_menu = QtGui.QMenu(self.playback_menu_button)
+        self.playback_menu_button.setMenu(self.playback_menu)
+        self.playback_widget_action = QtGui.QWidgetAction(self.playback_menu)
+        self.playback_widget = QtGui.QWidget()
+        self.playback_widget_action.setDefaultWidget(self.playback_widget)
+        self.playback_vlayout = QtGui.QVBoxLayout(self.playback_widget)
+        self.playback_menu.addAction(self.playback_widget_action)
+
+        self.audio_inputs = AudioInputWidget()
+        self.playback_vlayout.addWidget(self.audio_inputs.widget)
+
+        self.hlayout1.addItem(
+            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
 
         self.suppress_osc = False
 
