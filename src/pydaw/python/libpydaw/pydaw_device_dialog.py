@@ -322,6 +322,11 @@ class pydaw_device_dialog:
             print("\nDevice Index: {}".format(i))
             f_dev_name = f_dev.contents.name.decode("utf-8")
             print("Name : {}".format(f_dev_name))
+            print("maxInputChannels : {}".format(
+                f_dev.contents.maxInputChannels))
+            print("maxOutputChannels : {}".format(
+                f_dev.contents.maxOutputChannels))
+            print()
             f_name_to_index[f_dev_name] = i
             f_result_dict[f_dev_name] = f_dev.contents
             f_audio_device_names.append(f_dev_name)
@@ -442,7 +447,7 @@ class pydaw_device_dialog:
         f_cancel_button.pressed.connect(on_cancel)
 
         f_device_name_combobox.currentIndexChanged.connect(combobox_changed)
-        f_audio_device_names.sort()
+        f_audio_device_names.sort(key=lambda x: x.lower())
         f_device_name_combobox.addItems(f_audio_device_names)
 
         if "name" in pydaw_util.global_device_val_dict and \
