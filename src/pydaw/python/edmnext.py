@@ -8151,7 +8151,7 @@ class seq_track:
             for f_i in range(4):
                 f_send = track_send(
                     f_i, self.track_number, self.menu_gridlayout,
-                    self.save_callback,PROJECT.get_routing_graph,
+                    self.save_callback, PROJECT.get_routing_graph,
                     PROJECT.save_routing_graph, TRACK_NAMES)
                 self.sends.append(f_send)
                 f_plugin = plugin_settings_mixer(
