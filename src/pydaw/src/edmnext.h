@@ -2632,8 +2632,6 @@ t_edmnext * g_edmnext_get()
     t_edmnext * f_result;
     clalloc((void**)&f_result, sizeof(t_edmnext));
 
-    pthread_mutex_init(&musikernel->audio_inputs_mutex, NULL);
-
     f_result->current_sample = 0;
     f_result->current_bar = 0;
     f_result->current_region = 0;

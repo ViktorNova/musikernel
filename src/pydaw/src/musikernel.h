@@ -132,6 +132,7 @@ typedef struct
 {
     void (*run)(int sample_count, float **output, float **a_input_buffers);
     void (*osc_send)(t_osc_send_data*);
+    void (*audio_inputs)();
 }t_mk_host;
 
 typedef struct
@@ -240,6 +241,8 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     musikernel->preview_max_sample_count = ((int)(a_sr)) * 30;
     musikernel->playback_mode = 0;
 
+    pthread_mutex_init(&musikernel->audio_inputs_mutex, NULL);
+
     int f_i;
 
     hpalloc((void**)&musikernel->audio_inputs,
@@ -325,6 +328,11 @@ void v_pydaw_set_host(int a_mode)
     musikernel->current_host = &musikernel->hosts[a_mode];
 
     pthread_spin_unlock(&musikernel->main_lock);
+
+    if(musikernel->current_host->audio_inputs)
+    {
+        musikernel->current_host->audio_inputs();
+    }
 }
 
 void v_pydaw_activate_osc_thread(lo_method_handler osc_message_handler)
@@ -634,7 +642,7 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
 {
     char f_inputs_file[2048];
     t_pyaudio_input * f_ai;
-    sprintf(f_inputs_file, "%sdefault.pyinput", a_project_folder);
+    sprintf(f_inputs_file, "%s/input.txt", a_project_folder);
 
     if(a_project_folder && i_pydaw_file_exists(f_inputs_file))
     {
@@ -643,6 +651,7 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
             f_inputs_file, PYDAW_LARGE_STRING);
 
         pthread_mutex_lock(&musikernel->audio_inputs_mutex);
+
         for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
         {
             v_iterate_2d_char_array(f_2d_array);
@@ -679,6 +688,7 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
 
             v_pydaw_audio_input_record_set(f_ai, f_tmp_file_name);
         }
+
         pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
         g_free_2d_char_array(f_2d_array);
     }

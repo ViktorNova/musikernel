@@ -76,6 +76,9 @@ class WaveNextOsc(libmk.AbstractIPC):
     def pydaw_panic(self):
         self.send_configure("panic", "")
 
+    def save_audio_inputs(self):
+        self.send_configure("ai", "")
+
 
 wavenext_folder_tracks = "projects/wavenext/tracks"
 pydaw_file_wave_editor_bookmarks = "projects/edmnext/wave_editor_bookmarks.txt"
@@ -164,6 +167,7 @@ class WaveNextProject(libmk.AbstractProject):
     def save_audio_inputs(self, a_tracks):
         if not self.suppress_updates:
             self.save_file("", pydaw_file_pyinput, str(a_tracks))
+            self.wn_osc.save_audio_inputs()
 
 def normalize_dialog():
     def on_ok():
@@ -250,9 +254,13 @@ class AudioInputWidget:
 
     def callback(self):
         f_result = libmk.mk_project.AudioInputTracks()
+        for f_i, f_input in zip(range(len(self.inputs)), self.inputs):
+            f_result.add_track(f_i, f_input.get_value())
+        PROJECT.save_audio_inputs(f_result)
 
     def active(self):
-        return [x.get_value() for x in self.inputs if x.checkbox.isChecked()]
+        return [x.get_value() for x in self.inputs
+            if x.checkbox.isChecked()]
 
 
 class transport_widget(libmk.AbstractTransport):
@@ -307,12 +315,57 @@ class transport_widget(libmk.AbstractTransport):
     def on_stop(self):
         PROJECT.wn_osc.pydaw_wn_playback(0)
         WAVE_EDITOR.on_stop()
+        if libmk.IS_RECORDING:
+            self.show_rec_dialog()
 
     def on_rec(self):
-        QtGui.QMessageBox.warning(
-            self.group_box, _("Error"),
-            _("WaveNext does not support recording"))
-        return False
+        if not self.audio_inputs.active():
+            QtGui.QMessageBox.warning(
+                self.group_box, _("Error"),
+                _("No audio inputs are active, cannot record.  "
+                "Enable one or more inputs in the transport drop-down."))
+            return False
+        PROJECT.wn_osc.pydaw_wn_playback(2)
+        return True
+
+    def show_rec_dialog(self):
+        def on_ok():
+            f_txt = str(f_name_lineedit.text()).strip()
+            if not f_txt:
+                QtGui.QMessageBox.warning(
+                    MAIN_WINDOW, _("Error"), _("Name cannot be empty"))
+                return
+            for x in ("\\", "/", "~", "|"):
+                if x in f_txt:
+                    QtGui.QMessageBox.warning(
+                        MAIN_WINDOW, _("Error"),
+                        _("Invalid char '{}'".format(x)))
+                    return
+
+            f_window.close()
+
+        def on_cancel():
+            f_window.close()
+
+        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.setWindowTitle(_("Save Recorded Audio"))
+        f_window.setFixedSize(420, 90)
+        f_layout = QtGui.QVBoxLayout()
+        f_window.setLayout(f_layout)
+        f_hlayout = QtGui.QHBoxLayout()
+        f_layout.addLayout(f_hlayout)
+        f_hlayout.addWidget(QtGui.QLabel("Name"))
+        f_name_lineedit = QtGui.QLineEdit()
+        f_hlayout.addWidget(f_name_lineedit)
+        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_layout.addLayout(f_ok_cancel_layout)
+        f_ok_cancel_layout.addWidget(f_ok_button)
+        f_ok_button.pressed.connect(on_ok)
+        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_ok_cancel_layout.addWidget(f_cancel_button)
+        f_cancel_button.pressed.connect(on_cancel)
+        f_window.exec_()
 
     def set_tooltips(self, a_enabled):
         pass
@@ -442,7 +495,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.first_offline_render = True
         self.last_offline_dir = global_home
         self.copy_to_clipboard_checked = True
-        self.last_midi_dir = None
 
         self.setObjectName("plugin_ui")
         self.widget = QtGui.QWidget()

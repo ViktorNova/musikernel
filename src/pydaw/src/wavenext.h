@@ -21,6 +21,7 @@ GNU General Public License for more details.
 #define WN_CONFIGURE_KEY_WE_EXPORT "wex"
 #define WN_CONFIGURE_KEY_WN_PLAYBACK "wnp"
 #define WN_CONFIGURE_KEY_PLUGIN_INDEX "pi"
+#define WN_CONFIGURE_KEY_AUDIO_INPUTS "ai"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -32,6 +33,7 @@ typedef struct
     t_pydaw_audio_item * ab_audio_item;
     t_pytrack * track_pool[1];
     char * tracks_folder;
+    char * project_folder;
 }t_wavenext;
 
 void v_pydaw_set_ab_mode(int a_mode);
@@ -53,6 +55,7 @@ void g_wavenext_get()
     wavenext->ab_wav_item = 0;
     wavenext->ab_audio_item = g_pydaw_audio_item_get(f_sample_rate);
     wavenext->tracks_folder = (char*)malloc(sizeof(char) * 1024);
+    wavenext->project_folder = (char*)malloc(sizeof(char) * 1024);
     int f_i = 0;
     while(f_i < 1)
     {
@@ -252,8 +255,10 @@ void v_wn_open_tracks()
 
 void v_wn_open_project()
 {
-    sprintf(wavenext->tracks_folder, "%s/projects/wavenext/tracks",
+    sprintf(wavenext->project_folder, "%s/projects/wavenext",
         musikernel->project_folder);
+
+    sprintf(wavenext->tracks_folder, "%s/tracks", wavenext->project_folder);
     v_wn_open_tracks();
 }
 
@@ -454,7 +459,7 @@ void v_wn_osc_send(t_osc_send_data * a_buffers)
 
     v_queue_osc_message("peak", a_buffers->f_tmp1);
 
-    if(musikernel->playback_mode > 0)
+    if(musikernel->playback_mode == 1)
     {
         float f_frac =
         (float)(wavenext->ab_audio_item->sample_read_heads[
@@ -517,6 +522,11 @@ void v_wn_osc_send(t_osc_send_data * a_buffers)
     }
 }
 
+void v_wn_update_audio_inputs()
+{
+    v_pydaw_update_audio_inputs(wavenext->project_folder);
+}
+
 void v_wn_configure(const char* a_key, const char* a_value)
 {
     printf("v_wn_configure:  key: \"%s\", value: \"%s\"\n", a_key, a_value);
@@ -524,6 +534,10 @@ void v_wn_configure(const char* a_key, const char* a_value)
     if(!strcmp(a_key, WN_CONFIGURE_KEY_LOAD_AB_OPEN))
     {
         v_pydaw_set_we_file(wavenext, a_value);
+    }
+    else if(!strcmp(a_key, WN_CONFIGURE_KEY_AUDIO_INPUTS))
+    {
+        v_wn_update_audio_inputs();
     }
     else if(!strcmp(a_key, WN_CONFIGURE_KEY_WE_SET))
     {

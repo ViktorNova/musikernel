@@ -90,9 +90,11 @@ void v_pydaw_activate(int a_thread_count,
 
     musikernel->hosts[MK_HOST_EDMNEXT].run = v_en_run_engine;
     musikernel->hosts[MK_HOST_EDMNEXT].osc_send = v_en_osc_send;
+    musikernel->hosts[MK_HOST_EDMNEXT].audio_inputs = NULL;
 
     musikernel->hosts[MK_HOST_WAVENEXT].run = v_pydaw_run_wave_editor;
     musikernel->hosts[MK_HOST_WAVENEXT].osc_send = v_wn_osc_send;
+    musikernel->hosts[MK_HOST_WAVENEXT].audio_inputs = v_wn_update_audio_inputs;
 
     g_en_instantiate();
     g_wavenext_get();
