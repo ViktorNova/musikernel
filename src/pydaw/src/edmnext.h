@@ -1627,7 +1627,6 @@ inline void v_en_run_engine(int sample_count,
     long f_next_current_sample = edmnext->current_sample + sample_count;
 
     musikernel->sample_count = sample_count;
-    musikernel->input_buffers = a_input_buffers;
     self->f_next_current_sample = f_next_current_sample;
 
     if((musikernel->playback_mode) > 0)

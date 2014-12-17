@@ -160,7 +160,6 @@ typedef struct
     int is_offline_rendering;
     //set from the audio device buffer size every time the main loop is called.
     int sample_count;
-    float ** input_buffers;
     int input_buffers_active;
     t_wav_pool_item * preview_wav_item;
     t_pydaw_audio_item * preview_audio_item;
@@ -580,9 +579,9 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
         }
         else
         {
-            int f_i = 0;
+            int f_i;
 
-            while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
+            for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
             {
                 f_ai = &musikernel->audio_inputs[f_i];
                 if(f_ai->recording_stopped)
@@ -596,21 +595,19 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                     f_ai->recording_stopped = 0;
                     f_ai->sndfile = 0;
                 }
-                ++f_i;
             }
 
             /*Re-create the sndfile if it no longer exists, that means the
              * UI has moved it from the tmp folder...*/
-            f_i = 0;
 
-            while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
+            for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
             {
                 if(musikernel->audio_inputs[f_i].rec)
                 {
                     f_did_something = 1;
 
                     sprintf(f_file_name, "%s%i.wav",
-                            musikernel->audio_tmp_folder, f_i);
+                        musikernel->audio_tmp_folder, f_i);
 
                     if(!i_pydaw_file_exists(f_file_name))
                     {
@@ -618,7 +615,6 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                             &musikernel->audio_inputs[f_i], f_file_name);
                     }
                 }
-                ++f_i;
             }
 
         }
