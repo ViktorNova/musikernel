@@ -1237,7 +1237,7 @@ def open_pydaw_engine(a_project_path):
         f_pa_suspend = False
 
     if int(pydaw_util.global_device_val_dict["audioEngine"]) >= 3 \
-    and pydaw_util.pydaw_which("x-terminal-emulator") is not None:
+    and pydaw_util.TERMINAL:
         f_sleep = "--sleep"
         if int(pydaw_util.global_device_val_dict["audioEngine"]) == 4 and \
         pydaw_util.pydaw_which("gdb") is not None:
@@ -1251,17 +1251,19 @@ def open_pydaw_engine(a_project_path):
             f_run_with = ""
         if f_pa_suspend:
             f_cmd = (
-                """pasuspender -- x-terminal-emulator -e """
-                """bash -c 'ulimit -c unlimited ; """
-                """{} "{}" "{}" "{}" {} {} {}; read' """.format(
-                f_run_with, pydaw_util.global_pydaw_bin_path,
+                """pasuspender -- {} -e ' """
+                """bash -c " ulimit -c unlimited ; """
+                """ {} "{}" "{}" "{}" {} {} {}; read " ' """.format(
+                pydaw_util.TERMINAL, f_run_with,
+                pydaw_util.global_pydaw_bin_path,
                 global_pydaw_install_prefix, f_project_dir, f_pid,
                 pydaw_util.USE_HUGEPAGES, f_sleep))
         else:
             f_cmd = (
-                """x-terminal-emulator -e bash -c 'ulimit -c unlimited ; """
-                """{} "{}" "{}" "{}" {} {} {}; read' """.format(
-                f_run_with, pydaw_util.global_pydaw_bin_path,
+                """{} -e ' bash -c " ulimit -c unlimited ; """
+                """ {} "{}" "{}" "{}" {} {} {}; read " ' """.format(
+                pydaw_util.TERMINAL, f_run_with,
+                pydaw_util.global_pydaw_bin_path,
                 pydaw_util.global_pydaw_install_prefix, f_project_dir,
                 f_pid, pydaw_util.USE_HUGEPAGES, f_sleep))
     else:

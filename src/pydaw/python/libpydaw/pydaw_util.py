@@ -163,6 +163,12 @@ def pydaw_beats_to_index(a_beat, a_divisor=4.0):
 int_to_note_array = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#',
                      'G', 'G#', 'A', 'A#', 'B']
 
+TERMINAL = None
+
+for _terminal in ("x-terminal-emulator", "gnome-terminal", "konsole"):
+    if pydaw_which(_terminal):
+        TERMINAL = _terminal
+        break
 
 pydaw_rubberband_util = "{}/lib/{}/rubberband/bin/rubberband".format(
     global_pydaw_install_prefix, global_pydaw_version_string)
