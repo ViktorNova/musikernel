@@ -243,10 +243,10 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     musikernel->playback_mode = 0;
 
     int f_i;
-    
-    hpalloc((void**)&musikernel->audio_inputs, 
+
+    hpalloc((void**)&musikernel->audio_inputs,
         sizeof(t_pyaudio_input) * PYDAW_AUDIO_INPUT_TRACK_COUNT);
-    
+
     for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
     {
         g_pyaudio_input_init(&musikernel->audio_inputs[f_i], a_sr, 1);
@@ -536,7 +536,7 @@ void v_pydaw_set_preview_file(const char * a_file)
 void * v_pydaw_audio_recording_thread(void* a_arg)
 {
     char f_file_name[1024];
-    
+
     t_pyaudio_input * f_ai;
 
     sleep(3);
@@ -632,6 +632,77 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
     }
 
     return (void*)1;
+}
+
+
+void v_pydaw_update_audio_inputs(char * a_project_folder)
+{
+    char f_inputs_file[2048];
+    t_pyaudio_input * f_ai;
+    sprintf(f_inputs_file, "%sdefault.pyinput", a_project_folder);
+
+    if(a_project_folder && i_pydaw_file_exists(f_inputs_file))
+    {
+        int f_i;
+        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(
+            f_inputs_file, PYDAW_LARGE_STRING);
+
+        pthread_mutex_lock(&musikernel->audio_inputs_mutex);
+        for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
+        {
+            v_iterate_2d_char_array(f_2d_array);
+
+            if(f_2d_array->eof) //!strcmp(f_index_str, "\\"))
+            {
+                break;
+            }
+
+            int f_index = atoi(f_2d_array->current_str);
+
+            v_iterate_2d_char_array(f_2d_array);
+            int f_rec = atoi(f_2d_array->current_str);
+
+            v_iterate_2d_char_array(f_2d_array);
+            int f_vol = atoi(f_2d_array->current_str);
+
+            v_iterate_2d_char_array(f_2d_array);
+            int f_out = atoi(f_2d_array->current_str);
+
+            v_iterate_2d_char_array(f_2d_array); //Not used
+
+            f_ai = &musikernel->audio_inputs[f_index];
+            f_ai->rec = f_rec;
+            f_ai->output_track = f_out;
+
+            f_ai->vol = f_vol;
+            f_ai->vol_linear = f_db_to_linear_fast(f_vol);
+
+            char f_tmp_file_name[2048];
+
+            sprintf(f_tmp_file_name, "%s%i.wav",
+                musikernel->audio_tmp_folder, f_index);
+
+            v_pydaw_audio_input_record_set(f_ai, f_tmp_file_name);
+        }
+        pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
+        g_free_2d_char_array(f_2d_array);
+    }
+    else
+    {
+        printf("%s not found, setting default values\n", f_inputs_file);
+        pthread_mutex_lock(&musikernel->audio_inputs_mutex);
+        int f_i;
+        for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
+        {
+            f_ai = &musikernel->audio_inputs[f_i];
+            f_ai->rec = 0;
+            f_ai->output_track = 0;
+
+            f_ai->vol = 0.0f;
+            f_ai->vol_linear = 1.0f;
+        }
+        pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
+    }
 }
 
 inline float f_bpm_to_seconds_per_beat(float a_tempo)

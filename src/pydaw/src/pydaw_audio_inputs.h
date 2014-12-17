@@ -35,7 +35,8 @@ typedef struct
     float vol, vol_linear;
     SF_INFO sf_info;
     SNDFILE * sndfile;
-    float rec_buffers[2][PYDAW_AUDIO_INPUT_REC_BUFFER_SIZE] __attribute__((aligned(16)));
+    float rec_buffers[2][PYDAW_AUDIO_INPUT_REC_BUFFER_SIZE]
+        __attribute__((aligned(16)));
     int buffer_iterator[2];
     int current_buffer;
     int flush_last_buffer_pending;
@@ -48,7 +49,7 @@ void g_pyaudio_input_init(t_pyaudio_input *, float, int);
 void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr, int a_ch)
 {
     assert(a_ch >= 1 && a_ch <= 2);
-    
+
     f_result->sf_info.channels = a_ch;
     f_result->sf_info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
     f_result->sf_info.samplerate = (int)(a_sr);
@@ -71,7 +72,7 @@ void v_pydaw_audio_input_record_set(
     if(a_audio_input->sndfile)
     {
         sf_close(a_audio_input->sndfile);
-        a_audio_input->sndfile = 0;
+        a_audio_input->sndfile = NULL;
     }
 
     if(i_pydaw_file_exists(a_file_out))
