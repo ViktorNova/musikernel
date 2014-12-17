@@ -80,6 +80,8 @@ class WaveNextOsc(libmk.AbstractIPC):
 wavenext_folder_tracks = "projects/wavenext/tracks"
 pydaw_file_wave_editor_bookmarks = "projects/edmnext/wave_editor_bookmarks.txt"
 pydaw_file_notes = "projects/wavenext/notes.txt"
+pydaw_file_pyinput = "projects/wavenext/input.txt"
+
 
 class WaveNextProject(libmk.AbstractProject):
     def __init__(self, a_with_audio):
@@ -159,6 +161,9 @@ class WaveNextProject(libmk.AbstractProject):
         else:
             return None
 
+    def save_audio_inputs(self, a_tracks):
+        if not self.suppress_updates:
+            self.save_file("", pydaw_file_pyinput, str(a_tracks))
 
 def normalize_dialog():
     def on_ok():

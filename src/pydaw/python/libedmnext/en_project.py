@@ -53,7 +53,6 @@ pydaw_file_pyitems = "projects/edmnext/items.txt"
 pydaw_file_pysong = "projects/edmnext/song.txt"
 pydaw_file_pytransport = "projects/edmnext/transport.txt"
 pydaw_file_pytracks = "projects/edmnext/tracks.txt"
-pydaw_file_pyinput = "projects/edmnext/input.txt"
 pydaw_file_notes = "projects/edmnext/notes.txt"
 
 #Anything smaller gets deleted when doing a transform
@@ -833,10 +832,6 @@ class EdmNextProject(libmk.AbstractProject):
         f_folder = pydaw_folder_tracks
         if not self.suppress_updates:
             self.save_file(f_folder, str(a_uid), str(a_track))
-
-    def save_audio_inputs(self, a_tracks):
-        if not self.suppress_updates:
-            self.save_file("", pydaw_file_pyinput, str(a_tracks))
 
     def save_audio_region(self, a_region_uid, a_tracks):
         if not self.suppress_updates:
@@ -2039,44 +2034,6 @@ class pydaw_audio_item_fx_region:
                     pydaw_modulex_settings(a_knob0, a_knob1, a_knob2, a_type))
             f_result.set_row(f_item_index, f_items_arr)
         return f_result
-
-class pydaw_audio_input_tracks:
-    def add_track(self, a_index, a_track):
-        self.tracks[a_index] = a_track
-
-    def __init__(self):
-        self.tracks = {}
-
-    def __str__(self):
-        f_result = ""
-        for k, v in list(self.tracks.items()):
-            f_result += "{}|{}".format(k, v)
-        f_result += pydaw_terminating_char
-        return f_result
-
-    @staticmethod
-    def from_str(a_str):
-        f_result = pydaw_audio_input_tracks()
-        f_arr = a_str.split("\n")
-        for f_line in f_arr:
-            if f_line == pydaw_terminating_char:
-                break
-            else:
-                f_line_arr = f_line.split("|")
-                f_result.add_track(
-                    int(f_line_arr[0]),
-                    pydaw_audio_input_track(int_to_bool(f_line_arr[1]),
-                    int(f_line_arr[2]), int(f_line_arr[3])))
-        return f_result
-
-class pydaw_audio_input_track:
-    def __init__(self, a_vol=0, a_output=0, a_input="None"):
-        self.input = str(a_input)
-        self.output = int(a_output)
-        self.vol = int(a_vol)
-
-    def __str__(self):
-        return "{}|{}|{}\n".format(self.vol, self.output, self.input)
 
 class pydaw_midi_route:
     def __init__(self, a_on, a_track_num, a_device_name):
