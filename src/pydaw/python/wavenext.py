@@ -204,20 +204,40 @@ class AudioInput:
         self.callback = a_callback
         self.checkbox = QtGui.QCheckBox(str(a_num))
         self.checkbox.clicked.connect(self.update_engine)
-        a_layout.addWidget(self.checkbox, a_num)
+        a_layout.addWidget(self.checkbox, a_num, 0)
+        self.vol_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.vol_slider.setRange(-240, 240)
+        self.vol_slider.setValue(0)
+        self.vol_slider.setMinimumWidth(240)
+        self.vol_slider.valueChanged.connect(self.vol_changed)
+        self.vol_slider.sliderReleased.connect(self.update_engine)
+        a_layout.addWidget(self.vol_slider, a_num, 9)
+        self.vol_label = QtGui.QLabel("0.0dB")
+        self.vol_label.setMinimumWidth(64)
+        a_layout.addWidget(self.vol_label, a_num, 10)
 
     def update_engine(self, a_val=None):
         self.callback()
 
+    def vol_changed(self):
+        self.vol_label.setText("{}dB".format(self.get_vol()))
+
+    def get_vol(self):
+        return round(self.vol_slider.value() * 0.1, 1)
+
     def get_value(self):
-        return 1 if self.checkbox.isChecked() else 0
+        f_on = self.input_num if self.checkbox.isChecked() else None
+        f_vol = self.get_vol()
+        return libmk.mk_project.AudioInputTrack(f_vol, 0, f_on)
 
 
 class AudioInputWidget:
     def __init__(self):
         self.widget = QtGui.QWidget()
-        self.layout = QtGui.QVBoxLayout(self.widget)
-        self.layout.addWidget(QtGui.QLabel(_("Audio Inputs")))
+        self.main_layout = QtGui.QVBoxLayout(self.widget)
+        self.layout = QtGui.QGridLayout()
+        self.main_layout.addWidget(QtGui.QLabel(_("Audio Inputs")))
+        self.main_layout.addLayout(self.layout)
         self.inputs = []
         f_count = 0
         if "audioInputs" in pydaw_util.global_device_val_dict:
@@ -227,7 +247,10 @@ class AudioInputWidget:
             self.inputs.append(f_input)
 
     def callback(self):
-        print([x.get_value() for x in self.inputs])
+        f_result = libmk.mk_project.AudioInputTracks()
+
+    def active(self):
+        return [x.get_value() for x in self.inputs if x.checkbox.isChecked()]
 
 
 class transport_widget(libmk.AbstractTransport):

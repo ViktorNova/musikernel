@@ -1037,7 +1037,7 @@ class pydaw_sample_graph:
             print("\n\nError getting mtime: \n{}\n\n".format(f_ex.message))
             return False
 
-class pydaw_audio_input_tracks:
+class AudioInputTracks:
     def add_track(self, a_index, a_track):
         self.tracks[a_index] = a_track
 
@@ -1053,7 +1053,7 @@ class pydaw_audio_input_tracks:
 
     @staticmethod
     def from_str(a_str):
-        f_result = pydaw_audio_input_tracks()
+        f_result = AudioInputTracks()
         f_arr = a_str.split("\n")
         for f_line in f_arr:
             if f_line == pydaw_terminating_char:
@@ -1062,11 +1062,11 @@ class pydaw_audio_input_tracks:
                 f_line_arr = f_line.split("|")
                 f_result.add_track(
                     int(f_line_arr[0]),
-                    pydaw_audio_input_track(int_to_bool(f_line_arr[1]),
+                    AudioInputTrack(int_to_bool(f_line_arr[1]),
                     int(f_line_arr[2]), int(f_line_arr[3])))
         return f_result
 
-class pydaw_audio_input_track:
+class AudioInputTrack:
     def __init__(self, a_vol=0, a_output=0, a_input="None"):
         self.input = str(a_input)
         self.output = int(a_output)
