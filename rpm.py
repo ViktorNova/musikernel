@@ -73,10 +73,10 @@ Name:           {0}
 Version:        {1}
 
 Release:        1%{{?dist}}
-Summary:        A digital audio workstation with a full suite of instrument and effects plugins.
+Summary:        Digital audio workstations, instrument and effect plugins
 
 License:        GPLv3
-URL:            http://github.com/j3ffhubb/pydaw/
+URL:            http://github.com/j3ffhubb/musikernel/
 Source0:        {2}
 
 Requires:      python3-PyQt4 gcc alsa-lib-devel liblo-devel \
@@ -84,8 +84,7 @@ libsndfile-devel gcc-c++ git python3-numpy python3-scipy \
 fftw-devel portmidi-devel libsamplerate-devel python3-devel vorbis-tools
 
 %description
-PyDAW is a full featured audio and MIDI sequencer with a suite of high quality
-instrument and effects plugins.
+MusiKernel is digital audio workstations (DAWs), instrument and effect plugins
 
 %prep
 %setup -q
