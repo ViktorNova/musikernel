@@ -134,8 +134,6 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
 
     float f_sample_rate = musikernel->thread_storage[0].sample_rate;
 
-    musikernel->input_buffers_active = 0;
-
     long f_size = 0;
     long f_block_size = (musikernel->sample_count);
 
@@ -298,77 +296,69 @@ inline void v_pydaw_run_wave_editor(int sample_count,
         output[1][f_i] = 0.0f;
     }
 
-    if(musikernel->input_buffers_active)
+    for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
     {
-        for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
+        f_ai = &musikernel->audio_inputs[f_i];
+
+        if(f_ai->rec)
         {
-            f_ai = &musikernel->audio_inputs[f_i];
-
-            if(f_ai->rec)
+            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
-                if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+                float f_tmp_samples[2];
+
+                if(((f_ai->buffer_iterator[(f_ai->current_buffer)])
+                        + (sample_count * 2) ) >=
+                        PYDAW_AUDIO_INPUT_REC_BUFFER_SIZE)
                 {
-                    float f_tmp_samples[2];
+                    f_ai->flush_last_buffer_pending = 1;
+                    f_ai->buffer_to_flush = (f_ai->current_buffer);
 
-                    if(((f_ai->buffer_iterator[
-                            (f_ai->current_buffer)])
-                            + (sample_count * 2) ) >=
-                            PYDAW_AUDIO_INPUT_REC_BUFFER_SIZE)
+                    if((f_ai->current_buffer) == 0)
                     {
-                        f_ai->flush_last_buffer_pending = 1;
-                        f_ai->buffer_to_flush =
-                            (f_ai->current_buffer);
-
-                        if((f_ai->current_buffer) == 0)
-                        {
-                            f_ai->current_buffer = 1;
-                        }
-                        else
-                        {
-                            f_ai->current_buffer = 0;
-                        }
+                        f_ai->current_buffer = 1;
                     }
-
-                    int f_current_buffer = (f_ai->current_buffer);
-
-                    for(f_i2 = 0; f_i2 < sample_count; ++f_i2)
+                    else
                     {
-                         f_tmp_samples[0] =
-                            a_input[f_ai->input_port[0]][f_i2]
-                            * (f_ai->vol_linear);
-                         f_tmp_samples[1] =
-                            a_input[f_ai->input_port[1]][f_i2]
-                            * (f_ai->vol_linear);
-
-                        output[0][f_i2] += f_tmp_samples[0];
-                        output[1][f_i2] += f_tmp_samples[1];
-
-                        f_ai->rec_buffers[f_current_buffer][
-                            f_ai->buffer_iterator[f_current_buffer]] =
-                                f_tmp_samples[0];
-                        ++f_ai->buffer_iterator[f_current_buffer];
-
-                        f_ai->rec_buffers[f_current_buffer][
-                            f_ai->buffer_iterator[f_current_buffer]] =
-                                f_tmp_samples[1];
-                        ++f_ai->buffer_iterator[f_current_buffer];
+                        f_ai->current_buffer = 0;
                     }
                 }
-                else
+
+                int f_current_buffer = (f_ai->current_buffer);
+
+                for(f_i2 = 0; f_i2 < sample_count; ++f_i2)
                 {
-                    for(f_i2 = 0; f_i2 < sample_count; ++f_i2)
-                    {
-                        output[0][f_i2] +=
-                            a_input[f_ai->input_port[0]][f_i2]
-                                * (f_ai->vol_linear);
-                        output[1][f_i2] +=
-                            a_input[f_ai->input_port[1]][f_i2]
-                                * (f_ai->vol_linear);
-                    }
+                     f_tmp_samples[0] = a_input[f_ai->input_port[0]][f_i2]
+                        * (f_ai->vol_linear);
+                     f_tmp_samples[1] = a_input[f_ai->input_port[1]][f_i2]
+                        * (f_ai->vol_linear);
+
+                    output[0][f_i2] += f_tmp_samples[0];
+                    output[1][f_i2] += f_tmp_samples[1];
+
+                    f_ai->rec_buffers[f_current_buffer][
+                        f_ai->buffer_iterator[f_current_buffer]] =
+                            f_tmp_samples[0];
+                    ++f_ai->buffer_iterator[f_current_buffer];
+
+                    f_ai->rec_buffers[f_current_buffer][
+                        f_ai->buffer_iterator[f_current_buffer]] =
+                            f_tmp_samples[1];
+                    ++f_ai->buffer_iterator[f_current_buffer];
+                }
+            }
+            else
+            {
+                for(f_i2 = 0; f_i2 < sample_count; ++f_i2)
+                {
+                    output[0][f_i2] += a_input[f_ai->input_port[0]][f_i2] *
+                        (f_ai->vol_linear);
+                    output[1][f_i2] += a_input[f_ai->input_port[1]][f_i2] *
+                        (f_ai->vol_linear);
                 }
             }
         }
     }
+
 
     for(f_i = 0; f_i < sample_count; ++f_i)
     {

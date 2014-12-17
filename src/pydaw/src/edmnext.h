@@ -3013,8 +3013,6 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
 
     float f_sample_rate = musikernel->thread_storage[0].sample_rate;
 
-    musikernel->input_buffers_active = 0;
-
     int f_bar_count = a_end_bar - a_start_bar;
 
     register int f_i = a_start_region;

@@ -161,7 +161,6 @@ typedef struct
     int is_offline_rendering;
     //set from the audio device buffer size every time the main loop is called.
     int sample_count;
-    int input_buffers_active;
     t_wav_pool_item * preview_wav_item;
     t_pydaw_audio_item * preview_audio_item;
     float preview_start; //0.0f to 1.0f
@@ -232,7 +231,6 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     musikernel->samples_folder = (char*)malloc(sizeof(char) * 1024);
     musikernel->wav_pool_file = (char*)malloc(sizeof(char) * 1024);
     musikernel->plugins_folder = (char*)malloc(sizeof(char) * 1024);
-    musikernel->input_buffers_active = 0;
 
     musikernel->preview_wav_item = 0;
     musikernel->preview_audio_item = g_pydaw_audio_item_get(a_sr);

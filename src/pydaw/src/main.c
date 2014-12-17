@@ -148,16 +148,13 @@ inline void v_pydaw_run(float ** buffers, int sample_count)
 {
     pthread_spin_lock(&musikernel->main_lock);
 
-    if(!musikernel->is_offline_rendering)
+    if(likely(!musikernel->is_offline_rendering))
     {
-        musikernel->input_buffers_active = 1;
-
         v_pydaw_run_main_loop(sample_count, buffers, NULL);
     }
     else
     {
         /*Clear the output buffer*/
-        musikernel->input_buffers_active = 0;
         register int f_i = 0;
 
         while(f_i < sample_count)
@@ -724,7 +721,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             continue;
         }
 
-        const PaDeviceInfo * f_device_info = 
+        const PaDeviceInfo * f_device_info =
             Pa_GetDeviceInfo(inputParameters.device);
 
         inputParameters.suggestedLatency =
