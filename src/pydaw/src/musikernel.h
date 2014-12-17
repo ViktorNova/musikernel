@@ -67,6 +67,7 @@ int PYDAW_AUDIO_INPUT_TRACK_COUNT = 0;
 #define MK_CONFIGURE_KEY_ADD_TO_WAV_POOL "wp"
 #define MK_CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD "wr"
 #define MK_CONFIGURE_KEY_LOAD_AB_SET "abs"
+#define MK_CONFIGURE_KEY_AUDIO_IN_VOL "aiv"
 
 #define MK_HOST_EDMNEXT 0
 #define MK_HOST_WAVENEXT 1
@@ -853,6 +854,25 @@ void v_mk_configure(const char* a_key, const char* a_value)
 
         g_free_1d_char_array(f_val_arr);
     }
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_MASTER_VOL))
+    {
+        MASTER_VOL = atof(a_value);
+    }
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_AUDIO_IN_VOL))
+    {
+        t_1d_char_array * f_val_arr = c_split_str(a_value, '|', 2,
+                PYDAW_SMALL_STRING);
+        int f_index = atoi(f_val_arr->array[0]);
+        float f_vol = atof(f_val_arr->array[1]);
+        float f_vol_linear = f_db_to_linear_fast(f_vol);
+
+        g_free_1d_char_array(f_val_arr);
+
+        t_pyaudio_input * f_input = &musikernel->audio_inputs[f_index];
+
+        f_input->vol = f_vol;
+        f_input->vol_linear = f_vol_linear;
+    }
     else if(!strcmp(a_key, MK_CONFIGURE_KEY_KILL_ENGINE))
     {
         pthread_spin_lock(&musikernel->main_lock);
@@ -861,10 +881,6 @@ void v_mk_configure(const char* a_key, const char* a_value)
     else if(!strcmp(a_key, MK_CONFIGURE_KEY_EXIT))
     {
         exiting = 1;
-    }
-    else if(!strcmp(a_key, MK_CONFIGURE_KEY_MASTER_VOL))
-    {
-        MASTER_VOL = atof(a_value);
     }
     else if(!strcmp(a_key, MK_CONFIGURE_KEY_LOAD_CC_MAP))
     {

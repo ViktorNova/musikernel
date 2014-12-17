@@ -88,6 +88,9 @@ class MkIpc(libmk.AbstractIPC):
     def pydaw_reload_wavpool_item(self, a_uid):
         self.send_configure("wr", str(a_uid))
 
+    def audio_input_volume(self, a_index, a_vol):
+        self.send_configure(
+            "aiv", "|".join(str(x) for x in (a_index, a_vol)))
 
 class transport_widget:
     def __init__(self):

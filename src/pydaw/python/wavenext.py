@@ -220,7 +220,9 @@ class AudioInput:
         self.callback()
 
     def vol_changed(self):
-        self.vol_label.setText("{}dB".format(self.get_vol()))
+        f_vol = self.get_vol()
+        self.vol_label.setText("{}dB".format(f_vol))
+        libmk.IPC.audio_input_volume(self.input_num, f_vol)
 
     def get_vol(self):
         return round(self.vol_slider.value() * 0.1, 1)
