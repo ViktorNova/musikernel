@@ -130,7 +130,7 @@ typedef struct
 
 typedef struct
 {
-    void (*run)(int sample_count, float **output, float **a_input_buffers);
+    void (*run)(int sample_count, float **output, float *a_input_buffers);
     void (*osc_send)(t_osc_send_data*);
     void (*audio_inputs)();
 }t_mk_host;

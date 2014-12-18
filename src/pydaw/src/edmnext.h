@@ -1610,7 +1610,7 @@ inline void v_pydaw_finish_time_params(t_edmnext * self,
 }
 
 inline void v_en_run_engine(int sample_count,
-        float **output, float **a_input_buffers)
+        float **output, float *a_input_buffers)
 {
     t_edmnext * self = edmnext;
     //notify the worker threads to wake up

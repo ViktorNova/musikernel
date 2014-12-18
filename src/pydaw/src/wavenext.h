@@ -40,7 +40,7 @@ void v_pydaw_set_ab_mode(int a_mode);
 void v_pydaw_set_we_file(t_wavenext * self, const char * a_file);
 void v_pydaw_set_wave_editor_item(t_wavenext * self, const char * a_string);
 inline void v_pydaw_run_wave_editor(int sample_count,
-    float **output, float ** a_input);
+    float **output, float * a_input);
 
 #ifdef	__cplusplus
 }
@@ -269,7 +269,6 @@ void v_wn_open_project()
 
     sprintf(wavenext->tracks_folder, "%s/tracks", wavenext->project_folder);
     v_wn_open_tracks();
-    v_pydaw_update_audio_inputs(wavenext->project_folder);
 }
 
 void v_pydaw_set_wave_editor_item(t_wavenext * self,
@@ -295,11 +294,12 @@ void v_pydaw_set_wave_editor_item(t_wavenext * self,
 
 
 inline void v_pydaw_run_wave_editor(int sample_count,
-        float **output, float ** a_input)
+        float **output, float * a_input)
 {
     t_wavenext * self = wavenext;
     t_pydaw_plugin * f_plugin;
     t_pyaudio_input * f_ai;
+    float f_tmp_sample;
 
     int f_global_track_num = 0;
     t_pytrack * f_track = self->track_pool[f_global_track_num];
@@ -317,10 +317,10 @@ inline void v_pydaw_run_wave_editor(int sample_count,
 
         if(f_ai->rec)
         {
+            int f_buffer_pos = f_i;
+
             if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
-                float f_tmp_samples[2];
-
                 if(((f_ai->buffer_iterator[(f_ai->current_buffer)])
                         + (sample_count * 2) ) >=
                         PYDAW_AUDIO_INPUT_REC_BUFFER_SIZE)
@@ -342,33 +342,28 @@ inline void v_pydaw_run_wave_editor(int sample_count,
 
                 for(f_i2 = 0; f_i2 < sample_count; ++f_i2)
                 {
-                     f_tmp_samples[0] = a_input[f_ai->input_port[0]][f_i2]
-                        * (f_ai->vol_linear);
-                     f_tmp_samples[1] = a_input[f_ai->input_port[1]][f_i2]
-                        * (f_ai->vol_linear);
+                    f_tmp_sample = a_input[f_buffer_pos] * (f_ai->vol_linear);
 
-                    output[0][f_i2] += f_tmp_samples[0];
-                    output[1][f_i2] += f_tmp_samples[1];
+                    output[0][f_i2] += f_tmp_sample;
+                    output[1][f_i2] += f_tmp_sample;
 
                     f_ai->rec_buffers[f_current_buffer][
-                        f_ai->buffer_iterator[f_current_buffer]] =
-                            f_tmp_samples[0];
+                        f_ai->buffer_iterator[f_current_buffer]] = f_tmp_sample;
                     ++f_ai->buffer_iterator[f_current_buffer];
 
-                    f_ai->rec_buffers[f_current_buffer][
-                        f_ai->buffer_iterator[f_current_buffer]] =
-                            f_tmp_samples[1];
-                    ++f_ai->buffer_iterator[f_current_buffer];
+                    f_buffer_pos += PYDAW_AUDIO_INPUT_TRACK_COUNT;
                 }
             }
             else
             {
                 for(f_i2 = 0; f_i2 < sample_count; ++f_i2)
                 {
-                    output[0][f_i2] += a_input[f_ai->input_port[0]][f_i2] *
-                        (f_ai->vol_linear);
-                    output[1][f_i2] += a_input[f_ai->input_port[1]][f_i2] *
-                        (f_ai->vol_linear);
+                    f_tmp_sample = a_input[f_buffer_pos] * (f_ai->vol_linear);
+
+                    output[0][f_i2] += f_tmp_sample;
+                    output[1][f_i2] += f_tmp_sample;
+
+                    f_buffer_pos += PYDAW_AUDIO_INPUT_TRACK_COUNT;
                 }
             }
         }

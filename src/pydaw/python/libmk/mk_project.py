@@ -1067,10 +1067,11 @@ class AudioInputTracks:
         return f_result
 
 class AudioInputTrack:
-    def __init__(self, a_vol=0, a_output=0, a_input="None"):
-        self.input = str(a_input)
+    def __init__(self, a_rec=0, a_vol=0, a_output=0):
+        self.rec = int(a_rec)
         self.output = int(a_output)
-        self.vol = int(a_vol)
+        self.vol = float(a_vol)
 
     def __str__(self):
-        return "{}|{}|{}\n".format(self.vol, self.output, self.input)
+        return "{}\n".format("|".join(
+            str(x) for x in (self.rec, self.vol, self.output)))

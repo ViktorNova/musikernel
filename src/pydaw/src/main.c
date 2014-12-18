@@ -86,7 +86,7 @@ int osc_debug_handler(const char *path, const char *types, lo_arg **argv, int
 		      argc, void *data, void *user_data) ;
 
 inline void v_pydaw_run_main_loop(int sample_count,
-        float **output, float **a_input_buffers);
+        float **output, float *a_input_buffers);
 
 void signalHandler(int sig)
 {
@@ -144,13 +144,13 @@ static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
     }
 }
 
-inline void v_pydaw_run(float ** buffers, int sample_count)
+inline void v_pydaw_run(float ** buffers, float * a_input, int sample_count)
 {
     pthread_spin_lock(&musikernel->main_lock);
 
     if(likely(!musikernel->is_offline_rendering))
     {
-        v_pydaw_run_main_loop(sample_count, buffers, NULL);
+        v_pydaw_run_main_loop(sample_count, buffers, a_input);
     }
     else
     {
@@ -169,7 +169,7 @@ inline void v_pydaw_run(float ** buffers, int sample_count)
 }
 
 inline void v_pydaw_run_main_loop(int sample_count,
-        float ** a_buffers, PYFX_Data **a_input_buffers)
+        float ** a_buffers, PYFX_Data *a_input_buffers)
 {
     musikernel->current_host->run(sample_count, a_buffers, a_input_buffers);
 
@@ -261,6 +261,7 @@ static int portaudioCallback(
         PaStreamCallbackFlags statusFlags, void *userData)
 {
     float *out = (float*)outputBuffer;
+    float *in = (float*)inputBuffer;
 
     if(unlikely(framesPerBuffer > FRAMES_PER_BUFFER))
     {
@@ -270,7 +271,7 @@ static int portaudioCallback(
         framesPerBuffer = FRAMES_PER_BUFFER;
     }
 
-    (void)inputBuffer; //Prevent unused variable warning.
+
 
     // Try one time to set thread affinity
     if(unlikely(THREAD_AFFINITY && !THREAD_AFFINITY_SET))
@@ -279,7 +280,7 @@ static int portaudioCallback(
         THREAD_AFFINITY_SET = 1;
     }
 
-    v_pydaw_run(pluginOutputBuffers, framesPerBuffer);
+    v_pydaw_run(pluginOutputBuffers, in, framesPerBuffer);
 
     register int f_i;
 

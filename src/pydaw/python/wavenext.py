@@ -232,9 +232,9 @@ class AudioInput:
         return round(self.vol_slider.value() * 0.1, 1)
 
     def get_value(self):
-        f_on = self.input_num if self.checkbox.isChecked() else None
+        f_on = 1 if self.checkbox.isChecked() else 0
         f_vol = self.get_vol()
-        return libmk.mk_project.AudioInputTrack(f_vol, 0, f_on)
+        return libmk.mk_project.AudioInputTrack(f_on, f_vol, 0)
 
 
 class AudioInputWidget:
