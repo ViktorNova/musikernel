@@ -70,6 +70,11 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
     {
         case 0: //stop
         {
+            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            {
+                v_stop_record_audio();
+            }
+
             if(a_lock)
             {
                 pthread_spin_lock(&musikernel->main_lock);
@@ -114,6 +119,7 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
             {
                 return;
             }
+
             if(a_lock)
             {
                 pthread_spin_lock(&musikernel->main_lock);
@@ -125,6 +131,9 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
             {
                 pthread_spin_unlock(&musikernel->main_lock);
             }
+            break;
+        default:
+            assert(0);
             break;
     }
 }
@@ -260,6 +269,7 @@ void v_wn_open_project()
 
     sprintf(wavenext->tracks_folder, "%s/tracks", wavenext->project_folder);
     v_wn_open_tracks();
+    v_pydaw_update_audio_inputs(wavenext->project_folder);
 }
 
 void v_pydaw_set_wave_editor_item(t_wavenext * self,

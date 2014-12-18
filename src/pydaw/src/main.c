@@ -640,6 +640,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
                     printf("audioInputs: %s\n", f_value_char);
                     assert(f_audio_input_count >= 0 &&
                         f_audio_input_count <= 128);
+                    PYDAW_AUDIO_INPUT_TRACK_COUNT = f_audio_input_count;
                 }
                 else
                 {

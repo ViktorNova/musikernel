@@ -276,7 +276,26 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     }
 }
 
-void v_pydaw_set_control_from_atm( t_pydaw_seq_event *event,
+void v_stop_record_audio()
+{
+    int f_i;
+    t_pyaudio_input * f_ai;
+
+    pthread_mutex_lock(&musikernel->audio_inputs_mutex);
+
+    for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
+    {
+        f_ai = &musikernel->audio_inputs[f_i];
+        if(f_ai->rec)
+        {
+            f_ai->recording_stopped = 1;
+        }
+    }
+
+    pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
+}
+
+void v_pydaw_set_control_from_atm(t_pydaw_seq_event *event,
         int a_plugin_uid, t_pytrack * f_track)
 {
     if(!musikernel->is_offline_rendering)
@@ -630,7 +649,7 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
 
         if(!f_flushed_buffer || !f_did_something)
         {
-            usleep(10000);
+            usleep(100000);
         }
     }
 

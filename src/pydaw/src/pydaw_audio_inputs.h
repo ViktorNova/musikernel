@@ -54,7 +54,7 @@ void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr, int a_ch)
     f_result->sf_info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
     f_result->sf_info.samplerate = (int)(a_sr);
 
-    f_result->sndfile = 0;
+    f_result->sndfile = NULL;
 
     f_result->rec = 0;
     f_result->current_buffer = 0;
