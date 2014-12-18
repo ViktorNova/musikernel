@@ -371,7 +371,20 @@ class transport_widget(libmk.AbstractTransport):
                         MAIN_WINDOW, _("Error"),
                         _("Invalid char '{}'".format(x)))
                     return
-
+            if not f_txt.endswith(".wav"):
+                f_txt += ".wav"
+            for f_i, f_ai in zip(
+            range(len(self.audio_inputs.inputs)), self.audio_inputs.inputs):
+                f_val = f_ai.get_value()
+                if f_val.rec:
+                    f_path = os.path.join(
+                        libmk.PROJECT.audio_tmp_folder, str(f_i), ".wav")
+                    if os.path.isfile(f_path):
+                        f_new_path = os.path.join(
+                            libmk.PROJECT.user_folder, str(f_i), "-", f_txt)
+                        shutil.move(f_path, f_new_path)
+                    else:
+                        print("Error, path did not exist: {}".format(f_path))
             f_window.close()
 
         def on_cancel():
