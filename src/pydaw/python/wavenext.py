@@ -378,10 +378,11 @@ class transport_widget(libmk.AbstractTransport):
                 f_val = f_ai.get_value()
                 if f_val.rec:
                     f_path = os.path.join(
-                        libmk.PROJECT.audio_tmp_folder, str(f_i), ".wav")
+                        libmk.PROJECT.audio_tmp_folder, "{}.wav".format(f_i))
                     if os.path.isfile(f_path):
                         f_new_path = os.path.join(
-                            libmk.PROJECT.user_folder, str(f_i), "-", f_txt)
+                            libmk.PROJECT.user_folder,
+                            "{}-{}".format(f_i, f_txt))
                         shutil.move(f_path, f_new_path)
                     else:
                         print("Error, path did not exist: {}".format(f_path))
