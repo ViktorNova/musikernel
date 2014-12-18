@@ -15,7 +15,7 @@ GNU General Public License for more details.
 import os
 import sys
 
-python_version = "".join(str(x) for x in sys.version_info[:2])
+PYTHON_VERSION = "".join(str(x) for x in sys.version_info[:2])
 
 orig_wd = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,44 +23,30 @@ os.chdir(orig_wd)
 os.system("./src.sh")
 
 with open("src/major-version.txt") as f_file:
-    global_pydaw_version_string = f_file.read().strip()
+    MAJOR_VERSION = f_file.read().strip()
 
 with open("src/minor-version.txt") as f_file:
-    global_pydaw_version_num = f_file.read().strip()
+    MINOR_VERSION = f_file.read().strip()
 
-global_version_fedora = global_pydaw_version_num.replace("-", ".")
-global_pydaw_package_name = "{}-{}".format(
-    global_pydaw_version_string, global_version_fedora)
+global_version_fedora = MINOR_VERSION.replace("-", ".")
+PACKAGE_NAME = "{}-{}".format(
+    MAJOR_VERSION, global_version_fedora)
 
 global_home = os.path.expanduser("~")
 
 if not os.path.isdir("{}/rpmbuild".format(global_home)):
     os.system("rpmdev-setuptree")
 
-global_specs_dir = "{}/rpmbuild/SPECS/".format(global_home)
-global_sources_dir = "{}/rpmbuild/SOURCES/".format(global_home)
+SPEC_DIR = "{}/rpmbuild/SPECS/".format(global_home)
+SOURCE_DIR = "{}/rpmbuild/SOURCES/".format(global_home)
 
-global_tarball_name = "{}.tar.gz".format(global_pydaw_package_name)
-global_tarball_url = ("https://github.com/j3ffhubb/pydaw/archive"
-    "/{}".format(global_tarball_name))
+TARBALL_NAME = "{}.tar.gz".format(PACKAGE_NAME)
+TARBALL_URL = ("https://github.com/j3ffhubb/musikernel/archive"
+    "/{}".format(TARBALL_NAME))
 
-os.system('cp "{}" "{}"'.format(global_tarball_name, global_sources_dir))
+os.system('cp "{}" "{}"'.format(TARBALL_NAME, SOURCE_DIR))
 
-global_spec_file = "{}.spec".format(global_pydaw_version_string,)
-
-global_rpmmacros_file = open("{}/.rpmmacros".format(global_home), "r")
-global_macro_text = global_rpmmacros_file.read()
-
-# Creating separate debug packages screw up the inclusion of both debug,
-# non-debug and setuid binaries, so we need to force rpmbuild not to strip
-if not "%debug_package %{nil}" in global_macro_text:
-    global_rpmmacros_file.close()
-    global_rpmmacros_file = open("{}/.rpmmacros".format(global_home), "a")
-    global_rpmmacros_file.write("\n%debug_package %{nil}\n")
-else:
-    global_macro_text = None
-
-global_rpmmacros_file.close()
+global_spec_file = "{}.spec".format(MAJOR_VERSION,)
 
 if "--native" in sys.argv:
     f_native = "native"
@@ -301,32 +287,28 @@ rm -rf $RPM_BUILD_ROOT
 
 %doc
 
-""".format(global_pydaw_version_string, global_version_fedora,
-    global_tarball_url, f_native, python_version)
+""".format(MAJOR_VERSION, global_version_fedora,
+    TARBALL_URL, f_native, PYTHON_VERSION)
 
 f_spec_file = open(global_spec_file, "w")
 f_spec_file.write(f_spec_template)
 f_spec_file.close()
 
-os.system('cp "{}" "{}"'.format(global_spec_file, global_specs_dir))
+os.system('cp "{}" "{}"'.format(global_spec_file, SPEC_DIR))
 
-os.chdir(global_specs_dir)
+os.chdir(SPEC_DIR)
 os.system("rpmbuild -ba {}".format(global_spec_file))
 
-#Restore the ~/.rpmmacros file to it's original state.
-if global_macro_text is not None:
-    with  open("{}/.rpmmacros".format(global_home),
-    "w") as global_rpmmacros_file:
-        global_rpmmacros_file.write(global_macro_text)
 
-pkg_name = "{}-{}*rpm".format(
-    global_pydaw_version_string, global_pydaw_version_num)
+pkg_name = "{}-*{}*rpm".format(
+    MAJOR_VERSION, MINOR_VERSION)
 
 cp_cmd = "cp ~/rpmbuild/RPMS/*/{} '{}'".format(pkg_name, orig_wd)
 print(cp_cmd)
 os.system(cp_cmd)
 
 if "--install" in sys.argv or "-i" in sys.argv:
-    os.system("sudo rpm -e {}".format(global_pydaw_version_string))
+    os.system("sudo rpm -e {0}".format(MAJOR_VERSION))
+    os.system("sudo rpm -e {0}-debuginfo".format(MAJOR_VERSION))
     os.system("sudo rpm -ivh {}/{}".format(orig_wd, pkg_name))
 
