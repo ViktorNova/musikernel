@@ -108,6 +108,8 @@ class WaveNextProject(libmk.AbstractProject):
             self.project_folder, pydaw_file_notes)
         self.pywebm_file = "{}/{}".format(
             self.project_folder, pydaw_file_wave_editor_bookmarks)
+        self.audio_inputs_file = os.path.join(
+            self.project_folder, pydaw_file_pyinput)
 
         self.project_folders = [
             self.project_folder, self.wn_track_pool_folder,]
@@ -169,6 +171,15 @@ class WaveNextProject(libmk.AbstractProject):
             self.save_file("", pydaw_file_pyinput, str(a_tracks))
             self.wn_osc.save_audio_inputs()
 
+    def get_audio_inputs(self):
+        if os.path.isfile(self.audio_inputs_file):
+            with open(self.audio_inputs_file) as f_file:
+                f_str = f_file.read()
+            return libmk.mk_project.AudioInputTracks.from_str(f_str)
+        else:
+            return libmk.mk_project.AudioInputTracks()
+
+
 def normalize_dialog():
     def on_ok():
         f_window.f_result = f_db_spinbox.value()
@@ -219,14 +230,17 @@ class AudioInput:
         self.vol_label = QtGui.QLabel("0.0dB")
         self.vol_label.setMinimumWidth(64)
         a_layout.addWidget(self.vol_label, a_num, 10)
+        self.suppress_updates = False
 
     def update_engine(self, a_val=None):
-        self.callback()
+        if not self.suppress_updates:
+            self.callback()
 
     def vol_changed(self):
         f_vol = self.get_vol()
         self.vol_label.setText("{}dB".format(f_vol))
-        libmk.IPC.audio_input_volume(self.input_num, f_vol)
+        if not self.suppress_updates:
+            libmk.IPC.audio_input_volume(self.input_num, f_vol)
 
     def get_vol(self):
         return round(self.vol_slider.value() * 0.1, 1)
@@ -235,6 +249,13 @@ class AudioInput:
         f_on = 1 if self.checkbox.isChecked() else 0
         f_vol = self.get_vol()
         return libmk.mk_project.AudioInputTrack(f_on, f_vol, 0)
+
+    def set_value(self, a_val):
+        self.suppress_updates = True
+        f_rec = True if a_val.rec else False
+        self.checkbox.setChecked(f_rec)
+        self.vol_slider.setValue(int(a_val.vol * 10.0))
+        self.suppress_updates = False
 
 
 class AudioInputWidget:
@@ -261,6 +282,12 @@ class AudioInputWidget:
     def active(self):
         return [x.get_value() for x in self.inputs
             if x.checkbox.isChecked()]
+
+    def open_project(self):
+        f_audio_inputs = PROJECT.get_audio_inputs()
+        for k, v in f_audio_inputs.tracks.items():
+            if k < len(self.inputs):
+                self.inputs[k].set_value(v)
 
 
 class transport_widget(libmk.AbstractTransport):
@@ -296,6 +323,9 @@ class transport_widget(libmk.AbstractTransport):
             QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
 
         self.suppress_osc = False
+
+    def open_project(self):
+        self.audio_inputs.open_project()
 
     def on_panic(self):
         pass
@@ -1234,6 +1264,7 @@ def global_open_project(a_project_file):
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText(PROJECT.get_notes())
     WAVE_EDITOR.open_project()
+    TRANSPORT.open_project()
 
 
 def global_new_project(a_project_file):

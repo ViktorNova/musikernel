@@ -1061,13 +1061,11 @@ class AudioInputTracks:
             else:
                 f_line_arr = f_line.split("|")
                 f_result.add_track(
-                    int(f_line_arr[0]),
-                    AudioInputTrack(int_to_bool(f_line_arr[1]),
-                    int(f_line_arr[2]), int(f_line_arr[3])))
+                    int(f_line_arr[0]), AudioInputTrack(*f_line_arr[1:]))
         return f_result
 
 class AudioInputTrack:
-    def __init__(self, a_rec=0, a_vol=0, a_output=0):
+    def __init__(self, a_rec=0, a_vol=0.0, a_output=0):
         self.rec = int(a_rec)
         self.output = int(a_output)
         self.vol = float(a_vol)
