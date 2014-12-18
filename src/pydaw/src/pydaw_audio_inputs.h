@@ -29,7 +29,7 @@ extern "C" {
 typedef struct
 {
     int rec;
-    int stereo_mode;  // 0 == stereo, 1 == mono
+    int channels;
     int output_track;
     int input_port[2];
     float vol, vol_linear;
@@ -50,6 +50,7 @@ void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr, int a_ch)
 {
     assert(a_ch >= 1 && a_ch <= 2);
 
+    f_result->channels = a_ch;
     f_result->sf_info.channels = a_ch;
     f_result->sf_info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
     f_result->sf_info.samplerate = (int)(a_sr);

@@ -588,11 +588,13 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                 {
                     f_did_something = 1;
                     printf("Flushing record buffer of %i frames\n",
-                        ((f_ai->buffer_iterator[(f_ai->buffer_to_flush)]) / 2));
+                        ((f_ai->buffer_iterator[(f_ai->buffer_to_flush)])
+                        / f_ai->channels));
 
                     sf_writef_float(f_ai->sndfile,
                         f_ai->rec_buffers[f_ai->buffer_to_flush],
-                        ((f_ai->buffer_iterator[f_ai->buffer_to_flush]) / 2));
+                        ((f_ai->buffer_iterator[f_ai->buffer_to_flush])
+                        / f_ai->channels));
 
                     f_ai->flush_last_buffer_pending = 0;
                     f_ai->buffer_iterator[f_ai->buffer_to_flush] = 0;
@@ -609,11 +611,12 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                     f_did_something = 1;
                     sf_writef_float(f_ai->sndfile,
                         f_ai->rec_buffers[(f_ai->current_buffer)],
-                        ((f_ai->buffer_iterator[(f_ai->current_buffer)]) / 2));
+                        ((f_ai->buffer_iterator[(f_ai->current_buffer)])
+                        / f_ai->channels));
 
                     sf_close(f_ai->sndfile);
                     f_ai->recording_stopped = 0;
-                    f_ai->sndfile = 0;
+                    f_ai->sndfile = NULL;
                 }
             }
 
