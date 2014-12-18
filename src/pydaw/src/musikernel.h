@@ -563,12 +563,12 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
     char f_file_name[1024];
 
     t_pyaudio_input * f_ai;
+    int f_i;
 
     sleep(3);
 
     while(1)
     {
-        int f_flushed_buffer = 0;
         int f_did_something = 0;
 
         if(musikernel->audio_recording_quit_notifier)
@@ -581,14 +581,12 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
 
         if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
         {
-            int f_i = 0;
-
-            while(f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT)
+            for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
             {
                 f_ai = &musikernel->audio_inputs[f_i];
                 if((f_ai->rec) && (f_ai->flush_last_buffer_pending))
                 {
-                    f_flushed_buffer = 1;
+                    f_did_something = 1;
                     printf("Flushing record buffer of %i frames\n",
                         ((f_ai->buffer_iterator[(f_ai->buffer_to_flush)]) / 2));
 
@@ -599,14 +597,10 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                     f_ai->flush_last_buffer_pending = 0;
                     f_ai->buffer_iterator[f_ai->buffer_to_flush] = 0;
                 }
-
-                ++f_i;
             }
         }
         else
         {
-            int f_i;
-
             for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
             {
                 f_ai = &musikernel->audio_inputs[f_i];
@@ -642,12 +636,11 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                     }
                 }
             }
-
         }
 
         pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
 
-        if(!f_flushed_buffer || !f_did_something)
+        if(!f_did_something)
         {
             usleep(100000);
         }
@@ -660,6 +653,8 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
 void v_pydaw_update_audio_inputs(char * a_project_folder)
 {
     char f_inputs_file[2048];
+    char f_tmp_file_name[2048];
+
     t_pyaudio_input * f_ai;
     sprintf(f_inputs_file, "%s/input.txt", a_project_folder);
 
@@ -699,8 +694,6 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
 
             f_ai->vol = f_vol;
             f_ai->vol_linear = f_db_to_linear_fast(f_vol);
-
-            char f_tmp_file_name[2048];
 
             sprintf(f_tmp_file_name, "%s%i.wav",
                 musikernel->audio_tmp_folder, f_index);
