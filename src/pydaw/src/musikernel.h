@@ -685,6 +685,9 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
             int f_rec = atoi(f_2d_array->current_str);
 
             v_iterate_2d_char_array(f_2d_array);
+            int f_monitor = atoi(f_2d_array->current_str);
+
+            v_iterate_2d_char_array(f_2d_array);
             int f_vol = atoi(f_2d_array->current_str);
 
             v_iterate_2d_char_array(f_2d_array);
@@ -692,6 +695,7 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
 
             f_ai = &musikernel->audio_inputs[f_index];
             f_ai->rec = f_rec;
+            f_ai->monitor = f_monitor;
             f_ai->output_track = f_out;
 
             f_ai->vol = f_vol;

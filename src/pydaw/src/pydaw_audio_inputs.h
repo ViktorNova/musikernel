@@ -29,6 +29,7 @@ extern "C" {
 typedef struct
 {
     int rec;
+    int monitor;
     int channels;
     int output_track;
     int input_port[2];
@@ -58,6 +59,7 @@ void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr, int a_ch)
     f_result->sndfile = NULL;
 
     f_result->rec = 0;
+    f_result->monitor = 0;
     f_result->current_buffer = 0;
     f_result->buffer_to_flush = 0;
     f_result->flush_last_buffer_pending = 0;

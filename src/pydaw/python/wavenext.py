@@ -217,9 +217,14 @@ class AudioInput:
     def __init__(self, a_num, a_layout, a_callback):
         self.input_num = int(a_num)
         self.callback = a_callback
-        self.checkbox = QtGui.QCheckBox(str(a_num))
-        self.checkbox.clicked.connect(self.update_engine)
-        a_layout.addWidget(self.checkbox, a_num, 0)
+        self.rec_checkbox = QtGui.QCheckBox(str(a_num))
+        self.rec_checkbox.clicked.connect(self.update_engine)
+        a_layout.addWidget(self.rec_checkbox, a_num, 0)
+
+        self.monitor_checkbox = QtGui.QCheckBox(_("Monitor"))
+        self.monitor_checkbox.clicked.connect(self.update_engine)
+        a_layout.addWidget(self.monitor_checkbox, a_num, 1)
+
         self.vol_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.vol_slider.setRange(-240, 240)
         self.vol_slider.setValue(0)
@@ -246,14 +251,17 @@ class AudioInput:
         return round(self.vol_slider.value() * 0.1, 1)
 
     def get_value(self):
-        f_on = 1 if self.checkbox.isChecked() else 0
+        f_on = 1 if self.rec_checkbox.isChecked() else 0
         f_vol = self.get_vol()
-        return libmk.mk_project.AudioInputTrack(f_on, f_vol, 0)
+        f_monitor = 1 if self.monitor_checkbox.isChecked() else 0
+        return libmk.mk_project.AudioInputTrack(f_on, f_monitor, f_vol, 0)
 
     def set_value(self, a_val):
         self.suppress_updates = True
         f_rec = True if a_val.rec else False
-        self.checkbox.setChecked(f_rec)
+        f_monitor = True if a_val.monitor else False
+        self.rec_checkbox.setChecked(f_rec)
+        self.monitor_checkbox.setChecked(f_monitor)
         self.vol_slider.setValue(int(a_val.vol * 10.0))
         self.suppress_updates = False
 
@@ -281,7 +289,7 @@ class AudioInputWidget:
 
     def active(self):
         return [x.get_value() for x in self.inputs
-            if x.checkbox.isChecked()]
+            if x.rec_checkbox.isChecked()]
 
     def open_project(self):
         f_audio_inputs = PROJECT.get_audio_inputs()
