@@ -101,6 +101,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/musikernel.py
 %attr(755, root, root) /usr/lib/{0}/rubberband/bin/rubberband
 %attr(755, root, root) /usr/lib/{0}/sbsms/bin/sbsms
+%attr(755, root, root) /usr/lib/{0}/pydaw/python/libpydaw/project_recover.py
 
 /usr/lib/{0}/pydaw/python/edmnext.py
 /usr/lib/{0}/presets/MODULEX.mkp
@@ -112,7 +113,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/midicomp
 /usr/lib/{0}/pydaw/python/libpydaw/portaudio.py
 /usr/lib/{0}/pydaw/python/libpydaw/portmidi.py
-/usr/lib/{0}/pydaw/python/libpydaw/project_recover.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.py
 /usr/lib/{0}/pydaw/python/libedmnext/en_gradients.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_history.py
