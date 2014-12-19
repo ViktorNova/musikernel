@@ -293,6 +293,7 @@ class AudioInputWidget:
 class transport_widget(libmk.AbstractTransport):
     def __init__(self):
         self.suppress_osc = True
+        self.copy_path_to_clipboard = True
         self.start_region = 0
         self.last_bar = 0
         self.last_open_dir = global_home
@@ -389,6 +390,10 @@ class transport_widget(libmk.AbstractTransport):
                         shutil.move(f_path, f_new_path)
                     else:
                         print("Error, path did not exist: {}".format(f_path))
+            self.copy_path_to_clipboard = f_copy_path_checkbox.isChecked()
+            if self.copy_path_to_clipboard:
+                f_clipboard = libmk.APP.clipboard()
+                f_clipboard.setText(libmk.PROJECT.user_folder)
             f_window.close()
 
         def on_cancel():
@@ -404,6 +409,11 @@ class transport_widget(libmk.AbstractTransport):
         f_hlayout.addWidget(QtGui.QLabel("Name"))
         f_name_lineedit = QtGui.QLineEdit()
         f_hlayout.addWidget(f_name_lineedit)
+        f_copy_path_checkbox = QtGui.QRadioButton(
+            _("Copy directory to clipboard?"))
+        f_layout.addWidget(f_copy_path_checkbox)
+        if self.copy_path_to_clipboard:
+            f_copy_path_checkbox.setChecked(True)
         f_ok_button = QtGui.QPushButton(_("OK"))
         f_ok_cancel_layout = QtGui.QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout)
