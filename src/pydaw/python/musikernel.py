@@ -799,8 +799,12 @@ class MkMainWindow(QtGui.QMainWindow):
         close_pydaw_engine()
         time.sleep(2.0)
         f_dialog = pydaw_device_dialog.pydaw_device_dialog(True)
-        f_dialog.show_device_dialog(a_notify=True)
-        open_pydaw_engine(PROJECT_FILE)
+        f_dialog.show_device_dialog()
+        # Doesn't re-send the 'ready' message?
+        #open_pydaw_engine(PROJECT_FILE)
+        global RESPAWN
+        RESPAWN = True
+        self.prepare_to_quit()
 
     def on_kill_engine(self):
         libmk.IPC.pydaw_kill_engine()

@@ -198,8 +198,7 @@ class pydaw_device_dialog:
                     a_exit_on_cancel=True)
 
 
-    def show_device_dialog(
-            self, a_msg=None, a_notify=False, a_exit_on_cancel=False):
+    def show_device_dialog(self, a_msg=None, a_exit_on_cancel=False):
         self.dialog_result = False
         self.open_devices()
         if self.is_running:
