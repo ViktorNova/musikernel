@@ -593,14 +593,30 @@ class MkMainWindow(QtGui.QMainWindow):
 
     def subprocess_monitor(self):
         try:
-            if PYDAW_SUBPROCESS.poll() != None:
+            if PYDAW_SUBPROCESS and PYDAW_SUBPROCESS.poll() != None:
                 self.subprocess_timer.stop()
                 exitCode = PYDAW_SUBPROCESS.returncode
-                if exitCode != 0:
+                if exitCode == 0:
+                    pass
+                elif exitCode == 1000:
+                    QtGui.QMessageBox.warning(
+                        self, _("Error"),
+                        _("Audio device not found"))
+                elif exitCode == 1001:
+                    QtGui.QMessageBox.warning(
+                        self, _("Error"),
+                        _("Device config not found"))
+                elif exitCode == 1002:
+                    QtGui.QMessageBox.warning(
+                        self, _("Error"),
+                        _("Unknown error opening audio device"))
+                else:
                     QtGui.QMessageBox.warning(
                         self, _("Error"),
                         _("The audio engine died with error code {}, "
                         "please try restarting MusiKernel").format(exitCode))
+                if exitCode >= 1000 and exitCode <= 1002:
+                    self.on_change_audio_settings()
         except Exception as ex:
             print("subprocess_monitor: {}".format(ex))
 
@@ -780,12 +796,11 @@ class MkMainWindow(QtGui.QMainWindow):
             event.accept()
 
     def on_change_audio_settings(self):
+        close_pydaw_engine()
+        time.sleep(2.0)
         f_dialog = pydaw_device_dialog.pydaw_device_dialog(True)
         f_dialog.show_device_dialog(a_notify=True)
-        if f_dialog.dialog_result:
-            global RESPAWN
-            RESPAWN = True
-            self.prepare_to_quit()
+        open_pydaw_engine(PROJECT_FILE)
 
     def on_kill_engine(self):
         libmk.IPC.pydaw_kill_engine()
@@ -1293,8 +1308,12 @@ def global_ui_refresh_callback(a_restore_all=False):
     for f_module in MAIN_WINDOW.host_modules:
         f_module.global_ui_refresh_callback(a_restore_all)
 
+PROJECT_FILE = None
+
 #Opens or creates a new project
 def global_open_project(a_project_file, a_wait=True):
+    global PROJECT_FILE
+    PROJECT_FILE = a_project_file
     open_pydaw_engine(a_project_file)
     libmk.PROJECT = mk_project.MkProject()
     libmk.PROJECT.suppress_updates = True
@@ -1306,6 +1325,8 @@ def global_open_project(a_project_file, a_wait=True):
         f_module.global_open_project(a_project_file)
 
 def global_new_project(a_project_file, a_wait=True):
+    global PROJECT_FILE
+    PROJECT_FILE = a_project_file
     open_pydaw_engine(a_project_file)
     libmk.PROJECT = mk_project.MkProject()
     libmk.PROJECT.new_project(a_project_file)

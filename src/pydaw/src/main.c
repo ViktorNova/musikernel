@@ -67,6 +67,10 @@ GNU General Public License for more details.
 #define PA_SAMPLE_TYPE paFloat32
 #define DEFAULT_FRAMES_PER_BUFFER 512
 
+#define RET_CODE_DEVICE_NOT_FOUND 1000
+#define RET_CODE_CONFIG_NOT_FOUND 1001
+#define RET_CODE_AUDIO_DEVICE_ERROR 1002
+
 static float **pluginOutputBuffers;
 
 
@@ -355,9 +359,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     int f_performance = 0;
     int j;
 
-    //Stop trying to load the soundcard after 3 failed attempts
-    int f_failure_count = 0;
-
     pthread_attr_t f_ui_threadAttr;
     struct sched_param param;
     param.__sched_priority = 1; //90;
@@ -488,14 +489,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     sprintf(f_device_file_path, "%s/%s/config/device.txt",
         f_home, PYDAW_VERSION);
 
-    char f_show_dialog_cmd[1024];
-
-    sprintf(f_show_dialog_cmd,
-        "python3 \"%s/lib/%s/pydaw/python/libpydaw/pydaw_device_dialog.py\"",
-            argv[1], PYDAW_VERSION);
-
-    char f_cmd_buffer[10000];
-    f_cmd_buffer[0] = '\0';
     char f_device_name[1024];
     f_device_name[0] = '\0';
 
@@ -516,12 +509,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
     while(1)
     {
-        if(f_failure_count > 4)
-        {
-            printf("Failed to load device 3 times, quitting...\n");
-            exit(9996);
-        }
-
         if(i_pydaw_file_exists(f_device_file_path))
         {
             printf("device.txt exists\n");
@@ -655,22 +642,8 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         }
         else
         {
-            ++f_failure_count;
-            printf("%s does not exist, running %s\n",
-                f_device_file_path, f_show_dialog_cmd);
-            f_device_name[0] = '\0';
-            system(f_show_dialog_cmd);
-
-            if(i_pydaw_file_exists(f_device_file_path))
-            {
-                continue;
-            }
-            else
-            {
-                printf("It appears that the user closed the audio device "
-                        "dialog without choosing a device, exiting.");
-                exit(9998);
-            }
+            printf("Device config not found\n");
+            exit(RET_CODE_CONFIG_NOT_FOUND);
 
         }
 
@@ -699,12 +672,8 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
         if(!f_found_index)
         {
-            sprintf(f_cmd_buffer,
-                "%s \"Did not find device '%s' on this system.\"",
-                f_show_dialog_cmd, f_device_name);
-            system(f_cmd_buffer);
-            ++f_failure_count;
-            continue;
+            printf("Device not found\n");
+            exit(RET_CODE_DEVICE_NOT_FOUND);
         }
 
         const PaDeviceInfo * f_device_info =
@@ -735,11 +704,9 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
             if(err != paNoError)
             {
-                ++f_failure_count;
-                sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
-                    "Error while opening audio device: ", Pa_GetErrorText(err));
-                system(f_cmd_buffer);
-                continue;
+                printf("Error while opening audio device: %s",
+                    Pa_GetErrorText(err));
+                exit(RET_CODE_AUDIO_DEVICE_ERROR);
             }
         }
         break;
@@ -768,11 +735,9 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         err = Pa_StartStream(stream);
         if(err != paNoError)
         {
-            sprintf(f_cmd_buffer, "%s \"%s\"", f_show_dialog_cmd,
-                "Error: Unknown error while starting device.  Please "
+            printf("Error: Unknown error while starting device.  Please "
                 "re-configure your device and try starting MusiKernel again.");
-            system(f_cmd_buffer);
-            exiting = 1;
+            exit(RET_CODE_AUDIO_DEVICE_ERROR);
         }
         const PaStreamInfo * f_stream_info = Pa_GetStreamInfo(stream);
         printf("Actual output latency:\n\tseconds:  %f\n\tsamples:  %i\n",
