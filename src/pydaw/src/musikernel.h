@@ -571,13 +571,14 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
     {
         int f_did_something = 0;
 
+        pthread_mutex_lock(&musikernel->audio_inputs_mutex);
+
         if(musikernel->audio_recording_quit_notifier)
         {
+            pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
             printf("audio recording thread exiting...\n");
             break;
         }
-
-        pthread_mutex_lock(&musikernel->audio_inputs_mutex);
 
         if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
         {

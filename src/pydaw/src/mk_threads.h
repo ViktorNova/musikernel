@@ -113,6 +113,10 @@ void v_pydaw_destructor()
 
     char tmp_sndfile_name[2048];
 
+    pthread_mutex_lock(&musikernel->audio_inputs_mutex);
+    musikernel->audio_recording_quit_notifier = 1;
+    pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
+
     for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
     {
         if(musikernel->audio_inputs[f_i].sndfile)
@@ -126,8 +130,6 @@ void v_pydaw_destructor()
     }
 
     pthread_spin_lock(&musikernel->main_lock);
-
-    musikernel->audio_recording_quit_notifier = 1;
 
     for(f_i = 1; f_i < musikernel->worker_thread_count; ++f_i)
     {
