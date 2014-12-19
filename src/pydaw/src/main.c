@@ -674,25 +674,9 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
         }
 
-        if (inputParameters.device == paNoDevice)
-        {
-            sprintf(f_cmd_buffer, "%s \"%s\"", f_show_dialog_cmd,
-                "Error: No default input device.");
-            system(f_cmd_buffer);
-            continue;
-        }
-
         inputParameters.channelCount = f_audio_input_count;
         inputParameters.sampleFormat = PA_SAMPLE_TYPE;
         inputParameters.hostApiSpecificStreamInfo = NULL;
-
-        if (outputParameters.device == paNoDevice)
-        {
-          sprintf(f_cmd_buffer, "%s \"%s\"",
-                f_show_dialog_cmd, "Error: No default output device.");
-          system(f_cmd_buffer);
-          continue;
-        }
 
         outputParameters.channelCount = 2; /* stereo output */
         outputParameters.sampleFormat = PA_SAMPLE_TYPE;
