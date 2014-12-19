@@ -293,13 +293,24 @@ void v_en_process_atm(t_edmnext * self, int f_track_num,
 
 void v_en_set_midi_device(t_edmnext*, int, int, int);
 
+void g_en_midi_routing_list_init(t_pydaw_midi_routing_list*);
+
 #ifdef	__cplusplus
 }
 #endif
 
 t_edmnext * edmnext;
 
+void g_en_midi_routing_list_init(t_pydaw_midi_routing_list * self)
+{
+    int f_i;
 
+    for(f_i = 0; f_i < EN_TRACK_COUNT; ++f_i)
+    {
+        self->routes[f_i].on = 0;
+        self->routes[f_i].output_track = -1;
+    }
+}
 
 void g_en_instantiate()
 {
@@ -2698,6 +2709,8 @@ t_edmnext * g_edmnext_get()
         ++f_i;
     }
 
+    g_en_midi_routing_list_init(&f_result->midi_routing);
+
     return f_result;
 }
 
@@ -3319,10 +3332,15 @@ void v_en_set_midi_device(
      */
     t_pydaw_midi_routing_list * f_list = &self->midi_routing;
     t_pydaw_midi_routing * f_route = &f_list->routes[a_device];
-    t_pytrack * f_track_old = self->track_pool[f_route->output_track];
+    t_pytrack * f_track_old = NULL;
     t_pytrack * f_track_new = self->track_pool[a_output];
 
-    if(!f_route->on || f_route->output_track != a_output)
+    if(f_route->output_track != -1)
+    {
+        f_track_old = self->track_pool[f_route->output_track];
+    }
+
+    if(f_track_old && (!f_route->on || f_route->output_track != a_output))
     {
         f_track_old->extern_midi = 0;
         f_track_old->extern_midi_count = &ZERO;
