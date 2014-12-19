@@ -461,20 +461,19 @@ class pydaw_device_dialog:
         f_audio_device_names.sort(key=lambda x: x.lower())
         f_device_name_combobox.addItems(f_audio_device_names)
 
-        f_name = pydaw_util.global_device_val_dict["name"]
-
-        if "name" in pydaw_util.global_device_val_dict and \
-        f_name in f_result_dict:
-            f_device_name_combobox.setCurrentIndex(
-                f_device_name_combobox.findText(f_name))
-        elif "(hw:" in f_name:
-            f_name = f_name.split("(hw:")[0]
-            for f_dev in f_result_dict:
-                if f_dev.startswith(f_name):
-                    print("Device number changed, fixing")
-                    f_device_name_combobox.setCurrentIndex(
-                        f_device_name_combobox.findText(f_dev))
-                    break
+        if "name" in pydaw_util.global_device_val_dict:
+            f_name = pydaw_util.global_device_val_dict["name"]
+            if f_name in f_result_dict:
+                f_device_name_combobox.setCurrentIndex(
+                    f_device_name_combobox.findText(f_name))
+            elif "(hw:" in f_name:
+                f_name = f_name.split("(hw:")[0]
+                for f_dev in f_result_dict:
+                    if f_dev.startswith(f_name):
+                        print("Device number changed, fixing")
+                        f_device_name_combobox.setCurrentIndex(
+                            f_device_name_combobox.findText(f_dev))
+                        break
 
 
         if "audioInputs" in pydaw_util.global_device_val_dict:
