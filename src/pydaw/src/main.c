@@ -717,14 +717,21 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
         if(!PYDAW_NO_HARDWARE)
         {
+            PaStreamParameters * f_input_params = NULL;
+
+            if(inputParameters.channelCount > 0)
+            {
+                f_input_params = &inputParameters;
+            }
+
             err = Pa_OpenStream(
-            &stream, &inputParameters,
-            &outputParameters, sample_rate, //SAMPLE_RATE,
-            f_frame_count, //FRAMES_PER_BUFFER,
-            /* we won't output out of range samples so don't bother
-             * clipping them */
-            0, /* paClipOff, */
-            portaudioCallback, NULL);
+                &stream, f_input_params,
+                &outputParameters, sample_rate, //SAMPLE_RATE,
+                f_frame_count, //FRAMES_PER_BUFFER,
+                /* we won't output out of range samples so don't bother
+                 * clipping them */
+                0, /* paClipOff, */
+                portaudioCallback, NULL);
 
             if(err != paNoError)
             {
@@ -836,9 +843,10 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     {
         if(PYDAW_NO_HARDWARE)
         {
-            portaudioCallback(f_portaudio_input_buffer,
-                    f_portaudio_output_buffer, 128, NULL,
-                    (PaStreamCallbackFlags)NULL, NULL);
+            portaudioCallback(
+                f_portaudio_input_buffer,
+                f_portaudio_output_buffer, 128, NULL,
+                (PaStreamCallbackFlags)NULL, NULL);
 
             if(f_usleep)
             {
