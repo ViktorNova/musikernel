@@ -385,6 +385,7 @@ class pydaw_device_dialog:
                 f_samplerate_combobox.setCurrentIndex(
                     f_samplerate_combobox.findText(f_samplerate))
             f_in_count = f_result_dict[self.device_name].maxInputChannels
+            f_in_count = pydaw_util.pydaw_clip_value(f_in_count, 0, 128)
             f_audio_in_spinbox.setMaximum(f_in_count)
 
         def on_ok(a_self=None):
