@@ -353,7 +353,10 @@ class transport_widget(libmk.AbstractTransport):
             QtGui.QMessageBox.warning(
                 self.group_box, _("Error"),
                 _("No audio inputs are active, cannot record.  "
-                "Enable one or more inputs in the transport drop-down."))
+                "Enable one or more inputs in the transport drop-down.\n"
+                "If there are no inputs in the drop-down, you will need "
+                "to open the Menu->File->HardwareSettings in the \n"
+                "transport and set the number of audio inputs to 1 or more"))
             return False
         PROJECT.wn_osc.pydaw_wn_playback(2)
         return True
