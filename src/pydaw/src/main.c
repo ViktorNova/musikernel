@@ -715,7 +715,9 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         outputParameters.suggestedLatency =
             f_device_info->defaultLowOutputLatency;
 
-        err = Pa_OpenStream(
+        if(!PYDAW_NO_HARDWARE)
+        {
+            err = Pa_OpenStream(
             &stream, &inputParameters,
             &outputParameters, sample_rate, //SAMPLE_RATE,
             f_frame_count, //FRAMES_PER_BUFFER,
@@ -724,13 +726,14 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             0, /* paClipOff, */
             portaudioCallback, NULL);
 
-        if(err != paNoError)
-        {
-            ++f_failure_count;
-            sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
+            if(err != paNoError)
+            {
+                ++f_failure_count;
+                sprintf(f_cmd_buffer, "%s \"%s %s\"", f_show_dialog_cmd,
                     "Error while opening audio device: ", Pa_GetErrorText(err));
-            system(f_cmd_buffer);
-            continue;
+                system(f_cmd_buffer);
+                continue;
+            }
         }
         break;
     }
