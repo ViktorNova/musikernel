@@ -256,6 +256,9 @@ class AudioInput:
     def get_vol(self):
         return round(self.vol_slider.value() * 0.1, 1)
 
+    def get_name(self):
+        return str(self.name_lineedit.text())
+
     def get_value(self):
         f_on = 1 if self.rec_checkbox.isChecked() else 0
         f_vol = self.get_vol()
@@ -396,8 +399,6 @@ class transport_widget(libmk.AbstractTransport):
                         MAIN_WINDOW, _("Error"),
                         _("Invalid char '{}'".format(x)))
                     return
-            if not f_txt.endswith(".wav"):
-                f_txt += ".wav"
             for f_i, f_ai in zip(
             range(len(self.audio_inputs.inputs)), self.audio_inputs.inputs):
                 f_val = f_ai.get_value()
@@ -407,7 +408,8 @@ class transport_widget(libmk.AbstractTransport):
                     if os.path.isfile(f_path):
                         f_new_path = os.path.join(
                             libmk.PROJECT.user_folder,
-                            "{}-{}".format(f_i, f_txt))
+                            "{}-{}-{}.wav".format(
+                                f_txt, f_i, f_ai.get_name()))
                         shutil.move(f_path, f_new_path)
                     else:
                         print("Error, path did not exist: {}".format(f_path))
