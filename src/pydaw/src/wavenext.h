@@ -149,14 +149,16 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
     long f_size = 0;
     long f_block_size = (musikernel->sample_count);
 
-    float * f_output = (float*)malloc(sizeof(float) * (f_block_size * 2));
+    float * f_output;
+    lmalloc((void**)&f_output, sizeof(float) * (f_block_size * 2));
 
-    float ** f_buffer = (float**)malloc(sizeof(float) * 2);
+    float ** f_buffer;
+    lmalloc((void**)&f_buffer, sizeof(float*) * 2);
 
     int f_i = 0;
     while(f_i < 2)
     {
-        f_buffer[f_i] = (float*)malloc(sizeof(float) * f_block_size);
+        lmalloc((void**)&f_buffer[f_i], sizeof(float) * f_block_size);
         ++f_i;
     }
 
