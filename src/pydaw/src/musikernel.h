@@ -280,6 +280,8 @@ void v_stop_record_audio()
 {
     int f_i;
     t_pyaudio_input * f_ai;
+    char f_file_name_old[2048];
+    char f_file_name_new[2048];
 
     pthread_mutex_lock(&musikernel->audio_inputs_mutex);
 
@@ -288,7 +290,25 @@ void v_stop_record_audio()
         f_ai = &musikernel->audio_inputs[f_i];
         if(f_ai->rec)
         {
-            f_ai->recording_stopped = 1;
+            sf_writef_float(f_ai->sndfile,
+                f_ai->rec_buffers[(f_ai->current_buffer)],
+                ((f_ai->buffer_iterator[(f_ai->current_buffer)])
+                / f_ai->channels));
+
+            sf_close(f_ai->sndfile);
+            f_ai->sndfile = NULL;
+
+            sprintf(f_file_name_old, "%s%i",
+                musikernel->audio_tmp_folder, f_i);
+
+            sprintf(f_file_name_new, "%s%i.wav",
+                musikernel->audio_tmp_folder, f_i);
+
+            rename(f_file_name_old, f_file_name_new);
+
+            v_pydaw_audio_input_record_set(
+                &musikernel->audio_inputs[f_i], f_file_name_old);
+
         }
     }
 
@@ -560,8 +580,6 @@ void v_pydaw_set_preview_file(const char * a_file)
 
 void * v_pydaw_audio_recording_thread(void* a_arg)
 {
-    char f_file_name[1024];
-
     t_pyaudio_input * f_ai;
     int f_i;
 
@@ -599,45 +617,6 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
 
                     f_ai->flush_last_buffer_pending = 0;
                     f_ai->buffer_iterator[f_ai->buffer_to_flush] = 0;
-                }
-            }
-        }
-        else
-        {
-            for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
-            {
-                f_ai = &musikernel->audio_inputs[f_i];
-                if(f_ai->recording_stopped)
-                {
-                    f_did_something = 1;
-                    sf_writef_float(f_ai->sndfile,
-                        f_ai->rec_buffers[(f_ai->current_buffer)],
-                        ((f_ai->buffer_iterator[(f_ai->current_buffer)])
-                        / f_ai->channels));
-
-                    sf_close(f_ai->sndfile);
-                    f_ai->recording_stopped = 0;
-                    f_ai->sndfile = NULL;
-                }
-            }
-
-            /*Re-create the sndfile if it no longer exists, that means the
-             * UI has moved it from the tmp folder...*/
-
-            for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
-            {
-                if(musikernel->audio_inputs[f_i].rec)
-                {
-                    f_did_something = 1;
-
-                    sprintf(f_file_name, "%s%i.wav",
-                        musikernel->audio_tmp_folder, f_i);
-
-                    if(!i_pydaw_file_exists(f_file_name))
-                    {
-                        v_pydaw_audio_input_record_set(
-                            &musikernel->audio_inputs[f_i], f_file_name);
-                    }
                 }
             }
         }
@@ -766,7 +745,7 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
             f_ai->vol = f_vol;
             f_ai->vol_linear = f_db_to_linear_fast(f_vol);
 
-            sprintf(f_tmp_file_name, "%s%i.wav",
+            sprintf(f_tmp_file_name, "%s%i",
                 musikernel->audio_tmp_folder, f_index);
 
             v_pydaw_audio_input_record_set(f_ai, f_tmp_file_name);

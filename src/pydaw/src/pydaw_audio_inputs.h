@@ -42,7 +42,6 @@ typedef struct
     int current_buffer;
     int flush_last_buffer_pending;
     int buffer_to_flush;
-    int recording_stopped;
 }t_pyaudio_input;
 
 void g_pyaudio_input_init(t_pyaudio_input *, float, int);
@@ -66,7 +65,6 @@ void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr, int a_ch)
     f_result->output_track = 0;
     f_result->vol = 0.0f;
     f_result->vol_linear = 1.0f;
-    f_result->recording_stopped = 0;
 }
 
 void v_pydaw_audio_input_record_set(
