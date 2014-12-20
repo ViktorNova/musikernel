@@ -213,9 +213,10 @@ def normalize_dialog():
     return f_window.f_result
 
 class AudioInput:
-    def __init__(self, a_num, a_layout, a_callback):
+    def __init__(self, a_num, a_layout, a_callback, a_count):
         self.input_num = int(a_num)
         self.callback = a_callback
+        a_layout.addWidget(QtGui.QLabel(str(a_num)), a_num + 1, 21)
         self.name_lineedit = QtGui.QLineEdit(str(a_num))
         self.name_lineedit.editingFinished.connect(self.name_update)
         a_num += 1
@@ -228,20 +229,28 @@ class AudioInput:
         self.monitor_checkbox.clicked.connect(self.update_engine)
         a_layout.addWidget(self.monitor_checkbox, a_num, 2)
 
+        self.vol_layout = QtGui.QHBoxLayout()
+        a_layout.addLayout(self.vol_layout, a_num, 3)
         self.vol_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.vol_slider.setRange(-240, 240)
         self.vol_slider.setValue(0)
         self.vol_slider.setMinimumWidth(240)
         self.vol_slider.valueChanged.connect(self.vol_changed)
         self.vol_slider.sliderReleased.connect(self.update_engine)
-        a_layout.addWidget(self.vol_slider, a_num, 3)
+        self.vol_layout.addWidget(self.vol_slider)
         self.vol_label = QtGui.QLabel("0.0dB")
         self.vol_label.setMinimumWidth(64)
-        a_layout.addWidget(self.vol_label, a_num, 4)
+        self.vol_layout.addWidget(self.vol_label)
+        self.right_combobox = QtGui.QComboBox()
+        a_layout.addWidget(self.right_combobox, a_num, 4)
+        self.right_combobox.setMinimumWidth(72)
+        self.right_combobox.addItems([_("None")] +
+            [str(x) for x in range(a_count + 1)])
+        self.right_combobox.currentIndexChanged.connect(self.update_engine)
         self.suppress_updates = False
 
     def name_update(self, a_val=None):
-        pass
+        self.update_engine(a_notify=False)
 
     def update_engine(self, a_val=None, a_notify=True):
         if not self.suppress_updates:
@@ -263,8 +272,10 @@ class AudioInput:
         f_on = 1 if self.rec_checkbox.isChecked() else 0
         f_vol = self.get_vol()
         f_monitor = 1 if self.monitor_checkbox.isChecked() else 0
+        f_right_ch = self.right_combobox.currentIndex() - 1
         return libmk.mk_project.AudioInputTrack(
-            f_on, f_monitor, f_vol, 0, self.name_lineedit.text())
+            f_on, f_monitor, f_vol, 0,
+            f_right_ch, self.name_lineedit.text())
 
     def set_value(self, a_val):
         self.suppress_updates = True
@@ -274,6 +285,7 @@ class AudioInput:
         self.rec_checkbox.setChecked(f_rec)
         self.monitor_checkbox.setChecked(f_monitor)
         self.vol_slider.setValue(int(a_val.vol * 10.0))
+        self.right_combobox.setCurrentIndex(a_val.right_ch + 1)
         self.suppress_updates = False
 
 
@@ -284,7 +296,8 @@ class AudioInputWidget:
         self.layout = QtGui.QGridLayout()
         self.main_layout.addWidget(QtGui.QLabel(_("Audio Inputs")))
         self.main_layout.addLayout(self.layout)
-        f_labels = (_("Name"), _("Rec."), _("Mon."), _("Gain"))
+        f_labels = (
+            _("Name"), _("Rec."), _("Mon."), _("Gain"), _("Right Ch."))
         for f_i, f_label in zip(range(len(f_labels)), f_labels):
             self.layout.addWidget(QtGui.QLabel(f_label), 0, f_i)
         self.inputs = []
@@ -292,7 +305,7 @@ class AudioInputWidget:
         if "audioInputs" in pydaw_util.global_device_val_dict:
             f_count = int(pydaw_util.global_device_val_dict["audioInputs"])
         for f_i in range(f_count):
-            f_input = AudioInput(f_i, self.layout, self.callback)
+            f_input = AudioInput(f_i, self.layout, self.callback, f_count - 1)
             self.inputs.append(f_input)
 
     def callback(self, a_notify):
@@ -370,6 +383,7 @@ class transport_widget(libmk.AbstractTransport):
     def on_stop(self):
         PROJECT.wn_osc.pydaw_wn_playback(0)
         WAVE_EDITOR.on_stop()
+        self.playback_menu_button.setEnabled(True)
         if libmk.IS_RECORDING:
             self.show_rec_dialog()
 
@@ -384,6 +398,7 @@ class transport_widget(libmk.AbstractTransport):
                 "transport and set the number of audio inputs to 1 or more"))
             return False
         PROJECT.wn_osc.pydaw_wn_playback(2)
+        self.playback_menu_button.setEnabled(False)
         return True
 
     def show_rec_dialog(self):

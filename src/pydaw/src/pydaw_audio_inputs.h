@@ -31,6 +31,7 @@ typedef struct
     int rec;
     int monitor;
     int channels;
+    int right_ch;
     int output_track;
     float vol, vol_linear;
     SF_INFO sf_info;
@@ -43,14 +44,13 @@ typedef struct
     int buffer_to_flush;
 }t_pyaudio_input;
 
-void g_pyaudio_input_init(t_pyaudio_input *, float, int);
+void g_pyaudio_input_init(t_pyaudio_input *, float);
 
-void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr, int a_ch)
+void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr)
 {
-    assert(a_ch >= 1 && a_ch <= 2);
-
-    f_result->channels = a_ch;
-    f_result->sf_info.channels = a_ch;
+    f_result->channels = 1;
+    f_result->right_ch = -1;
+    f_result->sf_info.channels = 1;
     f_result->sf_info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
     f_result->sf_info.samplerate = (int)(a_sr);
 
@@ -78,12 +78,12 @@ void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr, int a_ch)
 }
 
 void v_pydaw_audio_input_record_set(
-        t_pyaudio_input * a_audio_input, char * a_file_out)
+        t_pyaudio_input * self, char * a_file_out)
 {
-    if(a_audio_input->sndfile)
+    if(self->sndfile)
     {
-        sf_close(a_audio_input->sndfile);
-        a_audio_input->sndfile = NULL;
+        sf_close(self->sndfile);
+        self->sndfile = NULL;
     }
 
     if(i_pydaw_file_exists(a_file_out))
@@ -91,10 +91,15 @@ void v_pydaw_audio_input_record_set(
         remove(a_file_out);
     }
 
-    if(a_audio_input->rec)
+    if(self->right_ch >= 0)
     {
-        a_audio_input->sndfile = sf_open(
-            a_file_out, SFM_WRITE, &a_audio_input->sf_info);
+        self->channels = 2;
+        self->sf_info.channels = 2;
+    }
+
+    if(self->rec)
+    {
+        self->sndfile = sf_open(a_file_out, SFM_WRITE, &self->sf_info);
     }
 }
 
