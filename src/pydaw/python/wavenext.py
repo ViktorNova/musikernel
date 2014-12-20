@@ -169,7 +169,6 @@ class WaveNextProject(libmk.AbstractProject):
     def save_audio_inputs(self, a_tracks):
         if not self.suppress_updates:
             self.save_file("", pydaw_file_pyinput, str(a_tracks))
-            self.wn_osc.save_audio_inputs()
 
     def get_audio_inputs(self):
         if os.path.isfile(self.audio_inputs_file):
@@ -217,13 +216,17 @@ class AudioInput:
     def __init__(self, a_num, a_layout, a_callback):
         self.input_num = int(a_num)
         self.callback = a_callback
-        self.rec_checkbox = QtGui.QCheckBox(str(a_num))
+        self.name_lineedit = QtGui.QLineEdit(str(a_num))
+        self.name_lineedit.editingFinished.connect(self.name_update)
+        a_num += 1
+        a_layout.addWidget(self.name_lineedit, a_num, 0)
+        self.rec_checkbox = QtGui.QCheckBox("")
         self.rec_checkbox.clicked.connect(self.update_engine)
-        a_layout.addWidget(self.rec_checkbox, a_num, 0)
+        a_layout.addWidget(self.rec_checkbox, a_num, 1)
 
-        self.monitor_checkbox = QtGui.QCheckBox(_("Monitor"))
+        self.monitor_checkbox = QtGui.QCheckBox(_(""))
         self.monitor_checkbox.clicked.connect(self.update_engine)
-        a_layout.addWidget(self.monitor_checkbox, a_num, 1)
+        a_layout.addWidget(self.monitor_checkbox, a_num, 2)
 
         self.vol_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.vol_slider.setRange(-240, 240)
@@ -231,15 +234,18 @@ class AudioInput:
         self.vol_slider.setMinimumWidth(240)
         self.vol_slider.valueChanged.connect(self.vol_changed)
         self.vol_slider.sliderReleased.connect(self.update_engine)
-        a_layout.addWidget(self.vol_slider, a_num, 9)
+        a_layout.addWidget(self.vol_slider, a_num, 3)
         self.vol_label = QtGui.QLabel("0.0dB")
         self.vol_label.setMinimumWidth(64)
-        a_layout.addWidget(self.vol_label, a_num, 10)
+        a_layout.addWidget(self.vol_label, a_num, 4)
         self.suppress_updates = False
 
-    def update_engine(self, a_val=None):
+    def name_update(self, a_val=None):
+        pass
+
+    def update_engine(self, a_val=None, a_notify=True):
         if not self.suppress_updates:
-            self.callback()
+            self.callback(a_notify)
 
     def vol_changed(self):
         f_vol = self.get_vol()
@@ -254,12 +260,14 @@ class AudioInput:
         f_on = 1 if self.rec_checkbox.isChecked() else 0
         f_vol = self.get_vol()
         f_monitor = 1 if self.monitor_checkbox.isChecked() else 0
-        return libmk.mk_project.AudioInputTrack(f_on, f_monitor, f_vol, 0)
+        return libmk.mk_project.AudioInputTrack(
+            f_on, f_monitor, f_vol, 0, self.name_lineedit.text())
 
     def set_value(self, a_val):
         self.suppress_updates = True
         f_rec = True if a_val.rec else False
         f_monitor = True if a_val.monitor else False
+        self.name_lineedit.setText(a_val.name)
         self.rec_checkbox.setChecked(f_rec)
         self.monitor_checkbox.setChecked(f_monitor)
         self.vol_slider.setValue(int(a_val.vol * 10.0))
@@ -273,6 +281,9 @@ class AudioInputWidget:
         self.layout = QtGui.QGridLayout()
         self.main_layout.addWidget(QtGui.QLabel(_("Audio Inputs")))
         self.main_layout.addLayout(self.layout)
+        f_labels = (_("Name"), _("Rec."), _("Mon."), _("Gain"))
+        for f_i, f_label in zip(range(len(f_labels)), f_labels):
+            self.layout.addWidget(QtGui.QLabel(f_label), 0, f_i)
         self.inputs = []
         f_count = 0
         if "audioInputs" in pydaw_util.global_device_val_dict:
@@ -281,11 +292,13 @@ class AudioInputWidget:
             f_input = AudioInput(f_i, self.layout, self.callback)
             self.inputs.append(f_input)
 
-    def callback(self):
+    def callback(self, a_notify):
         f_result = libmk.mk_project.AudioInputTracks()
         for f_i, f_input in zip(range(len(self.inputs)), self.inputs):
             f_result.add_track(f_i, f_input.get_value())
         PROJECT.save_audio_inputs(f_result)
+        if a_notify:
+            PROJECT.wn_osc.save_audio_inputs()
 
     def active(self):
         return [x.get_value() for x in self.inputs

@@ -750,6 +750,9 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
             v_iterate_2d_char_array(f_2d_array);
             int f_out = atoi(f_2d_array->current_str);
 
+            // name, ignored by the engine
+            v_iterate_2d_char_array_to_next_line(f_2d_array);
+
             if(f_index >= PYDAW_AUDIO_INPUT_TRACK_COUNT)
             {
                 continue;
