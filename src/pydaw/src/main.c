@@ -727,8 +727,8 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     v_queue_osc_message("ready", "");
 
     // only for no-hardware mode
-    float * f_portaudio_input_buffer;
-    float * f_portaudio_output_buffer;
+    float * f_portaudio_input_buffer = NULL;
+    float * f_portaudio_output_buffer = NULL;
 
     if(!PYDAW_NO_HARDWARE)
     {
@@ -751,10 +751,16 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     }
     else
     {
-        f_portaudio_input_buffer =
-            (float*)malloc(sizeof(float) * FRAMES_PER_BUFFER);
-        f_portaudio_output_buffer =
-            (float*)malloc(sizeof(float) * FRAMES_PER_BUFFER);
+        lmalloc((void**)&f_portaudio_input_buffer,
+            sizeof(float) * FRAMES_PER_BUFFER);
+        lmalloc((void**)&f_portaudio_output_buffer,
+            sizeof(float) * FRAMES_PER_BUFFER);
+
+        for(f_i = 0; f_i < FRAMES_PER_BUFFER; ++f_i)
+        {
+            f_portaudio_input_buffer[f_i] = 0.0f;
+            f_portaudio_output_buffer[f_i] = 0.0f;
+        }
     }
 
     if(f_with_midi)

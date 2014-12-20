@@ -32,7 +32,6 @@ typedef struct
     int monitor;
     int channels;
     int output_track;
-    int input_port[2];
     float vol, vol_linear;
     SF_INFO sf_info;
     SNDFILE * sndfile;
@@ -56,6 +55,17 @@ void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr, int a_ch)
     f_result->sf_info.samplerate = (int)(a_sr);
 
     f_result->sndfile = NULL;
+
+    f_result->buffer_iterator[0] = 0;
+    f_result->buffer_iterator[1] = 0;
+
+    register int f_i;
+
+    for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_REC_BUFFER_SIZE; ++f_i)
+    {
+        f_result->rec_buffers[0][f_i] = 0.0f;
+        f_result->rec_buffers[1][f_i] = 0.0f;
+    }
 
     f_result->rec = 0;
     f_result->monitor = 0;

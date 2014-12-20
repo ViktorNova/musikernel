@@ -251,8 +251,6 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
     {
         g_pyaudio_input_init(&musikernel->audio_inputs[f_i], a_sr, 1);
-        musikernel->audio_inputs[f_i].input_port[0] = f_i * 2;
-        musikernel->audio_inputs[f_i].input_port[1] = (f_i * 2) + 1;
     }
 
     for(f_i = 0; f_i < MAX_WORKER_THREADS; ++f_i)
