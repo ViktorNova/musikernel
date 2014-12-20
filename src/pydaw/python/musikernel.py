@@ -1424,4 +1424,4 @@ if RESPAWN:
     time.sleep(6.0)
     print("Parent UI process exiting")
 
-exit(0)
+#exit(0)
