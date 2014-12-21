@@ -120,6 +120,8 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
                 return;
             }
 
+            v_prepare_to_record_audio();
+
             if(a_lock)
             {
                 pthread_spin_lock(&musikernel->main_lock);

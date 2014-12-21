@@ -575,6 +575,26 @@ void v_pydaw_set_preview_file(const char * a_file)
     }
 }
 
+void v_prepare_to_record_audio()
+{
+    int f_i;
+    t_pyaudio_input * f_ai;
+
+    pthread_mutex_lock(&musikernel->audio_inputs_mutex);
+
+    for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
+    {
+        f_ai = &musikernel->audio_inputs[f_i];
+
+        f_ai->current_buffer = 0;
+        f_ai->flush_last_buffer_pending = 0;
+        f_ai->buffer_iterator[0] = 0;
+        f_ai->buffer_iterator[1] = 0;
+    }
+
+    pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
+}
+
 void * v_pydaw_audio_recording_thread(void* a_arg)
 {
     t_pyaudio_input * f_ai;
@@ -622,7 +642,7 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
 
         if(!f_did_something)
         {
-            usleep(100000);
+            usleep(10000);
         }
     }
 
@@ -644,8 +664,8 @@ void v_audio_input_run(int f_index, float ** output,
                 + (sample_count * f_ai->channels) ) >=
                 PYDAW_AUDIO_INPUT_REC_BUFFER_SIZE)
         {
-            f_ai->flush_last_buffer_pending = 1;
             f_ai->buffer_to_flush = (f_ai->current_buffer);
+            f_ai->flush_last_buffer_pending = 1;
 
             if((f_ai->current_buffer) == 0)
             {
@@ -806,10 +826,16 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
             f_ai->rec = 0;
             f_ai->monitor = 0;
             f_ai->output_track = 0;
+            f_ai->output_track = 0;
             f_ai->right_ch = -1;
 
             f_ai->vol = 0.0f;
             f_ai->vol_linear = 1.0f;
+
+            sprintf(f_tmp_file_name, "%s%i",
+                musikernel->audio_tmp_folder, f_i);
+
+            v_pydaw_audio_input_record_set(f_ai, f_tmp_file_name);
         }
         pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
     }

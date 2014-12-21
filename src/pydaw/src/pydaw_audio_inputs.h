@@ -91,14 +91,19 @@ void v_pydaw_audio_input_record_set(
         remove(a_file_out);
     }
 
-    if(self->right_ch >= 0)
-    {
-        self->channels = 2;
-        self->sf_info.channels = 2;
-    }
-
     if(self->rec)
     {
+        if(self->right_ch == -1)
+        {
+            self->channels = 1;
+            self->sf_info.channels = 1;
+        }
+        else
+        {
+            self->channels = 2;
+            self->sf_info.channels = 2;
+        }
+
         self->sndfile = sf_open(a_file_out, SFM_WRITE, &self->sf_info);
     }
 }
