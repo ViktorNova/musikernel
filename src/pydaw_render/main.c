@@ -86,6 +86,7 @@ int main(int argc, char** argv)
     v_pydaw_activate(f_thread_count, 0, f_project_dir, f_sample_rate, NULL, 0);
 
     /*
+    PYDAW_AUDIO_INPUT_TRACK_COUNT = 2;
     v_pydaw_activate(f_thread_count, 0, f_project_dir, f_sample_rate, NULL, 1);
     v_wn_test();
     */

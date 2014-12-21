@@ -70,10 +70,7 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
     {
         case 0: //stop
         {
-            if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
-            {
-                v_stop_record_audio();
-            }
+            int f_old_mode = musikernel->playback_mode;
 
             if(a_lock)
             {
@@ -87,6 +84,10 @@ void v_wn_set_playback_mode(t_wavenext * self, int a_mode, int a_lock)
                 pthread_spin_unlock(&musikernel->main_lock);
             }
 
+            if(f_old_mode == PYDAW_PLAYBACK_MODE_REC)
+            {
+                v_stop_record_audio();
+            }
         }
             break;
         case 1:  //play
@@ -566,6 +567,8 @@ void v_wn_test()
     {
         v_pydaw_run_wave_editor(512, f_output_arr, f_input_arr);
     }
+
+    v_wn_set_playback_mode(wavenext, PYDAW_PLAYBACK_MODE_OFF, 0);
 
     printf("End Wave-Next test\n");
 

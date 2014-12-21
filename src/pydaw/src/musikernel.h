@@ -274,44 +274,6 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     }
 }
 
-void v_stop_record_audio()
-{
-    int f_i;
-    t_pyaudio_input * f_ai;
-    char f_file_name_old[2048];
-    char f_file_name_new[2048];
-
-    pthread_mutex_lock(&musikernel->audio_inputs_mutex);
-
-    for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
-    {
-        f_ai = &musikernel->audio_inputs[f_i];
-        if(f_ai->rec)
-        {
-            sf_writef_float(f_ai->sndfile,
-                f_ai->rec_buffers[(f_ai->current_buffer)],
-                ((f_ai->buffer_iterator[(f_ai->current_buffer)])
-                / f_ai->channels));
-
-            sf_close(f_ai->sndfile);
-            f_ai->sndfile = NULL;
-
-            sprintf(f_file_name_old, "%s%i",
-                musikernel->audio_tmp_folder, f_i);
-
-            sprintf(f_file_name_new, "%s%i.wav",
-                musikernel->audio_tmp_folder, f_i);
-
-            rename(f_file_name_old, f_file_name_new);
-
-            v_pydaw_audio_input_record_set(
-                &musikernel->audio_inputs[f_i], f_file_name_old);
-        }
-    }
-
-    pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
-}
-
 void v_pydaw_set_control_from_atm(t_pydaw_seq_event *event,
         int a_plugin_uid, t_pytrack * f_track)
 {
@@ -595,10 +557,58 @@ void v_prepare_to_record_audio()
     pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
 }
 
+void v_stop_record_audio()
+{
+    int f_i, f_frames, f_count;
+    t_pyaudio_input * f_ai;
+    char f_file_name_old[2048];
+    char f_file_name_new[2048];
+
+    pthread_mutex_lock(&musikernel->audio_inputs_mutex);
+
+    for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
+    {
+        f_ai = &musikernel->audio_inputs[f_i];
+        if(f_ai->rec)
+        {
+            f_frames = f_ai->buffer_iterator[(f_ai->current_buffer)]
+                / f_ai->channels;
+
+            if(f_frames)
+            {
+                f_count =sf_writef_float(f_ai->sndfile,
+                    f_ai->rec_buffers[(f_ai->current_buffer)],
+                    ((f_ai->buffer_iterator[(f_ai->current_buffer)])
+                    / f_ai->channels));
+
+                printf("sf_writef_float returned %i\n", f_count);
+            }
+
+            sf_close(f_ai->sndfile);
+            f_ai->sndfile = NULL;
+
+            sprintf(f_file_name_old, "%s%i",
+                musikernel->audio_tmp_folder, f_i);
+
+            sprintf(f_file_name_new, "%s%i.wav",
+                musikernel->audio_tmp_folder, f_i);
+
+            rename(f_file_name_old, f_file_name_new);
+
+            v_pydaw_audio_input_record_set(
+                &musikernel->audio_inputs[f_i], f_file_name_old);
+        }
+    }
+
+    pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
+}
+
 void * v_pydaw_audio_recording_thread(void* a_arg)
 {
     t_pyaudio_input * f_ai;
+    int f_count;
     int f_i;
+    int f_frames;
 
     sleep(3);
 
@@ -622,15 +632,20 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
                 f_ai = &musikernel->audio_inputs[f_i];
                 if((f_ai->rec) && (f_ai->flush_last_buffer_pending))
                 {
+                    f_frames = f_ai->buffer_iterator[(f_ai->buffer_to_flush)]
+                        / f_ai->channels;
                     f_did_something = 1;
-                    printf("Flushing record buffer of %i frames\n",
-                        ((f_ai->buffer_iterator[(f_ai->buffer_to_flush)])
-                        / f_ai->channels));
 
-                    sf_writef_float(f_ai->sndfile,
-                        f_ai->rec_buffers[f_ai->buffer_to_flush],
-                        ((f_ai->buffer_iterator[f_ai->buffer_to_flush])
-                        / f_ai->channels));
+                    assert(f_ai->channels == f_ai->sf_info.channels);
+
+                    printf("Flushing record buffer of "
+                        "%i frames, %i channels for input %i\n",
+                        f_frames, f_ai->channels, f_i);
+
+                    f_count = sf_writef_float(f_ai->sndfile,
+                        f_ai->rec_buffers[f_ai->buffer_to_flush], f_frames);
+
+                    printf("sf_writef_float returned %i\n", f_count);
 
                     f_ai->flush_last_buffer_pending = 0;
                     f_ai->buffer_iterator[f_ai->buffer_to_flush] = 0;
@@ -706,6 +721,9 @@ void v_audio_input_run(int f_index, float ** output,
 
                 f_buffer_pos += PYDAW_AUDIO_INPUT_TRACK_COUNT;
             }
+
+            // Move it back to the correct position
+            --f_ai->buffer_iterator[f_current_buffer];
         }
     }
 
