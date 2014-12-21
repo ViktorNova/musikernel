@@ -706,9 +706,9 @@ void v_audio_input_run(int f_index, float ** output,
             f_buffer_pos += PYDAW_AUDIO_INPUT_TRACK_COUNT;
         }
 
-        if(f_ai->right_ch >= 0)
+        if(f_ai->stereo_ch >= 0)
         {
-            f_buffer_pos = f_ai->right_ch;
+            f_buffer_pos = f_ai->stereo_ch;
             f_ai->buffer_iterator[f_current_buffer] = f_orig_buffer_pos + 1;
 
             for(f_i2 = 0; f_i2 < sample_count; ++f_i2)
@@ -737,7 +737,7 @@ void v_audio_input_run(int f_index, float ** output,
 
             output[0][f_i2] += f_tmp_sample;
 
-            if(f_ai->right_ch == -1)
+            if(f_ai->stereo_ch == -1)
             {
                 output[1][f_i2] += f_tmp_sample;
             }
@@ -745,9 +745,9 @@ void v_audio_input_run(int f_index, float ** output,
             f_buffer_pos += PYDAW_AUDIO_INPUT_TRACK_COUNT;
         }
 
-        if(f_ai->right_ch >= 0)
+        if(f_ai->stereo_ch >= 0)
         {
-            f_buffer_pos = f_ai->right_ch;
+            f_buffer_pos = f_ai->stereo_ch;
 
             for(f_i2 = 0; f_i2 < sample_count; ++f_i2)
             {
@@ -820,7 +820,7 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
             f_ai->rec = f_rec;
             f_ai->monitor = f_monitor;
             f_ai->output_track = f_out;
-            f_ai->right_ch = f_right_ch;
+            f_ai->stereo_ch = f_right_ch;
             f_ai->vol = f_vol;
             f_ai->vol_linear = f_db_to_linear_fast(f_vol);
 
@@ -845,7 +845,7 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
             f_ai->monitor = 0;
             f_ai->output_track = 0;
             f_ai->output_track = 0;
-            f_ai->right_ch = -1;
+            f_ai->stereo_ch = -1;
 
             f_ai->vol = 0.0f;
             f_ai->vol_linear = 1.0f;

@@ -241,12 +241,12 @@ class AudioInput:
         self.vol_label = QtGui.QLabel("0.0dB")
         self.vol_label.setMinimumWidth(64)
         self.vol_layout.addWidget(self.vol_label)
-        self.right_combobox = QtGui.QComboBox()
-        a_layout.addWidget(self.right_combobox, a_num, 4)
-        self.right_combobox.setMinimumWidth(72)
-        self.right_combobox.addItems([_("None")] +
+        self.stereo_combobox = QtGui.QComboBox()
+        a_layout.addWidget(self.stereo_combobox, a_num, 4)
+        self.stereo_combobox.setMinimumWidth(72)
+        self.stereo_combobox.addItems([_("None")] +
             [str(x) for x in range(a_count + 1)])
-        self.right_combobox.currentIndexChanged.connect(self.update_engine)
+        self.stereo_combobox.currentIndexChanged.connect(self.update_engine)
         self.suppress_updates = False
 
     def name_update(self, a_val=None):
@@ -272,10 +272,10 @@ class AudioInput:
         f_on = 1 if self.rec_checkbox.isChecked() else 0
         f_vol = self.get_vol()
         f_monitor = 1 if self.monitor_checkbox.isChecked() else 0
-        f_right_ch = self.right_combobox.currentIndex() - 1
+        f_stereo = self.stereo_combobox.currentIndex() - 1
         return libmk.mk_project.AudioInputTrack(
             f_on, f_monitor, f_vol, 0,
-            f_right_ch, self.name_lineedit.text())
+            f_stereo, self.name_lineedit.text())
 
     def set_value(self, a_val):
         self.suppress_updates = True
@@ -285,7 +285,7 @@ class AudioInput:
         self.rec_checkbox.setChecked(f_rec)
         self.monitor_checkbox.setChecked(f_monitor)
         self.vol_slider.setValue(int(a_val.vol * 10.0))
-        self.right_combobox.setCurrentIndex(a_val.right_ch + 1)
+        self.stereo_combobox.setCurrentIndex(a_val.stereo + 1)
         self.suppress_updates = False
 
 
@@ -297,7 +297,7 @@ class AudioInputWidget:
         self.main_layout.addWidget(QtGui.QLabel(_("Audio Inputs")))
         self.main_layout.addLayout(self.layout)
         f_labels = (
-            _("Name"), _("Rec."), _("Mon."), _("Gain"), _("Right Ch."))
+            _("Name"), _("Rec."), _("Mon."), _("Gain"), _("Stereo"))
         for f_i, f_label in zip(range(len(f_labels)), f_labels):
             self.layout.addWidget(QtGui.QLabel(f_label), 0, f_i)
         self.inputs = []

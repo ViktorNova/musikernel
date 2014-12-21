@@ -31,7 +31,7 @@ typedef struct
     int rec;
     int monitor;
     int channels;
-    int right_ch;
+    int stereo_ch;
     int output_track;
     float vol, vol_linear;
     SF_INFO sf_info;
@@ -49,7 +49,7 @@ void g_pyaudio_input_init(t_pyaudio_input *, float);
 void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr)
 {
     f_result->channels = 1;
-    f_result->right_ch = -1;
+    f_result->stereo_ch = -1;
     f_result->sf_info.channels = 1;
     f_result->sf_info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
     f_result->sf_info.samplerate = (int)(a_sr);
@@ -93,7 +93,7 @@ void v_pydaw_audio_input_record_set(
 
     if(self->rec)
     {
-        if(self->right_ch == -1)
+        if(self->stereo_ch == -1)
         {
             self->channels = 1;
             self->sf_info.channels = 1;
