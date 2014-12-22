@@ -69,6 +69,8 @@ Requires:      python3-PyQt4 gcc alsa-lib-devel liblo-devel \
 libsndfile-devel gcc-c++ git python3-numpy python3-scipy \
 fftw-devel portmidi-devel libsamplerate-devel python3-devel vorbis-tools
 
+%define __provides_exclude_from /usr/lib/{0}/pydaw/python/libpydaw/libportaudio.so
+
 %description
 MusiKernel is digital audio workstations (DAWs), instrument and effect plugins
 
