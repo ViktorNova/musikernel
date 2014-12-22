@@ -712,6 +712,14 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         break;
     }
 
+    char * f_master_vol_str = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+    get_file_setting(f_master_vol_str, "master_vol", "0.0");
+    float f_master_vol = atof(f_master_vol_str);
+    free(f_master_vol_str);
+
+    MASTER_VOL = f_db_to_linear(f_master_vol * 0.1);
+    printf("MASTER_VOL = %f\n", MASTER_VOL);
+
     free(f_key_char);
     free(f_value_char);
 

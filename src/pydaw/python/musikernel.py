@@ -143,6 +143,7 @@ class transport_widget:
         self.grid_layout1.addWidget(self.host_combobox, 1, 55)
 
         self.master_vol_knob = pydaw_widgets.pydaw_pixmap_knob(60, -480, 0)
+        self.load_master_vol()
         self.hlayout1.addWidget(self.master_vol_knob)
         self.master_vol_knob.valueChanged.connect(self.master_vol_changed)
         self.master_vol_knob.sliderReleased.connect(self.master_vol_released)
@@ -188,9 +189,6 @@ class transport_widget:
             self.enable_controls(False)
         else:
             self.stop_button.setChecked(True)
-
-    def on_ready(self):
-        self.load_master_vol()
 
     def on_stop(self):
         if not libmk.IS_PLAYING and not libmk.IS_RECORDING:

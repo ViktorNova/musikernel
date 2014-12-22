@@ -9041,7 +9041,7 @@ class pydaw_main_window(QtGui.QScrollArea):
                 libmk.PLUGIN_UI_DICT.midi_learn_control[0].update_cc_map(
                     a_val, libmk.PLUGIN_UI_DICT.midi_learn_control[1])
             elif a_key == "ready":
-                for f_widget in (libmk.TRANSPORT, MIDI_DEVICES_DIALOG):
+                for f_widget in (MIDI_DEVICES_DIALOG,):
                     f_widget.on_ready()
         #This prevents multiple events from moving the same control,
         #only the last goes through

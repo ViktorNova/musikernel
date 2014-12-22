@@ -21,6 +21,8 @@ GNU General Public License for more details.
 #include <sys/stat.h>
 #include <assert.h>
 
+#define PYDAW_VERSION "musikernel"
+
 /*Standard string sizes*/
 #define PYDAW_XLARGE_STRING 1048576
 #define PYDAW_LARGE_STRING  65536 //1048576
@@ -44,6 +46,8 @@ typedef struct
     char key[256];
     char value[5000];
 }t_key_value_pair;
+
+int i_pydaw_file_exists(char*);
 
 #ifdef	__cplusplus
 }
@@ -375,6 +379,25 @@ typedef struct
     char ** str_arr;
     char * str_block;
 }t_pydaw_line_split;
+
+void get_file_setting(char * a_dest, char * a_name, char * a_default)
+{
+    char f_path[2048];
+    char * f_home = getenv("HOME");
+
+    sprintf(f_path, "%s/%s/config/%s.txt", f_home, PYDAW_VERSION, a_name);
+
+    printf("get_file_setting:  %s \n", f_path);
+
+    if(i_pydaw_file_exists(f_path))
+    {
+        get_string_from_file(f_path, PYDAW_TINY_STRING, a_dest);
+    }
+    else
+    {
+        sprintf(a_dest, "%s", a_default);
+    }
+}
 
 t_pydaw_line_split * g_split_line(char a_delimiter, const char * a_str)
 {

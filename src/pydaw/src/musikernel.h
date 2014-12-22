@@ -33,7 +33,6 @@ GNU General Public License for more details.
 #define MAX_PLUGIN_POOL_COUNT 1000
 
 int PYDAW_AUDIO_INPUT_TRACK_COUNT = 0;
-#define PYDAW_VERSION "musikernel"
 
 #define PYDAW_OSC_SEND_QUEUE_SIZE 256
 #define PYDAW_OSC_MAX_MESSAGE_SIZE 65536
