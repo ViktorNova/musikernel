@@ -57,10 +57,11 @@ install:
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/sbsms
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/rubberband
+	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/rubberband/bin
 	make -C pydaw PREFIX=$(PREFIX) DESTDIR=$(DESTDIR) install
 	make -C sbsms/cli PREFIX=$(SBSMS_PREFIX) \
 	DESTDIR=$(DESTDIR) install
-	make -C rubberband DESTDIR=$(DESTDIR) install
+	install rubberband/bin/rubberband $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/rubberband/bin
 	make -C pydaw_render DESTDIR=$(DESTDIR) PREFIX=$(PREFIX) install
 
 # --------------------------------------------------------------

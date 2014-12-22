@@ -69,7 +69,7 @@ Requires:      python3-PyQt4 gcc alsa-lib-devel liblo-devel \
 libsndfile-devel gcc-c++ git python3-numpy python3-scipy \
 fftw-devel portmidi-devel libsamplerate-devel python3-devel vorbis-tools
 
-%define __provides_exclude_from /usr/lib/{0}/pydaw/python/libpydaw/libportaudio.so
+%define __provides_exclude_from ^/usr/lib/{0}/.*$
 
 %description
 MusiKernel is digital audio workstations (DAWs), instrument and effect plugins
@@ -127,13 +127,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/translate.py
 /usr/lib/{0}/major-version.txt
 /usr/lib/{0}/minor-version.txt
-/usr/lib/{0}/rubberband/include/rubberband/RubberBandStretcher.h
-/usr/lib/{0}/rubberband/include/rubberband/rubberband-c.h
-/usr/lib/{0}/rubberband/lib/librubberband.a
-/usr/lib/{0}/rubberband/lib/librubberband.so
-/usr/lib/{0}/rubberband/lib/librubberband.so.2
-/usr/lib/{0}/rubberband/lib/librubberband.so.2.1.0
-/usr/lib/{0}/rubberband/lib/pkgconfig/rubberband.pc
 /usr/lib/{0}/themes/default/drop-down.png
 /usr/lib/{0}/themes/default/euphoria.png
 /usr/lib/{0}/themes/default/h-fader.png
