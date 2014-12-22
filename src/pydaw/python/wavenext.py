@@ -421,10 +421,20 @@ class transport_widget(libmk.AbstractTransport):
                     f_path = os.path.join(
                         libmk.PROJECT.audio_tmp_folder, "{}.wav".format(f_i))
                     if os.path.isfile(f_path):
+                        f_file_name = "-".join(
+                            str(x) for x in (f_txt, f_i, f_ai.get_name()))
                         f_new_path = os.path.join(
-                            libmk.PROJECT.user_folder,
-                            "{}-{}-{}.wav".format(
-                                f_txt, f_i, f_ai.get_name()))
+                            libmk.PROJECT.user_folder, f_file_name)
+                        if f_new_path.lower().endswith(".wav"):
+                            f_new_path = f_new_path[:-4]
+                        if os.path.exists(f_new_path + ".wav"):
+                            for f_i in range(10000):
+                                f_tmp = "{}-{}.wav".format(f_new_path, f_i)
+                                if not os.path.exists(f_tmp):
+                                    f_new_path = f_tmp
+                                    break
+                        else:
+                            f_new_path += ".wav"
                         shutil.move(f_path, f_new_path)
                     else:
                         print("Error, path did not exist: {}".format(f_path))
@@ -435,9 +445,18 @@ class transport_widget(libmk.AbstractTransport):
             f_window.close()
 
         def on_cancel():
+            for f_file in os.listdir(libmk.PROJECT.audio_tmp_folder):
+                if f_file.endswith(".wav"):
+                    f_path = os.path.join(
+                        libmk.PROJECT.audio_tmp_folder, f_file)
+                    os.remove(f_path)
             f_window.close()
 
+        def dialog_close_event(a_event):
+            QtGui.QDialog.closeEvent(f_window, a_event)
+
         f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.closeEvent = dialog_close_event
         f_window.setWindowTitle(_("Save Recorded Audio"))
         f_window.setFixedSize(420, 90)
         f_layout = QtGui.QVBoxLayout()
