@@ -484,113 +484,9 @@ class transport_widget(libmk.AbstractTransport):
     def set_tooltips(self, a_enabled):
         pass
 
-
-# TODO:  Remove some of the junk from here
-class pydaw_audio_item:
-    def __init__(
-            self, a_uid, a_sample_start=0.0, a_sample_end=1000.0,
-            a_start_bar=0, a_start_beat=0.0, a_timestretch_mode=3,
-            a_pitch_shift=0.0, a_output_track=0, a_vol=0.0,
-            a_timestretch_amt=1.0, a_fade_in=0.0, a_fade_out=999.0,
-            a_lane_num=0, a_pitch_shift_end=0.0,
-            a_timestretch_amt_end=1.0, a_reversed=False, a_crispness=5,
-            a_fadein_vol=-18, a_fadeout_vol=-18, a_paif_automation_uid=0,
-            a_send1=-1, a_s1_vol=0.0, a_send2=-1, a_s2_vol=0.0,
-            a_s0_sc=False, a_s1_sc=False, a_s2_sc=False):
-        self.uid = int(a_uid)
-        self.sample_start = float(a_sample_start)
-        self.sample_end = float(a_sample_end)
-        self.start_bar = int(a_start_bar)
-        self.start_beat = float(a_start_beat)
-        self.time_stretch_mode = int(a_timestretch_mode)
-        self.pitch_shift = float(a_pitch_shift)
-        self.output_track = int(a_output_track)
-        self.vol = round(float(a_vol), 1)
-        self.timestretch_amt = float(a_timestretch_amt)
-        self.fade_in = float(a_fade_in)
-        self.fade_out = float(a_fade_out)
-        self.lane_num = int(a_lane_num)
-        self.pitch_shift_end = float(a_pitch_shift_end)
-        self.timestretch_amt_end = float(a_timestretch_amt_end)
-        if isinstance(a_reversed, bool):
-            self.reversed = a_reversed
-        else:
-            self.reversed = int_to_bool(a_reversed)
-        self.crispness = int(a_crispness) #This is specific to Rubberband
-        self.fadein_vol = int(a_fadein_vol)
-        self.fadeout_vol = int(a_fadeout_vol)
-        self.paif_automation_uid = int(a_paif_automation_uid)
-        self.send1 = int(a_send1)
-        self.s1_vol = round(float(a_s1_vol), 1)
-        self.send2 = int(a_send2)
-        self.s2_vol = round(float(a_s2_vol), 1)
-        self.s0_sc = int_to_bool(a_s0_sc)
-        self.s1_sc = int_to_bool(a_s1_sc)
-        self.s2_sc = int_to_bool(a_s2_sc)
-
-    def set_pos(self, a_bar, a_beat):
-        self.start_bar = int(a_bar)
-        self.start_beat = float(a_beat)
-
-    def set_fade_in(self, a_value):
-        f_value = pydaw_clip_value(a_value, 0.0, self.fade_out - 1.0)
-        self.fade_in = f_value
-
-    def set_fade_out(self, a_value):
-        f_value = pydaw_clip_value(a_value, self.fade_in + 1.0, 999.0)
-        self.fade_out = f_value
-
-    def clip_at_region_end(self, a_region_length, a_tempo,
-            a_sample_length_seconds, a_truncate=True):
-        f_region_length_beats = a_region_length * 4
-        f_seconds_per_beat = (60.0 / a_tempo)
-        f_region_length_seconds = f_seconds_per_beat * f_region_length_beats
-        f_item_start_beats = (self.start_bar * 4.0) + self.start_beat
-        f_item_start_seconds = f_item_start_beats * f_seconds_per_beat
-        f_sample_start_seconds = (
-            self.sample_start * 0.001 * a_sample_length_seconds)
-        f_sample_end_seconds = (
-            self.sample_end * 0.001 * a_sample_length_seconds)
-        f_actual_sample_length = f_sample_end_seconds - f_sample_start_seconds
-        f_actual_item_end = f_item_start_seconds + f_actual_sample_length
-
-        if a_truncate and f_actual_item_end > f_region_length_seconds:
-            f_new_item_end_seconds = (f_region_length_seconds -
-                f_item_start_seconds) + f_sample_start_seconds
-            f_new_item_end = (
-                f_new_item_end_seconds / a_sample_length_seconds) * 1000.0
-            print("clip_at_region_end:  new end: {}".format(f_new_item_end))
-            self.sample_end = f_new_item_end
-            return True
-        elif not a_truncate:
-            f_new_start_seconds = \
-                f_region_length_seconds - f_actual_sample_length
-            f_beats_total = f_new_start_seconds / f_seconds_per_beat
-            self.start_bar = int(f_beats_total) // 4
-            self.start_beat = f_beats_total % 4.0
-            return True
-        else:
-            return False
-
-    def __eq__(self, other):
-        return str(self) == str(other)
-
+class pydaw_audio_item(MkAudioItem):
     def clone(self):
         return pydaw_audio_item.from_arr(str(self).strip("\n").split("|"))
-
-    def __str__(self):
-        return "{}\n".format("|".join(proj_file_str(x) for x in
-            (self.uid, self.sample_start, self.sample_end,
-            self.start_bar, self.start_beat,
-            self.time_stretch_mode, self.pitch_shift, self.output_track,
-            self.vol, self.timestretch_amt,
-            self.fade_in, self.fade_out, self.lane_num, self.pitch_shift_end,
-            self.timestretch_amt_end, bool_to_int(self.reversed),
-            int(self.crispness), int(self.fadein_vol), int(self.fadeout_vol),
-            int(self.paif_automation_uid),
-            self.send1, self.s1_vol, self.send2, self.s2_vol,
-            bool_to_int(self.s0_sc), bool_to_int(self.s1_sc),
-            bool_to_int(self.s2_sc))))
 
     @staticmethod
     def from_str(f_str):
@@ -600,8 +496,6 @@ class pydaw_audio_item:
     def from_arr(a_arr):
         f_result = pydaw_audio_item(*a_arr)
         return f_result
-
-
 
 class pydaw_main_window(QtGui.QScrollArea):
     def __init__(self):
