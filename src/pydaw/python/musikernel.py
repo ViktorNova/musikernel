@@ -795,11 +795,14 @@ class MkMainWindow(QtGui.QMainWindow):
 
     def on_change_audio_settings(self):
         close_pydaw_engine()
-        libmk.PLUGIN_UI_DICT.save_all_plugin_state()
-        time.sleep(1.0)
+        time.sleep(2.0)
         f_dialog = pydaw_device_dialog.pydaw_device_dialog(True)
         f_dialog.show_device_dialog()
-        open_pydaw_engine(PROJECT_FILE)
+        # Doesn't re-send the 'ready' message?
+        #open_pydaw_engine(PROJECT_FILE)
+        global RESPAWN
+        RESPAWN = True
+        self.prepare_to_quit()
 
     def on_kill_engine(self):
         libmk.IPC.pydaw_kill_engine()
