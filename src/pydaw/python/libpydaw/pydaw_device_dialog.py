@@ -163,6 +163,8 @@ class pydaw_device_dialog:
             f_dev = self.pyaudio.Pa_GetDeviceInfo(i)
             f_dev_name = f_dev.contents.name.decode("utf-8")
             f_audio_device_names.append(f_dev_name)
+            if f_device_str == f_dev_name:
+                break
 
         self.close_devices()
 
