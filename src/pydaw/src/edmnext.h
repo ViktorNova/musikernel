@@ -291,7 +291,8 @@ void v_en_process_atm(t_edmnext * self, int f_track_num,
     int f_index, int sample_count, int a_playback_mode,
     t_en_thread_storage * a_ts);
 
-void v_en_set_midi_device(t_edmnext*, int, int, int);
+void v_en_set_midi_device(int, int, int);
+void v_en_set_midi_devices();
 
 void g_en_midi_routing_list_init(t_pydaw_midi_routing_list*);
 
@@ -2337,6 +2338,8 @@ void v_en_open_project(int a_first_load)
     v_en_update_track_send(edmnext, 0);
 
     v_en_set_is_soloed(edmnext);
+
+    v_en_set_midi_devices();
 }
 
 
@@ -3324,9 +3327,9 @@ t_pydaw_routing_graph * g_pydaw_routing_graph_get(t_edmnext * self)
     return f_result;
 }
 
-void v_en_set_midi_device(
-    t_edmnext *self, int a_on, int a_device, int a_output)
+void v_en_set_midi_device(int a_on, int a_device, int a_output)
 {
+    t_edmnext * self = edmnext;
     /* Interim logic to get a minimum viable product working
      * TODO:  Make it modular and able to support multiple devices
      */
@@ -3374,6 +3377,59 @@ void v_en_set_midi_device(
         f_track_new->midi_device = 0;
     }
 }
+
+
+void v_en_set_midi_devices()
+{
+    char f_path[2048];
+    int f_i, f_i2;
+    t_midi_device * f_device;
+
+    if(!musikernel->midi_devices)
+    {
+        return;
+    }
+
+    sprintf(f_path, "%s/projects/edmnext/midi_routing.txt",
+        musikernel->project_folder);
+
+    if(!i_pydaw_file_exists(f_path))
+    {
+        return;
+    }
+
+    t_2d_char_array * f_current_string =
+        g_get_2d_array_from_file(f_path, PYDAW_LARGE_STRING);
+
+    for(f_i = 0; f_i < EN_TRACK_COUNT; ++f_i)
+    {
+        v_iterate_2d_char_array(f_current_string);
+        if(f_current_string->eof)
+        {
+            break;
+        }
+
+        int f_on = atoi(f_current_string->current_str);
+
+        v_iterate_2d_char_array(f_current_string);
+        int f_track_num = atoi(f_current_string->current_str);
+
+        v_iterate_2d_char_array_to_next_line(f_current_string);
+
+        for(f_i2 = 0; f_i2 < musikernel->midi_devices->count; ++f_i2)
+        {
+            f_device = &musikernel->midi_devices->devices[f_i2];
+            if(!strcmp(f_current_string->current_str, f_device->name))
+            {
+                v_en_set_midi_device(f_on, f_i2, f_track_num);
+                break;
+            }
+        }
+    }
+
+    g_free_2d_char_array(f_current_string);
+}
+
 
 void v_en_configure(const char* a_key, const char* a_value)
 {
@@ -3648,7 +3704,7 @@ void v_en_configure(const char* a_key, const char* a_value)
 
         pthread_spin_lock(&musikernel->main_lock);
 
-        v_en_set_midi_device(edmnext, f_on, f_device, f_output);
+        v_en_set_midi_device(f_on, f_device, f_output);
 
         pthread_spin_unlock(&musikernel->main_lock);
     }

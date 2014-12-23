@@ -20,6 +20,8 @@ GNU General Public License for more details.
 #include <time.h>
 #include <portmidi.h>
 
+#define MK_MAX_MIDI_DEVICE_COUNT 8
+
 #define MIDI_EVENT_BUFFER_SIZE 1024
 #define MIDI_CONTROLLER_COUNT 128
 
@@ -52,7 +54,7 @@ typedef struct
 typedef struct
 {
     int count;
-    t_midi_device devices[8];
+    t_midi_device devices[MK_MAX_MIDI_DEVICE_COUNT];
 }t_midi_device_list;
 
 void midiDeviceRead(t_midi_device *, float, unsigned long);

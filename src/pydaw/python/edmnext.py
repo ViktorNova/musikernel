@@ -7953,6 +7953,7 @@ class item_list_editor:
 
 class midi_device:
     def __init__(self, a_name, a_index, a_layout, a_save_callback):
+        self.suppress_updates = True
         self.name = str(a_name)
         self.index = int(a_index)
         self.save_callback = a_save_callback
@@ -7967,9 +7968,10 @@ class midi_device:
         AUDIO_TRACK_COMBOBOXES.append(self.track_combobox)
         self.track_combobox.currentIndexChanged.connect(self.device_changed)
         a_layout.addWidget(self.track_combobox, f_index, 2)
+        self.suppress_updates = False
 
     def device_changed(self, a_val=None):
-        if SUPPRESS_TRACK_COMBOBOX_CHANGES:
+        if SUPPRESS_TRACK_COMBOBOX_CHANGES or self.suppress_updates:
             return
         PROJECT.en_osc.pydaw_midi_device(
             self.record_checkbox.isChecked(), self.index,
@@ -7982,8 +7984,10 @@ class midi_device:
             self.track_combobox.currentIndex(), self.name)
 
     def set_routing(self, a_routing):
+        self.suppress_updates = True
         self.track_combobox.setCurrentIndex(a_routing.track_num)
         self.record_checkbox.setChecked(a_routing.on)
+        self.suppress_updates = False
 
 class midi_devices_dialog:
     def __init__(self):
@@ -8007,9 +8011,6 @@ class midi_devices_dialog:
 
     def save_callback(self):
         PROJECT.save_midi_routing(self.get_routings())
-
-    def on_ready(self):
-        self.set_routings()
 
     def set_routings(self):
         f_routings = PROJECT.get_midi_routing()
@@ -9041,8 +9042,7 @@ class pydaw_main_window(QtGui.QScrollArea):
                 libmk.PLUGIN_UI_DICT.midi_learn_control[0].update_cc_map(
                     a_val, libmk.PLUGIN_UI_DICT.midi_learn_control[1])
             elif a_key == "ready":
-                for f_widget in (MIDI_DEVICES_DIALOG,):
-                    f_widget.on_ready()
+                print("Engine sent 'ready' signal to the UI")
         #This prevents multiple events from moving the same control,
         #only the last goes through
         for k, f_val in f_ui_dict.items():
@@ -9140,6 +9140,7 @@ def global_open_project(a_project_file):
     ROUTING_GRAPH_WIDGET.draw_graph(
         PROJECT.get_routing_graph(), TRACK_PANEL.get_track_names())
     global_open_mixer()
+    MIDI_DEVICES_DIALOG.set_routings()
 
 def global_new_project(a_project_file):
     global PROJECT
