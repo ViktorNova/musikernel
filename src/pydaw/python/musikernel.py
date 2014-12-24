@@ -1109,7 +1109,10 @@ class MkMainWindow(QtGui.QMainWindow):
         f_window.exec_()
 
     def on_offline_render(self):
+        libmk.PLUGIN_UI_DICT.save_all_plugin_state()
+        close_pydaw_engine()
         self.current_window.on_offline_render()
+        open_pydaw_engine(PROJECT_FILE)
 
     def on_undo(self):
         self.current_window.on_undo()
