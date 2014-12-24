@@ -38,22 +38,25 @@ TRACK_COUNT_ALL = 32
 MAX_AUDIO_ITEM_COUNT = 256
 MAX_REGION_LENGTH = 64 #bars
 
-pydaw_folder_edmnext = "projects/edmnext"
-pydaw_folder_audio_per_item_fx = "projects/edmnext/audio_per_item_fx"
-pydaw_folder_items = "projects/edmnext/items"
-pydaw_folder_regions = "projects/edmnext/regions"
-pydaw_folder_regions_audio = "projects/edmnext/regions_audio"
-pydaw_folder_regions_atm = "projects/edmnext/regions_atm"
-pydaw_folder_tracks = "projects/edmnext/tracks"
+pydaw_folder_edmnext = os.path.join("projects", "edmnext")
+pydaw_folder_audio_per_item_fx = os.path.join(
+    "projects", "edmnext", "audio_per_item_fx")
+pydaw_folder_items = os.path.join("projects", "edmnext", "items")
+pydaw_folder_regions = os.path.join("projects", "edmnext", "regions")
+pydaw_folder_regions_audio = os.path.join(
+    "projects", "edmnext", "regions_audio")
+pydaw_folder_regions_atm = os.path.join("projects", "edmnext", "regions_atm")
+pydaw_folder_tracks = os.path.join("projects", "edmnext", "tracks")
 
-pydaw_file_routing_graph = "projects/edmnext/routing.txt"
-pydaw_file_midi_routing = "projects/edmnext/midi_routing.txt"
-pydaw_file_pyregions = "projects/edmnext/regions.txt"
-pydaw_file_pyitems = "projects/edmnext/items.txt"
-pydaw_file_pysong = "projects/edmnext/song.txt"
-pydaw_file_pytransport = "projects/edmnext/transport.txt"
-pydaw_file_pytracks = "projects/edmnext/tracks.txt"
-pydaw_file_notes = "projects/edmnext/notes.txt"
+pydaw_file_routing_graph = os.path.join("projects", "edmnext", "routing.txt")
+pydaw_file_midi_routing = os.path.join(
+    "projects", "edmnext", "midi_routing.txt")
+pydaw_file_pyregions = os.path.join("projects", "edmnext", "regions.txt")
+pydaw_file_pyitems = os.path.join("projects", "edmnext", "items.txt")
+pydaw_file_pysong = os.path.join("projects", "edmnext", "song.txt")
+pydaw_file_pytransport = os.path.join("projects", "edmnext", "transport.txt")
+pydaw_file_pytracks = os.path.join("projects", "edmnext", "tracks.txt")
+pydaw_file_notes = os.path.join("projects", "edmnext", "notes.txt")
 
 #Anything smaller gets deleted when doing a transform
 pydaw_min_note_length = 4.0 / 129.0
@@ -126,31 +129,32 @@ class EdmNextProject(libmk.AbstractProject):
         self.project_folder = os.path.dirname(a_project_file)
         self.project_file = os.path.splitext(
             os.path.basename(a_project_file))[0]
-        self.regions_folder = "{}/{}".format(
+        self.regions_folder = os.path.join(
             self.project_folder, pydaw_folder_regions)
-        self.regions_audio_folder = "{}/{}".format(
+        self.regions_audio_folder = os.path.join(
             self.project_folder, pydaw_folder_regions_audio)
-        self.regions_atm_folder = "{}/{}".format(
+        self.regions_atm_folder = os.path.join(
             self.project_folder, pydaw_folder_regions_atm)
-        self.items_folder = "{}/{}".format(
+        self.items_folder = os.path.join(
             self.project_folder, pydaw_folder_items)
-        self.edmnext_folder = "{}/{}".format(
+        self.edmnext_folder = os.path.join(
             self.project_folder, pydaw_folder_edmnext)
-        self.audio_per_item_fx_folder = "{}/{}".format(
+        self.audio_per_item_fx_folder = os.path.join(
             self.project_folder, pydaw_folder_audio_per_item_fx)
-        self.track_pool_folder = "{}/{}".format(
+        self.track_pool_folder = os.path.join(
             self.project_folder, pydaw_folder_tracks)
         #files
-        self.pyregions_file = "{}/{}".format(
+        self.pyregions_file = os.path.join(
             self.project_folder, pydaw_file_pyregions)
-        self.pyitems_file = "{}/{}".format(
+        self.pyitems_file = os.path.join(
             self.project_folder, pydaw_file_pyitems)
-        self.pyscale_file = "{}/default.pyscale".format(self.project_folder)
-        self.pynotes_file = "{}/{}".format(
+        self.pyscale_file = os.path.join(
+            self.project_folder, "default.pyscale")
+        self.pynotes_file = os.path.join(
             self.project_folder, pydaw_file_notes)
-        self.routing_graph_file = "{}/{}".format(
+        self.routing_graph_file = os.path.join(
             self.project_folder, pydaw_file_routing_graph)
-        self.midi_routing_file = "{}/{}".format(
+        self.midi_routing_file = os.path.join(
             self.project_folder, pydaw_file_midi_routing)
 
         self.project_folders = [
@@ -260,7 +264,7 @@ class EdmNextProject(libmk.AbstractProject):
     def get_song_string(self):
         try:
             f_file = open(
-                "{}/{}".format(self.project_folder, pydaw_file_pysong))
+                os.path.join(self.project_folder, pydaw_file_pysong))
         except:
             return pydaw_terminating_char
         f_result = f_file.read()
