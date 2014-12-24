@@ -458,13 +458,14 @@ class transport_widget(libmk.AbstractTransport):
         f_window = QtGui.QDialog(MAIN_WINDOW)
         f_window.closeEvent = dialog_close_event
         f_window.setWindowTitle(_("Save Recorded Audio"))
-        f_window.setFixedSize(420, 90)
+        #f_window.setFixedSize(420, 90)
         f_layout = QtGui.QVBoxLayout()
         f_window.setLayout(f_layout)
         f_hlayout = QtGui.QHBoxLayout()
         f_layout.addLayout(f_hlayout)
         f_hlayout.addWidget(QtGui.QLabel("Name"))
         f_name_lineedit = QtGui.QLineEdit()
+        f_name_lineedit.setMinimumWidth(330)
         f_hlayout.addWidget(f_name_lineedit)
         f_copy_path_checkbox = QtGui.QRadioButton(
             _("Copy directory to clipboard?"))
