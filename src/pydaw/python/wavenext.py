@@ -424,7 +424,7 @@ class transport_widget(libmk.AbstractTransport):
                         f_file_name = "-".join(
                             str(x) for x in (f_txt, f_i, f_ai.get_name()))
                         f_new_path = os.path.join(
-                            libmk.PROJECT.user_folder, f_file_name)
+                            libmk.PROJECT.audio_rec_folder, f_file_name)
                         if f_new_path.lower().endswith(".wav"):
                             f_new_path = f_new_path[:-4]
                         if os.path.exists(f_new_path + ".wav"):
@@ -441,7 +441,7 @@ class transport_widget(libmk.AbstractTransport):
             self.copy_path_to_clipboard = f_copy_path_checkbox.isChecked()
             if self.copy_path_to_clipboard:
                 f_clipboard = libmk.APP.clipboard()
-                f_clipboard.setText(libmk.PROJECT.user_folder)
+                f_clipboard.setText(libmk.PROJECT.audio_rec_folder)
             f_window.close()
 
         def on_cancel():

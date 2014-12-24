@@ -23,19 +23,20 @@ import wavefile
 import datetime
 import os
 
-pydaw_folder_audio = "audio/files"
-pydaw_folder_samplegraph = "audio/samplegraph"
-pydaw_folder_samples = "audio/samples"
-pydaw_folder_timestretch = "audio/timestretch"
-pydaw_folder_glued = "audio/glued"
+pydaw_folder_audio = os.path.join("audio", "files")
+pydaw_folder_audio_rec = os.path.join("audio", "rec")
+pydaw_folder_samplegraph = os.path.join("audio", "samplegraph")
+pydaw_folder_samples = os.path.join("audio", "samples")
+pydaw_folder_timestretch = os.path.join("audio", "timestretch")
+pydaw_folder_glued = os.path.join("audio", "glued")
 pydaw_folder_user = "user"
 pydaw_folder_backups = "backups"
 pydaw_folder_projects = "projects"
-pydaw_folder_plugins = "projects/plugins"
-pydaw_file_plugin_uid = "projects/plugin_uid.txt"
-pydaw_file_pywavs = "audio/wavs.txt"
-pydaw_file_pystretch = "audio/stretch.txt"
-pydaw_file_pystretch_map = "audio/stretch_map.txt"
+pydaw_folder_plugins = os.path.join("projects", "plugins")
+pydaw_file_plugin_uid = os.path.join("projects", "plugin_uid.txt")
+pydaw_file_pywavs = os.path.join("audio", "wavs.txt")
+pydaw_file_pystretch = os.path.join("audio", "stretch.txt")
+pydaw_file_pystretch_map = os.path.join("audio", "stretch_map.txt")
 pydaw_file_backups = "backups.json"
 
 
@@ -52,6 +53,8 @@ class MkProject(libmk.AbstractProject):
 
         self.audio_folder = "{}/{}".format(
             self.project_folder, pydaw_folder_audio)
+        self.audio_rec_folder = "{}/{}".format(
+            self.project_folder, pydaw_folder_audio_rec)
         self.audio_tmp_folder = "{}/{}/tmp".format(
             self.project_folder, pydaw_folder_audio)
         self.samplegraph_folder = "{}/{}".format(
@@ -85,7 +88,8 @@ class MkProject(libmk.AbstractProject):
             self.audio_folder, self.audio_tmp_folder, self.samples_folder,
             self.samplegraph_folder, self.timestretch_folder,
             self.glued_folder, self.user_folder, self.projects_folder,
-            self.backups_folder, self.plugin_pool_folder]
+            self.backups_folder, self.plugin_pool_folder,
+            self.audio_rec_folder]
 
         pydaw_clear_sample_graph_cache()
 
