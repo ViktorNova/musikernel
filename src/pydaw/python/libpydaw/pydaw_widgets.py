@@ -2903,7 +2903,10 @@ class mixer_channel:
     def set_name(self, a_name, a_dict):
         self.name_label.setText(a_name)
         for k in self.outputs:
-            self.output_labels[k].setText(a_dict[self.outputs[k]])
+            if self.outputs[k] == -1:
+                self.remove_plugin(k)
+            else:
+                self.output_labels[k].setText(a_dict[self.outputs[k]])
 
     def add_plugin(self, a_index, a_plugin, a_output):
         assert(a_index != -1)
@@ -2917,6 +2920,7 @@ class mixer_channel:
         a_plugin.widget.setSizePolicy(
             QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Expanding)
         self.grid_layout.addWidget(a_plugin.widget, 1, a_index + 1)
+        a_plugin.widget.setHidden(False)
 
     def remove_plugin(self, a_index):
         if a_index in self.sends:
@@ -2924,6 +2928,7 @@ class mixer_channel:
             self.sends.pop(a_index).widget, self.output_labels.pop(a_index)):
                 self.grid_layout.removeWidget(f_widget)
                 f_widget.setParent(None)
+                f_widget.setHidden(True)
 
 MIXER_TOOLTIP = _("""This is the mixer.
 To add volume sliders, etc...  select a mixer plugin for each send on
@@ -2953,8 +2958,8 @@ class mixer_widget:
         for k, v in a_track_names_dict.items():
             self.tracks[k].set_name(v, a_track_names_dict)
 
-    def set_plugin_widget(self, a_track_index, a_send_index, a_output,
-                          a_plugin):
+    def set_plugin_widget(
+            self, a_track_index, a_send_index, a_output, a_plugin):
         self.tracks[a_track_index].add_plugin(
             a_send_index, a_plugin, a_output)
 

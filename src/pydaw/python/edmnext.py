@@ -8035,7 +8035,8 @@ def global_open_mixer():
             if f_track_index in f_plugins and \
             f_send_plugin_index in f_plugins[f_track_index]:
                 f_plugin_obj = f_plugins[f_track_index][f_send_plugin_index]
-                if f_plugin_obj.plugin_index == 0:  # None
+                if f_plugin_obj.plugin_index == 0 or \
+                f_send.output == -1:  # None
                     continue
                 f_plugin_ui = libmk.PLUGIN_UI_DICT.open_plugin_ui(
                     f_plugin_obj.plugin_uid, f_plugin_obj.plugin_index,
