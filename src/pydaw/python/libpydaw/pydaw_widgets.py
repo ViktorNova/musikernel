@@ -2889,7 +2889,7 @@ class mixer_channel:
         self.grid_layout = QtGui.QGridLayout()
         self.vlayout.addLayout(self.grid_layout, 1)
         self.peak_meter = peak_meter(20, True)
-        self.grid_layout.addWidget(self.peak_meter.widget, 1, 0)
+        self.grid_layout.addWidget(self.peak_meter.widget, 0, 0, 2, 1)
 
     def clear(self):
         self.sends = {}
