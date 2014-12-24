@@ -527,6 +527,9 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.notes_tab.leaveEvent = self.on_edit_notes
         self.main_tabwidget.addTab(self.notes_tab, _("Project Notes"))
 
+    def on_offline_render(self, a_val=None):
+        WAVE_EDITOR.on_export()
+
     def on_edit_notes(self, a_event=None):
         QtGui.QTextEdit.leaveEvent(self.notes_tab, a_event)
         PROJECT.write_notes(self.notes_tab.toPlainText())
@@ -1274,3 +1277,4 @@ MAIN_WINDOW = pydaw_main_window()
 if libmk.TOOLTIPS_ENABLED:
     set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
 
+CLOSE_ENGINE_ON_RENDER = False

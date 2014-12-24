@@ -9224,3 +9224,4 @@ PIANO_ROLL_EDITOR_WIDGET.snap_combobox.setCurrentIndex(4)
 if libmk.TOOLTIPS_ENABLED:
     set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
 
+CLOSE_ENGINE_ON_RENDER = True
