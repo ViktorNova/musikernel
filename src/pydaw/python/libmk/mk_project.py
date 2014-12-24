@@ -51,37 +51,37 @@ class MkProject(libmk.AbstractProject):
         self.project_file = os.path.splitext(
             os.path.basename(a_project_file))[0]
 
-        self.audio_folder = "{}/{}".format(
+        self.audio_folder = os.path.join(
             self.project_folder, pydaw_folder_audio)
-        self.audio_rec_folder = "{}/{}".format(
+        self.audio_rec_folder = os.path.join(
             self.project_folder, pydaw_folder_audio_rec)
-        self.audio_tmp_folder = "{}/{}/tmp".format(
-            self.project_folder, pydaw_folder_audio)
-        self.samplegraph_folder = "{}/{}".format(
+        self.audio_tmp_folder = os.path.join(
+            self.project_folder, pydaw_folder_audio, "tmp")
+        self.samplegraph_folder = os.path.join(
             self.project_folder, pydaw_folder_samplegraph)
-        self.timestretch_folder = "{}/{}".format(
+        self.timestretch_folder = os.path.join(
             self.project_folder, pydaw_folder_timestretch)
-        self.glued_folder = "{}/{}".format(
+        self.glued_folder = os.path.join(
             self.project_folder, pydaw_folder_glued)
-        self.user_folder = "{}/{}".format(
+        self.user_folder = os.path.join(
             self.project_folder, pydaw_folder_user)
-        self.backups_folder = "{}/{}".format(
+        self.backups_folder = os.path.join(
             self.project_folder, pydaw_folder_backups)
-        self.samples_folder = "{}/{}".format(
+        self.samples_folder = os.path.join(
             self.project_folder, pydaw_folder_samples)
-        self.backups_file = "{}/{}".format(
+        self.backups_file = os.path.join(
             self.project_folder, pydaw_file_backups)
-        self.plugin_pool_folder = "{}/{}".format(
+        self.plugin_pool_folder = os.path.join(
             self.project_folder, pydaw_folder_plugins)
-        self.projects_folder = "{}/{}".format(
+        self.projects_folder = os.path.join(
             self.project_folder, pydaw_folder_projects)
-        self.plugin_uid_file = "{}/{}".format(
+        self.plugin_uid_file = os.path.join(
             self.project_folder, pydaw_file_plugin_uid)
-        self.pywavs_file = "{}/{}".format(
+        self.pywavs_file = os.path.join(
             self.project_folder, pydaw_file_pywavs)
-        self.pystretch_file = "{}/{}".format(
+        self.pystretch_file = os.path.join(
             self.project_folder, pydaw_file_pystretch)
-        self.pystretch_map_file = "{}/{}".format(
+        self.pystretch_map_file = os.path.join(
             self.project_folder, pydaw_file_pystretch_map)
 
         self.project_folders = [
