@@ -79,11 +79,12 @@ class WaveNextOsc(libmk.AbstractIPC):
     def save_audio_inputs(self):
         self.send_configure("ai", "")
 
-
-wavenext_folder_tracks = "projects/wavenext/tracks"
-pydaw_file_wave_editor_bookmarks = "projects/edmnext/wave_editor_bookmarks.txt"
-pydaw_file_notes = "projects/wavenext/notes.txt"
-pydaw_file_pyinput = "projects/wavenext/input.txt"
+wavenext_folder = os.path.join("projects", "wavenext")
+wavenext_folder_tracks = os.path.join(wavenext_folder, "tracks")
+pydaw_file_wave_editor_bookmarks = os.path.join(
+    wavenext_folder, "bookmarks.txt")
+pydaw_file_notes = os.path.join(wavenext_folder, "notes.txt")
+pydaw_file_pyinput = os.path.join(wavenext_folder, "input.txt")
 
 
 class WaveNextProject(libmk.AbstractProject):
@@ -101,12 +102,12 @@ class WaveNextProject(libmk.AbstractProject):
         self.project_folder = os.path.dirname(a_project_file)
         self.project_file = os.path.splitext(
             os.path.basename(a_project_file))[0]
-        self.wn_track_pool_folder = "{}/{}".format(
+        self.wn_track_pool_folder = os.path.join(
             self.project_folder, wavenext_folder_tracks)
         #files
-        self.pynotes_file = "{}/{}".format(
+        self.pynotes_file = os.path.join(
             self.project_folder, pydaw_file_notes)
-        self.pywebm_file = "{}/{}".format(
+        self.pywebm_file = os.path.join(
             self.project_folder, pydaw_file_wave_editor_bookmarks)
         self.audio_inputs_file = os.path.join(
             self.project_folder, pydaw_file_pyinput)

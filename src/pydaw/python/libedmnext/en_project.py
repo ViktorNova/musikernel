@@ -40,23 +40,23 @@ MAX_REGION_LENGTH = 64 #bars
 
 pydaw_folder_edmnext = os.path.join("projects", "edmnext")
 pydaw_folder_audio_per_item_fx = os.path.join(
-    "projects", "edmnext", "audio_per_item_fx")
-pydaw_folder_items = os.path.join("projects", "edmnext", "items")
-pydaw_folder_regions = os.path.join("projects", "edmnext", "regions")
+    pydaw_folder_edmnext, "audio_per_item_fx")
+pydaw_folder_items = os.path.join(pydaw_folder_edmnext, "items")
+pydaw_folder_regions = os.path.join(pydaw_folder_edmnext, "regions")
 pydaw_folder_regions_audio = os.path.join(
-    "projects", "edmnext", "regions_audio")
-pydaw_folder_regions_atm = os.path.join("projects", "edmnext", "regions_atm")
-pydaw_folder_tracks = os.path.join("projects", "edmnext", "tracks")
+    pydaw_folder_edmnext, "regions_audio")
+pydaw_folder_regions_atm = os.path.join(pydaw_folder_edmnext, "regions_atm")
+pydaw_folder_tracks = os.path.join(pydaw_folder_edmnext, "tracks")
 
-pydaw_file_routing_graph = os.path.join("projects", "edmnext", "routing.txt")
+pydaw_file_routing_graph = os.path.join(pydaw_folder_edmnext, "routing.txt")
 pydaw_file_midi_routing = os.path.join(
-    "projects", "edmnext", "midi_routing.txt")
-pydaw_file_pyregions = os.path.join("projects", "edmnext", "regions.txt")
-pydaw_file_pyitems = os.path.join("projects", "edmnext", "items.txt")
-pydaw_file_pysong = os.path.join("projects", "edmnext", "song.txt")
-pydaw_file_pytransport = os.path.join("projects", "edmnext", "transport.txt")
-pydaw_file_pytracks = os.path.join("projects", "edmnext", "tracks.txt")
-pydaw_file_notes = os.path.join("projects", "edmnext", "notes.txt")
+    pydaw_folder_edmnext, "midi_routing.txt")
+pydaw_file_pyregions = os.path.join(pydaw_folder_edmnext, "regions.txt")
+pydaw_file_pyitems = os.path.join(pydaw_folder_edmnext, "items.txt")
+pydaw_file_pysong = os.path.join(pydaw_folder_edmnext, "song.txt")
+pydaw_file_pytransport = os.path.join(pydaw_folder_edmnext, "transport.txt")
+pydaw_file_pytracks = os.path.join(pydaw_folder_edmnext, "tracks.txt")
+pydaw_file_notes = os.path.join(pydaw_folder_edmnext, "notes.txt")
 
 #Anything smaller gets deleted when doing a transform
 pydaw_min_note_length = 4.0 / 129.0
