@@ -146,8 +146,12 @@ message if an attempted connection creates feedback.
 troubleshooting = _(
 """<h3>Drop-outs or Xruns:</h3>
 
-<p>These are usually caused by CPU power management throttling the CPU clock
-frequency too aggressively.  Some PCs may just be able to force the CPU
+<p>Xruns are usually caused by CPU power management throttling the CPU clock
+frequency too aggressively, especially if you are using a laptop.  Other
+causes are using an older or slower CPU in a CPU intensive project, or
+possibly (but probably not) bad audio drivers.</p>
+
+<p>Some PCs may just be able to force the CPU
 governor to "Performance" mode, others may have to disable power management
 features in the BIOS.  Many laptops don't expose the ability to turn off
 these features in the BIOS.</p>
@@ -156,6 +160,12 @@ these features in the BIOS.</p>
 solution, as different generations of Intel and AMD processors use different
 CPU frequency drivers and offer different power saving features and different
 BIOS.</p>
+<br />
+<h3>My microphone doesn't work</h3>
+
+<p>On some interfaces (such as the Apogee One), you may need to open the
+terminal, type the command "alsamixer", and select your interface and
+set the input.</p>
 """
 )
 
