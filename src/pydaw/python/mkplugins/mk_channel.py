@@ -48,18 +48,16 @@ class mkchnl_plugin_ui(pydaw_abstract_plugin_ui):
             -2400, 2400, 0, KC_DECIMAL, self.port_dict, None)
         self.gain_knob.add_to_grid_layout(self.gain_gridlayout, 0)
 
-        self.pan_gridlayout = QtGui.QGridLayout()
-        self.layout.addLayout(self.pan_gridlayout)
         self.pan_knob = pydaw_knob_control(
             f_knob_size, _("Pan"), MKCHNL_PAN,
             self.plugin_rel_callback, self.plugin_val_callback,
             -100, 100, 0, KC_DECIMAL, self.port_dict, None)
-        self.pan_knob.add_to_grid_layout(self.pan_gridlayout, 0)
+        self.pan_knob.add_to_grid_layout(self.gain_gridlayout, 1)
         self.pan_law_knob = pydaw_knob_control(
             f_knob_size, _("Law"), MKCHNL_LAW,
             self.plugin_rel_callback, self.plugin_val_callback,
             -600, 0, -300, KC_DECIMAL, self.port_dict, None)
-        self.pan_law_knob.add_to_grid_layout(self.pan_gridlayout, 1)
+        self.pan_law_knob.add_to_grid_layout(self.gain_gridlayout, 2)
 
         self.volume_gridlayout = QtGui.QGridLayout()
         self.layout.addLayout(self.volume_gridlayout)
@@ -68,10 +66,10 @@ class mkchnl_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             -5000, 0, 0, KC_DECIMAL, self.port_dict)
         self.volume_slider.add_to_grid_layout(self.volume_gridlayout, 0)
-        self.volume_slider.control.setMinimumHeight(300)
+        self.volume_slider.control.setMinimumHeight(240)
         self.volume_slider.control.setSizePolicy(
             QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.widget.setFixedWidth(100)
+        self.widget.setFixedWidth(130)
         self.volume_slider.value_label.setMinimumWidth(91)
         self.widget.setWidgetResizable(True)
         self.open_plugin_file()
