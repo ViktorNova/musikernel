@@ -21,8 +21,9 @@ if not os.getuid() == 0:
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--de", help="Select the desktop environment, choices are:\n"
-"--de=gnome|kde|lxde|xfce|mate",  default="kde")
+parser.add_argument(
+    "--de", help="Select the desktop environment, choices are:\n"
+    "--de=gnome|kde|lxde|xfce|mate", default="kde")
 args = parser.parse_args()
 
 if args.de == "gnome":
@@ -64,8 +65,10 @@ pydaw_rpm_file = None
 for f_rpm_file in os.listdir(global_rpm_dir):
     if f_rpm_file.startswith("musikernel") and \
     f_rpm_file.endswith(".rpm") and \
-    pydaw_version in f_rpm_file:
+    pydaw_version in f_rpm_file and \
+    "debuginfo" not in f_rpm_file:
         pydaw_rpm_file = f_rpm_file
+        print("Using {}".format(pydaw_rpm_file))
 
 if pydaw_rpm_file is None:
     print("No MusiKernel .rpm files with current version {} found in {}, \n"
