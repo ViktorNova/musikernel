@@ -858,7 +858,7 @@ class OrderedTable(QtGui.QGraphicsView):
         self.item_width = a_item_width
         self.total_height = self.item_height * len(a_item_labels)
         self.total_width = a_item_width
-        self.scene = QtGui.QGraphicsScene()
+        self.scene = QtGui.QGraphicsScene(self)
         self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
         self.setScene(self.scene)
         self.setFixedSize(
@@ -3062,7 +3062,7 @@ class pydaw_additive_wav_viewer(QtGui.QGraphicsView):
         self.setMaximumWidth(600)
         self.last_x_scale = 1.0
         self.last_y_scale = 1.0
-        self.scene = QtGui.QGraphicsScene()
+        self.scene = QtGui.QGraphicsScene(self)
         self.setScene(self.scene)
         self.scene.setBackgroundBrush(ADD_OSC_BACKGROUND)
         self.setSceneRect(
@@ -3111,7 +3111,7 @@ class pydaw_additive_osc_viewer(QtGui.QGraphicsView):
             ADDITIVE_OSC_WIDTH, ADDITIVE_OSC_HEIGHT)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.scene = QtGui.QGraphicsScene()
+        self.scene = QtGui.QGraphicsScene(self)
         self.setScene(self.scene)
         self.scene.mousePressEvent = self.scene_mousePressEvent
         self.scene.mouseReleaseEvent = self.scene_mouseReleaseEvent
@@ -3680,7 +3680,7 @@ class pydaw_audio_item_viewer_widget(QtGui.QGraphicsView):
         self.end_callback_x = a_end_callback
         self.fade_in_callback_x = a_fade_in_callback
         self.fade_out_callback_x = a_fade_out_callback
-        self.scene = QtGui.QGraphicsScene()
+        self.scene = QtGui.QGraphicsScene(self)
         self.setScene(self.scene)
         self.setRenderHint(QtGui.QPainter.Antialiasing)
         self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
