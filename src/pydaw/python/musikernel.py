@@ -1128,27 +1128,30 @@ class MkMainWindow(QtGui.QMainWindow):
         for f_module in self.host_modules:
             f_module.set_tooltips_enabled(f_enabled)
 
-def final_gc():
+def final_gc(a_print=True):
     """ Brute-force garbage collect all possible objects to
         prevent the infamous PyQt SEGFAULT-on-exit...
     """
     f_last_unreachable = gc.collect()
     if not f_last_unreachable:
-        print("Successfully garbage collected all objects")
+        if a_print:
+            print("Successfully garbage collected all objects")
         return
     for f_i in range(2, 12):
         time.sleep(0.1)
         f_unreachable = gc.collect()
         if f_unreachable == 0:
-            print("Successfully garbage collected all objects "
-                "in {} iterations".format(f_i))
+            if a_print:
+                print("Successfully garbage collected all objects "
+                    "in {} iterations".format(f_i))
             return
         elif f_unreachable >= f_last_unreachable:
             break
         else:
             f_last_unreachable = f_unreachable
-    print("gc.collect() returned {} unreachable objects "
-        "after {} iterations".format(f_unreachable, f_i))
+    if a_print:
+        print("gc.collect() returned {} unreachable objects "
+            "after {} iterations".format(f_unreachable, f_i))
 
 def flush_events():
     for f_i in range(1, 10):
@@ -1412,6 +1415,7 @@ libmk.APP.setStyle(QtGui.QStyleFactory.create("Fusion"))
 libmk.APP.exec_()
 time.sleep(0.6)
 flush_events()
+final_gc(False)
 libmk.APP.deleteLater()
 time.sleep(0.6)
 libmk.APP = None
