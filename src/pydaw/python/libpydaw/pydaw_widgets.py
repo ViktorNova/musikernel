@@ -2736,6 +2736,10 @@ class routing_graph_widget(QtGui.QGraphicsView):
         self.setMouseTracking(True)
         self.toggle_callback = a_toggle_callback
 
+    def prepare_to_quit(self):
+        self.scene.clearSelection()
+        self.scene.clear()
+
     def get_coords(self, a_pos):
         f_x = int(a_pos.x() // self.node_width)
         f_y = int(a_pos.y() // self.node_height)

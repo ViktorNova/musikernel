@@ -9066,7 +9066,7 @@ class pydaw_main_window(QtGui.QScrollArea):
     def prepare_to_quit(self):
         try:
             for f_widget in (AUDIO_SEQ, PIANO_ROLL_EDITOR,
-            CC_EDITOR, PB_EDITOR, REGION_EDITOR):
+            CC_EDITOR, PB_EDITOR, REGION_EDITOR, ROUTING_GRAPH_WIDGET):
                 f_widget.prepare_to_quit()
         except Exception as ex:
             print("Exception thrown while attempting to close EDM-Next")
