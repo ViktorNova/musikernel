@@ -32,41 +32,55 @@ else:
 TOOLS = {
     "benchmark": "make clean > /dev/null 2>&1 && "
         "make release > /dev/null 2>&1 && "
-        "{BIN} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 --no-file",
+        "{BIN} {HOST} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 "
+        "--no-file",
     "valgrind": "make clean > /dev/null 2>&1 && "
         "make debug > /dev/null 2>&1 && "
         "valgrind --alignment=16 --track-origins=yes "
-        "{BIN}-dbg '{PROJECT}' test.wav 0 0 3 3 {SR} 512 {CORES} 0 --no-file",
+        "{BIN}-dbg {HOST} '{PROJECT}' test.wav 0 0 3 3 {SR} 512 {CORES} 0 "
+        "--no-file",
     "perf": "make clean > /dev/null 2>&1 && "
         "make release > /dev/null 2>&1 && "
         "perf stat -e cache-references,cache-misses,dTLB-loads,"
         "dTLB-load-misses,iTLB-loads,iTLB-load-misses,L1-dcache-loads,"
         "L1-dcache-load-misses,L1-icache-loads,L1-icache-load-misses,"
         "branch-misses,LLC-loads,LLC-load-misses "
-        "{BIN} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 --no-file",
+        "{BIN} {HOST} '{PROJECT}' test.wav 0 0 3 0 {SR} 512 {CORES} 1 "
+        "--no-file",
     "profile": "make clean && make gprof && "
-        "{BIN} '{PROJECT}' test.wav 0 0 3 3 {SR} 512 {CORES} 1 "
+        "{BIN} {HOST} '{PROJECT}' test.wav 0 0 3 3 {SR} 512 {CORES} 1 "
         "&& gprof {BIN} > profile.txt && gedit profile.txt",
     "pahole": "make clean && make debug && pahole {BIN}",
 }
 
-if len(sys.argv) < 2 or sys.argv[1] not in TOOLS:
-    print("Usage: {} {} [CORES=1] [SAMPLE_RATE=44100]".format(
+if len(sys.argv) < 2 or \
+sys.argv[1] not in ('e', 'd') or \
+sys.argv[2] not in TOOLS:
+    print("Usage: {} e|d  {} [CORES=1] "
+        "[SAMPLE_RATE=44100]".format(
         os.path.basename(__file__), "|".join(TOOLS)))
     exit(1)
 
-TOOL = sys.argv[1]
+HOST = {
+    "e":"edmnext",
+    "d":"dawnext"
+}[sys.argv[1]]
 
-if len(sys.argv) >= 3:
-    CORES = int(sys.argv[2])
+TOOL = sys.argv[2]
+
+if len(sys.argv) > 3:
+    CORES = int(sys.argv[3])
     assert(CORES >= 0 and CORES < 32)
 else:
     CORES = 1
 
-if len(sys.argv) >= 4:
-    SR = int(sys.argv[3])
+if len(sys.argv) > 4:
+    SR = int(sys.argv[4])
     assert(SR >= 11025 and SR <= 384000)
 else:
     SR = 44100
 
-os.system(TOOLS[TOOL].format(BIN=BIN, PROJECT=PROJECT, CORES=CORES, SR=SR))
+os.system(
+    TOOLS[TOOL].format(BIN=BIN, HOST=HOST, PROJECT=PROJECT, 
+    CORES=CORES, SR=SR))
+

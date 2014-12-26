@@ -487,7 +487,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     printf("using home folder: %s\n", f_home);
 
     sprintf(f_device_file_path, "%s/%s/config/device.txt",
-        f_home, PYDAW_VERSION);
+        f_home, MUSIKERNEL_VERSION);
 
     char f_device_name[1024];
     f_device_name[0] = '\0';

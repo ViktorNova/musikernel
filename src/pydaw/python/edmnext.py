@@ -8767,8 +8767,6 @@ class pydaw_main_window(QtGui.QScrollArea):
                 _("End point is before start point."))
                 return
 
-            libmk.PLUGIN_UI_DICT.save_all_plugin_state()
-
             if f_copy_to_clipboard_checkbox.isChecked():
                 self.copy_to_clipboard_checked = True
                 f_clipboard = QtGui.QApplication.clipboard()
@@ -8797,9 +8795,9 @@ class pydaw_main_window(QtGui.QScrollArea):
 
             if f_debug_checkbox.isChecked():
                 f_cmd = "x-terminal-emulator -e bash -c " \
-                "'gdb {}-dbg'".format(pydaw_util.global_pydaw_render_bin_path)
+                "'gdb {}-dbg'".format(pydaw_util.RENDER_BIN_PATH)
                 f_run_cmd = [str(x) for x in
-                    ("run", "'{}'".format(f_dir),
+                    ("run", "edmnext", "'{}'".format(f_dir),
                      "'{}'".format(f_out_file), f_sr, f_sb,
                      f_er, f_eb, f_samp_rate, f_buff_size, f_thread_count)]
                 f_clipboard = QtGui.QApplication.clipboard()
@@ -8807,7 +8805,7 @@ class pydaw_main_window(QtGui.QScrollArea):
                 subprocess.Popen(f_cmd, shell=True)
             else:
                 f_cmd = [str(x) for x in
-                    (pydaw_util.global_pydaw_render_bin_path,
+                    (pydaw_util.RENDER_BIN_PATH, "edmnext",
                      f_dir, f_out_file, f_sr, f_sb, f_er, f_eb,
                      f_samp_rate, f_buff_size, f_thread_count,
                      pydaw_util.USE_HUGEPAGES)]

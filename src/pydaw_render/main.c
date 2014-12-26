@@ -33,33 +33,63 @@ GNU General Public License for more details.
 #include "../pydaw/libmodsynth/lib/lmalloc.h"
 #include <unistd.h>
 
+int edmnext_main(int argc, char** argv);
+int dawnext_main(int argc, char** argv);
+void print_help();
+int main(int argc, char** argv);
 
 void print_help()
 {
-    printf("Usage:  %s_render [project_dir] [output_file] [start_region] "
-            "[start_bar] [end_region] [end_bar] [sample_rate] "
-            "[buffer_size] [thread_count] [huge_pages]\n\n", PYDAW_VERSION);
+    printf("Usage:\n");
+    printf("%s_render edmnext [project_dir] [output_file] [start_region] "
+        "[start_bar] [end_region] [end_bar] [sample_rate] "
+        "[buffer_size] [thread_count] [huge_pages]\n\n", MUSIKERNEL_VERSION);
+    printf("%s_render dawnext [project_dir] [output_file] [start_region] "
+        "[start_bar] [end_region] [end_bar] [sample_rate] "
+        "[buffer_size] [thread_count] [huge_pages]\n\n", MUSIKERNEL_VERSION);
 }
 
 int main(int argc, char** argv)
 {
-    if(argc < 11)
+    if(argc < 2)
     {
         print_help();
-        exit(1);
+        return 1;
+    }
+    else if(!strcmp(argv[1], "edmnext"))
+    {
+        return edmnext_main(argc, argv);
+    }
+    else if(!strcmp(argv[1], "dawnext"))
+    {
+        return dawnext_main(argc, argv);
+    }
+    else
+    {
+        print_help();
+        return 1;
+    }
+}
+
+int edmnext_main(int argc, char** argv)
+{
+    if(argc < 12)
+    {
+        print_help();
+        return 1;
     }
 
-    char * f_project_dir = argv[1];
-    char * f_output_file = argv[2];
-    int f_start_region = atoi(argv[3]);
-    int f_start_bar = atoi(argv[4]);
-    int f_end_region = atoi(argv[5]);
-    int f_end_bar = atoi(argv[6]);
-    int f_sample_rate = atoi(argv[7]);
-    int f_buffer_size = atoi(argv[8]);
-    int f_thread_count = atoi(argv[9]);
+    char * f_project_dir = argv[2];
+    char * f_output_file = argv[3];
+    int f_start_region = atoi(argv[4]);
+    int f_start_bar = atoi(argv[5]);
+    int f_end_region = atoi(argv[6]);
+    int f_end_bar = atoi(argv[7]);
+    int f_sample_rate = atoi(argv[8]);
+    int f_buffer_size = atoi(argv[9]);
+    int f_thread_count = atoi(argv[10]);
 
-    int f_huge_pages = atoi(argv[10]);
+    int f_huge_pages = atoi(argv[11]);
     assert(f_huge_pages == 0 || f_huge_pages == 1);
 
     if(f_huge_pages)
@@ -72,7 +102,7 @@ int main(int argc, char** argv)
     int f_create_file = 1;
 
     int f_i;
-    for(f_i = 11; f_i < argc; ++f_i)
+    for(f_i = 12; f_i < argc; ++f_i)
     {
         if(!strcmp(argv[f_i], "--no-file"))
         {
@@ -132,14 +162,100 @@ int main(int argc, char** argv)
     v_en_offline_render(edmnext, f_start_region, f_start_bar,
             f_end_region, f_end_bar, f_output_file, 0, f_create_file);
 
+    v_pydaw_destructor();
+
+    return 0;
+}
+
+int dawnext_main(int argc, char** argv)
+{
+    if(argc < 12)
+    {
+        print_help();
+        return 1;
+    }
+
+    char * f_project_dir = argv[2];
+    char * f_output_file = argv[3];
+    int f_start_region = atoi(argv[4]);
+    int f_start_bar = atoi(argv[5]);
+    int f_end_region = atoi(argv[6]);
+    int f_end_bar = atoi(argv[7]);
+    int f_sample_rate = atoi(argv[8]);
+    int f_buffer_size = atoi(argv[9]);
+    int f_thread_count = atoi(argv[10]);
+
+    int f_huge_pages = atoi(argv[11]);
+    assert(f_huge_pages == 0 || f_huge_pages == 1);
+
+    if(f_huge_pages)
+    {
+        printf("Attempting to use hugepages\n");
+    }
+
+    USE_HUGEPAGES = f_huge_pages;
+
+    int f_create_file = 1;
+
+    int f_i;
+    for(f_i = 12; f_i < argc; ++f_i)
+    {
+        if(!strcmp(argv[f_i], "--no-file"))
+        {
+            f_create_file = 0;
+        }
+    }
+
+    float** f_output;
+    hpalloc((void**)&f_output, sizeof(float*) * 2);
+
+    v_pydaw_activate(f_thread_count, 0, f_project_dir, f_sample_rate, NULL, 0);
+
     /*
+    PYDAW_AUDIO_INPUT_TRACK_COUNT = 2;
+    v_pydaw_activate(f_thread_count, 0, f_project_dir, f_sample_rate, NULL, 1);
+    v_wn_test();
+    */
+
+    f_i = 0;
+    while(f_i < 2)
+    {
+        hpalloc((void**)&f_output[f_i], sizeof(float) * f_buffer_size);
+        f_i++;
+    }
+
+    f_i = 0;
+    while(f_i < f_buffer_size)
+    {
+        f_output[0][f_i] = 0.0f;
+        f_output[1][f_i] = 0.0f;
+        f_i++;
+    }
+
+    musikernel->sample_count = f_buffer_size;
+
+    v_dn_offline_render_prep(dawnext);
+
+    v_dn_offline_render(dawnext, f_start_region, f_start_bar,
+            f_end_region, f_end_bar, f_output_file, 0, f_create_file);
+
+    v_pydaw_destructor();
+
+    return 0;
+}
+
+void v_interleave_benchmark(int f_buffer_size)
+{
+    register int f_i;
+    struct timespec f_start, f_finish;
+
     printf("\nRunning benchmark of interleaved vs. non-interleaved buffers\n");
 
     float ** f_non_interleaved;
 
-    buffer_alloc((void**)&f_non_interleaved, sizeof(float*) * 2);
-    buffer_alloc((void**)&f_non_interleaved[0], sizeof(float) * f_buffer_size);
-    buffer_alloc((void**)&f_non_interleaved[1], sizeof(float) * f_buffer_size);
+    clalloc((void**)&f_non_interleaved, sizeof(float*) * 2);
+    clalloc((void**)&f_non_interleaved[0], sizeof(float) * f_buffer_size);
+    clalloc((void**)&f_non_interleaved[1], sizeof(float) * f_buffer_size);
 
     for(f_i = 0; f_i < f_buffer_size; ++f_i)
     {
@@ -148,7 +264,7 @@ int main(int argc, char** argv)
     }
 
     float * f_interleaved;
-    buffer_alloc((void**)&f_interleaved, sizeof(float) * f_buffer_size * 2);
+    clalloc((void**)&f_interleaved, sizeof(float) * f_buffer_size * 2);
 
     int ITERATIONS = 10000000;
     float f_mult = 0.99999999f;
@@ -160,7 +276,7 @@ int main(int argc, char** argv)
 
     register int f_i2;
 
-    clock_t f_start_interleaved = clock();
+    clock_gettime(CLOCK_REALTIME, &f_start);
 
     for(f_i = 0; f_i < ITERATIONS; ++f_i)
     {
@@ -170,9 +286,11 @@ int main(int argc, char** argv)
         }
     }
 
-    v_pydaw_print_benchmark("Interleaved: ", f_start_interleaved);
+    clock_gettime(CLOCK_REALTIME, &f_finish);
 
-    clock_t f_start_non_interleaved = clock();
+    v_pydaw_print_benchmark("Interleaved: ", f_start, f_finish);
+
+    clock_gettime(CLOCK_REALTIME, &f_start);
 
     for(f_i = 0; f_i < ITERATIONS; ++f_i)
     {
@@ -183,10 +301,7 @@ int main(int argc, char** argv)
         }
     }
 
-    v_pydaw_print_benchmark("Non-interleaved: ", f_start_non_interleaved);
-    */
+    clock_gettime(CLOCK_REALTIME, &f_finish);
 
-    v_pydaw_destructor();
-
-    return 0;
+    v_pydaw_print_benchmark("Non-interleaved: ", f_start, f_finish);
 }

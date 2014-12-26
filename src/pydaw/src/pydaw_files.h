@@ -21,7 +21,7 @@ GNU General Public License for more details.
 #include <sys/stat.h>
 #include <assert.h>
 
-#define PYDAW_VERSION "musikernel"
+#define MUSIKERNEL_VERSION "musikernel"
 
 /*Standard string sizes*/
 #define PYDAW_XLARGE_STRING 1048576
@@ -385,7 +385,7 @@ void get_file_setting(char * a_dest, char * a_name, char * a_default)
     char f_path[2048];
     char * f_home = getenv("HOME");
 
-    sprintf(f_path, "%s/%s/config/%s.txt", f_home, PYDAW_VERSION, a_name);
+    sprintf(f_path, "%s/%s/config/%s.txt", f_home, MUSIKERNEL_VERSION, a_name);
 
     printf("get_file_setting:  %s \n", f_path);
 
