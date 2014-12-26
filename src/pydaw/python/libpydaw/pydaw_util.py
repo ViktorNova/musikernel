@@ -28,7 +28,7 @@ global_pydaw_file_type_string = 'MusiKernel Project (default.musikernel)'
 global_euphoria_file_type_string = 'Euphoria Sample File (*.u4ia4)'
 global_euphoria_file_type_ext = '.u4ia4'
 
-global_pydaw_bin_path = None
+BIN_PATH = None
 RENDER_BIN_PATH = None
 global_pydaw_is_sandboxed = False
 
@@ -43,8 +43,8 @@ else:
         "{}/../../../../..".format(os.path.dirname(__file__)))
 
 def pydaw_set_bin_path():
-    global global_pydaw_bin_path, RENDER_BIN_PATH
-    global_pydaw_bin_path = "{}/bin/{}-engine".format(
+    global BIN_PATH, RENDER_BIN_PATH
+    BIN_PATH = "{}/bin/{}-engine".format(
         global_pydaw_install_prefix, global_pydaw_version_string)
     RENDER_BIN_PATH = "{}/bin/{}_render".format(
         global_pydaw_install_prefix, global_pydaw_version_string)
@@ -481,7 +481,7 @@ def pydaw_delete_device_config():
         os.remove(global_pydaw_device_config)
 
 def pydaw_read_device_config():
-    global global_pydaw_bin_path, global_device_val_dict, MIDI_IN_DEVICES
+    global BIN_PATH, global_device_val_dict, MIDI_IN_DEVICES
     global global_pydaw_is_sandboxed, global_pydaw_with_audio, USE_HUGEPAGES
 
     global_device_val_dict = {}
@@ -522,16 +522,16 @@ def pydaw_read_device_config():
                 print("SELinux detected, not using any setuid "
                     "binaries to prevent lockups.")
 
-            if global_pydaw_bin_path is not None:
+            if BIN_PATH is not None:
                 if int(global_device_val_dict["audioEngine"]) == 0:
-                    global_pydaw_bin_path += "-no-root"
+                    BIN_PATH += "-no-root"
                 elif int(global_device_val_dict["audioEngine"]) <= 2:
                     # The setuid binaries will get blocked by
                     # SELinux, so don't use
                     if f_selinux:
-                        global_pydaw_bin_path += "-no-root"
+                        BIN_PATH += "-no-root"
                     elif int(global_device_val_dict["audioEngine"]) == 2:
-                        global_pydaw_bin_path = "{}/bin/{}".format(
+                        BIN_PATH = "{}/bin/{}".format(
                             global_pydaw_install_prefix,
                             global_pydaw_version_string)
                         global_pydaw_is_sandboxed = True
@@ -539,10 +539,10 @@ def pydaw_read_device_config():
                 int(global_device_val_dict["audioEngine"]) == 4 or \
                 int(global_device_val_dict["audioEngine"]) == 5 or \
                 int(global_device_val_dict["audioEngine"]) == 7:
-                    global_pydaw_bin_path += "-dbg"
+                    BIN_PATH += "-dbg"
                 elif int(global_device_val_dict["audioEngine"]) == 6:
                     global_pydaw_with_audio = False
-                    global_pydaw_bin_path = None
+                    BIN_PATH = None
             global SAMPLE_RATE, NYQUIST_FREQ
             SAMPLE_RATE = int(global_device_val_dict["sampleRate"])
             NYQUIST_FREQ = SAMPLE_RATE / 2
@@ -551,7 +551,7 @@ def pydaw_read_device_config():
             " deleting and starting over\n{}".format(ex))
         global_device_val_dict = {}
 
-    print("global_pydaw_bin_path == {}".format(global_pydaw_bin_path))
+    print("BIN_PATH == {}".format(BIN_PATH))
 
 pydaw_read_device_config()
 

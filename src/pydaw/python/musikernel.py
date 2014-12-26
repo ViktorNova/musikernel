@@ -1284,7 +1284,7 @@ def open_pydaw_engine(a_project_path):
                 """bash -c " ulimit -c unlimited ; """
                 """ {} "{}" "{}" "{}" {} {} {}; read " ' """.format(
                 pydaw_util.TERMINAL, f_run_with,
-                pydaw_util.global_pydaw_bin_path,
+                pydaw_util.BIN_PATH,
                 global_pydaw_install_prefix, f_project_dir, f_pid,
                 pydaw_util.USE_HUGEPAGES, f_sleep))
         else:
@@ -1292,18 +1292,18 @@ def open_pydaw_engine(a_project_path):
                 """{} -e ' bash -c " ulimit -c unlimited ; """
                 """ {} "{}" "{}" "{}" {} {} {}; read " ' """.format(
                 pydaw_util.TERMINAL, f_run_with,
-                pydaw_util.global_pydaw_bin_path,
+                pydaw_util.BIN_PATH,
                 pydaw_util.global_pydaw_install_prefix, f_project_dir,
                 f_pid, pydaw_util.USE_HUGEPAGES, f_sleep))
     else:
         if f_pa_suspend:
             f_cmd = 'pasuspender -- "{}" "{}" "{}" {} {}'.format(
-                pydaw_util.global_pydaw_bin_path,
+                pydaw_util.BIN_PATH,
                 pydaw_util.global_pydaw_install_prefix,
                 f_project_dir, f_pid, pydaw_util.USE_HUGEPAGES)
         else:
             f_cmd = '"{}" "{}" "{}" {} {}'.format(
-                pydaw_util.global_pydaw_bin_path,
+                pydaw_util.BIN_PATH,
                 pydaw_util.global_pydaw_install_prefix,
                 f_project_dir, f_pid, pydaw_util.USE_HUGEPAGES)
     print(f_cmd)
