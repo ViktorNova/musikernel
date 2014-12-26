@@ -15,6 +15,13 @@ GNU General Public License for more details.
 import os
 import sys
 
+IS_INSTALL = "-i" in sys.argv
+
+# invoke sudo at the beginning of the script so that future invokations
+# will automatically work without a password
+if IS_INSTALL:
+    os.system("sudo true")
+
 PYTHON_VERSION = "".join(str(x) for x in sys.version_info[:2])
 
 orig_wd = os.path.dirname(os.path.abspath(__file__))
@@ -302,7 +309,7 @@ cp_cmd = "cp ~/rpmbuild/RPMS/*/{} '{}'".format(pkg_name, orig_wd)
 print(cp_cmd)
 os.system(cp_cmd)
 
-if "--install" in sys.argv or "-i" in sys.argv:
+if IS_INSTALL:
     os.system("sudo rpm -e {0}".format(MAJOR_VERSION))
     os.system("sudo rpm -e {0}-debuginfo".format(MAJOR_VERSION))
     os.system("sudo rpm -ivh {}/{}".format(orig_wd, pkg_name))
