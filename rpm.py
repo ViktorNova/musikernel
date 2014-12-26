@@ -287,6 +287,26 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/wavenext.pyc
 /usr/lib/{0}/pydaw/python/wavenext.pyo
 
+/usr/lib/{0}/pydaw/python/dawnext.py
+/usr/lib/{0}/pydaw/python/dawnext.pyc
+/usr/lib/{0}/pydaw/python/dawnext.pyo
+/usr/lib/{0}/pydaw/python/libdawnext/__init__.py
+/usr/lib/{0}/pydaw/python/libdawnext/__init__.pyc
+/usr/lib/{0}/pydaw/python/libdawnext/__init__.pyo
+/usr/lib/{0}/pydaw/python/libdawnext/en_gradients.py
+/usr/lib/{0}/pydaw/python/libdawnext/en_gradients.pyc
+/usr/lib/{0}/pydaw/python/libdawnext/en_gradients.pyo
+/usr/lib/{0}/pydaw/python/libdawnext/en_osc.py
+/usr/lib/{0}/pydaw/python/libdawnext/en_osc.pyc
+/usr/lib/{0}/pydaw/python/libdawnext/en_osc.pyo
+/usr/lib/{0}/pydaw/python/libdawnext/en_project.py
+/usr/lib/{0}/pydaw/python/libdawnext/en_project.pyc
+/usr/lib/{0}/pydaw/python/libdawnext/en_project.pyo
+/usr/lib/{0}/pydaw/python/libdawnext/strings.py
+/usr/lib/{0}/pydaw/python/libdawnext/strings.pyc
+/usr/lib/{0}/pydaw/python/libdawnext/strings.pyo
+
+
 %doc
 
 """.format(MAJOR_VERSION, global_version_fedora,

@@ -916,9 +916,14 @@ int osc_message_handler(const char *path, const char *types, lo_arg **argv,
         v_en_configure(key, value);
         return 0;
     }
-    if(!strcmp(path, "/musikernel/wavenext"))
+    else if(!strcmp(path, "/musikernel/wavenext"))
     {
         v_wn_configure(key, value);
+        return 0;
+    }
+    else if(!strcmp(path, "/musikernel/dawnext"))
+    {
+        v_dn_configure(key, value);
         return 0;
     }
     else if(!strcmp(path, "/musikernel/master"))

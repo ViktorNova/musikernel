@@ -70,8 +70,9 @@ int PYDAW_AUDIO_INPUT_TRACK_COUNT = 0;
 
 #define MK_HOST_EDMNEXT 0
 #define MK_HOST_WAVENEXT 1
+#define MK_HOST_DAWNEXT 2
 
-#define MK_HOST_COUNT 2
+#define MK_HOST_COUNT 3
 
 volatile int exiting = 0;
 float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
@@ -193,6 +194,20 @@ typedef struct
     char * plugins_folder;
 }t_musikernel;
 
+typedef struct
+{
+    int output_track;
+    int on;
+}t_pydaw_midi_routing;
+
+typedef struct
+{
+    int output;
+    int active;
+    int sidechain;
+    char padding[4];
+}t_pytrack_routing;
+
 void g_musikernel_get(float, t_midi_device_list*);
 t_pytrack * g_pytrack_get(int, float);
 inline void v_pydaw_zero_buffer(float**, int);
@@ -201,6 +216,10 @@ double v_pydaw_print_benchmark(char * a_message,
 void * v_pydaw_audio_recording_thread(void* a_arg);
 void v_queue_osc_message(char*, char*);
 void v_pydaw_set_plugin_index(t_pytrack*, int, int, int, int, int);
+
+t_pytrack_routing * g_pytrack_routing_get();
+void v_pytrack_routing_set(t_pytrack_routing *, int, int);
+void v_pytrack_routing_free(t_pytrack_routing *);
 
 
 #ifdef	__cplusplus

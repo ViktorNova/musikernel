@@ -137,7 +137,7 @@ class transport_widget:
         self.grid_layout1.addWidget(QtGui.QLabel(_("Host")), 0, 55)
         self.host_combobox = QtGui.QComboBox()
         self.host_combobox.setMinimumWidth(120)
-        self.host_combobox.addItems(["EDM-Next", "Wave-Next"])
+        self.host_combobox.addItems(["EDM-Next", "Wave-Next", "DAW-Next"])
         self.host_combobox.currentIndexChanged.connect(
             libmk.MAIN_WINDOW.set_host)
         self.grid_layout1.addWidget(self.host_combobox, 1, 55)
@@ -272,10 +272,11 @@ class MkMainWindow(QtGui.QMainWindow):
 
         import edmnext
         import wavenext
+        import dawnext
 
         self.wave_editor_module = wavenext
 
-        self.host_modules = (edmnext, wavenext)
+        self.host_modules = (edmnext, wavenext, dawnext)
         self.host_windows = tuple(x.MAIN_WINDOW for x in self.host_modules)
 
         self.current_module = edmnext
@@ -426,6 +427,9 @@ class MkMainWindow(QtGui.QMainWindow):
             self.osc_server.add_method(
                 "musikernel/wavenext", 's',
                 wavenext.MAIN_WINDOW.configure_callback)
+            self.osc_server.add_method(
+                "musikernel/dawnext", 's',
+                dawnext.MAIN_WINDOW.configure_callback)
             self.osc_server.add_method(None, None, self.osc_fallback)
             self.osc_timer = QtCore.QTimer(self)
             self.osc_timer.setSingleShot(False)

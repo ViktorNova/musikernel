@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include <sys/mman.h>
 
 #include "edmnext.h"
+#include "dawnext.h"
 #include "wavenext.h"
 
 #ifdef	__cplusplus
@@ -74,6 +75,7 @@ void v_open_project(const char* a_project_folder, int a_first_load)
 
     v_en_open_project(a_first_load);
     v_wn_open_project();
+    v_dn_open_project(a_first_load);
 
     clock_gettime(CLOCK_REALTIME, &f_finish);
 
@@ -96,8 +98,13 @@ void v_pydaw_activate(int a_thread_count,
     musikernel->hosts[MK_HOST_WAVENEXT].osc_send = v_wn_osc_send;
     musikernel->hosts[MK_HOST_WAVENEXT].audio_inputs = v_wn_update_audio_inputs;
 
+    musikernel->hosts[MK_HOST_DAWNEXT].run = v_dn_run_engine;
+    musikernel->hosts[MK_HOST_DAWNEXT].osc_send = v_dn_osc_send;
+    musikernel->hosts[MK_HOST_DAWNEXT].audio_inputs = NULL;
+
     g_en_instantiate();
     g_wavenext_get();
+    g_dn_instantiate();
 
     v_open_project(a_project_path, 1);
 

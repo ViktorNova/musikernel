@@ -34,7 +34,7 @@ GNU General Public License for more details.
 #define PYDAW_AUDIO_ITEM_PADDING_DIV2 32
 #define PYDAW_AUDIO_ITEM_PADDING_DIV2_FLOAT 32.0f
 
-#define EN_AUDIO_ITEM_SEND_COUNT 3
+#define MK_AUDIO_ITEM_SEND_COUNT 3
 
 #ifdef	__cplusplus
 extern "C" {
@@ -57,15 +57,15 @@ typedef struct
     float sample_start_offset_float;
     int sample_end_offset;
     //The audio track whose Modulex instance to write the samples to
-    int outputs[EN_AUDIO_ITEM_SEND_COUNT];
-    int sidechain[EN_AUDIO_ITEM_SEND_COUNT];
-    float vols[EN_AUDIO_ITEM_SEND_COUNT];
-    float vols_linear[EN_AUDIO_ITEM_SEND_COUNT];
-    t_int_frac_read_head sample_read_heads[EN_AUDIO_ITEM_SEND_COUNT];
-    t_adsr adsrs[EN_AUDIO_ITEM_SEND_COUNT];
-    float fade_vols[EN_AUDIO_ITEM_SEND_COUNT];
+    int outputs[MK_AUDIO_ITEM_SEND_COUNT];
+    int sidechain[MK_AUDIO_ITEM_SEND_COUNT];
+    float vols[MK_AUDIO_ITEM_SEND_COUNT];
+    float vols_linear[MK_AUDIO_ITEM_SEND_COUNT];
+    t_int_frac_read_head sample_read_heads[MK_AUDIO_ITEM_SEND_COUNT];
+    t_adsr adsrs[MK_AUDIO_ITEM_SEND_COUNT];
+    float fade_vols[MK_AUDIO_ITEM_SEND_COUNT];
     //fade smoothing
-    t_state_variable_filter lp_filters[EN_AUDIO_ITEM_SEND_COUNT];
+    t_state_variable_filter lp_filters[MK_AUDIO_ITEM_SEND_COUNT];
 
     int index;
 
@@ -419,7 +419,7 @@ t_pydaw_audio_item * g_pydaw_audio_item_get(float a_sr)
     f_result->uid = -1;
     g_pit_ratio_init(&f_result->pitch_ratio_ptr);
 
-    for(f_i = 0; f_i < EN_AUDIO_ITEM_SEND_COUNT; ++f_i)
+    for(f_i = 0; f_i < MK_AUDIO_ITEM_SEND_COUNT; ++f_i)
     {
         g_adsr_init(&f_result->adsrs[f_i], a_sr);
         v_adsr_set_adsr_db(&f_result->adsrs[f_i], 0.003f, 0.1f, 0.0f, 0.2f);
