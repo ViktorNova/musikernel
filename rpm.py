@@ -323,6 +323,7 @@ f_rpm_result = os.system("rpmbuild -ba {}".format(global_spec_file))
 
 if f_rpm_result:
     print("Error:  rpmbuild returned {}".format(f_rpm_result))
+    exit(f_rpm_result)
 else:
     pkg_name = "{}-*{}*rpm".format(
         MAJOR_VERSION, MINOR_VERSION)
@@ -335,3 +336,4 @@ else:
         os.system("sudo rpm -e {0}".format(MAJOR_VERSION))
         os.system("sudo rpm -e {0}-debuginfo".format(MAJOR_VERSION))
         os.system("sudo rpm -ivh {}/{}".format(orig_wd, pkg_name))
+
