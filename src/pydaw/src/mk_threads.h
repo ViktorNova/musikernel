@@ -106,6 +106,14 @@ void v_pydaw_activate(int a_thread_count,
     g_wavenext_get();
     g_dn_instantiate();
 
+    char * f_host_str = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+    get_file_setting(f_host_str, "host", "0");
+    int f_host = atoi(f_host_str);
+    printf("Last host:  %i\n", f_host);
+    free(f_host_str);
+
+    v_pydaw_set_host(f_host);
+
     v_open_project(a_project_path, 1);
 
     v_pydaw_init_worker_threads(

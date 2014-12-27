@@ -290,14 +290,6 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     {
         musikernel->plugin_pool[f_i].active = 0;
     }
-
-    char * f_host_str = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
-    get_file_setting(f_host_str, "host", "0");
-    int f_host = atoi(f_host_str);
-    printf("Last host:  %i\n", f_host);
-    free(f_host_str);
-
-    v_pydaw_set_host(f_host);
 }
 
 void v_pydaw_set_control_from_atm(t_pydaw_seq_event *event,
