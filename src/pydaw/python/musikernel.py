@@ -815,7 +815,7 @@ class MkMainWindow(QtGui.QMainWindow):
         try:
             f_file = QtGui.QFileDialog.getOpenFileName(self,
                 _("Open a theme file"), "{}/lib/{}/themes".format(
-                pydaw_util.global_pydaw_install_prefix,
+                pydaw_util.INSTALL_PREFIX,
                 global_pydaw_version_string), "MusiKernel Style(*.pytheme)")
             if f_file is not None and str(f_file) != "":
                 f_file = str(f_file)
@@ -837,7 +837,7 @@ class MkMainWindow(QtGui.QMainWindow):
         f_window.setLayout(f_layout)
         f_minor_version = pydaw_read_file_text(
             "{}/lib/{}/minor-version.txt".format(
-                pydaw_util.global_pydaw_install_prefix,
+                pydaw_util.INSTALL_PREFIX,
                 global_pydaw_version_string))
         f_version = QtGui.QLabel(
             "{}-{}".format(global_pydaw_version_string, f_minor_version))
@@ -1285,7 +1285,7 @@ def open_pydaw_engine(a_project_path):
                 """ {} "{}" "{}" "{}" {} {} {}; read " ' """.format(
                 pydaw_util.TERMINAL, f_run_with,
                 pydaw_util.BIN_PATH,
-                global_pydaw_install_prefix, f_project_dir, f_pid,
+                INSTALL_PREFIX, f_project_dir, f_pid,
                 pydaw_util.USE_HUGEPAGES, f_sleep))
         else:
             f_cmd = (
@@ -1293,18 +1293,18 @@ def open_pydaw_engine(a_project_path):
                 """ {} "{}" "{}" "{}" {} {} {}; read " ' """.format(
                 pydaw_util.TERMINAL, f_run_with,
                 pydaw_util.BIN_PATH,
-                pydaw_util.global_pydaw_install_prefix, f_project_dir,
+                pydaw_util.INSTALL_PREFIX, f_project_dir,
                 f_pid, pydaw_util.USE_HUGEPAGES, f_sleep))
     else:
         if f_pa_suspend:
             f_cmd = 'pasuspender -- "{}" "{}" "{}" {} {}'.format(
                 pydaw_util.BIN_PATH,
-                pydaw_util.global_pydaw_install_prefix,
+                pydaw_util.INSTALL_PREFIX,
                 f_project_dir, f_pid, pydaw_util.USE_HUGEPAGES)
         else:
             f_cmd = '"{}" "{}" "{}" {} {}'.format(
                 pydaw_util.BIN_PATH,
-                pydaw_util.global_pydaw_install_prefix,
+                pydaw_util.INSTALL_PREFIX,
                 f_project_dir, f_pid, pydaw_util.USE_HUGEPAGES)
     print(f_cmd)
     PYDAW_SUBPROCESS = subprocess.Popen([f_cmd], shell=True)
@@ -1357,7 +1357,7 @@ libmk.APP = QtGui.QApplication(sys.argv)
 
 libmk.APP.setWindowIcon(
     QtGui.QIcon("{}/share/pixmaps/{}.png".format(
-    pydaw_util.global_pydaw_install_prefix, global_pydaw_version_string)))
+    pydaw_util.INSTALL_PREFIX, global_pydaw_version_string)))
 
 libmk.APP.setStyleSheet(global_stylesheet)
 

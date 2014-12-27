@@ -114,7 +114,7 @@ class MkProject(libmk.AbstractProject):
             "", "version.txt",
             "Created with {}-{}".format(global_pydaw_version_string,
             pydaw_read_file_text("{}/lib/{}/minor-version.txt".format(
-            global_pydaw_install_prefix, global_pydaw_version_string))))
+            INSTALL_PREFIX, global_pydaw_version_string))))
         self.create_file(
             "", os.path.basename(a_project_file),
             "This file is not supposed to contain any data, it is "

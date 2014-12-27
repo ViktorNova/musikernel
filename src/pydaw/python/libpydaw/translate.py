@@ -14,9 +14,9 @@ GNU General Public License for more details.
 """
 
 try:
-    from libpydaw.pydaw_util import global_pydaw_install_prefix
+    from libpydaw.pydaw_util import INSTALL_PREFIX
 except ImportError:
-    from pydaw_util import global_pydaw_install_prefix
+    from pydaw_util import INSTALL_PREFIX
 
 import locale
 import gettext
@@ -26,7 +26,7 @@ try:
     print("locale: {}".format(global_locale))
     print("encoding: {}".format(global_encoding))
     global_language = gettext.translation("musikernel",
-        "{}/share/locale".format(global_pydaw_install_prefix),
+        "{}/share/locale".format(INSTALL_PREFIX),
         [global_locale])
     print("global_language.info: {}".format(global_language.info()))
     global_language.install()

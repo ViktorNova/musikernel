@@ -37,27 +37,27 @@ global_pydaw_with_audio = True
 global_cpu_count = cpu_count()
 
 if "src/pydaw/python/" in __file__:
-    global_pydaw_install_prefix = "/usr"
+    INSTALL_PREFIX = "/usr"
 else:
-    global_pydaw_install_prefix = os.path.abspath(
+    INSTALL_PREFIX = os.path.abspath(
         "{}/../../../../..".format(os.path.dirname(__file__)))
 
 def pydaw_set_bin_path():
     global BIN_PATH, RENDER_BIN_PATH
     BIN_PATH = "{}/bin/{}-engine".format(
-        global_pydaw_install_prefix, global_pydaw_version_string)
+        INSTALL_PREFIX, global_pydaw_version_string)
     RENDER_BIN_PATH = "{}/bin/{}_render".format(
-        global_pydaw_install_prefix, global_pydaw_version_string)
+        INSTALL_PREFIX, global_pydaw_version_string)
 
 def pydaw_escape_stylesheet(a_stylesheet, a_path):
     f_dir = os.path.dirname(str(a_path))
     f_result = a_stylesheet.replace("$STYLE_FOLDER", f_dir)
     return f_result
 
-print("\n\n\ninstall prefix:  {}\n\n\n".format(global_pydaw_install_prefix))
+print("\n\n\ninstall prefix:  {}\n\n\n".format(INSTALL_PREFIX))
 
 PROJECT_HISTORY_SCRIPT = ("{}/lib/musikernel/pydaw/python/"
-    "libpydaw/project_recover.py".format(global_pydaw_install_prefix))
+    "libpydaw/project_recover.py".format(INSTALL_PREFIX))
 
 pydaw_bad_chars = ["|", "\\", "~", "."]
 
@@ -171,14 +171,14 @@ for _terminal in ("x-terminal-emulator", "gnome-terminal", "konsole"):
         break
 
 pydaw_rubberband_util = "{}/lib/{}/rubberband/bin/rubberband".format(
-    global_pydaw_install_prefix, global_pydaw_version_string)
+    INSTALL_PREFIX, global_pydaw_version_string)
 
 pydaw_sbsms_util = "{}/lib/{}/sbsms/bin/sbsms".format(
-    global_pydaw_install_prefix, global_pydaw_version_string)
+    INSTALL_PREFIX, global_pydaw_version_string)
 
 pydaw_paulstretch_util = ("{}/lib/{}/pydaw/python/libpydaw/"
     "pydaw_paulstretch.py".format(
-    global_pydaw_install_prefix, global_pydaw_version_string))
+    INSTALL_PREFIX, global_pydaw_version_string))
 
 def pydaw_rubberband(a_src_path, a_dest_path, a_timestretch_amt, a_pitch_shift,
                      a_crispness, a_preserve_formants=False):
@@ -532,7 +532,7 @@ def pydaw_read_device_config():
                         BIN_PATH += "-no-root"
                     elif int(global_device_val_dict["audioEngine"]) == 2:
                         BIN_PATH = "{}/bin/{}".format(
-                            global_pydaw_install_prefix,
+                            INSTALL_PREFIX,
                             global_pydaw_version_string)
                         global_pydaw_is_sandboxed = True
                 elif int(global_device_val_dict["audioEngine"]) == 3 or \
@@ -746,7 +746,7 @@ class sfz_file:
 
 global_default_stylesheet_file = \
     "{}/lib/{}/themes/default/default.pytheme".format(
-    global_pydaw_install_prefix, global_pydaw_version_string)
+    INSTALL_PREFIX, global_pydaw_version_string)
 
 global_user_style_file = "{}/default-style.txt".format(global_pydaw_home)
 

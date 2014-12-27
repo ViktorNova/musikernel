@@ -1904,7 +1904,7 @@ class pydaw_preset_manager_widget:
         self.configure_dict = a_configure_dict
         self.reconfigure_callback = a_reconfigure_callback
         self.factory_preset_path = "{}/lib/{}/presets/{}.mkp".format(
-            pydaw_util.global_pydaw_install_prefix,
+            pydaw_util.INSTALL_PREFIX,
             pydaw_util.global_pydaw_version_string, a_plugin_name)
         self.bank_dir = "{}/{}".format(pydaw_util.PRESET_DIR, a_plugin_name)
         if not os.path.isdir(self.bank_dir):

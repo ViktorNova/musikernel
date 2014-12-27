@@ -804,7 +804,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         f_logo_label = QtGui.QLabel()
         f_pixmap = QtGui.QPixmap(
             "{}/lib/{}/themes/default/euphoria.png".format(
-            pydaw_util.global_pydaw_install_prefix,
+            pydaw_util.INSTALL_PREFIX,
             pydaw_util.global_pydaw_version_string)).scaled(
             80, 80, transformMode=QtCore.Qt.SmoothTransformation)
         f_logo_label.setPixmap(f_pixmap)

@@ -64,13 +64,13 @@ def paulstretch(file_path, stretch, windowsize_seconds, onset_level,
         f_dest_path = outfilename.replace(".wav", "-tmp.wav")
         if a_end_pitch is not None:
             f_cmd = ["{}/lib/{}/sbsms/bin/sbsms".format(
-                        global_pydaw_install_prefix,
+                        INSTALL_PREFIX,
                         global_pydaw_version_string),
                      f_src_path, f_dest_path, "1.0", "1.0",
                      str(a_start_pitch), str(a_end_pitch)]
         else:
             f_cmd = ["{}/lib/{}/rubberband/bin/rubberband".format(
-                        global_pydaw_install_prefix,
+                        INSTALL_PREFIX,
                         global_pydaw_version_string),
                         "-p", str(a_start_pitch), "-R",
                      "--pitch-hq", f_src_path, f_dest_path]
