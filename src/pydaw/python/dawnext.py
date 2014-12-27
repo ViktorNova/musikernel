@@ -89,7 +89,7 @@ def set_tooltips_enabled(a_enabled):
     """
     libmk.TOOLTIPS_ENABLED = a_enabled
 
-    f_list = [SONG_EDITOR, AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR,
+    f_list = [AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR,
               MAIN_WINDOW, AUDIO_SEQ, TRANSPORT,
               REGION_EDITOR, MIXER_WIDGET] + list(AUTOMATION_EDITORS)
     for f_widget in f_list:
@@ -112,374 +112,6 @@ def pydaw_scale_to_rect(a_to_scale, a_scale_to):
     f_x = (a_scale_to.width() / a_to_scale.width())
     f_y = (a_scale_to.height() / a_to_scale.height())
     return (f_x, f_y)
-
-
-CURRENT_SONG_INDEX = None
-
-class song_editor:
-    def __init__(self):
-        self.song = pydaw_song()
-        self.last_midi_dir = None
-        self.main_vlayout = QtGui.QVBoxLayout()
-        self.table_widget = QtGui.QTableWidget()
-        self.table_widget.setColumnCount(300)
-        self.table_widget.setRowCount(1)
-        self.table_widget.setFixedHeight(87)
-        self.table_widget.setHorizontalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
-        self.table_widget.verticalHeader().setVisible(False)
-        self.table_widget.setAutoScroll(True)
-        self.table_widget.setAutoScrollMargin(1)
-        self.table_widget.setRowHeight(0, 50)
-        self.table_widget.horizontalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
-        self.table_widget.verticalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
-        self.table_widget.cellClicked.connect(self.cell_clicked)
-        self.table_widget.setDragDropOverwriteMode(False)
-        self.table_widget.setDragEnabled(True)
-        self.table_widget.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
-        self.table_widget.dropEvent = self.table_drop_event
-        self.table_widget.setEditTriggers(
-            QtGui.QAbstractItemView.NoEditTriggers)
-        self.main_vlayout.addWidget(self.table_widget)
-
-        self.table_widget.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
-        self.rename_action = QtGui.QAction(
-            _("Rename Region"), self.table_widget)
-        self.rename_action.triggered.connect(self.on_rename_region)
-        self.table_widget.addAction(self.rename_action)
-        self.delete_action = QtGui.QAction(
-            _("Delete Region(s)"), self.table_widget)
-        self.delete_action.triggered.connect(self.on_delete)
-        # Too often, this was being triggered by accident,
-        # making it a PITA as there
-        # was no easy way to tell which widget had focus...
-        #self.delete_action.setShortcut(QtGui.QKeySequence.Delete)
-        #self.delete_action.setShortcutContext(
-        #    QtCore.Qt.WidgetWithChildrenShortcut)
-        self.table_widget.addAction(self.delete_action)
-
-    def add_qtablewidgetitem(self, a_name, a_region_num):
-        """ Adds a properly formatted item.  This is not for
-            creating empty items...
-        """
-        f_qtw_item = QtGui.QTableWidgetItem(a_name)
-        f_qtw_item.setBackground(pydaw_region_gradient)
-        f_qtw_item.setTextAlignment(QtCore.Qt.AlignCenter)
-        f_qtw_item.setFlags(f_qtw_item.flags() | QtCore.Qt.ItemIsSelectable)
-        self.table_widget.setItem(0, a_region_num, f_qtw_item)
-
-    def open_song(self):
-        """ This method clears the existing song from the editor and opens the
-            one currently in PROJECT
-        """
-        self.table_widget.setUpdatesEnabled(False)
-        self.table_widget.clearContents()
-        self.song = PROJECT.get_song()
-        f_region_dict = PROJECT.get_regions_dict()
-        for f_pos, f_region in list(self.song.regions.items()):
-            self.add_qtablewidgetitem(
-            f_region_dict.get_name_by_uid(f_region), f_pos)
-        self.table_widget.setUpdatesEnabled(True)
-        self.table_widget.update()
-        #global_open_audio_items()
-        self.clipboard = []
-
-    def cell_clicked(self, x, y):
-        if libmk.IS_PLAYING:
-            return
-        f_cell = self.table_widget.item(x, y)
-        if f_cell is None:
-            def song_ok_handler():
-                if f_new_radiobutton.isChecked():
-                    f_uid = PROJECT.create_empty_region(
-                        str(f_new_lineedit.text()))
-                    f_msg = _("Create empty region '{}' at {}").format(
-                        f_new_lineedit.text(), y)
-                elif f_copy_radiobutton.isChecked():
-                    f_uid = PROJECT.copy_region(
-                        str(f_copy_combobox.currentText()),
-                        str(f_new_lineedit.text()))
-                    f_msg = (_("Create new region '{}' at {} copying from "
-                        "{}")).format(f_new_lineedit.text(), y,
-                        f_copy_combobox.currentText())
-                self.add_qtablewidgetitem(f_new_lineedit.text(), y)
-                self.song.add_region_ref_by_uid(y, f_uid)
-                REGION_SETTINGS.open_region(f_new_lineedit.text())
-                global CURRENT_SONG_INDEX
-                CURRENT_SONG_INDEX = y
-                PROJECT.save_song(self.song)
-                PROJECT.commit(f_msg)
-                TRANSPORT.set_region_value(y)
-                TRANSPORT.set_bar_value(0)
-                global_update_region_time()
-                f_window.close()
-
-            def song_cancel_handler():
-                f_window.close()
-
-            def on_name_changed():
-                f_new_lineedit.setText(
-                    pydaw_remove_bad_chars(f_new_lineedit.text()))
-
-            def on_current_index_changed(a_index):
-                f_copy_radiobutton.setChecked(True)
-
-            def on_import_midi():
-                f_window.close()
-                self.on_import_midi(y)
-
-            f_window = QtGui.QDialog(MAIN_WINDOW)
-            f_window.setWindowTitle(_("Add region to song..."))
-            f_window.setMinimumWidth(240)
-            f_layout = QtGui.QGridLayout()
-            f_window.setLayout(f_layout)
-            f_new_radiobutton = QtGui.QRadioButton()
-            f_new_radiobutton.setChecked(True)
-            f_layout.addWidget(f_new_radiobutton, 0, 0)
-            f_layout.addWidget(QtGui.QLabel(_("New:")), 0, 1)
-            f_new_lineedit = QtGui.QLineEdit(
-                PROJECT.get_next_default_region_name())
-            f_new_lineedit.setMaxLength(24)
-            f_new_lineedit.editingFinished.connect(on_name_changed)
-            f_layout.addWidget(f_new_lineedit, 0, 2)
-            f_copy_radiobutton = QtGui.QRadioButton()
-            f_layout.addWidget(f_copy_radiobutton, 1, 0)
-            f_copy_combobox = QtGui.QComboBox()
-            f_copy_combobox.addItems(PROJECT.get_region_list())
-            f_copy_combobox.currentIndexChanged.connect(
-                on_current_index_changed)
-            f_layout.addWidget(QtGui.QLabel(_("Copy from:")), 1, 1)
-            f_layout.addWidget(f_copy_combobox, 1, 2)
-            f_import_midi = QtGui.QPushButton("Import MIDI File")
-            f_import_midi.pressed.connect(on_import_midi)
-            f_layout.addWidget(f_import_midi, 3, 2)
-            f_ok_cancel_layout = QtGui.QHBoxLayout()
-            f_layout.addLayout(f_ok_cancel_layout, 5, 2)
-            f_ok_button = QtGui.QPushButton(_("OK"))
-            f_ok_cancel_layout.addWidget(f_ok_button)
-            f_ok_button.clicked.connect(song_ok_handler)
-            f_ok_button.setDefault(True)
-            f_cancel_button = QtGui.QPushButton(_("Cancel"))
-            f_ok_cancel_layout.addWidget(f_cancel_button)
-            f_cancel_button.clicked.connect(song_cancel_handler)
-            f_window.move(QtGui.QCursor.pos())
-            f_window.exec_()
-        else:
-            REGION_SETTINGS.open_region(str(f_cell.text()))
-            global CURRENT_SONG_INDEX
-            CURRENT_SONG_INDEX = y
-            REGION_EDITOR.scene.clearSelection()
-            TRANSPORT.set_region_value(y)
-            TRANSPORT.set_bar_value(0)
-
-    def on_import_midi(self, a_index):
-        self.midi_file = None
-
-        def ok_handler():
-            if self.midi_file is None:
-                QtGui.QMessageBox.warning(
-                    f_window, _("Error"), _("File name cannot be empty"))
-                return
-            f_item_name_str = str(f_item_name.text())
-            if f_item_name_str == "":
-                QtGui.QMessageBox.warning(
-                    f_window, _("Error"), _("File name cannot be empty"))
-                return
-            if not self.midi_file.populate_region_from_track_map(
-            PROJECT, f_item_name_str, a_index):
-                QtGui.QMessageBox.warning(f_window, _("Error"),
-                _("No available slots for inserting a region, delete "
-                "an existing region from the song editor first"))
-            else:
-                PROJECT.commit(_("Import MIDI file"))
-                SONG_EDITOR.open_song()
-            f_window.close()
-
-        def cancel_handler():
-            f_window.close()
-
-        def file_name_select():
-            if self.last_midi_dir is None:
-                f_dir_name = global_default_project_folder
-            else:
-                f_dir_name = self.last_midi_dir
-            f_file_name = QtGui.QFileDialog.getOpenFileName(
-                parent=self.table_widget, caption=_('Open MIDI File'),
-                directory=f_dir_name, filter='MIDI File (*.mid)')
-            if not f_file_name is None and not str(f_file_name) == "":
-                self.midi_file = pydaw_midi_file_to_items(f_file_name)
-                f_name.setText(f_file_name)
-                self.last_midi_dir = os.path.dirname(str(f_file_name))
-                if str(f_item_name.text()).strip() == "":
-                    f_item_name.setText(pydaw_remove_bad_chars(
-                        f_file_name.split("/")[-1].replace(".", "-")))
-
-        def item_name_changed(a_val=None):
-            f_item_name.setText(pydaw_remove_bad_chars(f_item_name.text()))
-
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Import MIDI File..."))
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-
-        f_name = QtGui.QLineEdit()
-        f_name.setReadOnly(True)
-        f_name.setMinimumWidth(360)
-        f_layout.addWidget(QtGui.QLabel(_("File Name:")), 0, 0)
-        f_layout.addWidget(f_name, 0, 1)
-        f_select_file = QtGui.QPushButton(_("Select"))
-        f_select_file.pressed.connect(file_name_select)
-        f_layout.addWidget(f_select_file, 0, 2)
-
-        f_item_name = QtGui.QLineEdit()
-        f_item_name.setMaxLength(24)
-        f_layout.addWidget(QtGui.QLabel(_("Item Name:")), 2, 0)
-        f_item_name.editingFinished.connect(item_name_changed)
-        f_layout.addWidget(f_item_name, 2, 1)
-
-        f_info_label = QtGui.QLabel()
-        f_layout.addWidget(f_info_label, 4, 1)
-
-        f_ok_layout = QtGui.QHBoxLayout()
-        f_ok_layout.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding,
-            QtGui.QSizePolicy.Minimum))
-        f_ok = QtGui.QPushButton(_("OK"))
-        f_ok.pressed.connect(ok_handler)
-        f_ok_layout.addWidget(f_ok)
-        f_layout.addLayout(f_ok_layout, 9, 1)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
-        f_cancel.pressed.connect(cancel_handler)
-        f_layout.addWidget(f_cancel, 9, 2)
-        f_window.exec_()
-
-    def set_tooltips(self, a_on):
-        if a_on:
-            self.table_widget.setToolTip(libdawnext.strings.song_editor)
-        else:
-            self.table_widget.setToolTip("")
-
-    def on_delete(self):
-        if not self.table_widget.selectedIndexes():
-            return
-        f_commit_list = []
-        for f_index in self.table_widget.selectedIndexes():
-            f_item = self.table_widget.item(f_index.row(), f_index.column())
-            if f_item is not None and str(f_item.text()) != "":
-                f_commit_list.append(str(f_index.column()))
-                f_empty = QtGui.QTableWidgetItem()
-                self.table_widget.setItem(
-                    f_index.row(), f_index.column(), f_empty)
-        if f_commit_list:
-            self.tablewidget_to_song()
-            REGION_SETTINGS.clear_items()
-            REGION_SETTINGS.region_name_lineedit.setText("")
-            REGION_SETTINGS.enabled = False
-            REGION_SETTINGS.update_region_length()
-            PROJECT.commit(
-                _("Deleted region references at {}").format(
-                ", ".join(f_commit_list)))
-
-    def on_rename_region(self):
-        f_item = self.table_widget.currentItem()
-        if f_item is None:
-            return
-
-        f_item_text = str(f_item.text())
-
-        if f_item_text == "":
-            return
-
-        f_index = self.table_widget.currentColumn()
-
-        def ok_handler():
-            f_new_name = str(f_new_lineedit.text())
-            if f_new_name == "":
-                QtGui.QMessageBox.warning(
-                    self.table_widget, _("Error"), _("Name cannot be blank"))
-                return
-            PROJECT.rename_region(f_item_text, f_new_name)
-            PROJECT.commit(_("Rename region"))
-            SONG_EDITOR.open_song()
-            REGION_SETTINGS.open_region(f_new_name)
-            SONG_EDITOR.table_widget.setCurrentCell(0, f_index)
-            f_window.close()
-
-        def cancel_handler():
-            f_window.close()
-
-        def on_name_changed():
-            f_new_lineedit.setText(
-                pydaw_remove_bad_chars(f_new_lineedit.text()))
-
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Rename region..."))
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-        f_new_lineedit = QtGui.QLineEdit()
-        f_new_lineedit.editingFinished.connect(on_name_changed)
-        f_new_lineedit.setMaxLength(24)
-        f_layout.addWidget(QtGui.QLabel(_("New name:")), 0, 0)
-        f_layout.addWidget(f_new_lineedit, 0, 1)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_layout.addWidget(f_ok_button, 5, 0)
-        f_ok_button.clicked.connect(ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
-        f_layout.addWidget(f_cancel_button, 5, 1)
-        f_cancel_button.clicked.connect(cancel_handler)
-        f_window.exec_()
-
-    def table_drop_event(self, a_event):
-        QtGui.QTableWidget.dropEvent(self.table_widget, a_event)
-        a_event.acceptProposedAction()
-        self.tablewidget_to_song()
-        self.table_widget.clearSelection()
-        PROJECT.commit(_("Drag-n-drop song item(s)"))
-        self.select_current_region()
-
-    def select_current_region(self):
-        if not CURRENT_REGION_NAME:
-            return
-        for f_i in range(0, 300):
-            f_item = self.table_widget.item(0, f_i)
-            if f_item and str(f_item.text()) == CURRENT_REGION_NAME:
-                f_item.setSelected(True)
-                global CURRENT_SONG_INDEX
-                CURRENT_SONG_INDEX = f_i
-                TRANSPORT.set_region_value(f_i)
-                TRANSPORT.set_bar_value(0)
-                global_update_region_time()
-
-    def tablewidget_to_song(self):
-        """ Flush the edited content of the QTableWidget back to
-            the native song class...
-        """
-        self.song.regions = {}
-        f_uid_dict = PROJECT.get_regions_dict()
-        global CURRENT_SONG_INDEX
-        CURRENT_SONG_INDEX = None
-        for f_i in range(0, 300):
-            f_item = self.table_widget.item(0, f_i)
-            if f_item:
-                if str(f_item.text()) != "":
-                    self.song.add_region_ref_by_name(
-                        f_i, f_item.text(), f_uid_dict)
-                if str(f_item.text()) == CURRENT_REGION_NAME:
-                    CURRENT_SONG_INDEX = f_i
-                    print(str(f_i))
-        PROJECT.save_song(self.song)
-        self.open_song()
-
-    def open_first_region(self):
-        for f_i in range(300):
-            f_item = self.table_widget.item(0, f_i)
-            if f_item is not None and str(f_item.text()) != "":
-                REGION_SETTINGS.open_region(str(f_item.text()))
-                TRANSPORT.set_region_value(f_i)
-                f_item.setSelected(True)
-                break
 
 
 def global_update_hidden_rows(a_val=None):
@@ -523,10 +155,6 @@ class region_settings:
         self.hlayout0.addWidget(self.menu_button)
         self.menu = QtGui.QMenu(self.menu_button)
         self.menu_button.setMenu(self.menu)
-        self.shift_action = self.menu.addAction(_("Shift Song..."))
-        self.shift_action.triggered.connect(self.on_shift)
-        self.split_action = self.menu.addAction(_("Split Region..."))
-        self.split_action.triggered.connect(self.on_split)
         self.reorder_tracks_action = self.menu.addAction(
             _("Reorder Tracks..."))
         self.reorder_tracks_action.triggered.connect(self.set_track_order)
@@ -623,111 +251,6 @@ class region_settings:
     def unmute_all(self):
         for f_track in TRACK_PANEL.tracks.values():
             f_track.mute_checkbox.setChecked(False)
-
-    def on_shift(self):
-        if libmk.IS_PLAYING:
-            return
-
-        def ok_handler():
-            f_song = PROJECT.get_song()
-            f_amt = f_shift_amt.value()
-            if f_amt == 0:
-                return
-            f_song.shift(f_amt)
-            PROJECT.save_song(f_song)
-            PROJECT.commit("Shift song by {}".format(f_amt))
-
-            SONG_EDITOR.open_song()
-            self.clear_items()
-            SONG_EDITOR.open_first_region()
-            global_update_region_time()
-            f_window.close()
-
-        def cancel_handler():
-            f_window.close()
-
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Shift song..."))
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-        f_shift_amt = QtGui.QSpinBox()
-        f_shift_amt.setRange(-10, 10)
-        f_layout.addWidget(QtGui.QLabel(_("Amount:")), 2, 1)
-        f_layout.addWidget(f_shift_amt, 2, 2)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
-        f_layout.addLayout(f_ok_cancel_layout, 5, 2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_ok_cancel_layout.addWidget(f_ok_button)
-        f_ok_button.clicked.connect(ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
-        f_ok_cancel_layout.addWidget(f_cancel_button)
-        f_cancel_button.clicked.connect(cancel_handler)
-        f_window.exec_()
-
-
-    def on_split(self):
-        if CURRENT_REGION is None or libmk.IS_PLAYING or \
-        CURRENT_REGION.region_length_bars == 1:
-            return
-
-        def split_ok_handler():
-            f_index = f_split_at.value()
-            f_region_name = str(f_new_lineedit.text())
-            f_new_uid = PROJECT.create_empty_region(f_region_name)
-            f_midi_tuple = CURRENT_REGION.split(f_index, f_new_uid)
-            f_audio_tuple = AUDIO_ITEMS.split(f_index)
-            f_atm_tuple = ATM_REGION.split(f_index)
-            f_current_index = SONG_EDITOR.song.get_index_of_region(
-                CURRENT_REGION.uid)
-            SONG_EDITOR.song.insert_region(f_current_index + 1, f_new_uid)
-            PROJECT.save_song(SONG_EDITOR.song)
-            PROJECT.save_region(
-                CURRENT_REGION_NAME, f_midi_tuple[0])
-            PROJECT.save_region(f_region_name, f_midi_tuple[1])
-            PROJECT.save_audio_region(
-                CURRENT_REGION.uid, f_audio_tuple[0])
-            PROJECT.save_audio_region(f_new_uid, f_audio_tuple[1])
-            PROJECT.save_atm_region(f_atm_tuple[0], CURRENT_REGION.uid)
-            PROJECT.save_atm_region(f_atm_tuple[1], f_new_uid)
-            PROJECT.commit(_("Split region {} into {}").format(
-                CURRENT_REGION_NAME, f_region_name))
-            REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
-            SONG_EDITOR.open_song()
-            global_update_region_time()
-            f_window.close()
-
-        def split_cancel_handler():
-            f_window.close()
-
-        def on_name_changed():
-            f_new_lineedit.setText(
-                pydaw_remove_bad_chars(f_new_lineedit.text()))
-
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Split Region..."))
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-        f_vlayout0 = QtGui.QVBoxLayout()
-        f_new_lineedit = QtGui.QLineEdit(
-            PROJECT.get_next_default_region_name())
-        f_new_lineedit.editingFinished.connect(on_name_changed)
-        f_new_lineedit.setMaxLength(24)
-        f_layout.addWidget(QtGui.QLabel(_("New Name:")), 0, 1)
-        f_layout.addWidget(f_new_lineedit, 0, 2)
-        f_layout.addLayout(f_vlayout0, 1, 0)
-        f_split_at = QtGui.QSpinBox()
-        f_split_at.setRange(1, pydaw_get_current_region_length() - 1)
-        f_layout.addWidget(QtGui.QLabel(_("Split After:")), 2, 1)
-        f_layout.addWidget(f_split_at, 2, 2)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
-        f_layout.addLayout(f_ok_cancel_layout, 5, 2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_ok_cancel_layout.addWidget(f_ok_button)
-        f_ok_button.clicked.connect(split_ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
-        f_ok_cancel_layout.addWidget(f_cancel_button)
-        f_cancel_button.clicked.connect(split_cancel_handler)
-        f_window.exec_()
 
     def open_region_by_uid(self, a_uid):
         f_regions_dict = PROJECT.get_regions_dict()
@@ -4357,6 +3880,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
             print(_("No audio items selected, not glueing"))
             return
         f_path = libmk.PROJECT.get_next_glued_file_name()
+        assert(False)  # Next line is invalid
         PROJECT.IPC.pydaw_glue_audio(
             f_path, CURRENT_SONG_INDEX, f_start_bar, f_end_bar, f_indexes)
         f_items = PROJECT.get_audio_region(f_region_uid)
@@ -8434,54 +7958,35 @@ class transport_widget(libmk.AbstractTransport):
     def get_bar_value(self):
         return self.bar_spinbox.value() - 1
 
-    def set_pos_from_cursor(self, a_region, a_bar, a_beat):
+    def set_pos_from_cursor(self, a_bar, a_beat):
         if libmk.IS_PLAYING or libmk.IS_RECORDING:
-            f_region = int(a_region)
             f_bar = int(a_bar)
             f_beat = float(a_beat)
             self.set_time(f_region, f_bar, f_beat)
             if self.get_region_value() != f_region or \
             self.get_bar_value() != f_bar:
-                self.set_region_value(f_region)
                 self.set_bar_value(f_bar)
-                if f_region != self.last_region_num:
-                    self.last_region_num = f_region
-                    f_item = SONG_EDITOR.table_widget.item(0, f_region)
-                    SONG_EDITOR.table_widget.selectColumn(f_region)
-                    if not f_item is None and f_item.text() != "":
-                        REGION_SETTINGS.open_region(f_item.text())
-                    else:
-                        global CURRENT_REGION_NAME
-                        global AUDIO_ITEMS
-                        global CURRENT_REGION
-                        CURRENT_REGION_NAME = None
-                        CURRENT_REGION = None
-                        AUDIO_ITEMS = None
-                        REGION_SETTINGS.clear_items()
-                        AUDIO_SEQ.update_zoom()
-                        AUDIO_SEQ.clear_drawn_items()
+                if not f_item is None and f_item.text() != "":
+                    REGION_SETTINGS.open_region(f_item.text())
+                else:
+                    global CURRENT_REGION_NAME
+                    global AUDIO_ITEMS
+                    global CURRENT_REGION
+                    CURRENT_REGION_NAME = None
+                    CURRENT_REGION = None
+                    AUDIO_ITEMS = None
+                    REGION_SETTINGS.clear_items()
+                    AUDIO_SEQ.update_zoom()
+                    AUDIO_SEQ.clear_drawn_items()
 
     def init_playback_cursor(self, a_start=True):
-        if SONG_EDITOR.table_widget.item(
-        0, self.get_region_value()) is not None:
-            f_region_name = str(SONG_EDITOR.table_widget.item(
-                0, self.get_region_value()).text())
-            if not a_start or (CURRENT_REGION_NAME is not None and \
-            f_region_name != CURRENT_REGION_NAME) or CURRENT_REGION is None:
-                REGION_SETTINGS.open_region(f_region_name)
-        else:
-            REGION_EDITOR.clear_drawn_items()
-            AUDIO_SEQ.clear_drawn_items()
-        if not a_start:
-            REGION_EDITOR.clearSelection()
-        SONG_EDITOR.table_widget.selectColumn(self.get_region_value())
+        REGION_EDITOR.clearSelection()
 
     def on_play(self):
         if libmk.IS_PLAYING:
             self.set_region_value(self.start_region)
             self.set_bar_value(self.last_bar)
 
-        SONG_EDITOR.table_widget.setEnabled(False)
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
         self.bar_spinbox.setEnabled(False)
@@ -8502,7 +8007,6 @@ class transport_widget(libmk.AbstractTransport):
 
     def on_stop(self):
         PROJECT.IPC.pydaw_en_playback(0)
-        SONG_EDITOR.table_widget.setEnabled(True)
         REGION_SETTINGS.on_stop()
         AUDIO_SEQ_WIDGET.on_stop()
 
@@ -8516,17 +8020,9 @@ class transport_widget(libmk.AbstractTransport):
             if CURRENT_REGION is not None and \
             REGION_SETTINGS.enabled:
                 REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
-            SONG_EDITOR.open_song()
         self.init_playback_cursor(a_start=False)
         self.set_bar_value(self.last_bar)
-        f_song_table_item = SONG_EDITOR.table_widget.item(
-            0, self.get_region_value())
-        if f_song_table_item is not None and \
-        str(f_song_table_item.text()) != None:
-            f_song_table_item_str = str(f_song_table_item.text())
-            REGION_SETTINGS.open_region(f_song_table_item_str)
-        else:
-            REGION_SETTINGS.clear_items()
+        #REGION_SETTINGS.open_region(f_song_table_item_str)
         AUDIO_SEQ.stop_playback(self.last_bar)
         time.sleep(0.1)
 
@@ -8541,9 +8037,6 @@ class transport_widget(libmk.AbstractTransport):
             PROJECT.save_recorded_items(
                 f_file_name, MREC_EVENTS, self.overdub_checkbox.isChecked(),
                 self.tempo_spinbox.value(), pydaw_util.SAMPLE_RATE)
-            SONG_EDITOR.open_song()
-            if not CURRENT_REGION:
-                SONG_EDITOR.open_first_region()
             REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
             f_window.close()
 
@@ -8583,7 +8076,6 @@ class transport_widget(libmk.AbstractTransport):
                 self.group_box, _("Error"),
                 _("Cannot use overdub mode with loop mode to record"))
             return False
-        SONG_EDITOR.table_widget.setEnabled(False)
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
         self.bar_spinbox.setEnabled(False)
@@ -8713,9 +8205,8 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.song_region_tab.setLayout(self.song_region_vlayout)
         self.song_region_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.song_region_splitter.addWidget(self.song_region_tab)
-        self.main_tabwidget.addTab(self.song_region_splitter, _("Song/Region"))
+        self.main_tabwidget.addTab(self.song_region_splitter, _("Sequencer"))
 
-        self.song_region_vlayout.addWidget(SONG_EDITOR.table_widget)
         self.song_region_vlayout.addLayout(REGION_SETTINGS.hlayout0)
 
         self.song_region_splitter.addWidget(self.regions_tab_widget)
@@ -8837,18 +8328,6 @@ class pydaw_main_window(QtGui.QScrollArea):
             self.end_reg = 1
             self.start_bar = 1
             self.end_bar = 2
-
-            for i in range(300):
-                f_item = SONG_EDITOR.table_widget.item(0, i)
-                if not f_item is None and f_item.text() != "":
-                    self.start_reg = i + 1
-                    break
-
-            for i in range(self.start_reg, 300):
-                f_item = SONG_EDITOR.table_widget.item(0, i)
-                if f_item is None or f_item.text() == "":
-                    self.end_reg = i + 1
-                    break
 
         def start_region_changed(a_val=None):
             f_max = pydaw_get_region_length(f_start_region.value() - 1)
@@ -9088,7 +8567,6 @@ def global_close_all():
         libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
     REGION_SETTINGS.clear_new()
     ITEM_EDITOR.clear_new()
-    SONG_EDITOR.table_widget.clearContents()
     AUDIO_SEQ.clear_drawn_items()
     PB_EDITOR.clear_drawn_items()
     TRANSPORT.reset()
@@ -9112,7 +8590,6 @@ def global_ui_refresh_callback(a_restore_all=False):
         CURRENT_REGION = None
     if ITEM_EDITOR.enabled and global_check_midi_items():
         global_open_items()
-    SONG_EDITOR.open_song()
     TRANSPORT.open_transport()
     PROJECT.IPC.pydaw_open_song(
         PROJECT.project_folder, a_restore_all)
@@ -9124,7 +8601,6 @@ def global_open_project(a_project_file):
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
     TRACK_PANEL.open_tracks()
-    SONG_EDITOR.open_song()
     REGION_EDITOR.clear_drawn_items()
     TRANSPORT.open_transport()
     PROJECT.suppress_updates = False
@@ -9132,7 +8608,6 @@ def global_open_project(a_project_file):
     if f_scale is not None:
         PIANO_ROLL_EDITOR_WIDGET.scale_key_combobox.setCurrentIndex(f_scale[0])
         PIANO_ROLL_EDITOR_WIDGET.scale_combobox.setCurrentIndex(f_scale[1])
-    SONG_EDITOR.open_first_region()
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText(PROJECT.get_notes())
     global_update_region_time()
@@ -9146,8 +8621,6 @@ def global_new_project(a_project_file):
     PROJECT = DawNextProject(global_pydaw_with_audio)
     PROJECT.new_project(a_project_file)
     PROJECT.save_transport(TRANSPORT.transport)
-    SONG_EDITOR.open_song()
-    PROJECT.save_song(SONG_EDITOR.song)
     TRANSPORT.open_transport()
     global_update_track_comboboxes()
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
@@ -9176,7 +8649,6 @@ PB_EDITOR = automation_viewer(a_is_cc=False)
 CC_EDITOR = automation_viewer()
 CC_EDITOR_WIDGET = automation_viewer_widget(CC_EDITOR)
 
-SONG_EDITOR = song_editor()
 REGION_SETTINGS = region_settings()
 TRACK_PANEL = tracks_widget()
 REGION_EDITOR = region_editor()
