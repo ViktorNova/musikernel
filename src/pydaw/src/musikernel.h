@@ -220,7 +220,7 @@ void v_pydaw_set_plugin_index(t_pytrack*, int, int, int, int, int);
 t_pytrack_routing * g_pytrack_routing_get();
 void v_pytrack_routing_set(t_pytrack_routing *, int, int);
 void v_pytrack_routing_free(t_pytrack_routing *);
-
+void v_pydaw_set_host(int);
 
 #ifdef	__cplusplus
 }
@@ -240,7 +240,7 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     clalloc((void**)&musikernel, sizeof(t_musikernel));
     musikernel->wav_pool = g_wav_pool_get(a_sr);
     musikernel->midi_devices = a_midi_devices;
-    musikernel->current_host = &musikernel->hosts[MK_HOST_EDMNEXT];
+    musikernel->current_host = NULL;
     musikernel->midi_learn = 0;
     musikernel->is_offline_rendering = 0;
     pthread_spin_init(&musikernel->main_lock, 0);
@@ -290,6 +290,14 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     {
         musikernel->plugin_pool[f_i].active = 0;
     }
+
+    char * f_host_str = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
+    get_file_setting(f_host_str, "host", "0");
+    int f_host = atoi(f_host_str);
+    printf("Last host:  %i\n", f_host);
+    free(f_host_str);
+
+    v_pydaw_set_host(f_host);
 }
 
 void v_pydaw_set_control_from_atm(t_pydaw_seq_event *event,

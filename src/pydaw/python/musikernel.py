@@ -290,6 +290,9 @@ class MkMainWindow(QtGui.QMainWindow):
 
         self.ignore_close_event = True
 
+        libmk.TRANSPORT.host_combobox.setCurrentIndex(
+            pydaw_util.get_file_setting("host", int, 0))
+
         self.menu_bar = QtGui.QMenu(self)
 
         libmk.TRANSPORT.menu_button.setMenu(self.menu_bar)
@@ -452,6 +455,7 @@ class MkMainWindow(QtGui.QMainWindow):
         #self.wave_editor_module.WAVE_EDITOR.sample_graph.repaint()
 
     def set_host(self, a_index):
+        pydaw_util.set_file_setting("host", a_index)
         self.transport_stack.setCurrentIndex(a_index)
         self.main_stack.setCurrentIndex(a_index)
         self.current_module = self.host_modules[a_index]

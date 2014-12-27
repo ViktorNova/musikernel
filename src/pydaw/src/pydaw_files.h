@@ -78,7 +78,10 @@ void get_string_from_file(const char * a_file, int a_size, char * a_buf)
     FILE * f_file;
     f_file = fopen(a_file, "r");
     assert(f_file);
-    fread(a_buf, sizeof(char), sizeof(char) * a_size, f_file);
+    size_t f_char_count =
+        fread(a_buf, sizeof(char), sizeof(char) * a_size, f_file);
+    assert((int)f_char_count < a_size);
+    a_buf[f_char_count] = '\0';
     fclose(f_file);
 }
 
