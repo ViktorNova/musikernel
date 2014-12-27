@@ -11,6 +11,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-from libedmnext.en_project import *
-from libedmnext.en_gradients import *
+from libedmnext.project import *
+from libedmnext.gradients import *
 

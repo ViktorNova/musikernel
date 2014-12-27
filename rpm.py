@@ -123,10 +123,10 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/midicomp
 /usr/lib/{0}/pydaw/python/libpydaw/portaudio.py
 /usr/lib/{0}/pydaw/python/libpydaw/portmidi.py
-/usr/lib/{0}/pydaw/python/libedmnext/en_gradients.py
+/usr/lib/{0}/pydaw/python/libedmnext/gradients.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_history.py
-/usr/lib/{0}/pydaw/python/libedmnext/en_osc.py
-/usr/lib/{0}/pydaw/python/libedmnext/en_project.py
+/usr/lib/{0}/pydaw/python/libedmnext/osc.py
+/usr/lib/{0}/pydaw/python/libedmnext/project.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_util.py
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_widgets.py
 /usr/lib/{0}/pydaw/python/libpydaw/staging.py
@@ -176,16 +176,16 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/project_recover.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.pyo
-/usr/lib/{0}/pydaw/python/libedmnext/en_gradients.pyc
-/usr/lib/{0}/pydaw/python/libedmnext/en_gradients.pyo
+/usr/lib/{0}/pydaw/python/libedmnext/gradients.pyc
+/usr/lib/{0}/pydaw/python/libedmnext/gradients.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_history.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_history.pyo
-/usr/lib/{0}/pydaw/python/libedmnext/en_osc.pyc
-/usr/lib/{0}/pydaw/python/libedmnext/en_osc.pyo
+/usr/lib/{0}/pydaw/python/libedmnext/osc.pyc
+/usr/lib/{0}/pydaw/python/libedmnext/osc.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_paulstretch.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_paulstretch.pyo
-/usr/lib/{0}/pydaw/python/libedmnext/en_project.pyc
-/usr/lib/{0}/pydaw/python/libedmnext/en_project.pyo
+/usr/lib/{0}/pydaw/python/libedmnext/project.pyc
+/usr/lib/{0}/pydaw/python/libedmnext/project.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_util.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_util.pyo
 /usr/lib/{0}/pydaw/python/libpydaw/pydaw_widgets.pyc
@@ -293,15 +293,15 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libdawnext/__init__.py
 /usr/lib/{0}/pydaw/python/libdawnext/__init__.pyc
 /usr/lib/{0}/pydaw/python/libdawnext/__init__.pyo
-/usr/lib/{0}/pydaw/python/libdawnext/en_gradients.py
-/usr/lib/{0}/pydaw/python/libdawnext/en_gradients.pyc
-/usr/lib/{0}/pydaw/python/libdawnext/en_gradients.pyo
-/usr/lib/{0}/pydaw/python/libdawnext/en_osc.py
-/usr/lib/{0}/pydaw/python/libdawnext/en_osc.pyc
-/usr/lib/{0}/pydaw/python/libdawnext/en_osc.pyo
-/usr/lib/{0}/pydaw/python/libdawnext/en_project.py
-/usr/lib/{0}/pydaw/python/libdawnext/en_project.pyc
-/usr/lib/{0}/pydaw/python/libdawnext/en_project.pyo
+/usr/lib/{0}/pydaw/python/libdawnext/gradients.py
+/usr/lib/{0}/pydaw/python/libdawnext/gradients.pyc
+/usr/lib/{0}/pydaw/python/libdawnext/gradients.pyo
+/usr/lib/{0}/pydaw/python/libdawnext/osc.py
+/usr/lib/{0}/pydaw/python/libdawnext/osc.pyc
+/usr/lib/{0}/pydaw/python/libdawnext/osc.pyo
+/usr/lib/{0}/pydaw/python/libdawnext/project.py
+/usr/lib/{0}/pydaw/python/libdawnext/project.pyc
+/usr/lib/{0}/pydaw/python/libdawnext/project.pyo
 /usr/lib/{0}/pydaw/python/libdawnext/strings.py
 /usr/lib/{0}/pydaw/python/libdawnext/strings.pyc
 /usr/lib/{0}/pydaw/python/libdawnext/strings.pyo
@@ -319,18 +319,19 @@ f_spec_file.close()
 os.system('cp "{}" "{}"'.format(global_spec_file, SPEC_DIR))
 
 os.chdir(SPEC_DIR)
-os.system("rpmbuild -ba {}".format(global_spec_file))
+f_rpm_result = os.system("rpmbuild -ba {}".format(global_spec_file))
 
+if f_rpm_result:
+    print("Error:  rpmbuild returned {}".format(f_rpm_result))
+else:
+    pkg_name = "{}-*{}*rpm".format(
+        MAJOR_VERSION, MINOR_VERSION)
 
-pkg_name = "{}-*{}*rpm".format(
-    MAJOR_VERSION, MINOR_VERSION)
+    cp_cmd = "cp ~/rpmbuild/RPMS/*/{} '{}'".format(pkg_name, orig_wd)
+    print(cp_cmd)
+    os.system(cp_cmd)
 
-cp_cmd = "cp ~/rpmbuild/RPMS/*/{} '{}'".format(pkg_name, orig_wd)
-print(cp_cmd)
-os.system(cp_cmd)
-
-if IS_INSTALL:
-    os.system("sudo rpm -e {0}".format(MAJOR_VERSION))
-    os.system("sudo rpm -e {0}-debuginfo".format(MAJOR_VERSION))
-    os.system("sudo rpm -ivh {}/{}".format(orig_wd, pkg_name))
-
+    if IS_INSTALL:
+        os.system("sudo rpm -e {0}".format(MAJOR_VERSION))
+        os.system("sudo rpm -e {0}-debuginfo".format(MAJOR_VERSION))
+        os.system("sudo rpm -ivh {}/{}".format(orig_wd, pkg_name))

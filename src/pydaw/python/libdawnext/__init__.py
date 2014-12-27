@@ -11,6 +11,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-from libdawnext.en_project import *
-from libdawnext.en_gradients import *
+from libdawnext.project import *
+from libdawnext.gradients import *
 

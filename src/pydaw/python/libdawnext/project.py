@@ -29,7 +29,7 @@ from libpydaw.pydaw_util import *
 from libpydaw.translate import _
 from libpydaw.pydaw_widgets import pydaw_modulex_settings
 
-from libedmnext.en_osc import EdmNextOsc
+from libdawnext.osc import DawNextOsc
 
 from PyQt4 import QtGui
 from libpydaw import pydaw_history
@@ -38,38 +38,38 @@ TRACK_COUNT_ALL = 32
 MAX_AUDIO_ITEM_COUNT = 256
 MAX_REGION_LENGTH = 64 #bars
 
-pydaw_folder_edmnext = os.path.join("projects", "edmnext")
+pydaw_folder_dawnext = os.path.join("projects", "dawnext")
 pydaw_folder_audio_per_item_fx = os.path.join(
-    pydaw_folder_edmnext, "audio_per_item_fx")
-pydaw_folder_items = os.path.join(pydaw_folder_edmnext, "items")
-pydaw_folder_regions = os.path.join(pydaw_folder_edmnext, "regions")
+    pydaw_folder_dawnext, "audio_per_item_fx")
+pydaw_folder_items = os.path.join(pydaw_folder_dawnext, "items")
+pydaw_folder_regions = os.path.join(pydaw_folder_dawnext, "regions")
 pydaw_folder_regions_audio = os.path.join(
-    pydaw_folder_edmnext, "regions_audio")
-pydaw_folder_regions_atm = os.path.join(pydaw_folder_edmnext, "regions_atm")
-pydaw_folder_tracks = os.path.join(pydaw_folder_edmnext, "tracks")
+    pydaw_folder_dawnext, "regions_audio")
+pydaw_folder_regions_atm = os.path.join(pydaw_folder_dawnext, "regions_atm")
+pydaw_folder_tracks = os.path.join(pydaw_folder_dawnext, "tracks")
 
-pydaw_file_routing_graph = os.path.join(pydaw_folder_edmnext, "routing.txt")
+pydaw_file_routing_graph = os.path.join(pydaw_folder_dawnext, "routing.txt")
 pydaw_file_midi_routing = os.path.join(
-    pydaw_folder_edmnext, "midi_routing.txt")
-pydaw_file_pyregions = os.path.join(pydaw_folder_edmnext, "regions.txt")
-pydaw_file_pyitems = os.path.join(pydaw_folder_edmnext, "items.txt")
-pydaw_file_pysong = os.path.join(pydaw_folder_edmnext, "song.txt")
-pydaw_file_pytransport = os.path.join(pydaw_folder_edmnext, "transport.txt")
-pydaw_file_pytracks = os.path.join(pydaw_folder_edmnext, "tracks.txt")
-pydaw_file_notes = os.path.join(pydaw_folder_edmnext, "notes.txt")
+    pydaw_folder_dawnext, "midi_routing.txt")
+pydaw_file_pyregions = os.path.join(pydaw_folder_dawnext, "regions.txt")
+pydaw_file_pyitems = os.path.join(pydaw_folder_dawnext, "items.txt")
+pydaw_file_pysong = os.path.join(pydaw_folder_dawnext, "song.txt")
+pydaw_file_pytransport = os.path.join(pydaw_folder_dawnext, "transport.txt")
+pydaw_file_pytracks = os.path.join(pydaw_folder_dawnext, "tracks.txt")
+pydaw_file_notes = os.path.join(pydaw_folder_dawnext, "notes.txt")
 
 #Anything smaller gets deleted when doing a transform
 pydaw_min_note_length = 4.0 / 129.0
 
 
-class EdmNextProject(libmk.AbstractProject):
+class DawNextProject(libmk.AbstractProject):
     def __init__(self, a_with_audio):
         self.last_item_number = 1
         self.last_region_number = 1
         self.history_files = []
         self.history_commits = []
         self.history_undo_cursor = 0
-        self.en_osc = EdmNextOsc(a_with_audio)
+        self.IPC = DawNextOsc(a_with_audio)
         self.suppress_updates = False
 
     def save_file(self, a_folder, a_file, a_text, a_force_new=False):
@@ -137,8 +137,8 @@ class EdmNextProject(libmk.AbstractProject):
             self.project_folder, pydaw_folder_regions_atm)
         self.items_folder = os.path.join(
             self.project_folder, pydaw_folder_items)
-        self.edmnext_folder = os.path.join(
-            self.project_folder, pydaw_folder_edmnext)
+        self.dawnext_folder = os.path.join(
+            self.project_folder, pydaw_folder_dawnext)
         self.audio_per_item_fx_folder = os.path.join(
             self.project_folder, pydaw_folder_audio_per_item_fx)
         self.track_pool_folder = os.path.join(
@@ -170,7 +170,7 @@ class EdmNextProject(libmk.AbstractProject):
             self.new_project(a_project_file)
 
         if a_notify_osc:
-            self.en_osc.pydaw_open_song(self.project_folder)
+            self.IPC.pydaw_open_song(self.project_folder)
 
     def new_project(self, a_project_file, a_notify_osc=True):
         self.set_project_folders(a_project_file)
@@ -193,7 +193,7 @@ class EdmNextProject(libmk.AbstractProject):
 
         self.commit("Created project")
         if a_notify_osc:
-            self.en_osc.pydaw_open_song(self.project_folder)
+            self.IPC.pydaw_open_song(self.project_folder)
 
     def get_notes(self):
         if os.path.isfile(self.pynotes_file):
@@ -236,7 +236,7 @@ class EdmNextProject(libmk.AbstractProject):
 
     def save_routing_graph(self, a_graph):
         self.save_file("", pydaw_file_routing_graph, str(a_graph))
-        self.en_osc.pydaw_update_track_send()
+        self.IPC.pydaw_update_track_send()
 
     def get_midi_routing(self):
         if os.path.isfile(self.midi_routing_file):
@@ -304,7 +304,7 @@ class EdmNextProject(libmk.AbstractProject):
 
     def save_atm_region(self, a_region, a_uid):
         self.save_file(pydaw_folder_regions_atm, a_uid, str(a_region))
-        self.en_osc.pydaw_save_atm_region(a_uid)
+        self.IPC.pydaw_save_atm_region(a_uid)
 
     def rename_items(self, a_item_names, a_new_item_name):
         f_items_dict = self.get_items_dict()
@@ -424,7 +424,7 @@ class EdmNextProject(libmk.AbstractProject):
                 if f_audio_item.uid == f_uid:
                     f_paif.set_row(f_index, a_paif)
                     self.save_audio_per_item_fx_region(f_region_uid, f_paif)
-                    self.en_osc.pydaw_audio_per_item_fx_region(
+                    self.IPC.pydaw_audio_per_item_fx_region(
                         f_region_uid)
                     f_changed = True
             if f_changed:
@@ -653,7 +653,7 @@ class EdmNextProject(libmk.AbstractProject):
             f_audio_region = self.get_audio_region(f_uid)
             f_audio_region.reorder(a_dict)
             self.save_audio_region(f_uid, f_audio_region)
-        self.en_osc.pydaw_open_song(self.project_folder)
+        self.IPC.pydaw_open_song(self.project_folder)
         self.commit("Re-order tracks")
 
     def get_tracks_string(self):
@@ -729,7 +729,7 @@ class EdmNextProject(libmk.AbstractProject):
 
     def create_empty_region(self, a_region_name):
         # TODO:  Check for uniqueness, from
-        # a EdmNextProject.check_for_uniqueness method...
+        # a DawNextProject.check_for_uniqueness method...
         f_regions_dict = self.get_regions_dict()
         f_uid = f_regions_dict.add_new_item(a_region_name)
         self.save_file(pydaw_folder_regions, f_uid, pydaw_terminating_char)
@@ -744,7 +744,7 @@ class EdmNextProject(libmk.AbstractProject):
         f_items_dict = self.get_items_dict()
         f_uid = f_items_dict.add_new_item(a_item_name)
         self.save_file(pydaw_folder_items, str(f_uid), pydaw_terminating_char)
-        self.en_osc.pydaw_save_item(f_uid)
+        self.IPC.pydaw_save_item(f_uid)
         self.save_items_dict(f_items_dict)
         return f_uid
 
@@ -783,9 +783,9 @@ class EdmNextProject(libmk.AbstractProject):
             self.save_file(
                 pydaw_folder_audio_per_item_fx, str(a_dest_region_uid),
                 pydaw_read_file_text(f_paif_file))
-            self.en_osc.pydaw_audio_per_item_fx_region(
+            self.IPC.pydaw_audio_per_item_fx_region(
                 a_dest_region_uid)
-        self.en_osc.pydaw_reload_audio_items(a_dest_region_uid)
+        self.IPC.pydaw_reload_audio_items(a_dest_region_uid)
         self.commit("Clone audio from region {}".format(a_src_region_name))
 
     def copy_item(self, a_old_item, a_new_item):
@@ -794,7 +794,7 @@ class EdmNextProject(libmk.AbstractProject):
         f_old_uid = f_items_dict.get_uid_by_name(a_old_item)
         self.save_file(pydaw_folder_items,  str(f_uid), pydaw_read_file_text(
             "{}/{}".format(self.items_folder, f_old_uid)))
-        self.en_osc.pydaw_save_item(f_uid)
+        self.IPC.pydaw_save_item(f_uid)
         self.save_items_dict(f_items_dict)
         return f_uid
 
@@ -803,14 +803,14 @@ class EdmNextProject(libmk.AbstractProject):
             f_items_dict = self.get_items_dict()
             f_uid = f_items_dict.get_uid_by_name(a_name)
             self.save_file(pydaw_folder_items, str(f_uid), str(a_item))
-            self.en_osc.pydaw_save_item(f_uid)
+            self.IPC.pydaw_save_item(f_uid)
 
     def save_item_by_uid(self, a_uid, a_item, a_new_item=False):
         if not self.suppress_updates:
             f_uid = int(a_uid)
             self.save_file(
                 pydaw_folder_items, str(f_uid), str(a_item), a_new_item)
-            self.en_osc.pydaw_save_item(f_uid)
+            self.IPC.pydaw_save_item(f_uid)
 
     def save_region(self, a_name, a_region):
         if not self.suppress_updates:
@@ -820,12 +820,12 @@ class EdmNextProject(libmk.AbstractProject):
 
     def save_region_by_uid(self, a_uid, a_region):
         self.save_file(pydaw_folder_regions, str(a_uid), str(a_region))
-        self.en_osc.pydaw_save_region(a_uid)
+        self.IPC.pydaw_save_region(a_uid)
 
     def save_song(self, a_song):
         if not self.suppress_updates:
             self.save_file("", pydaw_file_pysong, str(a_song))
-            self.en_osc.pydaw_save_song()
+            self.IPC.pydaw_save_song()
 
     def save_tracks(self, a_tracks):
         if not self.suppress_updates:
@@ -841,7 +841,7 @@ class EdmNextProject(libmk.AbstractProject):
         if not self.suppress_updates:
             self.save_file(
                 pydaw_folder_regions_audio, str(a_region_uid), str(a_tracks))
-            self.en_osc.pydaw_reload_audio_items(a_region_uid)
+            self.IPC.pydaw_reload_audio_items(a_region_uid)
 
     def item_exists(self, a_item_name, a_name_dict=None):
         if a_name_dict is None:
