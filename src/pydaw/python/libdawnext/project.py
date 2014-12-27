@@ -53,7 +53,6 @@ pydaw_file_midi_routing = os.path.join(
     pydaw_folder_dawnext, "midi_routing.txt")
 pydaw_file_pyregions = os.path.join(pydaw_folder_dawnext, "regions.txt")
 pydaw_file_pyitems = os.path.join(pydaw_folder_dawnext, "items.txt")
-pydaw_file_pysong = os.path.join(pydaw_folder_dawnext, "song.txt")
 pydaw_file_pytransport = os.path.join(pydaw_folder_dawnext, "transport.txt")
 pydaw_file_pytracks = os.path.join(pydaw_folder_dawnext, "tracks.txt")
 pydaw_file_notes = os.path.join(pydaw_folder_dawnext, "notes.txt")
@@ -182,7 +181,6 @@ class DawNextProject(libmk.AbstractProject):
 
         self.create_file("", pydaw_file_pyregions, pydaw_terminating_char)
         self.create_file("", pydaw_file_pyitems, pydaw_terminating_char)
-        self.create_file("", pydaw_file_pysong, pydaw_terminating_char)
         self.create_file("", pydaw_file_pytransport, str(pydaw_transport()))
         f_tracks = pydaw_tracks()
         for i in range(TRACK_COUNT_ALL):
@@ -261,19 +259,6 @@ class DawNextProject(libmk.AbstractProject):
     def save_items_dict(self, a_uid_dict):
         self.save_file("", pydaw_file_pyitems, str(a_uid_dict))
 
-    def get_song_string(self):
-        try:
-            f_file = open(
-                os.path.join(self.project_folder, pydaw_file_pysong))
-        except:
-            return pydaw_terminating_char
-        f_result = f_file.read()
-        f_file.close()
-        return f_result
-
-    def get_song(self):
-        return pydaw_song.from_str(self.get_song_string())
-
     def get_region_string(self, a_region_uid):
         try:
             f_file = open(
@@ -343,6 +328,7 @@ class DawNextProject(libmk.AbstractProject):
         """
         f_uid = int(a_uid)
         f_changed_any = False
+        assert(False)  # this needs to be reworked
         f_pysong = self.get_song()
         for f_region_uid in f_pysong.regions.values():
             f_audio_region = self.get_audio_region(f_region_uid)
@@ -367,6 +353,8 @@ class DawNextProject(libmk.AbstractProject):
             a_item:  pydaw_audio_item
         """
         f_changed_any = False
+        # this needs to be reworked
+        assert(False)
         f_pysong = self.get_song()
         for f_region_uid in f_pysong.regions.values():
             f_audio_region = self.get_audio_region(f_region_uid)
@@ -394,6 +382,8 @@ class DawNextProject(libmk.AbstractProject):
         """
         f_uid = int(a_uid)
         f_changed_any = False
+        #this needs to be reworked
+        assert(False)
         f_pysong = self.get_song()
         for f_region_uid in f_pysong.regions.values():
             f_audio_region = self.get_audio_region(f_region_uid)
@@ -822,11 +812,6 @@ class DawNextProject(libmk.AbstractProject):
         self.save_file(pydaw_folder_regions, str(a_uid), str(a_region))
         self.IPC.pydaw_save_region(a_uid)
 
-    def save_song(self, a_song):
-        if not self.suppress_updates:
-            self.save_file("", pydaw_file_pysong, str(a_song))
-            self.IPC.pydaw_save_song()
-
     def save_tracks(self, a_tracks):
         if not self.suppress_updates:
             self.save_file("", pydaw_file_pytracks, str(a_tracks))
@@ -935,82 +920,6 @@ class DawNextProject(libmk.AbstractProject):
                     "from region {}".format(f_uid))
         if f_commit:
             self.commit("")
-        return f_result
-
-class pydaw_song:
-    def __init__(self):
-        self.regions = {}
-
-    def get_next_empty_pos(self):
-        for f_i in range(300):
-            if not f_i in self.regions:
-                return f_i
-        return None
-
-    def get_index_of_region(self, a_uid):
-        for k, v in list(self.regions.items()):
-            if v == a_uid:
-                return k
-        assert(False)
-
-    def shift(self, a_amt):
-        f_result = {}
-        for k, v in self.regions.items():
-            f_index = k + a_amt
-            if f_index >= 0 and f_index < 300:
-                f_result[f_index] = v
-        self.regions = f_result
-
-    def insert_region(self, a_index, a_region_uid):
-        f_new_dict = {}
-        f_old_dict = {}
-        for k, v in list(self.regions.items()):
-            if k >= a_index:
-                if k < 299:
-                    f_new_dict[k + 1] = v
-            else:
-                f_old_dict[k] = v
-        print("\n\n\n")
-        for k, v in list(f_new_dict.items()):
-            f_old_dict[k] = v
-        print("\n\n\n")
-        self.regions = f_old_dict
-        self.regions[a_index] = a_region_uid
-
-    def add_region_ref_by_name(self, a_pos, a_region_name, a_uid_dict):
-        self.regions[int(a_pos)] = a_uid_dict.get_uid_by_name(a_region_name)
-        #TODO:  Raise an exception if it doesn't exist...
-
-    def add_region_ref_by_uid(self, a_pos, a_region_uid):
-        self.regions[int(a_pos)] = int(a_region_uid)
-        #TODO:  Raise an exception if it doesn't exist...
-
-    def get_region_names(self, a_uid_dict):
-        f_result = {}
-        for k, v in list(self.regions.items()):
-            f_result[k] = a_uid_dict.get_name_by_uid(v)
-        return f_result
-
-    def remove_region_ref(self, a_pos):
-        if a_pos in self.regions:
-            del self.regions[a_pos]
-
-    def __str__(self):
-        f_result = ""
-        for k, v in list(self.regions.items()):
-            f_result += "{}|{}\n".format(k, v)
-        f_result += pydaw_terminating_char
-        return f_result
-    @staticmethod
-    def from_str(a_str):
-        f_result = pydaw_song()
-        f_arr = a_str.split("\n")
-        for f_line in f_arr:
-            if f_line == pydaw_terminating_char:
-                break
-            else:
-                f_region = f_line.split("|")
-                f_result.add_region_ref_by_uid(f_region[0], f_region[1])
         return f_result
 
 class pydaw_region:
