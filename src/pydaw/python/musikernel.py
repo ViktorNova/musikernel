@@ -444,6 +444,8 @@ class MkMainWindow(QtGui.QMainWindow):
             self.subprocess_timer.timeout.connect(self.subprocess_monitor)
             self.subprocess_timer.setSingleShot(False)
             self.subprocess_timer.start(1000)
+        else:
+            self.subprocess_timer = None
 
         self.on_restore_splitters()
         self.show()
@@ -771,7 +773,8 @@ class MkMainWindow(QtGui.QMainWindow):
             for f_host in self.host_windows:
                 f_host.prepare_to_quit()
             self.ignore_close_event = False
-            self.subprocess_timer.stop()
+            if self.subprocess_timer:
+                self.subprocess_timer.stop()
             libmk.prepare_to_quit()
             f_quit_timer = QtCore.QTimer(self)
             f_quit_timer.setSingleShot(True)
