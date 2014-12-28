@@ -140,8 +140,6 @@ class region_settings:
         self.unmute_action.triggered.connect(self.unmute_all)
         self.unmute_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+M"))
 
-        self.hlayout0.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding))
         self.hlayout0.addWidget(QtGui.QLabel(_("Region Length:")))
         self.length_alternate_spinbox = QtGui.QSpinBox()
         self.length_alternate_spinbox.setKeyboardTracking(False)
@@ -150,6 +148,10 @@ class region_settings:
         self.length_alternate_spinbox.valueChanged.connect(
             self.update_region_length)
         self.hlayout0.addWidget(self.length_alternate_spinbox)
+        f_scrollbar = SEQUENCER.horizontalScrollBar()
+        f_scrollbar.setSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        self.hlayout0.addWidget(f_scrollbar)
 
     def edit_mode_changed(self, a_value=None):
         global REGION_EDITOR_MODE
@@ -1318,6 +1320,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.reselect_on_stop = []
         self.playback_cursor = None
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         #Somewhat slow on my AMD 5450 using the FOSS driver
         #self.setRenderHint(QtGui.QPainter.Antialiasing)
 
