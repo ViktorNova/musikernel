@@ -39,19 +39,15 @@ MAX_AUDIO_ITEM_COUNT = 256
 MAX_REGION_LENGTH = 64 #bars
 
 pydaw_folder_dawnext = os.path.join("projects", "dawnext")
-pydaw_folder_audio_per_item_fx = os.path.join(
-    pydaw_folder_dawnext, "audio_per_item_fx")
 pydaw_folder_items = os.path.join(pydaw_folder_dawnext, "items")
-pydaw_folder_regions = os.path.join(pydaw_folder_dawnext, "regions")
-pydaw_folder_regions_audio = os.path.join(
-    pydaw_folder_dawnext, "regions_audio")
-pydaw_folder_regions_atm = os.path.join(pydaw_folder_dawnext, "regions_atm")
 pydaw_folder_tracks = os.path.join(pydaw_folder_dawnext, "tracks")
 
+pydaw_file_regions_atm = os.path.join(pydaw_folder_dawnext, "automation.txt")
 pydaw_file_routing_graph = os.path.join(pydaw_folder_dawnext, "routing.txt")
 pydaw_file_midi_routing = os.path.join(
     pydaw_folder_dawnext, "midi_routing.txt")
-pydaw_file_pyregions = os.path.join(pydaw_folder_dawnext, "regions.txt")
+pydaw_file_audio_per_item_fx = os.path.join(
+    pydaw_folder_dawnext, "audio_per_item_fx.txt")
 pydaw_file_pyitems = os.path.join(pydaw_folder_dawnext, "items.txt")
 pydaw_file_pytransport = os.path.join(pydaw_folder_dawnext, "transport.txt")
 pydaw_file_pytracks = os.path.join(pydaw_folder_dawnext, "tracks.txt")
@@ -128,23 +124,13 @@ class DawNextProject(libmk.AbstractProject):
         self.project_folder = os.path.dirname(a_project_file)
         self.project_file = os.path.splitext(
             os.path.basename(a_project_file))[0]
-        self.regions_folder = os.path.join(
-            self.project_folder, pydaw_folder_regions)
-        self.regions_audio_folder = os.path.join(
-            self.project_folder, pydaw_folder_regions_audio)
-        self.regions_atm_folder = os.path.join(
-            self.project_folder, pydaw_folder_regions_atm)
         self.items_folder = os.path.join(
             self.project_folder, pydaw_folder_items)
         self.dawnext_folder = os.path.join(
             self.project_folder, pydaw_folder_dawnext)
-        self.audio_per_item_fx_folder = os.path.join(
-            self.project_folder, pydaw_folder_audio_per_item_fx)
         self.track_pool_folder = os.path.join(
             self.project_folder, pydaw_folder_tracks)
         #files
-        self.pyregions_file = os.path.join(
-            self.project_folder, pydaw_file_pyregions)
         self.pyitems_file = os.path.join(
             self.project_folder, pydaw_file_pyitems)
         self.pyscale_file = os.path.join(
@@ -155,11 +141,13 @@ class DawNextProject(libmk.AbstractProject):
             self.project_folder, pydaw_file_routing_graph)
         self.midi_routing_file = os.path.join(
             self.project_folder, pydaw_file_midi_routing)
+        self.paif_file = os.path.join(
+            self.project_folder, pydaw_file_audio_per_item_fx)
+        self.automation_file = os.path.join(
+            self.project_folder, pydaw_file_regions_atm)
 
         self.project_folders = [
-            self.project_folder, self.regions_folder, self.items_folder,
-            self.audio_per_item_fx_folder, self.regions_audio_folder,
-            self.track_pool_folder, self.regions_atm_folder,]
+            self.project_folder, self.items_folder, self.track_pool_folder,]
 
     def open_project(self, a_project_file, a_notify_osc=True):
         self.set_project_folders(a_project_file)
@@ -213,18 +201,6 @@ class DawNextProject(libmk.AbstractProject):
         else:
             return None
 
-    def get_regions_dict(self):
-        try:
-            f_file = open(self.pyregions_file, "r")
-        except:
-            return pydaw_name_uid_dict()
-        f_str = f_file.read()
-        f_file.close()
-        return pydaw_name_uid_dict.from_str(f_str)
-
-    def save_regions_dict(self, a_uid_dict):
-        self.save_file("", pydaw_file_pyregions, str(a_uid_dict))
-
     def get_routing_graph(self):
         if os.path.isfile(self.routing_graph_file):
             with open(self.routing_graph_file) as f_handle:
@@ -269,17 +245,11 @@ class DawNextProject(libmk.AbstractProject):
         f_file.close()
         return f_result
 
-    def get_region_by_name(self, a_region_name):
-        f_region_dict = self.get_regions_dict()
-        f_region_name = str(a_region_name)
-        f_uid = f_region_dict.get_uid_by_name(f_region_name)
-        return pydaw_region.from_str(f_uid, self.get_region_string(f_uid))
-
-    def get_region_by_uid(self, a_region_uid):
+    def get_region(self):
         f_uid = str(a_region_uid)
-        return pydaw_region.from_str(f_uid, self.get_region_string(f_uid))
+        return pydaw_sequencer.from_str(f_uid, self.get_region_string(f_uid))
 
-    def get_atm_region_by_uid(self, a_region_uid):
+    def get_atm_region(self):
         f_path = "{}/{}".format(self.regions_atm_folder, a_region_uid)
         if os.path.isfile(f_path):
             with open(f_path) as f_file:
@@ -287,7 +257,7 @@ class DawNextProject(libmk.AbstractProject):
         else:
             return pydaw_atm_region()
 
-    def save_atm_region(self, a_region, a_uid):
+    def save_atm_region(self, a_region):
         self.save_file(pydaw_folder_regions_atm, a_uid, str(a_region))
         self.IPC.pydaw_save_atm_region(a_uid)
 
@@ -922,70 +892,57 @@ class DawNextProject(libmk.AbstractProject):
             self.commit("")
         return f_result
 
-class pydaw_region:
+class pydaw_sequencer:
     def __init__(self, a_uid):
         self.items = []
         self.uid = a_uid
-        self.region_length_bars = 0  #0 == default length for project
+        self.beats_per_measure = 4
+        self.length_beats = 32 * 4  #0 == default length for project
 
     def reorder(self, a_dict):
         for f_item in self.items:
             f_item.track_num = a_dict[f_item.track_num]
-
-    def split(self, a_index, a_new_uid):
-        f_region0 = pydaw_region(self.uid)
-        f_region1 = pydaw_region(a_new_uid)
-        for f_item in self.items:
-            if f_item.bar_num >= a_index:
-                f_item.bar_num -= a_index
-                f_region1.items.append(f_item)
-            else:
-                f_region0.items.append(f_item)
-        if self.region_length_bars == 0:
-            f_length = 8
-        else:
-            f_length = self.region_length_bars
-        f_region0.region_length_bars = a_index
-        f_region1.region_length_bars = f_length - a_index
-        return f_region0, f_region1
 
     def add_item_ref_by_name(
             self, a_track_num, a_bar_num, a_item_name, a_uid_dict):
         f_item_uid = a_uid_dict.get_uid_by_name(a_item_name)
         self.add_item_ref_by_uid(a_track_num, a_bar_num, f_item_uid)
 
-    def add_item_ref_by_uid(self, a_track_num, a_bar_num, a_item_uid):
-        self.remove_item_ref(a_track_num, a_bar_num)
-        self.items.append(pydaw_region.region_item(
-            a_track_num, a_bar_num, int(a_item_uid)))
+    def add_item_ref_by_uid(
+            self, a_track_num, a_start_bar, a_start_beat, a_item_uid):
+        self.remove_item_ref(
+            a_track_num, a_start_bar, a_start_beat, a_item_uid)
+        self.items.append(pydaw_sequencer.region_item(
+            a_track_num, a_bar_num, a_item_uid))
 
-    def remove_item_ref(self, a_track_num, a_bar_num):
+    def remove_item_ref(
+            self, a_track_num, a_start_bar, a_start_beat, a_item_uid):
+        f_to_remove = pydaw_sequencer.region_item(
+            a_track_num, a_start_bar, a_start_beat, a_item_uid)
+        f_to_remove = str(f_to_remove)
         for f_item in self.items:
-            if f_item.bar_num == a_bar_num and f_item.track_num == a_track_num:
+            if str(f_item) == f_to_remove:
                 self.items.remove(f_item)
-                print("remove_item_ref removed bar: {}, track: {}".format(
-                    f_item.bar_num, f_item.track_num))
 
     def get_length(self):
-        if self.region_length_bars != 0:
-            return self.region_length_bars
-        else:
-            return 8
+        return self.length_beats
 
     def __str__(self):
-        f_result = ""
-        if self.region_length_bars > 0:
-            f_result += "L|{}|0\n".format(self.region_length_bars)
+        f_result = []
+        f_result.append("L|{}\n".format(self.length_beats))
+        f_result.append("T|{}\n".format(self.beats_per_measure))
+        f_result.append("C|{}\n".format(len(self.items)))
         self.items.sort()
         for f_item in self.items:
-            f_result += "{}|{}|{}\n".format(
-                f_item.track_num, f_item.bar_num, f_item.item_uid)
-        f_result += pydaw_terminating_char
-        return f_result
+            f_result.append("|".join(str(x) for x in
+                f_item.track_num, f_item.start_beat,
+                f_item.end_beat, f_item.item_uid, "\n"))
+        f_result.append(pydaw_terminating_char)
+        return "\n".join(f_result)
 
     @staticmethod
     def from_str(a_uid, a_str):
-        f_result = pydaw_region(a_uid)
+        f_result = pydaw_sequencer(a_uid)
         f_arr = a_str.split("\n")
         for f_line in f_arr:
             if f_line == pydaw_terminating_char:
@@ -993,21 +950,26 @@ class pydaw_region:
             else:
                 f_item_arr = f_line.split("|")
                 if f_item_arr[0] == "L":
-                    f_result.region_length_bars = int(f_item_arr[1])
+                    f_result.length_beats = int(f_item_arr[1])
                     continue
-                f_result.add_item_ref_by_uid(
-                    int(f_item_arr[0]), int(f_item_arr[1]), f_item_arr[2])
+                if f_item_arr[0] == "T":
+                    f_result.beats_per_measure = int(f_item_arr[1])
+                    continue
+                if f_item_arr[0] == "C":
+                    continue
+                f_result.add_item_ref_by_uid(*f_item_arr)
         return f_result
 
     class region_item:
-        def __init__(self, a_track_num, a_bar_num, a_item_uid):
-            self.track_num = a_track_num
-            self.bar_num = a_bar_num
-            self.item_uid = a_item_uid
+        def __init__(self, a_track_num, a_start_beat, a_end_beat, a_item_uid):
+            self.track_num = int(a_track_num)
+            self.start_beat = float(a_start_beat)
+            self.end_beat = float(a_end_beat)
+            self.item_uid = int(a_item_uid)
 
         def __lt__(self, other):
             if self.track_num == other.track_num:
-                return self.bar_num < other.bar_num
+                return self.start_beat < other.start_beat
             else:
                 return self.track_num < other.track_num
 
@@ -1357,6 +1319,7 @@ def pydaw_velocity_mod(
 
 class pydaw_item:
     def __init__(self):
+        self.items = {}  # audio items:  TODO rename
         self.notes = []
         self.ccs = []
         self.pitchbends = []
@@ -1675,18 +1638,18 @@ class pydaw_item:
                     f_result.add_cc(pydaw_cc.from_arr(f_event_arr[1:]))
                 elif f_event_arr[0] == "p":
                     f_result.add_pb(pydaw_pitchbend.from_arr(f_event_arr[1:]))
+                elif f_event_arr[0] == "a":
+                    f_result.add_item(pydaw_audio_item.from_arr(
+                        f_event_arr[1:]))
         return f_result
 
     def __str__(self):
         f_result = [str(x) for x in
             sorted(self.notes + self.ccs + self.pitchbends)]
+        for k, f_item in list(self.items.items()):
+            f_result.append("{}|{}".format(k, f_item))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
-
-
-class pydaw_audio_region:
-    def __init__(self):
-        self.items = {}
 
     def reorder(self, a_dict):
         for f_item in self.items.values():
@@ -1750,26 +1713,7 @@ class pydaw_audio_region:
         for f_key in f_to_delete:
             self.items.pop(f_key)
 
-    @staticmethod
-    def from_str(a_str):
-        f_result = pydaw_audio_region()
-        f_lines = a_str.split("\n")
-        for f_line in f_lines:
-            if f_line == pydaw_terminating_char:
-                return f_result
-            f_arr = f_line.split("|")
-            f_result.add_item(
-                int(f_arr[0]), pydaw_audio_item.from_arr(f_arr[1:]))
-        print("pydaw_audio_region.from_str:  Warning:  "
-            "no pydaw_terminating_char")
-        return f_result
 
-    def __str__(self):
-        f_result = ""
-        for k, f_item in list(self.items.items()):
-            f_result += "{}|{}".format(k, f_item)
-        f_result += pydaw_terminating_char
-        return f_result
 
 
 class pydaw_audio_item(MkAudioItem):

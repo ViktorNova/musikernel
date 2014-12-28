@@ -115,14 +115,6 @@ class region_settings:
     def __init__(self):
         self.enabled = False
         self.hlayout0 = QtGui.QHBoxLayout()
-        self.region_num_label = QtGui.QLabel()
-        self.region_num_label.setText(_("Region:"))
-        self.hlayout0.addWidget(self.region_num_label)
-        self.region_name_lineedit = QtGui.QLineEdit()
-        self.region_name_lineedit.setEnabled(False)
-        self.region_name_lineedit.setMaximumWidth(210)
-        self.hlayout0.addWidget(self.region_name_lineedit)
-
         self.edit_mode_combobox = QtGui.QComboBox()
         self.edit_mode_combobox.setMinimumWidth(132)
         self.edit_mode_combobox.addItems([_("Items"), _("Automation")])
@@ -184,10 +176,9 @@ class region_settings:
         SEQUENCER.open_region()
 
     def update_region_length(self, a_value=None):
-        f_region_name = str(self.region_name_lineedit.text())
         global CURRENT_REGION
         if not libmk.IS_PLAYING and \
-        CURRENT_REGION is not None and f_region_name != "":
+        CURRENT_REGION is not None:
             if not self.enabled or CURRENT_REGION is None:
                 return
             if self.length_alternate_radiobutton.isChecked():
@@ -202,12 +193,11 @@ class region_settings:
                 f_commit_message = _(
                     "Set region '{}' length to default value").format(
                     f_region_name)
-            PROJECT.save_region(
-                f_region_name, CURRENT_REGION)
+            PROJECT.save_region(CURRENT_REGION)
             AUDIO_ITEMS.set_region_length(f_region_length)
             PROJECT.save_audio_region(
                 CURRENT_REGION.uid, AUDIO_ITEMS)
-            self.open_region(self.region_name_lineedit.text())
+            self.open_region()
             f_resave = False
             for f_item in AUDIO_SEQ.audio_items:
                 if f_item.clip_at_region_end():
@@ -235,14 +225,11 @@ class region_settings:
         f_regions_dict = PROJECT.get_regions_dict()
         self.open_region(f_regions_dict.get_name_by_uid(a_uid))
 
-    def open_region(self, a_file_name):
+    def open_region(self):
         self.enabled = False
         self.clear_items()
-        self.region_name_lineedit.setText(a_file_name)
-        global CURRENT_REGION_NAME
-        CURRENT_REGION_NAME = str(a_file_name)
         global CURRENT_REGION
-        CURRENT_REGION = PROJECT.get_region_by_name(a_file_name)
+        CURRENT_REGION = PROJECT.get_region()
         if CURRENT_REGION.region_length_bars > 0:
             self.length_alternate_spinbox.setValue(
                 CURRENT_REGION.region_length_bars)
@@ -261,7 +248,6 @@ class region_settings:
             TRANSPORT.get_region_value(), TRANSPORT.get_bar_value(), 0.0)
 
     def clear_items(self):
-        self.region_name_lineedit.setText("")
         self.length_alternate_spinbox.setValue(8)
         self.length_default_radiobutton.setChecked(True)
         SEQUENCER.clear_drawn_items()
@@ -270,7 +256,6 @@ class region_settings:
         CURRENT_REGION = None
 
     def clear_new(self):
-        self.region_name_lineedit.setText("")
         global CURRENT_REGION
         CURRENT_REGION = None
         SEQUENCER.clear_new()
@@ -527,8 +512,7 @@ def global_tablewidget_to_region():
     for f_tuple in f_result:
         CURRENT_REGION.add_item_ref_by_name(
             f_tuple[0], f_tuple[1], f_tuple[2], f_uid_dict)
-    PROJECT.save_region(
-        str(REGION_SETTINGS.region_name_lineedit.text()), CURRENT_REGION)
+    PROJECT.save_region(CURRENT_REGION)
     PROJECT.commit(_("Edit region"))
     SEQUENCER.open_region()
 
@@ -1990,8 +1974,35 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.is_playing = False
         self.reselect_on_stop = []
         self.playback_cursor = None
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         #Somewhat slow on my AMD 5450 using the FOSS driver
         #self.setRenderHint(QtGui.QPainter.Antialiasing)
+
+    def open_region(self):
+        self.enabled = False
+        global ATM_REGION
+        if not CURRENT_REGION:
+            ATM_REGION = None
+            return
+        ATM_REGION = PROJECT.get_atm_region_by_uid(CURRENT_REGION.uid)
+        f_items_dict = PROJECT.get_items_dict()
+        self.setUpdatesEnabled(False)
+        self.clear_drawn_items()
+        for f_item in sorted(
+        CURRENT_REGION.items, key=lambda x: x.bar_num, reverse=True):
+            if f_item.bar_num < pydaw_get_current_region_length():
+                f_item_name = f_items_dict.get_name_by_uid(f_item.item_uid)
+                f_new_item = self.draw_item(
+                    f_item.track_num, f_item.bar_num, f_item_name)
+                if f_new_item.get_selected_string() in \
+                self.selected_item_strings:
+                    f_new_item.setSelected(True)
+        if REGION_EDITOR_MODE == 1:
+            self.open_atm_region()
+            TRACK_PANEL.update_ccs_in_use()
+        self.setUpdatesEnabled(True)
+        self.update()
+        self.enabled = True
 
     def set_header_pos(self):
         f_y = self.get_scene_pos().y()
@@ -2346,7 +2357,6 @@ class ItemSequencer(QtGui.QGraphicsView):
             for f_num in self.text_list:
                 f_num.setVisible(True)
 
-
     def draw_headers(self, a_cursor_pos=None):
         f_region_length = pydaw_get_current_region_length()
         f_size = AUDIO_PX_PER_BAR * f_region_length
@@ -2368,8 +2378,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.playback_cursor.setZValue(1000.0)
         i3 = 0.0
         for i in range(f_region_length):
-            f_number = QtGui.QGraphicsSimpleTextItem(
-                "{}".format(i + 1), self.ruler)
+            f_number = QtGui.QGraphicsSimpleTextItem(str(i + 1), self.ruler)
             f_number.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
             f_number.setBrush(QtCore.Qt.white)
             f_number.setZValue(1000.0)
@@ -2398,8 +2407,8 @@ class ItemSequencer(QtGui.QGraphicsView):
             i3 += AUDIO_PX_PER_BAR
         self.scene.addLine(
             i3, REGION_EDITOR_HEADER_HEIGHT, i3, f_total_height, f_reg_pen)
-        for i2 in range(AUDIO_ITEM_LANE_COUNT):
-            f_y = ((REGION_EDITOR_TRACK_HEIGHT) *
+        for i2 in range(REGION_EDITOR_TRACK_COUNT):
+            f_y = (REGION_EDITOR_TRACK_HEIGHT *
                 (i2 + 1)) + REGION_EDITOR_HEADER_HEIGHT
             self.scene.addLine(0, f_y, f_size, f_y)
         self.set_playback_pos(a_cursor_pos)
@@ -2421,11 +2430,11 @@ class ItemSequencer(QtGui.QGraphicsView):
 
     def draw_item(self, a_audio_item_index, a_audio_item, a_graph):
         """a_start in seconds, a_length in seconds"""
-        f_audio_item = SequencerItem(
+        f_item = SequencerItem(
             a_audio_item_index, a_audio_item, a_graph)
-        self.audio_items.append(f_audio_item)
-        self.scene.addItem(f_audio_item)
-        return f_audio_item
+        self.audio_items.append(f_item)
+        self.scene.addItem(f_item)
+        return f_item
 
 
 
