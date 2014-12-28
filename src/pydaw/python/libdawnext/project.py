@@ -895,22 +895,22 @@ class pydaw_sequencer:
 
     def add_item_ref_by_name(
             self, a_track_num, a_start_beat,
-            a_end_beat, a_item_name, a_uid_dict):
+            a_length_beats, a_item_name, a_uid_dict):
         f_item_uid = a_uid_dict.get_uid_by_name(a_item_name)
         self.add_item_ref_by_uid(
-            a_track_num, a_start_beat, a_end_beat, f_item_uid)
+            a_track_num, a_start_beat, a_length_beats, f_item_uid)
 
     def add_item_ref_by_uid(
-            self, a_track_num, a_start_beat, a_end_beat, a_item_uid):
+            self, a_track_num, a_start_beat, a_length_beats, a_item_uid):
         self.remove_item_ref(
-            a_track_num, a_start_beat, a_end_beat, a_item_uid)
+            a_track_num, a_start_beat, a_length_beats, a_item_uid)
         self.items.append(pydaw_sequencer.region_item(
-            a_track_num, a_start_beat, a_end_beat, a_item_uid))
+            a_track_num, a_start_beat, a_length_beats, a_item_uid))
 
     def remove_item_ref(
-            self, a_track_num, a_start_beat, a_end_beat, a_item_uid):
+            self, a_track_num, a_start_beat, a_length_beats, a_item_uid):
         f_to_remove = pydaw_sequencer.region_item(
-            a_track_num, a_start_beat, a_end_beat, a_item_uid)
+            a_track_num, a_start_beat, a_length_beats, a_item_uid)
         f_to_remove = str(f_to_remove)
         for f_item in self.items:
             if str(f_item) == f_to_remove:
@@ -928,8 +928,8 @@ class pydaw_sequencer:
         for f_item in self.items:
             f_result.append(
                 "|".join(str(x) for x in
-                (f_item.track_num, f_item.start_beat,
-                f_item.end_beat, f_item.item_uid)))
+                (f_item.track_num, round(f_item.start_beat, 6),
+                round(f_item.length_beats, 6), f_item.item_uid)))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 
@@ -954,11 +954,14 @@ class pydaw_sequencer:
         return f_result
 
     class region_item:
-        def __init__(self, a_track_num, a_start_beat, a_end_beat, a_item_uid):
+        def __init__(
+                self, a_track_num, a_start_beat, a_length_beats,
+                a_item_uid, a_start_pos=0.0):
             self.track_num = int(a_track_num)
             self.start_beat = float(a_start_beat)
-            self.end_beat = float(a_end_beat)
+            self.length_beats = float(a_length_beats)
             self.item_uid = int(a_item_uid)
+            self.sample_start = float(a_start_pos)
 
         def __lt__(self, other):
             if self.track_num == other.track_num:

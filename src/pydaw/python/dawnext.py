@@ -544,7 +544,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.start_handle.mousePressEvent = self.start_handle_mouseClickEvent
         self.start_handle_line = QtGui.QGraphicsLineItem(
             0.0, AUDIO_ITEM_HANDLE_HEIGHT, 0.0,
-            (AUDIO_ITEM_HEIGHT * -1.0) + AUDIO_ITEM_HANDLE_HEIGHT,
+            (REGION_EDITOR_TRACK_HEIGHT * -1.0) + AUDIO_ITEM_HANDLE_HEIGHT,
             self.start_handle)
 
         self.start_handle_line.setPen(AUDIO_ITEM_LINE_PEN)
@@ -560,7 +560,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.length_handle_line = QtGui.QGraphicsLineItem(
             AUDIO_ITEM_HANDLE_SIZE, AUDIO_ITEM_HANDLE_HEIGHT,
             AUDIO_ITEM_HANDLE_SIZE,
-            (AUDIO_ITEM_HEIGHT * -1.0) + AUDIO_ITEM_HANDLE_HEIGHT,
+            (REGION_EDITOR_TRACK_HEIGHT * -1.0) + AUDIO_ITEM_HANDLE_HEIGHT,
             self.length_handle)
 
         self.stretch_handle = QtGui.QGraphicsRectItem(parent=self)
@@ -574,9 +574,11 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             self.stretch_handle_mouseClickEvent
         self.stretch_handle_line = QtGui.QGraphicsLineItem(
             AUDIO_ITEM_HANDLE_SIZE,
-            (AUDIO_ITEM_HANDLE_HEIGHT * 0.5) - (AUDIO_ITEM_HEIGHT * 0.5),
+            (AUDIO_ITEM_HANDLE_HEIGHT * 0.5) -
+                (REGION_EDITOR_TRACK_HEIGHT * 0.5),
             AUDIO_ITEM_HANDLE_SIZE,
-            (AUDIO_ITEM_HEIGHT * 0.5) + (AUDIO_ITEM_HANDLE_HEIGHT * 0.5),
+            (REGION_EDITOR_TRACK_HEIGHT * 0.5) +
+                (AUDIO_ITEM_HANDLE_HEIGHT * 0.5),
             self.stretch_handle)
         self.stretch_handle.hide()
 
@@ -614,11 +616,11 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 
     def draw(self):
         f_start = self.audio_item.start_beat * SEQUENCER_PX_PER_BEAT
-        f_end = (self.audio_item.end_beat * SEQUENCER_PX_PER_BEAT) - f_start
+        f_end = (self.audio_item.length_beats * SEQUENCER_PX_PER_BEAT)
 
-#        self.length_px_start = \
-#            (self.audio_item.sample_start * 0.001 * f_end)
-#        self.length_px_minus_start = f_end - self.length_px_start
+        self.length_px_start = \
+            (self.audio_item.sample_start * 0.001 * f_end)
+        self.length_px_minus_start = f_end - self.length_px_start
 #        self.length_px_minus_end = (
 #            self.audio_item.sample_end * 0.001 * f_end)
 #        f_length = self.length_px_minus_end - self.length_px_start
@@ -648,9 +650,9 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 #
 #        self.length_handle.setPos(
 #            f_length - AUDIO_ITEM_HANDLE_SIZE,
-#            AUDIO_ITEM_HEIGHT - AUDIO_ITEM_HANDLE_HEIGHT)
+#            REGION_EDITOR_TRACK_HEIGHT - AUDIO_ITEM_HANDLE_HEIGHT)
 #        self.start_handle.setPos(
-#            0.0, AUDIO_ITEM_HEIGHT - AUDIO_ITEM_HANDLE_HEIGHT)
+#            0.0, REGION_EDITOR_TRACK_HEIGHT - AUDIO_ITEM_HANDLE_HEIGHT)
 #        if self.audio_item.time_stretch_mode >= 2 and \
 #        (((self.audio_item.time_stretch_mode != 5) and \
 #        (self.audio_item.time_stretch_mode != 2)) \
@@ -659,7 +661,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 #            self.stretch_handle.show()
 #            self.stretch_handle.setPos(
 #                f_length - AUDIO_ITEM_HANDLE_SIZE,
-#                (AUDIO_ITEM_HEIGHT * 0.5) - (AUDIO_ITEM_HANDLE_HEIGHT * 0.5))
+#                (REGION_EDITOR_TRACK_HEIGHT * 0.5) - (AUDIO_ITEM_HANDLE_HEIGHT * 0.5))
 
     def set_tooltips(self, a_on):
         if a_on:
@@ -681,7 +683,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 
     def clip_at_region_end(self):
         f_current_region_length = pydaw_get_current_region_length()
-        f_max_x = f_current_region_length * AUDIO_PX_PER_BAR
+        f_max_x = f_current_region_length * SEQUENCER_PX_PER_BEAT
         f_pos_x = self.pos().x()
         f_end = f_pos_x + self.rect().width()
         if f_end > f_max_x:
@@ -735,10 +737,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                     a_index % len(pydaw_track_gradients)])
 
     def pos_to_musical_time(self, a_pos):
-        f_bar_frac = a_pos / AUDIO_PX_PER_BAR
-        f_pos_bars = int(f_bar_frac)
-        f_pos_beats = (f_bar_frac - f_pos_bars) * 4.0
-        return(f_pos_bars, f_pos_beats)
+        return a_pos / SEQUENCER_PX_PER_BEAT
 
     def start_handle_mouseClickEvent(self, a_event):
         if libmk.IS_PLAYING:
@@ -771,7 +770,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.check_selected_status()
         a_event.setAccepted(True)
         QtGui.QGraphicsRectItem.mousePressEvent(self.stretch_handle, a_event)
-        f_max_region_pos = AUDIO_PX_PER_BAR * pydaw_get_current_region_length()
+        f_max_region_pos = (SEQUENCER_PX_PER_BEAT *
+            pydaw_get_current_region_length())
         for f_item in SEQUENCER.audio_items:
             if f_item.isSelected() and \
             f_item.audio_item.time_stretch_mode >= 2:
@@ -1320,10 +1320,6 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             return
 
         if a_event.modifiers() == QtCore.Qt.ShiftModifier:
-            f_per_item_fx_dict = \
-            PROJECT.get_audio_per_item_fx_region(
-                CURRENT_REGION.uid)
-
             f_item = self.audio_item
             f_item_old = f_item.clone()
             f_item.fade_in = 0.0
@@ -1371,26 +1367,9 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                     CURRENT_REGION.uid, f_per_item_fx_dict, False)
                 PROJECT.IPC.pydaw_audio_per_item_fx_region(
                     CURRENT_REGION.uid)
-            PROJECT.commit(_("Split audio item"))
+            PROJECT.commit(_("Split sequencer item"))
             global_open_audio_items(True)
-        elif a_event.modifiers() == \
-        QtCore.Qt.ControlModifier | QtCore.Qt.AltModifier:
-            self.is_amp_dragging = True
-        elif a_event.modifiers() == \
-        QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier:
-            self.is_amp_curving = True
-            f_list = [((x.audio_item.start_bar * 4.0) +
-                x.audio_item.start_beat)
-                for x in SEQUENCER.audio_items if x.isSelected()]
-            f_list.sort()
-            self.vc_start = f_list[0]
-            self.vc_mid = (self.audio_item.start_bar *
-                4.0) + self.audio_item.start_beat
-            self.vc_end = f_list[-1]
         else:
-            if a_event.modifiers() == QtCore.Qt.ControlModifier:
-                f_per_item_fx_dict = PROJECT.get_audio_per_item_fx_region(
-                    CURRENT_REGION.uid)
             QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
             self.event_pos_orig = a_event.pos().x()
             for f_item in SEQUENCER.get_selected():
@@ -1400,29 +1379,12 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                 if a_event.modifiers() == QtCore.Qt.ControlModifier:
                     f_item.is_copying = True
                     f_item.width_orig = f_item.rect().width()
-                    f_item.per_item_fx = \
-                        f_per_item_fx_dict.get_row(f_item.track_num)
                     SEQUENCER.draw_item(
-                        f_item.track_num, f_item.audio_item,
-                        f_item.graph_object)
-                if self.is_fading_out:
-                    f_item.fade_orig_pos = f_item.fade_out_handle.pos().x()
-                elif self.is_fading_in:
-                    f_item.fade_orig_pos = f_item.fade_in_handle.pos().x()
+                        f_item.track_num, f_item.audio_item)
                 if self.is_start_resizing:
                     f_item.width_orig = 0.0
                 else:
                     f_item.width_orig = f_item.rect().width()
-        if self.is_amp_curving or self.is_amp_dragging:
-            a_event.setAccepted(True)
-            self.setSelected(True)
-            self.event_pos_orig = a_event.pos().x()
-            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
-            self.orig_y = a_event.pos().y()
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.BlankCursor)
-            for f_item in SEQUENCER.get_selected():
-                f_item.orig_value = f_item.audio_item.vol
-                f_item.add_vol_line()
 
     def hoverEnterEvent(self, a_event):
         f_item_pos = self.pos().x()
@@ -1448,10 +1410,12 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             self.split_line.hide()
 
     def y_pos_to_lane_number(self, a_y_pos):
-        f_lane_num = int((a_y_pos - AUDIO_RULER_HEIGHT) / AUDIO_ITEM_HEIGHT)
+        f_lane_num = int((a_y_pos - REGION_EDITOR_HEADER_HEIGHT) /
+            REGION_EDITOR_TRACK_HEIGHT)
         f_lane_num = pydaw_clip_value(
             f_lane_num, 0, AUDIO_ITEM_MAX_LANE)
-        f_y_pos = (f_lane_num * AUDIO_ITEM_HEIGHT) + AUDIO_RULER_HEIGHT
+        f_y_pos = (f_lane_num *
+            REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
         return f_lane_num, f_y_pos
 
     def quantize_all(self, a_x):
@@ -1482,13 +1446,13 @@ class SequencerItem(QtGui.QGraphicsRectItem):
     def update_fade_in_line(self):
         f_pos = self.fade_in_handle.pos()
         self.fade_in_handle_line.setLine(
-            f_pos.x(), 0.0, 0.0, AUDIO_ITEM_HEIGHT)
+            f_pos.x(), 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
 
     def update_fade_out_line(self):
         f_pos = self.fade_out_handle.pos()
         self.fade_out_handle_line.setLine(
             f_pos.x() + AUDIO_ITEM_HANDLE_SIZE, 0.0,
-            self.rect().width(), AUDIO_ITEM_HEIGHT)
+            self.rect().width(), REGION_EDITOR_TRACK_HEIGHT)
 
     def add_vol_line(self):
         self.vol_line = QtGui.QGraphicsLineItem(
@@ -1498,7 +1462,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 
     def set_vol_line(self):
         f_pos = (float(48 - (self.audio_item.vol + 24))
-            * 0.020833333) * AUDIO_ITEM_HEIGHT # 1.0 / 48.0
+            * 0.020833333) * REGION_EDITOR_TRACK_HEIGHT # 1.0 / 48.0
         self.vol_line.setPos(0, f_pos)
         self.label.setText("{}dB".format(self.audio_item.vol))
 
@@ -1525,7 +1489,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                         f_x -= f_item.quantize_offset
                     f_item.length_handle.setPos(
                         f_x - AUDIO_ITEM_HANDLE_SIZE,
-                        AUDIO_ITEM_HEIGHT - AUDIO_ITEM_HANDLE_HEIGHT)
+                        REGION_EDITOR_TRACK_HEIGHT - AUDIO_ITEM_HANDLE_HEIGHT)
         elif self.is_start_resizing:
             for f_item in SEQUENCER.audio_items:
                 if f_item.isSelected():
@@ -1539,25 +1503,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                         f_x = f_item.quantize_start(f_x)
                         f_x -= f_item.quantize_offset
                     f_item.start_handle.setPos(
-                        f_x, AUDIO_ITEM_HEIGHT - AUDIO_ITEM_HANDLE_HEIGHT)
-        elif self.is_fading_in:
-            for f_item in SEQUENCER.audio_items:
-                if f_item.isSelected():
-                    #f_x = f_event_pos #f_item.width_orig + f_event_diff
-                    f_x = f_item.fade_orig_pos + f_event_diff
-                    f_x = pydaw_clip_value(
-                        f_x, 0.0, f_item.fade_out_handle.pos().x() - 4.0)
-                    f_item.fade_in_handle.setPos(f_x, 0.0)
-                    f_item.update_fade_in_line()
-        elif self.is_fading_out:
-            for f_item in SEQUENCER.audio_items:
-                if f_item.isSelected():
-                    f_x = f_item.fade_orig_pos + f_event_diff
-                    f_x = pydaw_clip_value(
-                        f_x, f_item.fade_in_handle.pos().x() + 4.0,
-                        f_item.width_orig - AUDIO_ITEM_HANDLE_SIZE)
-                    f_item.fade_out_handle.setPos(f_x, 0.0)
-                    f_item.update_fade_out_line()
+                        f_x, REGION_EDITOR_TRACK_HEIGHT -
+                            AUDIO_ITEM_HANDLE_HEIGHT)
         elif self.is_stretching:
             for f_item in SEQUENCER.audio_items:
                 if f_item.isSelected() and \
@@ -1572,67 +1519,34 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                     f_x -= f_item.quantize_offset
                     f_item.stretch_handle.setPos(
                         f_x - AUDIO_ITEM_HANDLE_SIZE,
-                        (AUDIO_ITEM_HEIGHT * 0.5) -
+                        (REGION_EDITOR_TRACK_HEIGHT * 0.5) -
                         (AUDIO_ITEM_HANDLE_HEIGHT * 0.5))
-        elif self.is_amp_dragging:
-            for f_item in SEQUENCER.get_selected():
-                f_new_vel = pydaw_util.pydaw_clip_value(
-                    f_val + f_item.orig_value, -24.0, 24.0)
-                f_new_vel = round(f_new_vel, 1)
-                f_item.audio_item.vol = f_new_vel
-                f_item.set_vol_line()
-        elif self.is_amp_curving:
-            SEQUENCER.setUpdatesEnabled(False)
-            for f_item in SEQUENCER.get_selected():
-                f_start = ((f_item.audio_item.start_bar * 4.0) +
-                    f_item.audio_item.start_beat)
-                if f_start == self.vc_mid:
-                    f_new_vel = f_val + f_item.orig_value
-                else:
-                    if f_start > self.vc_mid:
-                        f_frac =  (f_start -
-                            self.vc_mid) / (self.vc_end - self.vc_mid)
-                        f_new_vel = pydaw_util.linear_interpolate(
-                            f_val, 0.3 * f_val, f_frac)
-                    else:
-                        f_frac = (f_start -
-                            self.vc_start) / (self.vc_mid - self.vc_start)
-                        f_new_vel = pydaw_util.linear_interpolate(
-                            0.3 * f_val, f_val, f_frac)
-                    f_new_vel += f_item.orig_value
-                f_new_vel = pydaw_util.pydaw_clip_value(f_new_vel, -24.0, 24.0)
-                f_new_vel = round(f_new_vel, 1)
-                f_item.audio_item.vol = f_new_vel
-                f_item.set_vol_line()
-            SEQUENCER.setUpdatesEnabled(True)
-            SEQUENCER.update()
         else:
             QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
             if AUDIO_QUANTIZE:
                 f_max_x = (pydaw_get_current_region_length() *
-                    AUDIO_PX_PER_BAR) - AUDIO_QUANTIZE_PX
+                    SEQUENCER_PX_PER_BEAT) - AUDIO_QUANTIZE_PX
             else:
                 f_max_x = (pydaw_get_current_region_length() *
-                    AUDIO_PX_PER_BAR) - AUDIO_ITEM_HANDLE_SIZE
-            for f_item in SEQUENCER.audio_items:
-                if f_item.isSelected():
-                    f_pos_x = f_item.pos().x()
-                    f_pos_y = f_item.pos().y()
-                    f_pos_x = pydaw_clip_value(f_pos_x, 0.0, f_max_x)
-                    f_ignored, f_pos_y = f_item.y_pos_to_lane_number(f_pos_y)
-                    f_pos_x = f_item.quantize_scene(f_pos_x)
-                    f_item.setPos(f_pos_x, f_pos_y)
-                    if not f_item.is_moving:
-                        f_item.setGraphicsEffect(
-                            QtGui.QGraphicsOpacityEffect())
-                        f_item.is_moving = True
+                    SEQUENCER_PX_PER_BEAT) - AUDIO_ITEM_HANDLE_SIZE
+            for f_item in SEQUENCER.get_selected():
+                f_pos_x = f_item.pos().x()
+                f_pos_y = f_item.pos().y()
+                f_pos_x = pydaw_clip_value(f_pos_x, 0.0, f_max_x)
+                f_ignored, f_pos_y = f_item.y_pos_to_lane_number(f_pos_y)
+                f_pos_x = f_item.quantize_scene(f_pos_x)
+                f_item.setPos(f_pos_x, f_pos_y)
+                if not f_item.is_moving:
+                    f_item.setGraphicsEffect(
+                        QtGui.QGraphicsOpacityEffect())
+                    f_item.is_moving = True
 
     def mouseReleaseEvent(self, a_event):
         if libmk.IS_PLAYING or self.event_pos_orig is None:
             return
         QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
         QtGui.QApplication.restoreOverrideCursor()
-        f_audio_items =  AUDIO_ITEMS
+        f_audio_items = SEQUENCER
         #Set to True when testing, set to False for better UI performance...
         f_reset_selection = True
         f_did_change = False
@@ -1641,23 +1555,19 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         f_event_pos = a_event.pos().x()
         f_event_diff = f_event_pos - self.event_pos_orig
         if self.is_copying:
-            f_was_copying = True
-            f_per_item_fx_dict = \
-            PROJECT.get_audio_per_item_fx_region(
-                CURRENT_REGION.uid)
-        else:
-            f_was_copying = False
+            pass
         for f_audio_item in SEQUENCER.get_selected():
             f_item = f_audio_item.audio_item
             f_pos_x = f_audio_item.pos().x()
             if f_audio_item.is_resizing:
-                f_x = f_audio_item.width_orig + f_event_diff + \
-                    f_audio_item.quantize_offset
-                f_x = pydaw_clip_value(f_x, AUDIO_ITEM_HANDLE_SIZE,
-                                       f_audio_item.length_px_minus_start)
+                f_x = (f_audio_item.width_orig + f_event_diff +
+                    f_audio_item.quantize_offset)
+                f_x = pydaw_clip_value(
+                    f_x, AUDIO_ITEM_HANDLE_SIZE,
+                    f_audio_item.length_px_minus_start)
                 f_x = f_audio_item.quantize(f_x)
                 f_x -= f_audio_item.quantize_offset
-                f_audio_item.setRect(0.0, 0.0, f_x, AUDIO_ITEM_HEIGHT)
+                f_audio_item.setRect(0.0, 0.0, f_x, REGION_EDITOR_TRACK_HEIGHT)
                 f_item.sample_end = ((f_audio_item.rect().width() +
                 f_audio_item.length_px_start) /
                 f_audio_item.length_seconds_orig_px) * 1000.0
@@ -1676,18 +1586,10 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                     f_audio_item.start_handle_scene_min) /
                     (f_audio_item.start_handle_scene_max -
                     f_audio_item.start_handle_scene_min)) * 1000.0
-                f_item.sample_start = pydaw_clip_value(
-                    f_item.sample_start, 0.0, 999.0, True)
-            elif f_audio_item.is_fading_in:
-                f_pos = f_audio_item.fade_in_handle.pos().x()
-                f_val = (f_pos / f_audio_item.rect().width()) * 1000.0
-                f_item.fade_in = pydaw_clip_value(f_val, 0.0, 997.0, True)
-            elif f_audio_item.is_fading_out:
-                f_pos = f_audio_item.fade_out_handle.pos().x()
-                f_val = ((f_pos + AUDIO_ITEM_HANDLE_SIZE) /
-                    (f_audio_item.rect().width())) * 1000.0
-                f_item.fade_out = pydaw_clip_value(f_val, 1.0, 998.0, True)
-            elif f_audio_item.is_stretching and f_item.time_stretch_mode >= 2:
+                f_item.sample_start = pydaw_clip_min(
+                    f_item.sample_start, 0.0)
+            elif f_audio_item.is_stretching and \
+            f_item.time_stretch_mode >= 2:
                 f_reset_selection = True
                 f_x = f_audio_item.width_orig + f_event_diff + \
                     f_audio_item.quantize_offset
@@ -1706,9 +1608,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                     f_ts_result = libmk.PROJECT.timestretch_audio_item(f_item)
                     if f_ts_result is not None:
                         f_stretched_items.append(f_ts_result)
-                f_audio_item.setRect(0.0, 0.0, f_x, AUDIO_ITEM_HEIGHT)
-            elif self.is_amp_curving or self.is_amp_dragging:
-                f_did_change = True
+                f_audio_item.setRect(0.0, 0.0, f_x, REGION_EDITOR_TRACK_HEIGHT)
             else:
                 f_pos_y = f_audio_item.pos().y()
                 if f_audio_item.is_copying:
@@ -1722,16 +1622,13 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                         break
                     else:
                         f_audio_items.add_item(f_index, f_item_old)
-                        if f_audio_item.per_item_fx is not None:
-                            f_per_item_fx_dict.set_row(
-                                f_index, f_audio_item.per_item_fx)
                 else:
                     f_audio_item.set_brush(f_item.track_num)
                 f_pos_x = self.quantize_all(f_pos_x)
                 f_item.track_num, f_pos_y = self.y_pos_to_lane_number(f_pos_y)
                 f_audio_item.setPos(f_pos_x, f_pos_y)
-                f_start_result = f_audio_item.pos_to_musical_time(f_pos_x)
-                f_item.set_pos(f_start_result[0], f_start_result[1])
+                f_item.start_beat = f_audio_item.pos_to_musical_time(f_pos_x)
+                f_did_change = True
             f_audio_item.clip_at_region_end()
             f_item_str = str(f_item)
             if f_item_str != f_audio_item.orig_string:
@@ -1749,29 +1646,12 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             f_audio_item.setGraphicsEffect(None)
             f_audio_item.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape)
         if f_did_change:
-            f_audio_items.deduplicate_items()
-            if f_was_copying:
-                PROJECT.save_audio_per_item_fx_region(
-                    CURRENT_REGION.uid, f_per_item_fx_dict, False)
-                PROJECT.IPC.pydaw_audio_per_item_fx_region(
-                    CURRENT_REGION.uid)
+            #f_audio_items.deduplicate_items()
             if f_was_stretching:
-                libmk.PROJECT.save_stretch_dicts()
-                for f_stretch_item in f_stretched_items:
-                    f_stretch_item[2].wait()
-                    libmk.PROJECT.get_wav_uid_by_name(
-                        f_stretch_item[0], a_uid=f_stretch_item[1])
-                for f_audio_item in SEQUENCER.get_selected():
-                    f_new_graph = libmk.PROJECT.get_sample_graph_by_uid(
-                        f_audio_item.audio_item.uid)
-                    f_audio_item.audio_item.clip_at_region_end(
-                        pydaw_get_current_region_length(),
-                        TRANSPORT.tempo_spinbox.value(),
-                        f_new_graph.length_in_seconds)
-            PROJECT.save_audio_region(
-                CURRENT_REGION.uid, f_audio_items)
-            PROJECT.commit(_("Update audio items"))
-        global_open_audio_items(f_reset_selection)
+                pass
+            PROJECT.save_region(CURRENT_REGION)
+            PROJECT.commit(_("Update sequencer items"))
+        REGION_SETTINGS.open_region()
 
 
 class ItemSequencer(QtGui.QGraphicsView):
@@ -1814,7 +1694,7 @@ class ItemSequencer(QtGui.QGraphicsView):
             f_track = int(f_pos_y // REGION_EDITOR_TRACK_HEIGHT)
             f_uid = PROJECT.create_empty_item()
             CURRENT_REGION.add_item_ref_by_uid(
-                f_track, f_beat, f_beat + 4.0, f_uid)
+                f_track, f_beat, 4.0, f_uid)
             PROJECT.save_region(CURRENT_REGION)
             REGION_SETTINGS.open_region()
 
@@ -1919,17 +1799,6 @@ class ItemSequencer(QtGui.QGraphicsView):
             f_item.set_brush()
             if f_item.isSelected():
                 f_selected_items.append(f_item)
-        if len(f_selected_items) == 1:
-            CURRENT_AUDIO_ITEM_INDEX = f_selected_items[0].track_num
-            SEQUENCER_WIDGET.modulex.widget.setEnabled(True)
-            f_paif = PROJECT.get_audio_per_item_fx_region(CURRENT_REGION.uid)
-            SEQUENCER_WIDGET.modulex.set_from_list(
-                f_paif.get_row(CURRENT_AUDIO_ITEM_INDEX))
-        elif len(f_selected_items) == 0:
-            CURRENT_AUDIO_ITEM_INDEX = None
-            SEQUENCER_WIDGET.modulex.widget.setDisabled(True)
-        else:
-            SEQUENCER_WIDGET.modulex.widget.setDisabled(True)
 
     def sceneDragEnterEvent(self, a_event):
         a_event.setAccepted(True)
@@ -1953,13 +1822,14 @@ class ItemSequencer(QtGui.QGraphicsView):
             return
         f_max_start = CURRENT_REGION.length_bars - 1
 
-        f_pos_bars = int(f_x / AUDIO_PX_PER_BAR)
+        f_pos_bars = int(f_x / SEQUENCER_PX_PER_BEAT)
         f_pos_bars = pydaw_clip_value(f_pos_bars, 0, f_max_start)
 
         if f_pos_bars == f_max_start:
             f_beat_frac = 0.0
         else:
-            f_beat_frac = ((f_x % AUDIO_PX_PER_BAR) / AUDIO_PX_PER_BAR) * 4.0
+            f_beat_frac = ((f_x % SEQUENCER_PX_PER_BEAT) /
+                SEQUENCER_PX_PER_BEAT) * 4.0
             f_beat_frac = pydaw_clip_value(
                 f_beat_frac, 0.0, 3.99, a_round=True)
         print("{}".format(f_beat_frac))
@@ -1969,7 +1839,7 @@ class ItemSequencer(QtGui.QGraphicsView):
 
         print("{} {}".format(f_pos_bars, f_beat_frac))
 
-        f_lane_num = int((f_y - AUDIO_RULER_HEIGHT) / AUDIO_ITEM_HEIGHT)
+        f_lane_num = int((f_y - AUDIO_RULER_HEIGHT) / REGION_EDITOR_TRACK_HEIGHT)
         f_lane_num = pydaw_clip_value(f_lane_num, 0, AUDIO_ITEM_MAX_LANE)
 
         f_items = PROJECT.get_audio_region(CURRENT_REGION.uid)
@@ -2050,13 +1920,9 @@ class ItemSequencer(QtGui.QGraphicsView):
         PROJECT.commit(_("Glued audio items"))
         global_open_audio_items()
 
-    def set_playback_pos(self, a_bar=None, a_beat=0.0):
-        if a_bar is None:
-            f_bar = TRANSPORT.get_bar_value()
-        else:
-            f_bar = int(a_bar)
+    def set_playback_pos(self, a_beat=0.0):
         f_beat = float(a_beat)
-        f_pos = (f_bar * AUDIO_PX_PER_BAR) + (f_beat * AUDIO_PX_PER_BEAT)
+        f_pos = (f_beat * SEQUENCER_PX_PER_BEAT)
         self.playback_cursor.setPos(f_pos, 0.0)
 
     def set_playback_clipboard(self):
@@ -2093,7 +1959,7 @@ class ItemSequencer(QtGui.QGraphicsView):
 
     def ruler_click_event(self, a_event):
         if not libmk.IS_PLAYING:
-            f_val = int(a_event.pos().x() / AUDIO_PX_PER_BAR)
+            f_val = int(a_event.pos().x() / SEQUENCER_PX_PER_BEAT)
             TRANSPORT.set_bar_value(f_val)
 
     def check_line_count(self):
@@ -2177,14 +2043,14 @@ class ItemSequencer(QtGui.QGraphicsView):
                             f_sub_x, REGION_EDITOR_HEADER_HEIGHT,
                             f_sub_x, f_total_height, f_16th_pen)
                         self.beat_line_list.append(f_line)
-            i3 += SEQUENCER_PX_PER_BEAT
+            i3 += SEQUENCER_PX_PER_BEAT * f_beat_count
         self.scene.addLine(
             i3, REGION_EDITOR_HEADER_HEIGHT, i3, f_total_height, f_reg_pen)
         for i2 in range(REGION_EDITOR_TRACK_COUNT):
             f_y = (REGION_EDITOR_TRACK_HEIGHT *
                 (i2 + 1)) + REGION_EDITOR_HEADER_HEIGHT
             self.scene.addLine(0, f_y, f_size, f_y)
-        self.set_playback_pos(a_cursor_pos)
+        self.set_playback_pos()
         self.check_line_count()
         self.set_ruler_y_pos()
 
