@@ -883,6 +883,32 @@ class DawNextProject(libmk.AbstractProject):
             self.commit("")
         return f_result
 
+class pydaw_sequencer_item:
+    def __init__(
+            self, a_track_num, a_start_beat, a_length_beats,
+            a_item_uid, a_start_pos=0.0):
+        self.track_num = int(a_track_num)
+        self.start_beat = float(a_start_beat)
+        self.length_beats = float(a_length_beats)
+        self.item_uid = int(a_item_uid)
+        self.sample_start = float(a_start_pos)
+
+    def clone(self):
+        f_self = str(self).split("|")
+        return pydaw_sequencer_item(*f_self)
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            (self.track_num, round(self.start_beat, 6),
+            round(self.length_beats, 6), self.item_uid,
+            round(self.sample_start, 6)))
+
+    def __lt__(self, other):
+        if self.track_num == other.track_num:
+            return self.start_beat < other.start_beat
+        else:
+            return self.track_num < other.track_num
+
 class pydaw_sequencer:
     def __init__(self):
         self.items = []
@@ -904,12 +930,15 @@ class pydaw_sequencer:
             self, a_track_num, a_start_beat, a_length_beats, a_item_uid):
         self.remove_item_ref(
             a_track_num, a_start_beat, a_length_beats, a_item_uid)
-        self.items.append(pydaw_sequencer.region_item(
+        self.items.append(pydaw_sequencer_item(
             a_track_num, a_start_beat, a_length_beats, a_item_uid))
+
+    def add_item(self, a_item):
+        self.items.append(a_item)
 
     def remove_item_ref(
             self, a_track_num, a_start_beat, a_length_beats, a_item_uid):
-        f_to_remove = pydaw_sequencer.region_item(
+        f_to_remove = pydaw_sequencer_item(
             a_track_num, a_start_beat, a_length_beats, a_item_uid)
         f_to_remove = str(f_to_remove)
         for f_item in self.items:
@@ -926,10 +955,7 @@ class pydaw_sequencer:
         f_result.append("C|{}".format(len(self.items)))
         self.items.sort()
         for f_item in self.items:
-            f_result.append(
-                "|".join(str(x) for x in
-                (f_item.track_num, round(f_item.start_beat, 6),
-                round(f_item.length_beats, 6), f_item.item_uid)))
+            f_result.append(str(f_item))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 
@@ -950,24 +976,10 @@ class pydaw_sequencer:
                     continue
                 if f_item_arr[0] == "C":
                     continue
-                f_result.add_item_ref_by_uid(*f_item_arr)
+                f_result.add_item(pydaw_sequencer_item(*f_item_arr))
+        f_result.items.sort()
         return f_result
 
-    class region_item:
-        def __init__(
-                self, a_track_num, a_start_beat, a_length_beats,
-                a_item_uid, a_start_pos=0.0):
-            self.track_num = int(a_track_num)
-            self.start_beat = float(a_start_beat)
-            self.length_beats = float(a_length_beats)
-            self.item_uid = int(a_item_uid)
-            self.sample_start = float(a_start_pos)
-
-        def __lt__(self, other):
-            if self.track_num == other.track_num:
-                return self.start_beat < other.start_beat
-            else:
-                return self.track_num < other.track_num
 
 class pydaw_atm_region:
     def __init__(self):
