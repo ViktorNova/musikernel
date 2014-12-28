@@ -34,15 +34,9 @@ from libdawnext import *
 
 def pydaw_get_current_region_length():
     if CURRENT_REGION is None:
-        return 8
-    f_result = CURRENT_REGION.region_length_bars
-    if f_result == 0:
-        return 8
+        return 32 * 4
     else:
-        return f_result
-
-def pydaw_get_region_length(a_index):
-    return 8
+        return CURRENT_REGION.get_length()
 
 def global_get_audio_file_from_clipboard():
     f_clipboard = QtGui.QApplication.clipboard()
@@ -149,15 +143,6 @@ class region_settings:
         self.hlayout0.addItem(
             QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding))
         self.hlayout0.addWidget(QtGui.QLabel(_("Region Length:")))
-        self.length_default_radiobutton = QtGui.QRadioButton(_("default"))
-        self.length_default_radiobutton.setChecked(True)
-        self.length_default_radiobutton.toggled.connect(
-            self.update_region_length)
-        self.hlayout0.addWidget(self.length_default_radiobutton)
-        self.length_alternate_radiobutton = QtGui.QRadioButton()
-        self.length_alternate_radiobutton.toggled.connect(
-            self.update_region_length)
-        self.hlayout0.addWidget(self.length_alternate_radiobutton)
         self.length_alternate_spinbox = QtGui.QSpinBox()
         self.length_alternate_spinbox.setKeyboardTracking(False)
         self.length_alternate_spinbox.setRange(1, MAX_REGION_LENGTH)
@@ -176,38 +161,17 @@ class region_settings:
         SEQUENCER.open_region()
 
     def update_region_length(self, a_value=None):
-        global CURRENT_REGION
         if not libmk.IS_PLAYING and \
         CURRENT_REGION is not None:
             if not self.enabled or CURRENT_REGION is None:
                 return
-            if self.length_alternate_radiobutton.isChecked():
-                f_region_length = self.length_alternate_spinbox.value()
-                CURRENT_REGION.region_length_bars = f_region_length
-                f_commit_message = _(
-                    "Set region '{}' length to {}").format(f_region_name,
-                    self.length_alternate_spinbox.value())
-            else:
-                CURRENT_REGION.region_length_bars = 0
-                f_region_length = 8
-                f_commit_message = _(
-                    "Set region '{}' length to default value").format(
-                    f_region_name)
+            f_region_length = self.length_alternate_spinbox.value()
+            CURRENT_REGION.length_bars = f_region_length
+            f_commit_message = _(
+                "Set sequencer length to {}").format(f_region_length)
             PROJECT.save_region(CURRENT_REGION)
-            AUDIO_ITEMS.set_region_length(f_region_length)
-            PROJECT.save_audio_region(
-                CURRENT_REGION.uid, AUDIO_ITEMS)
             self.open_region()
-            f_resave = False
-            for f_item in AUDIO_SEQ.audio_items:
-                if f_item.clip_at_region_end():
-                    f_resave = True
-            if f_resave:
-                PROJECT.save_audio_region(
-                    CURRENT_REGION.uid, AUDIO_ITEMS)
             PROJECT.commit(f_commit_message)
-            pydaw_set_audio_seq_zoom(AUDIO_SEQ.h_zoom, AUDIO_SEQ.v_zoom)
-            global_open_audio_items()
 
     def toggle_hide_inactive(self):
         self.hide_inactive = self.toggle_hide_action.isChecked()
@@ -221,35 +185,22 @@ class region_settings:
         for f_track in TRACK_PANEL.tracks.values():
             f_track.mute_checkbox.setChecked(False)
 
-    def open_region_by_uid(self, a_uid):
-        f_regions_dict = PROJECT.get_regions_dict()
-        self.open_region(f_regions_dict.get_name_by_uid(a_uid))
-
     def open_region(self):
         self.enabled = False
         self.clear_items()
         global CURRENT_REGION
         CURRENT_REGION = PROJECT.get_region()
-        if CURRENT_REGION.region_length_bars > 0:
-            self.length_alternate_spinbox.setValue(
-                CURRENT_REGION.region_length_bars)
-            TRANSPORT.bar_spinbox.setRange(
-                1, (CURRENT_REGION.region_length_bars))
-            self.length_alternate_radiobutton.setChecked(True)
-        else:
-            self.length_alternate_spinbox.setValue(8)
-            TRANSPORT.bar_spinbox.setRange(1, 8)
-            self.length_default_radiobutton.setChecked(True)
+        self.length_alternate_spinbox.setValue(
+            CURRENT_REGION.length_bars)
+        TRANSPORT.bar_spinbox.setRange(
+            1, (CURRENT_REGION.length_bars))
         self.enabled = True
         SEQUENCER.open_region()
-        global_open_audio_items()
+        #global_open_audio_items()
         global_update_hidden_rows()
-        TRANSPORT.set_time(
-            TRANSPORT.get_region_value(), TRANSPORT.get_bar_value(), 0.0)
+        #TRANSPORT.set_time(TRANSPORT.get_bar_value(), 0.0)
 
     def clear_items(self):
-        self.length_alternate_spinbox.setValue(8)
-        self.length_default_radiobutton.setChecked(True)
         SEQUENCER.clear_drawn_items()
         AUDIO_SEQ.clear_drawn_items()
         global CURRENT_REGION
@@ -261,13 +212,9 @@ class region_settings:
         SEQUENCER.clear_new()
 
     def on_play(self):
-        self.length_default_radiobutton.setEnabled(False)
-        self.length_alternate_radiobutton.setEnabled(False)
         self.length_alternate_spinbox.setEnabled(False)
 
     def on_stop(self):
-        self.length_default_radiobutton.setEnabled(True)
-        self.length_alternate_radiobutton.setEnabled(True)
         self.length_alternate_spinbox.setEnabled(True)
 
     def set_track_order(self):
@@ -283,8 +230,7 @@ class region_settings:
             TRACK_PANEL.open_tracks()
             for k, f_track in TRACK_PANEL.tracks.items():
                 f_track.refresh()
-            if CURRENT_REGION:
-                self.open_region_by_uid(CURRENT_REGION.uid)
+            self.open_region()
 
 def global_set_region_editor_zoom():
     global REGION_EDITOR_GRID_WIDTH
@@ -552,14 +498,13 @@ def pydaw_seconds_to_bars(a_seconds):
     return a_seconds * BARS_PER_SECOND
 
 class SequencerItem(QtGui.QGraphicsRectItem):
-    def __init__(self, a_track_num, a_audio_item, a_graph):
+    def __init__(self, a_track_num, a_audio_item):
         QtGui.QGraphicsRectItem.__init__(self)
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
         self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
         self.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape)
 
-        self.sample_length = a_graph.length_in_seconds
         self.graph_object = a_graph
         self.audio_item = a_audio_item
         self.orig_string = str(a_audio_item)
@@ -683,7 +628,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.quantize_offset = 0.0
         if libmk.TOOLTIPS_ENABLED:
             self.set_tooltips(True)
-        self.draw()
+        #self.draw()
 
     def generic_hoverEnterEvent(self, a_event):
         QtGui.QApplication.setOverrideCursor(
@@ -1984,7 +1929,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         if not CURRENT_REGION:
             ATM_REGION = None
             return
-        ATM_REGION = PROJECT.get_atm_region_by_uid(CURRENT_REGION.uid)
+        ATM_REGION = PROJECT.get_atm_region()
         f_items_dict = PROJECT.get_items_dict()
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
@@ -2178,10 +2123,7 @@ class ItemSequencer(QtGui.QGraphicsView):
     def add_items(self, f_x, f_y, a_item_list):
         if self.check_running():
             return
-        if CURRENT_REGION.region_length_bars == 0:
-            f_max_start = 7
-        else:
-            f_max_start = CURRENT_REGION.region_length_bars - 1
+        f_max_start = CURRENT_REGION.length_bars - 1
 
         f_pos_bars = int(f_x / AUDIO_PX_PER_BAR)
         f_pos_bars = pydaw_clip_value(f_pos_bars, 0, f_max_start)
@@ -2428,10 +2370,9 @@ class ItemSequencer(QtGui.QGraphicsView):
         if f_was_playing:
             self.is_playing = True
 
-    def draw_item(self, a_audio_item_index, a_audio_item, a_graph):
-        """a_start in seconds, a_length in seconds"""
+    def draw_item(self, a_audio_item_index, a_item):
         f_item = SequencerItem(
-            a_audio_item_index, a_audio_item, a_graph)
+            a_audio_item_index, a_item, a_graph)
         self.audio_items.append(f_item)
         self.scene.addItem(f_item)
         return f_item
@@ -4176,10 +4117,8 @@ class audio_items_viewer(QtGui.QGraphicsView):
     def add_items(self, f_x, f_y, a_item_list):
         if self.check_running():
             return
-        if CURRENT_REGION.region_length_bars == 0:
-            f_max_start = 7
-        else:
-            f_max_start = CURRENT_REGION.region_length_bars - 1
+
+        f_max_start = CURRENT_REGION.length_bars - 1
 
         f_pos_bars = int(f_x / AUDIO_PX_PER_BAR)
         f_pos_bars = pydaw_clip_value(f_pos_bars, 0, f_max_start)
@@ -4629,11 +4568,6 @@ class time_pitch_dialog_widget:
 
         f_selected_count = 0
 
-        f_region_length = CURRENT_REGION.region_length_bars
-        if f_region_length == 0:
-            f_region_length = 8
-        f_region_length -= 1
-
         f_was_stretching = False
         f_stretched_items = []
 
@@ -4766,11 +4700,6 @@ class fade_vol_dialog_widget:
         self.end_mode = 0
 
         f_selected_count = 0
-
-        f_region_length = CURRENT_REGION.region_length_bars
-        if f_region_length == 0:
-            f_region_length = 8
-        f_region_length -= 1
 
         for f_item in AUDIO_SEQ.audio_items:
             if f_item.isSelected():
@@ -5119,7 +5048,7 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
     global AUDIO_ITEMS
     if a_reload:
         if CURRENT_REGION:
-            AUDIO_ITEMS = PROJECT.get_audio_region(CURRENT_REGION.uid)
+            AUDIO_ITEMS = PROJECT.get_audio_region()
         else:
             AUDIO_ITEMS = None
     if a_update_viewer:
@@ -8385,7 +8314,7 @@ class transport_widget(libmk.AbstractTransport):
             self.show_save_items_dialog()
             if CURRENT_REGION is not None and \
             REGION_SETTINGS.enabled:
-                REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
+                REGION_SETTINGS.open_region()
         self.init_playback_cursor(a_start=False)
         self.set_bar_value(self.last_bar)
         #REGION_SETTINGS.open_region(f_song_table_item_str)
@@ -8403,7 +8332,7 @@ class transport_widget(libmk.AbstractTransport):
             PROJECT.save_recorded_items(
                 f_file_name, MREC_EVENTS, self.overdub_checkbox.isChecked(),
                 self.tempo_spinbox.value(), pydaw_util.SAMPLE_RATE)
-            REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
+            REGION_SETTINGS.open_region()
             f_window.close()
 
         def text_edit_handler(a_val=None):
@@ -8672,14 +8601,6 @@ class pydaw_main_window(QtGui.QScrollArea):
             self.start_bar = 1
             self.end_bar = 2
 
-        def start_region_changed(a_val=None):
-            f_max = pydaw_get_region_length(f_start_region.value() - 1)
-            f_start_bar.setMaximum(f_max)
-
-        def end_region_changed(a_val=None):
-            f_max = pydaw_get_region_length(f_end_region.value() - 1)
-            f_end_bar.setMaximum(f_max)
-
         f_window = QtGui.QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Offline Render"))
         f_layout = QtGui.QGridLayout()
@@ -8918,7 +8839,7 @@ def global_ui_refresh_callback(a_restore_all=False):
     global CURRENT_REGION
     if CURRENT_REGION is not None and \
     f_regions_dict.uid_exists(CURRENT_REGION.uid):
-        REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
+        REGION_SETTINGS.open_region()
         global_open_audio_items()
         #this_audio_editor.open_tracks()
     else:
@@ -8950,6 +8871,7 @@ def global_open_project(a_project_file):
         PROJECT.get_routing_graph(), TRACK_PANEL.get_track_names())
     global_open_mixer()
     MIDI_DEVICES_DIALOG.set_routings()
+    REGION_SETTINGS.open_region()
 
 def global_new_project(a_project_file):
     global PROJECT
@@ -8962,6 +8884,7 @@ def global_new_project(a_project_file):
     MAIN_WINDOW.notes_tab.setText("")
     ROUTING_GRAPH_WIDGET.scene.clear()
     global_open_mixer()
+    REGION_SETTINGS.open_region()
 
 PROJECT = DawNextProject(global_pydaw_with_audio)
 

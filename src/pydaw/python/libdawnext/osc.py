@@ -33,12 +33,12 @@ class DawNextOsc(libmk.AbstractIPC):
     def pydaw_save_item(self, a_uid):
         self.send_configure("si", str(a_uid))
 
-    def pydaw_save_region(self, a_name):
-        self.send_configure("sr", str(a_name))
+    def pydaw_save_region(self):
+        self.send_configure("sr", "")
 
-    def pydaw_en_playback(self, a_mode, a_region_num="0", a_bar="0"):
+    def pydaw_en_playback(self, a_mode, a_bar="0"):
         self.send_configure(
-            "enp", "|".join(str(x) for x in (a_mode, a_region_num, a_bar)))
+            "enp", "|".join(str(x) for x in (a_mode, a_bar)))
 
     def pydaw_wn_playback(self, a_mode):
         self.send_configure("wnp", str(a_mode))

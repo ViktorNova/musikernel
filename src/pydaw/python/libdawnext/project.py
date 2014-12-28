@@ -42,6 +42,7 @@ pydaw_folder_dawnext = os.path.join("projects", "dawnext")
 pydaw_folder_items = os.path.join(pydaw_folder_dawnext, "items")
 pydaw_folder_tracks = os.path.join(pydaw_folder_dawnext, "tracks")
 
+FILE_SEQUENCER = os.path.join(pydaw_folder_dawnext, "sequencer.txt")
 pydaw_file_regions_atm = os.path.join(pydaw_folder_dawnext, "automation.txt")
 pydaw_file_routing_graph = os.path.join(pydaw_folder_dawnext, "routing.txt")
 pydaw_file_midi_routing = os.path.join(
@@ -131,6 +132,8 @@ class DawNextProject(libmk.AbstractProject):
         self.track_pool_folder = os.path.join(
             self.project_folder, pydaw_folder_tracks)
         #files
+        self.sequencer_file = os.path.join(
+            self.project_folder, FILE_SEQUENCER)
         self.pyitems_file = os.path.join(
             self.project_folder, pydaw_file_pyitems)
         self.pyscale_file = os.path.join(
@@ -167,7 +170,6 @@ class DawNextProject(libmk.AbstractProject):
             if not os.path.isdir(project_dir):
                 os.makedirs(project_dir)
 
-        self.create_file("", pydaw_file_pyregions, pydaw_terminating_char)
         self.create_file("", pydaw_file_pyitems, pydaw_terminating_char)
         self.create_file("", pydaw_file_pytransport, str(pydaw_transport()))
         f_tracks = pydaw_tracks()
@@ -235,24 +237,16 @@ class DawNextProject(libmk.AbstractProject):
     def save_items_dict(self, a_uid_dict):
         self.save_file("", pydaw_file_pyitems, str(a_uid_dict))
 
-    def get_region_string(self, a_region_uid):
-        try:
-            f_file = open(
-                "{}/{}".format(self.regions_folder, a_region_uid), "r")
-        except:
-            return "\\"  #TODO:  allow the exception to happen???
-        f_result = f_file.read()
-        f_file.close()
-        return f_result
-
     def get_region(self):
-        f_uid = str(a_region_uid)
-        return pydaw_sequencer.from_str(f_uid, self.get_region_string(f_uid))
+        if os.path.isfile(self.sequencer_file):
+            with open(self.sequencer_file) as f_file:
+                return pydaw_sequencer.from_str(f_file.read())
+        else:
+            return pydaw_sequencer()
 
     def get_atm_region(self):
-        f_path = "{}/{}".format(self.regions_atm_folder, a_region_uid)
-        if os.path.isfile(f_path):
-            with open(f_path) as f_file:
+        if os.path.isfile(self.automation_file):
+            with open(self.automation_file) as f_file:
                 return pydaw_atm_region.from_str(f_file.read())
         else:
             return pydaw_atm_region()
@@ -772,15 +766,10 @@ class DawNextProject(libmk.AbstractProject):
                 pydaw_folder_items, str(f_uid), str(a_item), a_new_item)
             self.IPC.pydaw_save_item(f_uid)
 
-    def save_region(self, a_name, a_region):
+    def save_region(self, a_region):
         if not self.suppress_updates:
-            f_regions_dict = self.get_regions_dict()
-            f_uid = f_regions_dict.get_uid_by_name(a_name)
-            self.save_region_by_uid(f_uid, a_region)
-
-    def save_region_by_uid(self, a_uid, a_region):
-        self.save_file(pydaw_folder_regions, str(a_uid), str(a_region))
-        self.IPC.pydaw_save_region(a_uid)
+            self.save_file("", FILE_SEQUENCER, str(a_region))
+            self.IPC.pydaw_save_region()
 
     def save_tracks(self, a_tracks):
         if not self.suppress_updates:
@@ -893,11 +882,10 @@ class DawNextProject(libmk.AbstractProject):
         return f_result
 
 class pydaw_sequencer:
-    def __init__(self, a_uid):
+    def __init__(self):
         self.items = []
-        self.uid = a_uid
         self.beats_per_measure = 4
-        self.length_beats = 32 * 4  #0 == default length for project
+        self.length_bars = 32
 
     def reorder(self, a_dict):
         for f_item in self.items:
@@ -925,13 +913,13 @@ class pydaw_sequencer:
                 self.items.remove(f_item)
 
     def get_length(self):
-        return self.length_beats
+        return int(self.length_bars * self.beats_per_measure)
 
     def __str__(self):
         f_result = []
-        f_result.append("L|{}\n".format(self.length_beats))
-        f_result.append("T|{}\n".format(self.beats_per_measure))
-        f_result.append("C|{}\n".format(len(self.items)))
+        f_result.append("L|{}".format(self.length_bars))
+        f_result.append("T|{}".format(self.beats_per_measure))
+        f_result.append("C|{}".format(len(self.items)))
         self.items.sort()
         for f_item in self.items:
             f_result.append("|".join(str(x) for x in
@@ -941,8 +929,8 @@ class pydaw_sequencer:
         return "\n".join(f_result)
 
     @staticmethod
-    def from_str(a_uid, a_str):
-        f_result = pydaw_sequencer(a_uid)
+    def from_str(a_str):
+        f_result = pydaw_sequencer()
         f_arr = a_str.split("\n")
         for f_line in f_arr:
             if f_line == pydaw_terminating_char:
@@ -950,7 +938,7 @@ class pydaw_sequencer:
             else:
                 f_item_arr = f_line.split("|")
                 if f_item_arr[0] == "L":
-                    f_result.length_beats = int(f_item_arr[1])
+                    f_result.length_bars = int(f_item_arr[1])
                     continue
                 if f_item_arr[0] == "T":
                     f_result.beats_per_measure = int(f_item_arr[1])
@@ -1984,9 +1972,9 @@ class pydaw_midi_file_to_items:
         a_project.save_song(f_song)
 
         if self.bar_count > MAX_REGION_LENGTH:
-            f_result_region.region_length_bars = MAX_REGION_LENGTH
+            f_result_region.length_bars = MAX_REGION_LENGTH
         else:
-            f_result_region.region_length_bars = self.bar_count
+            f_result_region.length_bars = self.bar_count
             for f_channel, f_bar_dict in list(self.track_map.items()):
                 for f_bar, f_item in list(self.track_map[f_channel].items()):
                     f_this_item_name = "{}-{}-{}".format(
