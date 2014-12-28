@@ -14,6 +14,14 @@ GNU General Public License for more details.
 
 import os
 import sys
+import shutil
+
+DELETE_ME = 'src/pydaw/python/__pycache__'
+
+#these files may or may not exist, and should not be packaged
+if os.path.isdir(DELETE_ME):
+    print('Deleting ' + DELETE_ME)
+    shutil.rmtree(DELETE_ME)
 
 IS_INSTALL = "-i" in sys.argv
 
