@@ -935,8 +935,8 @@ class pydaw_sequencer:
         self.items.sort()
         for f_item in self.items:
             f_result.append("|".join(str(x) for x in
-                f_item.track_num, f_item.start_beat,
-                f_item.end_beat, f_item.item_uid, "\n"))
+                (f_item.track_num, f_item.start_beat,
+                f_item.end_beat, f_item.item_uid, "\n")))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 
