@@ -226,15 +226,12 @@ def pydaw_clip_max(a_val, a_max):
         return a_val
 
 def pydaw_read_file_text(a_file):
-    f_handle = open(str(a_file))
-    f_result = f_handle.read()
-    f_handle.close()
-    return f_result
+    with open(str(a_file)) as f_handle:
+        return f_handle.read()
 
 def pydaw_write_file_text(a_file, a_text):
-    f_handle = open(str(a_file), "w")
-    f_handle.write(str(a_text))
-    f_handle.close()
+    with open(str(a_file), "w") as f_handle:
+        f_handle.write(str(a_text))
 
 def pydaw_gen_uid():
     """Generated an integer uid.  Adding together multiple random
