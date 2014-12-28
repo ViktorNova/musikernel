@@ -694,9 +694,11 @@ class DawNextProject(libmk.AbstractProject):
         self.save_regions_dict(f_regions_dict)
         return f_uid
 
-    def create_empty_item(self, a_item_name):
+    def create_empty_item(self):
         f_items_dict = self.get_items_dict()
-        f_uid = f_items_dict.add_new_item(a_item_name)
+        f_item_name = self.get_next_default_item_name(
+            a_items_dict=f_items_dict)
+        f_uid = f_items_dict.add_new_item(f_item_name)
         self.save_file(pydaw_folder_items, str(f_uid), pydaw_terminating_char)
         self.IPC.pydaw_save_item(f_uid)
         self.save_items_dict(f_items_dict)
@@ -892,21 +894,23 @@ class pydaw_sequencer:
             f_item.track_num = a_dict[f_item.track_num]
 
     def add_item_ref_by_name(
-            self, a_track_num, a_bar_num, a_item_name, a_uid_dict):
+            self, a_track_num, a_start_beat,
+            a_end_beat, a_item_name, a_uid_dict):
         f_item_uid = a_uid_dict.get_uid_by_name(a_item_name)
-        self.add_item_ref_by_uid(a_track_num, a_bar_num, f_item_uid)
+        self.add_item_ref_by_uid(
+            a_track_num, a_start_beat, a_end_beat, f_item_uid)
 
     def add_item_ref_by_uid(
-            self, a_track_num, a_start_bar, a_start_beat, a_item_uid):
+            self, a_track_num, a_start_beat, a_end_beat, a_item_uid):
         self.remove_item_ref(
-            a_track_num, a_start_bar, a_start_beat, a_item_uid)
+            a_track_num, a_start_beat, a_end_beat, a_item_uid)
         self.items.append(pydaw_sequencer.region_item(
-            a_track_num, a_bar_num, a_item_uid))
+            a_track_num, a_start_beat, a_end_beat, a_item_uid))
 
     def remove_item_ref(
-            self, a_track_num, a_start_bar, a_start_beat, a_item_uid):
+            self, a_track_num, a_start_beat, a_end_beat, a_item_uid):
         f_to_remove = pydaw_sequencer.region_item(
-            a_track_num, a_start_bar, a_start_beat, a_item_uid)
+            a_track_num, a_start_beat, a_end_beat, a_item_uid)
         f_to_remove = str(f_to_remove)
         for f_item in self.items:
             if str(f_item) == f_to_remove:
@@ -922,9 +926,10 @@ class pydaw_sequencer:
         f_result.append("C|{}".format(len(self.items)))
         self.items.sort()
         for f_item in self.items:
-            f_result.append("|".join(str(x) for x in
+            f_result.append(
+                "|".join(str(x) for x in
                 (f_item.track_num, f_item.start_beat,
-                f_item.end_beat, f_item.item_uid, "\n")))
+                f_item.end_beat, f_item.item_uid)))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 
