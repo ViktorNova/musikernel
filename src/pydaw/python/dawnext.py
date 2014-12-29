@@ -140,14 +140,22 @@ class region_settings:
         self.unmute_action.triggered.connect(self.unmute_all)
         self.unmute_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+M"))
 
-        self.hlayout0.addWidget(QtGui.QLabel(_("Region Length:")))
-        self.length_alternate_spinbox = QtGui.QSpinBox()
-        self.length_alternate_spinbox.setKeyboardTracking(False)
-        self.length_alternate_spinbox.setRange(1, MAX_REGION_LENGTH)
-        self.length_alternate_spinbox.setValue(8)
-        self.length_alternate_spinbox.valueChanged.connect(
-            self.update_region_length)
-        self.hlayout0.addWidget(self.length_alternate_spinbox)
+        self.hlayout0.addWidget(QtGui.QLabel(_("Beats per Measure:")))
+        self.tsig_spinbox = QtGui.QSpinBox()
+        self.tsig_spinbox.setKeyboardTracking(False)
+        self.tsig_spinbox.setRange(1, 16)
+        self.tsig_spinbox.setValue(4)
+        self.tsig_spinbox.valueChanged.connect(self.update_tsig)
+        self.hlayout0.addWidget(self.tsig_spinbox)
+
+        self.hlayout0.addWidget(QtGui.QLabel(_("Length:")))
+        self.length_spinbox = QtGui.QSpinBox()
+        self.length_spinbox.setKeyboardTracking(False)
+        self.length_spinbox.setRange(1, MAX_REGION_LENGTH)
+        self.length_spinbox.setValue(8)
+        self.length_spinbox.valueChanged.connect(
+            self.update_length)
+        self.hlayout0.addWidget(self.length_spinbox)
         f_scrollbar = SEQUENCER.horizontalScrollBar()
         f_scrollbar.setSizePolicy(
             QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
@@ -162,12 +170,25 @@ class region_settings:
             SEQUENCER.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         SEQUENCER.open_region()
 
-    def update_region_length(self, a_value=None):
+    def update_tsig(self, a_value=None):
         if not libmk.IS_PLAYING and \
         CURRENT_REGION is not None:
             if not self.enabled or CURRENT_REGION is None:
                 return
-            f_region_length = self.length_alternate_spinbox.value()
+            f_bpm = self.tsig_spinbox.value()
+            CURRENT_REGION.beats_per_measure = f_bpm
+            f_commit_message = _(
+                "Set beats per measure to {}").format(f_bpm)
+            PROJECT.save_region(CURRENT_REGION)
+            self.open_region()
+            PROJECT.commit(f_commit_message)
+
+    def update_length(self, a_value=None):
+        if not libmk.IS_PLAYING and \
+        CURRENT_REGION is not None:
+            if not self.enabled or CURRENT_REGION is None:
+                return
+            f_region_length = self.length_spinbox.value()
             CURRENT_REGION.length_bars = f_region_length
             f_commit_message = _(
                 "Set sequencer length to {}").format(f_region_length)
@@ -192,10 +213,9 @@ class region_settings:
         self.clear_items()
         global CURRENT_REGION
         CURRENT_REGION = PROJECT.get_region()
-        self.length_alternate_spinbox.setValue(
-            CURRENT_REGION.length_bars)
-        TRANSPORT.bar_spinbox.setRange(
-            1, (CURRENT_REGION.length_bars))
+        self.length_spinbox.setValue(CURRENT_REGION.length_bars)
+        self.tsig_spinbox.setValue(CURRENT_REGION.beats_per_measure)
+        TRANSPORT.bar_spinbox.setRange(1, (CURRENT_REGION.length_bars))
         self.enabled = True
         SEQUENCER.open_region()
         #global_open_audio_items()
@@ -214,10 +234,12 @@ class region_settings:
         SEQUENCER.clear_new()
 
     def on_play(self):
-        self.length_alternate_spinbox.setEnabled(False)
+        self.length_spinbox.setEnabled(False)
+        self.tsig_spinbox.setEnabled(False)
 
     def on_stop(self):
-        self.length_alternate_spinbox.setEnabled(True)
+        self.length_spinbox.setEnabled(True)
+        self.tsig_spinbox.setEnabled(True)
 
     def set_track_order(self):
         f_result = pydaw_widgets.ordered_table_dialog(

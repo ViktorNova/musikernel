@@ -36,7 +36,7 @@ from libpydaw import pydaw_history
 
 TRACK_COUNT_ALL = 32
 MAX_AUDIO_ITEM_COUNT = 256
-MAX_REGION_LENGTH = 64 #bars
+MAX_REGION_LENGTH = 512 #measures
 
 pydaw_folder_dawnext = os.path.join("projects", "dawnext")
 pydaw_folder_items = os.path.join(pydaw_folder_dawnext, "items")
