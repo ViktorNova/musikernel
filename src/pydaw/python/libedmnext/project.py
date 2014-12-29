@@ -1856,11 +1856,11 @@ class pydaw_audio_region:
         return f_result
 
     def __str__(self):
-        f_result = ""
+        f_result = []
         for k, f_item in list(self.items.items()):
-            f_result += "{}|{}".format(k, f_item)
-        f_result += pydaw_terminating_char
-        return f_result
+            f_result.append("{}|{}".format(k, f_item))
+        f_result.append(pydaw_terminating_char)
+        return "\n".join(f_result)
 
 
 class pydaw_audio_item(MkAudioItem):
@@ -1913,11 +1913,11 @@ class pydaw_audio_item_fx_region:
         self.fx_list = {}
 
     def __str__(self):
-        f_result = ""
+        f_result = []
         for k, v in list(self.fx_list.items()):
-            f_result += "{}\n".format(self.get_row_str(k))
-        f_result += pydaw_terminating_char
-        return f_result
+            f_result.append(self.get_row_str(k))
+        f_result.append(pydaw_terminating_char)
+        return "\n".join(f_result)
 
     def get_row_str(self, a_row_index):
         f_result = str(a_row_index)

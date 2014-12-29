@@ -1144,7 +1144,7 @@ class MkAudioItem:
         return str(self) == str(other)
 
     def __str__(self):
-        return "{}\n".format("|".join(proj_file_str(x) for x in
+        return "|".join(proj_file_str(x) for x in
             (self.uid, self.sample_start, self.sample_end,
             self.start_bar, self.start_beat,
             self.time_stretch_mode, self.pitch_shift, self.output_track,
@@ -1155,6 +1155,6 @@ class MkAudioItem:
             int(self.paif_automation_uid),
             self.send1, self.s1_vol, self.send2, self.s2_vol,
             bool_to_int(self.s0_sc), bool_to_int(self.s1_sc),
-            bool_to_int(self.s2_sc))))
+            bool_to_int(self.s2_sc)))
 
 
