@@ -2815,7 +2815,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         else:
             if a_event.modifiers() == QtCore.Qt.ControlModifier:
                 f_per_item_fx_dict = PROJECT.get_audio_per_item_fx_region(
-                    CURRENT_REGION.uid)
+                    CURRENT_ITEM.uid)
             QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
             self.event_pos_orig = a_event.pos().x()
             for f_item in AUDIO_SEQ.get_selected():
@@ -5375,7 +5375,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
             1.0) + PIANO_KEYS_WIDTH
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
-        if ITEM_EDITOR.enabled:
+        if CURRENT_ITEM:
             for f_note in CURRENT_ITEM.notes:
                 f_note_item = self.draw_note(f_note)
                 f_note_item.resize_last_mouse_pos = \
@@ -5733,17 +5733,16 @@ global_automation_selected_gradient.setColorAt(0, QtGui.QColor(255, 255, 255))
 global_automation_selected_gradient.setColorAt(1, QtGui.QColor(240, 240, 240))
 
 class automation_item(QtGui.QGraphicsEllipseItem):
-    def __init__(self, a_time, a_value, a_cc, a_view, a_is_cc, a_item_index):
+    def __init__(self, a_time, a_value, a_cc, a_view, a_is_cc):
         QtGui.QGraphicsEllipseItem.__init__(
-            self, 0, 0, AUTOMATION_POINT_DIAMETER,
-            AUTOMATION_POINT_DIAMETER)
-        self.item_index = a_item_index
+            self, 0, 0, AUTOMATION_POINT_DIAMETER, AUTOMATION_POINT_DIAMETER)
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
         self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
         self.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
-        self.setPos(a_time - AUTOMATION_POINT_RADIUS,
-                    a_value - AUTOMATION_POINT_RADIUS)
+        self.setPos(
+            a_time - AUTOMATION_POINT_RADIUS,
+            a_value - AUTOMATION_POINT_RADIUS)
         self.setBrush(global_automation_gradient)
         f_pen = QtGui.QPen()
         f_pen.setWidth(2)
@@ -5781,46 +5780,37 @@ class automation_item(QtGui.QGraphicsEllipseItem):
         self.parent_view.selected_str = []
         for f_point in self.parent_view.automation_points:
             if f_point.isSelected():
-                f_cc_start = \
-                (((f_point.pos().x() - AUTOMATION_MIN_HEIGHT) /
-                    self.parent_view.item_width) * 4.0)
-#                if f_cc_start >= 4.0 * ITEM_EDITING_COUNT:
-#                    f_cc_start = (4.0 * ITEM_EDITING_COUNT) - 0.01
+                f_cc_start = (((f_point.pos().x() - AUTOMATION_MIN_HEIGHT) /
+                    self.parent_view.item_width))
                 if f_cc_start < 0.0:
                     f_cc_start = 0.0
-                f_new_item_index, f_cc_start = pydaw_beats_to_index(f_cc_start)
                 if self.is_cc:
-                    ITEM_EDITOR.items[f_point.item_index].ccs.remove(
-                        f_point.cc_item)
-                    f_point.item_index = f_new_item_index
+                    CURRENT_ITEM.ccs.remove(f_point.cc_item)
                     f_cc_val = (127.0 - (((f_point.pos().y() -
                         AUTOMATION_MIN_HEIGHT) /
                         self.parent_view.viewer_height) * 127.0))
 
                     f_point.cc_item.start = f_cc_start
                     f_point.cc_item.set_val(f_cc_val)
-                    ITEM_EDITOR.items[f_point.item_index].ccs.append(
+                    CURRENT_ITEM.ccs.append(
                         f_point.cc_item)
-                    ITEM_EDITOR.items[f_point.item_index].ccs.sort()
+                    CURRENT_ITEM.ccs.sort()
                 else:
                     #try:
-                    ITEM_EDITOR.items[f_point.item_index].pitchbends.\
-                        remove(f_point.cc_item)
+                    CURRENT_ITEM.pitchbends.remove(f_point.cc_item)
                     #except ValueError:
                     #print("Exception removing {} from list".format(
                         #f_point.cc_item))
-                    f_point.item_index = f_new_item_index
                     f_cc_val = (1.0 - (((f_point.pos().y() -
                         AUTOMATION_MIN_HEIGHT) /
                         self.parent_view.viewer_height) * 2.0))
 
                     f_point.cc_item.start = f_cc_start
                     f_point.cc_item.set_val(f_cc_val)
-                    ITEM_EDITOR.items[f_point.item_index].pitchbends.append(
-                        f_point.cc_item)
-                    ITEM_EDITOR.items[f_point.item_index].pitchbends.sort()
+                    CURRENT_ITEM.pitchbends.append(f_point.cc_item)
+                    CURRENT_ITEM.pitchbends.sort()
                 self.parent_view.selected_str.append(
-                    hash((int(f_point.item_index), str(f_point.cc_item))))
+                    hash(str(f_point.cc_item)))
         global_save_and_reload_items()
 
 AUTOMATION_EDITORS = []
@@ -5830,7 +5820,6 @@ class automation_viewer(QtGui.QGraphicsView):
         QtGui.QGraphicsView.__init__(self)
         self.is_cc = a_is_cc
         self.set_scale()
-        self.item_length = 4.0
         self.grid_max_start_time = AUTOMATION_WIDTH + \
             AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS
         self.viewer_width = AUTOMATION_WIDTH
@@ -5840,7 +5829,7 @@ class automation_viewer(QtGui.QGraphicsView):
 
         self.axis_size = AUTOMATION_RULER_WIDTH
 
-        self.beat_width = self.viewer_width / self.item_length
+        self.beat_width = self.viewer_width / CURRENT_ITEM_LEN
         self.value_width = self.beat_width / 16.0
         self.lines = []
 
@@ -5894,9 +5883,9 @@ class automation_viewer(QtGui.QGraphicsView):
     def copy_selected(self):
         if not ITEM_EDITOR.enabled:
             return
-        self.clipboard = [(x.cc_item.clone(), x.item_index)
+        self.clipboard = [x.cc_item.clone()
             for x in self.automation_points if x.isSelected()]
-        self.clipboard.sort(key=lambda x: (x[1], x[0].start))
+        self.clipboard.sort()
 
     def cut(self):
         self.copy_selected()
@@ -5908,32 +5897,27 @@ class automation_viewer(QtGui.QGraphicsView):
         self.selected_str = []
         if self.clipboard:
             self.clear_range(
-                self.clipboard[0][1], self.clipboard[0][0].start,
-                self.clipboard[-1][1], self.clipboard[-1][0].start)
+                self.clipboard[0].start, self.clipboard[-1].start)
             for f_item, f_index in self.clipboard:
                 if f_index < ITEM_EDITING_COUNT:
                     f_item2 = f_item.clone()
                     if self.is_cc:
                         f_item2.cc_num = self.cc_num
-                        ITEM_EDITOR.items[f_index].add_cc(f_item2)
+                        CURRENT_ITEM.add_cc(f_item2)
                     else:
-                        ITEM_EDITOR.items[f_index].add_pb(f_item2)
-                    self.selected_str.append(hash((f_index, str(f_item2))))
+                        CURRENT_ITEM.add_pb(f_item2)
+                    self.selected_str.append(hash(str(f_item2)))
             global_save_and_reload_items()
 
-    def clear_range(self, a_start_index, a_start_beat,
-                    a_end_index, a_end_beat, a_save=False):
-        f_start_tuple = (a_start_index, a_start_beat)
-        f_end_tuple = (a_end_index, a_end_beat)
+    def clear_range(self, a_start_beat, a_end_beat, a_save=False):
         for f_point in self.automation_points:
-            f_tuple = (f_point.item_index, f_point.cc_item.start)
-            if f_tuple >= f_start_tuple and f_tuple <= f_end_tuple:
+            f_pt_start = f_point.cc_item.start
+            if f_pt_start >= a_start_beat and \
+            f_pt_start <= a_end_beat:
                 if self.is_cc:
-                    ITEM_EDITOR.items[f_point.item_index].remove_cc(
-                        f_point.cc_item)
+                    CURRENT_ITEM.remove_cc(f_point.cc_item)
                 else:
-                    ITEM_EDITOR.items[f_point.item_index].remove_pb(
-                        f_point.cc_item)
+                    CURRENT_ITEM.remove_pb(f_point.cc_item)
         if a_save:
             self.selected_str = []
             global_save_and_reload_items()
@@ -5945,11 +5929,9 @@ class automation_viewer(QtGui.QGraphicsView):
         for f_point in self.automation_points:
             if f_point.isSelected():
                 if self.is_cc:
-                    ITEM_EDITOR.items[f_point.item_index].remove_cc(
-                        f_point.cc_item)
+                    CURRENT_ITEM.remove_cc(f_point.cc_item)
                 else:
-                    ITEM_EDITOR.items[f_point.item_index].remove_pb(
-                        f_point.cc_item)
+                    CURRENT_ITEM.remove_pb(f_point.cc_item)
         self.selected_str = []
         global_save_and_reload_items()
         self.selection_enabled = True
@@ -5961,11 +5943,9 @@ class automation_viewer(QtGui.QGraphicsView):
             return
         for f_point in self.automation_points:
             if self.is_cc:
-                ITEM_EDITOR.items[f_point.item_index].remove_cc(
-                    f_point.cc_item)
+                CURRENT_ITEM.remove_cc(f_point.cc_item)
             else:
-                ITEM_EDITOR.items[f_point.item_index].remove_pb(
-                    f_point.cc_item)
+                CURRENT_ITEM.remove_pb(f_point.cc_item)
         self.selected_str = []
         global_save_and_reload_items()
         self.selection_enabled = True
@@ -6027,38 +6007,35 @@ class automation_viewer(QtGui.QGraphicsView):
             if i == 3:
                 f_line.setPen(f_beat_pen)
 
-        for i in range(0, int(self.item_length) + 1):
+        for i in range(0, int(CURRENT_ITEM_LEN) + 1):
             f_beat = QtGui.QGraphicsLineItem(
                 0, 0, 0,
-                self.viewer_height + self.axis_size-f_beat_pen.width(),
+                self.viewer_height + self.axis_size - f_beat_pen.width(),
                 self.x_axis)
             f_beat.setPos(self.beat_width * i, 0.5 * f_beat_pen.width())
             f_beat.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
-            f_beat_number = i % 4
-            if f_beat_number == 0 and not i == 0:
-                f_beat.setPen(f_bar_pen)
-                f_beat.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
-            else:
-                f_beat.setPen(f_beat_pen)
-            if i < self.item_length:
-                f_number = QtGui.QGraphicsSimpleTextItem(
-                    str(f_beat_number + 1), self.x_axis)
-                f_number.setFlag(
-                    QtGui.QGraphicsItem.ItemIgnoresTransformations)
-                f_number.setPos(self.beat_width * i + 5, 2)
-                f_number.setBrush(QtCore.Qt.white)
-                for j in range(0, 16):
-                    f_line = QtGui.QGraphicsLineItem(
-                        0, 0, 0, self.viewer_height, self.x_axis)
-                    if float(j) == 8:
-                        f_line.setLine(0, 0, 0, self.viewer_height)
-                        f_line.setPos(
-                            (self.beat_width * i) + (self.value_width * j),
-                            self.axis_size)
-                    else:
-                        f_line.setPos((self.beat_width * i) +
-                            (self.value_width * j), self.axis_size)
-                        f_line.setPen(f_line_pen)
+
+            f_beat.setPen(f_beat_pen)
+            f_beat.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+
+            f_number = QtGui.QGraphicsSimpleTextItem(
+                str(i + 1), self.x_axis)
+            f_number.setFlag(
+                QtGui.QGraphicsItem.ItemIgnoresTransformations)
+            f_number.setPos(self.beat_width * i + 5, 2)
+            f_number.setBrush(QtCore.Qt.white)
+#                for j in range(0, 16):
+#                    f_line = QtGui.QGraphicsLineItem(
+#                        0, 0, 0, self.viewer_height, self.x_axis)
+#                    if float(j) == 8:
+#                        f_line.setLine(0, 0, 0, self.viewer_height)
+#                        f_line.setPos(
+#                            (self.beat_width * i) + (self.value_width * j),
+#                            self.axis_size)
+#                    else:
+#                        f_line.setPos((self.beat_width * i) +
+#                            (self.value_width * j), self.axis_size)
+#                        f_line.setPen(f_line_pen)
 
     def clear_drawn_items(self):
         self.selection_enabled = False
@@ -6094,8 +6071,7 @@ class automation_viewer(QtGui.QGraphicsView):
         self.setUpdatesEnabled(False)
         self.set_scale()
         self.viewer_width = self.item_width
-        self.item_length = 4.0 #* ITEM_EDITING_COUNT
-        self.beat_width = self.viewer_width / self.item_length
+        self.beat_width = self.viewer_width / CURRENT_ITEM_LEN
         self.value_width = self.beat_width / 16.0
         self.grid_max_start_time = self.viewer_width + \
             AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS
@@ -6103,39 +6079,35 @@ class automation_viewer(QtGui.QGraphicsView):
         if not ITEM_EDITOR.enabled:
             self.setUpdatesEnabled(True)
             return
-        f_item_index = 0
         f_pen = QtGui.QPen(pydaw_note_gradient, 2.0)
         f_note_height = (self.viewer_height / 127.0)
-        for f_item in ITEM_EDITOR.items:
-            if self.is_cc:
-                for f_cc in f_item.ccs:
-                    if f_cc.cc_num == self.cc_num:
-                        self.draw_point(f_cc, f_item_index)
-            else:
-                for f_pb in f_item.pitchbends:
-                    self.draw_point(f_pb, f_item_index)
-            for f_note in f_item.notes:
-                f_note_start = (f_item_index *
-                    self.item_width) + (f_note.start * 0.25 *
-                    self.item_width) + AUTOMATION_RULER_WIDTH
-                f_note_end = f_note_start + (f_note.length *
-                    self.item_width * 0.25)
-                f_note_y = AUTOMATION_RULER_WIDTH + ((127.0 -
-                    (f_note.note_num)) * f_note_height)
-                f_note_item = QtGui.QGraphicsLineItem(
-                    f_note_start, f_note_y, f_note_end, f_note_y)
-                f_note_item.setPen(f_pen)
-                self.scene.addItem(f_note_item)
-            f_item_index += 1
+
+        if self.is_cc:
+            for f_cc in CURRENT_ITEM.ccs:
+                if f_cc.cc_num == self.cc_num:
+                    self.draw_point(f_cc)
+        else:
+            for f_pb in CURRENT_ITEM.pitchbends:
+                self.draw_point(f_pb)
+        for f_note in CURRENT_ITEM.notes:
+            f_note_start = (self.item_width) + (f_note.start *
+                self.item_width) + AUTOMATION_RULER_WIDTH
+            f_note_end = f_note_start + (f_note.length * self.item_width)
+            f_note_y = AUTOMATION_RULER_WIDTH + (127.0 -
+                f_note.note_num) * f_note_height
+            f_note_item = QtGui.QGraphicsLineItem(
+                f_note_start, f_note_y, f_note_end, f_note_y)
+            f_note_item.setPen(f_pen)
+            self.scene.addItem(f_note_item)
+
         self.setSceneRect(
             0.0, 0.0, self.grid_max_start_time + 100.0, self.height())
         self.setUpdatesEnabled(True)
         self.update()
 
-    def draw_point(self, a_cc, a_item_index, a_select=True):
+    def draw_point(self, a_cc, a_select=True):
         """ a_cc is an instance of the pydaw_cc class"""
-        f_time = self.axis_size + (((float(a_item_index) * 4.0) +
-            a_cc.start) * self.beat_width)
+        f_time = self.axis_size + (a_cc.start * self.beat_width)
         if self.is_cc:
             f_value = self.axis_size +  self.viewer_height / 127.0 * (127.0 -
                 a_cc.cc_val)
@@ -6143,10 +6115,10 @@ class automation_viewer(QtGui.QGraphicsView):
             f_value = self.axis_size +  self.viewer_height / 2.0 * (1.0 -
                 a_cc.pb_val)
         f_point = automation_item(
-            f_time, f_value, a_cc, self, self.is_cc, a_item_index)
+            f_time, f_value, a_cc, self, self.is_cc)
         self.automation_points.append(f_point)
         self.scene.addItem(f_point)
-        if a_select and hash((a_item_index, str(a_cc))) in self.selected_str:
+        if a_select and hash(str(a_cc)) in self.selected_str:
             f_point.setSelected(True)
 
     def select_all(self):
@@ -6528,6 +6500,8 @@ def global_open_items(a_items=None, a_reset_scrollbar=False, a_len=None):
 
     ITEM_EDITOR.tab_changed()
     ITEM_EDITOR.open_item_list()
+    global_open_audio_items()
+
 
 def global_save_and_reload_items():
     PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
@@ -6893,7 +6867,7 @@ class item_list_editor:
 
     def tab_changed(self, a_val=None):
         f_list = [PIANO_ROLL_EDITOR, CC_EDITOR, PB_EDITOR]
-        f_index = self.tab_widget.currentIndex()
+        f_index = self.tab_widget.currentIndex() - 1
         if f_index == 0:
             global_set_piano_roll_zoom()
         if f_index < len(f_list):
@@ -6989,7 +6963,6 @@ class item_list_editor:
         self.notes_table_widget.resizeColumnsToContents()
         self.ccs_table_widget.resizeColumnsToContents()
         self.pitchbend_table_widget.resizeColumnsToContents()
-        global_open_audio_items()
 
 
 class midi_device:

@@ -1650,8 +1650,8 @@ class pydaw_item:
                 elif f_event_arr[0] == "U":
                     f_result.uid = int(f_event_arr[1])
                 else:
-                    print(f_event_arr)
-                    assert(False)
+                    print("Error: {}".format(f_event_arr))
+                    #assert(False)
         return f_result
 
     def __str__(self):
