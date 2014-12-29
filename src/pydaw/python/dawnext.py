@@ -1065,21 +1065,21 @@ class SequencerItem(QtGui.QGraphicsRectItem):
     def quantize_all(self, a_x):
         f_x = a_x
         if AUDIO_QUANTIZE:
-            f_x = round(f_x / AUDIO_QUANTIZE_PX) * AUDIO_QUANTIZE_PX
+            f_x = round(f_x / SEQUENCER_QUANTIZE_PX) * SEQUENCER_QUANTIZE_PX
         return f_x
 
     def quantize(self, a_x):
         f_x = a_x
         f_x = self.quantize_all(f_x)
-        if AUDIO_QUANTIZE and f_x < AUDIO_QUANTIZE_PX:
-            f_x = AUDIO_QUANTIZE_PX
+        if AUDIO_QUANTIZE and f_x < SEQUENCER_QUANTIZE_PX:
+            f_x = SEQUENCER_QUANTIZE_PX
         return f_x
 
     def quantize_start(self, a_x):
         f_x = a_x
         f_x = self.quantize_all(f_x)
         if f_x >= self.length_handle.pos().x():
-            f_x -= AUDIO_QUANTIZE_PX
+            f_x -= SEQUENCER_QUANTIZE_PX
         return f_x
 
     def quantize_scene(self, a_x):
@@ -1142,7 +1142,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
             if AUDIO_QUANTIZE:
                 f_max_x = (pydaw_get_current_region_length() *
-                    SEQUENCER_PX_PER_BEAT) - AUDIO_QUANTIZE_PX
+                    SEQUENCER_PX_PER_BEAT) - SEQUENCER_QUANTIZE_PX
             else:
                 f_max_x = (pydaw_get_current_region_length() *
                     SEQUENCER_PX_PER_BEAT) - AUDIO_ITEM_HANDLE_SIZE
@@ -1634,7 +1634,7 @@ class ItemSequencer(QtGui.QGraphicsView):
             f_number.setPos(i3 + 3.0, 2)
             if AUDIO_LINES_ENABLED:
                 for f_i4 in range(1, AUDIO_SNAP_RANGE):
-                    f_sub_x = i3 + (AUDIO_QUANTIZE_PX * f_i4)
+                    f_sub_x = i3 + (SEQUENCER_QUANTIZE_PX * f_i4)
                     f_line = self.scene.addLine(
                         f_sub_x, REGION_EDITOR_HEADER_HEIGHT,
                         f_sub_x, f_total_height, f_16th_pen)
@@ -1646,7 +1646,7 @@ class ItemSequencer(QtGui.QGraphicsView):
                 self.beat_line_list.append(f_line)
                 if AUDIO_LINES_ENABLED:
                     for f_i4 in range(1, AUDIO_SNAP_RANGE):
-                        f_sub_x = f_beat_x + (AUDIO_QUANTIZE_PX * f_i4)
+                        f_sub_x = f_beat_x + (SEQUENCER_QUANTIZE_PX * f_i4)
                         f_line = self.scene.addLine(
                             f_sub_x, REGION_EDITOR_HEADER_HEIGHT,
                             f_sub_x, f_total_height, f_16th_pen)
@@ -1683,8 +1683,7 @@ class ItemSequencer(QtGui.QGraphicsView):
 
 
 def pydaw_set_audio_seq_zoom(a_horizontal, a_vertical):
-    global AUDIO_PX_PER_BEAT, AUDIO_PX_PER_8TH, AUDIO_PX_PER_12TH, \
-        AUDIO_PX_PER_16TH, AUDIO_ITEM_HEIGHT
+    global AUDIO_PX_PER_BEAT, AUDIO_ITEM_HEIGHT
 
     f_width = float(AUDIO_SEQ.rect().width()) - \
         float(AUDIO_SEQ.verticalScrollBar().width()) - 6.0
@@ -1693,17 +1692,14 @@ def pydaw_set_audio_seq_zoom(a_horizontal, a_vertical):
     f_region_scale = f_width / f_region_px
 
     AUDIO_PX_PER_BEAT = 100.0 * a_horizontal * f_region_scale
-    AUDIO_PX_PER_8TH = AUDIO_PX_PER_BEAT / 2.0 # / 8.0
-    AUDIO_PX_PER_12TH = AUDIO_PX_PER_BEAT / 3.0
-    AUDIO_PX_PER_16TH = AUDIO_PX_PER_BEAT / 4.0
     pydaw_set_audio_snap(AUDIO_SNAP_VAL)
     AUDIO_ITEM_HEIGHT = 75.0 * a_vertical
 
 
 def pydaw_set_audio_snap(a_val):
-    global AUDIO_QUANTIZE, AUDIO_QUANTIZE_PX, \
-           AUDIO_QUANTIZE_AMT, AUDIO_SNAP_VAL, \
-           AUDIO_LINES_ENABLED, AUDIO_SNAP_RANGE
+    global AUDIO_QUANTIZE, AUDIO_QUANTIZE_PX, AUDIO_QUANTIZE_AMT, \
+        AUDIO_SNAP_VAL, AUDIO_LINES_ENABLED, AUDIO_SNAP_RANGE, \
+        SEQUENCER_QUANTIZE_PX
     AUDIO_SNAP_VAL = a_val
     AUDIO_QUANTIZE = True
     AUDIO_LINES_ENABLED = True
@@ -1711,21 +1707,26 @@ def pydaw_set_audio_snap(a_val):
     if a_val == 0:
         AUDIO_QUANTIZE = False
         AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT
+        SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT
         AUDIO_LINES_ENABLED = False
     elif a_val == 1:
         AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT
+        SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT
         AUDIO_LINES_ENABLED = False
         AUDIO_QUANTIZE_AMT = 1.0
     elif a_val == 2:
-        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_8TH
+        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT / 2.0
+        SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT / 2.0
         AUDIO_SNAP_RANGE = 2
         AUDIO_QUANTIZE_AMT = 2.0
     elif a_val == 3:
-        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_12TH
+        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT / 3.0
+        SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT / 3.0
         AUDIO_SNAP_RANGE = 3
         AUDIO_QUANTIZE_AMT = 3.0
     elif a_val == 4:
-        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_16TH
+        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT / 4.0
+        SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT / 4.0
         AUDIO_SNAP_RANGE = 4
         AUDIO_QUANTIZE_AMT = 4.0
 
@@ -1733,12 +1734,10 @@ AUDIO_LINES_ENABLED = True
 AUDIO_SNAP_RANGE = 8
 AUDIO_SNAP_VAL = 2
 AUDIO_PX_PER_BEAT = 100.0
-AUDIO_PX_PER_8TH = AUDIO_PX_PER_BEAT / 2.0
-AUDIO_PX_PER_12TH = AUDIO_PX_PER_BEAT / 3.0
-AUDIO_PX_PER_16TH = AUDIO_PX_PER_BEAT / 4.0
 
 AUDIO_QUANTIZE = False
-AUDIO_QUANTIZE_PX = 25.0
+AUDIO_QUANTIZE_PX = 100.0
+SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT
 AUDIO_QUANTIZE_AMT = 1.0
 
 AUDIO_RULER_HEIGHT = 20.0
@@ -4044,14 +4043,6 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
             QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding), 0, 30)
         self.vlayout.addLayout(self.controls_grid_layout)
         self.vlayout.addWidget(AUDIO_SEQ)
-        self.snap_combobox = QtGui.QComboBox()
-        self.snap_combobox.setFixedWidth(105)
-        self.snap_combobox.addItems(
-            [_("None"), _("Beat"), "1/8th", "1/12th", "1/16th"])
-        self.controls_grid_layout.addWidget(QtGui.QLabel(_("Snap:")), 0, 9)
-        self.controls_grid_layout.addWidget(self.snap_combobox, 0, 10)
-        self.snap_combobox.currentIndexChanged.connect(self.set_snap)
-        self.snap_combobox.setCurrentIndex(2)
 
         self.menu_button = QtGui.QPushButton(_("Menu"))
         self.controls_grid_layout.addWidget(self.menu_button, 0, 3)
@@ -4128,7 +4119,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
 
         self.audio_items_clipboard = []
         self.hsplitter.setSizes([100, 9999])
-        self.disable_on_play = (self.menu_button, self.snap_combobox)
+        self.disable_on_play = (self.menu_button,)
 
     def on_play(self):
         for f_item in self.disable_on_play:
@@ -4307,10 +4298,6 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
 
     def set_v_zoom(self, a_val=None):
         AUDIO_SEQ.set_v_zoom(float(a_val) * 0.1)
-        global_open_audio_items(a_reload=False)
-
-    def set_snap(self, a_val=None):
-        pydaw_set_audio_snap(a_val)
         global_open_audio_items(a_reload=False)
 
     def set_zoom(self, a_val=None):
@@ -7398,13 +7385,22 @@ class transport_widget(libmk.AbstractTransport):
         self.playback_vlayout = QtGui.QVBoxLayout(self.playback_widget)
         self.playback_menu.addAction(self.playback_widget_action)
 
-        self.grid_layout1.addWidget(QtGui.QLabel(_("Loop Mode:")), 0, 45)
+        self.grid_layout1.addWidget(QtGui.QLabel(_("Loop Mode:")), 0, 30)
         self.loop_mode_combobox = QtGui.QComboBox()
         self.loop_mode_combobox.addItems([_("Off"), _("Region")])
         self.loop_mode_combobox.setMinimumWidth(90)
         self.loop_mode_combobox.currentIndexChanged.connect(
             self.on_loop_mode_changed)
-        self.grid_layout1.addWidget(self.loop_mode_combobox, 1, 45)
+        self.grid_layout1.addWidget(self.loop_mode_combobox, 1, 30)
+
+        self.snap_combobox = QtGui.QComboBox()
+        self.snap_combobox.setFixedWidth(90)
+        self.snap_combobox.addItems(
+            [_("None"), _("Beat"), "1/8", "1/12", "1/16"])
+        self.grid_layout1.addWidget(QtGui.QLabel(_("Snap:")), 0, 40)
+        self.grid_layout1.addWidget(self.snap_combobox, 1, 40)
+        self.snap_combobox.currentIndexChanged.connect(self.set_snap)
+        self.snap_combobox.setCurrentIndex(0)
 
         self.overdub_checkbox = QtGui.QCheckBox(_("Overdub"))
         self.overdub_checkbox.clicked.connect(self.on_overdub_changed)
@@ -7415,6 +7411,9 @@ class transport_widget(libmk.AbstractTransport):
 
         self.last_region_num = -99
         self.suppress_osc = False
+
+    def set_snap(self, a_val=None):
+        pydaw_set_audio_snap(a_val)
 
     def on_panic(self):
         PROJECT.IPC.pydaw_panic()
