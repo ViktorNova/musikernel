@@ -72,15 +72,6 @@ def set_tooltips_enabled(a_enabled):
     pydaw_util.set_file_setting("tooltips", int(a_enabled))
 
 
-def pydaw_current_region_is_none():
-    if CURRENT_REGION is None:
-        QtGui.QMessageBox.warning(
-            MAIN_WINDOW, _("Error"),
-            _("You must create or select a region first by clicking "
-            "in the song editor above."))
-        return True
-    return False
-
 def pydaw_scale_to_rect(a_to_scale, a_scale_to):
     """ Returns a tuple that scales one QRectF to another """
     f_x = (a_scale_to.width() / a_to_scale.width())
@@ -1368,20 +1359,13 @@ class ItemSequencer(QtGui.QGraphicsView):
         return [x for x in self.audio_items if x.isSelected()]
 
     def delete_selected(self):
-        if pydaw_current_region_is_none() or self.check_running():
+        if self.check_running():
             return
-        f_items = PROJECT.get_audio_region(
-            CURRENT_REGION.uid)
-        f_paif = PROJECT.get_audio_per_item_fx_region(
-            CURRENT_REGION.uid)
         for f_item in self.get_selected():
-            f_items.remove_item(f_item.track_num)
-            f_paif.clear_row_if_exists(f_item.track_num)
-        PROJECT.save_audio_region(CURRENT_REGION.uid, f_items)
-        PROJECT.save_audio_per_item_fx_region(
-            CURRENT_REGION.uid, f_paif, False)
-        PROJECT.commit(_("Delete audio item(s)"))
-        global_open_audio_items(True)
+            CURRENT_REGION.remove_item_ref(f_item.audio_item)
+        PROJECT.save_region(CURRENT_REGION)
+        PROJECT.commit(_("Delete item(s)"))
+        REGION_SETTINGS.open_region()
 
     def set_tooltips(self, a_on):
         if a_on:
@@ -1414,7 +1398,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         a_event.setDropAction(QtCore.Qt.CopyAction)
 
     def check_running(self):
-        if pydaw_current_region_is_none() or libmk.IS_PLAYING:
+        if libmk.IS_PLAYING:
             return True
         return False
 
@@ -3268,7 +3252,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
         return [x for x in self.audio_items if x.isSelected()]
 
     def delete_selected(self):
-        if pydaw_current_region_is_none() or self.check_running():
+        if self.check_running():
             return
         f_items = PROJECT.get_audio_region(
             CURRENT_REGION.uid)
@@ -3393,7 +3377,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
         a_event.setDropAction(QtCore.Qt.CopyAction)
 
     def check_running(self):
-        if pydaw_current_region_is_none() or libmk.IS_PLAYING:
+        if not CURRENT_ITEM or libmk.IS_PLAYING:
             return True
         return False
 
@@ -3446,7 +3430,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
         self.last_open_dir = os.path.dirname(f_file_name_str)
 
     def glue_selected(self):
-        if pydaw_current_region_is_none() or self.check_running():
+        if self.check_running():
             return
 
         f_region_uid = CURRENT_REGION.uid

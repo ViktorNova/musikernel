@@ -809,19 +809,16 @@ class pydaw_sequencer:
 
     def add_item_ref_by_uid(
             self, a_track_num, a_start_beat, a_length_beats, a_item_uid):
-        self.remove_item_ref(
+        f_result = pydaw_sequencer_item(
             a_track_num, a_start_beat, a_length_beats, a_item_uid)
-        self.items.append(pydaw_sequencer_item(
-            a_track_num, a_start_beat, a_length_beats, a_item_uid))
+        self.remove_item_ref(f_result)
+        self.items.append(f_result)
 
     def add_item(self, a_item):
         self.items.append(a_item)
 
-    def remove_item_ref(
-            self, a_track_num, a_start_beat, a_length_beats, a_item_uid):
-        f_to_remove = pydaw_sequencer_item(
-            a_track_num, a_start_beat, a_length_beats, a_item_uid)
-        f_to_remove = str(f_to_remove)
+    def remove_item_ref(self, a_item):
+        f_to_remove = str(a_item)
         for f_item in self.items:
             if str(f_item) == f_to_remove:
                 self.items.remove(f_item)
