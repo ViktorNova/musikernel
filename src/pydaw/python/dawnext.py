@@ -2729,10 +2729,6 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             return
 
         if a_event.modifiers() == QtCore.Qt.ShiftModifier:
-            f_per_item_fx_dict = \
-            PROJECT.get_audio_per_item_fx_region(
-                CURRENT_REGION.uid)
-
             f_item = self.audio_item
             f_item_old = f_item.clone()
             f_item.fade_in = 0.0
@@ -2744,7 +2740,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             f_item_old.fade_in = pydaw_clip_value(
                 f_item_old.fade_in, 0.0, (f_item_old.fade_out - 90.0), True)
 
-            f_index = AUDIO_ITEMS.get_next_index()
+            f_index = CURRENT_ITEM.get_next_index()
             if f_index == -1:
                 QtGui.QMessageBox.warning(
                     self, _("Error"),
@@ -2752,13 +2748,10 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                     "is {}").format(MAX_AUDIO_ITEM_COUNT))
                 return
             else:
-                AUDIO_ITEMS.add_item(f_index, f_item_old)
-                f_per_item_fx = f_per_item_fx_dict.get_row(self.track_num)
+                CURRENT_ITEM.add_item(f_index, f_item_old)
+                f_per_item_fx = CURRENT_ITEM.get_row(self.track_num)
                 if f_per_item_fx is not None:
-                    f_per_item_fx_dict.set_row(f_index, f_per_item_fx)
-                    f_save_paif = True
-                else:
-                    f_save_paif = False
+                    CURRENT_ITEM.set_row(f_index, f_per_item_fx)
 
             f_event_pos = a_event.pos().x()
             # for items that are not quantized
@@ -2771,15 +2764,9 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 (f_sample_rect_pos * f_sample_shown) + f_item.sample_start
             f_item.sample_start = pydaw_clip_value(
                 f_item.sample_start, 0.0, 999.0, True)
-            f_item.start_bar = f_musical_pos[0]
-            f_item.start_beat = f_musical_pos[1]
+            f_item.start_beat = f_musical_pos
             f_item_old.sample_end = f_item.sample_start
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
-            if f_save_paif:
-                PROJECT.save_audio_per_item_fx_region(
-                    CURRENT_REGION.uid, f_per_item_fx_dict, False)
-                PROJECT.IPC.pydaw_audio_per_item_fx_region(
-                    CURRENT_REGION.uid)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             PROJECT.commit(_("Split audio item"))
             global_open_audio_items(True)
         elif a_event.modifiers() == \
@@ -2797,9 +2784,6 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 4.0) + self.audio_item.start_beat
             self.vc_end = f_list[-1]
         else:
-            if a_event.modifiers() == QtCore.Qt.ControlModifier:
-                f_per_item_fx_dict = PROJECT.get_audio_per_item_fx_region(
-                    CURRENT_ITEM.uid)
             QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
             self.event_pos_orig = a_event.pos().x()
             for f_item in AUDIO_SEQ.get_selected():
@@ -2809,8 +2793,8 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 if a_event.modifiers() == QtCore.Qt.ControlModifier:
                     f_item.is_copying = True
                     f_item.width_orig = f_item.rect().width()
-                    f_item.per_item_fx = \
-                        f_per_item_fx_dict.get_row(f_item.track_num)
+                    f_item.per_item_fx = CURRENT_ITEM.get_row(
+                        f_item.track_num)
                     AUDIO_SEQ.draw_item(
                         f_item.track_num, f_item.audio_item,
                         f_item.graph_object)
@@ -3049,13 +3033,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_stretched_items = []
         f_event_pos = a_event.pos().x()
         f_event_diff = f_event_pos - self.event_pos_orig
-        if self.is_copying:
-            f_was_copying = True
-            f_per_item_fx_dict = \
-            PROJECT.get_audio_per_item_fx_region(
-                CURRENT_REGION.uid)
-        else:
-            f_was_copying = False
+
         for f_audio_item in AUDIO_SEQ.get_selected():
             f_item = f_audio_item.audio_item
             f_pos_x = f_audio_item.pos().x()
@@ -3132,7 +3110,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                     else:
                         f_audio_items.add_item(f_index, f_item_old)
                         if f_audio_item.per_item_fx is not None:
-                            f_per_item_fx_dict.set_row(
+                            CURRENT_ITEM.set_row(
                                 f_index, f_audio_item.per_item_fx)
                 else:
                     f_audio_item.set_brush(f_item.lane_num)
@@ -3159,11 +3137,6 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             f_audio_item.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape)
         if f_did_change:
             f_audio_items.deduplicate_items()
-            if f_was_copying:
-                PROJECT.save_audio_per_item_fx_region(
-                    CURRENT_REGION.uid, f_per_item_fx_dict, False)
-                PROJECT.IPC.pydaw_audio_per_item_fx_region(
-                    CURRENT_REGION.uid)
             if f_was_stretching:
                 libmk.PROJECT.save_stretch_dicts()
                 for f_stretch_item in f_stretched_items:
