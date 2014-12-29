@@ -969,26 +969,6 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         PROJECT.commit(_("Reset sample ends for item(s)"))
         global_open_audio_items()
 
-    def copy_file_path_to_clipboard(self):
-        f_path = self.get_file_path()
-        f_clipboard = QtGui.QApplication.clipboard()
-        f_clipboard.setText(f_path)
-
-    def save_a_copy(self):
-        global LAST_AUDIO_ITEM_DIR
-        f_file = QtGui.QFileDialog.getSaveFileName(
-            parent=SEQUENCER,
-            caption=_('Save audio item as .wav'),
-            directory=LAST_AUDIO_ITEM_DIR)
-        if not f_file is None and not str(f_file) == "":
-            f_file = str(f_file)
-            if not f_file.endswith(".wav"):
-                f_file += ".wav"
-            LAST_AUDIO_ITEM_DIR = os.path.dirname(f_file)
-            f_orig_path = libmk.PROJECT.get_wav_name_by_uid(
-                self.audio_item.uid)
-            shutil.copy(f_orig_path, f_file)
-
     def open_item_folder(self):
         f_path = libmk.PROJECT.get_wav_name_by_uid(self.audio_item.uid)
         SEQUENCER_WIDGET.open_file_in_browser(f_path)
