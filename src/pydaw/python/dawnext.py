@@ -5744,9 +5744,7 @@ class automation_item(QtGui.QGraphicsEllipseItem):
             a_time - AUTOMATION_POINT_RADIUS,
             a_value - AUTOMATION_POINT_RADIUS)
         self.setBrush(global_automation_gradient)
-        f_pen = QtGui.QPen()
-        f_pen.setWidth(2)
-        f_pen.setColor(QtGui.QColor(170, 0, 0))
+        f_pen = QtGui.QPen(QtGui.QColor(170, 0, 0), 2.0)
         self.setPen(f_pen)
         self.cc_item = a_cc
         self.parent_view = a_view
@@ -6866,14 +6864,17 @@ class item_list_editor:
         f_window.exec_()
 
     def tab_changed(self, a_val=None):
-        f_list = [PIANO_ROLL_EDITOR, CC_EDITOR, PB_EDITOR]
-        f_index = self.tab_widget.currentIndex() - 1
+        f_list = [AUDIO_SEQ, PIANO_ROLL_EDITOR, CC_EDITOR, PB_EDITOR]
+        f_index = self.tab_widget.currentIndex()
         if f_index == 0:
-            global_set_piano_roll_zoom()
-        if f_index < len(f_list):
-            f_list[f_index].draw_item()
-        PIANO_ROLL_EDITOR.click_enabled = True
-        #^^^^huh?
+            global_open_audio_items()
+        else:
+            if f_index == 1:
+                global_set_piano_roll_zoom()
+            if f_index < len(f_list):
+                f_list[f_index].draw_item()
+            PIANO_ROLL_EDITOR.click_enabled = True
+            #^^^^huh?
 
     def show_not_enabled_warning(self):
         QtGui.QMessageBox.warning(
