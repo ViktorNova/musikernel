@@ -4710,7 +4710,7 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
             if self.is_resizing:
                 f_new_note_length = ((f_pos_x + f_item.rect().width() -
                     PIANO_KEYS_WIDTH) * f_recip *
-                    4.0) - f_item.resize_start_pos
+                    CURRENT_ITEM_LEN) - f_item.resize_start_pos
                 if PIANO_ROLL_SNAP and \
                 f_new_note_length < PIANO_ROLL_SNAP_BEATS:
                     f_new_note_length = PIANO_ROLL_SNAP_BEATS
@@ -4721,10 +4721,9 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
                 pass
             else:
                 f_new_note_start = (f_pos_x -
-                    PIANO_KEYS_WIDTH) * 4.0 * f_recip
+                    PIANO_KEYS_WIDTH) * CURRENT_ITEM_LEN * f_recip
                 f_new_note_num = self.y_pos_to_note(f_pos_y)
                 if self.is_copying:
-                    f_new_note_start = pydaw_beats_to_index(f_new_note_start)
                     f_new_note = pydaw_note(
                         f_new_note_start, f_item.note_item.length,
                         f_new_note_num, f_item.note_item.velocity)
@@ -4735,8 +4734,6 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
                     f_new_selection.append(f_item)
                 else:
                     CURRENT_ITEM.notes.remove(f_item.note_item)
-                    f_new_note_start = \
-                        pydaw_beats_to_index(f_new_note_start)
                     f_item.note_item.set_start(f_new_note_start)
                     f_item.note_item.note_num = f_new_note_num
                     CURRENT_ITEM.notes.append(f_item.note_item)
@@ -5083,12 +5080,12 @@ class piano_roll_editor(QtGui.QGraphicsView):
                 if PIANO_ROLL_SNAP:
                     f_beat = (int((f_pos_x - PIANO_KEYS_WIDTH) /
                         PIANO_ROLL_SNAP_VALUE) *
-                        PIANO_ROLL_SNAP_VALUE) * f_recip * 4.0
+                        PIANO_ROLL_SNAP_VALUE) * f_recip * CURRENT_ITEM_LEN
                     f_note_item = pydaw_note(
                         f_beat, LAST_NOTE_RESIZE, f_note, self.get_vel(f_beat))
                 else:
                     f_beat = (f_pos_x -
-                        PIANO_KEYS_WIDTH) * f_recip * 4.0
+                        PIANO_KEYS_WIDTH) * f_recip * CURRENT_ITEM_LEN
                     f_note_item = pydaw_note(
                         f_beat, 0.25, f_note, self.get_vel(f_beat))
                 ITEM_EDITOR.add_note(f_note_item)
