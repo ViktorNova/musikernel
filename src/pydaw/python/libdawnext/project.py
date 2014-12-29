@@ -47,8 +47,6 @@ pydaw_file_regions_atm = os.path.join(pydaw_folder_dawnext, "automation.txt")
 pydaw_file_routing_graph = os.path.join(pydaw_folder_dawnext, "routing.txt")
 pydaw_file_midi_routing = os.path.join(
     pydaw_folder_dawnext, "midi_routing.txt")
-pydaw_file_audio_per_item_fx = os.path.join(
-    pydaw_folder_dawnext, "audio_per_item_fx.txt")
 pydaw_file_pyitems = os.path.join(pydaw_folder_dawnext, "items.txt")
 pydaw_file_pytransport = os.path.join(pydaw_folder_dawnext, "transport.txt")
 pydaw_file_pytracks = os.path.join(pydaw_folder_dawnext, "tracks.txt")
@@ -144,8 +142,6 @@ class DawNextProject(libmk.AbstractProject):
             self.project_folder, pydaw_file_routing_graph)
         self.midi_routing_file = os.path.join(
             self.project_folder, pydaw_file_midi_routing)
-        self.paif_file = os.path.join(
-            self.project_folder, pydaw_file_audio_per_item_fx)
         self.automation_file = os.path.join(
             self.project_folder, pydaw_file_regions_atm)
 
@@ -269,18 +265,6 @@ class DawNextProject(libmk.AbstractProject):
         else:
             f_items_dict.rename_item(a_item_names[0], a_new_item_name)
         self.save_items_dict(f_items_dict)
-
-    def rename_region(self, a_old_name, a_new_name):
-        f_regions_dict = self.get_regions_dict()
-        if f_regions_dict.name_exists(a_new_name):
-            f_suffix = 1
-            f_new_name = "{}-".format(a_new_name)
-            while f_regions_dict.name_exists(f_new_name + str(f_suffix)):
-                f_suffix += 1
-            f_regions_dict.rename_item(a_old_name, f_new_name)
-        else:
-            f_regions_dict.rename_item(a_old_name, a_new_name)
-        self.save_regions_dict(f_regions_dict)
 
     def set_vol_for_all_audio_items(self, a_uid, a_vol,
                                     a_reverse=None, a_same_vol=False,
@@ -600,15 +584,12 @@ class DawNextProject(libmk.AbstractProject):
         f_graph.reorder(a_dict)
         self.save_routing_graph(f_graph)
 
-        f_regions_dict = self.get_regions_dict()
-
-        for f_uid in f_regions_dict.name_lookup:
-            f_region = self.get_region_by_uid(f_uid)
-            f_region.reorder(a_dict)
-            self.save_region_by_uid(f_uid, f_region)
-            f_audio_region = self.get_audio_region(f_uid)
-            f_audio_region.reorder(a_dict)
-            self.save_audio_region(f_uid, f_audio_region)
+        f_region = self.get_region()
+        f_region.reorder(a_dict)
+        self.save_region(f_region)
+        f_audio_region = self.get_audio_region(f_uid)
+        f_audio_region.reorder(a_dict)
+        self.save_audio_region(f_uid, f_audio_region)
         self.IPC.pydaw_open_song(self.project_folder)
         self.commit("Re-order tracks")
 
@@ -672,19 +653,6 @@ class DawNextProject(libmk.AbstractProject):
         if not self.suppress_updates:
             self.save_file("", pydaw_file_pytransport, str(a_transport))
 
-    def create_empty_region(self, a_region_name):
-        # TODO:  Check for uniqueness, from
-        # a DawNextProject.check_for_uniqueness method...
-        f_regions_dict = self.get_regions_dict()
-        f_uid = f_regions_dict.add_new_item(a_region_name)
-        self.save_file(pydaw_folder_regions, f_uid, pydaw_terminating_char)
-        self.save_file(
-            pydaw_folder_regions_audio, f_uid, pydaw_terminating_char)
-        self.save_file(
-            pydaw_folder_regions_atm, f_uid, pydaw_terminating_char)
-        self.save_regions_dict(f_regions_dict)
-        return f_uid
-
     def create_empty_item(self):
         f_items_dict = self.get_items_dict()
         f_item_name = self.get_next_default_item_name(
@@ -694,47 +662,6 @@ class DawNextProject(libmk.AbstractProject):
         self.IPC.pydaw_save_item(f_uid)
         self.save_items_dict(f_items_dict)
         return f_uid
-
-    def copy_region(self, a_old_region_name, a_new_region_name):
-        f_regions_dict = self.get_regions_dict()
-        f_uid = f_regions_dict.add_new_item(a_new_region_name)
-        f_old_uid = f_regions_dict.get_uid_by_name(a_old_region_name)
-        self.save_file(
-            pydaw_folder_regions,  str(f_uid),
-            pydaw_read_file_text(
-                "{}/{}".format(self.regions_folder, f_old_uid)))
-        self.save_file(
-            pydaw_folder_regions_audio,  str(f_uid),
-            pydaw_read_file_text(
-                "{}/{}".format(self.regions_audio_folder, f_old_uid)))
-        self.save_file(
-            pydaw_folder_regions_atm,  str(f_uid),
-            pydaw_read_file_text(
-                "{}/{}".format(self.regions_atm_folder, f_old_uid)))
-        f_paif_file = "{}/{}".format(self.audio_per_item_fx_folder, f_old_uid)
-        if os.path.isfile(f_paif_file):
-            self.save_file(
-                pydaw_folder_audio_per_item_fx, str(f_uid),
-                pydaw_read_file_text(f_paif_file))
-        self.save_regions_dict(f_regions_dict)
-        return f_uid
-
-    def region_audio_clone(self, a_dest_region_uid, a_src_region_name):
-        f_regions_dict = self.get_regions_dict()
-        f_uid = f_regions_dict.get_uid_by_name(a_src_region_name)
-        self.save_file(
-            pydaw_folder_regions_audio, str(a_dest_region_uid),
-            pydaw_read_file_text(
-                "{}/{}".format(self.regions_audio_folder, f_uid)))
-        f_paif_file = "{}/{}".format(self.audio_per_item_fx_folder, f_uid)
-        if os.path.isfile(f_paif_file):
-            self.save_file(
-                pydaw_folder_audio_per_item_fx, str(a_dest_region_uid),
-                pydaw_read_file_text(f_paif_file))
-            self.IPC.pydaw_audio_per_item_fx_region(
-                a_dest_region_uid)
-        self.IPC.pydaw_reload_audio_items(a_dest_region_uid)
-        self.commit("Clone audio from region {}".format(a_src_region_name))
 
     def copy_item(self, a_old_item, a_new_item):
         f_items_dict = self.get_items_dict()
@@ -776,12 +703,6 @@ class DawNextProject(libmk.AbstractProject):
         if not self.suppress_updates:
             self.save_file(f_folder, str(a_uid), str(a_track))
 
-    def save_audio_region(self, a_region_uid, a_tracks):
-        if not self.suppress_updates:
-            self.save_file(
-                pydaw_folder_regions_audio, str(a_region_uid), str(a_tracks))
-            self.IPC.pydaw_reload_audio_items(a_region_uid)
-
     def item_exists(self, a_item_name, a_name_dict=None):
         if a_name_dict is None:
             f_name_dict = self.get_items_dict()
@@ -817,24 +738,8 @@ class DawNextProject(libmk.AbstractProject):
                     self.last_item_number = i
                 return f_result
 
-    def get_next_default_region_name(self, a_region_name="region"):
-        f_regions_dict = self.get_regions_dict()
-        if str(a_region_name) != "region" and \
-        not str(a_region_name) in f_regions_dict.uid_lookup:
-            return str(a_region_name)
-        for i in range(self.last_region_number, 10000):
-            f_result = str(a_region_name) + "-" + str(i)
-            if not f_result in f_regions_dict.uid_lookup:
-                if str(a_region_name) == "region":
-                    self.last_region_number = i
-                return f_result
-
     def get_item_list(self):
         f_result = self.get_items_dict()
-        return sorted(f_result.uid_lookup.keys())
-
-    def get_region_list(self):
-        f_result = self.get_regions_dict()
         return sorted(f_result.uid_lookup.keys())
 
     def error_log_write(self, a_message):
