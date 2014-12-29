@@ -616,23 +616,6 @@ class DawNextProject(libmk.AbstractProject):
         else:
             return None
 
-    def get_audio_per_item_fx_region(self, a_region_uid):
-        f_path = "{}/{}".format(self.audio_per_item_fx_folder, a_region_uid)
-        #TODO:  Sort this out at PyDAWv4 and create an empty file first
-        if not os.path.isfile(f_path):
-            return pydaw_audio_item_fx_region()
-        else:
-            f_text = pydaw_read_file_text(f_path)
-            return pydaw_audio_item_fx_region.from_str(f_text)
-
-    def save_audio_per_item_fx_region(
-            self, a_region_uid, a_paif, a_commit=True):
-        if not self.suppress_updates:
-            self.save_file(
-                pydaw_folder_audio_per_item_fx, str(a_region_uid), str(a_paif))
-            if a_commit:
-                self.commit("Update per-audio-item effects")
-
     def get_transport(self):
         try:
             f_file = open(
@@ -1231,6 +1214,7 @@ class pydaw_item:
         self.pitchbends = []
         self.length = 4
         self.uid = int(a_uid)
+        self.fx_list = {} #per-audio-item-fx
 
     def painter_path(self, a_width, a_height):
         f_result = QtGui.QPainterPath()
@@ -1242,6 +1226,40 @@ class pydaw_item:
             f_width = f_note.length * f_beat_width
             f_result.addRect(f_x_pos, f_y_pos, f_width, f_note_height)
         return f_result
+
+    #per-audio-item-fx
+
+    def get_row_str(self, a_row_index):
+        f_result = str(a_row_index)
+        for f_item in self.fx_list[int(a_row_index)]:
+            f_result += str(f_item)
+        return f_result
+
+    def set_row(self, a_row_index, a_fx_list):
+        self.fx_list[int(a_row_index)] = a_fx_list
+
+    def clear_row(self, a_row_index):
+        self.fx_list.pop(a_row_index)
+
+    def clear_row_if_exists(self, a_row_index):
+        if a_row_index in self.fx_list:
+            self.fx_list.pop(a_row_index)
+
+    def get_row(self, a_row_index, a_return_none=False):
+        if int(a_row_index) in self.fx_list:
+            return self.fx_list[int(a_row_index)]
+        else:
+            # print("Index {} not found in "
+            #     "pydaw_audio_item_fx_region".format(a_row_index))
+            if a_return_none:
+                return None
+            else:
+                f_result = []
+                for f_i in range(8):
+                    f_result.append(pydaw_modulex_settings(64, 64, 64, 0))
+                return f_result
+
+    #end per-audio-item-fx
 
     def add_note(self, a_note, a_check=True):
         if a_check:
@@ -1550,13 +1568,26 @@ class pydaw_item:
                     f_result.add_item(
                         int(f_event_arr[1]),
                         pydaw_audio_item.from_arr(f_event_arr[2:]))
+                elif f_event_arr[0] == "f":
+                    f_items_arr = []
+                    f_item_index = f_event_arr[1]
+                    f_vals_arr = f_event_arr[2:]
+                    for f_i in range(8):
+                        f_index = f_i * 4
+                        f_index_end = f_index + 4
+                        a_knob0, a_knob1, a_knob2, a_type = f_vals_arr[
+                            f_index:f_index_end]
+                        f_items_arr.append(
+                            pydaw_modulex_settings(
+                                a_knob0, a_knob1, a_knob2, a_type))
+                    f_result.set_row(f_item_index, f_items_arr)
                 elif f_event_arr[0] == "L":
                     f_result.length = int(f_event_arr[1])
                 elif f_event_arr[0] == "U":
                     f_result.uid = int(f_event_arr[1])
                 else:
                     print("Error: {}".format(f_event_arr))
-                    #assert(False)
+                    assert(False)
         return f_result
 
     def __str__(self):
@@ -1566,6 +1597,8 @@ class pydaw_item:
         f_result.append("U|{}".format(self.uid))
         for k, f_item in list(self.items.items()):
             f_result.append("a|{}|{}".format(k, f_item))
+        for k, v in self.fx_list.items():
+            f_result.append("f|{}".format(self.get_row_str(k)))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 
@@ -1679,66 +1712,6 @@ class pydaw_audio_item(MkAudioItem):
         f_result = pydaw_audio_item(*a_arr)
         return f_result
 
-class pydaw_audio_item_fx_region:
-    def __init__(self):
-        self.fx_list = {}
-
-    def __str__(self):
-        f_result = ""
-        for k, v in list(self.fx_list.items()):
-            f_result += "{}\n".format(self.get_row_str(k))
-        f_result += pydaw_terminating_char
-        return f_result
-
-    def get_row_str(self, a_row_index):
-        f_result = str(a_row_index)
-        for f_item in self.fx_list[int(a_row_index)]:
-            f_result += str(f_item)
-        return f_result
-
-    def set_row(self, a_row_index, a_fx_list):
-        self.fx_list[int(a_row_index)] = a_fx_list
-
-    def clear_row(self, a_row_index):
-        self.fx_list.pop(a_row_index)
-
-    def clear_row_if_exists(self, a_row_index):
-        if a_row_index in self.fx_list:
-            self.fx_list.pop(a_row_index)
-
-    def get_row(self, a_row_index, a_return_none=False):
-        if int(a_row_index) in self.fx_list:
-            return self.fx_list[int(a_row_index)]
-        else:
-            # print("Index {} not found in "
-            #     "pydaw_audio_item_fx_region".format(a_row_index))
-            if a_return_none:
-                return None
-            else:
-                f_result = []
-                for f_i in range(8):
-                    f_result.append(pydaw_modulex_settings(64, 64, 64, 0))
-                return f_result
-
-    @staticmethod
-    def from_str(a_str):
-        f_result = pydaw_audio_item_fx_region()
-        f_arr = str(a_str).split("\n")
-        for f_line in f_arr:
-            if f_line == pydaw_terminating_char:
-                break
-            f_items_arr = []
-            f_item_index, f_vals = f_line.split("|", 1)
-            f_vals_arr = f_vals.split("|")
-            for f_i in range(8):
-                f_index = f_i * 4
-                f_index_end = f_index + 4
-                a_knob0, a_knob1, a_knob2, a_type = f_vals_arr[
-                    f_index:f_index_end]
-                f_items_arr.append(
-                    pydaw_modulex_settings(a_knob0, a_knob1, a_knob2, a_type))
-            f_result.set_row(f_item_index, f_items_arr)
-        return f_result
 
 class pydaw_midi_route:
     def __init__(self, a_on, a_track_num, a_device_name):

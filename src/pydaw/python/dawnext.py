@@ -3378,9 +3378,8 @@ class audio_items_viewer(QtGui.QGraphicsView):
         if len(f_selected_items) == 1:
             CURRENT_AUDIO_ITEM_INDEX = f_selected_items[0].track_num
             AUDIO_SEQ_WIDGET.modulex.widget.setEnabled(True)
-            f_paif = PROJECT.get_audio_per_item_fx_region(CURRENT_REGION.uid)
             AUDIO_SEQ_WIDGET.modulex.set_from_list(
-                f_paif.get_row(CURRENT_AUDIO_ITEM_INDEX))
+                CURRENT_ITEM.get_row(CURRENT_AUDIO_ITEM_INDEX))
         elif len(f_selected_items) == 0:
             CURRENT_AUDIO_ITEM_INDEX = None
             AUDIO_SEQ_WIDGET.modulex.widget.setDisabled(True)
@@ -4001,18 +4000,17 @@ AUDIO_ITEMS_TO_DROP = []
 CURRENT_AUDIO_ITEM_INDEX = None
 
 def global_paif_val_callback(a_port, a_val):
-    if CURRENT_REGION is not None and \
+    if CURRENT_ITEM is not None and \
     CURRENT_AUDIO_ITEM_INDEX is not None:
         PROJECT.IPC.pydaw_audio_per_item_fx(
-            CURRENT_REGION.uid, CURRENT_AUDIO_ITEM_INDEX, a_port, a_val)
+            CURRENT_ITEM.uid, CURRENT_AUDIO_ITEM_INDEX, a_port, a_val)
 
 def global_paif_rel_callback(a_port, a_val):
-    if CURRENT_REGION is not None and \
+    if CURRENT_ITEM is not None and \
     CURRENT_AUDIO_ITEM_INDEX is not None:
-        f_paif = PROJECT.get_audio_per_item_fx_region(CURRENT_REGION.uid)
         f_index_list = AUDIO_SEQ_WIDGET.modulex.get_list()
-        f_paif.set_row(CURRENT_AUDIO_ITEM_INDEX, f_index_list)
-        PROJECT.save_audio_per_item_fx_region(CURRENT_REGION.uid, f_paif)
+        CURRENT_ITEM.set_row(CURRENT_AUDIO_ITEM_INDEX, f_index_list)
+        PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
 
 class audio_items_viewer_widget(
 pydaw_widgets.pydaw_abstract_file_browser_widget):
