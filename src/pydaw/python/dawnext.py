@@ -1446,7 +1446,8 @@ class ItemSequencer(QtGui.QGraphicsView):
 
         print("{} {}".format(f_pos_bars, f_beat_frac))
 
-        f_lane_num = int((f_y - AUDIO_RULER_HEIGHT) / REGION_EDITOR_TRACK_HEIGHT)
+        f_lane_num = int((f_y - AUDIO_RULER_HEIGHT) /
+            REGION_EDITOR_TRACK_HEIGHT)
         f_lane_num = pydaw_clip_value(f_lane_num, 0, AUDIO_ITEM_MAX_LANE)
 
         f_items = PROJECT.get_audio_region(CURRENT_REGION.uid)
@@ -3193,8 +3194,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                         pydaw_get_current_region_length(),
                         TRANSPORT.tempo_spinbox.value(),
                         f_new_graph.length_in_seconds)
-            PROJECT.save_audio_region(
-                CURRENT_REGION.uid, f_audio_items)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             PROJECT.commit(_("Update audio items"))
         global_open_audio_items(f_reset_selection)
 
@@ -5820,14 +5820,13 @@ class automation_viewer(QtGui.QGraphicsView):
         self.set_scale()
         self.grid_max_start_time = AUTOMATION_WIDTH + \
             AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS
-        self.viewer_width = AUTOMATION_WIDTH
         self.automation_points = []
         self.clipboard = []
         self.selected_str = []
 
         self.axis_size = AUTOMATION_RULER_WIDTH
 
-        self.beat_width = self.viewer_width / CURRENT_ITEM_LEN
+        self.beat_width = AUTOMATION_WIDTH / CURRENT_ITEM_LEN
         self.value_width = self.beat_width / 16.0
         self.lines = []
 
@@ -5954,8 +5953,7 @@ class automation_viewer(QtGui.QGraphicsView):
             return
         f_pos_x = a_event.scenePos().x() - AUTOMATION_POINT_RADIUS
         f_pos_y = a_event.scenePos().y() - AUTOMATION_POINT_RADIUS
-        f_cc_start = ((f_pos_x -
-            AUTOMATION_MIN_HEIGHT) / self.item_width) * 4.0
+        f_cc_start = (f_pos_x - AUTOMATION_MIN_HEIGHT) / self.beat_width
         f_cc_start = pydaw_clip_min(f_cc_start, 0.0)
         if self.is_cc:
             f_cc_val = int(127.0 - (((f_pos_y - AUTOMATION_MIN_HEIGHT) /
@@ -5973,7 +5971,7 @@ class automation_viewer(QtGui.QGraphicsView):
 
     def draw_axis(self):
         self.x_axis = QtGui.QGraphicsRectItem(
-            0, 0, self.viewer_width, self.axis_size)
+            0, 0, AUTOMATION_WIDTH, self.axis_size)
         self.x_axis.setPos(self.axis_size, 0)
         self.scene.addItem(self.x_axis)
         self.y_axis = QtGui.QGraphicsRectItem(
@@ -5995,7 +5993,7 @@ class automation_viewer(QtGui.QGraphicsView):
             f_labels = [0, '1.0', 0, '0', 0, '-1.0']
         for i in range(1, 6):
             f_line = QtGui.QGraphicsLineItem(
-                0, 0, self.viewer_width, 0, self.y_axis)
+                0, 0, AUTOMATION_WIDTH, 0, self.y_axis)
             f_line.setPos(self.axis_size, self.viewer_height * (i - 1) / 4)
             if i % 2:
                 f_label = QtGui.QGraphicsSimpleTextItem(
@@ -6068,11 +6066,10 @@ class automation_viewer(QtGui.QGraphicsView):
     def draw_item(self):
         self.setUpdatesEnabled(False)
         self.set_scale()
-        self.viewer_width = self.item_width
-        self.beat_width = self.viewer_width / CURRENT_ITEM_LEN
+        self.beat_width = AUTOMATION_WIDTH / CURRENT_ITEM_LEN
         self.value_width = self.beat_width / 16.0
-        self.grid_max_start_time = self.viewer_width + \
-            AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS
+        self.grid_max_start_time = (AUTOMATION_WIDTH +
+            AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS)
         self.clear_drawn_items()
         if not ITEM_EDITOR.enabled:
             self.setUpdatesEnabled(True)
@@ -6088,9 +6085,9 @@ class automation_viewer(QtGui.QGraphicsView):
             for f_pb in CURRENT_ITEM.pitchbends:
                 self.draw_point(f_pb)
         for f_note in CURRENT_ITEM.notes:
-            f_note_start = (self.item_width) + (f_note.start *
-                self.item_width) + AUTOMATION_RULER_WIDTH
-            f_note_end = f_note_start + (f_note.length * self.item_width)
+            f_note_start = (f_note.start *
+                self.beat_width) + AUTOMATION_RULER_WIDTH
+            f_note_end = f_note_start + (f_note.length * self.beat_width)
             f_note_y = AUTOMATION_RULER_WIDTH + (127.0 -
                 f_note.note_num) * f_note_height
             f_note_item = QtGui.QGraphicsLineItem(
