@@ -631,6 +631,12 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             self.set_tooltips(True)
         self.draw()
 
+    def mouseDoubleClickEvent(self, a_event):
+        a_event.setAccepted(True)
+        QtGui.QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
+        global_open_items(self.audio_item, a_reset_scrollbar=True)
+        MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
+
     def generic_hoverEnterEvent(self, a_event):
         QtGui.QApplication.setOverrideCursor(
             QtGui.QCursor(QtCore.Qt.SizeHorCursor))
@@ -827,24 +833,6 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 #        f_file_menu.addSeparator()
 
         f_properties_menu = f_menu.addMenu(_("Properties"))
-        f_output_menu = f_properties_menu.addMenu("Track")
-        f_output_menu.triggered.connect(self.output_menu_triggered)
-
-        f_output_tracks = {x.audio_item.output_track
-            for x in SEQUENCER.get_selected()}
-
-        for f_track_name, f_index in zip(
-        TRACK_NAMES, range(len(TRACK_NAMES))):
-            f_action = f_output_menu.addAction(f_track_name)
-            if len(f_output_tracks) == 1 and f_index in f_output_tracks:
-                f_action.setCheckable(True)
-                f_action.setChecked(True)
-
-        f_ts_mode_menu = f_properties_menu.addMenu("Timestretch Mode")
-        f_ts_mode_menu.triggered.connect(self.ts_mode_menu_triggered)
-
-        f_ts_modes = {x.audio_item.time_stretch_mode
-            for x in SEQUENCER.get_selected()}
 
         f_reset_end_action = f_properties_menu.addAction(_("Reset Ends"))
         f_reset_end_action.triggered.connect(self.reset_end)
@@ -860,35 +848,12 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         f_menu.exec_(QtGui.QCursor.pos())
         CURRENT_AUDIO_ITEM_INDEX = f_CURRENT_AUDIO_ITEM_INDEX
 
-    def output_menu_triggered(self, a_action):
-        f_index = TRACK_NAMES.index(str(a_action.text()))
-        f_list = [x.audio_item for x in SEQUENCER.audio_items
-            if x.isSelected()]
-        for f_item in f_list:
-            f_item.output_track = f_index
-        PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
-        PROJECT.commit(_("Change output track for audio item(s)"))
-        global_open_audio_items()
-
     def select_file_instance(self):
         SEQUENCER.scene.clearSelection()
         f_uid = self.audio_item.uid
         for f_item in SEQUENCER.audio_items:
             if f_item.audio_item.uid == f_uid:
                 f_item.setSelected(True)
-
-    def set_paif_for_all_instance(self):
-        f_paif = PROJECT.get_audio_per_item_fx_region(
-            CURRENT_REGION.uid)
-        f_paif_row = f_paif.get_row(self.track_num)
-        PROJECT.set_paif_for_all_audio_items(
-            self.audio_item.uid, f_paif_row)
-
-    def set_all_output_menu_triggered(self, a_action):
-        f_index = TRACK_NAMES.index(str(a_action.text()))
-        PROJECT.set_output_for_all_audio_items(
-            self.audio_item.uid, f_index)
-        global_open_audio_items()
 
     def sends_dialog(self):
         def ok_handler():
@@ -904,9 +869,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                 f_item.send2 = f_track_cboxes[2].currentIndex() - 1
                 f_item.s2_vol = get_vol(f_track_vols[2].value())
                 f_item.s2_sc = f_sc_checkboxes[2].isChecked()
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
-            PROJECT.commit(_("Update sends for audio item(s)"))
-            global_open_audio_items()
+            PROJECT.save_region(CURRENT_REGION)
+            PROJECT.commit(_("Update sends for sequencer item(s)"))
             f_dialog.close()
 
         def cancel_handler():
@@ -990,7 +954,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                 f_item.audio_item.clip_at_region_end(
                     f_current_region_length, f_global_tempo,
                     f_item.graph_object.length_in_seconds, False)
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.save_region(CURRENT_REGION)
             PROJECT.commit(_("Move audio item(s) to region end"))
             global_open_audio_items(True)
 
@@ -1001,8 +965,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             f_item.audio_item.sample_end = 1000.0
             self.draw()
             self.clip_at_region_end()
-        PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
-        PROJECT.commit(_("Reset sample ends for audio item(s)"))
+        PROJECT.save_region(CURRENT_REGION)
+        PROJECT.commit(_("Reset sample ends for item(s)"))
         global_open_audio_items()
 
     def copy_file_path_to_clipboard(self):
@@ -7138,6 +7102,7 @@ class item_list_editor:
         self.notes_table_widget.resizeColumnsToContents()
         self.ccs_table_widget.resizeColumnsToContents()
         self.pitchbend_table_widget.resizeColumnsToContents()
+        global_open_audio_items()
 
 
 class midi_device:
