@@ -509,7 +509,6 @@ def global_update_track_comboboxes(a_index=None, a_value=None):
 #TODO:  Clean these up...
 BEATS_PER_MINUTE = 128.0
 BEATS_PER_SECOND = BEATS_PER_MINUTE / 60.0
-BARS_PER_SECOND = BEATS_PER_SECOND * 0.25
 
 def pydaw_set_bpm(a_bpm):
     global BEATS_PER_MINUTE, BEATS_PER_SECOND, BARS_PER_SECOND
@@ -518,9 +517,9 @@ def pydaw_set_bpm(a_bpm):
     BARS_PER_SECOND = BEATS_PER_SECOND * 0.25
     pydaw_widgets.set_global_tempo(a_bpm)
 
-def pydaw_seconds_to_bars(a_seconds):
+def pydaw_seconds_to_beats(a_seconds):
     '''converts seconds to regions'''
-    return a_seconds * BARS_PER_SECOND
+    return a_seconds * BEATS_PER_SECOND
 
 class SequencerItem(QtGui.QGraphicsRectItem):
     def __init__(self, a_name, a_audio_item):
@@ -1683,9 +1682,8 @@ class ItemSequencer(QtGui.QGraphicsView):
 
 
 def pydaw_set_audio_seq_zoom(a_horizontal, a_vertical):
-    global AUDIO_PX_PER_BAR, AUDIO_PX_PER_BEAT, \
-           AUDIO_PX_PER_8TH, AUDIO_PX_PER_12TH, \
-           AUDIO_PX_PER_16TH, AUDIO_ITEM_HEIGHT
+    global AUDIO_PX_PER_BEAT, AUDIO_PX_PER_8TH, AUDIO_PX_PER_12TH, \
+        AUDIO_PX_PER_16TH, AUDIO_ITEM_HEIGHT
 
     f_width = float(AUDIO_SEQ.rect().width()) - \
         float(AUDIO_SEQ.verticalScrollBar().width()) - 6.0
@@ -1693,11 +1691,10 @@ def pydaw_set_audio_seq_zoom(a_horizontal, a_vertical):
     f_region_px = f_region_length * 100.0
     f_region_scale = f_width / f_region_px
 
-    AUDIO_PX_PER_BAR = 100.0 * a_horizontal * f_region_scale
-    AUDIO_PX_PER_BEAT = AUDIO_PX_PER_BAR * 0.25 # / 4.0
-    AUDIO_PX_PER_8TH = AUDIO_PX_PER_BAR * 0.125 # / 8.0
-    AUDIO_PX_PER_12TH = AUDIO_PX_PER_BAR / 12.0
-    AUDIO_PX_PER_16TH = AUDIO_PX_PER_BAR * 0.0625 # / 16.0
+    AUDIO_PX_PER_BEAT = 100.0 * a_horizontal * f_region_scale
+    AUDIO_PX_PER_8TH = AUDIO_PX_PER_BEAT / 2.0 # / 8.0
+    AUDIO_PX_PER_12TH = AUDIO_PX_PER_BEAT / 3.0
+    AUDIO_PX_PER_16TH = AUDIO_PX_PER_BEAT / 4.0
     pydaw_set_audio_snap(AUDIO_SNAP_VAL)
     AUDIO_ITEM_HEIGHT = 75.0 * a_vertical
 
@@ -1715,22 +1712,18 @@ def pydaw_set_audio_snap(a_val):
         AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT
         AUDIO_LINES_ENABLED = False
     elif a_val == 1:
-        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BAR
-        AUDIO_LINES_ENABLED = False
-        AUDIO_QUANTIZE_AMT = 0.25
-    elif a_val == 2:
         AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT
         AUDIO_LINES_ENABLED = False
         AUDIO_QUANTIZE_AMT = 1.0
-    elif a_val == 3:
+    elif a_val == 2:
         AUDIO_QUANTIZE_PX = AUDIO_PX_PER_8TH
         AUDIO_SNAP_RANGE = 2
         AUDIO_QUANTIZE_AMT = 2.0
-    elif a_val == 4:
+    elif a_val == 3:
         AUDIO_QUANTIZE_PX = AUDIO_PX_PER_12TH
         AUDIO_SNAP_RANGE = 3
         AUDIO_QUANTIZE_AMT = 3.0
-    elif a_val == 5:
+    elif a_val == 4:
         AUDIO_QUANTIZE_PX = AUDIO_PX_PER_16TH
         AUDIO_SNAP_RANGE = 4
         AUDIO_QUANTIZE_AMT = 4.0
@@ -1738,11 +1731,10 @@ def pydaw_set_audio_snap(a_val):
 AUDIO_LINES_ENABLED = True
 AUDIO_SNAP_RANGE = 8
 AUDIO_SNAP_VAL = 2
-AUDIO_PX_PER_BAR = 100.0
-AUDIO_PX_PER_BEAT = AUDIO_PX_PER_BAR / 4.0
-AUDIO_PX_PER_8TH = AUDIO_PX_PER_BAR / 8.0
-AUDIO_PX_PER_12TH = AUDIO_PX_PER_BAR / 12.0
-AUDIO_PX_PER_16TH = AUDIO_PX_PER_BAR / 16.0
+AUDIO_PX_PER_BEAT = 100.0
+AUDIO_PX_PER_8TH = AUDIO_PX_PER_BEAT / 2.0
+AUDIO_PX_PER_12TH = AUDIO_PX_PER_BEAT / 3.0
+AUDIO_PX_PER_16TH = AUDIO_PX_PER_BEAT / 4.0
 
 AUDIO_QUANTIZE = False
 AUDIO_QUANTIZE_PX = 25.0
@@ -1966,24 +1958,23 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         self.audio_item.timestretch_amt):
             f_temp_seconds *= self.audio_item.timestretch_amt
 
-        f_start = float(self.audio_item.start_bar) + \
-            (self.audio_item.start_beat * 0.25)
-        f_start *= AUDIO_PX_PER_BAR
+        f_start = self.audio_item.start_beat
+        f_start *= AUDIO_PX_PER_BEAT
 
-        f_length_seconds = \
-            pydaw_seconds_to_bars(f_temp_seconds) * AUDIO_PX_PER_BAR
+        f_length_seconds = pydaw_seconds_to_beats(
+            f_temp_seconds) * AUDIO_PX_PER_BEAT
         self.length_seconds_orig_px = f_length_seconds
         self.rect_orig = QtCore.QRectF(
             0.0, 0.0, f_length_seconds, AUDIO_ITEM_HEIGHT)
-        self.length_px_start = \
-            (self.audio_item.sample_start * 0.001 * f_length_seconds)
+        self.length_px_start = (self.audio_item.sample_start *
+            0.001 * f_length_seconds)
         self.length_px_minus_start = f_length_seconds - self.length_px_start
-        self.length_px_minus_end = \
-            (self.audio_item.sample_end * 0.001 * f_length_seconds)
+        self.length_px_minus_end = (self.audio_item.sample_end *
+            0.001 * f_length_seconds)
         f_length = self.length_px_minus_end - self.length_px_start
 
-        f_track_num = \
-        AUDIO_RULER_HEIGHT + (AUDIO_ITEM_HEIGHT) * self.audio_item.lane_num
+        f_track_num = (AUDIO_RULER_HEIGHT +
+            AUDIO_ITEM_HEIGHT * self.audio_item.lane_num)
 
         f_fade_in = self.audio_item.fade_in * 0.001
         f_fade_out = self.audio_item.fade_out * 0.001
@@ -2008,12 +1999,12 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             self.stretch_width_default = \
                 f_length / self.audio_item.timestretch_amt
 
-        self.sample_start_offset_px = \
-        self.audio_item.sample_start * -0.001 * self.length_seconds_orig_px
+        self.sample_start_offset_px = (self.audio_item.sample_start *
+            -0.001 * self.length_seconds_orig_px)
 
         self.start_handle_scene_min = f_start + self.sample_start_offset_px
-        self.start_handle_scene_max = \
-            self.start_handle_scene_min + self.length_seconds_orig_px
+        self.start_handle_scene_max = (self.start_handle_scene_min +
+            self.length_seconds_orig_px)
 
         if not self.waveforms_scaled:
             f_channels = len(self.painter_paths)
@@ -2056,9 +2047,9 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         or (self.audio_item.timestretch_amt_end ==
         self.audio_item.timestretch_amt)):
             self.stretch_handle.show()
-            self.stretch_handle.setPos(f_length - AUDIO_ITEM_HANDLE_SIZE,
-                                       (AUDIO_ITEM_HEIGHT * 0.5) -
-                                       (AUDIO_ITEM_HANDLE_HEIGHT * 0.5))
+            self.stretch_handle.setPos(
+                f_length - AUDIO_ITEM_HANDLE_SIZE,
+                (AUDIO_ITEM_HEIGHT * 0.5) - (AUDIO_ITEM_HANDLE_HEIGHT * 0.5))
 
     def set_tooltips(self, a_on):
         if a_on:
@@ -2086,7 +2077,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
     def clip_at_region_end(self):
         f_current_region_length = pydaw_get_current_region_length()
-        f_max_x = f_current_region_length * AUDIO_PX_PER_BAR
+        f_max_x = CURRENT_ITEM_LEN * AUDIO_PX_PER_BEAT
         f_pos_x = self.pos().x()
         f_end = f_pos_x + self.rect().width()
         if f_end > f_max_x:
@@ -2152,10 +2143,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                     a_index % len(pydaw_track_gradients)])
 
     def pos_to_musical_time(self, a_pos):
-        f_bar_frac = a_pos / AUDIO_PX_PER_BAR
-        f_pos_bars = int(f_bar_frac)
-        f_pos_beats = (f_bar_frac - f_pos_bars) * 4.0
-        return(f_pos_bars, f_pos_beats)
+        return a_pos / AUDIO_PX_PER_BEAT
 
     def start_handle_mouseClickEvent(self, a_event):
         if libmk.IS_PLAYING:
@@ -2208,7 +2196,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         self.check_selected_status()
         a_event.setAccepted(True)
         QtGui.QGraphicsRectItem.mousePressEvent(self.stretch_handle, a_event)
-        f_max_region_pos = AUDIO_PX_PER_BAR * pydaw_get_current_region_length()
+        f_max_region_pos = AUDIO_PX_PER_BEAT * CURRENT_ITEM_LEN
         for f_item in AUDIO_SEQ.audio_items:
             if f_item.isSelected() and \
             f_item.audio_item.time_stretch_mode >= 2:
@@ -3046,11 +3034,11 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         else:
             QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
             if AUDIO_QUANTIZE:
-                f_max_x = (pydaw_get_current_region_length() *
-                    AUDIO_PX_PER_BAR) - AUDIO_QUANTIZE_PX
+                f_max_x = (CURRENT_ITEM_LEN *
+                    AUDIO_PX_PER_BEAT) - AUDIO_QUANTIZE_PX
             else:
-                f_max_x = (pydaw_get_current_region_length() *
-                    AUDIO_PX_PER_BAR) - AUDIO_ITEM_HANDLE_SIZE
+                f_max_x = (CURRENT_ITEM_LEN *
+                    AUDIO_PX_PER_BEAT) - AUDIO_ITEM_HANDLE_SIZE
             for f_item in AUDIO_SEQ.audio_items:
                 if f_item.isSelected():
                     f_pos_x = f_item.pos().x()
@@ -3090,8 +3078,9 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             if f_audio_item.is_resizing:
                 f_x = f_audio_item.width_orig + f_event_diff + \
                     f_audio_item.quantize_offset
-                f_x = pydaw_clip_value(f_x, AUDIO_ITEM_HANDLE_SIZE,
-                                       f_audio_item.length_px_minus_start)
+                f_x = pydaw_clip_value(
+                    f_x, AUDIO_ITEM_HANDLE_SIZE,
+                    f_audio_item.length_px_minus_start)
                 f_x = f_audio_item.quantize(f_x)
                 f_x -= f_audio_item.quantize_offset
                 f_audio_item.setRect(0.0, 0.0, f_x, AUDIO_ITEM_HEIGHT)
@@ -3107,8 +3096,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 if f_x < f_audio_item.sample_start_offset_px:
                     f_x = f_audio_item.sample_start_offset_px
                 f_start_result = self.pos_to_musical_time(f_x)
-                f_item.start_bar = f_start_result[0]
-                f_item.start_beat = f_start_result[1]
+                f_item.start_beat = f_start_result
                 f_item.sample_start = ((f_x -
                     f_audio_item.start_handle_scene_min) /
                     (f_audio_item.start_handle_scene_max -
@@ -3168,7 +3156,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 f_item.lane_num, f_pos_y = self.y_pos_to_lane_number(f_pos_y)
                 f_audio_item.setPos(f_pos_x, f_pos_y)
                 f_start_result = f_audio_item.pos_to_musical_time(f_pos_x)
-                f_item.set_pos(f_start_result[0], f_start_result[1])
+                f_item.set_pos(0, f_start_result)
             f_audio_item.clip_at_region_end()
             f_item_str = str(f_item)
             if f_item_str != f_audio_item.orig_string:
@@ -3509,13 +3497,9 @@ class audio_items_viewer(QtGui.QGraphicsView):
         PROJECT.commit(_("Glued audio items"))
         global_open_audio_items()
 
-    def set_playback_pos(self, a_bar=None, a_beat=0.0):
-        if a_bar is None:
-            f_bar = TRANSPORT.get_bar_value()
-        else:
-            f_bar = int(a_bar)
+    def set_playback_pos(self, a_beat=0.0):
         f_beat = float(a_beat)
-        f_pos = (f_bar * AUDIO_PX_PER_BAR) + (f_beat * AUDIO_PX_PER_BEAT)
+        f_pos = (f_beat * AUDIO_PX_PER_BEAT)
         self.playback_cursor.setPos(f_pos, 0.0)
 
     def set_playback_clipboard(self):
@@ -3551,7 +3535,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
 
     def ruler_click_event(self, a_event):
         if not libmk.IS_PLAYING:
-            f_val = int(a_event.pos().x() / AUDIO_PX_PER_BAR)
+            f_val = int(a_event.pos().x() / AUDIO_PX_PER_BEAT)
             TRANSPORT.set_bar_value(f_val)
 
     def check_line_count(self):
@@ -4063,7 +4047,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         self.snap_combobox = QtGui.QComboBox()
         self.snap_combobox.setFixedWidth(105)
         self.snap_combobox.addItems(
-            [_("None"), _("Bar"), _("Beat"), "1/8th", "1/12th", "1/16th"])
+            [_("None"), _("Beat"), "1/8th", "1/12th", "1/16th"])
         self.controls_grid_layout.addWidget(QtGui.QLabel(_("Snap:")), 0, 9)
         self.controls_grid_layout.addWidget(self.snap_combobox, 0, 10)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)

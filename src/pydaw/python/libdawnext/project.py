@@ -1643,11 +1643,15 @@ class pydaw_item:
                     f_result.add_pb(pydaw_pitchbend.from_arr(f_event_arr[1:]))
                 elif f_event_arr[0] == "a":
                     f_result.add_item(
-                        pydaw_audio_item.from_arr(f_event_arr[1:]))
+                        int(f_event_arr[1]),
+                        pydaw_audio_item.from_arr(f_event_arr[2:]))
                 elif f_event_arr[0] == "L":
                     f_result.length = int(f_event_arr[1])
                 elif f_event_arr[0] == "U":
                     f_result.uid = int(f_event_arr[1])
+                else:
+                    print(f_event_arr)
+                    assert(False)
         return f_result
 
     def __str__(self):
@@ -1656,7 +1660,7 @@ class pydaw_item:
         f_result.append("L|{}".format(self.length))
         f_result.append("U|{}".format(self.uid))
         for k, f_item in list(self.items.items()):
-            f_result.append("{}|{}".format(k, f_item))
+            f_result.append("a|{}|{}".format(k, f_item))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 
