@@ -398,7 +398,9 @@ class DawNextProject(libmk.AbstractProject):
         return f_result
 
     def get_item_by_uid(self, a_item_uid):
-        return pydaw_item.from_str(self.get_item_string(a_item_uid))
+        a_item_uid = int(a_item_uid)
+        return pydaw_item.from_str(
+            self.get_item_string(a_item_uid), a_item_uid)
 
     def get_item_by_name(self, a_item_name):
         f_items_dict = self.get_items_dict()
@@ -633,17 +635,6 @@ class DawNextProject(libmk.AbstractProject):
         else:
             return None
 
-    def get_audio_region_string(self, a_region_uid):
-        f_file = open(
-            "{}/{}".format(self.regions_audio_folder, a_region_uid), "r")
-        f_result = f_file.read()
-        f_file.close()
-        return f_result
-
-    def get_audio_region(self, a_region_uid):
-        return pydaw_audio_region.from_str(
-            self.get_audio_region_string(a_region_uid))
-
     def get_audio_per_item_fx_region(self, a_region_uid):
         f_path = "{}/{}".format(self.audio_per_item_fx_folder, a_region_uid)
         #TODO:  Sort this out at PyDAWv4 and create an empty file first
@@ -699,7 +690,7 @@ class DawNextProject(libmk.AbstractProject):
         f_item_name = self.get_next_default_item_name(
             a_items_dict=f_items_dict)
         f_uid = f_items_dict.add_new_item(f_item_name)
-        self.save_file(pydaw_folder_items, str(f_uid), pydaw_terminating_char)
+        self.save_file(pydaw_folder_items, str(f_uid), pydaw_item(f_uid))
         self.IPC.pydaw_save_item(f_uid)
         self.save_items_dict(f_items_dict)
         return f_uid
@@ -1326,11 +1317,13 @@ def pydaw_velocity_mod(
 
 
 class pydaw_item:
-    def __init__(self):
+    def __init__(self, a_uid):
         self.items = {}  # audio items:  TODO rename
         self.notes = []
         self.ccs = []
         self.pitchbends = []
+        self.length = 4
+        self.uid = int(a_uid)
 
     def painter_path(self, a_width, a_height):
         f_result = QtGui.QPainterPath()
@@ -1440,7 +1433,7 @@ class pydaw_item:
                         break
 
         f_quantized_value = bar_frac_text_to_float(a_beat_frac)
-        f_quantize_multiple = 1.0/f_quantized_value
+        f_quantize_multiple = 1.0 / f_quantized_value
 
         for note in f_notes:
             if a_selected_only and not note.is_selected:
@@ -1632,8 +1625,8 @@ class pydaw_item:
         pass
 
     @staticmethod
-    def from_str(a_str):
-        f_result = pydaw_item()
+    def from_str(a_str, a_uid):
+        f_result = pydaw_item(a_uid)
         f_arr = a_str.split("\n")
         for f_event_str in f_arr:
             if f_event_str == pydaw_terminating_char:
@@ -1647,13 +1640,19 @@ class pydaw_item:
                 elif f_event_arr[0] == "p":
                     f_result.add_pb(pydaw_pitchbend.from_arr(f_event_arr[1:]))
                 elif f_event_arr[0] == "a":
-                    f_result.add_item(pydaw_audio_item.from_arr(
-                        f_event_arr[1:]))
+                    f_result.add_item(
+                        pydaw_audio_item.from_arr(f_event_arr[1:]))
+                elif f_event_arr[0] == "L":
+                    f_result.length = int(f_event_arr[1])
+                elif f_event_arr[0] == "U":
+                    f_result.uid = int(f_event_arr[1])
         return f_result
 
     def __str__(self):
         f_result = [str(x) for x in
             sorted(self.notes + self.ccs + self.pitchbends)]
+        f_result.append("L|{}".format(self.length))
+        f_result.append("U|{}".format(self.uid))
         for k, f_item in list(self.items.items()):
             f_result.append("{}|{}".format(k, f_item))
         f_result.append(pydaw_terminating_char)
