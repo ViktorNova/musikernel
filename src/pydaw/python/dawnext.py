@@ -158,7 +158,7 @@ class region_settings:
         self.hlayout0.addWidget(self.length_spinbox)
         f_scrollbar = SEQUENCER.horizontalScrollBar()
         f_scrollbar.setSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.hlayout0.addWidget(f_scrollbar)
 
     def edit_mode_changed(self, a_value=None):
@@ -7698,11 +7698,12 @@ class pydaw_main_window(QtGui.QScrollArea):
 
         self.song_region_tab = QtGui.QWidget()
         self.song_region_vlayout = QtGui.QVBoxLayout()
-        self.song_region_vlayout.setMargin(3)
+        self.song_region_vlayout.setMargin(1)
         self.song_region_tab.setLayout(self.song_region_vlayout)
-        self.song_region_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.song_region_splitter.addWidget(self.song_region_tab)
-        self.main_tabwidget.addTab(self.song_region_splitter, _("Sequencer"))
+        self.sequencer_widget = QtGui.QWidget()
+        self.sequencer_vlayout = QtGui.QVBoxLayout(self.sequencer_widget)
+        self.sequencer_vlayout.addWidget(self.song_region_tab)
+        self.main_tabwidget.addTab(self.sequencer_widget, _("Sequencer"))
 
         self.song_region_vlayout.addLayout(REGION_SETTINGS.hlayout0)
 
@@ -7717,7 +7718,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.midi_scroll_area.setWidget(self.midi_scroll_widget)
         self.midi_hlayout.addWidget(TRACK_PANEL.tracks_widget)
         self.midi_hlayout.addWidget(SEQUENCER)
-        self.song_region_splitter.addWidget(self.midi_scroll_area)
+        self.sequencer_vlayout.addWidget(self.midi_scroll_area)
 
         self.midi_scroll_area.scrollContentsBy = self.midi_scrollContentsBy
 

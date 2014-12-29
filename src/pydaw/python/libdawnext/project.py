@@ -644,8 +644,8 @@ class DawNextProject(libmk.AbstractProject):
             f_text = pydaw_read_file_text(f_path)
             return pydaw_audio_item_fx_region.from_str(f_text)
 
-    def save_audio_per_item_fx_region(self, a_region_uid, a_paif,
-                                      a_commit=True):
+    def save_audio_per_item_fx_region(
+            self, a_region_uid, a_paif, a_commit=True):
         if not self.suppress_updates:
             self.save_file(
                 pydaw_folder_audio_per_item_fx, str(a_region_uid), str(a_paif))
@@ -713,8 +713,9 @@ class DawNextProject(libmk.AbstractProject):
                 "{}/{}".format(self.regions_atm_folder, f_old_uid)))
         f_paif_file = "{}/{}".format(self.audio_per_item_fx_folder, f_old_uid)
         if os.path.isfile(f_paif_file):
-            self.save_file(pydaw_folder_audio_per_item_fx, str(f_uid),
-                           pydaw_read_file_text(f_paif_file))
+            self.save_file(
+                pydaw_folder_audio_per_item_fx, str(f_uid),
+                pydaw_read_file_text(f_paif_file))
         self.save_regions_dict(f_regions_dict)
         return f_uid
 
@@ -739,7 +740,8 @@ class DawNextProject(libmk.AbstractProject):
         f_items_dict = self.get_items_dict()
         f_uid = f_items_dict.add_new_item(a_new_item)
         f_old_uid = f_items_dict.get_uid_by_name(a_old_item)
-        self.save_file(pydaw_folder_items,  str(f_uid), pydaw_read_file_text(
+        self.save_file(
+            pydaw_folder_items,  str(f_uid), pydaw_read_file_text(
             "{}/{}".format(self.items_folder, f_old_uid)))
         self.IPC.pydaw_save_item(f_uid)
         self.save_items_dict(f_items_dict)
@@ -790,8 +792,8 @@ class DawNextProject(libmk.AbstractProject):
         else:
             return False
 
-    def get_next_default_item_name(self, a_item_name="item",
-                                   a_items_dict=None):
+    def get_next_default_item_name(
+            self, a_item_name="item", a_items_dict=None):
         f_item_name = str(a_item_name)
         f_end_number = re.search(r"[0-9]+$", f_item_name)
         if f_item_name == "item":
