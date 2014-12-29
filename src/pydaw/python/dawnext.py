@@ -635,7 +635,9 @@ class SequencerItem(QtGui.QGraphicsRectItem):
     def mouseDoubleClickEvent(self, a_event):
         a_event.setAccepted(True)
         QtGui.QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
-        global_open_items(self.name, a_reset_scrollbar=True)
+        global_open_items(
+            self.name, a_reset_scrollbar=True,
+            a_len=self.audio_item.length_beats)
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
 
     def generic_hoverEnterEvent(self, a_event):
@@ -1687,7 +1689,7 @@ def pydaw_set_audio_seq_zoom(a_horizontal, a_vertical):
 
     f_width = float(AUDIO_SEQ.rect().width()) - \
         float(AUDIO_SEQ.verticalScrollBar().width()) - 6.0
-    f_region_length = pydaw_get_current_region_length()
+    f_region_length = CURRENT_ITEM_LEN
     f_region_px = f_region_length * 100.0
     f_region_scale = f_width / f_region_px
 
@@ -3067,7 +3069,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             return
         QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
         QtGui.QApplication.restoreOverrideCursor()
-        f_audio_items =  AUDIO_ITEMS
+        f_audio_items = CURRENT_ITEM
         #Set to True when testing, set to False for better UI performance...
         f_reset_selection = True
         f_did_change = False
@@ -3419,28 +3421,17 @@ class audio_items_viewer(QtGui.QGraphicsView):
         if self.check_running():
             return
 
-        f_max_start = CURRENT_REGION.length_bars - 1
-
-        f_pos_bars = int(f_x / AUDIO_PX_PER_BAR)
-        f_pos_bars = pydaw_clip_value(f_pos_bars, 0, f_max_start)
-
-        if f_pos_bars == f_max_start:
-            f_beat_frac = 0.0
-        else:
-            f_beat_frac = ((f_x % AUDIO_PX_PER_BAR) / AUDIO_PX_PER_BAR) * 4.0
-            f_beat_frac = pydaw_clip_value(
-                f_beat_frac, 0.0, 3.99, a_round=True)
-        print("{}".format(f_beat_frac))
+        f_beat_frac = f_x / AUDIO_PX_PER_BEAT
+        f_beat_frac = pydaw_clip_min(f_beat_frac, 0.0)
+        print("f_beat_frac: {}".format(f_beat_frac))
         if AUDIO_QUANTIZE:
-            f_beat_frac = \
-                int(f_beat_frac * AUDIO_QUANTIZE_AMT) / AUDIO_QUANTIZE_AMT
-
-        print("{} {}".format(f_pos_bars, f_beat_frac))
+            f_beat_frac = int(
+                f_beat_frac * AUDIO_QUANTIZE_AMT) / AUDIO_QUANTIZE_AMT
 
         f_lane_num = int((f_y - AUDIO_RULER_HEIGHT) / AUDIO_ITEM_HEIGHT)
         f_lane_num = pydaw_clip_value(f_lane_num, 0, AUDIO_ITEM_MAX_LANE)
 
-        f_items = PROJECT.get_audio_region(CURRENT_REGION.uid)
+        f_items = CURRENT_ITEM
 
         for f_file_name in a_item_list:
             f_file_name_str = str(f_file_name)
@@ -3454,17 +3445,17 @@ class audio_items_viewer(QtGui.QGraphicsView):
                 else:
                     f_uid = libmk.PROJECT.get_wav_uid_by_name(f_file_name_str)
                     f_item = pydaw_audio_item(
-                        f_uid, a_start_bar=f_pos_bars,
-                        a_start_beat=f_beat_frac, a_lane_num=f_lane_num,
+                        f_uid, a_start_bar=0, a_start_beat=f_beat_frac,
+                        a_lane_num=f_lane_num,
                         a_output_track=DEFAULT_AUDIO_TRACK)
                     f_items.add_item(f_index, f_item)
                     f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_uid)
                     f_audio_item = AUDIO_SEQ.draw_item(
                         f_index, f_item, f_graph)
                     f_audio_item.clip_at_region_end()
-        PROJECT.save_audio_region(CURRENT_REGION.uid, f_items)
+        PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
         PROJECT.commit(
-            _("Added audio items to region {}").format(CURRENT_REGION.uid))
+            _("Added audio items to item {}").format(CURRENT_ITEM.uid))
         global_open_audio_items()
         self.last_open_dir = os.path.dirname(f_file_name_str)
 
@@ -3596,8 +3587,8 @@ class audio_items_viewer(QtGui.QGraphicsView):
 
 
     def draw_headers(self, a_cursor_pos=None):
-        f_region_length = pydaw_get_current_region_length()
-        f_size = AUDIO_PX_PER_BAR * f_region_length
+        f_region_length = CURRENT_ITEM_LEN
+        f_size = AUDIO_PX_PER_BEAT * f_region_length
         self.ruler = QtGui.QGraphicsRectItem(0, 0, f_size, AUDIO_RULER_HEIGHT)
         self.ruler.setZValue(1500.0)
         self.ruler.setBrush(AUDIO_ITEMS_HEADER_GRADIENT)
@@ -3614,7 +3605,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
             0.0, 0.0, 0.0, f_total_height, QtGui.QPen(QtCore.Qt.red, 2.0))
         self.playback_cursor.setZValue(1000.0)
         i3 = 0.0
-        for i in range(f_region_length):
+        for i in range(int(f_region_length) + 1):
             f_number = QtGui.QGraphicsSimpleTextItem(
                 "{}".format(i + 1), self.ruler)
             f_number.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
@@ -3630,19 +3621,19 @@ class audio_items_viewer(QtGui.QGraphicsView):
                         f_sub_x, AUDIO_RULER_HEIGHT,
                         f_sub_x, f_total_height, f_16th_pen)
                     self.beat_line_list.append(f_line)
-            for f_beat_i in range(1, 4):
-                f_beat_x = i3 + (AUDIO_PX_PER_BEAT * f_beat_i)
-                f_line = self.scene.addLine(
-                    f_beat_x, 0.0, f_beat_x, f_total_height, f_beat_pen)
-                self.beat_line_list.append(f_line)
-                if AUDIO_LINES_ENABLED:
-                    for f_i4 in range(1, AUDIO_SNAP_RANGE):
-                        f_sub_x = f_beat_x + (AUDIO_QUANTIZE_PX * f_i4)
-                        f_line = self.scene.addLine(
-                            f_sub_x, AUDIO_RULER_HEIGHT,
-                            f_sub_x, f_total_height, f_16th_pen)
-                        self.beat_line_list.append(f_line)
-            i3 += AUDIO_PX_PER_BAR
+#            for f_beat_i in range(1, 4):
+#                f_beat_x = i3 + (AUDIO_PX_PER_BEAT * f_beat_i)
+#                f_line = self.scene.addLine(
+#                    f_beat_x, 0.0, f_beat_x, f_total_height, f_beat_pen)
+#                self.beat_line_list.append(f_line)
+#                if AUDIO_LINES_ENABLED:
+#                    for f_i4 in range(1, AUDIO_SNAP_RANGE):
+#                        f_sub_x = f_beat_x + (AUDIO_QUANTIZE_PX * f_i4)
+#                        f_line = self.scene.addLine(
+#                            f_sub_x, AUDIO_RULER_HEIGHT,
+#                            f_sub_x, f_total_height, f_16th_pen)
+#                        self.beat_line_list.append(f_line)
+            i3 += AUDIO_PX_PER_BEAT
         self.scene.addLine(
             i3, AUDIO_RULER_HEIGHT, i3, f_total_height, f_reg_pen)
         for i2 in range(AUDIO_ITEM_LANE_COUNT):
@@ -4840,7 +4831,6 @@ class piano_key_item(QtGui.QGraphicsRectItem):
 
 class piano_roll_editor(QtGui.QGraphicsView):
     def __init__(self):
-        self.item_length = 4.0
         self.viewer_width = 1000
         self.grid_div = 16
 
@@ -5183,7 +5173,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
         self.header.setBrush(PIANO_ROLL_HEADER_GRADIENT)
         self.scene.addItem(self.header)
         #self.header.mapToScene(self.piano_width + self.padding, 0.0)
-        self.beat_width = self.viewer_width / self.item_length
+        self.beat_width = self.viewer_width / CURRENT_ITEM_LEN
         self.value_width = self.beat_width / self.grid_div
         self.header.setZValue(1003.0)
 
@@ -5330,8 +5320,8 @@ class piano_roll_editor(QtGui.QGraphicsView):
             f_octave_brushes = \
                 f_octave_brushes[f_index:] + f_octave_brushes[:f_index]
         self.first_open = False
-        f_note_bar = QtGui.QGraphicsRectItem(0, 0, self.viewer_width,
-                                             self.note_height)
+        f_note_bar = QtGui.QGraphicsRectItem(
+            0, 0, self.viewer_width, self.note_height)
         f_note_bar.hoverMoveEvent = self.hover_restore_cursor_event
         f_note_bar.setBrush(f_base_brush)
         self.scene.addItem(f_note_bar)
@@ -5357,12 +5347,12 @@ class piano_roll_editor(QtGui.QGraphicsView):
         f_line_pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
         f_beat_y = \
             self.piano_height + PIANO_ROLL_HEADER_HEIGHT + self.note_height
-        for i in range(0, int(self.item_length) + 1):
+        for i in range(0, int(CURRENT_ITEM_LEN) + 1):
             f_beat_x = (self.beat_width * i) + self.piano_width
             f_beat = self.scene.addLine(f_beat_x, 0, f_beat_x, f_beat_y)
             f_beat_number = i
             f_beat.setPen(f_beat_pen)
-            if i < self.item_length:
+            if i < CURRENT_ITEM_LEN:
                 f_number = QtGui.QGraphicsSimpleTextItem(
                     str(f_beat_number + 1), self.header)
                 f_number.setFlag(
@@ -5396,7 +5386,6 @@ class piano_roll_editor(QtGui.QGraphicsView):
         self.setSceneRect(
             0.0, 0.0, self.viewer_width + PIANO_ROLL_GRID_WIDTH,
             self.piano_height + PIANO_ROLL_HEADER_HEIGHT + 24.0)
-        self.item_length = CURRENT_ITEM.length
         global PIANO_ROLL_GRID_MAX_START_TIME
         PIANO_ROLL_GRID_MAX_START_TIME = (PIANO_ROLL_GRID_WIDTH -
             1.0) + PIANO_KEYS_WIDTH
@@ -6507,13 +6496,16 @@ def global_set_midi_zoom(a_val):
     global_set_automation_zoom()
 
 
-def global_open_items(a_items=None, a_reset_scrollbar=False):
+def global_open_items(a_items=None, a_reset_scrollbar=False, a_len=None):
     """ a_items is a str which is the name of the item.
         Leave blank to open the existing list
     """
-    global CURRENT_ITEM, CURRENT_ITEM_NAME, LAST_ITEM, LAST_ITEM_NAME
+    global CURRENT_ITEM, CURRENT_ITEM_NAME, LAST_ITEM, \
+        LAST_ITEM_NAME, CURRENT_ITEM_LEN
 
     if a_items is not None:
+        if a_len:
+            CURRENT_ITEM_LEN = a_len
         ITEM_EDITOR.enabled = True
         PIANO_ROLL_EDITOR.selected_note_strings = []
         global_set_piano_roll_zoom()
@@ -6562,6 +6554,7 @@ CURRENT_ITEM_NAME = None
 LAST_ITEM_NAME = None
 CURRENT_ITEM = None
 LAST_ITEM = None
+CURRENT_ITEM_LEN = 4
 
 class item_list_editor:
     def __init__(self):
