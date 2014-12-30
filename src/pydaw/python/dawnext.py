@@ -1407,55 +1407,47 @@ class ItemSequencer(QtGui.QGraphicsView):
     def add_items(self, f_x, f_y, a_item_list):
         if self.check_running():
             return
-        f_max_start = CURRENT_REGION.length_bars - 1
 
-        f_pos_bars = int(f_x / SEQUENCER_PX_PER_BEAT)
-        f_pos_bars = pydaw_clip_value(f_pos_bars, 0, f_max_start)
+        f_beat_frac = (f_x / SEQUENCER_PX_PER_BEAT)
+        f_beat_frac = pydaw_clip_min(f_beat_frac, 0.0)
 
-        if f_pos_bars == f_max_start:
-            f_beat_frac = 0.0
-        else:
-            f_beat_frac = ((f_x % SEQUENCER_PX_PER_BEAT) /
-                SEQUENCER_PX_PER_BEAT) * 4.0
-            f_beat_frac = pydaw_clip_value(
-                f_beat_frac, 0.0, 3.99, a_round=True)
-        print("{}".format(f_beat_frac))
+        f_seconds_per_beat = 60.0 / BEATS_PER_MINUTE
+
         if AUDIO_QUANTIZE:
-            f_beat_frac = \
-                int(f_beat_frac * AUDIO_QUANTIZE_AMT) / AUDIO_QUANTIZE_AMT
+            f_beat_frac = int(f_beat_frac *
+                AUDIO_QUANTIZE_AMT) / AUDIO_QUANTIZE_AMT
 
-        print("{} {}".format(f_pos_bars, f_beat_frac))
-
-        f_lane_num = int((f_y - AUDIO_RULER_HEIGHT) /
+        f_lane_num = int((f_y - REGION_EDITOR_HEADER_HEIGHT) /
             REGION_EDITOR_TRACK_HEIGHT)
         f_lane_num = pydaw_clip_value(f_lane_num, 0, AUDIO_ITEM_MAX_LANE)
-
-        f_items = PROJECT.get_audio_region(CURRENT_REGION.uid)
 
         for f_file_name in a_item_list:
             f_file_name_str = str(f_file_name)
             if not f_file_name_str is None and not f_file_name_str == "":
+                f_item_uid = PROJECT.create_empty_item()
+                f_items = PROJECT.get_item_by_uid(f_item_uid)
                 f_index = f_items.get_next_index()
+
                 if f_index == -1:
                     QtGui.QMessageBox.warning(self, _("Error"),
                     _("No more available audio item slots, "
                     "max per region is {}").format(MAX_AUDIO_ITEM_COUNT))
                     break
-                else:
-                    f_uid = libmk.PROJECT.get_wav_uid_by_name(f_file_name_str)
-                    f_item = pydaw_audio_item(
-                        f_uid, a_start_bar=f_pos_bars,
-                        a_start_beat=f_beat_frac, a_lane_num=f_lane_num,
-                        a_output_track=DEFAULT_AUDIO_TRACK)
-                    f_items.add_item(f_index, f_item)
-                    f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_uid)
-                    f_audio_item = SEQUENCER.draw_item(
-                        f_index, f_item, f_graph)
-                    f_audio_item.clip_at_region_end()
-        PROJECT.save_audio_region(CURRENT_REGION.uid, f_items)
-        PROJECT.commit(
-            _("Added audio items to region {}").format(CURRENT_REGION.uid))
-        global_open_audio_items()
+
+                f_uid = libmk.PROJECT.get_wav_uid_by_name(f_file_name_str)
+                f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_uid)
+                f_length = f_graph.length_in_seconds / f_seconds_per_beat
+                CURRENT_REGION.add_item_ref_by_uid(
+                    f_lane_num, f_beat_frac, f_length, f_item_uid)
+                f_item = pydaw_audio_item(
+                    f_uid, a_start_bar=0, a_start_beat=0.0,
+                    a_lane_num=0, a_output_track=f_lane_num)
+                f_items.add_item(f_index, f_item)
+                PROJECT.save_item_by_uid(f_item_uid, f_items)
+
+        PROJECT.save_region(CURRENT_REGION)
+        PROJECT.commit("Added audio items")
+        REGION_SETTINGS.open_region()
         self.last_open_dir = os.path.dirname(f_file_name_str)
 
     def glue_selected(self):
