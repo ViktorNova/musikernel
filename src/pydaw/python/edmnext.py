@@ -9158,14 +9158,6 @@ def global_new_project(a_project_file):
 
 PROJECT = EdmNextProject(global_pydaw_with_audio)
 
-TIMESTRETCH_MODES = [
-    _("None"), _("Pitch(affecting time)"), _("Time(affecting pitch)"),
-    "Rubberband", "Rubberband(formants)", "SBSMS", "Paulstretch"]
-
-CRISPNESS_SETTINGS = [
-    _("0 (smeared)"), _("1 (piano)"), "2", "3",
-    "4", "5 (normal)", _("6 (sharp, drums)")]
-
 TRACK_NAMES = ["Master" if x == 0 else "track{}".format(x)
     for x in range(TRACK_COUNT_ALL)]
 

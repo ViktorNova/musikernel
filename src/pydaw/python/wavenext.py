@@ -1264,14 +1264,6 @@ PROJECT = WaveNextProject(True)
 
 ALL_PEAK_METERS = {}
 
-TIMESTRETCH_MODES = [
-    _("None"), _("Pitch(affecting time)"), _("Time(affecting pitch)"),
-    "Rubberband", "Rubberband(formants)", "SBSMS", "Paulstretch"]
-
-CRISPNESS_SETTINGS = [
-    _("0 (smeared)"), _("1 (piano)"), "2", "3",
-    "4", "5 (normal)", _("6 (sharp, drums)")]
-
 WAVE_EDITOR = pydaw_wave_editor_widget()
 TRANSPORT = transport_widget()
 MAIN_WINDOW = pydaw_main_window()

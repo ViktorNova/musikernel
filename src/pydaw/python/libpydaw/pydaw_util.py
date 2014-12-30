@@ -28,6 +28,14 @@ global_pydaw_file_type_string = 'MusiKernel Project (default.musikernel)'
 global_euphoria_file_type_string = 'Euphoria Sample File (*.u4ia4)'
 global_euphoria_file_type_ext = '.u4ia4'
 
+TIMESTRETCH_MODES = [
+    "None", "Pitch(affecting time)", "Time(affecting pitch)",
+    "Rubberband", "Rubberband(formants)", "SBSMS", "Paulstretch"]
+
+CRISPNESS_SETTINGS = [
+    "0 (smeared)", "1 (piano)", "2", "3",
+    "4", "5 (normal)", "6 (sharp, drums)"]
+
 BIN_PATH = None
 RENDER_BIN_PATH = None
 global_pydaw_is_sandboxed = False

@@ -13,10 +13,8 @@ GNU General Public License for more details.
 
 """
 
-try:
-    from libpydaw.pydaw_util import INSTALL_PREFIX
-except ImportError:
-    from pydaw_util import INSTALL_PREFIX
+
+from .pydaw_util import INSTALL_PREFIX
 
 import locale
 import gettext
