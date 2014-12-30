@@ -1288,7 +1288,8 @@ class ItemSequencer(QtGui.QGraphicsView):
         if a_event.modifiers() == QtCore.Qt.ControlModifier:
             self.scene.clearSelection()
             f_pos = a_event.scenePos()
-            f_pos_x, f_pos_y = f_pos.x(), f_pos.y()
+            f_pos_x = f_pos.x()
+            f_pos_y = f_pos.y() - REGION_EDITOR_HEADER_HEIGHT
             f_beat = float(f_pos_x // SEQUENCER_PX_PER_BEAT)
             f_track = int(f_pos_y // REGION_EDITOR_TRACK_HEIGHT)
             f_uid = PROJECT.create_empty_item()
