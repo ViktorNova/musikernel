@@ -1339,14 +1339,9 @@ class ItemSequencer(QtGui.QGraphicsView):
             QtGui.QGraphicsView.keyPressEvent(self, a_event)
         QtGui.QApplication.restoreOverrideCursor()
 
-    def scrollContentsBy(self, x, y):
-        QtGui.QGraphicsView.scrollContentsBy(self, x, y)
-        self.set_ruler_y_pos()
-
     def set_ruler_y_pos(self, a_y=None):
         if a_y is not None:
             self.ruler_y_pos = a_y
-        print(self.ruler_y_pos)
         self.ruler.setPos(0.0, self.ruler_y_pos - 2.0)
 
     def get_selected(self):
