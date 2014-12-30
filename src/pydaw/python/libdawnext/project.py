@@ -62,6 +62,7 @@ class DawNextProject(libmk.AbstractProject):
         self.last_region_number = 1
         self.history_files = []
         self.history_commits = []
+        self.painter_path_cache = {}
         self.history_undo_cursor = 0
         self.IPC = DawNextOsc(a_with_audio)
         self.suppress_updates = False
@@ -661,10 +662,20 @@ class DawNextProject(libmk.AbstractProject):
         if not self.suppress_updates:
             f_items_dict = self.get_items_dict()
             f_uid = f_items_dict.get_uid_by_name(a_name)
-            self.save_file(pydaw_folder_items, str(f_uid), str(a_item))
-            self.IPC.pydaw_save_item(f_uid)
+            self.save_item_by_uid(f_uid, a_item)
+
+    def get_item_path(self, a_uid, a_px_per_beat, a_height):
+        if a_uid in self.painter_path_cache:
+            return self.painter_path_cache[a_uid]
+        else:
+            f_item_obj = self.get_item_by_uid(a_uid)
+            f_path = f_item_obj.painter_path(a_px_per_beat, a_height)
+            self.painter_path_cache[a_uid] = f_path
+            return f_path
 
     def save_item_by_uid(self, a_uid, a_item, a_new_item=False):
+        if a_uid in self.painter_path_cache:
+            self.painter_path_cache.pop(a_uid)
         if not self.suppress_updates:
             f_uid = int(a_uid)
             self.save_file(

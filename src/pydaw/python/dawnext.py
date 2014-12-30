@@ -1258,7 +1258,6 @@ class ItemSequencer(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
         self.reset_line_lists()
-        self.painter_path_cache = {}
         self.h_zoom = 1.0
         self.v_zoom = 1.0
         self.ruler_y_pos = 0.0
@@ -1654,13 +1653,9 @@ class ItemSequencer(QtGui.QGraphicsView):
             self.is_playing = True
 
     def draw_item(self, a_name, a_item):
-        if a_name in self.painter_path_cache:
-            f_path = self.painter_path_cache[a_name]
-        else:
-            f_item_obj = PROJECT.get_item_by_name(a_name)
-            f_path = f_item_obj.painter_path(
-                SEQUENCER_PX_PER_BEAT, REGION_EDITOR_TRACK_HEIGHT)
-            self.painter_path_cache[a_name] = f_path
+        f_path = PROJECT.get_item_path(
+            a_item.item_uid, SEQUENCER_PX_PER_BEAT,
+            REGION_EDITOR_TRACK_HEIGHT)
         f_item = SequencerItem(a_name, a_item, f_path)
         self.audio_items.append(f_item)
         self.scene.addItem(f_item)
