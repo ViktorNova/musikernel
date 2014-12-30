@@ -1093,9 +1093,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                 f_x = f_item.width_orig + f_event_diff + \
                     f_item.quantize_offset
                 f_x = pydaw_clip_min(f_x, AUDIO_ITEM_HANDLE_SIZE)
-                if f_x < f_item.length_px_minus_start:
-                    f_x = f_item.quantize(f_x)
-                    f_x -= f_item.quantize_offset
+                f_x = f_item.quantize(f_x)
+                f_x -= f_item.quantize_offset
                 f_item.length_handle.setPos(
                     f_x - AUDIO_ITEM_HANDLE_SIZE,
                     REGION_EDITOR_TRACK_HEIGHT - AUDIO_ITEM_HANDLE_HEIGHT)
