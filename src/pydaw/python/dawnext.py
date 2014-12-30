@@ -642,8 +642,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         f_length = (self.audio_item.length_beats * SEQUENCER_PX_PER_BEAT)
 
         self.length_orig = f_length
-        self.length_px_start = (self.audio_item.sample_start *
-            0.001 * f_length)
+        self.length_px_start = (self.audio_item.start_offset *
+            SEQUENCER_PX_PER_BEAT)
         self.length_px_minus_start = f_length - self.length_px_start
 #        self.length_px_minus_end = (
 #            self.audio_item.sample_end * 0.001 * f_length)
@@ -665,8 +665,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 #            self.stretch_width_default = \
 #                f_length / self.audio_item.timestretch_amt
 
-        self.sample_start_offset_px = \
-            self.audio_item.sample_start * -0.001 * f_length
+        self.sample_start_offset_px = -self.length_px_start
 
         self.start_handle_scene_min = f_start + self.sample_start_offset_px
         self.start_handle_scene_max = self.start_handle_scene_min + f_length
@@ -954,7 +953,9 @@ class SequencerItem(QtGui.QGraphicsRectItem):
     def reset_end(self):
         f_list = SEQUENCER.get_selected()
         for f_item in f_list:
-            f_item.audio_item.sample_start = 0.0
+            f_item.audio_item.start_offset = 0.0
+            assert(False)
+            # How to do this next line?
             f_item.audio_item.sample_end = 1000.0
             self.draw()
             self.clip_at_region_end()
@@ -986,24 +987,20 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         if a_event.modifiers() == QtCore.Qt.ShiftModifier:
             f_item = self.audio_item
             f_item_old = f_item.clone()
+            CURRENT_REGION.add_item(f_item_old)
 
             f_event_pos = a_event.pos().x()
             # for items that are not quantized
             f_pos = f_event_pos - (f_event_pos - self.quantize(f_event_pos))
             f_scene_pos = self.quantize(a_event.scenePos().x())
-            f_musical_pos = self.pos_to_musical_time(f_scene_pos)
-            f_sample_shown = f_item.sample_end - f_item.sample_start
-            f_sample_rect_pos = f_pos / self.rect().width()
-            f_item.sample_start = (f_sample_rect_pos *
-                f_sample_shown) + f_item.sample_start
-            f_item.sample_start = pydaw_clip_value(
-                f_item.sample_start, 0.0, 999.0, True)
-            f_item.start_bar = f_musical_pos[0]
-            f_item.start_beat = f_musical_pos[1]
-            f_item_old.sample_end = f_item.sample_start
+            f_musical_pos = self.pos_to_musical_time(
+                f_scene_pos) - f_item_old.start_beat
+            f_item.start_beat = f_item.start_beat + f_musical_pos
+            f_item.length_beats = f_item_old.length_beats - f_musical_pos
+            f_item_old.length_beats = f_musical_pos
             PROJECT.save_region(CURRENT_REGION)
             PROJECT.commit(_("Split sequencer item"))
-            global_open_audio_items(True)
+            REGION_SETTINGS.open_region()
         else:
             QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
             self.event_pos_orig = a_event.pos().x()
@@ -1184,13 +1181,14 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                     f_x = f_audio_item.sample_start_offset_px
                 f_old_start = f_item.start_beat
                 f_item.start_beat = self.pos_to_musical_time(f_x)
-                f_item.length_beats -= f_item.start_beat - f_old_start
-                f_item.sample_start = ((f_x -
+                f_item.start_offset = ((f_x -
                     f_audio_item.start_handle_scene_min) /
                     (f_audio_item.start_handle_scene_max -
-                    f_audio_item.start_handle_scene_min)) * 1000.0
-                f_item.sample_start = pydaw_clip_min(
-                    f_item.sample_start, 0.0)
+                    f_audio_item.start_handle_scene_min)) * \
+                    f_item.length_beats
+                f_item.start_offset = pydaw_clip_min(
+                    f_item.start_offset, 0.0)
+                f_item.length_beats -= f_item.start_beat - f_old_start
             elif f_audio_item.is_stretching and \
             f_item.time_stretch_mode >= 2:
                 f_reset_selection = True

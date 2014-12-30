@@ -772,7 +772,8 @@ class pydaw_sequencer_item:
         self.start_beat = float(a_start_beat)
         self.length_beats = float(a_length_beats)
         self.item_uid = int(a_item_uid)
-        self.sample_start = float(a_start_pos)
+        self.start_offset = float(a_start_pos)
+        #self.sample_start = float(a_start_pos)
 
     def clone(self):
         f_self = str(self).split("|")
@@ -782,7 +783,7 @@ class pydaw_sequencer_item:
         return "|".join(str(x) for x in
             (self.track_num, round(self.start_beat, 6),
             round(self.length_beats, 6), self.item_uid,
-            round(self.sample_start, 6)))
+            round(self.start_offset, 6)))
 
     def __lt__(self, other):
         if self.track_num == other.track_num:
@@ -1209,7 +1210,6 @@ class pydaw_item:
         self.notes = []
         self.ccs = []
         self.pitchbends = []
-        self.length = 4
         self.uid = int(a_uid)
         self.fx_list = {} #per-audio-item-fx
 
@@ -1578,8 +1578,6 @@ class pydaw_item:
                             pydaw_modulex_settings(
                                 a_knob0, a_knob1, a_knob2, a_type))
                     f_result.set_row(f_item_index, f_items_arr)
-                elif f_event_arr[0] == "L":
-                    f_result.length = int(f_event_arr[1])
                 elif f_event_arr[0] == "U":
                     f_result.uid = int(f_event_arr[1])
                 else:
@@ -1590,7 +1588,6 @@ class pydaw_item:
     def __str__(self):
         f_result = [str(x) for x in
             sorted(self.notes + self.ccs + self.pitchbends)]
-        f_result.append("L|{}".format(self.length))
         f_result.append("U|{}".format(self.uid))
         for k, f_item in list(self.items.items()):
             f_result.append("a|{}|{}".format(k, f_item))
