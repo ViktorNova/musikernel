@@ -557,6 +557,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.label.setZValue(2100.00)
 
         self.start_handle = QtGui.QGraphicsRectItem(parent=self)
+        self.start_handle.setZValue(2200.0)
         self.start_handle.setAcceptHoverEvents(True)
         self.start_handle.hoverEnterEvent = self.generic_hoverEnterEvent
         self.start_handle.hoverLeaveEvent = self.generic_hoverLeaveEvent
@@ -572,6 +573,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.start_handle_line.setPen(AUDIO_ITEM_LINE_PEN)
 
         self.length_handle = QtGui.QGraphicsRectItem(parent=self)
+        self.length_handle.setZValue(2200.0)
         self.length_handle.setAcceptHoverEvents(True)
         self.length_handle.hoverEnterEvent = self.generic_hoverEnterEvent
         self.length_handle.hoverLeaveEvent = self.generic_hoverLeaveEvent
