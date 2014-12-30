@@ -209,7 +209,6 @@ class region_settings:
         TRANSPORT.bar_spinbox.setRange(1, (CURRENT_REGION.length_bars))
         self.enabled = True
         SEQUENCER.open_region()
-        #global_open_audio_items()
         global_update_hidden_rows()
         #TRANSPORT.set_time(TRANSPORT.get_bar_value(), 0.0)
 
@@ -7938,19 +7937,9 @@ def global_ui_refresh_callback(a_restore_all=False):
         their editors when the files have been changed externally
     """
     TRACK_PANEL.open_tracks()
-    f_regions_dict = PROJECT.get_regions_dict()
-    global CURRENT_REGION
-    if CURRENT_REGION is not None and \
-    f_regions_dict.uid_exists(CURRENT_REGION.uid):
-        REGION_SETTINGS.open_region()
-        global_open_audio_items()
-        #this_audio_editor.open_tracks()
-    else:
-        REGION_SETTINGS.clear_new()
-        CURRENT_REGION = None
-    if ITEM_EDITOR.enabled and global_check_midi_items():
-        global_open_items()
+    REGION_SETTINGS.open_region()
     TRANSPORT.open_transport()
+    MAIN_WINDOW.tab_changed()
     PROJECT.IPC.pydaw_open_song(
         PROJECT.project_folder, a_restore_all)
 
