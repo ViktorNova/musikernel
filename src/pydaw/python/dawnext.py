@@ -7352,6 +7352,7 @@ class transport_widget(libmk.AbstractTransport):
 
     def set_snap(self, a_val=None):
         pydaw_set_audio_snap(a_val)
+        MAIN_WINDOW.tab_changed()
 
     def on_panic(self):
         PROJECT.IPC.pydaw_panic()
