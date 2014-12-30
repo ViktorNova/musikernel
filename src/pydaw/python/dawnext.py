@@ -7557,6 +7557,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.song_region_tab.setLayout(self.song_region_vlayout)
         self.sequencer_widget = QtGui.QWidget()
         self.sequencer_vlayout = QtGui.QVBoxLayout(self.sequencer_widget)
+        self.sequencer_vlayout.setContentsMargins(1, 1, 1, 1)
         self.sequencer_vlayout.addWidget(self.song_region_tab)
         self.main_tabwidget.addTab(self.sequencer_widget, _("Sequencer"))
 
