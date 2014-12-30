@@ -550,7 +550,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.path_item.setParentItem(self)
         self.path_item.setZValue(2000.0)
 
-        self.label = QtGui.QGraphicsSimpleTextItem(a_name, parent=self)
+        self.label = QtGui.QGraphicsSimpleTextItem(
+            str(a_name), parent=self)
         self.label.setPen(QtGui.QPen(QtCore.Qt.NoPen))
         self.label.setPos(2.0, 2.0)
         self.label.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
@@ -1008,6 +1009,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             PROJECT.commit(_("Split sequencer item"))
             REGION_SETTINGS.open_region()
         else:
+            if a_event.modifiers() == QtCore.Qt.ControlModifier:
+                a_event.accept()
             QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
             self.event_pos_orig = a_event.pos().x()
             for f_item in SEQUENCER.get_selected():
@@ -1018,7 +1021,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                     f_item.is_copying = True
                     f_item.width_orig = f_item.rect().width()
                     SEQUENCER.draw_item(
-                        f_item.track_num, f_item.audio_item)
+                        f_item.name, f_item.audio_item)
                 if self.is_start_resizing:
                     f_item.width_orig = 0.0
                 else:
@@ -1164,7 +1167,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         f_event_pos = a_event.pos().x()
         f_event_diff = f_event_pos - self.event_pos_orig
         if self.is_copying:
-            pass
+            a_event.accept()
         for f_audio_item in SEQUENCER.get_selected():
             f_item = f_audio_item.audio_item
             f_pos_x = f_audio_item.pos().x()
