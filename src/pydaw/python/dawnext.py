@@ -3977,7 +3977,6 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         self.modulex_vlayout.addWidget(self.modulex.scroll_area)
 
         self.widget = QtGui.QWidget()
-        self.hsplitter.addWidget(self.widget)
         self.vlayout = QtGui.QVBoxLayout()
         self.widget.setLayout(self.vlayout)
         self.controls_grid_layout = QtGui.QGridLayout()
@@ -4057,10 +4056,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         self.controls_grid_layout.addWidget(QtGui.QLabel(_("H-Zoom:")), 0, 49)
         self.controls_grid_layout.addWidget(self.h_zoom_slider, 0, 50)
 
-
-
         self.audio_items_clipboard = []
-        self.hsplitter.setSizes([100, 9999])
         self.disable_on_play = (self.menu_button,)
 
     def on_play(self):
@@ -6442,7 +6438,7 @@ class item_list_editor:
 
         self.tab_widget = QtGui.QTabWidget()
 
-        self.tab_widget.addTab(AUDIO_SEQ_WIDGET.hsplitter, _("Audio"))
+        self.tab_widget.addTab(AUDIO_SEQ_WIDGET.widget, _("Audio"))
 
         self.piano_roll_tab = QtGui.QGroupBox()
         self.tab_widget.addTab(self.piano_roll_tab, _("Piano Roll"))
@@ -7576,7 +7572,9 @@ class pydaw_main_window(QtGui.QScrollArea):
 
         #The tabs
         self.main_tabwidget = QtGui.QTabWidget()
-        self.main_layout.addWidget(self.main_tabwidget)
+        AUDIO_SEQ_WIDGET.hsplitter.insertWidget(0, self.main_tabwidget)
+        self.main_layout.addWidget(AUDIO_SEQ_WIDGET.hsplitter)
+        AUDIO_SEQ_WIDGET.hsplitter.setSizes([9999, 100])
 
         self.song_region_tab = QtGui.QWidget()
         self.song_region_vlayout = QtGui.QVBoxLayout()
