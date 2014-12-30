@@ -215,7 +215,6 @@ class region_settings:
 
     def clear_items(self):
         SEQUENCER.clear_drawn_items()
-        AUDIO_SEQ.clear_drawn_items()
         global CURRENT_REGION
         CURRENT_REGION = None
 
@@ -6420,7 +6419,6 @@ def global_open_items(a_items=None, a_reset_scrollbar=False, a_len=None):
 
     ITEM_EDITOR.tab_changed()
     ITEM_EDITOR.open_item_list()
-    global_open_audio_items()
 
 
 def global_save_and_reload_items():
@@ -6793,6 +6791,8 @@ class item_list_editor:
         else:
             if f_index == 1:
                 global_set_piano_roll_zoom()
+            elif f_index == 4:
+                ITEM_EDITOR.open_item_list()
             if f_index < len(f_list):
                 f_list[f_index].draw_item()
             PIANO_ROLL_EDITOR.click_enabled = True
