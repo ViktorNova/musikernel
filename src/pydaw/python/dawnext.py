@@ -4291,7 +4291,6 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
 
 def global_set_piano_roll_zoom():
     global PIANO_ROLL_GRID_WIDTH
-    global MIDI_SCALE
 
     f_width = float(PIANO_ROLL_EDITOR.rect().width()) - \
         float(PIANO_ROLL_EDITOR.verticalScrollBar().width()) - 6.0 - \
@@ -4306,10 +4305,9 @@ PIANO_ROLL_GRID_WIDTH = 1000.0
 PIANO_KEYS_WIDTH = 34  #Width of the piano keys in px
 PIANO_ROLL_GRID_MAX_START_TIME = 999.0 + PIANO_KEYS_WIDTH
 PIANO_ROLL_NOTE_HEIGHT = pydaw_util.get_file_setting("PIANO_VZOOM", int, 21)
-PIANO_ROLL_SNAP_DIVISOR = 16.0
-PIANO_ROLL_SNAP_BEATS = 4.0 / PIANO_ROLL_SNAP_DIVISOR
+PIANO_ROLL_SNAP_DIVISOR = 4.0
+PIANO_ROLL_SNAP_BEATS = 1.0
 PIANO_ROLL_SNAP_VALUE = PIANO_ROLL_GRID_WIDTH / PIANO_ROLL_SNAP_DIVISOR
-PIANO_ROLL_SNAP_DIVISOR_BEATS = PIANO_ROLL_SNAP_DIVISOR / 4.0
 PIANO_ROLL_NOTE_COUNT = 120
 PIANO_ROLL_HEADER_HEIGHT = 45
 #gets updated by the piano roll to it's real value:
@@ -4324,13 +4322,9 @@ SELECTED_NOTE_GRADIENT.setColorAt(1, QtGui.QColor(240, 240, 240))
 SELECTED_PIANO_NOTE = None   #Used for mouse click hackery
 
 def pydaw_set_piano_roll_quantize(a_index):
-    global PIANO_ROLL_SNAP
-    global PIANO_ROLL_SNAP_VALUE
-    global PIANO_ROLL_SNAP_DIVISOR
-    global PIANO_ROLL_SNAP_DIVISOR_BEATS
-    global PIANO_ROLL_SNAP_BEATS
-    global LAST_NOTE_RESIZE
-    global PIANO_ROLL_QUANTIZE_INDEX
+    global PIANO_ROLL_SNAP, PIANO_ROLL_SNAP_VALUE, PIANO_ROLL_SNAP_DIVISOR, \
+        PIANO_ROLL_SNAP_BEATS, LAST_NOTE_RESIZE, PIANO_ROLL_QUANTIZE_INDEX, \
+        PIANO_ROLL_MIN_NOTE_LENGTH
 
     PIANO_ROLL_QUANTIZE_INDEX = a_index
 
@@ -4340,27 +4334,29 @@ def pydaw_set_piano_roll_quantize(a_index):
         PIANO_ROLL_SNAP = True
 
     if a_index == 0:
-        PIANO_ROLL_SNAP_DIVISOR = 16.0
-    elif a_index == 7:
-        PIANO_ROLL_SNAP_DIVISOR = 128.0
-    elif a_index == 6:
-        PIANO_ROLL_SNAP_DIVISOR = 64.0
-    elif a_index == 5:
-        PIANO_ROLL_SNAP_DIVISOR = 32.0
-    elif a_index == 4:
-        PIANO_ROLL_SNAP_DIVISOR = 16.0
-    elif a_index == 3:
-        PIANO_ROLL_SNAP_DIVISOR = 12.0
-    elif a_index == 2:
-        PIANO_ROLL_SNAP_DIVISOR = 8.0
-    elif a_index == 1:
         PIANO_ROLL_SNAP_DIVISOR = 4.0
+    elif a_index == 7:
+        PIANO_ROLL_SNAP_DIVISOR = 32.0
+    elif a_index == 6:
+        PIANO_ROLL_SNAP_DIVISOR = 16.0
+    elif a_index == 5:
+        PIANO_ROLL_SNAP_DIVISOR = 8.0
+    elif a_index == 4:
+        PIANO_ROLL_SNAP_DIVISOR = 4.0
+    elif a_index == 3:
+        PIANO_ROLL_SNAP_DIVISOR = 3.0
+    elif a_index == 2:
+        PIANO_ROLL_SNAP_DIVISOR = 2.0
+    elif a_index == 1:
+        PIANO_ROLL_SNAP_DIVISOR = 1.0
 
-    PIANO_ROLL_SNAP_BEATS = 4.0 / PIANO_ROLL_SNAP_DIVISOR
+    PIANO_ROLL_SNAP_BEATS = 1.0 / PIANO_ROLL_SNAP_DIVISOR
     LAST_NOTE_RESIZE = pydaw_clip_min(LAST_NOTE_RESIZE, PIANO_ROLL_SNAP_BEATS)
-    PIANO_ROLL_EDITOR.set_grid_div(PIANO_ROLL_SNAP_DIVISOR / 4.0)
-    PIANO_ROLL_SNAP_VALUE = PIANO_ROLL_GRID_WIDTH / PIANO_ROLL_SNAP_DIVISOR
-    PIANO_ROLL_SNAP_DIVISOR_BEATS = PIANO_ROLL_SNAP_DIVISOR / 4.0
+    PIANO_ROLL_EDITOR.set_grid_div(PIANO_ROLL_SNAP_DIVISOR)
+    PIANO_ROLL_SNAP_VALUE = (PIANO_ROLL_GRID_WIDTH / CURRENT_ITEM_LEN /
+        PIANO_ROLL_SNAP_DIVISOR)
+    PIANO_ROLL_MIN_NOTE_LENGTH = (PIANO_ROLL_GRID_WIDTH /
+        CURRENT_ITEM_LEN / 32.0)
 
 PIANO_ROLL_MIN_NOTE_LENGTH = PIANO_ROLL_GRID_WIDTH / 128.0
 
