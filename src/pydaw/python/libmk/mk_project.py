@@ -521,8 +521,8 @@ class pydaw_abstract_midi_event:
 
 class pydaw_note(pydaw_abstract_midi_event):
     def __init__(self, a_start, a_length, a_note_number, a_velocity):
-        self.start = float(a_start)
-        self.length = float(a_length)
+        self.start = round(float(a_start), 6)
+        self.length = round(float(a_length), 6)
         self.velocity = int(a_velocity)
         self.note_num = int(a_note_number)
         self.is_selected = False
@@ -536,15 +536,15 @@ class pydaw_note(pydaw_abstract_midi_event):
             (self.velocity == other.velocity))
 
     def set_start(self, a_start):
-        self.start = float(a_start)
+        self.start = round(float(a_start), 6)
         self.set_end()
 
     def set_length(self, a_length):
-        self.length = float(a_length)
+        self.length = round(float(a_length), 6)
         self.set_end()
 
     def set_end(self):
-        self.end = self.length + self.start
+        self.end = round(self.length + self.start, 6)
 
     def overlaps(self, other):
         if self.note_num == other.note_num:
