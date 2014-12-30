@@ -388,8 +388,8 @@ class DawNextProject(libmk.AbstractProject):
 
     def get_item_by_name(self, a_item_name):
         f_items_dict = self.get_items_dict()
-        return pydaw_item.from_str(
-            self.get_item_string(f_items_dict.get_uid_by_name(a_item_name)))
+        f_uid = f_items_dict.get_uid_by_name(a_item_name)
+        return pydaw_item.from_str(self.get_item_string(f_uid), f_uid)
 
     def save_recorded_items(
             self, a_item_name, a_mrec_list, a_overdub, a_tempo, a_sr):
@@ -1213,14 +1213,13 @@ class pydaw_item:
         self.uid = int(a_uid)
         self.fx_list = {} #per-audio-item-fx
 
-    def painter_path(self, a_width, a_height):
+    def painter_path(self, a_px_per_beat, a_height):
         f_result = QtGui.QPainterPath()
         f_note_height = float(a_height) / 128.0
-        f_beat_width = a_width * 0.25
         for f_note in self.notes:
             f_y_pos = a_height - (f_note_height * float(f_note.note_num))
-            f_x_pos = f_note.start * f_beat_width
-            f_width = f_note.length * f_beat_width
+            f_x_pos = f_note.start * a_px_per_beat
+            f_width = f_note.length * a_px_per_beat
             f_result.addRect(f_x_pos, f_y_pos, f_width, f_note_height)
         return f_result
 

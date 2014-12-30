@@ -513,7 +513,7 @@ def pydaw_seconds_to_beats(a_seconds):
     return a_seconds * BEATS_PER_SECOND
 
 class SequencerItem(QtGui.QGraphicsRectItem):
-    def __init__(self, a_name, a_audio_item):
+    def __init__(self, a_name, a_audio_item, a_path):
         QtGui.QGraphicsRectItem.__init__(self)
         self.name = str(a_name)
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
@@ -524,6 +524,11 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.audio_item = a_audio_item
         self.orig_string = str(a_audio_item)
         self.track_num = a_audio_item.track_num
+
+        self.path_item = QtGui.QGraphicsPathItem(a_path)
+        self.path_item.setParentItem(self)
+        self.path_item.setZValue(2000.0)
+
 #        f_graph = libmk.PROJECT.get_sample_graph_by_uid(
 #            self.audio_item.uid)
 #        self.painter_paths = f_graph.create_sample_graph(True)
@@ -544,10 +549,10 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 #            f_file_name)
 #        f_name_arr = f_file_name.rsplit("/", 1)
 #        f_name = f_name_arr[-1]
-#        self.label = QtGui.QGraphicsSimpleTextItem(f_name, parent=self)
-#        self.label.setPos(10, (REGION_EDITOR_TOTAL_HEIGHT * 0.5) -
-#            (self.label.boundingRect().height() * 0.5))
-#        self.label.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+        self.label = QtGui.QGraphicsSimpleTextItem(a_name, parent=self)
+        self.label.setPen(QtGui.QPen(QtCore.Qt.NoPen))
+        self.label.setPos(2.0, 2.0)
+        self.label.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
 
         self.start_handle = QtGui.QGraphicsRectItem(parent=self)
         self.start_handle.setAcceptHoverEvents(True)
@@ -666,6 +671,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 #                f_length / self.audio_item.timestretch_amt
 
         self.sample_start_offset_px = -self.length_px_start
+        self.path_item.setPos(self.sample_start_offset_px, 0.0)
 
         self.start_handle_scene_min = f_start + self.sample_start_offset_px
         self.start_handle_scene_max = self.start_handle_scene_min + f_length
@@ -1252,6 +1258,7 @@ class ItemSequencer(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
         self.reset_line_lists()
+        self.painter_path_cache = {}
         self.h_zoom = 1.0
         self.v_zoom = 1.0
         self.ruler_y_pos = 0.0
@@ -1647,7 +1654,14 @@ class ItemSequencer(QtGui.QGraphicsView):
             self.is_playing = True
 
     def draw_item(self, a_name, a_item):
-        f_item = SequencerItem(a_name, a_item)
+        if a_name in self.painter_path_cache:
+            f_path = self.painter_path_cache[a_name]
+        else:
+            f_item_obj = PROJECT.get_item_by_name(a_name)
+            f_path = f_item_obj.painter_path(
+                SEQUENCER_PX_PER_BEAT, REGION_EDITOR_TRACK_HEIGHT)
+            self.painter_path_cache[a_name] = f_path
+        f_item = SequencerItem(a_name, a_item, f_path)
         self.audio_items.append(f_item)
         self.scene.addItem(f_item)
         return f_item
