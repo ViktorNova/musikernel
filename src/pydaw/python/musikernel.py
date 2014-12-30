@@ -1434,9 +1434,8 @@ time.sleep(0.6)
 final_gc()
 
 if RESPAWN:
-    CMD = [__file__]
-    print("Spawning child UI process {}".format(CMD))
-    CHILD_PROC = subprocess.Popen(CMD)
+    print("Spawning child UI process {}".format(sys.argv))
+    CHILD_PROC = subprocess.Popen(sys.argv)
         #, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
     #CHILD_PROC.wait()
     time.sleep(6.0)
