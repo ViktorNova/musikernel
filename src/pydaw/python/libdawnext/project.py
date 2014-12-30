@@ -664,12 +664,13 @@ class DawNextProject(libmk.AbstractProject):
             f_uid = f_items_dict.get_uid_by_name(a_name)
             self.save_item_by_uid(f_uid, a_item)
 
-    def get_item_path(self, a_uid, a_px_per_beat, a_height):
+    def get_item_path(self, a_uid, a_px_per_beat, a_height, a_tempo):
         if a_uid in self.painter_path_cache:
             return self.painter_path_cache[a_uid]
         else:
             f_item_obj = self.get_item_by_uid(a_uid)
-            f_path = f_item_obj.painter_path(a_px_per_beat, a_height)
+            f_path = f_item_obj.painter_path(
+                a_px_per_beat, a_height, a_tempo)
             self.painter_path_cache[a_uid] = f_path
             return f_path
 
@@ -1224,15 +1225,30 @@ class pydaw_item:
         self.uid = int(a_uid)
         self.fx_list = {} #per-audio-item-fx
 
-    def painter_path(self, a_px_per_beat, a_height):
-        f_result = QtGui.QPainterPath()
+    def painter_path(self, a_px_per_beat, a_height, a_tempo):
+        f_seconds_per_beat = 60.0 / a_tempo
+        f_audio_path = QtGui.QPainterPath()
+        for f_item in sorted(self.items.values(), key=lambda x: x.start_beat):
+            f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_item.uid)
+            f_width = (f_graph.length_in_seconds /
+                f_seconds_per_beat) * a_px_per_beat
+            f_paths = f_graph.create_sample_graph(True, f_width, a_height)
+            f_y_inc = a_height / len(f_paths)
+            f_y_pos = 0.0
+            for f_painter_path in f_paths:
+                f_painter_path.translate(
+                    a_px_per_beat * f_item.start_beat, f_y_pos)
+                f_audio_path.addPath(f_painter_path)
+                f_y_pos += f_y_inc
+
+        f_notes_path = QtGui.QPainterPath()
         f_note_height = float(a_height) / 128.0
         for f_note in self.notes:
             f_y_pos = a_height - (f_note_height * float(f_note.note_num))
             f_x_pos = f_note.start * a_px_per_beat
             f_width = f_note.length * a_px_per_beat
-            f_result.addRect(f_x_pos, f_y_pos, f_width, f_note_height)
-        return f_result
+            f_notes_path.addRect(f_x_pos, f_y_pos, f_width, f_note_height)
+        return f_audio_path, f_notes_path
 
     #per-audio-item-fx
 

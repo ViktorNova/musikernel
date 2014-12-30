@@ -970,13 +970,17 @@ class pydaw_sample_graph:
         f_result = pydaw_clip_value(f_result, -24, 24)
         return f_result
 
-    def create_sample_graph(self, a_for_scene=False):
-        if self.sample_graph_cache is None:
+    def create_sample_graph(
+            self, a_for_scene=False, a_width=None, a_height=None):
+        if a_width or a_height or self.sample_graph_cache is None:
+            if not a_width:
+                a_width = pydaw_audio_item_scene_width
+            if not a_height:
+                a_height = pydaw_audio_item_scene_height
             if self.length_in_seconds > 0.5:
                 if a_for_scene:
-                    f_width_inc = pydaw_audio_item_scene_width / self.count
-                    f_section = \
-                        pydaw_audio_item_scene_height / float(self.channels)
+                    f_width_inc = a_width / self.count
+                    f_section = a_height / float(self.channels)
                 else:
                     f_width_inc = 98.0 / self.count
                     f_section = 100.0 / float(self.channels)
@@ -1000,11 +1004,12 @@ class pydaw_sample_graph:
                         f_width_pos -= f_width_inc
                     f_result.closeSubpath()
                     f_paths.append(f_result)
+                if a_width or a_height:
+                    return f_paths
                 self.sample_graph_cache = f_paths
             else:
-                f_width_inc = pydaw_audio_item_scene_width / self.count
-                f_section = \
-                    pydaw_audio_item_scene_height / float(self.channels)
+                f_width_inc = a_width / self.count
+                f_section = a_height / float(self.channels)
                 f_section_div2 = f_section * 0.5
                 f_paths = []
 
@@ -1019,6 +1024,8 @@ class pydaw_sample_graph:
                             (f_peak * f_section_div2))
                         f_width_pos += f_width_inc
                     f_paths.append(f_result)
+                if a_width or a_height:
+                    return f_paths
                 self.sample_graph_cache = f_paths
         return self.sample_graph_cache
 

@@ -512,8 +512,18 @@ def pydaw_seconds_to_beats(a_seconds):
     '''converts seconds to regions'''
     return a_seconds * BEATS_PER_SECOND
 
+SEQUENCER_ITEM_GRADIENT = QtGui.QLinearGradient(
+    0, 0, 0, REGION_EDITOR_TOTAL_HEIGHT)
+SEQUENCER_ITEM_GRADIENT.setColorAt(
+    0.0, QtGui.QColor.fromRgb(60, 60, 60, 120))
+SEQUENCER_ITEM_GRADIENT.setColorAt(
+    0.5, QtGui.QColor.fromRgb(90, 90, 90, 120))
+SEQUENCER_ITEM_GRADIENT.setColorAt(
+    1.0, QtGui.QColor.fromRgb(60, 60, 60, 120))
+
+
 class SequencerItem(QtGui.QGraphicsRectItem):
-    def __init__(self, a_name, a_audio_item, a_path):
+    def __init__(self, a_name, a_audio_item):
         QtGui.QGraphicsRectItem.__init__(self)
         self.name = str(a_name)
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
@@ -525,34 +535,27 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.orig_string = str(a_audio_item)
         self.track_num = a_audio_item.track_num
 
-        self.path_item = QtGui.QGraphicsPathItem(a_path)
+        f_audio_path, f_notes_path = PROJECT.get_item_path(
+            a_audio_item.item_uid, SEQUENCER_PX_PER_BEAT,
+            REGION_EDITOR_TRACK_HEIGHT, BEATS_PER_MINUTE)
+
+        self.audio_path_item = QtGui.QGraphicsPathItem(f_audio_path)
+        self.audio_path_item.setBrush(SEQUENCER_ITEM_GRADIENT)
+        self.audio_path_item.setPen(QtGui.QPen(QtCore.Qt.gray))
+        self.audio_path_item.setParentItem(self)
+        self.audio_path_item.setZValue(1900.0)
+
+        self.path_item = QtGui.QGraphicsPathItem(f_notes_path)
+        self.path_item.setBrush(QtCore.Qt.white)
+        self.path_item.setPen(QtGui.QPen(QtCore.Qt.NoPen))
         self.path_item.setParentItem(self)
         self.path_item.setZValue(2000.0)
 
-#        f_graph = libmk.PROJECT.get_sample_graph_by_uid(
-#            self.audio_item.uid)
-#        self.painter_paths = f_graph.create_sample_graph(True)
-#        self.y_inc = REGION_EDITOR_TRACK_HEIGHT / len(self.painter_paths)
-#        f_y_pos = 0.0
-#        self.path_items = []
-#        for f_painter_path in self.painter_paths:
-#            f_path_item = QtGui.QGraphicsPathItem(f_painter_path)
-#            f_path_item.setBrush(
-#                mk_project.pydaw_audio_item_scene_gradient)
-#            f_path_item.setParentItem(self)
-#            f_path_item.mapToParent(0.0, 0.0)
-#            self.path_items.append(f_path_item)
-#            f_y_pos += self.y_inc
-#        f_file_name = libmk.PROJECT.get_wav_name_by_uid(
-#            self.audio_item.uid)
-#        f_file_name = libmk.PROJECT.timestretch_lookup_orig_path(
-#            f_file_name)
-#        f_name_arr = f_file_name.rsplit("/", 1)
-#        f_name = f_name_arr[-1]
         self.label = QtGui.QGraphicsSimpleTextItem(a_name, parent=self)
         self.label.setPen(QtGui.QPen(QtCore.Qt.NoPen))
         self.label.setPos(2.0, 2.0)
         self.label.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+        self.label.setZValue(2100.00)
 
         self.start_handle = QtGui.QGraphicsRectItem(parent=self)
         self.start_handle.setAcceptHoverEvents(True)
@@ -650,9 +653,6 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.length_px_start = (self.audio_item.start_offset *
             SEQUENCER_PX_PER_BEAT)
         self.length_px_minus_start = f_length - self.length_px_start
-#        self.length_px_minus_end = (
-#            self.audio_item.sample_end * 0.001 * f_length)
-#        f_length = self.length_px_minus_end - self.length_px_start
 
         self.rect_orig = QtCore.QRectF(
             0.0, 0.0, f_length, REGION_EDITOR_TRACK_HEIGHT)
@@ -671,6 +671,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 #                f_length / self.audio_item.timestretch_amt
 
         self.sample_start_offset_px = -self.length_px_start
+        self.audio_path_item.setPos(self.sample_start_offset_px, 0.0)
         self.path_item.setPos(self.sample_start_offset_px, 0.0)
 
         self.start_handle_scene_min = f_start + self.sample_start_offset_px
@@ -1653,10 +1654,7 @@ class ItemSequencer(QtGui.QGraphicsView):
             self.is_playing = True
 
     def draw_item(self, a_name, a_item):
-        f_path = PROJECT.get_item_path(
-            a_item.item_uid, SEQUENCER_PX_PER_BEAT,
-            REGION_EDITOR_TRACK_HEIGHT)
-        f_item = SequencerItem(a_name, a_item, f_path)
+        f_item = SequencerItem(a_name, a_item)
         self.audio_items.append(f_item)
         self.scene.addItem(f_item)
         return f_item
