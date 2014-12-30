@@ -832,18 +832,11 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 #        f_select_instance_action.triggered.connect(self.select_file_instance)
 #        f_file_menu.addSeparator()
 
-        f_properties_menu = f_menu.addMenu(_("Properties"))
-
-        f_reset_end_action = f_properties_menu.addAction(_("Reset Ends"))
+        f_reset_end_action = f_menu.addAction(_("Reset Ends"))
         f_reset_end_action.triggered.connect(self.reset_end)
-        f_move_to_end_action = f_properties_menu.addAction(
-            _("Move to Region End"))
-        f_move_to_end_action.triggered.connect(self.move_to_region_end)
-        f_reverse_action = f_properties_menu.addAction(_("Reverse/Unreverse"))
-        f_reverse_action.triggered.connect(self.reverse)
 
-        f_sends_action = f_properties_menu.addAction(_("Sends..."))
-        f_sends_action.triggered.connect(self.sends_dialog)
+#        f_sends_action = f_menu.addAction(_("Sends..."))
+#        f_sends_action.triggered.connect(self.sends_dialog)
 
         f_menu.exec_(QtGui.QCursor.pos())
         CURRENT_AUDIO_ITEM_INDEX = f_CURRENT_AUDIO_ITEM_INDEX
@@ -937,34 +930,12 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_dialog.exec_()
 
-    def reverse(self):
-        f_list = SEQUENCER.get_selected()
-        for f_item in f_list:
-            f_item.audio_item.reversed = not f_item.audio_item.reversed
-        PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
-        PROJECT.commit(_("Toggle audio items reversed"))
-        global_open_audio_items(True)
-
-    def move_to_region_end(self):
-        f_list = SEQUENCER.get_selected()
-        if f_list:
-            f_current_region_length = pydaw_get_current_region_length()
-            f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
-            for f_item in f_list:
-                f_item.audio_item.clip_at_region_end(
-                    f_current_region_length, f_global_tempo,
-                    f_item.graph_object.length_in_seconds, False)
-            PROJECT.save_region(CURRENT_REGION)
-            PROJECT.commit(_("Move audio item(s) to region end"))
-            global_open_audio_items(True)
-
     def reset_end(self):
         f_list = SEQUENCER.get_selected()
         for f_item in f_list:
+            f_old = f_item.audio_item.start_offset
             f_item.audio_item.start_offset = 0.0
-            assert(False)
-            # How to do this next line?
-            f_item.audio_item.sample_end = 1000.0
+            f_item.audio_item.length_beats += f_old
             self.draw()
             self.clip_at_region_end()
         PROJECT.save_region(CURRENT_REGION)
