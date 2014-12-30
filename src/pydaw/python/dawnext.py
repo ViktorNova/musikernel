@@ -1257,6 +1257,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.reset_line_lists()
         self.h_zoom = 1.0
         self.v_zoom = 1.0
+        self.ruler_y_pos = 0.0
         self.scene = QtGui.QGraphicsScene(self)
         self.scene.setItemIndexMethod(QtGui.QGraphicsScene.NoIndex)
         self.scene.dropEvent = self.sceneDropEvent
@@ -1322,10 +1323,6 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.update()
         self.enabled = True
 
-    def set_header_pos(self):
-        f_y = self.get_scene_pos().y()
-        self.ruler.setPos(0, f_y - 2.0)
-
     def reset_line_lists(self):
         self.text_list = []
         self.beat_line_list = []
@@ -1346,14 +1343,11 @@ class ItemSequencer(QtGui.QGraphicsView):
         QtGui.QGraphicsView.scrollContentsBy(self, x, y)
         self.set_ruler_y_pos()
 
-    def set_ruler_y_pos(self):
-        f_point = self.get_scene_pos()
-        self.ruler.setPos(0.0, f_point.y())
-
-    def get_scene_pos(self):
-        return QtCore.QPointF(
-            self.horizontalScrollBar().value(),
-            self.verticalScrollBar().value())
+    def set_ruler_y_pos(self, a_y=None):
+        if a_y is not None:
+            self.ruler_y_pos = a_y
+        print(self.ruler_y_pos)
+        self.ruler.setPos(0.0, self.ruler_y_pos - 2.0)
 
     def get_selected(self):
         return [x for x in self.audio_items if x.isSelected()]
@@ -7854,7 +7848,8 @@ class pydaw_main_window(QtGui.QScrollArea):
 
     def midi_scrollContentsBy(self, x, y):
         QtGui.QScrollArea.scrollContentsBy(self.midi_scroll_area, x, y)
-        SEQUENCER.set_header_pos()
+        f_y = self.midi_scroll_area.verticalScrollBar().value()
+        SEQUENCER.set_ruler_y_pos(f_y)
 
     def configure_callback(self, path, arr):
         f_pc_dict = {}
