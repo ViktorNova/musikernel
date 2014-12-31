@@ -2177,6 +2177,8 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
 
 void g_dn_item_get(t_dawnext* self, int a_uid)
 {
+    float f_sr = musikernel->thread_storage[0].sample_rate;
+
     t_dn_item * f_result;
     lmalloc((void**)&f_result, sizeof(t_dn_item));
 
@@ -2207,10 +2209,10 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         char f_type = f_current_string->current_str[0];
 
         v_iterate_2d_char_array(f_current_string);
-        float f_start = atof(f_current_string->current_str);
 
         if(f_type == 'n')  //note
         {
+            float f_start = atof(f_current_string->current_str);
             v_iterate_2d_char_array(f_current_string);
             float f_length = atof(f_current_string->current_str);
             v_iterate_2d_char_array(f_current_string);
@@ -2224,6 +2226,7 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         }
         else if(f_type == 'c') //cc
         {
+            float f_start = atof(f_current_string->current_str);
             v_iterate_2d_char_array(f_current_string);
             int f_cc_num = atoi(f_current_string->current_str);
             v_iterate_2d_char_array(f_current_string);
@@ -2235,12 +2238,85 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         }
         else if(f_type == 'p') //pitchbend
         {
+            float f_start = atof(f_current_string->current_str);
             v_iterate_2d_char_array(f_current_string);
             float f_pb_val = atof(f_current_string->current_str) * 8192.0f;
 
             g_pypitchbend_init(&f_result->events[(f_result->event_count)],
                     f_start, f_pb_val);
             ++f_result->event_count;
+        }
+        else if(f_type == 'a') //audio item
+        {
+            t_pydaw_audio_item * f_new =
+                g_audio_item_load_single(f_sr,
+                    f_current_string, 0, musikernel->wav_pool, 0);
+            if(!f_new)  //EOF'd...
+            {
+                break;
+            }
+
+            t_pydaw_audio_items * f_audio_items =
+                f_result->audio_items;
+
+            int f_global_index = f_new->outputs[0];
+            int f_index_count =
+                f_audio_items->index_counts[f_global_index];
+
+            f_audio_items->indexes[
+                f_global_index][f_index_count].item_num = f_new->index;
+            f_audio_items->indexes[
+                f_global_index][f_index_count].send_num = 0;
+            ++f_audio_items->index_counts[f_global_index];
+
+            int f_i2;
+
+            for(f_i2 = 1; f_i2 < 3; ++f_i2)
+            {
+                f_global_index = f_new->outputs[f_i2];
+                if(f_global_index > -1)
+                {
+                    f_audio_items->indexes[f_global_index][
+                        f_index_count].item_num = f_new->index;
+                    f_audio_items->indexes[f_global_index][
+                        f_index_count].send_num = f_i2;
+                    ++f_audio_items->index_counts[f_global_index];
+                }
+            }
+
+            f_audio_items->items[f_new->index] = f_new;
+        }
+        else if(f_type == 'f') //per-item-fx
+        {
+            t_dn_per_audio_item_fx_region * f_paif = f_result->paif;
+            int f_index = atoi(f_current_string->current_str);
+
+            f_paif->loaded[f_index] = 1;
+
+            int f_i2 = 0;
+
+            while(f_i2 < 8)
+            {
+                f_paif->items[f_index][f_i2] = g_paif_get(f_sr);
+                int f_i3 = 0;
+                while(f_i3 < 3)
+                {
+                    v_iterate_2d_char_array(f_current_string);
+                    float f_knob_val = atof(f_current_string->current_str);
+                    f_paif->items[f_index][f_i2]->a_knobs[f_i3] = f_knob_val;
+                    ++f_i3;
+                }
+                v_iterate_2d_char_array(f_current_string);
+                int f_type_val = atoi(f_current_string->current_str);
+                f_paif->items[f_index][f_i2]->fx_type = f_type_val;
+                f_paif->items[f_index][f_i2]->func_ptr =
+                        g_mf3_get_function_pointer(f_type_val);
+                v_mf3_set(f_paif->items[f_index][f_i2]->mf3,
+                        f_paif->items[f_index][f_i2]->a_knobs[0],
+                        f_paif->items[f_index][f_i2]->a_knobs[1],
+                        f_paif->items[f_index][f_i2]->a_knobs[2]);
+                ++f_i2;
+            }
         }
         else
         {
