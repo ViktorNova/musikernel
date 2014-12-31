@@ -2555,7 +2555,7 @@ void g_en_item_get(t_edmnext* self, int a_uid)
     f_result->event_count = 0;
     f_result->uid = a_uid;
 
-    char f_full_path[512];
+    char f_full_path[2048];
     sprintf(f_full_path, "%s%i", self->item_folder, a_uid);
 
     t_2d_char_array * f_current_string = g_get_2d_array_from_file(f_full_path,
