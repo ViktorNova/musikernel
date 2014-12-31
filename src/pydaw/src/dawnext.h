@@ -79,22 +79,11 @@ typedef struct
     t_pydaw_midi_routing routes[DN_TRACK_COUNT];
 }t_dn_midi_routing_list;
 
- typedef struct
- {
-    int loaded[PYDAW_MAX_AUDIO_ITEM_COUNT];
-    t_per_audio_item_fx * items[PYDAW_MAX_AUDIO_ITEM_COUNT][8];
-}t_dn_per_audio_item_fx_region;
-
-
 typedef struct
 {
     t_pydaw_seq_event events[DN_MAX_EVENTS_PER_ITEM_COUNT];
     int event_count;
-
     t_pydaw_audio_items * audio_items;
-
-    t_dn_per_audio_item_fx_region * paif;
-
     int uid;
 }t_dn_item;
 
@@ -241,10 +230,7 @@ void v_dn_offline_render(t_dawnext*, double, double,
 void v_dn_audio_items_run(t_dawnext*, t_dn_item_ref*,
     int, float**, float**, int, int, int*, t_dn_thread_storage*);
 
-t_dn_per_audio_item_fx_region * g_dn_paif_region_get();
-void v_dn_paif_region_free(t_dn_per_audio_item_fx_region*);
-
-void v_dn_paif_set_control(t_dawnext*, int, int, float);
+void v_dn_paif_set_control(t_dawnext*, int, int, int, float);
 
 void v_dn_song_free(t_dn_song *);
 void v_dn_process_note_offs(t_dawnext * self, int f_i);
@@ -395,71 +381,29 @@ void v_dn_song_free(t_dn_song * a_dn_song)
     }
 }
 
-t_dn_per_audio_item_fx_region * g_dn_paif_region_get()
-{
-    t_dn_per_audio_item_fx_region * f_result =
-            (t_dn_per_audio_item_fx_region*)malloc(
-            sizeof(t_dn_per_audio_item_fx_region));
-
-    int f_i = 0;
-
-    while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
-    {
-        f_result->loaded[f_i] = 0;
-        int f_i2 = 0;
-        while(f_i2 < 8)
-        {
-            f_result->items[f_i][f_i2] = 0;
-            ++f_i2;
-        }
-        ++f_i;
-    }
-
-    return f_result;
-}
-
-void v_dn_paif_region_free(t_dn_per_audio_item_fx_region * a_paif)
-{
-    int f_i = 0;
-    while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
-    {
-        int f_i2 = 0;
-        while(f_i2 < 8)
-        {
-            if(a_paif->items[f_i][f_i2])
-            {
-                v_mf3_free(a_paif->items[f_i][f_i2]->mf3);
-                free(a_paif->items[f_i][f_i2]);
-                a_paif->items[f_i][f_i2] = 0;
-            }
-            ++f_i2;
-        }
-        ++f_i;
-    }
-    //free(a_paif);
-}
-
-
 void v_dn_paif_set_control(t_dawnext * self,
-        int a_item_index, int a_port, float a_val)
+        int a_item_index, int a_audio_item_index, int a_port, float a_val)
 {
     int f_effect_index = a_port / 4;
     int f_control_index = a_port % 4;
 
-    t_dn_per_audio_item_fx_region * f_region =
-        self->item_pool[a_item_index]->paif;
+    t_pydaw_audio_item * f_audio_item = self->item_pool[
+        a_item_index]->audio_items->items[a_audio_item_index];
+
+    t_paif * f_region = f_audio_item->paif;
     t_per_audio_item_fx * f_item;
+
     float f_sr = musikernel->thread_storage[0].sample_rate;
 
     if(!f_region)
     {
-        f_region = g_dn_paif_region_get();
+        f_region = g_paif8_get();
         pthread_spin_lock(&musikernel->main_lock);
-        self->item_pool[a_item_index]->paif = f_region;
+        f_audio_item->paif = f_region;
         pthread_spin_unlock(&musikernel->main_lock);
     }
 
-    if(!f_region->loaded[a_item_index])
+    if(!f_region->loaded)
     {
         t_per_audio_item_fx * f_items[8];
         int f_i = 0;
@@ -472,14 +416,14 @@ void v_dn_paif_set_control(t_dawnext * self,
         f_i = 0;
         while(f_i < 8)
         {
-            f_region->items[a_item_index][f_i] = f_items[f_i];
+            f_region->items[f_i] = f_items[f_i];
             ++f_i;
         }
-        f_region->loaded[a_item_index] = 1;
+        f_region->loaded = 1;
         pthread_spin_unlock(&musikernel->main_lock);
     }
 
-    f_item = f_region->items[a_item_index][f_effect_index];
+    f_item = f_region->items[f_effect_index];
 
     pthread_spin_lock(&musikernel->main_lock);
 
@@ -494,7 +438,7 @@ void v_dn_paif_set_control(t_dawnext * self,
     }
     else
     {
-        f_region->items[a_item_index][
+        f_region->items[
             f_effect_index]->a_knobs[f_control_index] = a_val;
 
         v_mf3_set(f_item->mf3, f_item->a_knobs[0],
@@ -1467,13 +1411,11 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
     }
 
     int f_playback_mode = musikernel->playback_mode;
-    t_dn_per_audio_item_fx_region * f_paif_region;
     t_per_audio_item_fx * f_paif_item;
 
     int f_adjusted_sample_count = a_sample_count;
     int f_start_sample = 0;
 
-    f_paif_region = f_item->paif;
     t_pydaw_audio_items * f_region = f_item->audio_items;
 
     int f_i = 0;
@@ -1616,23 +1558,20 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
 
                         float f_tmp_sample1 = f_tmp_sample0;
 
-                        if(f_paif_region)
+                        if(f_audio_item->paif && f_audio_item->paif->loaded)
                         {
-                            if(f_paif_region->loaded[f_i])
+                            int f_i3;
+                            for(f_i3 = 0; f_i3 < 8; ++f_i3)
                             {
-                                int f_i3;
-                                for(f_i3 = 0; f_i3 < 8; ++f_i3)
-                                {
-                                    f_paif_item =
-                                        f_paif_region->items[f_i][f_i3];
-                                    f_paif_item->func_ptr(
-                                        f_paif_item->mf3,
-                                        f_tmp_sample0, f_tmp_sample1);
-                                    f_tmp_sample0 =
-                                        f_paif_item->mf3->output0;
-                                    f_tmp_sample1 =
-                                        f_paif_item->mf3->output1;
-                                }
+                                f_paif_item =
+                                    f_audio_item->paif->items[f_i3];
+                                f_paif_item->func_ptr(
+                                    f_paif_item->mf3,
+                                    f_tmp_sample0, f_tmp_sample1);
+                                f_tmp_sample0 =
+                                    f_paif_item->mf3->output0;
+                                f_tmp_sample1 =
+                                    f_paif_item->mf3->output1;
                             }
                         }
 
@@ -1671,24 +1610,22 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
                         f_audio_item->vols_linear[f_send_num]
                         * f_audio_item->fade_vols[f_send_num];
 
-                        if(f_paif_region)
+
+                        if(f_audio_item->paif && f_audio_item->paif->loaded)
                         {
-                            if(f_paif_region->loaded[f_i])
+                            int f_i3 = 0;
+                            while(f_i3 < 8)
                             {
-                                int f_i3 = 0;
-                                while(f_i3 < 8)
-                                {
-                                    f_paif_item =
-                                        f_paif_region->items[f_i][f_i3];
-                                    f_paif_item->func_ptr(
-                                        f_paif_item->mf3,
-                                        f_tmp_sample0, f_tmp_sample1);
-                                    f_tmp_sample0 =
-                                        f_paif_item->mf3->output0;
-                                    f_tmp_sample1 =
-                                        f_paif_item->mf3->output1;
-                                    ++f_i3;
-                                }
+                                f_paif_item =
+                                    f_audio_item->paif->items[f_i3];
+                                f_paif_item->func_ptr(
+                                    f_paif_item->mf3,
+                                    f_tmp_sample0, f_tmp_sample1);
+                                f_tmp_sample0 =
+                                    f_paif_item->mf3->output0;
+                                f_tmp_sample1 =
+                                    f_paif_item->mf3->output1;
+                                ++f_i3;
                             }
                         }
 
@@ -2195,7 +2132,6 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
 
     f_result->audio_items = g_pydaw_audio_items_get(
         musikernel->thread_storage[0].sample_rate);
-    f_result->paif = g_dn_paif_region_get();
 
     while(f_i < DN_MAX_EVENTS_PER_ITEM_COUNT)
     {
@@ -2288,33 +2224,32 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         }
         else if(f_type == 'f') //per-item-fx
         {
-            t_dn_per_audio_item_fx_region * f_paif = f_result->paif;
             int f_index = atoi(f_current_string->current_str);
-
-            f_paif->loaded[f_index] = 1;
+            t_paif * f_paif = f_result->audio_items->items[f_index]->paif;
+            f_paif->loaded = 1;
 
             int f_i2 = 0;
 
             while(f_i2 < 8)
             {
-                f_paif->items[f_index][f_i2] = g_paif_get(f_sr);
+                f_paif->items[f_i2] = g_paif_get(f_sr);
                 int f_i3 = 0;
                 while(f_i3 < 3)
                 {
                     v_iterate_2d_char_array(f_current_string);
                     float f_knob_val = atof(f_current_string->current_str);
-                    f_paif->items[f_index][f_i2]->a_knobs[f_i3] = f_knob_val;
+                    f_paif->items[f_i2]->a_knobs[f_i3] = f_knob_val;
                     ++f_i3;
                 }
                 v_iterate_2d_char_array(f_current_string);
                 int f_type_val = atoi(f_current_string->current_str);
-                f_paif->items[f_index][f_i2]->fx_type = f_type_val;
-                f_paif->items[f_index][f_i2]->func_ptr =
+                f_paif->items[f_i2]->fx_type = f_type_val;
+                f_paif->items[f_i2]->func_ptr =
                         g_mf3_get_function_pointer(f_type_val);
-                v_mf3_set(f_paif->items[f_index][f_i2]->mf3,
-                        f_paif->items[f_index][f_i2]->a_knobs[0],
-                        f_paif->items[f_index][f_i2]->a_knobs[1],
-                        f_paif->items[f_index][f_i2]->a_knobs[2]);
+                v_mf3_set(f_paif->items[f_i2]->mf3,
+                        f_paif->items[f_i2]->a_knobs[0],
+                        f_paif->items[f_i2]->a_knobs[1],
+                        f_paif->items[f_i2]->a_knobs[2]);
                 ++f_i2;
             }
         }
@@ -2971,13 +2906,15 @@ void v_dn_configure(const char* a_key, const char* a_value)
 
     if(!strcmp(a_key, DN_CONFIGURE_KEY_PER_AUDIO_ITEM_FX))
     {
-        t_1d_char_array * f_arr = c_split_str(a_value, '|', 3,
+        t_1d_char_array * f_arr = c_split_str(a_value, '|', 4,
                 PYDAW_SMALL_STRING);
         int f_item_index = atoi(f_arr->array[0]);
-        int f_port_num = atoi(f_arr->array[1]);
-        float f_port_val = atof(f_arr->array[2]);
+        assert(NULL);  // The below hasn't been added to the UI
+        int f_audio_item_index = atoi(f_arr->array[1]);
+        int f_port_num = atoi(f_arr->array[2]);
+        float f_port_val = atof(f_arr->array[3]);
 
-        v_dn_paif_set_control(self, f_item_index,
+        v_dn_paif_set_control(self, f_item_index, f_audio_item_index,
                 f_port_num, f_port_val);
         g_free_1d_char_array(f_arr);
     }

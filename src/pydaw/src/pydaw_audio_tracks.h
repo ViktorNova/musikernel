@@ -36,9 +36,25 @@ GNU General Public License for more details.
 
 #define MK_AUDIO_ITEM_SEND_COUNT 3
 
+#define MK_PAIF_PER_ITEM 8
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
+
+typedef struct
+{
+    float a_knobs[3];
+    int fx_type;
+    fp_mf3_run func_ptr;
+    t_mf3_multi * mf3;
+}t_per_audio_item_fx;
+
+typedef struct
+{
+    int loaded;
+    t_per_audio_item_fx * items[MK_PAIF_PER_ITEM];
+}t_paif;
 
 typedef struct
 {
@@ -84,7 +100,8 @@ typedef struct
     int is_reversed;
     float fadein_vol;
     float fadeout_vol;
-    int paif_automation_uid;  //placeholder for future functionality
+    int paif_automation_uid;  //TODO:  This was never used, delete
+    t_paif * paif;
 } t_pydaw_audio_item __attribute__((aligned(16)));
 
 typedef struct
@@ -109,14 +126,6 @@ typedef struct
     int sample_rate;
     int uid;
 } t_pydaw_audio_items;
-
-typedef struct
-{
-    float a_knobs[3];
-    int fx_type;
-    fp_mf3_run func_ptr;
-    t_mf3_multi * mf3;
-}t_per_audio_item_fx;
 
 t_pydaw_audio_item * g_pydaw_audio_item_get(float);
 t_pydaw_audio_items * g_pydaw_audio_items_get(int);
@@ -144,6 +153,36 @@ t_per_audio_item_fx * g_paif_get(float a_sr)
     f_result->mf3 = g_mf3_get(a_sr);
 
     return f_result;
+}
+
+t_paif * g_paif8_get()
+{
+    t_paif * f_result;
+    lmalloc((void**)&f_result, sizeof(t_paif));
+
+    int f_i;
+    for(f_i = 0; f_i < MK_PAIF_PER_ITEM; ++f_i)
+    {
+        f_result->items[f_i] = NULL;
+    }
+
+    f_result->loaded = 0;
+
+    return f_result;
+}
+
+void v_paif_free(t_paif * self)
+{
+    int f_i2;
+    for(f_i2 = 0; f_i2 < MK_PAIF_PER_ITEM; ++f_i2)
+    {
+        if(self->items[f_i2])
+        {
+            v_mf3_free(self->items[f_i2]->mf3);
+            free(self->items[f_i2]);
+            self->items[f_i2] = 0;
+        }
+    }
 }
 
 void g_wav_pool_item_init(t_wav_pool_item *f_result,
@@ -402,6 +441,11 @@ void v_pydaw_audio_item_free(t_pydaw_audio_item* a_audio_item)
         return;
     }
 
+    if(a_audio_item->paif)
+    {
+        v_paif_free(a_audio_item->paif);
+    }
+
     if(a_audio_item)
     {
         free(a_audio_item);
@@ -416,6 +460,7 @@ t_pydaw_audio_item * g_pydaw_audio_item_get(float a_sr)
     lmalloc((void**)&f_result, sizeof(t_pydaw_audio_item));
 
     f_result->ratio = 1.0f;
+    f_result->paif = NULL;
     f_result->uid = -1;
     g_pit_ratio_init(&f_result->pitch_ratio_ptr);
 
