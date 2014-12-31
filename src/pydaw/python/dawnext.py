@@ -249,8 +249,8 @@ def global_set_region_editor_zoom():
     global REGION_EDITOR_GRID_WIDTH
     global MIDI_SCALE
 
-    f_width = float(REGION_EDITOR.rect().width()) - \
-        float(REGION_EDITOR.verticalScrollBar().width()) - 6.0 - \
+    f_width = float(SEQUENCER.rect().width()) - \
+        float(SEQUENCER.verticalScrollBar().width()) - 6.0 - \
         REGION_TRACK_WIDTH
     f_region_scale = f_width / 1000.0
 
@@ -7346,7 +7346,7 @@ class transport_widget(libmk.AbstractTransport):
         if not self.suppress_osc and \
         not libmk.IS_PLAYING and \
         not libmk.IS_RECORDING:
-            for f_editor in (AUDIO_SEQ, REGION_EDITOR):
+            for f_editor in (AUDIO_SEQ, SEQUENCER):
                 f_editor.set_playback_pos(self.get_bar_value())
             PROJECT.IPC.pydaw_set_pos(
                 self.get_region_value(), self.get_bar_value())
