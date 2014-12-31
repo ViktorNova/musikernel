@@ -91,6 +91,7 @@ typedef struct
 {
     int item_uid;
     double start;
+    double start_offset;
     double length;
     double end;
 }t_dn_item_ref;
@@ -1829,23 +1830,6 @@ void v_dn_open_project(int a_first_load)
     sprintf(f_transport_file, "%s/projects/dawnext/transport.txt",
             musikernel->project_folder);
 
-    if(i_pydaw_file_exists(f_transport_file))
-    {
-        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(
-                f_transport_file, PYDAW_LARGE_STRING);
-        v_iterate_2d_char_array(f_2d_array);
-        float f_tempo = atof(f_2d_array->current_str);
-
-        assert(f_tempo > 30.0f && f_tempo < 300.0f);
-        v_dn_set_tempo(dawnext, f_tempo);
-        g_free_2d_char_array(f_2d_array);
-    }
-    else  //No transport file, set default tempo
-    {
-        printf("No transport file found, defaulting to 128.0 BPM\n");
-        v_dn_set_tempo(dawnext, 128.0f);
-    }
-
     if(S_ISDIR(f_proj_stat.st_mode) &&
         S_ISDIR(f_item_stat.st_mode) &&
         S_ISDIR(f_reg_stat.st_mode) &&
@@ -1876,6 +1860,23 @@ void v_dn_open_project(int a_first_load)
         //Loads empty...  TODO:  Make this a separate function for getting an
         //empty en_song or loading a file into one...
         g_dn_song_get(dawnext, 0);
+    }
+
+    if(i_pydaw_file_exists(f_transport_file))
+    {
+        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(
+                f_transport_file, PYDAW_LARGE_STRING);
+        v_iterate_2d_char_array(f_2d_array);
+        float f_tempo = atof(f_2d_array->current_str);
+
+        assert(f_tempo > 30.0f && f_tempo < 300.0f);
+        v_dn_set_tempo(dawnext, f_tempo);
+        g_free_2d_char_array(f_2d_array);
+    }
+    else  //No transport file, set default tempo
+    {
+        printf("No transport file found, defaulting to 128.0 BPM\n");
+        v_dn_set_tempo(dawnext, 128.0f);
     }
 
     v_dn_update_track_send(dawnext, 0);
@@ -2044,33 +2045,22 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
             break;
         }
 
-        assert(NULL);  //TODO:  These are wrong, doesn't mean tempo
-        // also need to else if these and not continue and
-        // just do a char compare
         char f_key = f_current_string->current_str[0];
 
         if(f_key == 'L')
         {
             v_iterate_2d_char_array(f_current_string);
-            int f_bars = atoi(f_current_string->current_str);
-            f_result->region_length_bars = f_bars;
+            f_result->region_length_bars = atoi(f_current_string->current_str);
 
-            v_iterate_2d_char_array(f_current_string);
-            int f_beats = atoi(f_current_string->current_str);
-            f_result->region_length_beats = f_beats;
-        }
-        else if(f_key == 'T')
-        {
-            v_iterate_2d_char_array(f_current_string);
-            f_result->tempo = atof(f_current_string->current_str);
-        }
-        //per-region bar length in beats, not yet implemented
-        else if(f_key == 'B')
-        {
             v_iterate_2d_char_array(f_current_string);
             f_result->bar_length = atoi(f_current_string->current_str);
 
-            v_iterate_2d_char_array(f_current_string);  //not used
+            f_result->region_length_beats =
+                f_result->region_length_bars * f_result->bar_length;
+        }
+        else if(f_key == 'T')
+        {
+            assert(NULL);  //tempo, not yet implemented
         }
         else if(f_key == 'C')
         {
@@ -2111,6 +2101,8 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
             v_iterate_2d_char_array(f_current_string);
             f_item_ref->item_uid = atoi(f_current_string->current_str);
 
+            v_iterate_2d_char_array(f_current_string);
+            f_item_ref->start_offset = atof(f_current_string->current_str);
 
             ++f_item_counters[f_track_num];
         }

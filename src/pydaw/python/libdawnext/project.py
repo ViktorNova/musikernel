@@ -841,8 +841,8 @@ class pydaw_sequencer:
 
     def __str__(self):
         f_result = []
-        f_result.append("L|{}".format(self.length_bars))
-        f_result.append("T|{}".format(self.beats_per_measure))
+        f_result.append("L|{}|{}".format(
+            self.length_bars, self.beats_per_measure))
 
         for f_i in range(TRACK_COUNT_ALL):
             f_items = [x for x in self.items if x.track_num == f_i]
@@ -864,10 +864,11 @@ class pydaw_sequencer:
             else:
                 f_item_arr = f_line.split("|")
                 if f_item_arr[0] == "L":
-                    f_result.length_bars = int(f_item_arr[1])
+                    f_result.length_bars, f_result.beats_per_measure = (
+                        int(x) for x in f_item_arr[1:])
                     continue
                 if f_item_arr[0] == "T":
-                    f_result.beats_per_measure = int(f_item_arr[1])
+                    assert(False)
                     continue
                 if f_item_arr[0] == "C":
                     continue
