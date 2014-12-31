@@ -145,7 +145,7 @@ typedef struct
 typedef struct
 {
     t_dn_region * regions[DN_MAX_REGION_COUNT];
-    t_dn_atm_region * regions_atm[DN_MAX_REGION_COUNT];
+    t_dn_atm_region * regions_atm;
 }t_dn_song;
 
 typedef struct
@@ -212,10 +212,7 @@ typedef struct
 
     char * item_folder;
     char * region_folder;
-    char * region_audio_folder;
-    char * region_atm_folder;
     char * tracks_folder;
-    char * per_audio_item_fx_folder;
 }t_dawnext;
 
 
@@ -239,9 +236,7 @@ void v_dn_update_track_send(t_dawnext * self, int a_lock);
 void v_dn_process_external_midi(t_dawnext * pydaw_data,
         t_pytrack * a_track, int sample_count, int a_thread_num,
         t_dn_thread_storage * a_ts);
-void v_dn_offline_render(t_dawnext * self, int a_start_region,
-        int a_start_bar, int a_end_region, int a_end_bar, char * a_file_out,
-        int a_is_audio_glue, int a_create_file);
+void v_dn_offline_render(t_dawnext*, double, double, char*, int, int);
 void v_dn_audio_items_run(
     t_dawnext*, int, float**, float**, int, int, int*, t_dn_thread_storage*);
 inline float f_dn_count_beats(t_dawnext * self,
@@ -997,45 +992,15 @@ inline void v_dn_process_atm(
 
     while(1)
     {
-        if(self->en_song->regions_atm[f_current_track_region] &&
-            self->en_song->regions_atm[
-                f_current_track_region]->plugins[f_pool_index].point_count)
+        if(self->en_song->regions_atm &&
+            self->en_song->regions_atm->plugins[f_pool_index].point_count)
         {
             t_dn_atm_plugin * f_current_item =
-                &self->en_song->regions_atm[
-                    f_current_track_region]->plugins[f_pool_index];
+                &self->en_song->regions_atm->plugins[f_pool_index];
 
             if((f_plugin->atm_pos) >= (f_current_item->point_count))
             {
-                if(f_track_next_period_beats >= 4.0f)
-                {
-                    f_track_current_period_beats = 0.0f;
-                    f_track_next_period_beats =
-                        f_track_next_period_beats - 4.0f;
-                    f_track_beats_offset =
-                        ((a_ts->ml_sample_period_inc) * 4.0f) -
-                        f_track_next_period_beats;
-
-                    f_plugin->atm_pos = 0;
-
-                    ++f_current_track_bar;
-
-                    if(f_current_track_bar >= self->f_region_length_bars)
-                    {
-                        f_current_track_bar = 0;
-
-                        if(self->loop_mode != DN_LOOP_MODE_REGION)
-                        {
-                            ++f_current_track_region;
-                        }
-                    }
-
-                    continue;
-                }
-                else
-                {
-                    break;
-                }
+                break;
             }
 
             t_dn_atm_point * f_point =
@@ -1046,7 +1011,6 @@ inline void v_dn_process_atm(
                 ++f_plugin->atm_pos;
                 continue;
             }
-
 
             if((f_point->beat >= f_track_current_period_beats) &&
                 (f_point->beat < f_track_next_period_beats))
@@ -1075,37 +1039,6 @@ inline void v_dn_process_atm(
                     ++f_plugin->atm_count;
                 }
                 ++f_plugin->atm_pos;
-            }
-            else
-            {
-                break;
-            }
-        }
-        else
-        {
-            if(f_track_next_period_beats >= 4.0f)
-            {
-                f_track_current_period_beats = 0.0f;
-                f_track_next_period_beats =
-                    f_track_next_period_beats - 4.0f;
-                f_track_beats_offset =
-                    ((a_ts->ml_sample_period_inc) * 4.0f) -
-                        f_track_next_period_beats;
-
-                ++f_current_track_bar;
-
-                if(f_current_track_bar >= self->f_region_length_bars)
-                {
-                    f_current_track_bar = 0;
-                    f_plugin->atm_pos = 0;
-
-                    if(self->loop_mode != DN_LOOP_MODE_REGION)
-                    {
-                        ++f_current_track_region;
-                    }
-                }
-
-                continue;
             }
             else
             {
@@ -2057,20 +1990,23 @@ void v_dn_audio_items_run(t_dawnext * self,
 
 void g_dn_song_get(t_dawnext* self, int a_lock)
 {
-    t_dn_song * f_result = (t_dn_song*)malloc(sizeof(t_dn_song));
+    t_dn_song * f_result;
+    lmalloc((void**)&f_result, sizeof(t_dn_song));
 
+    f_result->regions_atm = NULL;
     int f_i = 0;
 
     while(f_i < DN_MAX_REGION_COUNT)
     {
         f_result->regions[f_i] = NULL;
-        f_result->regions_atm[f_i] = NULL;
         ++f_i;
     }
 
     char f_full_path[2048];
-    sprintf(f_full_path, "%s/projects/dawnext/song.txt",
+    sprintf(f_full_path, "%s/projects/dawnext/sequencer.txt",
         musikernel->project_folder);
+
+    f_result->regions_atm = g_dn_atm_region_get(self, f_uid);
 
     if(i_pydaw_file_exists(f_full_path))
     {
@@ -2091,7 +2027,6 @@ void g_dn_song_get(t_dawnext* self, int a_lock)
             int f_uid = atoi(f_current_string->current_str);
             f_result->regions[f_pos] = g_dn_region_get(self, f_uid);
             f_result->regions[f_pos]->uid = f_uid;
-            f_result->regions_atm[f_pos] = g_dn_atm_region_get(self, f_uid);
             //v_pydaw_audio_items_free(self->audio_items);
             ++f_i;
         }
@@ -2299,12 +2234,12 @@ int i_dn_song_index_from_region_uid(t_dawnext* self, int a_uid)
     return -1;
 }
 
-t_dn_atm_region * g_dn_atm_region_get(t_dawnext * self, int a_uid)
+t_dn_atm_region * g_dn_atm_region_get(t_dawnext * self)
 {
     t_dn_atm_region * f_result = NULL;
 
     char f_file[1024] = "\0";
-    sprintf(f_file, "%s%i", self->region_atm_folder, a_uid);
+    sprintf(f_file, "%s%i", self->region_atm_folder);
 
     if(i_pydaw_file_exists(f_file))
     {
@@ -2348,10 +2283,7 @@ t_dn_atm_region * g_dn_atm_region_get(t_dawnext * self, int a_uid)
             }
             else
             {
-                int f_bar = atoi(f_current_string->current_str);
-
-                v_iterate_2d_char_array(f_current_string);
-                float f_beat = atof(f_current_string->current_str);
+                double f_beat = atof(f_current_string->current_str);
 
                 v_iterate_2d_char_array(f_current_string);
                 int f_port = atoi(f_current_string->current_str);
@@ -2372,7 +2304,6 @@ t_dn_atm_region * g_dn_atm_region_get(t_dawnext * self, int a_uid)
                 t_dn_atm_point * f_point =
                     &f_result->plugins[f_index].points[f_pos];
 
-                f_point->bar = f_bar;
                 f_point->beat = f_beat;
                 f_point->port = f_port;
                 f_point->val = f_val;
@@ -3382,18 +3313,18 @@ void v_dn_configure(const char* a_key, const char* a_value)
     else if(!strcmp(a_key, DN_CONFIGURE_KEY_SAVE_ATM))
     {
         int f_uid = atoi(a_value);
-        t_dn_atm_region * f_result = g_dn_atm_region_get(self, f_uid);
+        t_dn_atm_region * f_result = g_dn_atm_region_get(self);
         int f_region_index = i_dn_song_index_from_region_uid(self, f_uid);
 
         if(f_region_index >= 0 )
         {
             t_dn_atm_region * f_old_region = NULL;
-            if(self->en_song->regions_atm[f_region_index])
+            if(self->en_song->regions_atm)
             {
-                f_old_region = self->en_song->regions_atm[f_region_index];
+                f_old_region = self->en_song->regions_atm;
             }
             pthread_spin_lock(&musikernel->main_lock);
-            self->en_song->regions_atm[f_region_index] = f_result;
+            self->en_song->regions_atm = f_result;
             pthread_spin_unlock(&musikernel->main_lock);
             if(f_old_region)
             {
