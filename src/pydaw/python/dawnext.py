@@ -2185,18 +2185,6 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_replace_action.triggered.connect(self.replace_with_path_in_clipboard)
 
         f_properties_menu = f_menu.addMenu(_("Properties"))
-        f_output_menu = f_properties_menu.addMenu("Track")
-        f_output_menu.triggered.connect(self.output_menu_triggered)
-
-        f_output_tracks = {x.audio_item.output_track
-            for x in AUDIO_SEQ.get_selected()}
-
-        for f_track_name, f_index in zip(
-        TRACK_NAMES, range(len(TRACK_NAMES))):
-            f_action = f_output_menu.addAction(f_track_name)
-            if len(f_output_tracks) == 1 and f_index in f_output_tracks:
-                f_action.setCheckable(True)
-                f_action.setChecked(True)
 
         f_ts_mode_menu = f_properties_menu.addMenu("Timestretch Mode")
         f_ts_mode_menu.triggered.connect(self.ts_mode_menu_triggered)
@@ -2241,8 +2229,6 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_time_pitch_action.triggered.connect(self.time_pitch_dialog)
         f_fade_vol_action = f_properties_menu.addAction(_("Fade Volume..."))
         f_fade_vol_action.triggered.connect(self.fade_vol_dialog)
-        f_sends_action = f_properties_menu.addAction(_("Sends..."))
-        f_sends_action.triggered.connect(self.sends_dialog)
 
         f_paif_menu = f_menu.addMenu(_("Per-Item FX"))
         f_edit_paif_action = f_paif_menu.addAction(_("Edit Per-Item Effects"))
@@ -2265,16 +2251,6 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_all_fades_action.triggered.connect(self.set_fades_for_all_instances)
         f_all_paif_action = f_per_file_menu.addAction(_("Per-Item FX"))
         f_all_paif_action.triggered.connect(self.set_paif_for_all_instance)
-
-        f_set_all_output_menu = f_per_file_menu.addMenu("Track")
-        f_set_all_output_menu.triggered.connect(
-            self.set_all_output_menu_triggered)
-        for f_track_name, f_index in zip(
-        TRACK_NAMES, range(len(TRACK_NAMES))):
-            f_action = f_set_all_output_menu.addAction(f_track_name)
-            if f_index == self.audio_item.output_track:
-                f_action.setCheckable(True)
-                f_action.setChecked(True)
 
         f_groove_menu = f_menu.addMenu(_("Groove"))
         f_copy_as_cc_action = f_groove_menu.addAction(
@@ -2311,16 +2287,6 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
     def copy_as_notes(self):
         PIANO_ROLL_EDITOR.clipboard = en_project.envelope_to_notes(
             self.graph_object, TRANSPORT.tempo_spinbox.value())
-
-    def output_menu_triggered(self, a_action):
-        f_index = TRACK_NAMES.index(str(a_action.text()))
-        f_list = [x.audio_item for x in AUDIO_SEQ.audio_items
-            if x.isSelected()]
-        for f_item in f_list:
-            f_item.output_track = f_index
-        PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
-        PROJECT.commit(_("Change output track for audio item(s)"))
-        global_open_audio_items()
 
     def crisp_menu_triggered(self, a_action):
         f_index = CRISPNESS_SETTINGS.index(str(a_action.text()))
@@ -2359,7 +2325,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 TRANSPORT.tempo_spinbox.value(),
                 f_new_graph.length_in_seconds)
 
-        PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+        PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
         PROJECT.commit(_("Change timestretch mode for audio item(s)"))
         global_open_audio_items()
 
@@ -2377,99 +2343,9 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         PROJECT.set_paif_for_all_audio_items(
             self.audio_item.uid, f_paif_row)
 
-    def set_all_output_menu_triggered(self, a_action):
-        f_index = TRACK_NAMES.index(str(a_action.text()))
-        PROJECT.set_output_for_all_audio_items(
-            self.audio_item.uid, f_index)
-        global_open_audio_items()
-
     def set_fades_for_all_instances(self):
         PROJECT.set_fades_for_all_audio_items(self.audio_item)
         global_open_audio_items()
-
-    def sends_dialog(self):
-        def ok_handler():
-            f_list = [x.audio_item for x in AUDIO_SEQ.audio_items
-                if x.isSelected()]
-            for f_item in f_list:
-                f_item.output_track = f_track_cboxes[0].currentIndex()
-                f_item.vol = get_vol(f_track_vols[0].value())
-                f_item.s0_sc = f_sc_checkboxes[0].isChecked()
-                f_item.send1 = f_track_cboxes[1].currentIndex() - 1
-                f_item.s1_vol = get_vol(f_track_vols[1].value())
-                f_item.s1_sc = f_sc_checkboxes[1].isChecked()
-                f_item.send2 = f_track_cboxes[2].currentIndex() - 1
-                f_item.s2_vol = get_vol(f_track_vols[2].value())
-                f_item.s2_sc = f_sc_checkboxes[2].isChecked()
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
-            PROJECT.commit(_("Update sends for audio item(s)"))
-            global_open_audio_items()
-            f_dialog.close()
-
-        def cancel_handler():
-            f_dialog.close()
-
-        def vol_changed(a_val=None):
-            for f_vol_label, f_vol_slider in zip(f_vol_labels, f_track_vols):
-                f_vol_label.setText(
-                    "{}dB".format(get_vol(f_vol_slider.value())))
-
-        def get_vol(a_val):
-            return round(a_val * 0.1, 1)
-
-        f_dialog = QtGui.QDialog(MAIN_WINDOW)
-        f_dialog.setWindowTitle(_("Set Volume for all Instance of File"))
-        f_layout = QtGui.QGridLayout(f_dialog)
-        f_layout.setAlignment(QtCore.Qt.AlignCenter)
-        f_track_cboxes = []
-        f_sc_checkboxes = []
-        f_track_vols = []
-        f_vol_labels = []
-        f_current_vals = [
-            (self.audio_item.output_track, self.audio_item.vol,
-             self.audio_item.s0_sc),
-            (self.audio_item.send1, self.audio_item.s1_vol,
-             self.audio_item.s1_sc),
-            (self.audio_item.send2, self.audio_item.s2_vol,
-             self.audio_item.s2_sc)]
-        for f_i in range(3):
-            f_out, f_vol, f_sc = f_current_vals[f_i]
-            f_tracks_combobox = QtGui.QComboBox()
-            f_track_cboxes.append(f_tracks_combobox)
-            if f_i == 0:
-                f_tracks_combobox.addItems(TRACK_NAMES)
-                f_tracks_combobox.setCurrentIndex(f_out)
-            else:
-                f_tracks_combobox.addItems(["None"] + TRACK_NAMES)
-                f_tracks_combobox.setCurrentIndex(f_out + 1)
-            f_tracks_combobox.setMinimumWidth(105)
-            f_layout.addWidget(f_tracks_combobox, 0, f_i)
-            f_sc_checkbox = QtGui.QCheckBox(_("Sidechain"))
-            f_sc_checkboxes.append(f_sc_checkbox)
-            if f_sc:
-                f_sc_checkbox.setChecked(True)
-            f_layout.addWidget(f_sc_checkbox, 1, f_i)
-            f_vol_slider = QtGui.QSlider(QtCore.Qt.Vertical)
-            f_track_vols.append(f_vol_slider)
-            f_vol_slider.setRange(-240, 240)
-            f_vol_slider.setMinimumHeight(360)
-            f_vol_slider.valueChanged.connect(vol_changed)
-            f_layout.addWidget(f_vol_slider, 2, f_i, QtCore.Qt.AlignCenter)
-            f_vol_label = QtGui.QLabel("0.0dB")
-            f_vol_labels.append(f_vol_label)
-            f_layout.addWidget(f_vol_label, 3, f_i)
-            f_vol_slider.setValue(f_vol * 10.0)
-
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
-        f_layout.addLayout(f_ok_cancel_layout, 10, 2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_ok_button.pressed.connect(ok_handler)
-        f_ok_cancel_layout.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
-        f_cancel_button.pressed.connect(cancel_handler)
-        f_ok_cancel_layout.addWidget(f_cancel_button)
-        f_dialog.exec_()
-
 
     def set_vol_for_all_instances(self):
         def ok_handler():
@@ -2529,7 +2405,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_list = AUDIO_SEQ.get_selected()
         for f_item in f_list:
             f_item.audio_item.reversed = not f_item.audio_item.reversed
-        PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+        PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
         PROJECT.commit(_("Toggle audio items reversed"))
         global_open_audio_items(True)
 
@@ -2542,7 +2418,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 f_item.audio_item.clip_at_region_end(
                     f_current_region_length, f_global_tempo,
                     f_item.graph_object.length_in_seconds, False)
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             PROJECT.commit(_("Move audio item(s) to region end"))
             global_open_audio_items(True)
 
@@ -2552,7 +2428,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             for f_item in f_list:
                 f_item.audio_item.fade_in = 0.0
                 f_item.audio_item.fade_out = 999.0
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             PROJECT.commit(_("Reset audio item fades"))
             global_open_audio_items(True)
 
@@ -2563,7 +2439,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             f_item.audio_item.sample_end = 1000.0
             self.draw()
             self.clip_at_region_end()
-        PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+        PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
         PROJECT.commit(_("Reset sample ends for audio item(s)"))
         global_open_audio_items()
 
@@ -2571,7 +2447,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_path = global_get_audio_file_from_clipboard()
         if f_path is not None:
             self.audio_item.uid = libmk.PROJECT.get_wav_uid_by_name(f_path)
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             PROJECT.commit(_("Replace audio item"))
             global_open_audio_items(True)
 
@@ -2593,7 +2469,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             f_val = round(f_db_spinbox.value(), 1)
             for f_item in AUDIO_SEQ.get_selected():
                 f_item.audio_item.vol = f_val
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             PROJECT.commit(_("Normalize audio items"))
             global_open_audio_items(True)
             f_window.close()
@@ -2640,7 +2516,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             f_save = True
             f_item.normalize(f_val)
         if f_save:
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             PROJECT.commit(_("Normalize audio items"))
             global_open_audio_items(True)
 
@@ -3248,7 +3124,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
                     f_item.audio_item.set_fade_out(f_val)
 
         if f_changed:
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             PROJECT.commit(_("Crossfade audio items"))
             global_open_audio_items(True)
 
@@ -3828,7 +3704,7 @@ class time_pitch_dialog_widget:
                     f_audio_item.clip_at_region_end(
                         f_current_region_length, f_global_tempo,
                         f_graph.length_in_seconds)
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             global_open_audio_items(True)
             PROJECT.commit(_("Update audio items"))
         self.widget.close()
@@ -3906,7 +3782,7 @@ class fade_vol_dialog_widget:
             QtGui.QMessageBox.warning(
                 self.widget, _("Error"), _("No items selected"))
         else:
-            PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             global_open_audio_items(True)
             PROJECT.commit(_("Update audio items"))
         self.widget.close()
@@ -4165,7 +4041,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
                 if f_list is not None:
                     f_per_item_fx_dict.set_row(f_index, f_list)
         AUDIO_ITEMS.deduplicate_items()
-        PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
+        PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
         PROJECT.save_audio_per_item_fx_region(
             CURRENT_REGION.uid, f_per_item_fx_dict, False)
         PROJECT.IPC.pydaw_audio_per_item_fx_region(
