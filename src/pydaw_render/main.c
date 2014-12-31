@@ -235,7 +235,7 @@ int dawnext_main(int argc, char** argv)
     v_dn_offline_render_prep(dawnext);
 
     v_dn_offline_render(dawnext, f_start_beat,
-        f_end_beat, f_output_file, 0, f_create_file);
+        f_end_beat, f_output_file, 0, f_create_file, NULL);
 
     v_pydaw_destructor();
 
