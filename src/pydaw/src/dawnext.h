@@ -91,6 +91,7 @@ typedef struct
 {
     int item_uid;
     double start;
+    double length;
     double end;
 }t_dn_item_ref;
 
@@ -1704,37 +1705,8 @@ void g_dn_song_get(t_dawnext* self, int a_lock)
         ++f_i;
     }
 
-    char f_full_path[2048];
-    sprintf(f_full_path, "%s/projects/dawnext/sequencer.txt",
-        musikernel->project_folder);
-
     f_result->regions_atm = g_dn_atm_region_get(self);
-
-    if(i_pydaw_file_exists(f_full_path))
-    {
-        f_i = 0;
-
-        t_2d_char_array * f_current_string =
-            g_get_2d_array_from_file(f_full_path, PYDAW_LARGE_STRING);
-
-        while(f_i < DN_MAX_REGION_COUNT)
-        {
-            v_iterate_2d_char_array(f_current_string);
-            if(f_current_string->eof)
-            {
-                break;
-            }
-            int f_pos = atoi(f_current_string->current_str);
-            v_iterate_2d_char_array(f_current_string);
-            int f_uid = atoi(f_current_string->current_str);
-            f_result->regions[f_pos] = g_dn_region_get(self, f_uid);
-            f_result->regions[f_pos]->uid = f_uid;
-            //v_pydaw_audio_items_free(self->audio_items);
-            ++f_i;
-        }
-
-        g_free_2d_char_array(f_current_string);
-    }
+    f_result->regions[0] = g_dn_region_get(self, 0);
 
     t_dn_song * f_old = self->en_song;
 
@@ -2036,6 +2008,7 @@ void v_dn_atm_region_free(t_dn_atm_region * self)
 t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
 {
     t_dn_region * f_result;
+    int f_item_counters[DN_TRACK_COUNT];
     lmalloc((void**)&f_result, sizeof(t_dn_region));
 
     f_result->tempo = 128.0f;
@@ -2050,11 +2023,13 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
     {
         f_result->tracks[f_i].refs = NULL;
         f_result->tracks[f_i].count = 0;
+        f_item_counters[f_i] = 0;
     }
 
 
     char f_full_path[PYDAW_TINY_STRING];
-    sprintf(f_full_path, "%s%i", self->region_folder, a_uid);
+    sprintf(f_full_path, "%s/sequencer.txt", self->project_folder); //, a_uid);
+    //sprintf(f_full_path, "%s%i", self->region_folder, a_uid);
 
     t_2d_char_array * f_current_string =
         g_get_2d_array_from_file(f_full_path, PYDAW_LARGE_STRING);
@@ -2113,7 +2088,31 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
         }
         else
         {
-            assert(NULL);  //TODO
+            v_iterate_2d_char_array(f_current_string);
+            int f_track_num = atoi(f_current_string->current_str);
+
+            assert(f_result->tracks[f_track_num].refs);
+
+            t_dn_item_ref * f_item_ref =
+                &f_result->tracks[f_track_num].refs[
+                    f_item_counters[f_track_num]];
+
+            assert(f_item_counters[f_track_num] <
+                f_result->tracks[f_track_num].count);
+
+            v_iterate_2d_char_array(f_current_string);
+            f_item_ref->start = atof(f_current_string->current_str);
+
+            v_iterate_2d_char_array(f_current_string);
+            f_item_ref->length = atof(f_current_string->current_str);
+
+            f_item_ref->end = f_item_ref->start + f_item_ref->length;
+
+            v_iterate_2d_char_array(f_current_string);
+            f_item_ref->item_uid = atoi(f_current_string->current_str);
+
+
+            ++f_item_counters[f_track_num];
         }
 
         ++f_i;
