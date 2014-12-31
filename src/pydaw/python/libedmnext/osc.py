@@ -40,9 +40,6 @@ class EdmNextOsc(libmk.AbstractIPC):
         self.send_configure(
             "enp", "|".join(str(x) for x in (a_mode, a_region_num, a_bar)))
 
-    def pydaw_wn_playback(self, a_mode):
-        self.send_configure("wnp", str(a_mode))
-
     def pydaw_set_loop_mode(self, a_mode):
         self.send_configure("loop", str(a_mode))
 
@@ -81,9 +78,6 @@ class EdmNextOsc(libmk.AbstractIPC):
             "or", "|".join(str(x) for x in
             (a_start_region, a_start_bar, a_end_region, a_end_bar,
              a_file_name)))
-
-    def pydaw_we_export(self, a_file_name):
-        self.send_configure("wex", "{}".format(a_file_name))
 
     def pydaw_reload_audio_items(self, a_region_uid):
         self.send_configure("ai", str(a_region_uid))

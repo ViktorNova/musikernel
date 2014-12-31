@@ -36,12 +36,9 @@ class DawNextOsc(libmk.AbstractIPC):
     def pydaw_save_region(self):
         self.send_configure("sr", "")
 
-    def pydaw_en_playback(self, a_mode, a_bar="0"):
+    def pydaw_en_playback(self, a_mode, a_beat="0"):
         self.send_configure(
-            "enp", "|".join(str(x) for x in (a_mode, a_bar)))
-
-    def pydaw_wn_playback(self, a_mode):
-        self.send_configure("wnp", str(a_mode))
+            "enp", "|".join(str(x) for x in (a_mode, a_beat)))
 
     def pydaw_set_loop_mode(self, a_mode):
         self.send_configure("loop", str(a_mode))
@@ -75,18 +72,13 @@ class DawNextOsc(libmk.AbstractIPC):
     def pydaw_save_atm_region(self, a_region_uid):
         self.send_configure("sa", str(a_region_uid))
 
-    def pydaw_offline_render(self, a_start_region, a_start_bar, a_end_region,
-                             a_end_bar, a_file_name):
+    def pydaw_offline_render(self, a_start_beat, a_end_beat, a_file_name):
         self.send_configure(
             "or", "|".join(str(x) for x in
-            (a_start_region, a_start_bar, a_end_region, a_end_bar,
-             a_file_name)))
+            (a_start_beat, a_end_beat, a_file_name)))
 
     def pydaw_we_export(self, a_file_name):
         self.send_configure("wex", "{}".format(a_file_name))
-
-    def pydaw_reload_audio_items(self, a_region_uid):
-        self.send_configure("ai", str(a_region_uid))
 
     def pydaw_set_overdub_mode(self, a_is_on):
         """ a_is_on should be a bool """
@@ -95,17 +87,15 @@ class DawNextOsc(libmk.AbstractIPC):
     def pydaw_panic(self):
         self.send_configure("panic", "")
 
-    def pydaw_audio_per_item_fx(self, a_region_uid, a_item_index,
-                                a_port_num, a_val):
+    def pydaw_audio_per_item_fx(
+            self, a_region_uid, a_item_index, a_port_num, a_val):
         self.send_configure(
             "paif", "|".join(str(x) for x in
              (a_region_uid, a_item_index, a_port_num, a_val)))
 
-    def pydaw_audio_per_item_fx_region(self, a_region_uid):
-        self.send_configure("par", str(a_region_uid))
-
-    def pydaw_glue_audio(self, a_file_name, a_region_index, a_start_bar_index,
-                         a_end_bar_index, a_item_indexes):
+    def pydaw_glue_audio(
+            self, a_file_name, a_region_index, a_start_bar_index,
+            a_end_bar_index, a_item_indexes):
         f_index_arr = [str(x) for x in a_item_indexes]
         self.send_configure("ga", "|".join(str(x) for x in
            (a_file_name, a_region_index, a_start_bar_index, a_end_bar_index,
@@ -120,4 +110,5 @@ class DawNextOsc(libmk.AbstractIPC):
             (bool_to_int(a_is_on), a_device_num, a_track_num)))
 
     def pydaw_set_pos(self, a_region, a_bar):
-        self.send_configure("pos", "|".join(str(x) for x in (a_region, a_bar)))
+        self.send_configure(
+            "pos", "|".join(str(x) for x in (a_region, a_bar)))
