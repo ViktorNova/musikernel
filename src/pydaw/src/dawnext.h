@@ -2073,12 +2073,11 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
 
             assert(!f_result->tracks[f_track_num].refs);
 
-            lmalloc((void**)&f_result->tracks[f_i].refs,
-                f_result->tracks[f_i].count * sizeof(t_dn_item_ref));
+            lmalloc((void**)&f_result->tracks[f_track_num].refs,
+                f_result->tracks[f_track_num].count * sizeof(t_dn_item_ref));
         }
         else
         {
-            v_iterate_2d_char_array(f_current_string);
             int f_track_num = atoi(f_current_string->current_str);
 
             assert(f_result->tracks[f_track_num].refs);
