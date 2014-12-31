@@ -843,10 +843,14 @@ class pydaw_sequencer:
         f_result = []
         f_result.append("L|{}".format(self.length_bars))
         f_result.append("T|{}".format(self.beats_per_measure))
-        f_result.append("C|{}".format(len(self.items)))
-        self.items.sort()
-        for f_item in self.items:
-            f_result.append(str(f_item))
+
+        for f_i in range(TRACK_COUNT_ALL):
+            f_items = [x for x in self.items if x.track_num == f_i]
+            if f_items:
+                f_items.sort()
+                f_result.append("C|{}|{}".format(f_i, len(f_items)))
+                for f_item in f_items:
+                    f_result.append(str(f_item))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 

@@ -2048,6 +2048,7 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
 
     for(f_i = 0; f_i < DN_TRACK_COUNT; ++f_i)
     {
+        f_result->tracks[f_i].refs = NULL;
         f_result->tracks[f_i].count = 0;
     }
 
@@ -2060,7 +2061,7 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
 
     f_i = 0;
 
-    while(f_i < 264)
+    while(1)
     {
         v_iterate_2d_char_array(f_current_string);
         if(f_current_string->eof)
@@ -2068,7 +2069,12 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
             break;
         }
 
-        if(!strcmp("L", f_current_string->current_str))
+        assert(NULL);  //TODO:  These are wrong, doesn't mean tempo
+        // also need to else if these and not continue and
+        // just do a char compare
+        char f_key = f_current_string->current_str[0];
+
+        if(f_key == 'L')
         {
             v_iterate_2d_char_array(f_current_string);
             int f_bars = atoi(f_current_string->current_str);
@@ -2077,29 +2083,38 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
             v_iterate_2d_char_array(f_current_string);
             int f_beats = atoi(f_current_string->current_str);
             f_result->region_length_beats = f_beats;
-            continue;
         }
-        assert(NULL);  //TODO:  These are wrong, doesn't mean tempo
-        // also need to else if these and not continue and
-        // just do a char compare
-        if(!strcmp("T", f_current_string->current_str))
+        else if(f_key == 'T')
         {
             v_iterate_2d_char_array(f_current_string);
             f_result->tempo = atof(f_current_string->current_str);
-            continue;
         }
         //per-region bar length in beats, not yet implemented
-        if(!strcmp("B", f_current_string->current_str))
+        else if(f_key == 'B')
         {
             v_iterate_2d_char_array(f_current_string);
             f_result->bar_length = atoi(f_current_string->current_str);
 
             v_iterate_2d_char_array(f_current_string);  //not used
-            continue;
         }
+        else if(f_key == 'C')
+        {
+            v_iterate_2d_char_array(f_current_string);
+            int f_track_num = atoi(f_current_string->current_str);
+            v_iterate_2d_char_array(f_current_string);
 
-        assert(NULL);  //TODO
+            f_result->tracks[f_track_num].count =
+                atoi(f_current_string->current_str);
 
+            assert(!f_result->tracks[f_track_num].refs);
+
+            lmalloc((void**)&f_result->tracks[f_i].refs,
+                f_result->tracks[f_i].count * sizeof(t_dn_item_ref));
+        }
+        else
+        {
+            assert(NULL);  //TODO
+        }
 
         ++f_i;
     }
@@ -2122,7 +2137,7 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
     f_result->event_count = 0;
     f_result->uid = a_uid;
 
-    char f_full_path[512];
+    char f_full_path[2048];
     sprintf(f_full_path, "%s%i", self->item_folder, a_uid);
 
     t_2d_char_array * f_current_string = g_get_2d_array_from_file(f_full_path,
