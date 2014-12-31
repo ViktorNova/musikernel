@@ -47,8 +47,8 @@ typedef struct
     float ratio;
     int uid;
     int start_bar;
-    float start_beat;
-    float adjusted_start_beat;
+    double start_beat;
+    double adjusted_start_beat;
     int timestretch_mode;  //tentatively: 0 == none, 1 == pitch, 2 == time+pitch
     float pitch_shift;
     float sample_start;
