@@ -210,6 +210,7 @@ typedef struct
     long f_next_current_sample;
     t_dn_midi_routing_list midi_routing;
 
+    char * project_folder;
     char * item_folder;
     char * region_folder;
     char * tracks_folder;
@@ -220,7 +221,7 @@ void g_dn_song_get(t_dawnext*, int);
 t_dn_routing_graph * g_dn_routing_graph_get(t_dawnext *);
 void v_dn_routing_graph_free(t_dn_routing_graph*);
 t_dn_region * g_dn_region_get(t_dawnext*, const int);
-t_dn_atm_region * g_dn_atm_region_get(t_dawnext*, int);
+t_dn_atm_region * g_dn_atm_region_get(t_dawnext*);
 void v_dn_atm_region_free(t_dn_atm_region*);
 void g_dn_item_get(t_dawnext*, int);
 
@@ -445,66 +446,6 @@ void v_dn_paif_region_free(t_dn_per_audio_item_fx_region * a_paif)
     //free(a_paif);
 }
 
-
-t_dn_per_audio_item_fx_region * g_dn_paif_region_open(
-        t_dawnext * self, int a_region_uid)
-{
-    t_dn_per_audio_item_fx_region * f_result = g_dn_paif_region_get();
-
-    int f_i = 0;
-    char f_temp[1024];
-    sprintf(f_temp, "%s%i", self->per_audio_item_fx_folder, a_region_uid);
-
-    float f_sr = musikernel->thread_storage[0].sample_rate;
-
-    if(i_pydaw_file_exists(f_temp))
-    {
-        t_2d_char_array * f_current_string =
-                g_get_2d_array_from_file(f_temp, PYDAW_LARGE_STRING);
-        while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
-        {
-            v_iterate_2d_char_array(f_current_string);
-            if(f_current_string->eof)
-            {
-                break;
-            }
-            int f_index = atoi(f_current_string->current_str);
-
-            f_result->loaded[f_index] = 1;
-
-            int f_i2 = 0;
-
-            while(f_i2 < 8)
-            {
-                f_result->items[f_index][f_i2] = g_paif_get(f_sr);
-                int f_i3 = 0;
-                while(f_i3 < 3)
-                {
-                    v_iterate_2d_char_array(f_current_string);
-                    float f_knob_val = atof(f_current_string->current_str);
-                    f_result->items[f_index][f_i2]->a_knobs[f_i3] = f_knob_val;
-                    ++f_i3;
-                }
-                v_iterate_2d_char_array(f_current_string);
-                int f_type_val = atoi(f_current_string->current_str);
-                f_result->items[f_index][f_i2]->fx_type = f_type_val;
-                f_result->items[f_index][f_i2]->func_ptr =
-                        g_mf3_get_function_pointer(f_type_val);
-                v_mf3_set(f_result->items[f_index][f_i2]->mf3,
-                        f_result->items[f_index][f_i2]->a_knobs[0],
-                        f_result->items[f_index][f_i2]->a_knobs[1],
-                        f_result->items[f_index][f_i2]->a_knobs[2]);
-                ++f_i2;
-            }
-
-            ++f_i;
-        }
-
-        g_free_2d_char_array(f_current_string);
-    }
-
-    return f_result;
-}
 
 void v_dn_paif_set_control(t_dawnext * self,
         int a_item_index, int a_port, float a_val)
@@ -1416,19 +1357,16 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
         (self->ts[0].ml_next_playback_cursor) * 4.0f;
 
     self->ts[0].ml_current_region = (self->current_region);
-    self->ts[0].ml_current_bar = (self->current_bar);
     self->ts[0].ml_current_beat = (self->ts[0].ml_current_period_beats);
 
-    self->ts[0].ml_next_bar = (self->current_bar);
     self->ts[0].ml_next_region = (self->current_region);
 
-    if((self->ts[0].ml_next_period_beats) > 4.0f)  //Should it be >= ???
+    /*
+    if((self->ts[0].ml_next_period_beats) > 4.0f)
     {
         self->ts[0].ml_starting_new_bar = 1;
         self->ts[0].ml_next_beat =
             (self->ts[0].ml_next_period_beats) - 4.0f;
-
-        self->ts[0].ml_next_bar = (self->current_bar) + 1;
 
         int f_region_length = 8;
         if(self->en_song->regions[(self->current_region)])
@@ -1457,11 +1395,12 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
         }
     }
     else
+    */
+    if(1)
     {
         self->ts[0].ml_is_looping = 0;
         self->ts[0].ml_starting_new_bar = 0;
         self->ts[0].ml_next_region = self->current_region;
-        self->ts[0].ml_next_bar = self->current_bar;
         self->ts[0].ml_next_beat = self->ts[0].ml_next_period_beats;
     }
 }
@@ -2006,7 +1945,7 @@ void g_dn_song_get(t_dawnext* self, int a_lock)
     sprintf(f_full_path, "%s/projects/dawnext/sequencer.txt",
         musikernel->project_folder);
 
-    f_result->regions_atm = g_dn_atm_region_get(self, f_uid);
+    f_result->regions_atm = g_dn_atm_region_get(self);
 
     if(i_pydaw_file_exists(f_full_path))
     {
@@ -2116,18 +2055,14 @@ void v_dn_open_tracks()
 
 void v_dn_open_project(int a_first_load)
 {
-    sprintf(dawnext->item_folder, "%s/projects/dawnext/items/",
+    sprintf(dawnext->project_folder, "%s/projects/dawnext",
         musikernel->project_folder);
-    sprintf(dawnext->region_folder, "%s/projects/dawnext/regions/",
-        musikernel->project_folder);
-    sprintf(dawnext->region_audio_folder, "%s/projects/dawnext/regions_audio/",
-        musikernel->project_folder);
-    sprintf(dawnext->region_atm_folder, "%s/projects/dawnext/regions_atm/",
-        musikernel->project_folder);
-    sprintf(dawnext->per_audio_item_fx_folder,
-        "%s/projects/dawnext/audio_per_item_fx/", musikernel->project_folder);
-    sprintf(dawnext->tracks_folder, "%s/projects/dawnext/tracks",
-        musikernel->project_folder);
+    sprintf(dawnext->item_folder, "%s/items/",
+        dawnext->project_folder);
+    sprintf(dawnext->region_folder, "%s/regions/",
+        dawnext->project_folder);
+    sprintf(dawnext->tracks_folder, "%s/tracks",
+        dawnext->project_folder);
 
     int f_i = 0;
 
@@ -2239,7 +2174,7 @@ t_dn_atm_region * g_dn_atm_region_get(t_dawnext * self)
     t_dn_atm_region * f_result = NULL;
 
     char f_file[1024] = "\0";
-    sprintf(f_file, "%s%i", self->region_atm_folder);
+    sprintf(f_file, "%s/automation.txt", self->project_folder);
 
     if(i_pydaw_file_exists(f_file))
     {
@@ -2345,7 +2280,6 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
     f_result->region_length_beats = 0;
     f_result->bar_length = 0;
     f_result->uid = a_uid;
-    f_result->not_yet_saved = 0;
 
     int f_i = 0;
     int f_i2 = 0;
@@ -2526,11 +2460,10 @@ t_dawnext * g_dawnext_get()
 
     f_result->overdub_mode = 0;
     f_result->loop_mode = 0;
+
+    f_result->project_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->item_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->region_folder = (char*)malloc(sizeof(char) * 1024);
-    f_result->region_audio_folder = (char*)malloc(sizeof(char) * 1024);
-    f_result->region_atm_folder = (char*)malloc(sizeof(char) * 1024);
-    f_result->per_audio_item_fx_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->tracks_folder = (char*)malloc(sizeof(char) * 1024);
 
     f_result->en_song = NULL;
@@ -2606,6 +2539,7 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
             }
 
             self->suppress_new_audio_items = 1;
+            /*
             //Fade out the playing audio tracks
             if(self->en_song->audio_items[self->current_region])
             {
@@ -2623,6 +2557,7 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
                     ++f_i;
                 }
             }
+            */
 
             self->suppress_new_audio_items = 0;
             musikernel->playback_mode = a_mode;
@@ -2700,78 +2635,13 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
     }
 }
 
-
-/*Load/Reload samples from file...*/
-t_pydaw_audio_items * v_dn_audio_items_load_all(t_dawnext * self,
-        int a_region_uid)
-{
-    float f_sample_rate = musikernel->thread_storage[0].sample_rate;
-    t_pydaw_audio_items * f_result =
-        g_pydaw_audio_items_get(f_sample_rate);
-    char f_file[1024] = "\0";
-    sprintf(f_file, "%s%i", self->region_audio_folder, a_region_uid);
-    int f_i, f_i2;
-
-    if(i_pydaw_file_exists(f_file))
-    {
-        t_2d_char_array * f_current_string = g_get_2d_array_from_file(f_file,
-                PYDAW_LARGE_STRING);
-
-        for(f_i = 0; f_i < PYDAW_MAX_AUDIO_ITEM_COUNT; ++f_i)
-        {
-            t_pydaw_audio_item * f_new =
-                g_audio_item_load_single(f_sample_rate,
-                    f_current_string, 0, musikernel->wav_pool, 0);
-            if(!f_new)  //EOF'd...
-            {
-                break;
-            }
-
-            int f_global_index = f_new->outputs[0];
-
-            f_result->indexes[f_global_index][
-                f_result->index_counts[f_global_index]].item_num = f_new->index;
-            f_result->indexes[f_global_index][
-                f_result->index_counts[f_global_index]].send_num = 0;
-            ++f_result->index_counts[f_global_index];
-
-            for(f_i2 = 1; f_i2 < 3; ++f_i2)
-            {
-                f_global_index = f_new->outputs[f_i2];
-                if(f_global_index > -1)
-                {
-                    f_result->indexes[f_global_index][
-                    f_result->index_counts[f_global_index]].item_num =
-                        f_new->index;
-                    f_result->indexes[f_global_index][
-                        f_result->index_counts[f_global_index]].send_num = f_i2;
-                    ++f_result->index_counts[f_global_index];
-                }
-            }
-
-            f_result->items[f_new->index] = f_new;
-        }
-
-        g_free_2d_char_array(f_current_string);
-    }
-    else
-    {
-        printf("Error:  v_dn_audio_items_load_all:  a_file: \"%s\" "
-                "does not exist\n", f_file);
-        assert(0);
-    }
-
-    return f_result;
-}
-
-
 void v_dn_set_playback_cursor(t_dawnext * self, int a_region, int a_bar)
 {
     self->current_region = a_region;
     self->playback_cursor = 0.0f;
     self->ts[0].ml_current_period_beats = 0.0f;
 
-    v_dn_reset_audio_item_read_heads(self, a_region, a_bar);
+    //v_dn_reset_audio_item_read_heads(self, a_region, a_bar);
 
     register int f_i = 0;
 
@@ -2892,9 +2762,7 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
 
     float f_sample_rate = musikernel->thread_storage[0].sample_rate;
 
-    int f_bar_count = a_end_bar - a_start_bar;
-
-    register int f_i = a_start_region;
+    register int f_i;
     int f_beat_total = (int)(a_end_beat - a_start_beat);
 
     float f_sample_count =
@@ -2919,8 +2787,7 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
     int f_old_loop_mode = self->loop_mode;
     v_dn_set_loop_mode(self, DN_LOOP_MODE_OFF);
 
-    v_dn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_PLAY,
-            a_start_region, a_start_bar, 0);
+    v_dn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_PLAY, a_start_beat, 0);
 
     printf("\nOpening SNDFILE with sample rate %i\n", (int)f_sample_rate);
 

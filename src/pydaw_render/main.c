@@ -44,9 +44,9 @@ void print_help()
     printf("%s_render edmnext [project_dir] [output_file] [start_region] "
         "[start_bar] [end_region] [end_bar] [sample_rate] "
         "[buffer_size] [thread_count] [huge_pages]\n\n", MUSIKERNEL_VERSION);
-    printf("%s_render dawnext [project_dir] [output_file] [start_region] "
-        "[start_bar] [end_region] [end_bar] [sample_rate] "
-        "[buffer_size] [thread_count] [huge_pages]\n\n", MUSIKERNEL_VERSION);
+    printf("%s_render dawnext [project_dir] [output_file] [start_beat] "
+        "[end_beat] [sample_rate] [buffer_size] [thread_count] "
+        "[huge_pages]\n\n", MUSIKERNEL_VERSION);
 }
 
 int main(int argc, char** argv)
@@ -169,7 +169,7 @@ int edmnext_main(int argc, char** argv)
 
 int dawnext_main(int argc, char** argv)
 {
-    if(argc < 12)
+    if(argc < 10)
     {
         print_help();
         return 1;
@@ -177,15 +177,13 @@ int dawnext_main(int argc, char** argv)
 
     char * f_project_dir = argv[2];
     char * f_output_file = argv[3];
-    int f_start_region = atoi(argv[4]);
-    int f_start_bar = atoi(argv[5]);
-    int f_end_region = atoi(argv[6]);
-    int f_end_bar = atoi(argv[7]);
-    int f_sample_rate = atoi(argv[8]);
-    int f_buffer_size = atoi(argv[9]);
-    int f_thread_count = atoi(argv[10]);
+    double f_start_beat = atof(argv[4]);
+    double f_end_beat = atof(argv[5]);
+    int f_sample_rate = atoi(argv[6]);
+    int f_buffer_size = atoi(argv[7]);
+    int f_thread_count = atoi(argv[8]);
 
-    int f_huge_pages = atoi(argv[11]);
+    int f_huge_pages = atoi(argv[9]);
     assert(f_huge_pages == 0 || f_huge_pages == 1);
 
     if(f_huge_pages)
@@ -198,7 +196,7 @@ int dawnext_main(int argc, char** argv)
     int f_create_file = 1;
 
     int f_i;
-    for(f_i = 12; f_i < argc; ++f_i)
+    for(f_i = 10; f_i < argc; ++f_i)
     {
         if(!strcmp(argv[f_i], "--no-file"))
         {
@@ -236,8 +234,8 @@ int dawnext_main(int argc, char** argv)
 
     v_dn_offline_render_prep(dawnext);
 
-    v_dn_offline_render(dawnext, f_start_region, f_start_bar,
-            f_end_region, f_end_bar, f_output_file, 0, f_create_file);
+    v_dn_offline_render(dawnext, f_start_beat,
+        f_end_beat, f_output_file, 0, f_create_file);
 
     v_pydaw_destructor();
 
