@@ -151,9 +151,7 @@ typedef struct
 
 typedef struct
 {
-    float ml_sample_period_inc;
     float ml_sample_period_inc_beats;
-    float ml_next_playback_cursor;
     float ml_current_period_beats;
     float ml_next_period_beats;
 
@@ -177,8 +175,6 @@ typedef struct
     int loop_mode;  //0 == Off, 1 == Bar, 2 == Region
     int overdub_mode;  //0 == Off, 1 == On
 
-    //only refers to the fractional position within the current bar.
-    float playback_cursor;
     /*the increment per-period to iterate through 1 bar,
      * as determined by sample rate and tempo*/
     float playback_inc;
@@ -940,6 +936,10 @@ inline void v_dn_process_atm(
                 break;
             }
         }
+        else
+        {
+            break;
+        }
     }
 }
 
@@ -1235,16 +1235,13 @@ void v_dn_process_external_midi(t_dawnext * self,
 
 inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
 {
-    self->ts[0].ml_sample_period_inc =
-        ((self->playback_inc) * ((float)(sample_count)));
     self->ts[0].ml_sample_period_inc_beats =
-        (self->ts[0].ml_sample_period_inc) * 4.0f;
-    self->ts[0].ml_next_playback_cursor =
-        (self->playback_cursor) + (self->ts[0].ml_sample_period_inc);
+        ((self->playback_inc) * ((float)(sample_count)));
     self->ts[0].ml_current_period_beats =
-        (self->playback_cursor) * 4.0f;
+        self->ts[0].ml_next_period_beats;
     self->ts[0].ml_next_period_beats =
-        (self->ts[0].ml_next_playback_cursor) * 4.0f;
+        self->ts[0].ml_current_period_beats +
+        self->ts[0].ml_sample_period_inc_beats;
 
     self->ts[0].ml_current_region = (self->current_region);
     self->ts[0].ml_current_beat = (self->ts[0].ml_current_period_beats);
@@ -1297,13 +1294,13 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
 
 inline void v_dn_finish_time_params(t_dawnext * self)
 {
+    /*
     self->playback_cursor = (self->ts[0].ml_next_playback_cursor);
 
     if((self->playback_cursor) >= 1.0f)
     {
         self->playback_cursor = (self->playback_cursor) - 1.0f;
 
-        /*
         if((self->current_bar) >= a_region_length_bars)
         {
             self->current_bar = 0;
@@ -1329,8 +1326,8 @@ inline void v_dn_finish_time_params(t_dawnext * self)
                 v_queue_osc_message("mrec", musikernel->osc_cursor_message);
             }
         }
-        */
     }
+    */
 }
 
 inline void v_dn_run_engine(int sample_count,
@@ -2282,7 +2279,6 @@ t_dawnext * g_dawnext_get()
 
     f_result->current_sample = 0;
     f_result->current_region = 0;
-    f_result->playback_cursor = 0.0f;
     f_result->playback_inc = 0.0f;
 
     f_result->overdub_mode = 0;
@@ -2299,8 +2295,6 @@ t_dawnext * g_dawnext_get()
 
     f_result->ts[0].ml_current_period_beats = 0.0f;
     f_result->ts[0].ml_next_period_beats = 0.0f;
-    f_result->ts[0].ml_next_playback_cursor = 0.0f;
-    f_result->ts[0].ml_sample_period_inc = 0.0f;
     f_result->ts[0].ml_sample_period_inc_beats = 0.0f;
 
     f_result->ts[0].ml_current_region = 0;
@@ -2464,10 +2458,8 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
 
 void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
 {
-    assert(NULL);  //TODO: something to interpolate the region number from beats
     //self->current_region = a_region;
-    self->playback_cursor = a_beat;
-    self->ts[0].ml_current_period_beats = a_beat;
+    self->ts[0].ml_next_period_beats = a_beat;
 
     //v_dn_reset_audio_item_read_heads(self, a_region, a_bar);
 
@@ -2517,8 +2509,7 @@ void v_dn_set_tempo(t_dawnext * self, float a_tempo)
 {
     float f_sample_rate = musikernel->thread_storage[0].sample_rate;
     self->en_song->regions[0]->tempo = a_tempo;
-    self->playback_inc = ( (1.0f / (f_sample_rate)) /
-        (60.0f / (a_tempo * 0.25f)) );
+    self->playback_inc = (1.0f / f_sample_rate) / (60.0f / a_tempo);
     self->samples_per_beat = (f_sample_rate) / (a_tempo / 60.0f);
 }
 
@@ -2599,8 +2590,7 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
     struct timespec f_start, f_finish;
     clock_gettime(CLOCK_REALTIME, &f_start);
 
-    assert(NULL);  // TODO:  Is playback_cursor based on beats?
-    while(self->playback_cursor < a_end_beat)
+    while(self->ts[0].ml_current_period_beats < a_end_beat)
     {
         f_i = 0;
         f_size = 0;
