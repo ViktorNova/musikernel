@@ -1232,7 +1232,6 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.scene.dragEnterEvent = self.sceneDragEnterEvent
         self.scene.dragMoveEvent = self.sceneDragMoveEvent
         self.scene.contextMenuEvent = self.sceneContextMenuEvent
-        self.scene.mousePressEvent = self.sceneMousePressEvent
         self.scene.setBackgroundBrush(QtGui.QColor(90, 90, 90))
         self.scene.selectionChanged.connect(self.scene_selection_changed)
         self.setAcceptDrops(True)
@@ -1252,10 +1251,19 @@ class ItemSequencer(QtGui.QGraphicsView):
         #Somewhat slow on my AMD 5450 using the FOSS driver
         #self.setRenderHint(QtGui.QPainter.Antialiasing)
 
-    def sceneMousePressEvent(self, a_event):
+    def mousePressEvent(self, a_event):
+        f_pos = self.mapToScene(a_event.pos())
+
+        for f_item in self.scene.items(f_pos):
+            if isinstance(f_item, SequencerItem):
+                if not f_item.isSelected():
+                    self.scene.clearSelection()
+                f_item.setSelected(True)
+                QtGui.QGraphicsView.mousePressEvent(self, a_event)
+                return
+
         if a_event.modifiers() == QtCore.Qt.ControlModifier:
             self.scene.clearSelection()
-            f_pos = a_event.scenePos()
             f_pos_x = f_pos.x()
             f_pos_y = f_pos.y() - REGION_EDITOR_HEADER_HEIGHT
             f_beat = float(f_pos_x // SEQUENCER_PX_PER_BEAT)
@@ -1265,9 +1273,8 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_track, f_beat, 4.0, f_uid)
             PROJECT.save_region(CURRENT_REGION)
             REGION_SETTINGS.open_region()
-
-        a_event.setAccepted(True)
-        QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
+            a_event.accept()
+        QtGui.QGraphicsView.mousePressEvent(self, a_event)
         QtGui.QApplication.restoreOverrideCursor()
 
     def open_region(self):
