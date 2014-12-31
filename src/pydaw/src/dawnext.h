@@ -91,7 +91,7 @@ typedef struct
     t_pydaw_seq_event events[DN_MAX_EVENTS_PER_ITEM_COUNT];
     int event_count;
 
-    t_pydaw_audio_items audio_items;
+    t_pydaw_audio_items * audio_items;
 
     t_dn_per_audio_item_fx_region * paif;
 
@@ -240,9 +240,7 @@ void v_dn_process_external_midi(t_dawnext * pydaw_data,
 void v_dn_offline_render(t_dawnext*, double, double, char*, int, int);
 void v_dn_audio_items_run(
     t_dawnext*, int, float**, float**, int, int, int*, t_dn_thread_storage*);
-inline float f_dn_count_beats(t_dawnext * self,
-        int a_start_region, int a_start_bar, float a_start_beat,
-        int a_end_region, int a_end_bar, float a_end_beat);
+
 t_pydaw_audio_items * v_dn_audio_items_load_all(t_dawnext * self,
         int a_region_uid);
 
@@ -2282,17 +2280,10 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
     f_result->uid = a_uid;
 
     int f_i = 0;
-    int f_i2 = 0;
 
-    while(f_i < DN_TRACK_COUNT)
+    for(f_i = 0; f_i < DN_TRACK_COUNT; ++f_i)
     {
-        f_i2 = 0;
-        while(f_i2 < DN_MAX_REGION_SIZE)
-        {
-            f_result->item_indexes[f_i][f_i2] = -1;
-            ++f_i2;
-        }
-        ++f_i;
+        f_result->tracks[f_i].count = 0;
     }
 
 
@@ -2323,11 +2314,13 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
             f_result->region_length_beats = f_beats;
             continue;
         }
+        assert(NULL);  //TODO:  These are wrong, doesn't mean tempo
+        // also need to else if these and not continue and
+        // just do a char compare
         if(!strcmp("T", f_current_string->current_str))
         {
             v_iterate_2d_char_array(f_current_string);
             f_result->tempo = atof(f_current_string->current_str);
-            v_iterate_2d_char_array(f_current_string);  //not used
             continue;
         }
         //per-region bar length in beats, not yet implemented
@@ -2340,16 +2333,8 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
             continue;
         }
 
-        int f_y = atoi(f_current_string->current_str);
+        assert(NULL);  //TODO
 
-        v_iterate_2d_char_array(f_current_string);
-        int f_x = atoi(f_current_string->current_str);
-
-        v_iterate_2d_char_array(f_current_string);
-        assert(f_y < DN_TRACK_COUNT);
-        assert(f_x < DN_MAX_REGION_SIZE);
-        f_result->item_indexes[f_y][f_x] = atoi(f_current_string->current_str);
-        assert(self->item_pool[f_result->item_indexes[f_y][f_x]]);
 
         ++f_i;
     }
@@ -2377,9 +2362,6 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
             PYDAW_LARGE_STRING);
 
     int f_i = 0;
-
-    f_result->audio_items = NULL;
-    f_result->per_audio_item_fx = NULL;
 
     f_result->audio_items = v_dn_audio_items_load_all(self, a_uid);
     f_result->paif = g_dn_paif_region_open(self, a_uid);
@@ -2523,7 +2505,7 @@ t_dawnext * g_dawnext_get()
  * int a_bar) //The bar index (with a_region) to start playback on
  */
 void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
-        int a_region, int a_bar, int a_lock)
+        double a_beat, int a_lock)
 {
     switch(a_mode)
     {
@@ -2602,7 +2584,7 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
                 pthread_spin_lock(&musikernel->main_lock);
             }
 
-            v_dn_set_playback_cursor(self, a_region, a_bar);
+            v_dn_set_playback_cursor(self, a_beat);
 
             musikernel->playback_mode = a_mode;
 
@@ -2623,7 +2605,7 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
                 pthread_spin_lock(&musikernel->main_lock);
             }
 
-            v_dn_set_playback_cursor(self, a_region, a_bar);
+            v_dn_set_playback_cursor(self, a_region, a_beat);
 
             musikernel->playback_mode = a_mode;
 
@@ -2635,17 +2617,18 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
     }
 }
 
-void v_dn_set_playback_cursor(t_dawnext * self, int a_region, int a_bar)
+void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
 {
-    self->current_region = a_region;
-    self->playback_cursor = 0.0f;
-    self->ts[0].ml_current_period_beats = 0.0f;
+    assert(NULL);  //TODO: something to interpolate the region number from beats
+    //self->current_region = a_region;
+    self->playback_cursor = a_beat;
+    self->ts[0].ml_current_period_beats = a_beat;
 
     //v_dn_reset_audio_item_read_heads(self, a_region, a_bar);
 
-    register int f_i = 0;
+    register int f_i;
 
-    while(f_i < DN_TRACK_COUNT)
+    for(f_i = 0; f_i < DN_TRACK_COUNT; ++f_i)
     {
         self->track_pool[f_i]->item_event_index = 0;
         if((self->is_soloed && !self->track_pool[f_i]->solo) ||
@@ -2653,7 +2636,6 @@ void v_dn_set_playback_cursor(t_dawnext * self, int a_region, int a_bar)
         {
             self->track_pool[f_i]->fade_state = FADE_STATE_FADED;
         }
-        ++f_i;
     }
 
     f_i = 0;
@@ -2693,37 +2675,6 @@ void v_dn_set_tempo(t_dawnext * self, float a_tempo)
     self->playback_inc = ( (1.0f / (f_sample_rate)) /
         (60.0f / (a_tempo * 0.25f)) );
     self->samples_per_beat = (f_sample_rate) / (a_tempo / 60.0f);
-}
-
-
-/*Count the number of beats between 2 points in time...*/
-inline float f_dn_count_beats(t_dawnext * self,
-        int a_start_region, int a_start_bar, float a_start_beat,
-        int a_end_region, int a_end_bar, float a_end_beat)
-{
-    int f_bar_count = a_end_bar - a_start_bar;
-
-    register int f_i = a_start_region;
-    int f_beat_total = 0;
-
-    while(f_i < a_end_region)
-    {
-        if((self->en_song->regions[f_i]) &&
-                (self->en_song->regions[f_i]->region_length_bars))
-        {
-            f_beat_total +=
-                    self->en_song->regions[f_i]->region_length_bars * 4;
-        }
-        else
-        {
-            f_beat_total += (8 * 4);
-        }
-        ++f_i;
-    }
-
-    f_beat_total += f_bar_count * 4;
-
-    return ((float)(f_beat_total)) + (a_end_beat - a_start_beat);
 }
 
 void v_dn_offline_render_prep(t_dawnext * self)
@@ -2862,8 +2813,7 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
         printf("Ratio:  infinity : 1");
     }
 
-    v_dn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_OFF, a_start_region,
-            a_start_bar, 0);
+    v_dn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_OFF, a_start_beat, 0);
     v_dn_set_loop_mode(self, f_old_loop_mode);
 
     sf_close(f_sndfile);
