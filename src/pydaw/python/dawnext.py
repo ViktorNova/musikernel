@@ -510,16 +510,6 @@ def pydaw_seconds_to_beats(a_seconds):
     '''converts seconds to regions'''
     return a_seconds * BEATS_PER_SECOND
 
-SEQUENCER_ITEM_GRADIENT = QtGui.QLinearGradient(
-    0, 0, 0, REGION_EDITOR_TOTAL_HEIGHT)
-SEQUENCER_ITEM_GRADIENT.setColorAt(
-    0.0, QtGui.QColor.fromRgb(60, 60, 60, 120))
-SEQUENCER_ITEM_GRADIENT.setColorAt(
-    0.5, QtGui.QColor.fromRgb(90, 90, 90, 120))
-SEQUENCER_ITEM_GRADIENT.setColorAt(
-    1.0, QtGui.QColor.fromRgb(60, 60, 60, 120))
-
-
 class SequencerItem(QtGui.QGraphicsRectItem):
     def __init__(self, a_name, a_audio_item):
         QtGui.QGraphicsRectItem.__init__(self)
@@ -538,7 +528,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             REGION_EDITOR_TRACK_HEIGHT, BEATS_PER_MINUTE)
 
         self.audio_path_item = QtGui.QGraphicsPathItem(f_audio_path)
-        self.audio_path_item.setBrush(SEQUENCER_ITEM_GRADIENT)
+        self.audio_path_item.setBrush(QtCore.Qt.gray)
         self.audio_path_item.setPen(QtGui.QPen(QtCore.Qt.gray))
         self.audio_path_item.setParentItem(self)
         self.audio_path_item.setZValue(1900.0)
