@@ -206,7 +206,7 @@ typedef struct
     int suppress_new_audio_items;
 
     int audio_glue_indexes[PYDAW_MAX_AUDIO_ITEM_COUNT];
-    int f_region_length_bars;
+
     long f_next_current_sample;
     t_dn_midi_routing_list midi_routing;
 
@@ -236,13 +236,13 @@ void v_dn_update_track_send(t_dawnext * self, int a_lock);
 void v_dn_process_external_midi(t_dawnext * pydaw_data,
         t_pytrack * a_track, int sample_count, int a_thread_num,
         t_dn_thread_storage * a_ts);
-void v_dn_offline_render(t_dawnext*, double, double, char*, int, int);
+void v_dn_offline_render(t_dawnext*, double, double,
+    char*, int, int, t_dn_item_ref*);
 void v_dn_audio_items_run(t_dawnext*, t_dn_item_ref*,
     int, float**, float**, int, int, int*, t_dn_thread_storage*);
 
 t_dn_per_audio_item_fx_region * g_dn_paif_region_get();
 void v_dn_paif_region_free(t_dn_per_audio_item_fx_region*);
-t_dn_per_audio_item_fx_region * g_dn_paif_region_open(t_dawnext*, int);
 
 void v_dn_paif_set_control(t_dawnext*, int, int, float);
 
@@ -536,7 +536,7 @@ void v_dn_osc_send(t_osc_send_data * a_buffers)
 
     if(musikernel->playback_mode > 0 && !musikernel->is_offline_rendering)
     {
-        sprintf(a_buffers->f_msg, "%ld",
+        sprintf(a_buffers->f_msg, "%f",
             dawnext->ts[0].ml_current_beat);
         v_queue_osc_message("cur", a_buffers->f_msg);
     }
@@ -926,7 +926,6 @@ inline void v_dn_process_atm(
 {
     t_pytrack * f_track = self->track_pool[f_track_num];
     t_pydaw_plugin * f_plugin = f_track->plugins[f_index];
-    int f_current_track_region = self->current_region;
     float f_track_current_period_beats = a_ts->ml_current_period_beats;
     float f_track_next_period_beats = a_ts->ml_next_period_beats;
     float f_track_beats_offset = 0.0f;
@@ -1208,7 +1207,7 @@ void v_dn_process_external_midi(t_dawnext * self,
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
                         f_tempo, f_sample_rate);
 
-                sprintf(f_osc_msg, "on|%d|%i|%i|%i|%ld",
+                sprintf(f_osc_msg, "on|%f|%i|%i|%i|%ld",
                     f_beat, a_track->track_num, events[f_i2].note,
                     events[f_i2].velocity,
                     self->current_sample + events[f_i2].tick);
@@ -1244,7 +1243,7 @@ void v_dn_process_external_midi(t_dawnext * self,
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
                         f_tempo, f_sample_rate);
 
-                sprintf(f_osc_msg, "pb|%d|%i|%f|%ld",
+                sprintf(f_osc_msg, "pb|%f|%i|%f|%ld",
                     f_beat, a_track->track_num, events[f_i2].value,
                     self->current_sample + events[f_i2].tick);
                 v_queue_osc_message("mrec", f_osc_msg);
@@ -1277,7 +1276,7 @@ void v_dn_process_external_midi(t_dawnext * self,
                         f_sample_rate);
 
                 sprintf(f_osc_msg,
-                    "cc|%d|%i|%i|%f",
+                    "cc|%f|%i|%i|%f",
                     f_beat,
                     a_track->track_num, controller, events[f_i2].value);
                 v_queue_osc_message("mrec", f_osc_msg);
@@ -1350,8 +1349,7 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
     }
 }
 
-inline void v_dn_finish_time_params(t_dawnext * self,
-        int a_region_length_bars)
+inline void v_dn_finish_time_params(t_dawnext * self)
 {
     self->playback_cursor = (self->ts[0].ml_next_playback_cursor);
 
@@ -1359,8 +1357,7 @@ inline void v_dn_finish_time_params(t_dawnext * self,
     {
         self->playback_cursor = (self->playback_cursor) - 1.0f;
 
-        ++self->current_bar;
-
+        /*
         if((self->current_bar) >= a_region_length_bars)
         {
             self->current_bar = 0;
@@ -1386,6 +1383,7 @@ inline void v_dn_finish_time_params(t_dawnext * self,
                 v_queue_osc_message("mrec", musikernel->osc_cursor_message);
             }
         }
+        */
     }
 }
 
@@ -1412,33 +1410,6 @@ inline void v_dn_run_engine(int sample_count,
     if((musikernel->playback_mode) > 0)
     {
         v_dn_set_time_params(self, sample_count);
-
-        self->f_region_length_bars =
-                self->default_region_length_bars;
-        //float f_bar_length = (float)(self->default_bar_length);
-
-        if(self->en_song->regions[(self->current_region)])
-        {
-            if(self->en_song->regions[
-                (self->current_region)]->bar_length)
-            {
-                //f_bar_length = (float)(self->en_song->regions[
-                        //(self->current_region)]->bar_length);
-            }
-
-            if(self->en_song->regions[self->current_region]->region_length_bars)
-            {
-                self->f_region_length_bars =
-                    self->en_song->regions[
-                        (self->current_region)]->region_length_bars;
-
-                if(self->en_song->regions[
-                        (self->current_region)]->region_length_beats)
-                {
-                    ++self->f_region_length_bars;
-                }
-            }
-        }
     }
 
     for(f_i = 0; f_i < DN_TRACK_COUNT; ++f_i)
@@ -1475,7 +1446,7 @@ inline void v_dn_run_engine(int sample_count,
 
     if((musikernel->playback_mode) > 0)
     {
-        v_dn_finish_time_params(self, self->f_region_length_bars);
+        v_dn_finish_time_params(self);
     }
 
     dawnext->current_sample = f_next_current_sample;
@@ -2222,7 +2193,7 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
 
     f_result->audio_items = g_pydaw_audio_items_get(
         musikernel->thread_storage[0].sample_rate);
-    f_result->paif = g_dn_paif_region_open(self, a_uid);
+    f_result->paif = g_dn_paif_region_get();
 
     while(f_i < DN_MAX_EVENTS_PER_ITEM_COUNT)
     {
@@ -2563,7 +2534,7 @@ void v_dn_offline_render_prep(t_dawnext * self)
 
 void v_dn_offline_render(t_dawnext * self, double a_start_beat,
         double a_end_beat, char * a_file_out, int a_is_audio_glue,
-        int a_create_file, t_dn_item * a_glue_item)
+        int a_create_file, t_dn_item_ref * a_glue_item)
 {
     pthread_spin_lock(&musikernel->main_lock);
     musikernel->is_offline_rendering = 1;
@@ -2631,7 +2602,7 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
             v_dn_audio_items_run(
                 self, a_glue_item, f_block_size, f_buffer, NULL, -1, 1, NULL,
                 &self->ts[0]);
-            v_dn_finish_time_params(self, 999999);
+            v_dn_finish_time_params(self);
         }
         else
         {
@@ -3117,7 +3088,13 @@ void v_dn_configure(const char* a_key, const char* a_value)
             ++f_i;
         }
 
-        v_dn_offline_render(self, f_start_beat, f_end_beat, f_path, 1, 1);
+        t_dn_item_ref f_item_ref;
+        f_item_ref.item_uid = f_item_uid;
+        f_item_ref.start = 0.0d;
+        f_item_ref.end = f_end_beat;
+
+        v_dn_offline_render(self, f_start_beat, f_end_beat,
+            f_path, 1, 1, &f_item_ref);
 
         v_free_split_line(f_val_arr);
 
