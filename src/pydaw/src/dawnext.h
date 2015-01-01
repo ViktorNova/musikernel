@@ -733,8 +733,8 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
 
     for(f_i = 0; f_i < f_seq->count; ++f_i)
     {
-        if(f_seq->refs[f_i].start >= a_ts->ml_current_beat &&
-        f_seq->refs[f_i].end < a_ts->ml_next_beat)
+        if(f_seq->refs[f_i].start <= a_ts->ml_current_beat &&
+        f_seq->refs[f_i].end > a_ts->ml_next_beat)
         {
             f_item_ref = &f_seq->refs[f_i];
             break;
@@ -1238,7 +1238,6 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
         self->ts[0].ml_sample_period_inc_beats;
 
     self->ts[0].ml_current_region = (self->current_region);
-    self->ts[0].ml_current_beat = (self->ts[0].ml_current_beat);
 
     self->ts[0].ml_next_region = (self->current_region);
 
