@@ -152,16 +152,11 @@ typedef struct
 typedef struct
 {
     float ml_sample_period_inc_beats;
-    float ml_current_period_beats;
-    float ml_next_period_beats;
 
     int ml_current_region;
     float ml_current_beat;
     int ml_next_region;
     float ml_next_beat;
-
-    int ml_starting_new_bar;
-
     int ml_is_looping;
     char padding[CACHE_LINE_SIZE - (7 * sizeof(float)) - (4 * sizeof(int))];
 }t_dn_thread_storage;
@@ -868,8 +863,8 @@ inline void v_dn_process_atm(
 {
     t_pytrack * f_track = self->track_pool[f_track_num];
     t_pydaw_plugin * f_plugin = f_track->plugins[f_index];
-    float f_track_current_period_beats = a_ts->ml_current_period_beats;
-    float f_track_next_period_beats = a_ts->ml_next_period_beats;
+    float f_track_current_period_beats = a_ts->ml_current_beat;
+    float f_track_next_period_beats = a_ts->ml_next_beat;
     float f_track_beats_offset = 0.0f;
     int f_pool_index = f_plugin->pool_uid;
 
@@ -952,8 +947,8 @@ void v_dn_process_midi(t_dawnext * self, t_dn_item_ref * a_item_ref,
     t_pytrack * f_track = self->track_pool[f_i];
     f_track->period_event_index = 0;
 
-    float f_track_current_period_beats = (a_ts->ml_current_period_beats);
-    float f_track_next_period_beats = (a_ts->ml_next_period_beats);
+    float f_track_current_period_beats = (a_ts->ml_current_beat);
+    float f_track_next_period_beats = (a_ts->ml_next_beat);
     float f_track_beats_offset = 0.0f;
 
     if((!self->overdub_mode) && (a_playback_mode == 2) &&
@@ -1149,7 +1144,7 @@ void v_dn_process_external_midi(t_dawnext * self,
         {
             if(f_playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
-                float f_beat = a_ts->ml_current_period_beats +
+                float f_beat = a_ts->ml_current_beat +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
                         f_tempo, f_sample_rate);
 
@@ -1168,7 +1163,7 @@ void v_dn_process_external_midi(t_dawnext * self,
         {
             if(f_playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
-                float f_beat = a_ts->ml_current_period_beats +
+                float f_beat = a_ts->ml_current_beat +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
                         f_tempo, f_sample_rate);
 
@@ -1185,7 +1180,7 @@ void v_dn_process_external_midi(t_dawnext * self,
         {
             if(f_playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
-                float f_beat = a_ts->ml_current_period_beats +
+                float f_beat = a_ts->ml_current_beat +
                     f_pydaw_samples_to_beat_count(events[f_i2].tick,
                         f_tempo, f_sample_rate);
 
@@ -1216,7 +1211,7 @@ void v_dn_process_external_midi(t_dawnext * self,
             if(f_playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
                 float f_beat =
-                    a_ts->ml_current_period_beats +
+                    a_ts->ml_current_beat +
                     f_pydaw_samples_to_beat_count(
                         events[f_i2].tick, f_tempo,
                         f_sample_rate);
@@ -1237,14 +1232,13 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
 {
     self->ts[0].ml_sample_period_inc_beats =
         ((self->playback_inc) * ((float)(sample_count)));
-    self->ts[0].ml_current_period_beats =
-        self->ts[0].ml_next_period_beats;
-    self->ts[0].ml_next_period_beats =
-        self->ts[0].ml_current_period_beats +
+    self->ts[0].ml_current_beat =
+        self->ts[0].ml_next_beat;
+    self->ts[0].ml_next_beat = self->ts[0].ml_current_beat +
         self->ts[0].ml_sample_period_inc_beats;
 
     self->ts[0].ml_current_region = (self->current_region);
-    self->ts[0].ml_current_beat = (self->ts[0].ml_current_period_beats);
+    self->ts[0].ml_current_beat = (self->ts[0].ml_current_beat);
 
     self->ts[0].ml_next_region = (self->current_region);
 
@@ -1286,9 +1280,7 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
     if(1)
     {
         self->ts[0].ml_is_looping = 0;
-        self->ts[0].ml_starting_new_bar = 0;
         self->ts[0].ml_next_region = self->current_region;
-        self->ts[0].ml_next_beat = self->ts[0].ml_next_period_beats;
     }
 }
 
@@ -1317,7 +1309,7 @@ inline void v_dn_finish_time_params(t_dawnext * self)
             }
             else if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
             {
-                float f_beat = self->ts[0].ml_current_period_beats;
+                float f_beat = self->ts[0].ml_current_beat;
 
                 sprintf(musikernel->osc_cursor_message, "loop|%i|%i|%f|%ld",
                     f_beat, self->current_sample +
@@ -2297,14 +2289,12 @@ t_dawnext * g_dawnext_get()
     f_result->is_soloed = 0;
     f_result->suppress_new_audio_items = 0;
 
-    f_result->ts[0].ml_current_period_beats = 0.0f;
-    f_result->ts[0].ml_next_period_beats = 0.0f;
     f_result->ts[0].ml_sample_period_inc_beats = 0.0f;
 
     f_result->ts[0].ml_current_region = 0;
     f_result->ts[0].ml_next_region = 0;
-    f_result->ts[0].ml_next_beat = 0.0;
-    f_result->ts[0].ml_starting_new_bar = 0;
+    f_result->ts[0].ml_current_beat = 0.0f;
+    f_result->ts[0].ml_next_beat = 0.0f;
     f_result->ts[0].ml_is_looping = 0;
 
     f_result->routing_graph = 0;
@@ -2463,7 +2453,7 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
 void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
 {
     //self->current_region = a_region;
-    self->ts[0].ml_next_period_beats = a_beat;
+    self->ts[0].ml_next_beat = a_beat;
 
     //v_dn_reset_audio_item_read_heads(self, a_region, a_bar);
 
@@ -2594,7 +2584,7 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
     struct timespec f_start, f_finish;
     clock_gettime(CLOCK_REALTIME, &f_start);
 
-    while(self->ts[0].ml_current_period_beats < a_end_beat)
+    while(self->ts[0].ml_current_beat < a_end_beat)
     {
         f_i = 0;
         f_size = 0;
