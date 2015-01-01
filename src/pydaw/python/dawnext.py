@@ -7197,9 +7197,11 @@ class transport_widget(libmk.AbstractTransport):
     def on_panic(self):
         PROJECT.IPC.pydaw_panic()
 
-    def set_time(self, a_region, a_bar, a_beat):
+    def set_time(self, a_beat):
+        f_bar = int(REGION_SETTINGS.tsig_spinbox.value() * a_beat)
+        self.set_bar_value(f_bar)
         f_seconds_per_beat = 60.0 / float(self.tempo_spinbox.value())
-        f_seconds = f_seconds_per_beat * ((4.0 * a_bar) + a_beat)
+        f_seconds = f_seconds_per_beat * a_beat
         f_minutes = int(f_seconds / 60)
         f_seconds = str(round(f_seconds % 60, 1))
         f_seconds, f_frac = f_seconds.split('.', 1)
@@ -7212,13 +7214,13 @@ class transport_widget(libmk.AbstractTransport):
     def get_bar_value(self):
         return self.bar_spinbox.value() - 1
 
-    def set_pos_from_cursor(self, a_bar, a_beat):
+    def get_beat_value(self):
+        return self.bar_spinbox.value() * REGION_SETTINGS.tsig_spinbox.value()
+
+    def set_pos_from_cursor(self, a_beat):
         if libmk.IS_PLAYING or libmk.IS_RECORDING:
-            f_bar = int(a_bar)
             f_beat = float(a_beat)
-            self.set_time(f_region, f_bar, f_beat)
-            if self.get_bar_value() != f_bar:
-                self.set_bar_value(f_bar)
+            self.set_time(f_beat)
 
     def init_playback_cursor(self, a_start=True):
         pass
@@ -7236,11 +7238,11 @@ class transport_widget(libmk.AbstractTransport):
         self.last_bar = self.get_bar_value()
         self.trigger_audio_playback()
         AUDIO_SEQ.set_playback_clipboard()
-        PROJECT.IPC.pydaw_en_playback(1, self.get_bar_value())
+        PROJECT.IPC.pydaw_en_playback(1, self.get_beat_value())
         return True
 
     def trigger_audio_playback(self):
-        AUDIO_SEQ.set_playback_pos(self.get_bar_value())
+        AUDIO_SEQ.set_playback_pos(self.get_beat_value())
         AUDIO_SEQ.start_playback(self.tempo_spinbox.value())
 
     def on_stop(self):
@@ -7321,7 +7323,7 @@ class transport_widget(libmk.AbstractTransport):
         self.init_playback_cursor()
         self.last_bar = self.get_bar_value()
         PROJECT.IPC.pydaw_en_playback(
-            2, a_bar=self.get_bar_value())
+            2, self.get_beat_value())
         self.trigger_audio_playback()
         AUDIO_SEQ.set_playback_clipboard()
         return True
@@ -7351,10 +7353,9 @@ class transport_widget(libmk.AbstractTransport):
         not libmk.IS_PLAYING and \
         not libmk.IS_RECORDING:
             for f_editor in (AUDIO_SEQ, SEQUENCER):
-                f_editor.set_playback_pos(self.get_bar_value())
-            PROJECT.IPC.pydaw_set_pos(
-                self.get_region_value(), self.get_bar_value())
-        self.set_time(self.get_region_value(), self.get_bar_value(), 0.0)
+                f_editor.set_playback_pos(self.get_beat_value())
+            PROJECT.IPC.pydaw_set_pos(self.get_beat_value())
+        self.set_time(self.get_beat_value())
 
     def open_transport(self, a_notify_osc=False):
         if not a_notify_osc:
@@ -7697,15 +7698,10 @@ class pydaw_main_window(QtGui.QScrollArea):
                 f_pc_dict[(f_plugin_uid, f_port)] = f_val
             elif a_key == "cur":
                 if libmk.IS_PLAYING:
-                    f_region, f_bar, f_beat = a_val.split("|")
-                    f_region, f_bar = (int(x) for x in (f_region, f_bar))
-                    f_beat = float(f_beat)
-                    if self.last_bar != f_bar or f_beat >= 4.0:
-                        f_beat = 0.0
-                    self.last_bar = f_bar
-                    TRANSPORT.set_pos_from_cursor(f_region, f_bar, f_beat)
+                    f_beat = float(a_val)
+                    TRANSPORT.set_pos_from_cursor(f_beat)
                     for f_editor in (SEQUENCER,): #AUDIO_SEQ,):
-                        f_editor.set_playback_pos(f_bar, f_beat)
+                        f_editor.set_playback_pos(f_beat)
             elif a_key == "peak":
                 global_update_peak_meters(a_val)
             elif a_key == "cc":

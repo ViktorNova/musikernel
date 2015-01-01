@@ -109,6 +109,5 @@ class DawNextOsc(libmk.AbstractIPC):
             "md", "|".join(str(x) for x in
             (bool_to_int(a_is_on), a_device_num, a_track_num)))
 
-    def pydaw_set_pos(self, a_region, a_bar):
-        self.send_configure(
-            "pos", "|".join(str(x) for x in (a_region, a_bar)))
+    def pydaw_set_pos(self, a_beat):
+        self.send_configure("pos", str(a_beat))
