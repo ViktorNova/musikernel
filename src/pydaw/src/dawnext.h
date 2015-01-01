@@ -1809,9 +1809,9 @@ void v_dn_open_project(int a_first_load)
         ++f_i;
     }
 
-    char f_song_file[1024];
-    sprintf(f_song_file,
-        "%s/projects/dawnext/song.txt", musikernel->project_folder);
+    //char f_song_file[1024];
+    //sprintf(f_song_file,
+    //    "%s/projects/dawnext/song.txt", musikernel->project_folder);
 
     struct stat f_proj_stat;
     stat((musikernel->project_folder), &f_proj_stat);
@@ -1819,18 +1819,17 @@ void v_dn_open_project(int a_first_load)
     stat((dawnext->item_folder), &f_item_stat);
     struct stat f_reg_stat;
     stat((dawnext->region_folder), &f_reg_stat);
-    struct stat f_song_file_stat;
-    stat(f_song_file, &f_song_file_stat);
+    //struct stat f_song_file_stat;
+    //stat(f_song_file, &f_song_file_stat);
 
     //TODO:  This should be moved to a separate function
     char f_transport_file[1024];
-    sprintf(f_transport_file, "%s/projects/dawnext/transport.txt",
-            musikernel->project_folder);
+    sprintf(f_transport_file, "%s/transport.txt", dawnext->project_folder);
 
     if(S_ISDIR(f_proj_stat.st_mode) &&
-        S_ISDIR(f_item_stat.st_mode) &&
-        S_ISDIR(f_reg_stat.st_mode) &&
-        S_ISREG(f_song_file_stat.st_mode))
+        S_ISDIR(f_item_stat.st_mode)
+        //&& S_ISDIR(f_reg_stat.st_mode) && S_ISREG(f_song_file_stat.st_mode)
+        )
     {
         t_dir_list * f_item_dir_list =
                 g_get_dir_list(dawnext->item_folder);
@@ -2254,6 +2253,11 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
                         f_paif->items[f_i2]->a_knobs[2]);
                 ++f_i2;
             }
+        }
+        else if(f_type == 'U')
+        {
+            f_result->uid = atoi(f_current_string->current_str);
+            assert(f_result->uid == a_uid);
         }
         else
         {
