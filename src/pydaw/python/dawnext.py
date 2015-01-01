@@ -2999,6 +2999,7 @@ DEFAULT_AUDIO_TRACK = 0
 class audio_items_viewer(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
+        self.playback_cursor = None
         self.reset_line_lists()
         self.h_zoom = 1.0
         self.v_zoom = 1.0
@@ -3021,7 +3022,6 @@ class audio_items_viewer(QtGui.QGraphicsView):
         self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         self.is_playing = False
         self.reselect_on_stop = []
-        self.playback_cursor = None
         #Somewhat slow on my AMD 5450 using the FOSS driver
         #self.setRenderHint(QtGui.QPainter.Antialiasing)
 
@@ -7221,7 +7221,8 @@ class transport_widget(libmk.AbstractTransport):
                 self.set_bar_value(f_bar)
 
     def init_playback_cursor(self, a_start=True):
-        SEQUENCER.clearSelection()
+        pass
+        #SEQUENCER.clearSelection()
 
     def on_play(self):
         if libmk.IS_PLAYING:
@@ -7232,13 +7233,10 @@ class transport_widget(libmk.AbstractTransport):
         AUDIO_SEQ_WIDGET.on_play()
         self.bar_spinbox.setEnabled(False)
         self.init_playback_cursor()
-        self.last_region_num = self.get_region_value()
-        self.start_region = self.get_region_value()
         self.last_bar = self.get_bar_value()
         self.trigger_audio_playback()
         AUDIO_SEQ.set_playback_clipboard()
-        PROJECT.IPC.pydaw_en_playback(
-            1, self.get_region_value(), self.get_bar_value())
+        PROJECT.IPC.pydaw_en_playback(1, self.get_bar_value())
         return True
 
     def trigger_audio_playback(self):
@@ -7253,7 +7251,6 @@ class transport_widget(libmk.AbstractTransport):
         self.bar_spinbox.setEnabled(True)
         self.overdub_checkbox.setEnabled(True)
 
-        self.set_region_value(self.start_region)
         if libmk.IS_RECORDING:
             self.show_save_items_dialog()
             if CURRENT_REGION is not None and \
