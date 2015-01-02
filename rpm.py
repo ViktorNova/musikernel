@@ -18,12 +18,18 @@ import shutil
 
 DELETE_ME = 'src/pydaw/python/__pycache__'
 
+IS_INSTALL = "-i" in sys.argv
+
+if IS_INSTALL:
+    for f_file in os.listdir("."):
+        if f_file.startswith("core."):
+            print("Deleting {}".format(f_file))
+            os.remove(f_file)
+
 #these files may or may not exist, and should not be packaged
 if os.path.isdir(DELETE_ME):
     print('Deleting ' + DELETE_ME)
     shutil.rmtree(DELETE_ME)
-
-IS_INSTALL = "-i" in sys.argv
 
 # invoke sudo at the beginning of the script so that future invokations
 # will automatically work without a password
