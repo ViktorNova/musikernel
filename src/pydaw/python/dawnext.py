@@ -3047,18 +3047,14 @@ class audio_items_viewer(QtGui.QGraphicsView):
     def delete_selected(self):
         if self.check_running():
             return
-        f_items = PROJECT.get_audio_region(
-            CURRENT_REGION.uid)
-        f_paif = PROJECT.get_audio_per_item_fx_region(
-            CURRENT_REGION.uid)
+        f_items = CURRENT_ITEM
+        f_paif = CURRENT_ITEM
         for f_item in self.get_selected():
             f_items.remove_item(f_item.track_num)
             f_paif.clear_row_if_exists(f_item.track_num)
-        PROJECT.save_audio_region(CURRENT_REGION.uid, f_items)
-        PROJECT.save_audio_per_item_fx_region(
-            CURRENT_REGION.uid, f_paif, False)
+        PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
         PROJECT.commit(_("Delete audio item(s)"))
-        global_open_audio_items(True)
+        global_open_items()
 
     def crossfade_selected(self):
         f_list = self.get_selected()

@@ -326,33 +326,11 @@ class DawNextProject(libmk.AbstractProject):
             self.commit("Changed volume for all audio items "
                 "with uid {}".format(a_item.uid))
 
-    def set_output_for_all_audio_items(self, a_uid, a_index):
-        """ a_uid:  wav_pool uid
-            a_index:  output track
-        """
-        f_uid = int(a_uid)
-        f_changed_any = False
-        #this needs to be reworked
-        assert(False)
-        f_pysong = self.get_song()
-        for f_region_uid in f_pysong.regions.values():
-            f_audio_region = self.get_audio_region(f_region_uid)
-            f_changed = False
-            for f_audio_item in f_audio_region.items.values():
-                if f_audio_item.uid == f_uid:
-                    f_audio_item.output_track = int(a_index)
-                    f_changed = True
-            if f_changed:
-                self.save_audio_region(f_region_uid, f_audio_region)
-                f_changed_any = True
-        if f_changed_any:
-            self.commit("Changed output to {} for all "
-                "audio items with uid {}".format(a_index, f_uid))
-
     def set_paif_for_all_audio_items(self, a_uid, a_paif):
         """ a_uid:  wav_pool uid
             a_paif:  a list that corresponds to a paif row
         """
+        assert(False)  #this one needs a rework
         f_uid = int(a_uid)
         f_changed_any = False
         f_pysong = self.get_song()

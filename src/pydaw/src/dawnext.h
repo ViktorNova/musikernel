@@ -98,6 +98,7 @@ typedef struct
 
 typedef struct
 {
+    int pos;
     int count;
     t_dn_item_ref * refs;
 }t_dn_track_seq;
@@ -729,19 +730,24 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
     t_dn_item_ref * f_item_ref = NULL;
     t_pydaw_plugin * f_plugin;
 
-    for(f_i = 0; f_i < f_seq->count; ++f_i)
+    while(1)
     {
-        if(f_seq->refs[f_i].start <= a_ts->ml_current_beat &&
-        f_seq->refs[f_i].end > a_ts->ml_next_beat)
+        if(f_seq->pos >= f_seq->count)
         {
-            f_item_ref = &f_seq->refs[f_i];
-            if(f_seq->refs[f_i].start >= a_ts->ml_current_beat &&
-                    f_seq->refs[f_i].start < a_ts->ml_next_beat)
-            {
-                v_dn_reset_audio_item_read_heads(self,
-                    self->item_pool[f_item_ref->item_uid]->audio_items,
-                    a_ts->ml_current_beat);
-            }
+            break;
+        }
+
+        if(f_seq->refs[f_seq->pos].end > a_ts->ml_current_beat)
+        {
+            f_item_ref = &f_seq->refs[f_seq->pos];
+            break;
+        }
+        else if(f_seq->refs[f_seq->pos].end < a_ts->ml_current_beat)
+        {
+            ++f_seq->pos;
+        }
+        else
+        {
             break;
         }
     }
@@ -1408,9 +1414,6 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
     int f_playback_mode = musikernel->playback_mode;
     t_per_audio_item_fx * f_paif_item;
 
-    int f_adjusted_sample_count = a_sample_count;
-    int f_start_sample = 0;
-
     t_pydaw_audio_items * f_region = f_item->audio_items;
 
     int f_i = 0;
@@ -1477,7 +1480,7 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
             continue;
         }
 
-        register int f_i2 = f_start_sample;
+        register int f_i2 = 0;
 
         if((f_audio_start >= a_ts->ml_current_beat) &&
             (f_audio_start < a_ts->ml_next_beat))
@@ -1499,26 +1502,24 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
 
             v_adsr_retrigger(&f_audio_item->adsrs[f_send_num]);
 
-            double f_diff = (a_ts->ml_current_beat - a_ts->ml_next_beat);
-            double f_distance = a_ts->ml_next_beat - f_audio_start;
+            double f_diff = (a_ts->ml_next_beat - a_ts->ml_current_beat);
+            double f_distance = f_audio_start - a_ts->ml_current_beat;
 
-            f_i2 = f_adjusted_sample_count - (int)((f_distance /
-                f_diff) * ((double)(f_adjusted_sample_count -
-                f_start_sample)));
+            f_i2 = (int)((f_distance / f_diff) * ((double)(a_sample_count)));
 
             if(f_i2 < 0)
             {
                 f_i2 = 0;
             }
-            else if(f_i2 >= f_adjusted_sample_count)
+            else if(f_i2 >= a_sample_count)
             {
-                f_i2 = f_adjusted_sample_count - 1;
+                f_i2 = a_sample_count - 1;
             }
         }
 
         if((f_audio_item->adsrs[f_send_num].stage) != ADSR_STAGE_OFF)
         {
-            while((f_i2 < f_adjusted_sample_count) &&
+            while((f_i2 < a_sample_count) &&
                 (((!f_audio_item->is_reversed) &&
                 ((f_audio_item->sample_read_heads[
                     f_send_num].whole_number) <
@@ -1531,17 +1532,14 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
                 ))
             {
                 assert(f_i2 < a_sample_count);
-                v_pydaw_audio_item_set_fade_vol(
-                    f_audio_item, f_send_num);
+                v_pydaw_audio_item_set_fade_vol(f_audio_item, f_send_num);
 
                 if(f_audio_item->wav_pool_item->channels == 1)
                 {
                     float f_tmp_sample0 = f_cubic_interpolate_ptr_ifh(
                     (f_audio_item->wav_pool_item->samples[0]),
-                    (f_audio_item->sample_read_heads[
-                        f_send_num].whole_number),
-                    (f_audio_item->sample_read_heads[
-                        f_send_num].fraction)) *
+                    (f_audio_item->sample_read_heads[f_send_num].whole_number),
+                    (f_audio_item->sample_read_heads[f_send_num].fraction)) *
                     (f_audio_item->adsrs[f_send_num].output) *
                     (f_audio_item->vols_linear[f_send_num]) *
                     (f_audio_item->fade_vols[f_send_num]);
@@ -1553,15 +1551,11 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
                         int f_i3;
                         for(f_i3 = 0; f_i3 < 8; ++f_i3)
                         {
-                            f_paif_item =
-                                f_audio_item->paif->items[f_i3];
-                            f_paif_item->func_ptr(
-                                f_paif_item->mf3,
+                            f_paif_item = f_audio_item->paif->items[f_i3];
+                            f_paif_item->func_ptr(f_paif_item->mf3,
                                 f_tmp_sample0, f_tmp_sample1);
-                            f_tmp_sample0 =
-                                f_paif_item->mf3->output0;
-                            f_tmp_sample1 =
-                                f_paif_item->mf3->output1;
+                            f_tmp_sample0 = f_paif_item->mf3->output0;
+                            f_tmp_sample1 = f_paif_item->mf3->output1;
                         }
                     }
 
@@ -1602,15 +1596,11 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
                         int f_i3 = 0;
                         while(f_i3 < 8)
                         {
-                            f_paif_item =
-                                f_audio_item->paif->items[f_i3];
-                            f_paif_item->func_ptr(
-                                f_paif_item->mf3,
+                            f_paif_item = f_audio_item->paif->items[f_i3];
+                            f_paif_item->func_ptr(f_paif_item->mf3,
                                 f_tmp_sample0, f_tmp_sample1);
-                            f_tmp_sample0 =
-                                f_paif_item->mf3->output0;
-                            f_tmp_sample1 =
-                                f_paif_item->mf3->output1;
+                            f_tmp_sample0 = f_paif_item->mf3->output0;
+                            f_tmp_sample1 = f_paif_item->mf3->output1;
                             ++f_i3;
                         }
                     }
@@ -2002,6 +1992,7 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
     {
         f_result->tracks[f_i].refs = NULL;
         f_result->tracks[f_i].count = 0;
+        f_result->tracks[f_i].pos = 0;
         f_item_counters[f_i] = 0;
     }
 
@@ -2448,6 +2439,7 @@ void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
 {
     //self->current_region = a_region;
     self->ts[0].ml_next_beat = a_beat;
+    t_dn_region * f_region = self->en_song->regions[0];
 
     register int f_i;
 
@@ -2459,6 +2451,8 @@ void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
         {
             self->track_pool[f_i]->fade_state = FADE_STATE_FADED;
         }
+
+        f_region->tracks[f_i].pos = 0;
     }
 
     f_i = 0;
