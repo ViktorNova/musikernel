@@ -88,10 +88,10 @@ class DawNextOsc(libmk.AbstractIPC):
         self.send_configure("panic", "")
 
     def pydaw_audio_per_item_fx(
-            self, a_region_uid, a_item_index, a_port_num, a_val):
+            self, a_item_uid, a_audio_item_index, a_port_num, a_val):
         self.send_configure(
             "paif", "|".join(str(x) for x in
-             (a_region_uid, a_item_index, a_port_num, a_val)))
+             (a_item_uid, a_audio_item_index, a_port_num, a_val)))
 
     def pydaw_glue_audio(
             self, a_file_name, a_region_index, a_start_bar_index,

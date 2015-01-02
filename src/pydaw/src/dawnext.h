@@ -2884,7 +2884,6 @@ void v_dn_configure(const char* a_key, const char* a_value)
         t_1d_char_array * f_arr = c_split_str(a_value, '|', 4,
                 PYDAW_SMALL_STRING);
         int f_item_index = atoi(f_arr->array[0]);
-        assert(NULL);  // The below hasn't been added to the UI
         int f_audio_item_index = atoi(f_arr->array[1]);
         int f_port_num = atoi(f_arr->array[2]);
         float f_port_val = atof(f_arr->array[3]);
