@@ -83,6 +83,22 @@ extern "C" {
 
 typedef struct
 {
+    int sample_counts;
+    long current_samples;
+    double beat_starts;
+    double beat_ends;
+    float * buffers[2];
+    float * sc_buffers[2];
+}t_sample_period;
+
+typedef struct
+{
+    int count;
+    t_sample_period periods[3];
+}t_sample_period_split;
+
+typedef struct
+{
     char * f_tmp1;
     char * f_tmp2;
     char * f_msg;
@@ -104,6 +120,7 @@ typedef struct
     char bus_counter_padding[CACHE_LINE_SIZE - sizeof(int)];
     volatile int status;
     char status_padding[CACHE_LINE_SIZE - sizeof(int)];
+    t_sample_period_split splitter;
     int solo;
     int mute;
     int period_event_index;
@@ -228,6 +245,114 @@ void v_pydaw_set_host(int);
 
 t_musikernel * musikernel = NULL;
 int ZERO = 0;
+
+void v_sample_period_split(
+        t_sample_period_split* self, float ** a_buffers,
+        float ** a_sc_buffers, int a_sample_count,
+        double a_period_start_beat, double a_period_end_beat,
+        double a_event1_beat, double a_event2_beat, long a_current_sample)
+{
+    self->periods[0].current_samples = a_current_sample;
+
+    if(a_event1_beat <= a_period_start_beat ||
+    (a_event1_beat > a_period_end_beat && a_event2_beat > a_period_end_beat))
+    {
+        self->count = 1;
+        self->periods[0].sample_counts = a_sample_count;
+        self->periods[0].buffers[0] = a_buffers[0];
+        self->periods[0].buffers[1] = a_buffers[1];
+        self->periods[0].sc_buffers[0] = a_sc_buffers[0];
+        self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+    }
+    else if(a_event1_beat >= a_period_start_beat &&
+            a_event1_beat < a_period_end_beat)
+    {
+        if(a_event2_beat >= a_period_end_beat)
+        {
+            self->count = 1;
+            self->periods[0].sample_counts = a_sample_count;
+
+            self->periods[0].buffers[0] = a_buffers[0];
+            self->periods[0].buffers[1] = a_buffers[1];
+            self->periods[0].sc_buffers[0] = a_sc_buffers[0];
+            self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+        }
+        else if(a_event1_beat == a_event2_beat ||
+                a_event2_beat >= a_period_end_beat)
+        {
+            self->count = 2;
+
+            double f_diff = (a_period_end_beat - a_period_start_beat);
+            double f_distance = a_event2_beat - a_period_start_beat;
+            int f_split =
+                (int)((f_distance / f_diff) * ((double)(a_sample_count)));
+
+            self->periods[0].sample_counts = f_split;
+            self->periods[1].sample_counts = a_sample_count - f_split;
+
+            self->periods[1].current_samples = a_current_sample + (long)f_split;
+
+            self->periods[0].buffers[0] = a_buffers[0];
+            self->periods[0].buffers[1] = a_buffers[1];
+            self->periods[0].sc_buffers[0] = a_sc_buffers[0];
+            self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+
+            self->periods[1].buffers[0] = &a_buffers[0][f_split];
+            self->periods[1].buffers[1] = &a_buffers[1][f_split];
+            self->periods[1].sc_buffers[0] = &a_sc_buffers[0][f_split];
+            self->periods[1].sc_buffers[1] = &a_sc_buffers[1][f_split];
+        }
+        else if(a_event2_beat < a_period_end_beat)
+        {
+            self->count = 3;
+
+            double f_diff = (a_period_end_beat - a_period_start_beat);
+
+            double f_distance = a_event1_beat - a_period_start_beat;
+            int f_split =
+                (int)((f_distance / f_diff) * ((double)(a_sample_count)));
+
+            self->periods[0].sample_counts = f_split;
+            self->periods[1].current_samples = a_current_sample + (long)f_split;
+
+            self->periods[0].buffers[0] = a_buffers[0];
+            self->periods[0].buffers[1] = a_buffers[1];
+            self->periods[0].sc_buffers[0] = a_sc_buffers[0];
+            self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+
+            f_distance = a_event2_beat - a_event1_beat;
+            f_split +=
+                (int)((f_distance / f_diff) * ((double)(a_sample_count)));
+
+            self->periods[1].current_samples = a_current_sample + (long)f_split;
+
+            self->periods[1].sample_counts = f_split;
+            self->periods[1].buffers[0] = &a_buffers[0][f_split];
+            self->periods[1].buffers[1] = &a_buffers[1][f_split];
+            self->periods[1].sc_buffers[0] = &a_sc_buffers[0][f_split];
+            self->periods[1].sc_buffers[1] = &a_sc_buffers[1][f_split];
+
+            f_distance = a_period_end_beat - a_event2_beat;
+            f_split +=
+                (int)((f_distance / f_diff) * ((double)(a_sample_count)));
+
+            f_split = a_sample_count - f_split;
+            self->periods[2].sample_counts = f_split;
+            self->periods[2].buffers[0] = &a_buffers[0][f_split];
+            self->periods[2].buffers[1] = &a_buffers[1][f_split];
+            self->periods[2].sc_buffers[0] = &a_sc_buffers[0][f_split];
+            self->periods[2].sc_buffers[1] = &a_sc_buffers[1][f_split];
+        }
+        else
+        {
+            assert(0);
+        }
+    }
+    else
+    {
+        assert(0);
+    }
+}
 
 void pydaw_osc_error(int num, const char *msg, const char *path)
 {
