@@ -167,6 +167,7 @@ class DawNextProject(libmk.AbstractProject):
             if not os.path.isdir(project_dir):
                 os.makedirs(project_dir)
 
+        self.save_file("", FILE_SEQUENCER, str(pydaw_sequencer()))
         self.create_file("", pydaw_file_pyitems, pydaw_terminating_char)
         self.create_file("", pydaw_file_pytransport, str(pydaw_transport()))
         f_tracks = pydaw_tracks()

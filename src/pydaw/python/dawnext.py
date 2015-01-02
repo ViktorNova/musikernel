@@ -206,7 +206,7 @@ class region_settings:
         CURRENT_REGION = PROJECT.get_region()
         self.length_spinbox.setValue(CURRENT_REGION.length_bars)
         self.tsig_spinbox.setValue(CURRENT_REGION.beats_per_measure)
-        TRANSPORT.bar_spinbox.setRange(1, (CURRENT_REGION.length_bars))
+        TRANSPORT.bar_spinbox.setRange(1, CURRENT_REGION.length_bars)
         self.enabled = True
         SEQUENCER.open_region()
         global_update_hidden_rows()
@@ -1480,14 +1480,9 @@ class ItemSequencer(QtGui.QGraphicsView):
             if f_item.isSelected():
                 self.reselect_on_stop.append(str(f_item.audio_item))
 
-    def start_playback(self, a_bpm):
-        self.is_playing = True
-
-    def stop_playback(self, a_bar=None):
-        if self.is_playing:
-            self.is_playing = False
-            self.reset_selection()
-            self.set_playback_pos(a_bar)
+    def stop_playback(self, a_beat=0.0):
+        self.reset_selection()
+        self.set_playback_pos(a_beat)
 
     def reset_selection(self):
         for f_item in self.audio_items:
@@ -1604,17 +1599,10 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.set_ruler_y_pos()
 
     def clear_drawn_items(self):
-        if self.is_playing:
-            f_was_playing = True
-            self.is_playing = False
-        else:
-            f_was_playing = False
         self.reset_line_lists()
         self.audio_items = []
         self.scene.clear()
         self.draw_headers()
-        if f_was_playing:
-            self.is_playing = True
 
     def draw_item(self, a_name, a_item):
         f_item = SequencerItem(a_name, a_item)
@@ -3299,11 +3287,11 @@ class audio_items_viewer(QtGui.QGraphicsView):
     def start_playback(self, a_bpm):
         self.is_playing = True
 
-    def stop_playback(self, a_bar=None):
+    def stop_playback(self, a_beat=None):
         if self.is_playing:
             self.is_playing = False
             self.reset_selection()
-            self.set_playback_pos(a_bar)
+            self.set_playback_pos(a_beat)
 
     def reset_selection(self):
         for f_item in self.audio_items:
@@ -7198,8 +7186,6 @@ class transport_widget(libmk.AbstractTransport):
         PROJECT.IPC.pydaw_panic()
 
     def set_time(self, a_beat):
-        f_bar = int(REGION_SETTINGS.tsig_spinbox.value() * a_beat)
-        self.set_bar_value(f_bar)
         f_seconds_per_beat = 60.0 / float(self.tempo_spinbox.value())
         f_seconds = f_seconds_per_beat * a_beat
         f_minutes = int(f_seconds / 60)
@@ -7215,7 +7201,8 @@ class transport_widget(libmk.AbstractTransport):
         return self.bar_spinbox.value() - 1
 
     def get_beat_value(self):
-        return self.bar_spinbox.value() * REGION_SETTINGS.tsig_spinbox.value()
+        return (self.bar_spinbox.value()
+            - 1)* REGION_SETTINGS.tsig_spinbox.value()
 
     def set_pos_from_cursor(self, a_beat):
         if libmk.IS_PLAYING or libmk.IS_RECORDING:
@@ -7223,12 +7210,12 @@ class transport_widget(libmk.AbstractTransport):
             self.set_time(f_beat)
 
     def init_playback_cursor(self, a_start=True):
-        pass
-        #SEQUENCER.clearSelection()
+        if a_start:
+            SEQUENCER.scene.clearSelection()
+        SEQUENCER.set_playback_pos(self.get_beat_value())
 
     def on_play(self):
         if libmk.IS_PLAYING:
-            self.set_region_value(self.start_region)
             self.set_bar_value(self.last_bar)
 
         REGION_SETTINGS.on_play()
@@ -7236,14 +7223,8 @@ class transport_widget(libmk.AbstractTransport):
         self.bar_spinbox.setEnabled(False)
         self.init_playback_cursor()
         self.last_bar = self.get_bar_value()
-        self.trigger_audio_playback()
-        AUDIO_SEQ.set_playback_clipboard()
         PROJECT.IPC.pydaw_en_playback(1, self.get_beat_value())
         return True
-
-    def trigger_audio_playback(self):
-        AUDIO_SEQ.set_playback_pos(self.get_beat_value())
-        AUDIO_SEQ.start_playback(self.tempo_spinbox.value())
 
     def on_stop(self):
         PROJECT.IPC.pydaw_en_playback(0)
@@ -7261,7 +7242,7 @@ class transport_widget(libmk.AbstractTransport):
         self.init_playback_cursor(a_start=False)
         self.set_bar_value(self.last_bar)
         #REGION_SETTINGS.open_region(f_song_table_item_str)
-        AUDIO_SEQ.stop_playback(self.last_bar)
+        SEQUENCER.stop_playback(self.get_beat_value())
         time.sleep(0.1)
 
     def show_save_items_dialog(self):
@@ -7324,8 +7305,6 @@ class transport_widget(libmk.AbstractTransport):
         self.last_bar = self.get_bar_value()
         PROJECT.IPC.pydaw_en_playback(
             2, self.get_beat_value())
-        self.trigger_audio_playback()
-        AUDIO_SEQ.set_playback_clipboard()
         return True
 
     def on_tempo_changed(self, a_tempo):
@@ -7352,10 +7331,11 @@ class transport_widget(libmk.AbstractTransport):
         if not self.suppress_osc and \
         not libmk.IS_PLAYING and \
         not libmk.IS_RECORDING:
-            for f_editor in (AUDIO_SEQ, SEQUENCER):
-                f_editor.set_playback_pos(self.get_beat_value())
-            PROJECT.IPC.pydaw_set_pos(self.get_beat_value())
-        self.set_time(self.get_beat_value())
+            f_beat = self.get_beat_value()
+            for f_editor in (SEQUENCER,):
+                f_editor.set_playback_pos(f_beat)
+            PROJECT.IPC.pydaw_set_pos(f_beat)
+            self.set_time(f_beat)
 
     def open_transport(self, a_notify_osc=False):
         if not a_notify_osc:

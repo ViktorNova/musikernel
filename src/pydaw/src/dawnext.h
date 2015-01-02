@@ -2136,10 +2136,9 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
 
         char f_type = f_current_string->current_str[0];
 
-        v_iterate_2d_char_array(f_current_string);
-
         if(f_type == 'n')  //note
         {
+            v_iterate_2d_char_array(f_current_string);
             float f_start = atof(f_current_string->current_str);
             v_iterate_2d_char_array(f_current_string);
             float f_length = atof(f_current_string->current_str);
@@ -2154,6 +2153,7 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         }
         else if(f_type == 'c') //cc
         {
+            v_iterate_2d_char_array(f_current_string);
             float f_start = atof(f_current_string->current_str);
             v_iterate_2d_char_array(f_current_string);
             int f_cc_num = atoi(f_current_string->current_str);
@@ -2166,6 +2166,7 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         }
         else if(f_type == 'p') //pitchbend
         {
+            v_iterate_2d_char_array(f_current_string);
             float f_start = atof(f_current_string->current_str);
             v_iterate_2d_char_array(f_current_string);
             float f_pb_val = atof(f_current_string->current_str) * 8192.0f;
@@ -2216,6 +2217,7 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         }
         else if(f_type == 'f') //per-item-fx
         {
+            v_iterate_2d_char_array(f_current_string);
             int f_index = atoi(f_current_string->current_str);
             t_paif * f_paif = f_result->audio_items->items[f_index]->paif;
             f_paif->loaded = 1;
@@ -2247,6 +2249,7 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         }
         else if(f_type == 'U')
         {
+            v_iterate_2d_char_array(f_current_string);
             f_result->uid = atoi(f_current_string->current_str);
             assert(f_result->uid == a_uid);
         }
