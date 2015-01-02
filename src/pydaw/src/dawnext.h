@@ -264,9 +264,9 @@ void g_dn_instantiate()
 }
 
 void v_dn_reset_audio_item_read_heads(t_dawnext * self,
-        t_pydaw_audio_items * f_audio_items, int a_start_bar)
+        t_pydaw_audio_items * f_audio_items, double a_start_beat)
 {
-    if(a_start_bar == 0)
+    if(a_start_beat == 0.0f)
     {
         return;  //no need to run because the audio loop will reset it all
     }
@@ -278,7 +278,6 @@ void v_dn_reset_audio_item_read_heads(t_dawnext * self,
 
     register int f_i;
     int f_i2;
-    float f_start_beats = (float)(a_start_bar * 4);
     float f_sr = musikernel->thread_storage[0].sample_rate;
     t_pydaw_audio_item * f_audio_item;
     float f_tempo = self->en_song->regions[0]->tempo;
@@ -290,15 +289,15 @@ void v_dn_reset_audio_item_read_heads(t_dawnext * self,
             f_audio_item = f_audio_items->items[f_i];
             double f_start_beat = f_audio_item->start_beat;
 
-            float f_end_beat =
+            double f_end_beat =
                 f_start_beat + f_pydaw_samples_to_beat_count(
                     (f_audio_item->sample_end_offset -
                      f_audio_item->sample_start_offset),
                     f_tempo, f_sr);
 
-            if((f_start_beats > f_start_beat) && (f_start_beats < f_end_beat))
+            if((a_start_beat > f_start_beat) && (a_start_beat < f_end_beat))
             {
-                float f_beats_offset = (f_start_beats - f_start_beat);
+                double f_beats_offset = (a_start_beat - f_start_beat);
                 int f_sample_start = i_beat_count_to_samples(
                         f_beats_offset, f_tempo, f_sr);
 
@@ -318,13 +317,12 @@ void v_dn_reset_audio_item_read_heads(t_dawnext * self,
  */
 void v_dn_zero_all_buffers(t_dawnext * self)
 {
-    int f_i = 0;
+    int f_i;
     float ** f_buff;
-    while(f_i < DN_TRACK_COUNT)
+    for(f_i = 0; f_i < DN_TRACK_COUNT; ++f_i)
     {
         f_buff = self->track_pool[f_i]->buffers;
         v_pydaw_zero_buffer(f_buff, FRAMES_PER_BUFFER);
-        ++f_i;
     }
 }
 
@@ -737,6 +735,13 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         f_seq->refs[f_i].end > a_ts->ml_next_beat)
         {
             f_item_ref = &f_seq->refs[f_i];
+            if(f_seq->refs[f_i].start >= a_ts->ml_current_beat &&
+                    f_seq->refs[f_i].start < a_ts->ml_next_beat)
+            {
+                v_dn_reset_audio_item_read_heads(self,
+                    self->item_pool[f_item_ref->item_uid]->audio_items,
+                    a_ts->ml_current_beat);
+            }
             break;
         }
     }
@@ -1395,7 +1400,7 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
     t_dn_item * f_item = self->item_pool[a_item_ref->item_uid];
 
     if(!a_is_audio_glue &&
-    (!f_item->audio_items->index_counts[a_audio_track_num]))
+    (!f_item->audio_items->index_counts[0]))
     {
         return;
     }
@@ -1414,14 +1419,12 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
     float ** f_buff = a_buff;
 
     while(a_is_audio_glue ||
-        f_index_pos < f_region->index_counts[a_audio_track_num])
+        f_index_pos < f_region->index_counts[0])
     {
         if(!a_is_audio_glue)
         {
-            f_i = f_region->indexes[
-                a_audio_track_num][f_index_pos].item_num;
-            f_send_num = f_region->indexes[
-                a_audio_track_num][f_index_pos].send_num;
+            f_i = f_region->indexes[0][f_index_pos].item_num;
+            //f_send_num = f_region->indexes[0][f_index_pos].send_num;
             ++f_index_pos;
         }
         else
@@ -1468,214 +1471,202 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
         double f_audio_start = f_audio_item->adjusted_start_beat +
             a_item_ref->start;
 
-        if(a_is_audio_glue ||
-        f_audio_item->outputs[f_send_num] == a_audio_track_num)
+        if(f_audio_start >= a_ts->ml_next_beat)
         {
-            if(f_audio_start >= a_ts->ml_next_beat)
+            ++f_i;
+            continue;
+        }
+
+        register int f_i2 = f_start_sample;
+
+        if((f_audio_start >= a_ts->ml_current_beat) &&
+            (f_audio_start < a_ts->ml_next_beat))
+        {
+            if(f_audio_item->is_reversed)
             {
-                ++f_i;
-                continue;
+                v_ifh_retrigger(
+                    &f_audio_item->sample_read_heads[f_send_num],
+                    f_audio_item->sample_end_offset);
+            }
+            else
+            {
+                v_ifh_retrigger(
+                    &f_audio_item->sample_read_heads[f_send_num],
+                    f_audio_item->sample_start_offset);
             }
 
-            register int f_i2 = f_start_sample;
+            v_svf_reset(&f_audio_item->lp_filters[f_send_num]);
 
-            if((f_audio_start >= a_ts->ml_current_beat) &&
-                (f_audio_start < a_ts->ml_next_beat))
+            v_adsr_retrigger(&f_audio_item->adsrs[f_send_num]);
+
+            double f_diff = (a_ts->ml_current_beat - a_ts->ml_next_beat);
+            double f_distance = a_ts->ml_next_beat - f_audio_start;
+
+            f_i2 = f_adjusted_sample_count - (int)((f_distance /
+                f_diff) * ((double)(f_adjusted_sample_count -
+                f_start_sample)));
+
+            if(f_i2 < 0)
             {
-                if(f_audio_item->is_reversed)
-                {
-                    v_ifh_retrigger(
-                        &f_audio_item->sample_read_heads[f_send_num],
-                        f_audio_item->sample_end_offset);
-                }
-                else
-                {
-                    v_ifh_retrigger(
-                        &f_audio_item->sample_read_heads[f_send_num],
-                        f_audio_item->sample_start_offset);
-                }
-
-                v_svf_reset(&f_audio_item->lp_filters[f_send_num]);
-
-                v_adsr_retrigger(&f_audio_item->adsrs[f_send_num]);
-
-                double f_diff = (a_ts->ml_current_beat - a_ts->ml_next_beat);
-                double f_distance = a_ts->ml_next_beat - f_audio_start;
-
-                f_i2 = f_adjusted_sample_count - (int)((f_distance /
-                        f_diff) * ((double)(f_adjusted_sample_count -
-                        f_start_sample)));
-
-                if(f_i2 < 0)
-                {
-                    f_i2 = 0;
-                }
-                else if(f_i2 >= f_adjusted_sample_count)
-                {
-                    f_i2 = f_adjusted_sample_count - 1;
-                }
+                f_i2 = 0;
             }
-
-            if((f_audio_item->adsrs[f_send_num].stage) != ADSR_STAGE_OFF)
+            else if(f_i2 >= f_adjusted_sample_count)
             {
-                while((f_i2 < f_adjusted_sample_count) &&
-                    (((!f_audio_item->is_reversed) &&
-                    ((f_audio_item->sample_read_heads[
-                        f_send_num].whole_number) <
-                    (f_audio_item->sample_end_offset)))
-                        ||
-                    ((f_audio_item->is_reversed) &&
-                    ((f_audio_item->sample_read_heads[
-                        f_send_num].whole_number) >
-                    (f_audio_item->sample_start_offset)))
-                    ))
-                {
-                    assert(f_i2 < a_sample_count);
-                    v_pydaw_audio_item_set_fade_vol(
-                        f_audio_item, f_send_num);
+                f_i2 = f_adjusted_sample_count - 1;
+            }
+        }
 
-                    if(f_audio_item->wav_pool_item->channels == 1)
+        if((f_audio_item->adsrs[f_send_num].stage) != ADSR_STAGE_OFF)
+        {
+            while((f_i2 < f_adjusted_sample_count) &&
+                (((!f_audio_item->is_reversed) &&
+                ((f_audio_item->sample_read_heads[
+                    f_send_num].whole_number) <
+                (f_audio_item->sample_end_offset)))
+                    ||
+                ((f_audio_item->is_reversed) &&
+                ((f_audio_item->sample_read_heads[
+                    f_send_num].whole_number) >
+                (f_audio_item->sample_start_offset)))
+                ))
+            {
+                assert(f_i2 < a_sample_count);
+                v_pydaw_audio_item_set_fade_vol(
+                    f_audio_item, f_send_num);
+
+                if(f_audio_item->wav_pool_item->channels == 1)
+                {
+                    float f_tmp_sample0 = f_cubic_interpolate_ptr_ifh(
+                    (f_audio_item->wav_pool_item->samples[0]),
+                    (f_audio_item->sample_read_heads[
+                        f_send_num].whole_number),
+                    (f_audio_item->sample_read_heads[
+                        f_send_num].fraction)) *
+                    (f_audio_item->adsrs[f_send_num].output) *
+                    (f_audio_item->vols_linear[f_send_num]) *
+                    (f_audio_item->fade_vols[f_send_num]);
+
+                    float f_tmp_sample1 = f_tmp_sample0;
+
+                    if(f_audio_item->paif && f_audio_item->paif->loaded)
                     {
-                        float f_tmp_sample0 = f_cubic_interpolate_ptr_ifh(
-                        (f_audio_item->wav_pool_item->samples[0]),
-                        (f_audio_item->sample_read_heads[
-                            f_send_num].whole_number),
-                        (f_audio_item->sample_read_heads[
-                            f_send_num].fraction)) *
-                        (f_audio_item->adsrs[f_send_num].output) *
-                        (f_audio_item->vols_linear[f_send_num]) *
-                        (f_audio_item->fade_vols[f_send_num]);
-
-                        float f_tmp_sample1 = f_tmp_sample0;
-
-                        if(f_audio_item->paif && f_audio_item->paif->loaded)
+                        int f_i3;
+                        for(f_i3 = 0; f_i3 < 8; ++f_i3)
                         {
-                            int f_i3;
-                            for(f_i3 = 0; f_i3 < 8; ++f_i3)
-                            {
-                                f_paif_item =
-                                    f_audio_item->paif->items[f_i3];
-                                f_paif_item->func_ptr(
-                                    f_paif_item->mf3,
-                                    f_tmp_sample0, f_tmp_sample1);
-                                f_tmp_sample0 =
-                                    f_paif_item->mf3->output0;
-                                f_tmp_sample1 =
-                                    f_paif_item->mf3->output1;
-                            }
+                            f_paif_item =
+                                f_audio_item->paif->items[f_i3];
+                            f_paif_item->func_ptr(
+                                f_paif_item->mf3,
+                                f_tmp_sample0, f_tmp_sample1);
+                            f_tmp_sample0 =
+                                f_paif_item->mf3->output0;
+                            f_tmp_sample1 =
+                                f_paif_item->mf3->output1;
                         }
-
-                        f_buff[0][f_i2] += f_tmp_sample0;
-                        f_buff[1][f_i2] += f_tmp_sample1;
                     }
-                    else if(f_audio_item->wav_pool_item->channels == 2)
-                    {
-                        assert(f_audio_item->sample_read_heads[
-                                f_send_num].whole_number
-                            <=
-                            f_audio_item->wav_pool_item->length);
 
-                        assert(f_audio_item->sample_read_heads[
-                                f_send_num].whole_number
-                            >=
-                            PYDAW_AUDIO_ITEM_PADDING_DIV2);
+                    f_buff[0][f_i2] += f_tmp_sample0;
+                    f_buff[1][f_i2] += f_tmp_sample1;
+                }
+                else if(f_audio_item->wav_pool_item->channels == 2)
+                {
+                    assert(
+                        f_audio_item->sample_read_heads[f_send_num].whole_number
+                        <= f_audio_item->wav_pool_item->length);
 
-                        float f_tmp_sample0 = f_cubic_interpolate_ptr_ifh(
+                    assert(
+                        f_audio_item->sample_read_heads[f_send_num].whole_number
+                        >= PYDAW_AUDIO_ITEM_PADDING_DIV2);
+
+                    float f_tmp_sample0 = f_cubic_interpolate_ptr_ifh(
                         f_audio_item->wav_pool_item->samples[0],
                         f_audio_item->sample_read_heads[
                             f_send_num].whole_number,
-                        f_audio_item->sample_read_heads[
-                            f_send_num].fraction) *
+                        f_audio_item->sample_read_heads[f_send_num].fraction) *
                         f_audio_item->adsrs[f_send_num].output *
                         f_audio_item->vols_linear[f_send_num] *
                         f_audio_item->fade_vols[f_send_num];
 
-                        float f_tmp_sample1 = f_cubic_interpolate_ptr_ifh(
+                    float f_tmp_sample1 = f_cubic_interpolate_ptr_ifh(
                         f_audio_item->wav_pool_item->samples[1],
                         f_audio_item->sample_read_heads[
                             f_send_num].whole_number,
-                        f_audio_item->sample_read_heads[
-                            f_send_num].fraction) *
-                        f_audio_item->adsrs[f_send_num].output *
-                        f_audio_item->vols_linear[f_send_num]
-                        * f_audio_item->fade_vols[f_send_num];
+                        f_audio_item->sample_read_heads[f_send_num].fraction) *
+                    f_audio_item->adsrs[f_send_num].output *
+                    f_audio_item->vols_linear[f_send_num]
+                    * f_audio_item->fade_vols[f_send_num];
 
 
-                        if(f_audio_item->paif && f_audio_item->paif->loaded)
-                        {
-                            int f_i3 = 0;
-                            while(f_i3 < 8)
-                            {
-                                f_paif_item =
-                                    f_audio_item->paif->items[f_i3];
-                                f_paif_item->func_ptr(
-                                    f_paif_item->mf3,
-                                    f_tmp_sample0, f_tmp_sample1);
-                                f_tmp_sample0 =
-                                    f_paif_item->mf3->output0;
-                                f_tmp_sample1 =
-                                    f_paif_item->mf3->output1;
-                                ++f_i3;
-                            }
-                        }
-
-                        f_buff[0][f_i2] += f_tmp_sample0;
-                        f_buff[1][f_i2] += f_tmp_sample1;
-
-                    }
-                    else
+                    if(f_audio_item->paif && f_audio_item->paif->loaded)
                     {
-                        // TODO:  Catch this during load and
-                        // do something then...
-                        printf(
-                            "Error: v_pydaw_dn_song->audio_items"
-                            "[f_current_region]_run, invalid number "
-                            "of channels %i\n",
-                            f_audio_item->wav_pool_item->channels);
-                    }
-
-                    if(f_audio_item->is_reversed)
-                    {
-                        v_ifh_run_reverse(
-                            &f_audio_item->sample_read_heads[f_send_num],
-                            f_audio_item->ratio);
-
-                        if(f_audio_item->sample_read_heads[
-                                f_send_num].whole_number <
-                            PYDAW_AUDIO_ITEM_PADDING_DIV2)
+                        int f_i3 = 0;
+                        while(f_i3 < 8)
                         {
-                            f_audio_item->adsrs[
-                                f_send_num].stage = ADSR_STAGE_OFF;
-                        }
-                    }
-                    else
-                    {
-                        v_ifh_run(
-                            &f_audio_item->sample_read_heads[f_send_num],
-                            f_audio_item->ratio);
-
-                        if(f_audio_item->sample_read_heads[
-                                f_send_num].whole_number >=
-                            f_audio_item->wav_pool_item->length - 1)
-                        {
-                            f_audio_item->adsrs[f_send_num].stage =
-                                ADSR_STAGE_OFF;
+                            f_paif_item =
+                                f_audio_item->paif->items[f_i3];
+                            f_paif_item->func_ptr(
+                                f_paif_item->mf3,
+                                f_tmp_sample0, f_tmp_sample1);
+                            f_tmp_sample0 =
+                                f_paif_item->mf3->output0;
+                            f_tmp_sample1 =
+                                f_paif_item->mf3->output1;
+                            ++f_i3;
                         }
                     }
 
+                    f_buff[0][f_i2] += f_tmp_sample0;
+                    f_buff[1][f_i2] += f_tmp_sample1;
 
-                    if(f_audio_item->adsrs[f_send_num].stage ==
-                        ADSR_STAGE_OFF)
+                }
+                else
+                {
+                    // TODO:  Catch this during load and
+                    // do something then...
+                    printf(
+                        "Error: v_pydaw_dn_song->audio_items"
+                        "[f_current_region]_run, invalid number "
+                        "of channels %i\n",
+                        f_audio_item->wav_pool_item->channels);
+                }
+
+                if(f_audio_item->is_reversed)
+                {
+                    v_ifh_run_reverse(
+                        &f_audio_item->sample_read_heads[f_send_num],
+                        f_audio_item->ratio);
+
+                    if(f_audio_item->sample_read_heads[f_send_num].whole_number
+                        < PYDAW_AUDIO_ITEM_PADDING_DIV2)
                     {
-                        break;
+                        f_audio_item->adsrs[f_send_num].stage = ADSR_STAGE_OFF;
                     }
+                }
+                else
+                {
+                    v_ifh_run(
+                        &f_audio_item->sample_read_heads[f_send_num],
+                        f_audio_item->ratio);
 
-                    v_adsr_run_db(&f_audio_item->adsrs[f_send_num]);
+                    if(f_audio_item->sample_read_heads[f_send_num].whole_number
+                        >= f_audio_item->wav_pool_item->length - 1)
+                    {
+                        f_audio_item->adsrs[f_send_num].stage =
+                            ADSR_STAGE_OFF;
+                    }
+                }
 
-                    ++f_i2;
-                }//while < sample count
-            }  //if stage
-        } //if this track_num
+
+                if(f_audio_item->adsrs[f_send_num].stage == ADSR_STAGE_OFF)
+                {
+                    break;
+                }
+
+                v_adsr_run_db(&f_audio_item->adsrs[f_send_num]);
+
+                ++f_i2;
+            }//while < sample count
+        }  //if stage
         ++f_i;
     } //while < audio item count
 }
@@ -2219,7 +2210,8 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         {
             v_iterate_2d_char_array(f_current_string);
             int f_index = atoi(f_current_string->current_str);
-            t_paif * f_paif = f_result->audio_items->items[f_index]->paif;
+            t_paif * f_paif = g_paif8_get();
+            f_result->audio_items->items[f_index]->paif = f_paif;
             f_paif->loaded = 1;
 
             int f_i2 = 0;
@@ -2456,8 +2448,6 @@ void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
 {
     //self->current_region = a_region;
     self->ts[0].ml_next_beat = a_beat;
-
-    //v_dn_reset_audio_item_read_heads(self, a_region, a_bar);
 
     register int f_i;
 

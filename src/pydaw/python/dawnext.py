@@ -1410,7 +1410,7 @@ class ItemSequencer(QtGui.QGraphicsView):
                     f_lane_num, f_beat_frac, f_length, f_item_uid)
                 f_item = pydaw_audio_item(
                     f_uid, a_start_bar=0, a_start_beat=0.0,
-                    a_lane_num=0, a_output_track=f_lane_num)
+                    a_lane_num=0)
                 f_items.add_item(f_index, f_item)
                 PROJECT.save_item_by_uid(f_item_uid, f_items)
 
@@ -1459,8 +1459,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_index = f_items.get_next_index()
         f_uid = libmk.PROJECT.get_wav_uid_by_name(f_path)
         f_item = pydaw_audio_item(
-            f_uid, a_start_bar=f_start_bar, a_lane_num=f_lane,
-            a_output_track=f_audio_track_num)
+            f_uid, a_start_bar=f_start_bar, a_lane_num=f_lane)
         f_items.add_item(f_index, f_item)
 
         PROJECT.save_audio_region(f_region_uid, f_items)
