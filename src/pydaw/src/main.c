@@ -748,8 +748,8 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
             exit(RET_CODE_AUDIO_DEVICE_ERROR);
         }
         const PaStreamInfo * f_stream_info = Pa_GetStreamInfo(stream);
-        printf("Actual output latency:\n\tseconds:  %f\n\tsamples:  %i\n",
-            (float)f_stream_info->outputLatency,
+        printf("Actual output latency:\n\tmilliseconds:  %f\n\tsamples:  %i\n",
+            (float)f_stream_info->outputLatency * 1000.0f,
             (int)(f_stream_info->outputLatency * f_stream_info->sampleRate));
         if((int)f_stream_info->sampleRate != (int)sample_rate)
         {
