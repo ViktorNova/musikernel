@@ -1396,8 +1396,9 @@ class ItemSequencer(QtGui.QGraphicsView):
 
         for f_file_name in a_item_list:
             f_file_name_str = str(f_file_name)
+            f_item_name = os.path.basename(f_file_name_str)
             if not f_file_name_str is None and not f_file_name_str == "":
-                f_item_uid = PROJECT.create_empty_item()
+                f_item_uid = PROJECT.create_empty_item(f_item_name)
                 f_items = PROJECT.get_item_by_uid(f_item_uid)
                 f_index = f_items.get_next_index()
 

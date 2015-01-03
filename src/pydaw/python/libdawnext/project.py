@@ -616,10 +616,10 @@ class DawNextProject(libmk.AbstractProject):
         if not self.suppress_updates:
             self.save_file("", pydaw_file_pytransport, str(a_transport))
 
-    def create_empty_item(self):
+    def create_empty_item(self, a_item_name="item"):
         f_items_dict = self.get_items_dict()
         f_item_name = self.get_next_default_item_name(
-            a_items_dict=f_items_dict)
+            a_item_name, a_items_dict=f_items_dict)
         f_uid = f_items_dict.add_new_item(f_item_name)
         self.save_file(pydaw_folder_items, str(f_uid), pydaw_item(f_uid))
         self.IPC.pydaw_save_item(f_uid)
