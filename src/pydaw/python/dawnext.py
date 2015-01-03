@@ -1272,7 +1272,8 @@ class ItemSequencer(QtGui.QGraphicsView):
             f_track = int(f_pos_y // REGION_EDITOR_TRACK_HEIGHT)
             f_uid = PROJECT.create_empty_item()
             CURRENT_REGION.add_item_ref_by_uid(
-                f_track, f_beat, 4.0, f_uid)
+                f_track, f_beat, REGION_SETTINGS.tsig_spinbox.value(), f_uid)
+            TRACK_PANEL.tracks[f_track].check_output()
             PROJECT.save_region(CURRENT_REGION)
             REGION_SETTINGS.open_region()
             a_event.accept()
