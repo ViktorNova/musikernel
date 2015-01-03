@@ -567,9 +567,6 @@ class DawNextProject(libmk.AbstractProject):
         f_region = self.get_region()
         f_region.reorder(a_dict)
         self.save_region(f_region)
-        f_audio_region = self.get_audio_region(f_uid)
-        f_audio_region.reorder(a_dict)
-        self.save_audio_region(f_uid, f_audio_region)
         self.IPC.pydaw_open_song(self.project_folder)
         self.commit("Re-order tracks")
 
