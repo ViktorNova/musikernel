@@ -975,15 +975,12 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             f_item = self.audio_item
             f_item_old = f_item.clone()
             CURRENT_REGION.add_item(f_item_old)
-
-            f_event_pos = a_event.pos().x()
-            # for items that are not quantized
-            f_pos = f_event_pos - (f_event_pos - self.quantize(f_event_pos))
             f_scene_pos = self.quantize(a_event.scenePos().x())
             f_musical_pos = self.pos_to_musical_time(
                 f_scene_pos) - f_item_old.start_beat
             f_item.start_beat = f_item.start_beat + f_musical_pos
             f_item.length_beats = f_item_old.length_beats - f_musical_pos
+            f_item.start_offset = f_musical_pos
             f_item_old.length_beats = f_musical_pos
             PROJECT.save_region(CURRENT_REGION)
             PROJECT.commit(_("Split sequencer item"))
