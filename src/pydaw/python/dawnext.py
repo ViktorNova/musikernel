@@ -1234,6 +1234,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                 pass
             PROJECT.save_region(CURRENT_REGION)
             PROJECT.commit(_("Update sequencer items"))
+        REGION_EDITOR.set_selected_strings()
         REGION_SETTINGS.open_region()
 
 
