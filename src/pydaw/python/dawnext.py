@@ -528,8 +528,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             REGION_EDITOR_TRACK_HEIGHT, BEATS_PER_MINUTE)
 
         self.audio_path_item = QtGui.QGraphicsPathItem(f_audio_path)
-        self.audio_path_item.setBrush(QtCore.Qt.gray)
-        self.audio_path_item.setPen(QtGui.QPen(QtCore.Qt.gray))
+        self.audio_path_item.setBrush(QtCore.Qt.darkGray)
+        self.audio_path_item.setPen(QtGui.QPen(QtCore.Qt.darkGray))
         self.audio_path_item.setParentItem(self)
         self.audio_path_item.setZValue(1900.0)
 
@@ -542,6 +542,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.label = QtGui.QGraphicsSimpleTextItem(
             str(a_name), parent=self)
         self.label.setPen(QtGui.QPen(QtCore.Qt.NoPen))
+        self.label.setBrush(QtCore.Qt.white)
+
         self.label.setPos(2.0, 2.0)
         self.label.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
         self.label.setZValue(2100.00)
