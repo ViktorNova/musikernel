@@ -1231,7 +1231,7 @@ class pydaw_item:
                 f_seconds_per_beat) * a_px_per_beat
             f_vol = pydaw_util.pydaw_db_to_lin(f_item.vol)
             f_paths = f_graph.create_sample_graph(
-                True, f_width, a_height, f_vol)
+                True, f_width, a_height, f_vol, f_item.reversed)
             f_y_inc = a_height / len(f_paths)
             f_y_pos = 0.0
             for f_painter_path in f_paths:
