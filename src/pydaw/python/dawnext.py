@@ -1507,7 +1507,9 @@ class ItemSequencer(QtGui.QGraphicsView):
 
     def ruler_click_event(self, a_event):
         if not libmk.IS_PLAYING:
-            f_val = int(a_event.pos().x() / SEQUENCER_PX_PER_BEAT)
+            f_val = int((a_event.scenePos().x() /
+                SEQUENCER_PX_PER_BEAT) /
+                REGION_SETTINGS.tsig_spinbox.value())
             TRANSPORT.set_bar_value(f_val)
 
     def check_line_count(self):
@@ -7136,6 +7138,7 @@ class transport_widget(libmk.AbstractTransport):
         #REGION_SETTINGS.open_region(f_song_table_item_str)
         SEQUENCER.stop_playback(self.get_beat_value())
         time.sleep(0.1)
+        self.set_time(self.get_beat_value())
 
     def show_save_items_dialog(self):
         def ok_handler():
