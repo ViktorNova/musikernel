@@ -2514,6 +2514,7 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
 void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
 {
     //self->current_region = a_region;
+    self->ts[0].ml_current_beat = a_beat;
     self->ts[0].ml_next_beat = a_beat;
     t_dn_region * f_region = self->en_song->regions[0];
 
