@@ -1057,7 +1057,14 @@ void v_dn_process_midi(t_dawnext * self, t_dn_item_ref * a_item_ref,
             t_pydaw_seq_event * f_event =
                 &f_current_item->events[f_track->item_event_index];
 
-            f_adjusted_start = f_event->start + a_item_ref->start;
+            f_adjusted_start = f_event->start + a_item_ref->start -
+                a_item_ref->start_offset;
+
+            if(f_adjusted_start < f_track_current_period_beats)
+            {
+                ++f_track->item_event_index;
+                continue;
+            }
 
             if((f_adjusted_start >= f_track_current_period_beats) &&
                 (f_adjusted_start < f_track_next_period_beats))
@@ -1548,7 +1555,7 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
         }
 
         double f_audio_start = f_audio_item->adjusted_start_beat +
-            a_item_ref->start;
+            a_item_ref->start - a_item_ref->start_offset;
 
         if(f_audio_start >= a_ts->ml_next_beat)
         {
