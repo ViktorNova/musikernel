@@ -1388,7 +1388,8 @@ class ItemSequencer(QtGui.QGraphicsView):
 
         f_lane_num = int((f_y - REGION_EDITOR_HEADER_HEIGHT) /
             REGION_EDITOR_TRACK_HEIGHT)
-        f_lane_num = pydaw_clip_value(f_lane_num, 0, AUDIO_ITEM_MAX_LANE)
+        f_lane_num = pydaw_clip_value(f_lane_num, 0, project.TRACK_COUNT_ALL)
+        TRACK_PANEL.tracks[f_lane_num].check_output()
 
         for f_file_name in a_item_list:
             f_file_name_str = str(f_file_name)
@@ -7044,6 +7045,10 @@ class seq_track:
         PROJECT.commit(
             "Update track plugins for '{}', {}".format(
             self.name_callback(), self.track_number))
+        self.check_output()
+        self.plugin_changed()
+
+    def check_output(self):
         f_graph = PROJECT.get_routing_graph()
         if self.track_number != 0 and \
         f_graph.set_default_output(self.track_number):
@@ -7051,7 +7056,6 @@ class seq_track:
             PROJECT.commit(_("Set default output "
                 "for track {}".format(self.track_number)))
             self.open_plugins()
-        self.plugin_changed()
 
     def name_callback(self):
         return str(self.track_name_lineedit.text())
@@ -7066,6 +7070,8 @@ class seq_track:
         self.suppress_osc = False
 
     def open_plugins(self):
+        if not self.menu_created:
+            self.create_menu()
         f_plugins = PROJECT.get_track_plugins(self.track_number)
         if f_plugins:
             for f_plugin in f_plugins.plugins:
