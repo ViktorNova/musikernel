@@ -548,7 +548,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 
         self.path_item = QtGui.QGraphicsPathItem(f_notes_path)
         self.path_item.setBrush(QtCore.Qt.white)
-        self.path_item.setPen(QtGui.QPen(QtCore.Qt.NoPen))
+        self.path_item.setPen(QtGui.QPen(QtCore.Qt.black))
         self.path_item.setParentItem(self)
         self.path_item.setZValue(2000.0)
 
