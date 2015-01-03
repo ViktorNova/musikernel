@@ -255,23 +255,19 @@ def global_set_region_editor_zoom():
     f_region_scale = f_width / 1000.0
 
     REGION_EDITOR_GRID_WIDTH = 1000.0 * MIDI_SCALE * f_region_scale
-    pydaw_set_region_editor_quantize(REGION_EDITOR_QUANTIZE_INDEX)
+
 
 REGION_EDITOR_SNAP = True
 REGION_EDITOR_GRID_WIDTH = 1000.0
 REGION_TRACK_WIDTH = 180  #Width of the tracks in px
 REGION_EDITOR_MAX_START = 999.0 + REGION_TRACK_WIDTH
-REGION_EDITOR_TRACK_HEIGHT = pydaw_util.get_file_setting(
-    "TRACK_VZOOM", int, 64)
-REGION_EDITOR_SNAP_DIVISOR = 16.0
-REGION_EDITOR_SNAP_BEATS = 4.0 / REGION_EDITOR_SNAP_DIVISOR
-REGION_EDITOR_SNAP_VALUE = \
-    REGION_EDITOR_GRID_WIDTH / REGION_EDITOR_SNAP_DIVISOR
-REGION_EDITOR_SNAP_DIVISOR_BEATS = REGION_EDITOR_SNAP_DIVISOR / 4.0
+REGION_EDITOR_TRACK_HEIGHT = 64
+
 REGION_EDITOR_TRACK_COUNT = 32
 REGION_EDITOR_HEADER_HEIGHT = 24
 #gets updated by the region editor to it's real value:
-REGION_EDITOR_TOTAL_HEIGHT = 1000
+REGION_EDITOR_TOTAL_HEIGHT = (REGION_EDITOR_TRACK_COUNT *
+    REGION_EDITOR_TRACK_HEIGHT)
 REGION_EDITOR_QUANTIZE_INDEX = 4
 
 SELECTED_ITEM_GRADIENT = QtGui.QLinearGradient(
@@ -295,42 +291,6 @@ def region_editor_set_delete_mode(a_enabled):
         SEQUENCER.selected_item_strings = set([])
         QtGui.QApplication.restoreOverrideCursor()
 
-def pydaw_set_region_editor_quantize(a_index):
-    global REGION_EDITOR_SNAP
-    global REGION_EDITOR_SNAP_VALUE
-    global REGION_EDITOR_SNAP_DIVISOR
-    global REGION_EDITOR_SNAP_DIVISOR_BEATS
-    global REGION_EDITOR_SNAP_BEATS
-    global REGION_EDITOR_QUANTIZE_INDEX
-
-    REGION_EDITOR_QUANTIZE_INDEX = a_index
-
-    if a_index == 0:
-        REGION_EDITOR_SNAP = False
-    else:
-        REGION_EDITOR_SNAP = True
-
-    if a_index == 0:
-        REGION_EDITOR_SNAP_DIVISOR = 16.0
-    elif a_index == 7:
-        REGION_EDITOR_SNAP_DIVISOR = 128.0
-    elif a_index == 6:
-        REGION_EDITOR_SNAP_DIVISOR = 64.0
-    elif a_index == 5:
-        REGION_EDITOR_SNAP_DIVISOR = 32.0
-    elif a_index == 4:
-        REGION_EDITOR_SNAP_DIVISOR = 16.0
-    elif a_index == 3:
-        REGION_EDITOR_SNAP_DIVISOR = 12.0
-    elif a_index == 2:
-        REGION_EDITOR_SNAP_DIVISOR = 8.0
-    elif a_index == 1:
-        REGION_EDITOR_SNAP_DIVISOR = 4.0
-
-    REGION_EDITOR_SNAP_BEATS = 4.0 / REGION_EDITOR_SNAP_DIVISOR
-    REGION_EDITOR_SNAP_VALUE = \
-        REGION_EDITOR_GRID_WIDTH / REGION_EDITOR_SNAP_DIVISOR
-    REGION_EDITOR_SNAP_DIVISOR_BEATS = REGION_EDITOR_SNAP_DIVISOR / 4.0
 
 REGION_EDITOR_MIN_NOTE_LENGTH = REGION_EDITOR_GRID_WIDTH / 128.0
 
@@ -460,7 +420,7 @@ class atm_item(QtGui.QGraphicsEllipseItem):
         QtGui.QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
         f_pos = self.pos()
         f_point = self.item
-        f_point.track, f_point.bar, f_point.beat, f_point.cc_val = \
+        f_point.track, f_point.beat, f_point.cc_val = \
             SEQUENCER.get_item_coord(f_pos, a_clip=True)
         self.save_callback()
 
@@ -1337,6 +1297,29 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.atm_select_pos_x = None
         self.atm_select_track = None
         self.atm_delete = False
+
+    def get_item_coord(self, a_pos, a_clip=False):
+        f_pos_x = a_pos.x()
+        f_pos_y = a_pos.y()
+        if a_clip or (
+        f_pos_x > 0 and
+        f_pos_x < REGION_EDITOR_MAX_START and
+        f_pos_y > REGION_EDITOR_HEADER_HEIGHT and
+        f_pos_y < REGION_EDITOR_TOTAL_HEIGHT):
+            f_pos_x = pydaw_util.pydaw_clip_value(
+                f_pos_x, 0.0, REGION_EDITOR_MAX_START)
+            f_pos_y = pydaw_util.pydaw_clip_value(
+                f_pos_y, REGION_EDITOR_HEADER_HEIGHT,
+                REGION_EDITOR_TOTAL_HEIGHT)
+            f_pos_y = f_pos_y - REGION_EDITOR_HEADER_HEIGHT
+            f_track_height = REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
+            f_track = int(f_pos_y / REGION_EDITOR_TRACK_HEIGHT)
+            f_val = (1.0 - ((f_pos_y - (f_track * REGION_EDITOR_TRACK_HEIGHT))
+                / f_track_height)) * 127.0
+            f_beat = f_pos_x / SEQUENCER_PX_PER_BEAT
+            return f_track, round(f_beat, 6), round(f_val, 6)
+        else:
+            return None
 
     def get_selected_items(self):
         return [x for x in self.audio_items if x.isSelected()]
