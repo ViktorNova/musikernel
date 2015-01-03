@@ -664,6 +664,7 @@ class DawNextProject(libmk.AbstractProject):
 
     def save_region(self, a_region):
         if not self.suppress_updates:
+            a_region.fix_overlaps()
             self.save_file("", FILE_SEQUENCER, str(a_region))
             self.IPC.pydaw_save_region()
 
@@ -817,6 +818,17 @@ class pydaw_sequencer:
 
     def get_length(self):
         return int(self.length_bars * self.beats_per_measure)
+
+    def fix_overlaps(self):
+        for f_i in range(TRACK_COUNT_ALL):
+            f_items = [x for x in self.items if x.track_num == f_i]
+            if f_items:
+                f_items.sort()
+                for f_item, f_next in zip(f_items, f_items[1:]):
+                    f_end = f_item.start_beat + f_item.length_beats
+                    if f_end > f_next.start_beat:
+                        f_item.length_beats = (f_next.start_beat -
+                            f_item.start_beat)
 
     def __str__(self):
         f_result = []
