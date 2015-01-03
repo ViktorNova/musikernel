@@ -1234,7 +1234,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                 pass
             PROJECT.save_region(CURRENT_REGION)
             PROJECT.commit(_("Update sequencer items"))
-        REGION_EDITOR.set_selected_strings()
+        SEQUENCER.set_selected_strings()
         REGION_SETTINGS.open_region()
 
 
@@ -1342,7 +1342,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.atm_delete = False
 
     def get_selected_items(self):
-        return [x for x in self.get_all_items() if x.isSelected()]
+        return [x for x in self.audio_items if x.isSelected()]
 
     def set_selected_strings(self):
         self.selected_item_strings = {x.get_selected_string()
