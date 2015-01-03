@@ -7153,7 +7153,6 @@ class transport_widget(libmk.AbstractTransport):
         self.grid_layout1.addWidget(QtGui.QLabel(_("Snap:")), 0, 40)
         self.grid_layout1.addWidget(self.snap_combobox, 1, 40)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
-        self.snap_combobox.setCurrentIndex(0)
 
         self.overdub_checkbox = QtGui.QCheckBox(_("Overdub"))
         self.overdub_checkbox.clicked.connect(self.on_overdub_changed)
@@ -7771,6 +7770,7 @@ def global_open_project(a_project_file):
     global_open_mixer()
     MIDI_DEVICES_DIALOG.set_routings()
     REGION_SETTINGS.open_region()
+    TRANSPORT.snap_combobox.setCurrentIndex(1)
 
 def global_new_project(a_project_file):
     global PROJECT
@@ -7784,6 +7784,7 @@ def global_new_project(a_project_file):
     ROUTING_GRAPH_WIDGET.scene.clear()
     global_open_mixer()
     REGION_SETTINGS.open_region()
+    TRANSPORT.snap_combobox.setCurrentIndex(1)
 
 PROJECT = DawNextProject(global_pydaw_with_audio)
 
