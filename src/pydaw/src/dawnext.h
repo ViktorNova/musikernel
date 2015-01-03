@@ -222,7 +222,7 @@ void v_dn_process_external_midi(t_dawnext * pydaw_data,
 void v_dn_offline_render(t_dawnext*, double, double,
     char*, int, int, t_dn_item_ref*);
 void v_dn_audio_items_run(t_dawnext*, t_dn_item_ref*,
-    int, float**, float**, int, int, int*, t_dn_thread_storage*);
+    int, float**, float**, int, int*, t_dn_thread_storage*);
 
 void v_dn_paif_set_control(t_dawnext*, int, int, int, float);
 
@@ -846,7 +846,7 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         if(f_item_ref[f_i])
         {
             v_dn_audio_items_run(self, f_item_ref[f_i], a_sample_count,
-                f_track->buffers, f_track->sc_buffers, a_global_track_num, 0,
+                f_track->buffers, f_track->sc_buffers, 0,
                 &f_track->sc_buffers_dirty, a_ts);
         }
     }
@@ -1034,9 +1034,9 @@ void v_dn_process_midi(t_dawnext * self, t_dn_item_ref * a_item_ref,
     t_pytrack * f_track = self->track_pool[f_i];
     f_track->period_event_index = 0;
 
-    float f_track_current_period_beats = (a_ts->ml_current_beat);
-    float f_track_next_period_beats = (a_ts->ml_next_beat);
-    float f_track_beats_offset = 0.0f;
+    double f_track_current_period_beats = (a_ts->ml_current_beat);
+    double f_track_next_period_beats = (a_ts->ml_next_beat);
+    double f_track_beats_offset = 0.0f;
 
     if((!self->overdub_mode) && (a_playback_mode == 2) &&
         (f_track->extern_midi))
@@ -1065,10 +1065,10 @@ void v_dn_process_midi(t_dawnext * self, t_dn_item_ref * a_item_ref,
                 if(f_event->type == PYDAW_EVENT_NOTEON)
                 {
                     int f_note_sample_offset = 0;
-                    float f_note_start_diff =
+                    double f_note_start_diff =
                         f_adjusted_start - f_track_current_period_beats +
                         f_track_beats_offset;
-                    float f_note_start_frac = f_note_start_diff /
+                    double f_note_start_frac = f_note_start_diff /
                             (a_ts->ml_sample_period_inc_beats);
                     f_note_sample_offset =  (int)(f_note_start_frac *
                             ((float)sample_count));
@@ -1116,10 +1116,10 @@ void v_dn_process_midi(t_dawnext * self, t_dn_item_ref * a_item_ref,
 
                     int f_note_sample_offset = 0;
 
-                    float f_note_start_diff =
+                    double f_note_start_diff =
                         ((f_adjusted_start) - f_track_current_period_beats) +
                         f_track_beats_offset;
-                    float f_note_start_frac = f_note_start_diff /
+                    double f_note_start_frac = f_note_start_diff /
                         a_ts->ml_sample_period_inc_beats;
                     f_note_sample_offset =
                         (int)(f_note_start_frac * ((float)sample_count));
@@ -1138,9 +1138,9 @@ void v_dn_process_midi(t_dawnext * self, t_dn_item_ref * a_item_ref,
                 else if(f_event->type == PYDAW_EVENT_PITCHBEND)
                 {
                     int f_note_sample_offset = 0;
-                    float f_note_start_diff = ((f_adjusted_start) -
-                    f_track_current_period_beats) + f_track_beats_offset;
-                    float f_note_start_frac = f_note_start_diff /
+                    double f_note_start_diff = ((f_adjusted_start) -
+                        f_track_current_period_beats) + f_track_beats_offset;
+                    double f_note_start_frac = f_note_start_diff /
                         a_ts->ml_sample_period_inc_beats;
                     f_note_sample_offset =  (int)(f_note_start_frac *
                         ((float)sample_count));
@@ -1476,7 +1476,7 @@ inline void v_dn_run_engine(int sample_count,
 
 void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
     int a_sample_count, float** a_buff, float ** a_sc_buff,
-    int a_audio_track_num, int a_is_audio_glue, int * a_sc_dirty,
+    int a_is_audio_glue, int * a_sc_dirty,
     t_dn_thread_storage * a_ts)
 {
     t_dn_item * f_item = self->item_pool[a_item_ref->item_uid];
@@ -2663,7 +2663,7 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
         {
             v_dn_set_time_params(self, f_block_size);
             v_dn_audio_items_run(
-                self, a_glue_item, f_block_size, f_buffer, NULL, -1, 1, NULL,
+                self, a_glue_item, f_block_size, f_buffer, NULL, 1, NULL,
                 &self->ts[0]);
             v_dn_finish_time_params(self);
         }
