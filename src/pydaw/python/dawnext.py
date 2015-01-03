@@ -3219,56 +3219,6 @@ class audio_items_viewer(QtGui.QGraphicsView):
         global_open_audio_items()
         self.last_open_dir = os.path.dirname(f_file_name_str)
 
-    def glue_selected(self):
-        if self.check_running():
-            return
-
-        f_region_uid = CURRENT_REGION.uid
-        f_indexes = []
-        f_start_bar = None
-        f_end_bar = None
-        f_lane = None
-        f_audio_track_num = None
-        for f_item in self.audio_items:
-            if f_item.isSelected():
-                f_indexes.append(f_item.track_num)
-                if f_start_bar is None or \
-                f_start_bar > f_item.audio_item.start_bar:
-                    f_start_bar = f_item.audio_item.start_bar
-                    f_lane = f_item.audio_item.lane_num
-                    f_audio_track_num = f_item.audio_item.output_track
-                f_end, f_beat = \
-                f_item.pos_to_musical_time(
-                    f_item.pos().x() + f_item.rect().width())
-                if f_beat > 0.0:
-                    f_end += 1
-                if f_end_bar is None or f_end_bar < f_end:
-                    f_end_bar = f_end
-        if len(f_indexes) == 0:
-            print(_("No audio items selected, not glueing"))
-            return
-        f_path = libmk.PROJECT.get_next_glued_file_name()
-        assert(False)  # Next line is invalid
-        PROJECT.IPC.pydaw_glue_audio(
-            f_path, CURRENT_SONG_INDEX, f_start_bar, f_end_bar, f_indexes)
-        f_items = PROJECT.get_audio_region(f_region_uid)
-        f_paif = PROJECT.get_audio_per_item_fx_region(f_region_uid)
-        for f_index in f_indexes:
-            f_items.remove_item(f_index)
-            f_paif.clear_row_if_exists(f_index)
-        f_index = f_items.get_next_index()
-        f_uid = libmk.PROJECT.get_wav_uid_by_name(f_path)
-        f_item = pydaw_audio_item(
-            f_uid, a_start_bar=f_start_bar, a_lane_num=f_lane,
-            a_output_track=f_audio_track_num)
-        f_items.add_item(f_index, f_item)
-
-        PROJECT.save_audio_region(f_region_uid, f_items)
-        PROJECT.save_audio_per_item_fx_region(f_region_uid, f_paif)
-        PROJECT.IPC.pydaw_audio_per_item_fx_region(f_region_uid)
-        PROJECT.commit(_("Glued audio items"))
-        global_open_audio_items()
-
     def set_playback_pos(self, a_beat=0.0):
         f_beat = float(a_beat)
         f_pos = (f_beat * AUDIO_PX_PER_BEAT)
@@ -3842,14 +3792,6 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         self.delete_selected_action.triggered.connect(self.on_delete_selected)
         self.delete_selected_action.setShortcut(QtGui.QKeySequence.Delete)
         self.action_menu.addSeparator()
-        self.clone_action = self.action_menu.addAction(
-            _("Clone from Region..."))
-        self.clone_action.triggered.connect(self.on_clone)
-        self.glue_selected_action = self.action_menu.addAction(
-            _("Glue Selected"))
-        self.glue_selected_action.triggered.connect(self.on_glue_selected)
-        self.glue_selected_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+G"))
         self.crossfade_action = self.action_menu.addAction(
             _("Crossfade Selected"))
         self.crossfade_action.triggered.connect(AUDIO_SEQ.crossfade_selected)
@@ -3963,8 +3905,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         if CURRENT_REGION is None or libmk.IS_PLAYING:
             return 0
         self.audio_items_clipboard = []
-        f_per_item_fx_dict = PROJECT.get_audio_per_item_fx_region(
-            CURRENT_REGION.uid)
+        f_per_item_fx_dict = CURRENT_ITEM
         f_count = False
         for f_item in AUDIO_SEQ.audio_items:
             if f_item.isSelected():
@@ -3982,73 +3923,36 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
             self.on_delete_selected()
 
     def on_paste(self):
-        if CURRENT_REGION is None or libmk.IS_PLAYING:
+        if not CURRENT_ITEM or libmk.IS_PLAYING:
             return
         if not self.audio_items_clipboard:
-            QtGui.QMessageBox.warning(self.widget, _("Error"),
-                                      _("Nothing copied to the clipboard."))
+            QtGui.QMessageBox.warning(
+                self.widget, _("Error"),
+                _("Nothing copied to the clipboard."))
         AUDIO_SEQ.reselect_on_stop = []
-        f_per_item_fx_dict = PROJECT.get_audio_per_item_fx_region(
-            CURRENT_REGION.uid)
-        f_current_region_length = pydaw_get_current_region_length()
+        f_per_item_fx_dict = CURRENT_ITEM
         f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
         for f_str, f_list in self.audio_items_clipboard:
             AUDIO_SEQ.reselect_on_stop.append(f_str)
-            f_index = AUDIO_ITEMS.get_next_index()
+            f_index = CURRENT_ITEM.get_next_index()
             if f_index == -1:
                 break
             f_item = pydaw_audio_item.from_str(f_str)
-            f_start = f_item.start_bar + (f_item.start_beat * 0.25)
-            if f_start < f_current_region_length:
+            f_start = f_item.start_beat
+            if f_start < CURRENT_ITEM_LEN:
                 f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_item.uid)
                 f_item.clip_at_region_end(
-                    f_current_region_length, f_global_tempo,
+                    CURRENT_ITEM_LEN, f_global_tempo,
                     f_graph.length_in_seconds)
-                AUDIO_ITEMS.add_item(f_index, f_item)
+                CURRENT_ITEM.add_item(f_index, f_item)
                 if f_list is not None:
                     f_per_item_fx_dict.set_row(f_index, f_list)
-        AUDIO_ITEMS.deduplicate_items()
+        CURRENT_ITEM.deduplicate_items()
         PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
-        PROJECT.save_audio_per_item_fx_region(
-            CURRENT_REGION.uid, f_per_item_fx_dict, False)
-        PROJECT.IPC.pydaw_audio_per_item_fx_region(
-            CURRENT_REGION.uid)
         PROJECT.commit(_("Paste audio items"))
-        global_open_audio_items(True)
+        global_open_items()
         AUDIO_SEQ.scene.clearSelection()
         AUDIO_SEQ.reset_selection()
-
-    def on_clone(self):
-        if CURRENT_REGION is None or libmk.IS_PLAYING:
-            return
-        def ok_handler():
-            f_region_name = str(f_region_combobox.currentText())
-            PROJECT.region_audio_clone(CURRENT_REGION.uid, f_region_name)
-            global_open_audio_items(True)
-            f_window.close()
-
-        def cancel_handler():
-            f_window.close()
-
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Clone audio from region..."))
-        f_window.setMinimumWidth(270)
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-        f_layout.addWidget(QtGui.QLabel(_("Clone from:")), 0, 0)
-        f_region_combobox = QtGui.QComboBox()
-        f_regions_dict = PROJECT.get_regions_dict()
-        f_regions_list = list(f_regions_dict.uid_lookup.keys())
-        f_regions_list.sort()
-        f_region_combobox.addItems(f_regions_list)
-        f_layout.addWidget(f_region_combobox, 0, 1)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_layout.addWidget(f_ok_button, 5, 0)
-        f_ok_button.clicked.connect(ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
-        f_layout.addWidget(f_cancel_button, 5, 1)
-        f_cancel_button.clicked.connect(cancel_handler)
-        f_window.exec_()
 
     def set_v_zoom(self, a_val=None):
         AUDIO_SEQ.set_v_zoom(float(a_val) * 0.1)

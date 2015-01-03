@@ -1686,10 +1686,10 @@ class pydaw_item:
 class pydaw_audio_item(MkAudioItem):
     def clip_at_region_end(self, a_region_length, a_tempo,
             a_sample_length_seconds, a_truncate=True):
-        f_region_length_beats = a_region_length * 4
+        f_region_length_beats = a_region_length
         f_seconds_per_beat = (60.0 / a_tempo)
         f_region_length_seconds = f_seconds_per_beat * f_region_length_beats
-        f_item_start_beats = (self.start_bar * 4.0) + self.start_beat
+        f_item_start_beats = self.start_beat
         f_item_start_seconds = f_item_start_beats * f_seconds_per_beat
         f_sample_start_seconds = (
             self.sample_start * 0.001 * a_sample_length_seconds)
@@ -1710,8 +1710,7 @@ class pydaw_audio_item(MkAudioItem):
             f_new_start_seconds = \
                 f_region_length_seconds - f_actual_sample_length
             f_beats_total = f_new_start_seconds / f_seconds_per_beat
-            self.start_bar = int(f_beats_total) // 4
-            self.start_beat = f_beats_total % 4.0
+            self.start_beat = f_beats_total
             return True
         else:
             return False
