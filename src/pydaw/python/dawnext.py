@@ -1315,26 +1315,51 @@ class ItemSequencer(QtGui.QGraphicsView):
                     f_item.setSelected(True)
                 self.show_context_menu()
 
-        if a_event.modifiers() == QtCore.Qt.ControlModifier:
-            f_item = self.get_item(f_pos)
-            if f_item:
-                if not f_item.isSelected():
-                    self.scene.clearSelection()
-                f_item.setSelected(True)
-                QtGui.QGraphicsView.mousePressEvent(self, a_event)
+        if REGION_EDITOR_MODE == 0:
+            if a_event.modifiers() == QtCore.Qt.ControlModifier:
+                f_item = self.get_item(f_pos)
+                if f_item:
+                    if not f_item.isSelected():
+                        self.scene.clearSelection()
+                    f_item.setSelected(True)
+                    QtGui.QGraphicsView.mousePressEvent(self, a_event)
+                    return
+                self.scene.clearSelection()
+                f_pos_x = f_pos.x()
+                f_pos_y = f_pos.y() - REGION_EDITOR_HEADER_HEIGHT
+                f_beat = float(f_pos_x // SEQUENCER_PX_PER_BEAT)
+                f_track = int(f_pos_y // REGION_EDITOR_TRACK_HEIGHT)
+                f_uid = PROJECT.create_empty_item()
+                CURRENT_REGION.add_item_ref_by_uid(
+                    f_track, f_beat, REGION_SETTINGS.tsig_spinbox.value(), f_uid)
+                TRACK_PANEL.tracks[f_track].check_output()
+                PROJECT.save_region(CURRENT_REGION)
+                REGION_SETTINGS.open_region()
+        elif REGION_EDITOR_MODE == 1:
+            SEQUENCER.setDragMode(QtGui.QGraphicsView.NoDrag)
+            self.atm_select_pos_x = None
+            self.atm_select_track = None
+            if a_event.modifiers() == QtCore.Qt.ControlModifier or \
+            a_event.modifiers() == QtCore.Qt.ShiftModifier:
+                self.current_coord = self.get_item_coord(f_pos, True)
+                self.scene.clearSelection()
+                self.atm_select_pos_x = f_pos.x()
+                self.atm_select_track = self.current_coord[0]
+                if a_event.modifiers() == QtCore.Qt.ShiftModifier:
+                    self.atm_delete = True
                 return
-            self.scene.clearSelection()
-            f_pos_x = f_pos.x()
-            f_pos_y = f_pos.y() - REGION_EDITOR_HEADER_HEIGHT
-            f_beat = float(f_pos_x // SEQUENCER_PX_PER_BEAT)
-            f_track = int(f_pos_y // REGION_EDITOR_TRACK_HEIGHT)
-            f_uid = PROJECT.create_empty_item()
-            CURRENT_REGION.add_item_ref_by_uid(
-                f_track, f_beat, REGION_SETTINGS.tsig_spinbox.value(), f_uid)
-            TRACK_PANEL.tracks[f_track].check_output()
-            PROJECT.save_region(CURRENT_REGION)
-            REGION_SETTINGS.open_region()
-            a_event.accept()
+            elif self.current_coord is not None:
+                f_port, f_index = TRACK_PANEL.has_automation(
+                    self.current_coord[0])
+                if f_port is not None:
+                    f_track, f_beat, f_val = self.current_coord
+                    f_point = pydaw_atm_point(
+                        f_beat, f_port, f_val,
+                        *TRACK_PANEL.get_atm_params(f_track))
+                    ATM_REGION.add_point(f_point)
+                    self.draw_point(f_point)
+                    self.automation_save_callback()
+        a_event.accept()
         QtGui.QGraphicsView.mousePressEvent(self, a_event)
         QtGui.QApplication.restoreOverrideCursor()
 
@@ -1741,8 +1766,17 @@ class ItemSequencer(QtGui.QGraphicsView):
         if str(a_point) in self.selected_point_strings:
             f_item.setSelected(True)
 
+    def get_pos_from_point(self, a_point):
+        f_track_height = REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
+        f_track = TRACK_PANEL.plugin_uid_map[a_point.index]
+        return QtCore.QPointF(
+            (a_point.beat * SEQUENCER_PX_PER_BEAT),
+            (f_track_height * (1.0 - (a_point.cc_val / 127.0))) +
+            (REGION_EDITOR_TRACK_HEIGHT * f_track) +
+            REGION_EDITOR_HEADER_HEIGHT)
+
     def automation_save_callback(self):
-        PROJECT.save_atm_region(ATM_REGION, CURRENT_REGION.uid)
+        PROJECT.save_atm_region(ATM_REGION)
 
     def smooth_atm_points(self):
         if not self.current_coord:

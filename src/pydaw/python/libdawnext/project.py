@@ -250,8 +250,8 @@ class DawNextProject(libmk.AbstractProject):
             return pydaw_atm_region()
 
     def save_atm_region(self, a_region):
-        self.save_file(pydaw_folder_regions_atm, a_uid, str(a_region))
-        self.IPC.pydaw_save_atm_region(a_uid)
+        self.save_file(pydaw_folder_dawnext, "automation.txt", str(a_region))
+        self.IPC.pydaw_save_atm_region()
 
     def rename_items(self, a_item_names, a_new_item_name):
         f_items_dict = self.get_items_dict()
@@ -1005,9 +1005,7 @@ class pydaw_atm_region:
 
 class pydaw_atm_point:
     def __init__(
-            self, a_bar, a_beat, a_port_num, a_cc_val,
-            a_index, a_plugin_index):
-        self.bar = int(a_bar)
+            self, a_beat, a_port_num, a_cc_val, a_index, a_plugin_index):
         self.beat = round(float(a_beat), 4)
         self.port_num = int(a_port_num)
         self.cc_val = round(float(a_cc_val), 4)
@@ -1018,13 +1016,11 @@ class pydaw_atm_point:
         self.cc_val = pydaw_clip_value(float(a_val), 0.0, 127.0, True)
 
     def __lt__(self, other):
-        return ((self.bar < other.bar) or
-            (self.bar == other.bar and self.beat <= other.beat))
+        return self.beat <= other.beat
 
 #    def __eq__(self, other):
 #        return (
 #            (self.track == other.track) and
-#            (self.bar == other.bar) and
 #            (self.beat == other.beat) and
 #            (self.port_num == other.port_num) and
 #            (self.cc_val == other.cc_val) and
@@ -1033,7 +1029,7 @@ class pydaw_atm_point:
 
     def __str__(self):
         return "|".join(str(x) for x in (
-            self.bar, self.beat, self.port_num, self.cc_val,
+            self.beat, self.port_num, self.cc_val,
             self.index, self.plugin_index))
 
     @staticmethod

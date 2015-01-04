@@ -69,8 +69,8 @@ class DawNextOsc(libmk.AbstractIPC):
     def pydaw_save_tracks(self):
         self.send_configure("st", "")
 
-    def pydaw_save_atm_region(self, a_region_uid):
-        self.send_configure("sa", str(a_region_uid))
+    def pydaw_save_atm_region(self):
+        self.send_configure("sa", "")
 
     def pydaw_offline_render(self, a_start_beat, a_end_beat, a_file_name):
         self.send_configure(

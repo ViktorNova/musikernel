@@ -3028,28 +3028,19 @@ void v_dn_configure(const char* a_key, const char* a_value)
     }
     else if(!strcmp(a_key, DN_CONFIGURE_KEY_SAVE_ATM))
     {
-        int f_uid = atoi(a_value);
         t_dn_atm_region * f_result = g_dn_atm_region_get(self);
-        int f_region_index = i_dn_song_index_from_region_uid(self, f_uid);
 
-        if(f_region_index >= 0 )
+        t_dn_atm_region * f_old_region = NULL;
+        if(self->en_song->regions_atm)
         {
-            t_dn_atm_region * f_old_region = NULL;
-            if(self->en_song->regions_atm)
-            {
-                f_old_region = self->en_song->regions_atm;
-            }
-            pthread_spin_lock(&musikernel->main_lock);
-            self->en_song->regions_atm = f_result;
-            pthread_spin_unlock(&musikernel->main_lock);
-            if(f_old_region)
-            {
-                v_dn_atm_region_free(f_old_region);
-            }
+            f_old_region = self->en_song->regions_atm;
         }
-        else
+        pthread_spin_lock(&musikernel->main_lock);
+        self->en_song->regions_atm = f_result;
+        pthread_spin_unlock(&musikernel->main_lock);
+        if(f_old_region)
         {
-            printf("region %i is not in song, not loading...", f_uid);
+            v_dn_atm_region_free(f_old_region);
         }
     }
     else if(!strcmp(a_key, DN_CONFIGURE_KEY_LOOP)) //Set loop mode
