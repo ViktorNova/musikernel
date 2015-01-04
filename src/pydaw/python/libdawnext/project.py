@@ -820,6 +820,7 @@ class pydaw_sequencer:
         return int(self.length_bars * self.beats_per_measure)
 
     def fix_overlaps(self):
+        f_to_delete = []
         for f_i in range(TRACK_COUNT_ALL):
             f_items = [x for x in self.items if x.track_num == f_i]
             if f_items:
@@ -829,6 +830,11 @@ class pydaw_sequencer:
                     if f_end > f_next.start_beat:
                         f_item.length_beats = (f_next.start_beat -
                             f_item.start_beat)
+                        if f_item.length_beats == 0:
+                            f_to_delete.append(f_item)
+        for f_item in f_to_delete:
+            self.items.remove(f_item)
+
 
     def __str__(self):
         f_result = []

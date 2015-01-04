@@ -2009,6 +2009,7 @@ class ItemSequencer(QtGui.QGraphicsView):
             if f_item.scene():
                 self.scene.removeItem(f_item)
             f_item_obj = f_item.audio_item
+            CURRENT_REGION.remove_item_ref(f_item_obj)
             CURRENT_REGION.add_item_ref_by_uid(
                 f_item_obj.track_num, f_item_obj.start_beat,
                 f_item_obj.length_beats, f_uid)
