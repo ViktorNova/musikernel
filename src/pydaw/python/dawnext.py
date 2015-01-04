@@ -788,26 +788,6 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             SEQUENCER.scene.clearSelection()
             self.setSelected(True)
 
-    def show_context_menu(self):
-        global CURRENT_AUDIO_ITEM_INDEX
-        f_CURRENT_AUDIO_ITEM_INDEX = CURRENT_AUDIO_ITEM_INDEX
-        CURRENT_AUDIO_ITEM_INDEX = self.track_num
-        f_menu = QtGui.QMenu(MAIN_WINDOW)
-
-#        f_select_instance_action = f_file_menu.addAction(
-#            _("Select All Instances of This File"))
-#        f_select_instance_action.triggered.connect(self.select_file_instance)
-#        f_file_menu.addSeparator()
-
-        f_reset_end_action = f_menu.addAction(_("Reset Ends"))
-        f_reset_end_action.triggered.connect(self.reset_end)
-
-#        f_sends_action = f_menu.addAction(_("Sends..."))
-#        f_sends_action.triggered.connect(self.sends_dialog)
-
-        f_menu.exec_(QtGui.QCursor.pos())
-        CURRENT_AUDIO_ITEM_INDEX = f_CURRENT_AUDIO_ITEM_INDEX
-
     def select_file_instance(self):
         SEQUENCER.scene.clearSelection()
         f_uid = self.audio_item.uid
@@ -927,7 +907,6 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             self.setSelected(True)
 
         if a_event.button() == QtCore.Qt.RightButton:
-            self.show_context_menu()
             return
 
         if a_event.modifiers() == QtCore.Qt.ShiftModifier:
@@ -1328,15 +1307,14 @@ class ItemSequencer(QtGui.QGraphicsView):
                     f_item.setSelected(True)
                 self.show_context_menu()
 
-#        for f_item in self.scene.items(f_pos):
-#            if isinstance(f_item, SequencerItem):
-#                if not f_item.isSelected():
-#                    self.scene.clearSelection()
-#                f_item.setSelected(True)
-#                QtGui.QGraphicsView.mousePressEvent(self, a_event)
-#                return
-
         if a_event.modifiers() == QtCore.Qt.ControlModifier:
+            f_item = self.get_item(f_pos)
+            if f_item:
+                if not f_item.isSelected():
+                    self.scene.clearSelection()
+                f_item.setSelected(True)
+                QtGui.QGraphicsView.mousePressEvent(self, a_event)
+                return
             self.scene.clearSelection()
             f_pos_x = f_pos.x()
             f_pos_y = f_pos.y() - REGION_EDITOR_HEADER_HEIGHT
@@ -1519,7 +1497,6 @@ class ItemSequencer(QtGui.QGraphicsView):
 
     def scene_selection_changed(self):
         f_selected_items = []
-        global CURRENT_AUDIO_ITEM_INDEX
         for f_item in self.audio_items:
             f_item.set_brush()
             if f_item.isSelected():
@@ -1915,16 +1892,14 @@ class ItemSequencer(QtGui.QGraphicsView):
                 QtGui.QMessageBox.warning(
                     self.group_box, _("Error"), _("Name cannot be blank"))
                 return
-            global REGION_CLIPBOARD, OPEN_ITEM_NAMES, \
-                LAST_OPEN_ITEM_NAMES, LAST_OPEN_ITEM_UIDS
+            global REGION_CLIPBOARD, LAST_OPEN_ITEM_NAMES, LAST_OPEN_ITEM_UIDS
             #Clear the clipboard, otherwise the names could be invalid
             REGION_CLIPBOARD = []
-            OPEN_ITEM_NAMES = []
             LAST_OPEN_ITEM_NAMES = []
             LAST_OPEN_ITEM_UIDS = []
             PROJECT.rename_items(f_result, f_new_name)
             PROJECT.commit(_("Rename items"))
-            REGION_SETTINGS.open_region_by_uid(CURRENT_REGION.uid)
+            REGION_SETTINGS.open_region()
             global_update_items_label()
             if DRAW_LAST_ITEMS:
                 global_open_items()
@@ -1959,15 +1934,13 @@ class ItemSequencer(QtGui.QGraphicsView):
         """ Rename a single instance of an item and
             make it into a new item
         """
-        if not self.enabled:
-            self.warn_no_region_selected()
-            return
         if REGION_EDITOR_MODE != 0:
             return
-        if not self.current_coord or not self.current_item:
+        f_current_item = self.get_item()
+        if not self.current_coord or not f_current_item:
             return
 
-        f_current_item_text = self.current_item.name
+        f_current_item_text = f_current_item.name
         x, y, f_beat = self.current_coord[:3]
 
         def note_ok_handler():
@@ -6708,9 +6681,7 @@ class automation_viewer_widget:
         f_window.exec_()
 
 def global_update_items_label():
-    assert(False)  # this one needs to be re-thought
-    f_items_dict = PROJECT.get_items_dict()
-    global_open_items()
+    print("global_update_items_label does not currently do anything")
 
 def global_check_midi_items():
     """ Return True if OK, otherwise clear the the item
