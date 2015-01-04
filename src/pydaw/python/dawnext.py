@@ -1998,51 +1998,61 @@ class ItemSequencer(QtGui.QGraphicsView):
         """ Adds an automatic -N suffix """
         if REGION_EDITOR_MODE != 0:
             return
-        for f_item in self.get_selected_items():
+        f_selected = list(self.get_selected_items())
+        if not f_selected:
+            return
+
+        self.selected_item_strings = set()
+        for f_item in f_selected:
             f_name_suffix = 1
             while PROJECT.item_exists(
             "{}-{}".format(f_item.name, f_name_suffix)):
                 f_name_suffix += 1
             f_cell_text = "{}-{}".format(f_item.name, f_name_suffix)
             f_uid = PROJECT.copy_item(f_item.name, f_cell_text)
-            self.draw_item(f_cell_text, f_item.audio_item)
-            if f_item.scene():
-                self.scene.removeItem(f_item)
             f_item_obj = f_item.audio_item
             CURRENT_REGION.remove_item_ref(f_item_obj)
+            f_item_obj.uid = f_uid
+            self.selected_item_strings.add(str(f_item_obj))
             CURRENT_REGION.add_item_ref_by_uid(
                 f_item_obj.track_num, f_item_obj.start_beat,
                 f_item_obj.length_beats, f_uid)
-        self.set_selected_strings()
         PROJECT.save_region(CURRENT_REGION)
         PROJECT.commit(_("Auto-Unlink items"))
+        REGION_SETTINGS.open_region()
 
     def on_auto_unlink_unique(self):
         if REGION_EDITOR_MODE != 0:
             return
-        f_result = {(x.track_num, x.bar):x.name
-            for x in self.get_selected_items()}
+        f_result = [(x.name, x.audio_item) for x in self.get_selected_items()]
 
-        for f_item in self.get_selected_items():
-            if f_item.scene():
-                self.scene.removeItem(f_item)
+        if not f_result:
+            return
 
         old_new_map = {}
 
-        for f_item_name in set(f_result.values()):
+        for f_item_name in set(x[0] for x in f_result):
             f_name_suffix = 1
             while PROJECT.item_exists(
             "{}-{}".format(f_item_name, f_name_suffix)):
                 f_name_suffix += 1
             f_cell_text = "{}-{}".format(f_item_name, f_name_suffix)
             f_uid = PROJECT.copy_item(f_item_name, f_cell_text)
-            old_new_map[f_item_name] = (f_cell_text, f_uid)
+            old_new_map[f_item_name] = f_uid
 
-        for k, v in f_result.items():
-            self.draw_item(k[0], k[1], old_new_map[v][0], True)
-            CURRENT_REGION.add_item_ref_by_uid(k[0], k[1], old_new_map[v][1])
+        self.selected_item_strings = set()
+
+        for k, v in f_result:
+            CURRENT_REGION.remove_item_ref(v)
+            f_new_uid = old_new_map[k]
+            v.uid = f_new_uid
+            self.selected_item_strings.add(str(v))
+            CURRENT_REGION.add_item_ref_by_uid(
+                v.track_num, v.start_beat,
+                v.length_beats, f_new_uid)
         PROJECT.save_region(CURRENT_REGION)
         PROJECT.commit(_("Auto-Unlink unique items"))
+        REGION_SETTINGS.open_region()
 
     def copy_selected(self):
         if not self.enabled:
