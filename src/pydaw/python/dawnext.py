@@ -1283,6 +1283,12 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.transpose_action.triggered.connect(self.transpose_dialog)
         self.addAction(self.transpose_action)
 
+        self.glue_action = self.menu.addAction(_("Glue Selected"))
+        self.glue_action.triggered.connect(self.glue_selected)
+        self.glue_action.setShortcut(
+            QtGui.QKeySequence.fromString("CTRL+G"))
+        self.addAction(self.glue_action)
+
     def show_context_menu(self):
         if REGION_EDITOR_MODE == 0:
             self.menu.exec_(QtGui.QCursor.pos())
@@ -1567,54 +1573,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         REGION_SETTINGS.open_region()
         self.last_open_dir = os.path.dirname(f_file_name_str)
 
-    def glue_selected(self):
-        if libmk.IS_PLAYING:
-            return
 
-        f_region_uid = CURRENT_REGION.uid
-        f_indexes = []
-        f_start_bar = None
-        f_end_bar = None
-        f_lane = None
-        f_audio_track_num = None
-        for f_item in self.audio_items:
-            if f_item.isSelected():
-                f_indexes.append(f_item.track_num)
-                if f_start_bar is None or \
-                f_start_bar > f_item.audio_item.start_bar:
-                    f_start_bar = f_item.audio_item.start_bar
-                    f_lane = f_item.audio_item.lane_num
-                    f_audio_track_num = f_item.audio_item.output_track
-                f_end, f_beat = \
-                f_item.pos_to_musical_time(
-                    f_item.pos().x() + f_item.rect().width())
-                if f_beat > 0.0:
-                    f_end += 1
-                if f_end_bar is None or f_end_bar < f_end:
-                    f_end_bar = f_end
-        if len(f_indexes) == 0:
-            print(_("No audio items selected, not glueing"))
-            return
-        f_path = libmk.PROJECT.get_next_glued_file_name()
-        assert(False)  # Next line is invalid
-        PROJECT.IPC.pydaw_glue_audio(
-            f_path, CURRENT_SONG_INDEX, f_start_bar, f_end_bar, f_indexes)
-        f_items = PROJECT.get_audio_region(f_region_uid)
-        f_paif = PROJECT.get_audio_per_item_fx_region(f_region_uid)
-        for f_index in f_indexes:
-            f_items.remove_item(f_index)
-            f_paif.clear_row_if_exists(f_index)
-        f_index = f_items.get_next_index()
-        f_uid = libmk.PROJECT.get_wav_uid_by_name(f_path)
-        f_item = pydaw_audio_item(
-            f_uid, a_start_bar=f_start_bar, a_lane_num=f_lane)
-        f_items.add_item(f_index, f_item)
-
-        PROJECT.save_audio_region(f_region_uid, f_items)
-        PROJECT.save_audio_per_item_fx_region(f_region_uid, f_paif)
-        PROJECT.IPC.pydaw_audio_per_item_fx_region(f_region_uid)
-        PROJECT.commit(_("Glued audio items"))
-        global_open_audio_items()
 
     def set_playback_pos(self, a_beat=0.0):
         f_beat = float(a_beat)
@@ -1844,37 +1803,46 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_layout.addWidget(f_cancel, 6, 1)
         f_window.exec_()
 
+    def glue_selected(self):
+        if libmk.IS_PLAYING:
+            return
+        f_did_something = False
+        f_items_dict = PROJECT.get_items_dict()
+        f_selected = [x.audio_item for x in self.get_selected()]
+        for f_i in range(project.TRACK_COUNT_ALL):
+            f_track_items = [x for x in f_selected if x.track_num == f_i]
+            if len(f_track_items) > 1:
+                f_did_something = True
+                f_track_items.sort()
+                f_new_ref = f_track_items[0]
+                f_old_name = f_items_dict.get_name_by_uid(f_new_ref.item_uid)
+                f_new_name = PROJECT.get_next_default_item_name(
+                    f_old_name, f_items_dict)
+                f_new_uid = PROJECT.copy_item(f_old_name, f_new_name)
+                f_new_item = PROJECT.get_item_by_uid(f_new_uid)
+                f_last_ref = f_track_items[-1]
+                f_new_ref.item_uid = f_new_uid
+                f_new_ref.length_beats = (f_last_ref.start_beat -
+                    f_new_ref.start_beat) + f_last_ref.length_beats
+                for f_ref in f_track_items[1:]:
+                    f_offset = f_ref.start_beat - f_new_ref.start_beat
+                    f_item = PROJECT.get_item_by_uid(f_ref.item_uid)
+                    f_new_item.extend(f_item, f_offset)
+                    CURRENT_REGION.remove_item_ref(f_ref)
+                PROJECT.save_item(f_new_name, f_new_item)
+        if f_did_something:
+            PROJECT.save_region(CURRENT_REGION)
+            PROJECT.commit(_("Glue sequencer items"))
+            REGION_SETTINGS.open_region()
+        else:
+            QtGui.QMessageBox.warning(
+                MAIN_WINDOW, _("Error"),
+                _("You must select at least 2 items on one or more tracks"))
+
+
     def cut_selected(self):
         self.copy_selected()
         self.delete_selected()
-
-    def edit_unique(self):
-        self.edit_group(True)
-
-    def edit_group(self, a_unique=False):
-        if REGION_EDITOR_MODE != 0:
-            return
-        f_result = [x.name for x in self.get_selected_items()]
-        f_result2 = []
-        for x in f_result:
-            if x not in f_result2:
-                f_result2.append(x)
-        if not a_unique and len(f_result2) != len(f_result):
-            QtGui.QMessageBox.warning(
-                self, _("Error"),
-                _("You cannot open multiple instances of the same "
-                "item as a group.\n"
-                "You should unlink all duplicate instances into their own "
-                "individual item names before editing as a group."))
-            return
-
-        if f_result2:
-            global_open_items(f_result2, a_reset_scrollbar=True)
-            MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
-        else:
-            QtGui.QMessageBox.warning(
-                self, _("Error"), _("No items selected"))
-
 
     def on_rename_items(self):
         if REGION_EDITOR_MODE != 0:
