@@ -154,10 +154,6 @@ class region_settings:
     def edit_mode_changed(self, a_value=None):
         global REGION_EDITOR_MODE
         REGION_EDITOR_MODE = a_value
-        if a_value == 0:
-            SEQUENCER.setDragMode(QtGui.QGraphicsView.NoDrag)
-        elif a_value == 1:
-            SEQUENCER.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         SEQUENCER.open_region()
 
     def update_tsig(self, a_value=None):
@@ -486,9 +482,15 @@ class SequencerItem(QtGui.QGraphicsRectItem):
     def __init__(self, a_name, a_audio_item):
         QtGui.QGraphicsRectItem.__init__(self)
         self.name = str(a_name)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
-        self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
+
+        if REGION_EDITOR_MODE == 0:
+            self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
+            self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
+            self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
+        else:
+            self.setEnabled(False)
+            self.setOpacity(0.6)
+
         self.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape)
 
         self.audio_item = a_audio_item
@@ -1424,6 +1426,10 @@ class ItemSequencer(QtGui.QGraphicsView):
                     yield f_point
 
     def open_region(self):
+        if REGION_EDITOR_MODE == 0:
+            SEQUENCER.setDragMode(QtGui.QGraphicsView.NoDrag)
+        elif REGION_EDITOR_MODE == 1:
+            SEQUENCER.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         self.enabled = False
         global ATM_REGION
         ATM_REGION = PROJECT.get_atm_region()
