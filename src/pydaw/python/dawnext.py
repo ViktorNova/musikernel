@@ -1203,7 +1203,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.scene.dragMoveEvent = self.sceneDragMoveEvent
         self.scene.contextMenuEvent = self.sceneContextMenuEvent
         self.scene.setBackgroundBrush(QtGui.QColor(90, 90, 90))
-        self.scene.selectionChanged.connect(self.scene_selection_changed)
+        self.scene.selectionChanged.connect(self.highlight_selected)
         self.scene.mouseMoveEvent = self.sceneMouseMoveEvent
         self.setAcceptDrops(True)
         self.setScene(self.scene)
@@ -1316,6 +1316,7 @@ class ItemSequencer(QtGui.QGraphicsView):
                 self.show_context_menu()
 
         if REGION_EDITOR_MODE == 0:
+            self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
             if a_event.modifiers() == QtCore.Qt.ControlModifier:
                 f_item = self.get_item(f_pos)
                 if f_item:
@@ -1331,12 +1332,13 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_track = int(f_pos_y // REGION_EDITOR_TRACK_HEIGHT)
                 f_uid = PROJECT.create_empty_item()
                 CURRENT_REGION.add_item_ref_by_uid(
-                    f_track, f_beat, REGION_SETTINGS.tsig_spinbox.value(), f_uid)
+                    f_track, f_beat, REGION_SETTINGS.tsig_spinbox.value(),
+                    f_uid)
                 TRACK_PANEL.tracks[f_track].check_output()
                 PROJECT.save_region(CURRENT_REGION)
                 REGION_SETTINGS.open_region()
         elif REGION_EDITOR_MODE == 1:
-            SEQUENCER.setDragMode(QtGui.QGraphicsView.NoDrag)
+            self.setDragMode(QtGui.QGraphicsView.NoDrag)
             self.atm_select_pos_x = None
             self.atm_select_track = None
             if a_event.modifiers() == QtCore.Qt.ControlModifier or \
@@ -1347,7 +1349,6 @@ class ItemSequencer(QtGui.QGraphicsView):
                 self.atm_select_track = self.current_coord[0]
                 if a_event.modifiers() == QtCore.Qt.ShiftModifier:
                     self.atm_delete = True
-                return
             elif self.current_coord is not None:
                 f_port, f_index = TRACK_PANEL.has_automation(
                     self.current_coord[0])
@@ -1532,12 +1533,19 @@ class ItemSequencer(QtGui.QGraphicsView):
             return
         QtGui.QGraphicsScene.contextMenuEvent(self.scene, a_event)
 
-    def scene_selection_changed(self):
-        f_selected_items = []
-        for f_item in self.audio_items:
-            f_item.set_brush()
-            if f_item.isSelected():
-                f_selected_items.append(f_item)
+    def highlight_selected(self):
+        self.setUpdatesEnabled(False)
+        self.has_selected = False
+        if REGION_EDITOR_MODE == 0:
+            for f_item in self.audio_items:
+                f_item.set_brush()
+                self.has_selected = True
+        elif REGION_EDITOR_MODE == 1:
+            for f_item in self.get_all_points():
+                f_item.set_brush()
+                self.has_selected = True
+        self.setUpdatesEnabled(True)
+        self.update()
 
     def sceneDragEnterEvent(self, a_event):
         a_event.setAccepted(True)
