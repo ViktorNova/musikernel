@@ -1241,16 +1241,100 @@ class ItemSequencer(QtGui.QGraphicsView):
         #Somewhat slow on my AMD 5450 using the FOSS driver
         #self.setRenderHint(QtGui.QPainter.Antialiasing)
 
+        self.menu = QtGui.QMenu()
+        self.atm_menu = QtGui.QMenu()
+
+        self.copy_action = self.atm_menu.addAction(_("Copy"))
+        self.copy_action.triggered.connect(self.copy_selected)
+        self.copy_action.setShortcut(QtGui.QKeySequence.Copy)
+        self.addAction(self.copy_action)
+
+        self.cut_action = self.atm_menu.addAction(_("Cut"))
+        self.cut_action.triggered.connect(self.cut_selected)
+        self.cut_action.setShortcut(QtGui.QKeySequence.Cut)
+        self.addAction(self.cut_action)
+
+        self.paste_action = self.atm_menu.addAction(_("Paste"))
+        self.paste_action.triggered.connect(self.paste_clipboard)
+
+        self.paste_ctrl_action = self.atm_menu.addAction(
+            _("Paste Plugin Control"))
+        self.paste_ctrl_action.triggered.connect(self.paste_atm_point)
+
+        self.smooth_atm_action = self.atm_menu.addAction(
+            _("Smooth Selected Points"))
+        self.smooth_atm_action.triggered.connect(self.smooth_atm_points)
+        self.smooth_atm_action.setShortcut(
+            QtGui.QKeySequence.fromString("ALT+S"))
+        self.addAction(self.smooth_atm_action)
+
+        self.delete_action = self.menu.addAction(_("Delete"))
+        self.delete_action.triggered.connect(self.delete_selected)
+        self.delete_action.setShortcut(QtGui.QKeySequence.Delete)
+        self.addAction(self.delete_action)
+        self.atm_menu.addAction(self.delete_action)
+
+        self.menu.addSeparator()
+
+        self.unlink_selected_action = self.menu.addAction(
+            _("Auto-Unlink Item(s)"))
+        self.unlink_selected_action.setShortcut(
+            QtGui.QKeySequence.fromString("CTRL+U"))
+        self.unlink_selected_action.triggered.connect(
+            self.on_auto_unlink_selected)
+        self.addAction(self.unlink_selected_action)
+
+        self.unlink_unique_action = self.menu.addAction(
+            _("Auto-Unlink Unique Item(s)"))
+        self.unlink_unique_action.setShortcut(
+            QtGui.QKeySequence.fromString("ALT+U"))
+        self.unlink_unique_action.triggered.connect(self.on_auto_unlink_unique)
+        self.addAction(self.unlink_unique_action)
+
+        self.rename_action = self.menu.addAction(
+            _("Rename Selected Item(s)..."))
+        self.rename_action.triggered.connect(self.on_rename_items)
+        self.addAction(self.rename_action)
+
+        self.unlink_action = self.menu.addAction(_("Unlink Single Item..."))
+        self.unlink_action.triggered.connect(self.on_unlink_item)
+        self.addAction(self.unlink_action)
+
+        self.transpose_action = self.menu.addAction(_("Transpose..."))
+        self.transpose_action.triggered.connect(self.transpose_dialog)
+        self.addAction(self.transpose_action)
+
+    def show_context_menu(self):
+        if REGION_EDITOR_MODE == 0:
+            self.menu.exec_(QtGui.QCursor.pos())
+        elif REGION_EDITOR_MODE == 1:
+            self.atm_menu.exec_(QtGui.QCursor.pos())
+
+    def get_item(self, a_pos):
+        for f_item in self.scene.items(a_pos):
+            if isinstance(f_item, SequencerItem):
+                return f_item
+        return None
+
     def mousePressEvent(self, a_event):
         f_pos = self.mapToScene(a_event.pos())
 
-        for f_item in self.scene.items(f_pos):
-            if isinstance(f_item, SequencerItem):
-                if not f_item.isSelected():
+        self.current_coord = self.get_item_coord(f_pos)
+        if a_event.button() == QtCore.Qt.RightButton:
+            if self.current_coord:
+                f_item = self.get_item(f_pos)
+                if f_item and not f_item.isSelected():
                     self.scene.clearSelection()
-                f_item.setSelected(True)
-                QtGui.QGraphicsView.mousePressEvent(self, a_event)
-                return
+                    f_item.setSelected(True)
+                self.show_context_menu()
+
+#        for f_item in self.scene.items(f_pos):
+#            if isinstance(f_item, SequencerItem):
+#                if not f_item.isSelected():
+#                    self.scene.clearSelection()
+#                f_item.setSelected(True)
+#                QtGui.QGraphicsView.mousePressEvent(self, a_event)
+#                return
 
         if a_event.modifiers() == QtCore.Qt.ControlModifier:
             self.scene.clearSelection()
@@ -1734,8 +1818,6 @@ class ItemSequencer(QtGui.QGraphicsView):
     def transpose_dialog(self):
         if REGION_EDITOR_MODE != 0:
             return
-        if pydaw_current_region_is_none():
-            return
 
         f_item_set = {x.name for x in self.get_selected_items()}
         if len(f_item_set) == 0:
@@ -1752,7 +1834,7 @@ class ItemSequencer(QtGui.QGraphicsView):
                     a_duplicate=f_duplicate_notes.isChecked())
                 PROJECT.save_item(f_item_name, f_item)
             PROJECT.commit(_("Transpose item(s)"))
-            if len(OPEN_ITEM_UIDS) > 0:
+            if CURRENT_ITEM:
                 global_open_items()
             f_window.close()
 
@@ -1950,15 +2032,15 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_name_suffix += 1
             f_cell_text = "{}-{}".format(f_item.name, f_name_suffix)
             f_uid = PROJECT.copy_item(f_item.name, f_cell_text)
-            self.draw_item(f_item.track_num, f_item.bar, f_cell_text, True)
+            self.draw_item(f_cell_text, f_item.audio_item)
             if f_item.scene():
                 self.scene.removeItem(f_item)
+            f_item_obj = f_item.audio_item
             CURRENT_REGION.add_item_ref_by_uid(
-                f_item.track_num, f_item.bar, f_uid)
+                f_item_obj.track_num, f_item_obj.start_beat,
+                f_item_obj.length_beats, f_uid)
         self.set_selected_strings()
-        PROJECT.save_region(
-            str(REGION_SETTINGS.region_name_lineedit.text()),
-            CURRENT_REGION)
+        PROJECT.save_region(CURRENT_REGION)
         PROJECT.commit(_("Auto-Unlink items"))
 
     def on_auto_unlink_unique(self):
@@ -1985,12 +2067,204 @@ class ItemSequencer(QtGui.QGraphicsView):
         for k, v in f_result.items():
             self.draw_item(k[0], k[1], old_new_map[v][0], True)
             CURRENT_REGION.add_item_ref_by_uid(k[0], k[1], old_new_map[v][1])
-        PROJECT.save_region(
-            str(REGION_SETTINGS.region_name_lineedit.text()),
-            CURRENT_REGION)
+        PROJECT.save_region(CURRENT_REGION)
         PROJECT.commit(_("Auto-Unlink unique items"))
 
+    def copy_selected(self):
+        if not self.enabled:
+            self.warn_no_region_selected()
+            return
+        if REGION_EDITOR_MODE == 0:
+            global REGION_CLIPBOARD, REGION_CLIPBOARD_ROW_OFFSET, \
+                REGION_CLIPBOARD_COL_OFFSET
+            REGION_CLIPBOARD = []  #Clear the clipboard
+            for f_item in self.get_selected_items():
+                REGION_CLIPBOARD.append(
+                    [f_item.track_num, f_item.bar, f_item.name])
+            if REGION_CLIPBOARD:
+                REGION_CLIPBOARD.sort(key=lambda x: x[0])
+                f_row_offset = REGION_CLIPBOARD[0][0]
+                for f_item in REGION_CLIPBOARD:
+                    f_item[0] -= f_row_offset
+                REGION_CLIPBOARD.sort(key=lambda x: x[1])
+                f_column_offset = REGION_CLIPBOARD[0][1]
+                for f_item in REGION_CLIPBOARD:
+                    f_item[1] -= f_column_offset
+                REGION_CLIPBOARD_COL_OFFSET = f_column_offset
+                REGION_CLIPBOARD_ROW_OFFSET = f_row_offset
+        elif REGION_EDITOR_MODE == 1:
+            global ATM_CLIPBOARD, ATM_CLIPBOARD_ROW_OFFSET, \
+                ATM_CLIPBOARD_COL_OFFSET
+            ATM_CLIPBOARD = []  #Clear the clipboard
+            for f_item in self.get_selected_points(self.current_coord[0]):
+                ATM_CLIPBOARD.append(
+                    [f_item.item.track, f_item.item.bar, f_item.item])
+            if ATM_CLIPBOARD:
+                ATM_CLIPBOARD.sort(key=lambda x: x[0])
+                f_row_offset = ATM_CLIPBOARD[0][0]
+                for f_item in ATM_CLIPBOARD:
+                    f_item[0] -= f_row_offset
+                ATM_CLIPBOARD.sort(key=lambda x: x[1])
+                f_column_offset = ATM_CLIPBOARD[0][1]
+                for f_item in ATM_CLIPBOARD:
+                    f_item[1] -= f_column_offset
+                ATM_CLIPBOARD_COL_OFFSET = f_column_offset
+                ATM_CLIPBOARD_ROW_OFFSET = f_row_offset
 
+    def paste_clipboard(self, a_original_pos=False):
+        if not self.enabled:
+            self.warn_no_region_selected()
+            return
+        if REGION_EDITOR_MODE == 0:
+            if a_original_pos:
+                f_base_row = REGION_CLIPBOARD_ROW_OFFSET
+                f_base_column = REGION_CLIPBOARD_COL_OFFSET
+            else:
+                if not self.current_coord:
+                    return
+                f_base_row, f_base_column, f_beat = self.current_coord[:3]
+            self.scene.clearSelection()
+            f_region_length = pydaw_get_current_region_length()
+            for f_item in REGION_CLIPBOARD:
+                f_column = f_item[1] + f_base_column
+                if f_column >= f_region_length or f_column < 0:
+                    continue
+                f_row = f_item[0] + f_base_row
+                if f_row >= len(TRACK_PANEL.tracks) or f_row < 0:
+                    continue
+                self.draw_item(f_row, f_column, f_item[2], a_selected=True)
+            global_tablewidget_to_region()
+            global_update_hidden_rows()
+        elif REGION_EDITOR_MODE == 1:
+            if not self.current_coord:
+                return
+            f_track_port_num, f_track_index = TRACK_PANEL.has_automation(
+                self.current_coord[0])
+            if f_track_port_num is None:
+                QtGui.QMessageBox.warning(
+                    self, _("Error"),
+                    _("No automation selected for this track"))
+                return
+            f_row, f_base_column, f_val, f_beat = self.current_coord
+            f_track_params = TRACK_PANEL.get_atm_params(f_row)
+            self.scene.clearSelection()
+            f_region_length = pydaw_get_current_region_length()
+            for f_item in ATM_CLIPBOARD:
+                f_column = f_item[1] + f_base_column
+                if f_column >= f_region_length or f_column < 0:
+                    continue
+                f_point = f_item[2]
+                ATM_REGION.add_point(
+                    pydaw_atm_point(
+                        f_column, f_point.beat, f_track_port_num,
+                        f_point.cc_val, *f_track_params))
+            self.automation_save_callback()
+            self.open_region()
+
+    def paste_atm_point(self):
+        if libmk.IS_PLAYING:
+            return
+        if pydaw_widgets.CC_CLIPBOARD is None:
+            QtGui.QMessageBox.warning(
+                self, _("Error"),
+                _("Nothing copied to the clipboard.\n"
+                "Right-click->'Copy' on any knob on any plugin."))
+            return
+        self.add_atm_point(pydaw_widgets.CC_CLIPBOARD)
+
+    def add_atm_point(self, a_value=None):
+        if libmk.IS_PLAYING:
+            return
+
+        def ok_handler():
+            f_track = f_track_cbox.currentIndex()
+            f_port, f_index = TRACK_PANEL.has_automation(f_track)
+
+            if f_port is not None:
+                f_bar = f_bar_spinbox.value() - 1
+                f_beat = f_pos_spinbox.value() - 1.0
+                f_val = f_value_spinbox.value()
+                f_point = pydaw_atm_point(
+                    f_bar, f_beat, f_port, f_val,
+                    *TRACK_PANEL.get_atm_params(f_track))
+                ATM_REGION.add_point(f_point)
+                self.draw_point(f_point)
+                self.automation_save_callback()
+
+        def goto_start():
+            f_bar_spinbox.setValue(f_bar_spinbox.minimum())
+            f_pos_spinbox.setValue(f_pos_spinbox.minimum())
+
+        def goto_end():
+            f_bar_spinbox.setValue(f_bar_spinbox.maximum())
+            f_pos_spinbox.setValue(f_pos_spinbox.maximum())
+
+        def value_paste():
+            f_value_spinbox.setValue(pydaw_widgets.CC_CLIPBOARD)
+
+        def cancel_handler():
+            f_window.close()
+
+        f_window = QtGui.QDialog(self)
+        f_window.setWindowTitle(_("Add automation point"))
+        f_layout = QtGui.QGridLayout()
+        f_window.setLayout(f_layout)
+
+        f_layout.addWidget(QtGui.QLabel(_("Track")), 0, 0)
+        f_track_cbox = QtGui.QComboBox()
+        f_track_cbox.addItems(TRACK_NAMES)
+        f_layout.addWidget(f_track_cbox, 0, 1)
+
+        f_layout.addWidget(QtGui.QLabel(_("Position (bars)")), 2, 0)
+        f_bar_spinbox = QtGui.QSpinBox()
+        f_bar_spinbox.setRange(1, pydaw_get_current_region_length())
+        f_layout.addWidget(f_bar_spinbox, 2, 1)
+
+        f_layout.addWidget(QtGui.QLabel(_("Position (beats)")), 5, 0)
+        f_pos_spinbox = QtGui.QDoubleSpinBox()
+        f_pos_spinbox.setRange(1.0, 4.99)
+        f_pos_spinbox.setDecimals(2)
+        f_pos_spinbox.setSingleStep(0.25)
+        f_layout.addWidget(f_pos_spinbox, 5, 1)
+
+        f_begin_end_layout = QtGui.QHBoxLayout()
+        f_layout.addLayout(f_begin_end_layout, 6, 1)
+        f_start_button = QtGui.QPushButton("<<")
+        f_start_button.pressed.connect(goto_start)
+        f_begin_end_layout.addWidget(f_start_button)
+        f_begin_end_layout.addItem(
+            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+        f_end_button = QtGui.QPushButton(">>")
+        f_end_button.pressed.connect(goto_end)
+        f_begin_end_layout.addWidget(f_end_button)
+
+        f_layout.addWidget(QtGui.QLabel(_("Value")), 10, 0)
+        f_value_spinbox = QtGui.QDoubleSpinBox()
+        f_value_spinbox.setRange(0.0, 127.0)
+        f_value_spinbox.setDecimals(4)
+        if a_value is not None:
+            f_value_spinbox.setValue(a_value)
+        f_layout.addWidget(f_value_spinbox, 10, 1)
+        f_value_paste = QtGui.QPushButton(_("Paste"))
+        f_layout.addWidget(f_value_paste, 10, 2)
+        f_value_paste.pressed.connect(value_paste)
+
+        if self.current_coord:
+            f_track, f_bar, f_beat, f_val = self.current_coord
+            f_track_cbox.setCurrentIndex(f_track)
+            f_bar_spinbox.setValue(f_bar + 1)
+            f_pos_spinbox.setValue(f_beat + 1.0)
+
+        f_ok = QtGui.QPushButton(_("Add"))
+        f_ok.pressed.connect(ok_handler)
+        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout.addWidget(f_ok)
+
+        f_layout.addLayout(f_ok_cancel_layout, 40, 1)
+        f_cancel = QtGui.QPushButton(_("Close"))
+        f_cancel.pressed.connect(cancel_handler)
+        f_ok_cancel_layout.addWidget(f_cancel)
+        f_window.show()
 
 def pydaw_set_audio_seq_zoom(a_horizontal, a_vertical):
     global AUDIO_PX_PER_BEAT, AUDIO_ITEM_HEIGHT
