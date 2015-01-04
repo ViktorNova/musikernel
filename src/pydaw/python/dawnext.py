@@ -65,11 +65,10 @@ def set_tooltips_enabled(a_enabled):
 
     f_list = [
         AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR, MAIN_WINDOW,
-        AUDIO_SEQ, TRANSPORT, MIXER_WIDGET] + list(AUTOMATION_EDITORS)
+        AUDIO_SEQ, TRANSPORT, MIXER_WIDGET,
+        SEQUENCER] + list(AUTOMATION_EDITORS)
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
-
-    pydaw_util.set_file_setting("tooltips", int(a_enabled))
 
 
 def pydaw_scale_to_rect(a_to_scale, a_scale_to):
@@ -1420,7 +1419,7 @@ class ItemSequencer(QtGui.QGraphicsView):
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.setToolTip(libpydaw.strings.audio_items_viewer)
+            self.setToolTip(libdawnext.strings.sequencer)
         else:
             self.setToolTip("")
         for f_item in self.audio_items:

@@ -14,31 +14,23 @@ GNU General Public License for more details.
 
 from libpydaw.translate import _
 
-song_editor = _(
-"""This is the song editor.  A song is a timeline consisting of regions,
-click here to add a region, click and drag to move a region,
-or 'right-click->Delete Region' to delete the selected regions.
-Click on a region to edit it in the region editor below.
-
-Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
-
-region_list_editor = _(
-"""This is a region editor, it consists of items, tracks and automation.
+sequencer = _(
+"""This is sequencer, it consists of items, tracks and automation.
 
 Tracks:
 
 A track can be any/all of: instrument, audio, bus or send.
-An item is one bar of MIDI notes and/or pitch-bend.
+An item can contain MIDI data (notes, CCs, pitchbend) and/or one or
+more audio files.
 
 Items:
 
-Click an empty cell to add a new item.
+CTRL+click to add a new item
 
 Select multiple items or automation points using CTRL+click+drag
 (automation points only allow selecting from one track at a time)
 
-Double click an item to open it in the piano-roll-editor or select
- multiple and right-click->'Edit Selected Items'
+Double click an item to open it in the item editor
 
 The term 'unlink' means to create a new copy of the item that does not
 change it's parent item when edited. (by default all items are
@@ -60,7 +52,9 @@ Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
 
 transport = _(
 """
-The MIDI controller used for each track can be configured in the dropdown
+The MIDI controllers and audio inputs used for recording can be
+configured in the dropdown
+
 The 'Loop Mode' combobox can be used to loop a region.
 The 'Follow' checkbox causes the UI to follow the project's playback position
 The 'Overdub' checkbox causes recorded MIDI notes to be appended to existing

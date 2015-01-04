@@ -1138,6 +1138,7 @@ class MkMainWindow(QtGui.QMainWindow):
         libmk.TRANSPORT.set_tooltips(f_enabled)
         for f_module in self.host_modules:
             f_module.set_tooltips_enabled(f_enabled)
+        pydaw_util.set_file_setting("tooltips", 1 if f_enabled else 0)
 
 def final_gc(a_print=True):
     """ Brute-force garbage collect all possible objects to

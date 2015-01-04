@@ -95,8 +95,6 @@ def set_tooltips_enabled(a_enabled):
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
 
-    pydaw_util.set_file_setting("tooltips", int(a_enabled))
-
 
 def pydaw_current_region_is_none():
     if CURRENT_REGION is None:
