@@ -710,7 +710,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             self.length_handle_line.setPen(AUDIO_ITEM_LINE_SELECTED_PEN)
             self.stretch_handle_line.setPen(AUDIO_ITEM_LINE_SELECTED_PEN)
 
-            #self.label.setBrush(QtCore.Qt.darkGray)
+            self.label.setBrush(QtCore.Qt.black)
             self.start_handle.setBrush(AUDIO_ITEM_HANDLE_SELECTED_BRUSH)
             self.length_handle.setBrush(AUDIO_ITEM_HANDLE_SELECTED_BRUSH)
             self.stretch_handle.setBrush(AUDIO_ITEM_HANDLE_SELECTED_BRUSH)
@@ -724,7 +724,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             self.length_handle_line.setPen(AUDIO_ITEM_LINE_PEN)
             self.stretch_handle_line.setPen(AUDIO_ITEM_LINE_PEN)
 
-            #self.label.setBrush(QtCore.Qt.white)
+            self.label.setBrush(QtCore.Qt.white)
             self.start_handle.setBrush(AUDIO_ITEM_HANDLE_BRUSH)
             self.length_handle.setBrush(AUDIO_ITEM_HANDLE_BRUSH)
             self.stretch_handle.setBrush(AUDIO_ITEM_HANDLE_BRUSH)
