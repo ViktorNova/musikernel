@@ -283,7 +283,7 @@ def region_editor_set_delete_mode(a_enabled):
     else:
         SEQUENCER.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         REGION_EDITOR_DELETE_MODE = False
-        SEQUENCER.selected_item_strings = set([])
+        SEQUENCER.selected_item_strings = set()
         QtGui.QApplication.restoreOverrideCursor()
 
 
@@ -390,6 +390,7 @@ class atm_item(QtGui.QGraphicsEllipseItem):
         self.set_brush()
         self.min_y = a_min_y
         self.max_y = a_max_y
+        self.is_deleted = False
 
     def set_brush(self):
         if self.isSelected():
@@ -482,6 +483,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
     def __init__(self, a_name, a_audio_item):
         QtGui.QGraphicsRectItem.__init__(self)
         self.name = str(a_name)
+        self.is_deleted = False
 
         if REGION_EDITOR_MODE == 0:
             self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
@@ -489,7 +491,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
         else:
             self.setEnabled(False)
-            self.setOpacity(0.6)
+            self.setOpacity(0.2)
 
         self.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape)
 
@@ -891,10 +893,6 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         PROJECT.commit(_("Reset sample ends for item(s)"))
         global_open_audio_items()
 
-    def open_item_folder(self):
-        f_path = libmk.PROJECT.get_wav_name_by_uid(self.audio_item.uid)
-        SEQUENCER_WIDGET.open_file_in_browser(f_path)
-
     def mousePressEvent(self, a_event):
         if libmk.IS_PLAYING:
             return
@@ -1011,6 +1009,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             f_val = (f_diff_y * 0.05)
         f_event_pos = a_event.pos().x()
         f_event_diff = f_event_pos - self.event_pos_orig
+
         if self.is_resizing:
             for f_item in SEQUENCER.get_selected():
                 f_x = f_item.width_orig + f_event_diff + \
@@ -1205,6 +1204,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.scene.setBackgroundBrush(QtGui.QColor(90, 90, 90))
         self.scene.selectionChanged.connect(self.highlight_selected)
         self.scene.mouseMoveEvent = self.sceneMouseMoveEvent
+        self.scene.mouseReleaseEvent = self.sceneMouseReleaseEvent
         self.setAcceptDrops(True)
         self.setScene(self.scene)
         self.audio_items = []
@@ -1337,6 +1337,9 @@ class ItemSequencer(QtGui.QGraphicsView):
                 TRACK_PANEL.tracks[f_track].check_output()
                 PROJECT.save_region(CURRENT_REGION)
                 REGION_SETTINGS.open_region()
+            elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
+                region_editor_set_delete_mode(True)
+                return
         elif REGION_EDITOR_MODE == 1:
             self.setDragMode(QtGui.QGraphicsView.NoDrag)
             self.atm_select_pos_x = None
@@ -1379,13 +1382,23 @@ class ItemSequencer(QtGui.QGraphicsView):
                         f_item.setSelected(False)
 
     def sceneMouseReleaseEvent(self, a_event):
+        QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         if REGION_EDITOR_DELETE_MODE:
-            region_editor_set_delete_mode(False)
-            global_tablewidget_to_region()
-        else:
-            QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
+            self.scene.clearSelection()
+            self.selected_item_strings = set()
+            for f_item in self.audio_items:
+                if f_item.is_deleted:
+                    CURRENT_REGION.remove_item_ref(f_item.audio_item)
+            PROJECT.save_region(CURRENT_REGION)
+            PROJECT.commit("Delete sequencer items")
+            self.open_region()
         if self.atm_delete:
-            for f_point in self.get_selected_points(self.atm_select_track):
+            f_selected = list(
+                self.get_selected_points(self.atm_select_track))
+            self.scene.clearSelection()
+            self.selected_point_strings = set()
+            for f_point in f_selected:
+                self.automation_points.remove(f_point)
                 ATM_REGION.remove_point(f_point.item)
             self.automation_save_callback()
             self.open_region()
@@ -1789,13 +1802,14 @@ class ItemSequencer(QtGui.QGraphicsView):
     def smooth_atm_points(self):
         if not self.current_coord:
             return
-        f_track, f_bar, f_beat, f_val = self.current_coord
+        f_track, f_beat, f_val = self.current_coord
         f_index, f_plugin = TRACK_PANEL.get_atm_params(f_track)
         if f_index is None:
             return
         f_port, f_index = TRACK_PANEL.has_automation(f_track)
         f_points = [x.item for x in self.get_selected_points()]
         ATM_REGION.smooth_points(f_index, f_port, f_plugin, f_points)
+        self.selected_point_strings = set()
         self.automation_save_callback()
         self.open_region()
 
