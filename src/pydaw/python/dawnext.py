@@ -1398,6 +1398,8 @@ class ItemSequencer(QtGui.QGraphicsView):
                 PROJECT.save_region(CURRENT_REGION)
                 PROJECT.commit("Delete sequencer items")
                 self.open_region()
+            else:
+                QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         elif REGION_EDITOR_MODE == 1:
             if self.atm_delete:
                 print("self.atm_delete")
