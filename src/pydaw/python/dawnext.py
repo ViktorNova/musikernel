@@ -1388,31 +1388,34 @@ class ItemSequencer(QtGui.QGraphicsView):
                         f_item.setSelected(False)
 
     def sceneMouseReleaseEvent(self, a_event):
-        if REGION_EDITOR_DELETE_MODE:
-            print("REGION_EDITOR_DELETE_MODE")
-            region_editor_set_delete_mode(False)
-            self.scene.clearSelection()
-            self.selected_item_strings = set()
-            for f_item in self.deleted_items:
-                CURRENT_REGION.remove_item_ref(f_item)
-            PROJECT.save_region(CURRENT_REGION)
-            PROJECT.commit("Delete sequencer items")
-            self.open_region()
-        if self.atm_delete:
-            print("self.atm_delete")
-            f_selected = list(
-                self.get_selected_points(self.atm_select_track))
-            self.scene.clearSelection()
-            self.selected_point_strings = set()
-            for f_point in f_selected:
-                self.automation_points.remove(f_point)
-                ATM_REGION.remove_point(f_point.item)
-            self.automation_save_callback()
-            self.open_region()
+        if REGION_EDITOR_MODE == 0:
+            if REGION_EDITOR_DELETE_MODE:
+                region_editor_set_delete_mode(False)
+                self.scene.clearSelection()
+                self.selected_item_strings = set()
+                for f_item in self.deleted_items:
+                    CURRENT_REGION.remove_item_ref(f_item)
+                PROJECT.save_region(CURRENT_REGION)
+                PROJECT.commit("Delete sequencer items")
+                self.open_region()
+        elif REGION_EDITOR_MODE == 1:
+            if self.atm_delete:
+                print("self.atm_delete")
+                f_selected = list(
+                    self.get_selected_points(self.atm_select_track))
+                self.scene.clearSelection()
+                self.selected_point_strings = set()
+                for f_point in f_selected:
+                    self.automation_points.remove(f_point)
+                    ATM_REGION.remove_point(f_point.item)
+                self.automation_save_callback()
+                self.open_region()
+            QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
+        else:
+            QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         self.atm_select_pos_x = None
         self.atm_select_track = None
         self.atm_delete = False
-        QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
 
     def get_item_coord(self, a_pos, a_clip=False):
         f_pos_x = a_pos.x()
@@ -1633,8 +1636,6 @@ class ItemSequencer(QtGui.QGraphicsView):
         REGION_SETTINGS.open_region()
         self.last_open_dir = os.path.dirname(f_file_name_str)
 
-
-
     def set_playback_pos(self, a_beat=0.0):
         f_beat = float(a_beat)
         f_pos = (f_beat * SEQUENCER_PX_PER_BEAT)
@@ -1769,6 +1770,7 @@ class ItemSequencer(QtGui.QGraphicsView):
     def clear_drawn_items(self):
         self.reset_line_lists()
         self.audio_items = []
+        self.automation_points = []
         self.scene.clear()
         self.draw_headers()
 
