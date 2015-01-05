@@ -520,7 +520,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.label.setPen(QtGui.QPen(QtCore.Qt.NoPen))
         self.label.setBrush(QtCore.Qt.white)
 
-        self.label.setPos(2.0, 2.0)
+        self.label.setPos(1.0, 1.0)
         self.label.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
         self.label.setZValue(2100.00)
 
