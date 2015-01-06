@@ -152,16 +152,12 @@ typedef struct
 
 typedef struct
 {
-    float ml_sample_period_inc_beats;
+    double ml_sample_period_inc_beats;
     double ml_current_beat;
     double ml_next_beat;
-    int ml_current_region;
-    int ml_next_region;
-    int ml_is_looping;
     long current_sample;
     long f_next_current_sample;
-    char padding[CACHE_LINE_SIZE - sizeof(float) - (2 * sizeof(double)) -
-        (3 * sizeof(int)) - (2 * sizeof(long))];
+    char padding[CACHE_LINE_SIZE - (3 * sizeof(double)) - (2 * sizeof(long))];
 }t_dn_thread_storage;
 
 typedef struct
@@ -171,6 +167,9 @@ typedef struct
     t_pytrack * track_pool[DN_TRACK_COUNT];
     t_dn_routing_graph * routing_graph;
     int loop_mode;  //0 == Off, 1 == Bar, 2 == Region
+    int ml_is_looping;
+    double loop_start;
+    double loop_end;
     int overdub_mode;  //0 == Off, 1 == On
 
     /*the increment per-period to iterate through 1 bar,
@@ -197,6 +196,7 @@ typedef struct
     char * item_folder;
     char * region_folder;
     char * tracks_folder;
+    char * seq_event_file;
 }t_dawnext;
 
 
@@ -1331,89 +1331,17 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
     self->ts[0].ml_next_beat = self->ts[0].ml_current_beat +
         self->ts[0].ml_sample_period_inc_beats;
 
-    self->ts[0].ml_current_region = (self->current_region);
-
-    self->ts[0].ml_next_region = (self->current_region);
-
-    /*
-    if((self->ts[0].ml_next_period_beats) > 4.0f)
+    if(self->loop_end >= self->ts[0].ml_current_beat &&
+        self->loop_end <= self->ts[0].ml_next_beat)
     {
-        self->ts[0].ml_starting_new_bar = 1;
-        self->ts[0].ml_next_beat =
-            (self->ts[0].ml_next_period_beats) - 4.0f;
-
-        int f_region_length = 8;
-        if(self->en_song->regions[(self->current_region)])
-        {
-            f_region_length =
-                (self->en_song->regions[
-                    (self->current_region)]->region_length_bars);
-        }
-
-        if(f_region_length == 0)
-        {
-            f_region_length = 8;
-        }
-
-        if((self->ts[0].ml_next_bar) >= f_region_length)
-        {
-            self->ts[0].ml_next_bar = 0;
-            if(self->loop_mode != DN_LOOP_MODE_REGION)
-            {
-                ++self->ts[0].ml_next_region;
-            }
-            else
-            {
-                self->ts[0].ml_is_looping = 1;
-            }
-        }
+        self->ml_is_looping = 0;
     }
     else
-    */
-    if(1)
     {
-        self->ts[0].ml_is_looping = 0;
-        self->ts[0].ml_next_region = self->current_region;
+        self->ml_is_looping = 0;
     }
 }
 
-inline void v_dn_finish_time_params(t_dawnext * self)
-{
-    /*
-    self->playback_cursor = (self->ts[0].ml_next_playback_cursor);
-
-    if((self->playback_cursor) >= 1.0f)
-    {
-        self->playback_cursor = (self->playback_cursor) - 1.0f;
-
-        if((self->current_bar) >= a_region_length_bars)
-        {
-            self->current_bar = 0;
-
-            if(self->loop_mode != DN_LOOP_MODE_REGION)
-            {
-                ++self->current_region;
-
-                if((self->current_region) >= DN_MAX_REGION_COUNT)
-                {
-                    musikernel->playback_mode = 0;
-                    self->current_region = 0;
-                }
-            }
-            else if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
-            {
-                float f_beat = self->ts[0].ml_current_beat;
-
-                sprintf(musikernel->osc_cursor_message, "loop|%i|%i|%f|%ld",
-                    f_beat, self->current_sample +
-                    i_beat_count_to_samples(4.0 - f_beat, self->tempo,
-                        musikernel->thread_storage[0].sample_rate));
-                v_queue_osc_message("mrec", musikernel->osc_cursor_message);
-            }
-        }
-    }
-    */
-}
 
 inline void v_dn_run_engine(int sample_count,
         float **output, float *a_input_buffers)
@@ -1471,11 +1399,6 @@ inline void v_dn_run_engine(int sample_count,
     }
 
     v_pydaw_zero_buffer(f_master_buff, sample_count);
-
-    if((musikernel->playback_mode) > 0)
-    {
-        v_dn_finish_time_params(self);
-    }
 
     dawnext->ts[0].current_sample = f_next_current_sample;
 }
@@ -1850,6 +1773,8 @@ void v_dn_open_project(int a_first_load)
     sprintf(dawnext->region_folder, "%s/regions/",
         dawnext->project_folder);
     sprintf(dawnext->tracks_folder, "%s/tracks",
+        dawnext->project_folder);
+    sprintf(dawnext->seq_event_file, "%s/seq_event.txt",
         dawnext->project_folder);
 
     int f_i = 0;
@@ -2348,6 +2273,7 @@ t_dawnext * g_dawnext_get()
     f_result->loop_mode = 0;
 
     f_result->project_folder = (char*)malloc(sizeof(char) * 1024);
+    f_result->seq_event_file = (char*)malloc(sizeof(char) * 1024);
     f_result->item_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->region_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->tracks_folder = (char*)malloc(sizeof(char) * 1024);
@@ -2358,14 +2284,12 @@ t_dawnext * g_dawnext_get()
 
     f_result->ts[0].current_sample = 0;
     f_result->ts[0].ml_sample_period_inc_beats = 0.0f;
-
-    f_result->ts[0].ml_current_region = 0;
-    f_result->ts[0].ml_next_region = 0;
     f_result->ts[0].ml_current_beat = 0.0f;
     f_result->ts[0].ml_next_beat = 0.0f;
-    f_result->ts[0].ml_is_looping = 0;
 
-    f_result->routing_graph = 0;
+    f_result->ml_is_looping = 0;
+
+    f_result->routing_graph = NULL;
 
     int f_i = 0;
     int f_track_total = 0;
@@ -2672,7 +2596,6 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
             v_dn_audio_items_run(
                 self, a_glue_item, f_block_size, f_buffer, NULL, 1, NULL,
                 &self->ts[0]);
-            v_dn_finish_time_params(self);
         }
         else
         {
