@@ -105,6 +105,7 @@ typedef struct
     int type;  //0:Loop,1:TempoChange
     double beat;
     double start_beat;  //currently only for the loop event
+    float tempo;
 }t_mk_seq_event;
 
 typedef struct
@@ -1183,7 +1184,7 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
                 }
                 else if(a_result->splitter.count == 2)
                 {
-                    
+
                 }
                 else
                 {
@@ -1250,6 +1251,14 @@ t_mk_seq_event_list * g_mk_seq_event_list_get(char * a_file_path)
                 v_iterate_2d_char_array(f_current_string);
                 f_result->events[f_pos].start_beat =
                     atof(f_current_string->current_str);
+            }
+            else if(f_result->events[f_pos].type == SEQ_EVENT_TEMPO_CHANGE)
+            {
+                v_iterate_2d_char_array(f_current_string);
+                f_result->events[f_pos].tempo =
+                    atof(f_current_string->current_str);
+                //time signature, ignored by the engine
+                v_iterate_2d_char_array(f_current_string);
             }
         }
     }
