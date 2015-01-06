@@ -259,7 +259,9 @@ REGION_EDITOR_MAX_START = 999.0 + REGION_TRACK_WIDTH
 REGION_EDITOR_TRACK_HEIGHT = 64
 
 REGION_EDITOR_TRACK_COUNT = 32
-REGION_EDITOR_HEADER_HEIGHT = 24
+
+REGION_EDITOR_HEADER_ROW_HEIGHT = 18
+REGION_EDITOR_HEADER_HEIGHT = REGION_EDITOR_HEADER_ROW_HEIGHT * 3
 #gets updated by the region editor to it's real value:
 REGION_EDITOR_TOTAL_HEIGHT = (REGION_EDITOR_TRACK_COUNT *
     REGION_EDITOR_TRACK_HEIGHT)
@@ -1671,7 +1673,8 @@ class ItemSequencer(QtGui.QGraphicsView):
         #pydaw_set_SEQUENCER_zoom(self.h_zoom, self.v_zoom)
 
     def ruler_click_event(self, a_event):
-        if not libmk.IS_PLAYING:
+        if not libmk.IS_PLAYING and \
+        a_event.button() != QtCore.Qt.RightButton:
             f_val = int((a_event.scenePos().x() /
                 SEQUENCER_PX_PER_BEAT) /
                 REGION_SETTINGS.tsig_spinbox.value())
@@ -1708,6 +1711,31 @@ class ItemSequencer(QtGui.QGraphicsView):
             for f_num in self.text_list:
                 f_num.setVisible(True)
 
+    def ruler_time_modify(self):
+        pass
+
+    def ruler_marker_modify(self):
+        pass
+
+    def ruler_loop_start(self):
+        pass
+
+    def ruler_loop_end(self):
+        pass
+
+    def rulerContextMenuEvent(self, a_event):
+        self.ruler_event_pos = int(a_event.pos().x() / SEQUENCER_PX_PER_BEAT)
+        f_menu = QtGui.QMenu(self)
+        f_loop_start_action = f_menu.addAction(_("Set Loop Start"))
+        f_loop_start_action.triggered.connect(self.ruler_loop_start)
+        f_loop_end_action = f_menu.addAction(_("Set Loop End"))
+        f_loop_end_action.triggered.connect(self.ruler_loop_end)
+        f_marker_action = f_menu.addAction(_("Marker..."))
+        f_marker_action.triggered.connect(self.ruler_marker_modify)
+        f_time_modify_action = f_menu.addAction(_("Time/Tempo Marker..."))
+        f_time_modify_action.triggered.connect(self.ruler_time_modify)
+        f_menu.exec_(QtGui.QCursor.pos())
+
     def draw_headers(self, a_cursor_pos=None):
         f_region_length = pydaw_get_current_region_length()
         f_size = SEQUENCER_PX_PER_BEAT * f_region_length
@@ -1716,6 +1744,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.ruler.setZValue(1500.0)
         self.ruler.setBrush(REGION_EDITOR_HEADER_GRADIENT)
         self.ruler.mousePressEvent = self.ruler_click_event
+        self.ruler.contextMenuEvent = self.rulerContextMenuEvent
         self.scene.addItem(self.ruler)
         f_v_pen = QtGui.QPen(QtCore.Qt.black)
         f_beat_pen = QtGui.QPen(QtGui.QColor(210, 210, 210))
