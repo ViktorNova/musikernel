@@ -106,11 +106,8 @@ typedef struct
 typedef struct
 {
     t_dn_track_seq tracks[DN_TRACK_COUNT];
+    t_mk_seq_event_list events;
     int uid;
-    int bar_length;
-    int region_length_bars;
-    int region_length_beats;
-    float tempo;
 }t_dn_region;
 
 typedef struct
@@ -157,7 +154,9 @@ typedef struct
     double ml_next_beat;
     long current_sample;
     long f_next_current_sample;
-    char padding[CACHE_LINE_SIZE - (3 * sizeof(double)) - (2 * sizeof(long))];
+    float tempo;
+    char padding[CACHE_LINE_SIZE - sizeof(float) -
+        (3 * sizeof(double)) - (2 * sizeof(long))];
 }t_dn_thread_storage;
 
 typedef struct
@@ -281,7 +280,7 @@ void v_dn_reset_audio_item_read_heads(t_dawnext * self,
     int f_i2;
     float f_sr = musikernel->thread_storage[0].sample_rate;
     t_pydaw_audio_item * f_audio_item;
-    float f_tempo = self->en_song->regions[0]->tempo;
+    float f_tempo = self->ts[0].tempo;
 
     for(f_i = 0; f_i < PYDAW_MAX_AUDIO_ITEM_COUNT; ++f_i)
     {
@@ -1213,7 +1212,7 @@ void v_dn_process_external_midi(t_dawnext * self,
     float f_sample_rate = musikernel->thread_storage[a_thread_num].sample_rate;
     int f_playback_mode = musikernel->playback_mode;
     int f_midi_learn = musikernel->midi_learn;
-    float f_tempo = self->en_song->regions[0]->tempo;
+    float f_tempo = self->ts[0].tempo;
 
     midiDeviceRead(a_track->midi_device, f_sample_rate, sample_count);
 
@@ -1988,10 +1987,10 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
     int f_item_counters[DN_TRACK_COUNT];
     lmalloc((void**)&f_result, sizeof(t_dn_region));
 
-    f_result->tempo = 128.0f;
-    f_result->region_length_bars = 0;
-    f_result->region_length_beats = 0;
-    f_result->bar_length = 0;
+    f_result->events.count = 0;
+    f_result->events.pos = 0;
+    f_result->events.events = NULL;
+
     f_result->uid = a_uid;
 
     int f_i = 0;
@@ -2013,6 +2012,7 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
         g_get_2d_array_from_file(f_full_path, PYDAW_LARGE_STRING);
 
     f_i = 0;
+    int f_ev_pos = 0;
 
     while(1)
     {
@@ -2024,22 +2024,7 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
 
         char f_key = f_current_string->current_str[0];
 
-        if(f_key == 'L')
-        {
-            v_iterate_2d_char_array(f_current_string);
-            f_result->region_length_bars = atoi(f_current_string->current_str);
-
-            v_iterate_2d_char_array(f_current_string);
-            f_result->bar_length = atoi(f_current_string->current_str);
-
-            f_result->region_length_beats =
-                f_result->region_length_bars * f_result->bar_length;
-        }
-        else if(f_key == 'T')
-        {
-            assert(NULL);  //tempo, not yet implemented
-        }
-        else if(f_key == 'C')
+        if(f_key == 'C')
         {
             v_iterate_2d_char_array(f_current_string);
             int f_track_num = atoi(f_current_string->current_str);
@@ -2053,7 +2038,36 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
             lmalloc((void**)&f_result->tracks[f_track_num].refs,
                 f_result->tracks[f_track_num].count * sizeof(t_dn_item_ref));
         }
-        else
+        else if(f_current_string->current_str[0] == 'M')  //marker count
+        {
+            assert(!f_result->events.events);
+            v_iterate_2d_char_array(f_current_string);
+            f_result->events.count = atoi(f_current_string->current_str);
+        }
+        else if(f_current_string->current_str[0] == 'E')  //sequencer event
+        {
+            assert(f_result->events.events);
+            t_mk_seq_event * f_ev = &f_result->events.events[f_ev_pos];
+            ++f_ev_pos;
+            f_ev->type = atoi(f_current_string->current_str);
+
+            v_iterate_2d_char_array(f_current_string);
+            f_ev->beat = atof(f_current_string->current_str);
+
+            if(f_ev->type == SEQ_EVENT_LOOP)
+            {
+                v_iterate_2d_char_array(f_current_string);
+                f_ev->start_beat = atof(f_current_string->current_str);
+            }
+            else if(f_ev->type == SEQ_EVENT_TEMPO_CHANGE)
+            {
+                v_iterate_2d_char_array(f_current_string);
+                f_ev->tempo = atof(f_current_string->current_str);
+                //time signature, ignored by the engine
+                v_iterate_2d_char_array(f_current_string);
+            }
+        }
+        else  //item reference
         {
             int f_track_num = atoi(f_current_string->current_str);
 
@@ -2496,7 +2510,7 @@ void v_dn_set_loop_mode(t_dawnext * self, int a_mode)
 void v_dn_set_tempo(t_dawnext * self, float a_tempo)
 {
     float f_sample_rate = musikernel->thread_storage[0].sample_rate;
-    self->en_song->regions[0]->tempo = a_tempo;
+    self->ts[0].tempo = a_tempo;
     self->playback_inc = (1.0f / f_sample_rate) / (60.0f / a_tempo);
     self->samples_per_beat = (f_sample_rate) / (a_tempo / 60.0f);
 }

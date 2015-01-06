@@ -52,8 +52,10 @@ int PYDAW_AUDIO_INPUT_TRACK_COUNT = 0;
 #define FADE_STATE_FADED 2
 #define FADE_STATE_RETURNING 3
 
-#define SEQ_EVENT_LOOP 0
-#define SEQ_EVENT_TEMPO_CHANGE 1
+#define SEQ_EVENT_NONE 0
+#define SEQ_EVENT_LOOP 1
+#define SEQ_EVENT_TEMPO_CHANGE 2
+#define SEQ_EVENT_MARKER 3
 
 #define MK_CONFIGURE_KEY_UPDATE_PLUGIN_CONTROL "pc"
 #define MK_CONFIGURE_KEY_CONFIGURE_PLUGIN "co"
@@ -1197,73 +1199,6 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
             }
         }
     }
-}
-
-
-t_mk_seq_event_list * g_mk_seq_event_list_get(char * a_file_path)
-{
-    t_mk_seq_event_list * f_result;
-    lmalloc((void**)&f_result, sizeof(t_mk_seq_event_list));
-    f_result->count = 0;
-    f_result->pos = 0;
-    f_result->events = NULL;
-
-    if(!i_pydaw_file_exists(a_file_path))
-    {
-        return f_result;
-    }
-
-    t_2d_char_array * f_current_string =
-        g_get_2d_array_from_file(a_file_path, PYDAW_LARGE_STRING);
-
-    int f_pos = 0;
-
-    while(1)
-    {
-        v_iterate_2d_char_array(f_current_string);
-        if(f_current_string->eof)
-        {
-            break;
-        }
-
-        if(f_current_string->current_str[0] == 'C')
-        {
-            assert(!f_result->events);
-            v_iterate_2d_char_array(f_current_string);
-            f_result->count = atoi(f_current_string->current_str);
-        }
-        else if(f_current_string->current_str[0] == 'M')
-        {
-            //marker, not used by the engine
-            v_iterate_2d_char_array(f_current_string);   //beat
-            v_iterate_2d_char_array_to_next_line(f_current_string);  //text
-        }
-        else
-        {
-            assert(f_result->events);
-            f_result->events[f_pos].type = atoi(f_current_string->current_str);
-
-            v_iterate_2d_char_array(f_current_string);
-            f_result->events[f_pos].beat = atof(f_current_string->current_str);
-
-            if(f_result->events[f_pos].type == SEQ_EVENT_LOOP)
-            {
-                v_iterate_2d_char_array(f_current_string);
-                f_result->events[f_pos].start_beat =
-                    atof(f_current_string->current_str);
-            }
-            else if(f_result->events[f_pos].type == SEQ_EVENT_TEMPO_CHANGE)
-            {
-                v_iterate_2d_char_array(f_current_string);
-                f_result->events[f_pos].tempo =
-                    atof(f_current_string->current_str);
-                //time signature, ignored by the engine
-                v_iterate_2d_char_array(f_current_string);
-            }
-        }
-    }
-
-    return f_result;
 }
 
 

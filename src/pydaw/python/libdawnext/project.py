@@ -784,11 +784,71 @@ class pydaw_sequencer_item:
         else:
             return self.track_num < other.track_num
 
+
+class pydaw_sequencer_marker:
+    def __init__(self, a_beat, a_text):
+        self.type = 3
+        self.beat = int(a_beat)
+        self.text = str(a_text)
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("E", self.type, self.beat, self.text))
+
+    @staticmethod
+    def from_str(self, a_str):
+        return pydaw_sequencer_marker(*a_str.split("|", 1))
+
+class pydaw_tempo_marker:
+    def __init__(self, a_beat, a_tempo, a_tsig):
+        self.type = 2
+        self.beat = int(a_beat)
+        self.tempo = round(float(a_tempo), 1)
+        self.tsig = int(a_tsig)
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("E", self.type, self.beat, self.tempo, self.tsig))
+
+    @staticmethod
+    def from_str(self, a_str):
+        return pydaw_sequencer_marker(*a_str.split("|"))
+
+class pydaw_loop_marker:
+    def __init__(self, a_beat, a_start_beat):
+        self.type = 1
+        self.beat = int(a_beat)
+        self.start_beat = int(a_start_beat)
+
+    def __str__(self):
+        return "|".join(str(x) for x in
+            ("E", self.type, self.beat, self.start_beat))
+
+    @staticmethod
+    def from_str(self, a_str):
+        return pydaw_sequencer_marker(*a_str.split("|", 1))
+
 class pydaw_sequencer:
     def __init__(self):
         self.items = []
-        self.beats_per_measure = 4
-        self.length_bars = 32
+        self.markers = {}
+        self.loop_marker = None
+        self.set_marker(pydaw_tempo_marker(0, 128.0, 4))
+
+    def set_marker(self, a_marker):
+        self.markers[(a_marker.beat, a_marker.type)] = a_marker
+
+    def delete_marker(self, a_marker):
+        f_tuple = (a_marker.beat, a_marker.type)
+        assert(f_tuple != (0, 2))  # don't delete the first tempo marker
+        self.markers.pop(f_tuple)
+
+    def set_loop_marker(self, a_marker=None):
+        if a_marker:
+            self.set_marker(a_marker)
+        else:
+            self.delete_marker(a_marker)
+        self.loop_marker = a_marker
 
     def reorder(self, a_dict):
         for f_item in self.items:
@@ -839,9 +899,10 @@ class pydaw_sequencer:
 
     def __str__(self):
         f_result = []
-        f_result.append("L|{}|{}".format(
-            self.length_bars, self.beats_per_measure))
-
+        f_result.append("M|{}".format(len(self.markers)))
+        for k in sorted(self.markers):
+            v = self.markers[k]
+            f_result.append("E|{}".format(str(v)))
         for f_i in range(TRACK_COUNT_ALL):
             f_items = [x for x in self.items if x.track_num == f_i]
             if f_items:
@@ -861,12 +922,19 @@ class pydaw_sequencer:
                 break
             else:
                 f_item_arr = f_line.split("|")
-                if f_item_arr[0] == "L":
-                    f_result.length_bars, f_result.beats_per_measure = (
-                        int(x) for x in f_item_arr[1:])
+                if f_item_arr[0] == "E":
+                    f_type = int(f_item_arr[1])
+                    raise NotImplementedError()
+                    if f_type == 1:
+                        pass
+                    elif f_type == 2:
+                        pass
+                    elif f_type == 3:
+                        pass
+                    else:
+                        assert(False)
                     continue
-                if f_item_arr[0] == "T":
-                    assert(False)
+                if f_item_arr[0] == "M":
                     continue
                 if f_item_arr[0] == "C":
                     continue
