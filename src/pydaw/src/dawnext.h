@@ -2047,10 +2047,17 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
         else if(f_current_string->current_str[0] == 'E')  //sequencer event
         {
             assert(f_result->events.events);
+            int f_type = atoi(f_current_string->current_str);
+
+            if(f_type == SEQ_EVENT_MARKER)  //the engine ignores these
+            {
+                
+            }
+
             t_mk_seq_event * f_ev = &f_result->events.events[f_ev_pos];
             ++f_ev_pos;
-            f_ev->type = atoi(f_current_string->current_str);
 
+            f_ev->type = f_type;
             v_iterate_2d_char_array(f_current_string);
             f_ev->beat = atof(f_current_string->current_str);
 
