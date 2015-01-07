@@ -1330,10 +1330,11 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
     self->ts[0].ml_next_beat = self->ts[0].ml_current_beat +
         self->ts[0].ml_sample_period_inc_beats;
 
-    if(self->loop_end >= self->ts[0].ml_current_beat &&
-        self->loop_end <= self->ts[0].ml_next_beat)
+    if(self->loop_mode &&
+    self->loop_end >= self->ts[0].ml_current_beat &&
+    self->loop_end <= self->ts[0].ml_next_beat)
     {
-        self->ml_is_looping = 0;
+        self->ml_is_looping = 1;
     }
     else
     {
@@ -2043,15 +2044,22 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
             assert(!f_result->events.events);
             v_iterate_2d_char_array(f_current_string);
             f_result->events.count = atoi(f_current_string->current_str);
+
+            lmalloc((void**)&f_result->events.events,
+                sizeof(t_mk_seq_event) * f_result->events.count);
         }
         else if(f_current_string->current_str[0] == 'E')  //sequencer event
         {
             assert(f_result->events.events);
+            v_iterate_2d_char_array(f_current_string);
             int f_type = atoi(f_current_string->current_str);
 
             if(f_type == SEQ_EVENT_MARKER)  //the engine ignores these
             {
-                
+                v_iterate_2d_char_array(f_current_string);  //beat
+                //Marker text
+                v_iterate_2d_char_array_to_next_line(f_current_string);
+                continue;
             }
 
             t_mk_seq_event * f_ev = &f_result->events.events[f_ev_pos];
@@ -2292,6 +2300,8 @@ t_dawnext * g_dawnext_get()
 
     f_result->overdub_mode = 0;
     f_result->loop_mode = 0;
+    f_result->loop_start = 0.0d;
+    f_result->loop_end = -16.0d;
 
     f_result->project_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->seq_event_file = (char*)malloc(sizeof(char) * 1024);
