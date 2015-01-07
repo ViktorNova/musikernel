@@ -33,10 +33,7 @@ from libmk import mk_project
 from libdawnext import *
 
 def pydaw_get_current_region_length():
-    if CURRENT_REGION is None:
-        return 32 * 4
-    else:
-        return CURRENT_REGION.get_length()
+    return CURRENT_REGION.get_length() if CURRENT_REGION else 32
 
 def global_get_audio_file_from_clipboard():
     f_clipboard = QtGui.QApplication.clipboard()
@@ -130,22 +127,6 @@ class region_settings:
         self.unmute_action.triggered.connect(self.unmute_all)
         self.unmute_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+M"))
 
-        self.hlayout0.addWidget(QtGui.QLabel(_("Beats per Measure:")))
-        self.tsig_spinbox = QtGui.QSpinBox()
-        self.tsig_spinbox.setKeyboardTracking(False)
-        self.tsig_spinbox.setRange(1, 16)
-        self.tsig_spinbox.setValue(4)
-        self.tsig_spinbox.valueChanged.connect(self.update_tsig)
-        self.hlayout0.addWidget(self.tsig_spinbox)
-
-        self.hlayout0.addWidget(QtGui.QLabel(_("Length:")))
-        self.length_spinbox = QtGui.QSpinBox()
-        self.length_spinbox.setKeyboardTracking(False)
-        self.length_spinbox.setRange(1, MAX_REGION_LENGTH)
-        self.length_spinbox.setValue(8)
-        self.length_spinbox.valueChanged.connect(
-            self.update_length)
-        self.hlayout0.addWidget(self.length_spinbox)
         f_scrollbar = SEQUENCER.horizontalScrollBar()
         f_scrollbar.setSizePolicy(
             QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -155,32 +136,6 @@ class region_settings:
         global REGION_EDITOR_MODE
         REGION_EDITOR_MODE = a_value
         SEQUENCER.open_region()
-
-    def update_tsig(self, a_value=None):
-        if not libmk.IS_PLAYING and \
-        CURRENT_REGION is not None:
-            if not self.enabled or CURRENT_REGION is None:
-                return
-            f_bpm = self.tsig_spinbox.value()
-            CURRENT_REGION.beats_per_measure = f_bpm
-            f_commit_message = _(
-                "Set beats per measure to {}").format(f_bpm)
-            PROJECT.save_region(CURRENT_REGION)
-            self.open_region()
-            PROJECT.commit(f_commit_message)
-
-    def update_length(self, a_value=None):
-        if not libmk.IS_PLAYING and \
-        CURRENT_REGION is not None:
-            if not self.enabled or CURRENT_REGION is None:
-                return
-            f_region_length = self.length_spinbox.value()
-            CURRENT_REGION.length_bars = f_region_length
-            f_commit_message = _(
-                "Set sequencer length to {}").format(f_region_length)
-            PROJECT.save_region(CURRENT_REGION)
-            self.open_region()
-            PROJECT.commit(f_commit_message)
 
     def toggle_hide_inactive(self):
         self.hide_inactive = self.toggle_hide_action.isChecked()
@@ -196,12 +151,12 @@ class region_settings:
 
     def open_region(self):
         self.enabled = False
-        self.clear_items()
         global CURRENT_REGION
+        if CURRENT_REGION:
+            self.clear_items()
         CURRENT_REGION = PROJECT.get_region()
-        self.length_spinbox.setValue(CURRENT_REGION.length_bars)
-        self.tsig_spinbox.setValue(CURRENT_REGION.beats_per_measure)
-        TRANSPORT.bar_spinbox.setRange(1, CURRENT_REGION.length_bars)
+        TRANSPORT.bar_spinbox.setRange(
+            1, CURRENT_REGION.get_length_bars())
         self.enabled = True
         SEQUENCER.open_region()
         global_update_hidden_rows()
@@ -1213,7 +1168,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.track = 0
         self.gradient_index = 0
         self.playback_px = 0.0
-        self.draw_headers(0)
+        #self.draw_headers(0)
         self.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
         self.is_playing = False
@@ -1675,10 +1630,9 @@ class ItemSequencer(QtGui.QGraphicsView):
     def ruler_click_event(self, a_event):
         if not libmk.IS_PLAYING and \
         a_event.button() != QtCore.Qt.RightButton:
-            f_val = int((a_event.scenePos().x() /
-                SEQUENCER_PX_PER_BEAT) /
-                REGION_SETTINGS.tsig_spinbox.value())
-            TRANSPORT.set_bar_value(f_val)
+            f_beat = int(a_event.scenePos().x() / SEQUENCER_PX_PER_BEAT)
+            f_bar = CURRENT_REGION.beat_to_bar(f_beat)
+            TRANSPORT.set_bar_value(f_bar)
 
     def check_line_count(self):
         """ Check that there are not too many vertical
@@ -1712,24 +1666,128 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_num.setVisible(True)
 
     def ruler_time_modify(self):
-        pass
+        def ok_handler():
+            f_marker = project.pydaw_tempo_marker(
+                self.ruler_event_pos, f_tempo.value(),
+                f_tsig.value(), f_length.value())
+            CURRENT_REGION.set_marker(f_marker)
+            PROJECT.save_region(CURRENT_REGION)
+            REGION_SETTINGS.open_region()
+            f_window.close()
+
+        def cancel_handler():
+            f_marker = CURRENT_REGION.has_marker(self.ruler_event_pos, 2)
+            if f_marker:
+                CURRENT_REGION.delete_marker(f_marker)
+                PROJECT.save_region(CURRENT_REGION)
+                REGION_SETTINGS.open_region()
+            f_window.close()
+
+        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.setWindowTitle(_("Tempo / Time Signature"))
+        f_layout = QtGui.QGridLayout()
+        f_window.setLayout(f_layout)
+
+        f_marker = CURRENT_REGION.has_marker(self.ruler_event_pos, 2)
+
+        f_tempo = QtGui.QSpinBox()
+        f_tempo.setRange(30, 240)
+        f_layout.addWidget(QtGui.QLabel(_("Tempo")), 0, 0)
+        f_layout.addWidget(f_tempo, 0, 1)
+        f_tsig = QtGui.QSpinBox()
+        f_tsig.setRange(1, 16)
+        f_layout.addWidget(QtGui.QLabel(_("Beats per Measure")), 1, 0)
+        f_layout.addWidget(f_tsig, 1, 1)
+        f_length = QtGui.QSpinBox()
+        f_length.setRange(1, 320)
+        f_layout.addWidget(QtGui.QLabel(_("Length (Measures)")), 2, 0)
+        f_layout.addWidget(f_length, 2, 1)
+
+        f_action = QtGui.QComboBox()
+        f_action.addItems(
+            ["Replace current", "Append after current",
+            "Insert at current beat"])
+        f_layout.addWidget(QtGui.QLabel(_("Action")), 3, 0)
+        f_layout.addWidget(f_action, 3, 1)
+
+        if f_marker:
+            f_tempo.setValue(f_marker.tempo)
+            f_tsig.setValue(f_marker.tsig)
+            f_length.setValue(f_marker.length)
+        else:
+            f_tempo.setValue(128)
+            f_tsig.setValue(4)
+            f_length.setValue(32)
+
+        f_ok = QtGui.QPushButton(_("Save"))
+        f_ok.pressed.connect(ok_handler)
+        f_layout.addWidget(f_ok, 6, 0)
+        f_cancel = QtGui.QPushButton(_("Delete"))
+        f_cancel.pressed.connect(cancel_handler)
+        f_layout.addWidget(f_cancel, 6, 1)
+        f_window.exec_()
 
     def ruler_marker_modify(self):
-        pass
+        def ok_handler():
+            f_marker = project.pydaw_sequencer_marker(
+                self.ruler_event_pos, f_text.text())
+            CURRENT_REGION.set_marker(f_marker)
+            PROJECT.save_region(CURRENT_REGION)
+            REGION_SETTINGS.open_region()
+            f_window.close()
+
+        def cancel_handler():
+            f_marker = CURRENT_REGION.has_marker(self.ruler_event_pos, 3)
+            if f_marker:
+                CURRENT_REGION.delete_marker(f_marker)
+                PROJECT.save_region(CURRENT_REGION)
+                REGION_SETTINGS.open_region()
+            f_window.close()
+
+        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.setWindowTitle(_("Marker"))
+        f_layout = QtGui.QGridLayout()
+        f_window.setLayout(f_layout)
+
+        f_text = QtGui.QLineEdit()
+        f_text.setMaxLength(21)
+        f_layout.addWidget(QtGui.QLabel(_("Text")), 0, 0)
+        f_layout.addWidget(f_text, 0, 1)
+        f_ok = QtGui.QPushButton(_("Save"))
+        f_ok.pressed.connect(ok_handler)
+        f_layout.addWidget(f_ok, 6, 0)
+        if CURRENT_REGION.has_marker(self.ruler_event_pos, 3):
+            f_cancel = QtGui.QPushButton(_("Delete"))
+        else:
+            f_cancel = QtGui.QPushButton(_("Cancel"))
+        f_cancel.pressed.connect(cancel_handler)
+        f_layout.addWidget(f_cancel, 6, 1)
+        f_window.exec_()
 
     def ruler_loop_start(self):
-        pass
+        if CURRENT_REGION.loop_marker:
+            f_end = CURRENT_REGION.loop_marker.beat
+        else:
+            f_end = self.ruler_event_pos + 4
+
+        f_marker = project.pydaw_loop_marker(f_end, self.ruler_event_pos)
+        CURRENT_REGION.set_loop_marker(f_marker)
+        PROJECT.save_region(CURRENT_REGION)
+        REGION_SETTINGS.open_region()
 
     def ruler_loop_end(self):
-        pass
+        CURRENT_REGION.loop_marker.beat = self.ruler_event_pos
+        PROJECT.save_region(CURRENT_REGION)
+        REGION_SETTINGS.open_region()
 
     def rulerContextMenuEvent(self, a_event):
         self.ruler_event_pos = int(a_event.pos().x() / SEQUENCER_PX_PER_BEAT)
         f_menu = QtGui.QMenu(self)
         f_loop_start_action = f_menu.addAction(_("Set Loop Start"))
         f_loop_start_action.triggered.connect(self.ruler_loop_start)
-        f_loop_end_action = f_menu.addAction(_("Set Loop End"))
-        f_loop_end_action.triggered.connect(self.ruler_loop_end)
+        if CURRENT_REGION.loop_marker:
+            f_loop_end_action = f_menu.addAction(_("Set Loop End"))
+            f_loop_end_action.triggered.connect(self.ruler_loop_end)
         f_marker_action = f_menu.addAction(_("Marker..."))
         f_marker_action.triggered.connect(self.ruler_marker_modify)
         f_time_modify_action = f_menu.addAction(_("Time/Tempo Marker..."))
@@ -1746,20 +1804,60 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.ruler.mousePressEvent = self.ruler_click_event
         self.ruler.contextMenuEvent = self.rulerContextMenuEvent
         self.scene.addItem(self.ruler)
+        for f_marker in CURRENT_REGION.markers.values():
+            if f_marker.type == 1:
+                f_x = f_marker.start_beat * SEQUENCER_PX_PER_BEAT
+                f_start = QtGui.QGraphicsLineItem(
+                    f_x, 0, f_x, REGION_EDITOR_HEADER_HEIGHT, self.ruler)
+                f_start.setPen(QtGui.QPen(QtCore.Qt.red))
+
+                f_x = f_marker.beat * SEQUENCER_PX_PER_BEAT
+                f_end = QtGui.QGraphicsLineItem(
+                    f_x, 0, f_x, REGION_EDITOR_HEADER_HEIGHT, self.ruler)
+                f_end.setPen(QtGui.QPen(QtCore.Qt.blue))
+            elif f_marker.type == 2:
+                f_text = "{} : {}".format(f_marker.tempo, f_marker.tsig)
+                f_item = QtGui.QGraphicsSimpleTextItem(f_text, self.ruler)
+                f_item.setBrush(QtCore.Qt.white)
+                f_item.setPos(
+                    f_marker.beat * SEQUENCER_PX_PER_BEAT,
+                    REGION_EDITOR_HEADER_ROW_HEIGHT)
+                self.draw_region(f_marker)
+            elif f_marker.type == 3:
+                f_item = QtGui.QGraphicsSimpleTextItem(
+                    f_marker.text, self.ruler)
+                f_item.setBrush(QtCore.Qt.white)
+                f_item.setPos(
+                    f_marker.beat * SEQUENCER_PX_PER_BEAT,
+                    REGION_EDITOR_HEADER_ROW_HEIGHT * 2)
+            else:
+                assert(False)
+
+        f_total_height = (REGION_EDITOR_TRACK_COUNT *
+            (REGION_EDITOR_TRACK_HEIGHT)) + REGION_EDITOR_HEADER_HEIGHT
+        self.playback_cursor = self.scene.addLine(
+            0.0, 0.0, 0.0, f_total_height, QtGui.QPen(QtCore.Qt.red, 2.0))
+        self.playback_cursor.setZValue(1000.0)
+
+        self.set_playback_pos()
+        self.check_line_count()
+        self.set_ruler_y_pos()
+
+    def draw_region(self, a_marker):
+        f_region_length = pydaw_get_current_region_length()
+        f_size = SEQUENCER_PX_PER_BEAT * f_region_length
         f_v_pen = QtGui.QPen(QtCore.Qt.black)
         f_beat_pen = QtGui.QPen(QtGui.QColor(210, 210, 210))
         f_16th_pen = QtGui.QPen(QtGui.QColor(120, 120, 120))
         f_reg_pen = QtGui.QPen(QtCore.Qt.white)
         f_total_height = (REGION_EDITOR_TRACK_COUNT *
             (REGION_EDITOR_TRACK_HEIGHT)) + REGION_EDITOR_HEADER_HEIGHT
-        self.scene.setSceneRect(0.0, 0.0, f_size, f_total_height)
-        self.playback_cursor = self.scene.addLine(
-            0.0, 0.0, 0.0, f_total_height, QtGui.QPen(QtCore.Qt.red, 2.0))
-        self.playback_cursor.setZValue(1000.0)
-        i3 = 0.0
-        f_bar_count = CURRENT_REGION.length_bars if CURRENT_REGION else 32
-        f_beat_count = CURRENT_REGION.beats_per_measure if \
-            CURRENT_REGION else 4
+
+        f_bar_count = a_marker.length
+        f_beat_count = a_marker.tsig
+        f_x_offset = a_marker.beat * SEQUENCER_PX_PER_BEAT
+        i3 = f_x_offset
+
         for i in range(f_bar_count):
             f_number = QtGui.QGraphicsSimpleTextItem(str(i + 1), self.ruler)
             f_number.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
@@ -1793,10 +1891,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         for i2 in range(REGION_EDITOR_TRACK_COUNT):
             f_y = (REGION_EDITOR_TRACK_HEIGHT *
                 (i2 + 1)) + REGION_EDITOR_HEADER_HEIGHT
-            self.scene.addLine(0, f_y, f_size, f_y)
-        self.set_playback_pos()
-        self.check_line_count()
-        self.set_ruler_y_pos()
+            self.scene.addLine(f_x_offset, f_y, f_size, f_y)
 
     def clear_drawn_items(self):
         self.reset_line_lists()
@@ -8367,7 +8462,6 @@ def global_open_project(a_project_file):
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
     TRACK_PANEL.open_tracks()
-    SEQUENCER.clear_drawn_items()
     TRANSPORT.open_transport()
     PROJECT.suppress_updates = False
     f_scale = PROJECT.get_midi_scale()
