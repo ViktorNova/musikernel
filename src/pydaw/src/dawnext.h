@@ -162,6 +162,7 @@ typedef struct
 typedef struct
 {
     t_dn_thread_storage ts[MAX_WORKER_THREADS];
+    t_mk_seq_event_result seq_event_result;
     t_dn_song * en_song;
     t_pytrack * track_pool[DN_TRACK_COUNT];
     t_dn_routing_graph * routing_graph;
@@ -1366,6 +1367,11 @@ inline void v_dn_run_engine(int sample_count,
     if((musikernel->playback_mode) > 0)
     {
         v_dn_set_time_params(self, sample_count);
+
+        v_mk_seq_event_list_set(&self->en_song->regions[0]->events,
+            &self->seq_event_result, output, a_input_buffers,
+            PYDAW_AUDIO_INPUT_TRACK_COUNT, self->ts[0].ml_current_beat,
+            self->ts[0].ml_next_beat, sample_count, self->ts[0].current_sample);
     }
 
     for(f_i = 0; f_i < DN_TRACK_COUNT; ++f_i)

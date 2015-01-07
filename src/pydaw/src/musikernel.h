@@ -1133,7 +1133,7 @@ t_pydaw_seq_event * g_pypitchbend_get(float a_start, float a_value)
 }
 
 void v_mk_seq_event_result_set_default(t_mk_seq_event_result * self,
-        float ** a_buffers, float ** a_sc_buffers,
+        float ** a_buffers, float * a_input_buffers, int a_input_count,
         double a_start_beat, double a_end_beat, int a_sample_count,
         long a_current_sample)
 {
@@ -1151,15 +1151,15 @@ void v_mk_seq_event_result_set_default(t_mk_seq_event_result * self,
 
 void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
         t_mk_seq_event_result * a_result,
-        float ** a_buffers, float ** a_sc_buffers,
+        float ** a_buffers, float * a_input_buffers, int a_input_count,
         double a_start_beat, double a_end_beat, int a_sample_count,
         long a_current_sample)
 {
     if(self->pos >= self->count)
     {
         v_mk_seq_event_result_set_default(a_result,
-            a_buffers, a_sc_buffers, a_start_beat, a_end_beat, a_sample_count,
-            a_current_sample);
+            a_buffers, a_input_buffers, a_start_beat, a_end_beat,
+            a_sample_count, a_current_sample);
     }
     else
     {
