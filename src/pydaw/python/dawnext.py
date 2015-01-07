@@ -155,8 +155,6 @@ class region_settings:
         if CURRENT_REGION:
             self.clear_items()
         CURRENT_REGION = PROJECT.get_region()
-        TRANSPORT.bar_spinbox.setRange(
-            1, CURRENT_REGION.get_length_bars())
         self.enabled = True
         SEQUENCER.open_region()
         global_update_hidden_rows()
@@ -173,12 +171,10 @@ class region_settings:
         SEQUENCER.clear_new()
 
     def on_play(self):
-        self.length_spinbox.setEnabled(False)
-        self.tsig_spinbox.setEnabled(False)
+        pass
 
     def on_stop(self):
-        self.length_spinbox.setEnabled(True)
-        self.tsig_spinbox.setEnabled(True)
+        pass
 
     def set_track_order(self):
         f_result = pydaw_widgets.ordered_table_dialog(
@@ -420,21 +416,10 @@ def global_update_track_comboboxes(a_index=None, a_value=None):
         PROJECT.get_routing_graph(), TRACK_PANEL.get_track_names())
     global_open_mixer()
 
-
-#TODO:  Clean these up...
-BEATS_PER_MINUTE = 128.0
-BEATS_PER_SECOND = BEATS_PER_MINUTE / 60.0
-
-def pydaw_set_bpm(a_bpm):
-    global BEATS_PER_MINUTE, BEATS_PER_SECOND, BARS_PER_SECOND
-    BEATS_PER_MINUTE = a_bpm
-    BEATS_PER_SECOND = a_bpm / 60.0
-    BARS_PER_SECOND = BEATS_PER_SECOND * 0.25
-    pydaw_widgets.set_global_tempo(a_bpm)
-
 def pydaw_seconds_to_beats(a_seconds):
     '''converts seconds to regions'''
-    return a_seconds * BEATS_PER_SECOND
+    return a_seconds * (CURRENT_REGION.get_tempo_at_pos(
+        CURRENT_ITEM_REF.start_beat) / 60.0)
 
 class SequencerItem(QtGui.QGraphicsRectItem):
     def __init__(self, a_name, a_audio_item):
@@ -458,7 +443,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 
         f_audio_path, f_notes_path = PROJECT.get_item_path(
             a_audio_item.item_uid, SEQUENCER_PX_PER_BEAT,
-            REGION_EDITOR_TRACK_HEIGHT, BEATS_PER_MINUTE)
+            REGION_EDITOR_TRACK_HEIGHT,
+            CURRENT_REGION.get_tempo_at_pos(a_audio_item.start_beat))
 
         self.audio_path_item = QtGui.QGraphicsPathItem(f_audio_path)
         self.audio_path_item.setBrush(QtCore.Qt.darkGray)
@@ -565,6 +551,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         global_open_items(
             self.name, a_reset_scrollbar=True,
             a_len=self.audio_item.length_beats)
+        global CURRENT_ITEM_REF
+        CURRENT_ITEM_REF = self.audio_item
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
 
     def generic_hoverEnterEvent(self, a_event):
@@ -1135,6 +1123,7 @@ class ItemSequencer(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
 
+        self.playback_pos = 0.0
         self.selected_item_strings = set([])
         self.selected_point_strings = set([])
         self.clipboard = []
@@ -1288,9 +1277,7 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_beat = float(f_pos_x // SEQUENCER_PX_PER_BEAT)
                 f_track = int(f_pos_y // REGION_EDITOR_TRACK_HEIGHT)
                 f_uid = PROJECT.create_empty_item()
-                CURRENT_REGION.add_item_ref_by_uid(
-                    f_track, f_beat, REGION_SETTINGS.tsig_spinbox.value(),
-                    f_uid)
+                CURRENT_REGION.add_item_ref_by_uid(f_track, f_beat, 4, f_uid)
                 TRACK_PANEL.tracks[f_track].check_output()
                 PROJECT.save_region(CURRENT_REGION)
                 REGION_SETTINGS.open_region()
@@ -1554,7 +1541,8 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_beat_frac = (f_x / SEQUENCER_PX_PER_BEAT)
         f_beat_frac = pydaw_clip_min(f_beat_frac, 0.0)
 
-        f_seconds_per_beat = 60.0 / BEATS_PER_MINUTE
+        f_seconds_per_beat = (60.0 /
+            CURRENT_REGION.get_tempo_at_pos(f_beat_frac))
 
         if AUDIO_QUANTIZE:
             f_beat_frac = int(f_beat_frac *
@@ -1595,9 +1583,12 @@ class ItemSequencer(QtGui.QGraphicsView):
         REGION_SETTINGS.open_region()
         self.last_open_dir = os.path.dirname(f_file_name_str)
 
+    def get_beat_value(self):
+        return self.playback_pos
+
     def set_playback_pos(self, a_beat=0.0):
-        f_beat = float(a_beat)
-        f_pos = (f_beat * SEQUENCER_PX_PER_BEAT)
+        self.playback_pos = float(a_beat)
+        f_pos = (self.playback_pos * SEQUENCER_PX_PER_BEAT)
         self.playback_cursor.setPos(f_pos, 0.0)
 
     def set_playback_clipboard(self):
@@ -1631,8 +1622,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         if not libmk.IS_PLAYING and \
         a_event.button() != QtCore.Qt.RightButton:
             f_beat = int(a_event.scenePos().x() / SEQUENCER_PX_PER_BEAT)
-            f_bar = CURRENT_REGION.beat_to_bar(f_beat)
-            TRANSPORT.set_bar_value(f_bar)
+            self.set_playback_pos(f_beat)
 
     def check_line_count(self):
         """ Check that there are not too many vertical
@@ -1668,8 +1658,7 @@ class ItemSequencer(QtGui.QGraphicsView):
     def ruler_time_modify(self):
         def ok_handler():
             f_marker = project.pydaw_tempo_marker(
-                self.ruler_event_pos, f_tempo.value(),
-                f_tsig.value(), f_length.value())
+                self.ruler_event_pos, f_tempo.value(), f_tsig.value())
             CURRENT_REGION.set_marker(f_marker)
             PROJECT.save_region(CURRENT_REGION)
             REGION_SETTINGS.open_region()
@@ -1698,17 +1687,6 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_tsig.setRange(1, 16)
         f_layout.addWidget(QtGui.QLabel(_("Beats per Measure")), 1, 0)
         f_layout.addWidget(f_tsig, 1, 1)
-        f_length = QtGui.QSpinBox()
-        f_length.setRange(1, 320)
-        f_layout.addWidget(QtGui.QLabel(_("Length (Measures)")), 2, 0)
-        f_layout.addWidget(f_length, 2, 1)
-
-        f_action = QtGui.QComboBox()
-        f_action.addItems(
-            ["Replace current", "Append after current",
-            "Insert at current beat"])
-        f_layout.addWidget(QtGui.QLabel(_("Action")), 3, 0)
-        f_layout.addWidget(f_action, 3, 1)
 
         if f_marker:
             f_tempo.setValue(f_marker.tempo)
@@ -1717,7 +1695,6 @@ class ItemSequencer(QtGui.QGraphicsView):
         else:
             f_tempo.setValue(128)
             f_tsig.setValue(4)
-            f_length.setValue(32)
 
         f_ok = QtGui.QPushButton(_("Save"))
         f_ok.pressed.connect(ok_handler)
@@ -1804,7 +1781,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.ruler.mousePressEvent = self.ruler_click_event
         self.ruler.contextMenuEvent = self.rulerContextMenuEvent
         self.scene.addItem(self.ruler)
-        for f_marker in CURRENT_REGION.markers.values():
+        for f_marker in CURRENT_REGION.get_markers():
             if f_marker.type == 1:
                 f_x = f_marker.start_beat * SEQUENCER_PX_PER_BEAT
                 f_start = QtGui.QGraphicsLineItem(
@@ -1853,7 +1830,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_total_height = (REGION_EDITOR_TRACK_COUNT *
             (REGION_EDITOR_TRACK_HEIGHT)) + REGION_EDITOR_HEADER_HEIGHT
 
-        f_bar_count = a_marker.length
+        f_bar_count = int(a_marker.length / a_marker.tsig)
         f_beat_count = a_marker.tsig
         f_x_offset = a_marker.beat * SEQUENCER_PX_PER_BEAT
         i3 = f_x_offset
@@ -6944,6 +6921,7 @@ def global_save_and_reload_items():
 CURRENT_ITEM_NAME = None
 LAST_ITEM_NAME = None
 CURRENT_ITEM = None
+CURRENT_ITEM_REF = None
 LAST_ITEM = None
 CURRENT_ITEM_LEN = 4
 
@@ -7803,10 +7781,7 @@ MREC_EVENTS = []
 class transport_widget(libmk.AbstractTransport):
     def __init__(self):
         self.suppress_osc = True
-        self.start_region = 0
-        self.last_bar = 0
         self.last_open_dir = global_home
-        self.transport = pydaw_transport()
         self.group_box = QtGui.QGroupBox()
         self.group_box.setObjectName("transport_panel")
         self.vlayout = QtGui.QVBoxLayout()
@@ -7820,20 +7795,6 @@ class transport_widget(libmk.AbstractTransport):
         self.hlayout1.addWidget(self.playback_menu_button)
         self.grid_layout1 = QtGui.QGridLayout()
         self.hlayout1.addLayout(self.grid_layout1)
-        self.grid_layout1.addWidget(QtGui.QLabel(_("BPM")), 0, 0)
-        self.tempo_spinbox = QtGui.QSpinBox()
-        self.tempo_spinbox.setKeyboardTracking(False)
-        self.tempo_spinbox.setObjectName("large_spinbox")
-        self.tempo_spinbox.setRange(50, 200)
-        self.tempo_spinbox.valueChanged.connect(self.on_tempo_changed)
-        self.grid_layout1.addWidget(self.tempo_spinbox, 1, 0)
-
-        self.grid_layout1.addWidget(QtGui.QLabel(_("Bar")), 0, 20)
-        self.bar_spinbox = QtGui.QSpinBox()
-        self.bar_spinbox.setObjectName("large_spinbox")
-        self.bar_spinbox.setRange(1, 8)
-        self.bar_spinbox.valueChanged.connect(self.on_bar_changed)
-        self.grid_layout1.addWidget(self.bar_spinbox, 1, 20)
 
         self.playback_menu = QtGui.QMenu(self.playback_menu_button)
         self.playback_menu_button.setMenu(self.playback_menu)
@@ -7859,6 +7820,9 @@ class transport_widget(libmk.AbstractTransport):
         self.grid_layout1.addWidget(self.snap_combobox, 1, 40)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
 
+        self.grid_layout1.addItem(
+            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding), 1, 60)
+
         self.overdub_checkbox = QtGui.QCheckBox(_("Overdub"))
         self.overdub_checkbox.clicked.connect(self.on_overdub_changed)
         self.playback_vlayout.addWidget(self.overdub_checkbox)
@@ -7877,23 +7841,8 @@ class transport_widget(libmk.AbstractTransport):
         PROJECT.IPC.pydaw_panic()
 
     def set_time(self, a_beat):
-        f_seconds_per_beat = 60.0 / float(self.tempo_spinbox.value())
-        f_seconds = f_seconds_per_beat * a_beat
-        f_minutes = int(f_seconds / 60)
-        f_seconds = str(round(f_seconds % 60, 1))
-        f_seconds, f_frac = f_seconds.split('.', 1)
-        f_text = "{}:{}.{}".format(f_minutes, str(f_seconds).zfill(2), f_frac)
+        f_text = CURRENT_REGION.get_time_at_beat(a_beat)
         libmk.TRANSPORT.set_time(f_text)
-
-    def set_bar_value(self, a_val):
-        self.bar_spinbox.setValue(int(a_val) + 1)
-
-    def get_bar_value(self):
-        return self.bar_spinbox.value() - 1
-
-    def get_beat_value(self):
-        return (self.bar_spinbox.value()
-            - 1)* REGION_SETTINGS.tsig_spinbox.value()
 
     def set_pos_from_cursor(self, a_beat):
         if libmk.IS_PLAYING or libmk.IS_RECORDING:
@@ -7903,18 +7852,13 @@ class transport_widget(libmk.AbstractTransport):
     def init_playback_cursor(self, a_start=True):
         if a_start:
             SEQUENCER.scene.clearSelection()
-        SEQUENCER.set_playback_pos(self.get_beat_value())
+        SEQUENCER.set_playback_pos(SEQUENCER.get_beat_value())
 
     def on_play(self):
-        if libmk.IS_PLAYING:
-            self.set_bar_value(self.last_bar)
-
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
-        self.bar_spinbox.setEnabled(False)
         self.init_playback_cursor()
-        self.last_bar = self.get_bar_value()
-        PROJECT.IPC.pydaw_en_playback(1, self.get_beat_value())
+        PROJECT.IPC.pydaw_en_playback(1, SEQUENCER.get_beat_value())
         return True
 
     def on_stop(self):
@@ -7922,7 +7866,6 @@ class transport_widget(libmk.AbstractTransport):
         REGION_SETTINGS.on_stop()
         AUDIO_SEQ_WIDGET.on_stop()
 
-        self.bar_spinbox.setEnabled(True)
         self.overdub_checkbox.setEnabled(True)
 
         if libmk.IS_RECORDING:
@@ -7931,11 +7874,10 @@ class transport_widget(libmk.AbstractTransport):
             REGION_SETTINGS.enabled:
                 REGION_SETTINGS.open_region()
         self.init_playback_cursor(a_start=False)
-        self.set_bar_value(self.last_bar)
         #REGION_SETTINGS.open_region(f_song_table_item_str)
-        SEQUENCER.stop_playback(self.get_beat_value())
+        SEQUENCER.stop_playback(SEQUENCER.get_beat_value())
         time.sleep(0.1)
-        self.set_time(self.get_beat_value())
+        self.set_time(SEQUENCER.get_beat_value())
 
     def show_save_items_dialog(self):
         def ok_handler():
@@ -7989,25 +7931,12 @@ class transport_widget(libmk.AbstractTransport):
             return False
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
-        self.bar_spinbox.setEnabled(False)
         self.overdub_checkbox.setEnabled(False)
         global MREC_EVENTS
         MREC_EVENTS = []
         self.init_playback_cursor()
-        self.last_bar = self.get_bar_value()
-        PROJECT.IPC.pydaw_en_playback(
-            2, self.get_beat_value())
+        PROJECT.IPC.pydaw_en_playback(2, SEQUENCER.get_beat_value())
         return True
-
-    def on_tempo_changed(self, a_tempo):
-        self.transport.bpm = a_tempo
-        pydaw_set_bpm(a_tempo)
-        if CURRENT_REGION is not None:
-            global_open_audio_items()
-        if not self.suppress_osc:
-            PROJECT.IPC.pydaw_set_tempo(a_tempo)
-            PROJECT.save_transport(self.transport)
-            PROJECT.commit(_("Set project tempo to {}").format(a_tempo))
 
     def on_loop_mode_changed(self, a_loop_mode):
         if not self.suppress_osc:
@@ -8018,23 +7947,6 @@ class transport_widget(libmk.AbstractTransport):
         if f_index >= self.loop_mode_combobox.count():
             f_index = 0
         self.loop_mode_combobox.setCurrentIndex(f_index)
-
-    def on_bar_changed(self, a_bar):
-        if not self.suppress_osc and \
-        not libmk.IS_PLAYING and \
-        not libmk.IS_RECORDING:
-            f_beat = self.get_beat_value()
-            for f_editor in (SEQUENCER,):
-                f_editor.set_playback_pos(f_beat)
-            PROJECT.IPC.pydaw_set_pos(f_beat)
-            self.set_time(f_beat)
-
-    def open_transport(self, a_notify_osc=False):
-        if not a_notify_osc:
-            self.suppress_osc = True
-        self.transport = PROJECT.get_transport()
-        self.tempo_spinbox.setValue(int(self.transport.bpm))
-        self.suppress_osc = False
 
     def on_overdub_changed(self, a_val=None):
         PROJECT.IPC.pydaw_set_overdub_mode(
@@ -8068,7 +7980,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.last_offline_dir = global_home
         self.copy_to_clipboard_checked = True
         self.last_midi_dir = None
-        self.last_bar = 0
 
         self.setObjectName("plugin_ui")
         self.widget = QtGui.QWidget()
@@ -8450,7 +8361,6 @@ def global_ui_refresh_callback(a_restore_all=False):
     """
     TRACK_PANEL.open_tracks()
     REGION_SETTINGS.open_region()
-    TRANSPORT.open_transport()
     MAIN_WINDOW.tab_changed()
     PROJECT.IPC.pydaw_open_song(
         PROJECT.project_folder, a_restore_all)
@@ -8462,7 +8372,6 @@ def global_open_project(a_project_file):
     PROJECT.suppress_updates = True
     PROJECT.open_project(a_project_file, False)
     TRACK_PANEL.open_tracks()
-    TRANSPORT.open_transport()
     PROJECT.suppress_updates = False
     f_scale = PROJECT.get_midi_scale()
     if f_scale is not None:
@@ -8481,8 +8390,6 @@ def global_new_project(a_project_file):
     global PROJECT
     PROJECT = DawNextProject(global_pydaw_with_audio)
     PROJECT.new_project(a_project_file)
-    PROJECT.save_transport(TRANSPORT.transport)
-    TRANSPORT.open_transport()
     global_update_track_comboboxes()
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     MAIN_WINDOW.notes_tab.setText("")

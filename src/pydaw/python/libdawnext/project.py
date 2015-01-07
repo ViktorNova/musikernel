@@ -803,16 +803,15 @@ class pydaw_sequencer_marker(pydaw_abstract_marker):
         return pydaw_sequencer_marker(*a_str.split("|", 1))
 
 class pydaw_tempo_marker(pydaw_abstract_marker):
-    def __init__(self, a_beat, a_tempo, a_tsig, a_length):
+    def __init__(self, a_beat, a_tempo, a_tsig):
         self.type = 2
         self.beat = int(a_beat)
         self.tempo = round(float(a_tempo), 1)
         self.tsig = int(a_tsig)
-        self.length = int(a_length)
 
     def __str__(self):
         return "|".join(str(x) for x in
-            ("E", self.type, self.beat, self.tempo, self.tsig, self.length))
+            ("E", self.type, self.beat, self.tempo, self.tsig))
 
     @staticmethod
     def from_str(self, a_str):
@@ -837,15 +836,10 @@ class pydaw_sequencer:
         self.items = []
         self.markers = {}
         self.loop_marker = None
-        self.set_marker(pydaw_tempo_marker(0, 128.0, 4, 32))
+        self.set_marker(pydaw_tempo_marker(0, 128.0, 4))
 
     def set_marker(self, a_marker):
         self.markers[(a_marker.beat, a_marker.type)] = a_marker
-
-    def fix_tsig_lengths(self):
-        f_tempo_markers = self.get_tempo_markers()
-        for f_t1, f_t2 in zip(f_tempo_markers, f_tempo_markers[1:]):
-            f_t1.length = (f_t2.beat - f_t1.beat) / f_t1.tsig
 
     def delete_marker(self, a_marker):
         f_tuple = (a_marker.beat, a_marker.type)
@@ -859,6 +853,14 @@ class pydaw_sequencer:
         assert(len(f_result) <= 1)
         return f_result[0] if f_result else None
 
+    def get_markers(self):
+        f_tempo_markers = self.get_tempo_markers()
+        for f_t1, f_t2 in zip(f_tempo_markers, f_tempo_markers[1:]):
+            f_t1.length = f_t2.beat - f_t1.beat
+        f_tempo_markers[-1].length = \
+            self.get_length() - f_tempo_markers[-1].beat
+        return sorted(self.markers.values())
+
     def set_loop_marker(self, a_marker=None):
         if a_marker:
             self.set_marker(a_marker)
@@ -869,19 +871,31 @@ class pydaw_sequencer:
     def get_tempo_markers(self):
         return sorted(x for x in self.markers.values() if x.type == 2)
 
-    def beat_to_bar(self, a_beat):
+    def get_tempo_at_pos(self, a_beat):
         f_tempo_markers = self.get_tempo_markers()
-        f_bar_count = 0
+        for f_t1, f_t2 in zip(f_tempo_markers, f_tempo_markers[1:]):
+            if a_beat < f_t2.beat and a_beat > f_t1.beat:
+                return f_t1.tempo
+        return f_tempo_markers[-1].tempo
 
-        for f_marker in f_tempo_markers:
-            f_length_beats = (f_marker.tsig * f_marker.length)
-            if a_beat >= f_marker.start and \
-            a_beat < (f_marker.start + f_length_beats):
-                return f_bar_count + int(
-                    a_beat / f_length_beats / f_marker.tsig)
+    def get_time_at_beat(self, a_beat):
+        f_time = 0.0
+        f_found = False
+        f_tempo_markers = self.get_tempo_markers()
+        for f_t1, f_t2 in zip(f_tempo_markers, f_tempo_markers[1:]):
+            if a_beat < f_t2.beat and a_beat > f_t1.beat:
+                f_time += (a_beat - f_t1.beat) * (60.0 / f_t1.tempo)
+                f_found = True
+                break
             else:
-                f_bar_count += f_marker.length
-        assert(False)
+                f_time += (f_t2.beat - f_t1.beat) * (60.0 / f_t1.tempo)
+        if not f_found:
+            f_t1 = f_tempo_markers[-1]
+            f_time += (a_beat - f_t1.beat) * (60.0 / f_t1.tempo)
+        f_minutes = int(f_time / 60)
+        f_seconds = str(round(f_time % 60, 1))
+        f_seconds, f_frac = f_seconds.split('.', 1)
+        return "{}:{}.{}".format(f_minutes, str(f_seconds).zfill(2), f_frac)
 
     def reorder(self, a_dict):
         for f_item in self.items:
@@ -911,14 +925,11 @@ class pydaw_sequencer:
                 self.items.remove(f_item)
 
     def get_length(self):
-        f_max = max(x for x in self.markers.values() if x.type == 2)
-        return f_max.beat + (f_max.length * f_max.tsig)
-
-    def get_length_bars(self):
-        f_result = 0
-        for f_marker in (x for x in self.markers.values() if x.type == 2):
-            f_result += f_marker.length
-        return f_result
+        f_item_max = max(x.start_beat + x.length_beats
+            for x in self.items) if self.items else 0
+        f_marker_max = max(
+            x.beat for x in self.markers.values()) if self.markers else 0
+        return max((f_item_max, f_marker_max)) + 64
 
     def fix_overlaps(self):
         f_to_delete = []
