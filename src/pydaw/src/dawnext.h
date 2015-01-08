@@ -1345,69 +1345,95 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
 }
 
 
-inline void v_dn_run_engine(int sample_count,
-        float **output, float *a_input_buffers)
+inline void v_dn_run_engine(int a_sample_count,
+        float **a_output, float *a_input_buffers)
 {
     t_dawnext * self = dawnext;
-    //notify the worker threads to wake up
-    register int f_i = 1;
-    while(f_i < musikernel->worker_thread_count)
+    t_mk_seq_event_period * f_seq_period;
+    int f_period, sample_count;
+    float * output[2];
+
+    v_mk_seq_event_list_set(&self->en_song->regions[0]->events,
+        &self->seq_event_result, a_output, a_input_buffers,
+        PYDAW_AUDIO_INPUT_TRACK_COUNT, self->ts[0].ml_current_beat,
+        self->ts[0].ml_next_beat, a_sample_count, self->ts[0].current_sample);
+
+    for(f_period = 0; f_period < self->seq_event_result.count; ++f_period)
     {
-        pthread_spin_lock(&musikernel->thread_locks[f_i]);
-        pthread_mutex_lock(&musikernel->track_block_mutexes[f_i]);
-        pthread_cond_broadcast(&musikernel->track_cond[f_i]);
-        pthread_mutex_unlock(&musikernel->track_block_mutexes[f_i]);
-        ++f_i;
+        f_seq_period = &self->seq_event_result.sample_periods[f_period];
+
+        if(f_seq_period->event)
+        {
+            if(f_seq_period->event->type == SEQ_EVENT_LOOP)
+            {
+                v_dn_set_playback_cursor(
+                    self, f_seq_period->event->start_beat);
+            }
+            else if(f_seq_period->event->type == SEQ_EVENT_TEMPO_CHANGE)
+            {
+                v_dn_set_tempo(self, f_seq_period->event->tempo);
+            }
+        }
+
+        sample_count = f_seq_period->period.sample_counts;
+        output[0] = f_seq_period->period.buffers[0];
+        output[1] = f_seq_period->period.buffers[1];
+        //notify the worker threads to wake up
+        register int f_i = 1;
+        while(f_i < musikernel->worker_thread_count)
+        {
+            pthread_spin_lock(&musikernel->thread_locks[f_i]);
+            pthread_mutex_lock(&musikernel->track_block_mutexes[f_i]);
+            pthread_cond_broadcast(&musikernel->track_cond[f_i]);
+            pthread_mutex_unlock(&musikernel->track_block_mutexes[f_i]);
+            ++f_i;
+        }
+
+        long f_next_current_sample =
+            dawnext->ts[0].current_sample + sample_count;
+
+        musikernel->sample_count = sample_count;
+        self->ts[0].f_next_current_sample = f_next_current_sample;
+
+        if((musikernel->playback_mode) > 0)
+        {
+            v_dn_set_time_params(self, sample_count);
+        }
+
+        for(f_i = 0; f_i < DN_TRACK_COUNT; ++f_i)
+        {
+            self->track_pool[f_i]->status = STATUS_NOT_PROCESSED;
+            self->track_pool[f_i]->bus_counter =
+                self->routing_graph->bus_count[f_i];
+        }
+
+        //unleash the hounds
+        for(f_i = 1; f_i < musikernel->worker_thread_count; ++f_i)
+        {
+            pthread_spin_unlock(&musikernel->thread_locks[f_i]);
+        }
+
+        v_dn_process((t_pydaw_thread_args*)musikernel->main_thread_args);
+
+        t_pytrack * f_master_track = self->track_pool[0];
+        float ** f_master_buff = f_master_track->buffers;
+
+        //wait for the other threads to finish
+        v_wait_for_threads();
+
+        v_dn_process_track(self, 0, 0, sample_count,
+            musikernel->playback_mode, &self->ts[0]);
+
+        for(f_i = 0; f_i < sample_count; ++f_i)
+        {
+            output[0][f_i] = f_master_buff[0][f_i];
+            output[1][f_i] = f_master_buff[1][f_i];
+        }
+
+        v_pydaw_zero_buffer(f_master_buff, sample_count);
+
+        dawnext->ts[0].current_sample = f_next_current_sample;
     }
-
-    long f_next_current_sample = dawnext->ts[0].current_sample + sample_count;
-
-    musikernel->sample_count = sample_count;
-    self->ts[0].f_next_current_sample = f_next_current_sample;
-
-    if((musikernel->playback_mode) > 0)
-    {
-        v_dn_set_time_params(self, sample_count);
-
-        v_mk_seq_event_list_set(&self->en_song->regions[0]->events,
-            &self->seq_event_result, output, a_input_buffers,
-            PYDAW_AUDIO_INPUT_TRACK_COUNT, self->ts[0].ml_current_beat,
-            self->ts[0].ml_next_beat, sample_count, self->ts[0].current_sample);
-    }
-
-    for(f_i = 0; f_i < DN_TRACK_COUNT; ++f_i)
-    {
-        self->track_pool[f_i]->status = STATUS_NOT_PROCESSED;
-        self->track_pool[f_i]->bus_counter =
-            self->routing_graph->bus_count[f_i];
-    }
-
-    //unleash the hounds
-    for(f_i = 1; f_i < musikernel->worker_thread_count; ++f_i)
-    {
-        pthread_spin_unlock(&musikernel->thread_locks[f_i]);
-    }
-
-    v_dn_process((t_pydaw_thread_args*)musikernel->main_thread_args);
-
-    t_pytrack * f_master_track = self->track_pool[0];
-    float ** f_master_buff = f_master_track->buffers;
-
-    //wait for the other threads to finish
-    v_wait_for_threads();
-
-    v_dn_process_track(self, 0, 0, sample_count,
-        musikernel->playback_mode, &self->ts[0]);
-
-    for(f_i = 0; f_i < sample_count; ++f_i)
-    {
-        output[0][f_i] = f_master_buff[0][f_i];
-        output[1][f_i] = f_master_buff[1][f_i];
-    }
-
-    v_pydaw_zero_buffer(f_master_buff, sample_count);
-
-    dawnext->ts[0].current_sample = f_next_current_sample;
 }
 
 
