@@ -43,9 +43,6 @@ class DawNextOsc(libmk.AbstractIPC):
     def pydaw_set_loop_mode(self, a_mode):
         self.send_configure("loop", str(a_mode))
 
-    def pydaw_set_tempo(self, a_tempo):
-        self.send_configure("tempo", str(a_tempo))
-
     def pydaw_set_solo(self, a_track_num, a_bool):
         self.send_configure(
             "solo", "|".join(str(x) for x in

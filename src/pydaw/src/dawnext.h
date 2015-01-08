@@ -22,7 +22,6 @@ GNU General Public License for more details.
 #define DN_CONFIGURE_KEY_SAVE_ATM "sa"
 #define DN_CONFIGURE_KEY_DN_PLAYBACK "enp"
 #define DN_CONFIGURE_KEY_LOOP "loop"
-#define DN_CONFIGURE_KEY_TEMPO "tempo"
 #define DN_CONFIGURE_KEY_SOLO "solo"
 #define DN_CONFIGURE_KEY_MUTE "mute"
 #define DN_CONFIGURE_KEY_SET_OVERDUB_MODE "od"
@@ -208,7 +207,6 @@ void g_dn_item_get(t_dawnext*, int);
 
 t_dawnext * g_dawnext_get();
 int i_dn_get_region_index_from_name(t_dawnext *, int);
-void v_dn_set_tempo(t_dawnext*,float);
 void v_dn_set_is_soloed(t_dawnext * self);
 void v_dn_set_loop_mode(t_dawnext * self, int a_mode);
 void v_dn_set_playback_cursor(t_dawnext*, double);
@@ -821,9 +819,9 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
             if(f_item_ref[f_i])
             {
                 v_dn_process_midi(self, f_item_ref[f_i], a_global_track_num,
-                    f_track->splitter.periods[f_i].sample_counts,
+                    f_track->splitter.periods[f_i].sample_count,
                     a_playback_mode,
-                    f_track->splitter.periods[f_i].current_samples, a_ts);
+                    f_track->splitter.periods[f_i].current_sample, a_ts);
             }
         }
     }
@@ -1340,17 +1338,16 @@ inline void v_dn_run_engine(int a_sample_count,
     int f_period, sample_count;
     float * output[2];
 
-    v_dn_set_time_params(self, a_sample_count);
-
     v_mk_seq_event_list_set(&self->en_song->regions[0]->events,
         &self->seq_event_result, a_output, a_input_buffers,
-        PYDAW_AUDIO_INPUT_TRACK_COUNT, self->ts[0].ml_current_beat,
-        self->ts[0].ml_next_beat, a_sample_count, self->ts[0].current_sample);
+        PYDAW_AUDIO_INPUT_TRACK_COUNT,
+        a_sample_count, self->ts[0].current_sample);
 
     for(f_period = 0; f_period < self->seq_event_result.count; ++f_period)
     {
         f_seq_period = &self->seq_event_result.sample_periods[f_period];
 
+        /*
         if(f_seq_period->event)
         {
             if(f_seq_period->event->type == SEQ_EVENT_LOOP && self->loop_mode)
@@ -1363,8 +1360,9 @@ inline void v_dn_run_engine(int a_sample_count,
                 v_dn_set_tempo(self, f_seq_period->event->tempo);
             }
         }
+        */
 
-        sample_count = f_seq_period->period.sample_counts;
+        sample_count = f_seq_period->period.sample_count;
         output[0] = f_seq_period->period.buffers[0];
         output[1] = f_seq_period->period.buffers[1];
         //notify the worker threads to wake up
@@ -1387,10 +1385,9 @@ inline void v_dn_run_engine(int a_sample_count,
         if((musikernel->playback_mode) > 0)
         {
             self->ts[0].ml_sample_period_inc_beats =
-                f_seq_period->period.beat_ends -
-                f_seq_period->period.beat_starts;
-            self->ts[0].ml_current_beat = f_seq_period->period.beat_starts;
-            self->ts[0].ml_next_beat = f_seq_period->period.beat_ends;
+                f_seq_period->period.period_inc_beats;
+            self->ts[0].ml_current_beat = f_seq_period->period.start_beat;
+            self->ts[0].ml_next_beat = f_seq_period->period.end_beat;
         }
 
         for(f_i = 0; f_i < DN_TRACK_COUNT; ++f_i)
@@ -1862,23 +1859,6 @@ void v_dn_open_project(int a_first_load)
         //Loads empty...  TODO:  Make this a separate function for getting an
         //empty en_song or loading a file into one...
         g_dn_song_get(dawnext, 0);
-    }
-
-    if(i_pydaw_file_exists(f_transport_file))
-    {
-        t_2d_char_array * f_2d_array = g_get_2d_array_from_file(
-                f_transport_file, PYDAW_LARGE_STRING);
-        v_iterate_2d_char_array(f_2d_array);
-        float f_tempo = atof(f_2d_array->current_str);
-
-        assert(f_tempo > 30.0f && f_tempo < 300.0f);
-        v_dn_set_tempo(dawnext, f_tempo);
-        g_free_2d_char_array(f_2d_array);
-    }
-    else  //No transport file, set default tempo
-    {
-        printf("No transport file found, defaulting to 128.0 BPM\n");
-        v_dn_set_tempo(dawnext, 128.0f);
     }
 
     v_dn_update_track_send(dawnext, 0);
@@ -2499,6 +2479,8 @@ void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
     self->ts[0].ml_current_beat = a_beat;
     self->ts[0].ml_next_beat = a_beat;
     t_dn_region * f_region = self->en_song->regions[0];
+    f_region->events.period.start_beat = a_beat;
+    f_region->events.period.end_beat = a_beat;
 
     register int f_i;
 
@@ -2542,14 +2524,6 @@ void v_dn_set_is_soloed(t_dawnext * self)
 void v_dn_set_loop_mode(t_dawnext * self, int a_mode)
 {
     self->loop_mode = a_mode;
-}
-
-void v_dn_set_tempo(t_dawnext * self, float a_tempo)
-{
-    float f_sample_rate = musikernel->thread_storage[0].sample_rate;
-    self->ts[0].tempo = a_tempo;
-    self->playback_inc = (1.0f / f_sample_rate) / (60.0f / a_tempo);
-    self->samples_per_beat = (f_sample_rate) / (a_tempo / 60.0f);
 }
 
 void v_dn_offline_render_prep(t_dawnext * self)
@@ -3030,14 +3004,6 @@ void v_dn_configure(const char* a_key, const char* a_value)
         t_key_value_pair * f_kvp = g_kvp_get(a_value);
         int f_first_open = atoi(f_kvp->key);
         v_dn_open_project(f_first_open);
-    }
-    else if(!strcmp(a_key, DN_CONFIGURE_KEY_TEMPO)) //Change tempo
-    {
-        pthread_spin_lock(&musikernel->main_lock);
-        v_dn_set_tempo(self, atof(a_value));
-        pthread_spin_unlock(&musikernel->main_lock);
-        //To reload audio items when tempo changed
-        //g_dn_song_get(self);
     }
     else if(!strcmp(a_key, DN_CONFIGURE_KEY_SOLO)) //Set track solo
     {
