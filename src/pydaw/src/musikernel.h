@@ -323,6 +323,9 @@ void v_sample_period_split(
             self->count = 1;
             self->periods[0].sample_counts = a_sample_count;
 
+            self->periods[0].beat_starts = a_period_start_beat;
+            self->periods[0].beat_ends = a_period_end_beat;
+
             self->periods[0].buffers[0] = a_buffers[0];
             self->periods[0].buffers[1] = a_buffers[1];
 
@@ -343,9 +346,15 @@ void v_sample_period_split(
             self->count = 2;
 
             double f_diff = (a_period_end_beat - a_period_start_beat);
-            double f_distance = a_event2_beat - a_period_start_beat;
+            double f_distance = a_event1_beat - a_period_start_beat;
             int f_split =
                 (int)((f_distance / f_diff) * ((double)(a_sample_count)));
+
+            self->periods[0].beat_starts = a_period_start_beat;
+            self->periods[0].beat_ends = a_event1_beat;
+
+            self->periods[1].beat_starts = a_event1_beat;
+            self->periods[1].beat_ends = a_period_end_beat;
 
             self->periods[0].sample_counts = f_split;
             self->periods[1].sample_counts = a_sample_count - f_split;
@@ -390,6 +399,15 @@ void v_sample_period_split(
             double f_distance = a_event1_beat - a_period_start_beat;
             int f_split =
                 (int)((f_distance / f_diff) * ((double)(a_sample_count)));
+
+            self->periods[0].beat_starts = a_period_start_beat;
+            self->periods[0].beat_ends = a_event1_beat;
+
+            self->periods[1].beat_starts = a_event1_beat;
+            self->periods[1].beat_ends = a_event2_beat;
+
+            self->periods[2].beat_starts = a_event2_beat;
+            self->periods[2].beat_ends = a_period_end_beat;
 
             self->periods[0].sample_counts = f_split;
             self->periods[1].current_samples = a_current_sample + (long)f_split;

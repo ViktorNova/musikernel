@@ -166,10 +166,8 @@ typedef struct
     t_dn_song * en_song;
     t_pytrack * track_pool[DN_TRACK_COUNT];
     t_dn_routing_graph * routing_graph;
-    int loop_mode;  //0 == Off, 1 == Bar, 2 == Region
-    int ml_is_looping;
-    double loop_start;
-    double loop_end;
+
+    int loop_mode;  //0 == Off, 1 == On
     int overdub_mode;  //0 == Off, 1 == On
 
     /*the increment per-period to iterate through 1 bar,
@@ -1331,17 +1329,6 @@ inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
         self->ts[0].ml_next_beat;
     self->ts[0].ml_next_beat = self->ts[0].ml_current_beat +
         self->ts[0].ml_sample_period_inc_beats;
-
-    if(self->loop_mode &&
-    self->loop_end >= self->ts[0].ml_current_beat &&
-    self->loop_end <= self->ts[0].ml_next_beat)
-    {
-        self->ml_is_looping = 1;
-    }
-    else
-    {
-        self->ml_is_looping = 0;
-    }
 }
 
 
@@ -1352,6 +1339,8 @@ inline void v_dn_run_engine(int a_sample_count,
     t_mk_seq_event_period * f_seq_period;
     int f_period, sample_count;
     float * output[2];
+
+    v_dn_set_time_params(self, a_sample_count);
 
     v_mk_seq_event_list_set(&self->en_song->regions[0]->events,
         &self->seq_event_result, a_output, a_input_buffers,
@@ -1364,7 +1353,7 @@ inline void v_dn_run_engine(int a_sample_count,
 
         if(f_seq_period->event)
         {
-            if(f_seq_period->event->type == SEQ_EVENT_LOOP)
+            if(f_seq_period->event->type == SEQ_EVENT_LOOP && self->loop_mode)
             {
                 v_dn_set_playback_cursor(
                     self, f_seq_period->event->start_beat);
@@ -1397,7 +1386,11 @@ inline void v_dn_run_engine(int a_sample_count,
 
         if((musikernel->playback_mode) > 0)
         {
-            v_dn_set_time_params(self, sample_count);
+            self->ts[0].ml_sample_period_inc_beats =
+                f_seq_period->period.beat_ends -
+                f_seq_period->period.beat_starts;
+            self->ts[0].ml_current_beat = f_seq_period->period.beat_starts;
+            self->ts[0].ml_next_beat = f_seq_period->period.beat_ends;
         }
 
         for(f_i = 0; f_i < DN_TRACK_COUNT; ++f_i)
@@ -2331,8 +2324,6 @@ t_dawnext * g_dawnext_get()
 
     f_result->overdub_mode = 0;
     f_result->loop_mode = 0;
-    f_result->loop_start = 0.0d;
-    f_result->loop_end = -16.0d;
 
     f_result->project_folder = (char*)malloc(sizeof(char) * 1024);
     f_result->seq_event_file = (char*)malloc(sizeof(char) * 1024);
@@ -2348,8 +2339,6 @@ t_dawnext * g_dawnext_get()
     f_result->ts[0].ml_sample_period_inc_beats = 0.0f;
     f_result->ts[0].ml_current_beat = 0.0f;
     f_result->ts[0].ml_next_beat = 0.0f;
-
-    f_result->ml_is_looping = 0;
 
     f_result->routing_graph = NULL;
 
@@ -2527,7 +2516,7 @@ void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
 
     f_i = 0;
 
-    while(f_i < MAX_PLUGIN_TOTAL_COUNT)
+    while(f_i < MAX_PLUGIN_POOL_COUNT)
     {
         musikernel->plugin_pool[f_i].atm_pos = 0;
         ++f_i;
