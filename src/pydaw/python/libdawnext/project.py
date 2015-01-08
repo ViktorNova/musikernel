@@ -48,7 +48,6 @@ pydaw_file_routing_graph = os.path.join(pydaw_folder_dawnext, "routing.txt")
 pydaw_file_midi_routing = os.path.join(
     pydaw_folder_dawnext, "midi_routing.txt")
 pydaw_file_pyitems = os.path.join(pydaw_folder_dawnext, "items.txt")
-pydaw_file_pytransport = os.path.join(pydaw_folder_dawnext, "transport.txt")
 pydaw_file_pytracks = os.path.join(pydaw_folder_dawnext, "tracks.txt")
 pydaw_file_notes = os.path.join(pydaw_folder_dawnext, "notes.txt")
 
@@ -169,7 +168,6 @@ class DawNextProject(libmk.AbstractProject):
 
         self.save_file("", FILE_SEQUENCER, str(pydaw_sequencer()))
         self.create_file("", pydaw_file_pyitems, pydaw_terminating_char)
-        self.create_file("", pydaw_file_pytransport, str(pydaw_transport()))
         f_tracks = pydaw_tracks()
         for i in range(TRACK_COUNT_ALL):
             f_tracks.add_track(i, pydaw_track(
@@ -593,26 +591,6 @@ class DawNextProject(libmk.AbstractProject):
             return libmk.pydaw_track_plugins.from_str(f_str)
         else:
             return None
-
-    def get_transport(self):
-        try:
-            f_file = open(
-                "{}/{}".format(self.project_folder, pydaw_file_pytransport))
-        except:
-            return pydaw_transport()  #defaults
-        f_str = f_file.read()
-        f_file.close()
-        f_result = pydaw_transport.from_str(f_str)
-        f_file_name = "{}/default.pymididevice".format(self.project_folder)
-        if os.path.isfile(f_file_name):
-            f_file = open(f_file_name)
-            f_result.midi_keybd = f_file.read()
-            f_file.close()
-        return f_result
-
-    def save_transport(self, a_transport):
-        if not self.suppress_updates:
-            self.save_file("", pydaw_file_pytransport, str(a_transport))
 
     def create_empty_item(self, a_item_name="item"):
         f_items_dict = self.get_items_dict()
@@ -1908,20 +1886,6 @@ class pydaw_midi_routings:
                 break
             f_routings.append(pydaw_midi_route(*f_line.split("|", 2)))
         return pydaw_midi_routings(f_routings)
-
-
-class pydaw_transport:
-    def __init__(self, a_bpm=128):
-        self.bpm = a_bpm
-
-    def __str__(self):
-        return "{}\n\\".format(self.bpm)
-
-    @staticmethod
-    def from_str(a_str):
-        f_str = a_str.split("\n")[0]
-        f_arr = f_str.split("|")
-        return pydaw_transport(f_arr[0])
 
 
 class pydaw_midicomp_event:

@@ -38,7 +38,6 @@ GNU General Public License for more details.
 #define DN_LOOP_MODE_REGION 1
 
 #define DN_MAX_ITEM_COUNT 5000
-#define DN_MAX_REGION_COUNT 300
 #define DN_MAX_EVENTS_PER_ITEM_COUNT 1024
 
 #define DN_TRACK_COUNT 32
@@ -106,7 +105,6 @@ typedef struct
 {
     t_dn_track_seq tracks[DN_TRACK_COUNT];
     t_mk_seq_event_list events;
-    int uid;
 }t_dn_region;
 
 typedef struct
@@ -132,7 +130,7 @@ typedef struct
 
 typedef struct
 {
-    t_dn_region * regions[DN_MAX_REGION_COUNT];
+    t_dn_region * regions;
     t_dn_atm_region * regions_atm;
 }t_dn_song;
 
@@ -169,10 +167,7 @@ typedef struct
     int loop_mode;  //0 == Off, 1 == On
     int overdub_mode;  //0 == Off, 1 == On
 
-    /*the increment per-period to iterate through 1 bar,
-     * as determined by sample rate and tempo*/
     float playback_inc;
-    int current_region; //the current region
 
     //The number of samples per beat, for calculating length
     float samples_per_beat;
@@ -200,7 +195,7 @@ typedef struct
 void g_dn_song_get(t_dawnext*, int);
 t_dn_routing_graph * g_dn_routing_graph_get(t_dawnext *);
 void v_dn_routing_graph_free(t_dn_routing_graph*);
-t_dn_region * g_dn_region_get(t_dawnext*, const int);
+t_dn_region * g_dn_region_get(t_dawnext*);
 t_dn_atm_region * g_dn_atm_region_get(t_dawnext*);
 void v_dn_atm_region_free(t_dn_atm_region*);
 void g_dn_item_get(t_dawnext*, int);
@@ -357,15 +352,9 @@ void v_dn_panic(t_dawnext * self)
 
 void v_dn_song_free(t_dn_song * a_dn_song)
 {
-    int f_i = 0;
-    while(f_i < DN_MAX_REGION_COUNT)
+    if(a_dn_song->regions)
     {
-        if(a_dn_song->regions[f_i])
-        {
-            free(a_dn_song->regions[f_i]);
-        }
-
-        ++f_i;
+        free(a_dn_song->regions);
     }
 }
 
@@ -723,7 +712,7 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
     double f_current_beat, f_next_beat;
     t_pytrack * f_track = self->track_pool[a_global_track_num];
     t_dn_track_seq * f_seq =
-        &self->en_song->regions[0]->tracks[a_global_track_num];
+        &self->en_song->regions->tracks[a_global_track_num];
     int f_item_ref_count = 0;
     int f_item_ref_index = 0;
     t_dn_item_ref * f_item_ref[3] = {NULL, NULL, NULL};
@@ -731,6 +720,11 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
 
     while(1)
     {
+        if(!f_seq->refs)
+        {
+            break;
+        }
+
         f_item_ref_index = f_seq->pos + f_item_ref_count;
         if(f_item_ref_index >= f_seq->count ||
         f_seq->refs[f_item_ref_index].start > a_ts->ml_next_beat)
@@ -1338,7 +1332,7 @@ inline void v_dn_run_engine(int a_sample_count,
     int f_period, sample_count;
     float * output[2];
 
-    v_mk_seq_event_list_set(&self->en_song->regions[0]->events,
+    v_mk_seq_event_list_set(&self->en_song->regions->events,
         &self->seq_event_result, a_output, a_input_buffers,
         PYDAW_AUDIO_INPUT_TRACK_COUNT,
         a_sample_count, self->ts[0].current_sample, self->loop_mode);
@@ -1366,6 +1360,17 @@ inline void v_dn_run_engine(int a_sample_count,
 
         musikernel->sample_count = sample_count;
         self->ts[0].f_next_current_sample = f_next_current_sample;
+
+        self->ts[0].current_sample = f_seq_period->period.current_sample;
+        self->ts[0].f_next_current_sample =
+            f_seq_period->period.current_sample +
+            f_seq_period->period.sample_count;
+
+        if(f_seq_period->event &&
+        f_seq_period->event->type == SEQ_EVENT_TEMPO_CHANGE)
+        {
+            self->ts[0].tempo = f_seq_period->event->tempo;
+        }
 
         if((musikernel->playback_mode) > 0)
         {
@@ -1681,16 +1686,9 @@ void g_dn_song_get(t_dawnext* self, int a_lock)
     lmalloc((void**)&f_result, sizeof(t_dn_song));
 
     f_result->regions_atm = NULL;
-    int f_i = 0;
-
-    while(f_i < DN_MAX_REGION_COUNT)
-    {
-        f_result->regions[f_i] = NULL;
-        ++f_i;
-    }
 
     f_result->regions_atm = g_dn_atm_region_get(self);
-    f_result->regions[0] = g_dn_region_get(self, 0);
+    f_result->regions = g_dn_region_get(self);
 
     t_dn_song * f_old = self->en_song;
 
@@ -1810,10 +1808,6 @@ void v_dn_open_project(int a_first_load)
     //struct stat f_song_file_stat;
     //stat(f_song_file, &f_song_file_stat);
 
-    //TODO:  This should be moved to a separate function
-    char f_transport_file[1024];
-    sprintf(f_transport_file, "%s/transport.txt", dawnext->project_folder);
-
     if(S_ISDIR(f_proj_stat.st_mode) &&
         S_ISDIR(f_item_stat.st_mode)
         //&& S_ISDIR(f_reg_stat.st_mode) && S_ISREG(f_song_file_stat.st_mode)
@@ -1851,25 +1845,6 @@ void v_dn_open_project(int a_first_load)
     v_dn_set_is_soloed(dawnext);
 
     v_dn_set_midi_devices();
-}
-
-
-int i_dn_song_index_from_region_uid(t_dawnext* self, int a_uid)
-{
-    int f_i = 0;
-
-    while(f_i < DN_MAX_REGION_COUNT)
-    {
-        if(self->en_song->regions[f_i])
-        {
-            if(a_uid == self->en_song->regions[f_i]->uid)
-            {
-                return f_i;
-            }
-        }
-        ++f_i;
-    }
-    return -1;
 }
 
 t_dn_atm_region * g_dn_atm_region_get(t_dawnext * self)
@@ -1973,15 +1948,13 @@ void v_dn_atm_region_free(t_dn_atm_region * self)
     free(self);
 }
 
-t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
+t_dn_region * g_dn_region_get(t_dawnext* self)
 {
     t_dn_region * f_result;
     int f_item_counters[DN_TRACK_COUNT];
     lmalloc((void**)&f_result, sizeof(t_dn_region));
 
     g_mk_seq_event_list_init(&f_result->events);
-
-    f_result->uid = a_uid;
 
     int f_i = 0;
 
@@ -2284,7 +2257,6 @@ t_dawnext * g_dawnext_get()
     t_dawnext * f_result;
     clalloc((void**)&f_result, sizeof(t_dawnext));
 
-    f_result->current_region = 0;
     f_result->playback_inc = 0.0f;
 
     f_result->overdub_mode = 0;
@@ -2299,11 +2271,14 @@ t_dawnext * g_dawnext_get()
     f_result->en_song = NULL;
     f_result->is_soloed = 0;
     f_result->suppress_new_audio_items = 0;
+    f_result->samples_per_beat = 0;
 
     f_result->ts[0].current_sample = 0;
     f_result->ts[0].ml_sample_period_inc_beats = 0.0f;
     f_result->ts[0].ml_current_beat = 0.0f;
     f_result->ts[0].ml_next_beat = 0.0f;
+    f_result->ts[0].tempo = 128.0f;
+    f_result->ts[0].f_next_current_sample = 0;
 
     f_result->routing_graph = NULL;
 
@@ -2463,7 +2438,7 @@ void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
     //self->current_region = a_region;
     self->ts[0].ml_current_beat = a_beat;
     self->ts[0].ml_next_beat = a_beat;
-    t_dn_region * f_region = self->en_song->regions[0];
+    t_dn_region * f_region = self->en_song->regions;
 
     v_mk_set_playback_pos(&f_region->events, a_beat);
 
@@ -2925,29 +2900,18 @@ void v_dn_configure(const char* a_key, const char* a_value)
         pthread_spin_lock(&musikernel->main_lock);
         pthread_spin_unlock(&musikernel->main_lock);
 
-        int f_uid = atoi(a_value);
-        t_dn_region * f_result = g_dn_region_get(self, f_uid);
-        int f_region_index = i_dn_song_index_from_region_uid(self, f_uid);
+        t_dn_region * f_result = g_dn_region_get(self);
 
-        if(f_region_index >= 0 )
+        t_dn_region * f_old_region = NULL;
+        f_old_region = self->en_song->regions;
+        pthread_spin_lock(&musikernel->main_lock);
+        self->en_song->regions = f_result;
+        pthread_spin_unlock(&musikernel->main_lock);
+        if(f_old_region)
         {
-            t_dn_region * f_old_region = NULL;
-            if(self->en_song->regions[f_region_index])
-            {
-                f_old_region = self->en_song->regions[f_region_index];
-            }
-            pthread_spin_lock(&musikernel->main_lock);
-            self->en_song->regions[f_region_index] = f_result;
-            pthread_spin_unlock(&musikernel->main_lock);
-            if(f_old_region)
-            {
-                free(f_old_region);
-            }
+            free(f_old_region);
         }
-        else
-        {
-            printf("region %i is not in song, not loading...", f_uid);
-        }
+
     }
     else if(!strcmp(a_key, DN_CONFIGURE_KEY_SI)) //Save Item
     {

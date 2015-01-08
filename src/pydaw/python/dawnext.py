@@ -1124,6 +1124,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         QtGui.QGraphicsView.__init__(self)
 
         self.playback_pos = 0.0
+        self.playback_pos_orig = 0.0
         self.selected_item_strings = set([])
         self.selected_point_strings = set([])
         self.clipboard = []
@@ -1588,6 +1589,7 @@ class ItemSequencer(QtGui.QGraphicsView):
 
     def set_playback_pos(self, a_beat=0.0):
         self.playback_pos = float(a_beat)
+        self.playback_pos_orig = self.playback_pos
         f_pos = (self.playback_pos * SEQUENCER_PX_PER_BEAT)
         self.playback_cursor.setPos(f_pos, 0.0)
 
@@ -1597,9 +1599,9 @@ class ItemSequencer(QtGui.QGraphicsView):
             if f_item.isSelected():
                 self.reselect_on_stop.append(str(f_item.audio_item))
 
-    def stop_playback(self, a_beat=0.0):
+    def stop_playback(self):
         self.reset_selection()
-        self.set_playback_pos(a_beat)
+        self.set_playback_pos(self.playback_pos_orig)
 
     def reset_selection(self):
         for f_item in self.audio_items:
@@ -7873,7 +7875,7 @@ class transport_widget(libmk.AbstractTransport):
                 REGION_SETTINGS.open_region()
         self.init_playback_cursor(a_start=False)
         #REGION_SETTINGS.open_region(f_song_table_item_str)
-        SEQUENCER.stop_playback(SEQUENCER.get_beat_value())
+        SEQUENCER.stop_playback()
         time.sleep(0.1)
         self.set_time(SEQUENCER.get_beat_value())
 
