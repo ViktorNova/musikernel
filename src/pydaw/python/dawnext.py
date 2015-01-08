@@ -7851,7 +7851,6 @@ class transport_widget(libmk.AbstractTransport):
     def init_playback_cursor(self, a_start=True):
         if a_start:
             SEQUENCER.scene.clearSelection()
-        SEQUENCER.set_playback_pos(SEQUENCER.get_beat_value())
 
     def on_play(self):
         REGION_SETTINGS.on_play()

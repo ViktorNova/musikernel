@@ -1341,26 +1341,11 @@ inline void v_dn_run_engine(int a_sample_count,
     v_mk_seq_event_list_set(&self->en_song->regions[0]->events,
         &self->seq_event_result, a_output, a_input_buffers,
         PYDAW_AUDIO_INPUT_TRACK_COUNT,
-        a_sample_count, self->ts[0].current_sample);
+        a_sample_count, self->ts[0].current_sample, self->loop_mode);
 
     for(f_period = 0; f_period < self->seq_event_result.count; ++f_period)
     {
         f_seq_period = &self->seq_event_result.sample_periods[f_period];
-
-        /*
-        if(f_seq_period->event)
-        {
-            if(f_seq_period->event->type == SEQ_EVENT_LOOP && self->loop_mode)
-            {
-                v_dn_set_playback_cursor(
-                    self, f_seq_period->event->start_beat);
-            }
-            else if(f_seq_period->event->type == SEQ_EVENT_TEMPO_CHANGE)
-            {
-                v_dn_set_tempo(self, f_seq_period->event->tempo);
-            }
-        }
-        */
 
         sample_count = f_seq_period->period.sample_count;
         output[0] = f_seq_period->period.buffers[0];
@@ -2479,8 +2464,8 @@ void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
     self->ts[0].ml_current_beat = a_beat;
     self->ts[0].ml_next_beat = a_beat;
     t_dn_region * f_region = self->en_song->regions[0];
-    f_region->events.period.start_beat = a_beat;
-    f_region->events.period.end_beat = a_beat;
+
+    v_mk_set_playback_pos(&f_region->events, a_beat);
 
     register int f_i;
 

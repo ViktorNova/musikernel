@@ -1240,11 +1240,8 @@ t_pydaw_seq_event * g_pypitchbend_get(float a_start, float a_value)
     return f_result;
 }
 
-void v_mk_set_time_params(t_sample_period * self,
-        t_mk_seq_event_list * a_list, int a_sample_count)
+void v_mk_set_time_params(t_sample_period * self)
 {
-    self->period_inc_beats =
-        ((a_list->playback_inc) * ((float)(a_sample_count)));
     self->start_beat = self->end_beat;
     self->end_beat = self->start_beat + self->period_inc_beats;
 }
@@ -1256,7 +1253,9 @@ void v_mk_seq_event_result_set_default(t_mk_seq_event_result * self,
 {
     self->count = 1;
     t_sample_period * f_period = &self->sample_periods[0].period;
-    v_mk_set_time_params(f_period, a_list, a_sample_count);
+    f_period->period_inc_beats =
+        ((a_list->playback_inc) * ((float)(a_sample_count)));
+    v_mk_set_time_params(f_period);
     f_period->current_sample = a_current_sample;
     f_period->sample_count = a_sample_count;
     f_period->buffers[0] = a_buffers[0];
@@ -1269,7 +1268,8 @@ void v_set_sample_period(t_sample_period * self,
         float ** a_buffers, float ** a_sc_buffers, float * a_input_buffers,
         int a_sample_count, long a_current_sample)
 {
-    v_mk_set_time_params(self, a_list, a_sample_count);
+    self->period_inc_beats =
+        ((a_list->playback_inc) * ((float)(a_sample_count)));
 
     self->current_sample = a_current_sample;
     self->sample_count = a_sample_count;
@@ -1298,10 +1298,32 @@ void v_mk_set_tempo(t_mk_seq_event_list * self, float a_tempo)
     self->samples_per_beat = (f_sample_rate) / (a_tempo / 60.0f);
 }
 
+void v_mk_set_playback_pos(t_mk_seq_event_list * self, double a_beat)
+{
+    t_mk_seq_event * f_ev;
+    self->period.start_beat = a_beat;
+    self->period.end_beat = a_beat;
+
+    for(self->pos = 0; self->pos < self->count; ++self->pos)
+    {
+         f_ev = &self->events[self->pos];
+         if(f_ev->type == SEQ_EVENT_TEMPO_CHANGE)
+         {
+             v_mk_set_tempo(self, f_ev->tempo);
+         }
+
+         if(f_ev->beat >= a_beat)
+         {
+             break;
+         }
+    }
+}
+
+
 void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
         t_mk_seq_event_result * a_result,
         float ** a_buffers, float * a_input_buffers, int a_input_count,
-        int a_sample_count, long a_current_sample)
+        int a_sample_count, long a_current_sample, int a_loop_mode)
 {
     if(self->pos >= self->count)
     {
@@ -1319,6 +1341,9 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
         v_set_sample_period(&self->period, self,
             a_buffers, NULL, a_input_buffers,
             a_sample_count, a_current_sample);
+
+        v_mk_set_time_params(&self->period);
+
         memcpy(&f_current_period, &self->period, sizeof(t_sample_period));
 
         while(1)
@@ -1338,16 +1363,26 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
 
                 if(self->events[self->pos].beat == f_current_period.start_beat)
                 {
-                    if(f_ev->type == SEQ_EVENT_LOOP)
+                    if(f_ev->type == SEQ_EVENT_LOOP && a_loop_mode)
                     {
                         self->pos = 0;
                         f_current_period.start_beat = f_ev->start_beat;
-                        v_mk_set_time_params(&f_current_period,
-                            self, a_sample_count);
+                        v_set_sample_period(&self->period, self,
+                            a_buffers, NULL, a_input_buffers,
+                            a_sample_count, a_current_sample);
+                        memcpy(&f_current_period, &self->period,
+                            sizeof(t_sample_period));
                     }
                     else if(f_ev->type == SEQ_EVENT_TEMPO_CHANGE)
                     {
                         v_mk_set_tempo(self, f_ev->tempo);
+                        v_set_sample_period(&self->period, self,
+                            a_buffers, NULL, a_input_buffers,
+                            a_sample_count, a_current_sample);
+                        self->period.end_beat = self->period.start_beat +
+                            self->period.period_inc_beats;
+                        memcpy(&f_current_period, &self->period,
+                            sizeof(t_sample_period));
                     }
                 }
 
@@ -1394,14 +1429,15 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
                     assert(0);
                 }
 
-                if(self->events[self->pos].beat != f_current_period.start_beat)
+                if(f_ev->beat != f_current_period.start_beat)
                 {
-                    if(f_ev->type == SEQ_EVENT_LOOP)
+                    if(f_ev->type == SEQ_EVENT_LOOP && a_loop_mode)
                     {
                         self->pos = 0;
                         f_current_period.start_beat = f_ev->start_beat;
-                        v_mk_set_time_params(&f_current_period,
-                            self, a_sample_count);
+                        f_current_period.end_beat = f_ev->start_beat +
+                            self->period.period_inc_beats;
+
                     }
                     else if(f_ev->type == SEQ_EVENT_TEMPO_CHANGE)
                     {
