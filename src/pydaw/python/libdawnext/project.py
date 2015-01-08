@@ -950,7 +950,8 @@ class pydaw_sequencer:
 
     def __str__(self):
         f_result = []
-        f_result.append("M|{}".format(len(self.markers)))
+        f_result.append("M|{}".format(
+            len([x for x in self.markers.values() if x.type in (1, 2)])))
         for k in sorted(self.markers):
             v = self.markers[k]
             f_result.append(str(v))

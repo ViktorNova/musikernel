@@ -94,6 +94,7 @@ typedef struct
     double beat_ends;
     float * buffers[2];
     float * sc_buffers[2];
+    float * input_buffer;
 }t_sample_period;
 
 typedef struct
@@ -279,11 +280,19 @@ void v_pydaw_set_host(int);
 t_musikernel * musikernel = NULL;
 int ZERO = 0;
 
+void g_mk_seq_event_list_init(t_mk_seq_event_list * self)
+{
+    self->count = 0;
+    self->pos = 0;
+    self->events = NULL;
+}
+
 void v_sample_period_split(
         t_sample_period_split* self, float ** a_buffers,
         float ** a_sc_buffers, int a_sample_count,
         double a_period_start_beat, double a_period_end_beat,
-        double a_event1_beat, double a_event2_beat, long a_current_sample)
+        double a_event1_beat, double a_event2_beat, long a_current_sample,
+        float * a_input_buffer, int a_input_count)
 {
     self->periods[0].current_samples = a_current_sample;
 
@@ -294,8 +303,17 @@ void v_sample_period_split(
         self->periods[0].sample_counts = a_sample_count;
         self->periods[0].buffers[0] = a_buffers[0];
         self->periods[0].buffers[1] = a_buffers[1];
-        self->periods[0].sc_buffers[0] = a_sc_buffers[0];
-        self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+
+        if(a_sc_buffers)
+        {
+            self->periods[0].sc_buffers[0] = a_sc_buffers[0];
+            self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+        }
+
+        if(a_input_buffer)
+        {
+            self->periods[0].input_buffer = a_input_buffer;
+        }
     }
     else if(a_event1_beat >= a_period_start_beat &&
             a_event1_beat < a_period_end_beat)
@@ -307,8 +325,17 @@ void v_sample_period_split(
 
             self->periods[0].buffers[0] = a_buffers[0];
             self->periods[0].buffers[1] = a_buffers[1];
-            self->periods[0].sc_buffers[0] = a_sc_buffers[0];
-            self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+
+            if(a_sc_buffers)
+            {
+                self->periods[0].sc_buffers[0] = a_sc_buffers[0];
+                self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+            }
+
+            if(a_input_buffer)
+            {
+                self->periods[0].input_buffer = a_input_buffer;
+            }
         }
         else if(a_event1_beat == a_event2_beat ||
                 a_event2_beat >= a_period_end_beat)
@@ -327,13 +354,32 @@ void v_sample_period_split(
 
             self->periods[0].buffers[0] = a_buffers[0];
             self->periods[0].buffers[1] = a_buffers[1];
-            self->periods[0].sc_buffers[0] = a_sc_buffers[0];
-            self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+
+            if(a_sc_buffers)
+            {
+                self->periods[0].sc_buffers[0] = a_sc_buffers[0];
+                self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+            }
+
+            if(a_input_buffer)
+            {
+                self->periods[0].input_buffer = a_input_buffer;
+            }
 
             self->periods[1].buffers[0] = &a_buffers[0][f_split];
             self->periods[1].buffers[1] = &a_buffers[1][f_split];
-            self->periods[1].sc_buffers[0] = &a_sc_buffers[0][f_split];
-            self->periods[1].sc_buffers[1] = &a_sc_buffers[1][f_split];
+
+            if(a_sc_buffers)
+            {
+                self->periods[1].sc_buffers[0] = &a_sc_buffers[0][f_split];
+                self->periods[1].sc_buffers[1] = &a_sc_buffers[1][f_split];
+            }
+
+            if(a_input_buffer)
+            {
+                self->periods[1].input_buffer =
+                    &a_input_buffer[f_split * a_input_count];
+            }
         }
         else if(a_event2_beat < a_period_end_beat)
         {
@@ -350,8 +396,17 @@ void v_sample_period_split(
 
             self->periods[0].buffers[0] = a_buffers[0];
             self->periods[0].buffers[1] = a_buffers[1];
-            self->periods[0].sc_buffers[0] = a_sc_buffers[0];
-            self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+
+            if(a_sc_buffers)
+            {
+                self->periods[0].sc_buffers[0] = a_sc_buffers[0];
+                self->periods[0].sc_buffers[1] = a_sc_buffers[1];
+            }
+
+            if(a_input_buffer)
+            {
+                self->periods[0].input_buffer = a_input_buffer;
+            }
 
             f_distance = a_event2_beat - a_event1_beat;
             f_split +=
@@ -362,8 +417,18 @@ void v_sample_period_split(
             self->periods[1].sample_counts = f_split;
             self->periods[1].buffers[0] = &a_buffers[0][f_split];
             self->periods[1].buffers[1] = &a_buffers[1][f_split];
-            self->periods[1].sc_buffers[0] = &a_sc_buffers[0][f_split];
-            self->periods[1].sc_buffers[1] = &a_sc_buffers[1][f_split];
+
+            if(a_sc_buffers)
+            {
+                self->periods[1].sc_buffers[0] = &a_sc_buffers[0][f_split];
+                self->periods[1].sc_buffers[1] = &a_sc_buffers[1][f_split];
+            }
+
+            if(a_input_buffer)
+            {
+                self->periods[1].input_buffer =
+                    &a_input_buffer[f_split * a_input_count];
+            }
 
             f_distance = a_period_end_beat - a_event2_beat;
             f_split +=
@@ -373,8 +438,18 @@ void v_sample_period_split(
             self->periods[2].sample_counts = f_split;
             self->periods[2].buffers[0] = &a_buffers[0][f_split];
             self->periods[2].buffers[1] = &a_buffers[1][f_split];
-            self->periods[2].sc_buffers[0] = &a_sc_buffers[0][f_split];
-            self->periods[2].sc_buffers[1] = &a_sc_buffers[1][f_split];
+
+            if(a_sc_buffers)
+            {
+                self->periods[2].sc_buffers[0] = &a_sc_buffers[0][f_split];
+                self->periods[2].sc_buffers[1] = &a_sc_buffers[1][f_split];
+            }
+
+            if(a_input_buffer)
+            {
+                self->periods[2].input_buffer =
+                    &a_input_buffer[f_split * a_input_count];
+            }
         }
         else
         {
@@ -1145,8 +1220,33 @@ void v_mk_seq_event_result_set_default(t_mk_seq_event_result * self,
     f_period->beat_ends = a_end_beat;
     f_period->buffers[0] = a_buffers[0];
     f_period->buffers[1] = a_buffers[1];
-    f_period->sc_buffers[0] = a_sc_buffers[0];
-    f_period->sc_buffers[1] = a_sc_buffers[1];
+    f_period->input_buffer = a_input_buffers;
+}
+
+void v_set_sample_period(t_sample_period * self,
+        float ** a_buffers, float ** a_sc_buffers, float * a_input_buffers,
+        double a_start_beat, double a_end_beat,
+        int a_sample_count, long a_current_sample)
+{
+    self->current_samples = a_current_sample;
+    self->sample_counts = a_sample_count;
+    self->beat_starts = a_start_beat;
+    self->beat_ends = a_end_beat;
+
+    if(a_sc_buffers)
+    {
+        self->sc_buffers[0] = a_sc_buffers[0];
+        self->sc_buffers[1] = a_sc_buffers[1];
+    }
+    else
+    {
+        self->sc_buffers[0] = NULL;
+        self->sc_buffers[1] = NULL;
+    }
+
+    self->buffers[0] = a_buffers[0];
+    self->buffers[1] = a_buffers[1];
+    self->input_buffer = a_input_buffers;
 }
 
 void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
@@ -1158,45 +1258,89 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
     if(self->pos >= self->count)
     {
         v_mk_seq_event_result_set_default(a_result,
-            a_buffers, a_input_buffers, a_start_beat, a_end_beat,
-            a_sample_count, a_current_sample);
+            a_buffers, a_input_buffers, a_input_count,
+            a_start_beat, a_end_beat, a_sample_count, a_current_sample);
     }
     else
     {
         a_result->count = 0;
 
+        t_sample_period f_current_period;
+        t_sample_period * f_tmp_period;
+
+        v_set_sample_period(&f_current_period, a_buffers, NULL,
+            a_input_buffers, a_start_beat, a_end_beat, a_sample_count,
+            a_current_sample);
+
         while(1)
         {
-            t_mk_seq_event * f_ev = &self->events[self->pos];
-            if(f_ev->beat >= a_start_beat && f_ev->beat < a_end_beat)
+            if(self->pos < self->count &&
+            self->events[self->pos].beat >= a_start_beat &&
+            self->events[self->pos].beat < a_end_beat)
             {
+                t_mk_seq_event * f_ev = &self->events[self->pos];
                 t_mk_seq_event_period * f_period =
                     &a_result->sample_periods[a_result->count];
                 f_period->event = f_ev;
                 ++a_result->count;
+                ++self->pos;
 
                 v_sample_period_split(
-                    &a_result->splitter, a_buffers, a_sc_buffers,
-                    a_sample_count, a_start_beat, a_end_beat,
-                    f_ev->beat, f_ev->beat + 2.0f, a_current_sample);
+                    &a_result->splitter, f_current_period.buffers, NULL,
+                    f_current_period.sample_counts,
+                    f_current_period.beat_starts,
+                    f_current_period.beat_ends,
+                    f_ev->beat, f_ev->beat + 2.0f,
+                    f_current_period.current_samples,
+                    f_current_period.input_buffer, a_input_count);
 
                 if(a_result->splitter.count == 1)
                 {
+                    f_tmp_period = &a_result->splitter.periods[0];
 
+                    v_set_sample_period(&f_period->period,
+                        f_tmp_period->buffers, NULL,
+                        f_tmp_period->input_buffer,
+                        f_tmp_period->beat_starts, f_tmp_period->beat_ends,
+                        f_tmp_period->sample_counts,
+                        f_tmp_period->current_samples);
                 }
                 else if(a_result->splitter.count == 2)
                 {
+                    f_tmp_period = &a_result->splitter.periods[0];
+                    v_set_sample_period(&f_period->period,
+                        f_tmp_period->buffers, NULL,
+                        f_tmp_period->input_buffer,
+                        f_tmp_period->beat_starts, f_tmp_period->beat_ends,
+                        f_tmp_period->sample_counts,
+                        f_tmp_period->current_samples);
 
+                    f_tmp_period = &a_result->splitter.periods[1];
+                    v_set_sample_period(&f_current_period,
+                        f_tmp_period->buffers, NULL,
+                        f_tmp_period->input_buffer,
+                        f_tmp_period->beat_starts, f_tmp_period->beat_ends,
+                        f_tmp_period->sample_counts,
+                        f_tmp_period->current_samples);
                 }
                 else
                 {
-
+                    assert(0);
                 }
             }
             else
             {
                 break;
             }
+        }
+
+        if(a_result->count == 0)
+        {
+            a_result->count = 1;
+            a_result->sample_periods[0].event = NULL;
+            v_set_sample_period(&a_result->sample_periods[0].period,
+                a_buffers, NULL, a_input_buffers,
+                a_start_beat, a_end_beat, a_sample_count, a_current_sample);
         }
     }
 }

@@ -1691,7 +1691,6 @@ class ItemSequencer(QtGui.QGraphicsView):
         if f_marker:
             f_tempo.setValue(f_marker.tempo)
             f_tsig.setValue(f_marker.tsig)
-            f_length.setValue(f_marker.length)
         else:
             f_tempo.setValue(128)
             f_tsig.setValue(4)

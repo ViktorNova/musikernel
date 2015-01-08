@@ -808,7 +808,8 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
     v_sample_period_split(&f_track->splitter, f_track->buffers,
         f_track->sc_buffers, a_sample_count,
         a_ts->ml_current_beat, a_ts->ml_next_beat,
-        f_current_beat, f_next_beat, a_ts->current_sample);
+        f_current_beat, f_next_beat, a_ts->current_sample,
+        NULL, 0);
 
     if(a_playback_mode > 0)
     {
@@ -1994,9 +1995,7 @@ t_dn_region * g_dn_region_get(t_dawnext* self, int a_uid)
     int f_item_counters[DN_TRACK_COUNT];
     lmalloc((void**)&f_result, sizeof(t_dn_region));
 
-    f_result->events.count = 0;
-    f_result->events.pos = 0;
-    f_result->events.events = NULL;
+    g_mk_seq_event_list_init(&f_result->events);
 
     f_result->uid = a_uid;
 
