@@ -152,7 +152,9 @@ typedef struct
     long current_sample;
     long f_next_current_sample;
     float tempo;
-    char padding[CACHE_LINE_SIZE - sizeof(float) -
+    //The number of samples per beat, for calculating length
+    float samples_per_beat;
+    char padding[CACHE_LINE_SIZE - (2 * sizeof(float)) -
         (3 * sizeof(double)) - (2 * sizeof(long))];
 }t_dn_thread_storage;
 
@@ -168,9 +170,6 @@ typedef struct
     int overdub_mode;  //0 == Off, 1 == On
 
     float playback_inc;
-
-    //The number of samples per beat, for calculating length
-    float samples_per_beat;
 
     t_dn_item * item_pool[DN_MAX_ITEM_COUNT];
 
@@ -1103,7 +1102,7 @@ void v_dn_process_midi(t_dawnext * self, t_dn_item_ref * a_item_ref,
 
                     f_track->note_offs[(f_event->note)] =
                         a_current_sample + ((int)(f_event->length *
-                        self->samples_per_beat));
+                        a_ts->samples_per_beat));
                 }
                 else if(f_event->type == PYDAW_EVENT_CONTROLLER)
                 {
@@ -1365,6 +1364,8 @@ inline void v_dn_run_engine(int a_sample_count,
         self->ts[0].f_next_current_sample =
             f_seq_period->period.current_sample +
             f_seq_period->period.sample_count;
+        self->ts[0].samples_per_beat =
+            self->en_song->regions->events.samples_per_beat;
 
         if(f_seq_period->event &&
         f_seq_period->event->type == SEQ_EVENT_TEMPO_CHANGE)
@@ -1845,6 +1846,8 @@ void v_dn_open_project(int a_first_load)
     v_dn_set_is_soloed(dawnext);
 
     v_dn_set_midi_devices();
+
+    v_dn_set_playback_cursor(dawnext, 0.0f);
 }
 
 t_dn_atm_region * g_dn_atm_region_get(t_dawnext * self)
@@ -2271,8 +2274,8 @@ t_dawnext * g_dawnext_get()
     f_result->en_song = NULL;
     f_result->is_soloed = 0;
     f_result->suppress_new_audio_items = 0;
-    f_result->samples_per_beat = 0;
 
+    f_result->ts[0].samples_per_beat = 0;
     f_result->ts[0].current_sample = 0;
     f_result->ts[0].ml_sample_period_inc_beats = 0.0f;
     f_result->ts[0].ml_current_beat = 0.0f;
@@ -2526,7 +2529,7 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
     int f_beat_total = (int)(a_end_beat - a_start_beat);
 
     float f_sample_count =
-        self->samples_per_beat * ((float)f_beat_total);
+        self->ts[0].samples_per_beat * ((float)f_beat_total);
 
     long f_size = 0;
     long f_block_size = (musikernel->sample_count);

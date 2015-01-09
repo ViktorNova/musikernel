@@ -1317,15 +1317,16 @@ void v_mk_set_playback_pos(t_mk_seq_event_list * self, double a_beat)
     for(f_i = 0; f_i < self->count; ++f_i)
     {
          f_ev = &self->events[f_i];
-         if(f_ev->type == SEQ_EVENT_TEMPO_CHANGE)
-         {
-             v_mk_set_tempo(self, f_ev->tempo);
-             f_found_tempo = 1;
-         }
 
          if(f_ev->beat > a_beat)
          {
              break;
+         }
+
+         if(f_ev->type == SEQ_EVENT_TEMPO_CHANGE)
+         {
+             v_mk_set_tempo(self, f_ev->tempo);
+             f_found_tempo = 1;
          }
     }
 
