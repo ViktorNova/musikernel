@@ -1174,7 +1174,7 @@ void v_dn_process_note_offs(t_dawnext * self, int f_i,
     while(f_i2 < PYDAW_MIDI_NOTE_COUNT)
     {
         f_note_off = f_track->note_offs[f_i2];
-        if(f_note_off >=  f_current_sample &&
+        if(f_note_off >= f_current_sample &&
            f_note_off < f_next_current_sample)
         {
             t_pydaw_seq_event * f_event =
@@ -2275,6 +2275,9 @@ t_dawnext * g_dawnext_get()
     f_result->ts[0].ml_next_beat = 0.0f;
     f_result->ts[0].tempo = 128.0f;
     f_result->ts[0].f_next_current_sample = 0;
+    f_result->ts[0].playback_inc = 0.0f;
+
+    g_seq_event_result_init(&f_result->seq_event_result);
 
     f_result->routing_graph = NULL;
 

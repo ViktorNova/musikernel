@@ -124,7 +124,7 @@ typedef struct
 {
     t_sample_period_split splitter;
     int count;
-    t_mk_seq_event_period sample_periods[10];
+    t_mk_seq_event_period sample_periods[2];
 }t_mk_seq_event_result;
 
 typedef struct
@@ -309,6 +309,19 @@ void g_mk_seq_event_list_init(t_mk_seq_event_list * self)
     self->events = NULL;
     g_sample_period_init(&self->period);
     v_mk_set_tempo(self, 128.0f);
+}
+
+void g_seq_event_result_init(t_mk_seq_event_result * self)
+{
+    self->count = 0;
+    int f_i = 0;
+    for(f_i = 0; f_i < 2; ++f_i)
+    {
+        self->sample_periods[f_i].playback_inc = 0.0f;
+        self->sample_periods[f_i].samples_per_beat = 0.0f;
+        self->sample_periods[f_i].tempo = 0.0f;
+        g_sample_period_init(&self->sample_periods[f_i].period);
+    }
 }
 
 void v_sample_period_split(
@@ -1394,6 +1407,7 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
 
                     f_period = &a_result->sample_periods[a_result->count - 1];
 
+                    f_period->period.start_beat = f_ev->start_beat;
                 }
                 else if(f_ev->type == SEQ_EVENT_TEMPO_CHANGE)
                 {
@@ -1447,6 +1461,9 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
             f_period->tempo = self->tempo;
             f_period->playback_inc = self->playback_inc;
             f_period->samples_per_beat = self->samples_per_beat;
+
+            f_period->period.start_beat = self->period.start_beat;
+            f_period->period.end_beat = self->period.end_beat;
         }
         else if(a_result->count == 1)
         {
@@ -1458,11 +1475,13 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
                 f_tmp_period->input_buffer,
                 f_tmp_period->sample_count,
                 f_tmp_period->current_sample);
-            f_period->period.start_beat = f_tmp_period->start_beat;
-            f_period->period.end_beat = f_tmp_period->end_beat;
 
+            f_period->period.start_beat = f_tmp_period->start_beat;
             f_period->period.period_inc_beats = ((f_period->playback_inc) *
                 ((float)(f_tmp_period->sample_count)));
+            f_period->period.end_beat = f_tmp_period->start_beat +
+                f_period->period.period_inc_beats;
+            self->period.end_beat = f_period->period.end_beat;
         }
         else if(a_result->count == 2)
         {
@@ -1473,9 +1492,11 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
                 self->period.sample_count,
                 self->period.start_beat,
                 self->period.end_beat,
-                f_ev->beat, f_ev->beat + 2.0f,
+                f_ev->beat, f_ev->beat,
                 self->period.current_sample,
                 self->period.input_buffer, a_input_count);
+
+            assert(a_result->splitter.count == 2);
 
             f_tmp_period = &a_result->splitter.periods[0];
 
@@ -1489,10 +1510,12 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
                 ((float)(f_tmp_period->sample_count)));
 
             f_period->period.start_beat = f_tmp_period->start_beat;
+            f_period->period.end_beat = f_period->period.start_beat +
+                f_period->period.period_inc_beats;
 
             f_tmp_period = &a_result->splitter.periods[1];
 
-            f_period->period.end_beat = f_tmp_period->start_beat;
+            f_period->period.start_beat = f_tmp_period->start_beat;
 
             v_set_sample_period(&self->period, self->playback_inc,
                 f_tmp_period->buffers, NULL,
@@ -1502,6 +1525,9 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
 
             f_period->period.period_inc_beats = ((f_period->playback_inc) *
                 ((float)(f_tmp_period->sample_count)));
+            f_period->period.end_beat = f_period->period.start_beat +
+                f_period->period.period_inc_beats;
+            self->period.end_beat = f_period->period.end_beat;
         }
         else
         {

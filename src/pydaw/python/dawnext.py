@@ -548,11 +548,11 @@ class SequencerItem(QtGui.QGraphicsRectItem):
     def mouseDoubleClickEvent(self, a_event):
         a_event.setAccepted(True)
         QtGui.QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
+        global CURRENT_ITEM_REF
+        CURRENT_ITEM_REF = self.audio_item
         global_open_items(
             self.name, a_reset_scrollbar=True,
             a_len=self.audio_item.length_beats)
-        global CURRENT_ITEM_REF
-        CURRENT_ITEM_REF = self.audio_item
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
 
     def generic_hoverEnterEvent(self, a_event):
@@ -4757,28 +4757,28 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
         AUDIO_SEQ.clear_drawn_items()
         if CURRENT_ITEM:
             for k, v in CURRENT_ITEM.items.items():
-                try:
+#                try:
                     f_graph = libmk.PROJECT.get_sample_graph_by_uid(v.uid)
                     if f_graph is None:
                         print(_("Error drawing item for {}, could not get "
                         "sample graph object").format(v.uid))
                         continue
                     AUDIO_SEQ.draw_item(k, v, f_graph)
-                except:
-                    if libmk.IS_PLAYING:
-                        print(_("Exception while loading {}".format(v.uid)))
-                    else:
-                        f_path = libmk.PROJECT.get_wav_path_by_uid(v.uid)
-                        if os.path.isfile(f_path):
-                            f_error_msg = _(
-                                "Unknown error loading sample f_path {}, "
-                                "\n\n{}").format(f_path, locals())
-                        else:
-                            f_error_msg = _(
-                                "Error loading '{}', file does not "
-                                "exist.").format(f_path)
-                        QtGui.QMessageBox.warning(
-                            MAIN_WINDOW, _("Error"), f_error_msg)
+#                except:
+#                    if libmk.IS_PLAYING:
+#                        print(_("Exception while loading {}".format(v.uid)))
+#                    else:
+#                        f_path = libmk.PROJECT.get_wav_path_by_uid(v.uid)
+#                        if os.path.isfile(f_path):
+#                            f_error_msg = _(
+#                                "Unknown error loading sample f_path {}, "
+#                                "\n\n{}").format(f_path, locals())
+#                        else:
+#                            f_error_msg = _(
+#                                "Error loading '{}', file does not "
+#                                "exist.").format(f_path)
+#                        QtGui.QMessageBox.warning(
+#                            MAIN_WINDOW, _("Error"), f_error_msg)
         for f_item in AUDIO_SEQ.audio_items:
             if str(f_item.audio_item) in f_selected_list:
                 f_item.setSelected(True)
