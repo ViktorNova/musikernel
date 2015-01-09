@@ -1349,7 +1349,9 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
     {
         a_result->count = 0;
 
+        //The sample period that persists between loops
         t_sample_period f_current_period;
+        //The scratchpad sample period for iterating
         t_sample_period * f_tmp_period;
 
         v_set_sample_period(&self->period, self,
@@ -1371,6 +1373,7 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
             self->events[self->pos].beat < f_current_period.end_beat)
             {
                 t_mk_seq_event * f_ev = &self->events[self->pos];
+                //The period that is returned to the main loop
                 t_mk_seq_event_period * f_period =
                     &a_result->sample_periods[a_result->count];
                 f_period->event = f_ev;

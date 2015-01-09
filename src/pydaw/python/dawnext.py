@@ -1589,9 +1589,11 @@ class ItemSequencer(QtGui.QGraphicsView):
 
     def set_playback_pos(self, a_beat=0.0):
         self.playback_pos = float(a_beat)
-        self.playback_pos_orig = self.playback_pos
         f_pos = (self.playback_pos * SEQUENCER_PX_PER_BEAT)
         self.playback_cursor.setPos(f_pos, 0.0)
+
+    def start_playback(self):
+        self.playback_pos_orig = self.playback_pos
 
     def set_playback_clipboard(self):
         self.reselect_on_stop = []
@@ -7850,14 +7852,10 @@ class transport_widget(libmk.AbstractTransport):
             f_beat = float(a_beat)
             self.set_time(f_beat)
 
-    def init_playback_cursor(self, a_start=True):
-        if a_start:
-            SEQUENCER.scene.clearSelection()
-
     def on_play(self):
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
-        self.init_playback_cursor()
+        SEQUENCER.start_playback()
         PROJECT.IPC.pydaw_en_playback(1, SEQUENCER.get_beat_value())
         return True
 
@@ -7873,7 +7871,6 @@ class transport_widget(libmk.AbstractTransport):
             if CURRENT_REGION is not None and \
             REGION_SETTINGS.enabled:
                 REGION_SETTINGS.open_region()
-        self.init_playback_cursor(a_start=False)
         #REGION_SETTINGS.open_region(f_song_table_item_str)
         SEQUENCER.stop_playback()
         time.sleep(0.1)
@@ -7931,10 +7928,10 @@ class transport_widget(libmk.AbstractTransport):
             return False
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
+        SEQUENCER.start_playback()
         self.overdub_checkbox.setEnabled(False)
         global MREC_EVENTS
         MREC_EVENTS = []
-        self.init_playback_cursor()
         PROJECT.IPC.pydaw_en_playback(2, SEQUENCER.get_beat_value())
         return True
 
