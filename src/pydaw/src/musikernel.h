@@ -1450,7 +1450,6 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
         }
         else if(a_result->count == 1)
         {
-            assert(0);  //don't use the splitter
             f_tmp_period = &self->period;
             f_period = &a_result->sample_periods[0];
 
