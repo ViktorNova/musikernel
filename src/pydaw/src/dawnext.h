@@ -781,6 +781,7 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         case 1:
             f_current_beat = f_item_ref[0]->start;
             f_next_beat = f_item_ref[0]->end;
+            break;
         case 2:
             f_current_beat = f_item_ref[0]->end;
             f_next_beat = f_item_ref[0]->end; //f_item_ref[1]->start;

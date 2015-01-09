@@ -7809,7 +7809,7 @@ class transport_widget(libmk.AbstractTransport):
 
         self.grid_layout1.addWidget(QtGui.QLabel(_("Loop Mode:")), 0, 30)
         self.loop_mode_combobox = QtGui.QComboBox()
-        self.loop_mode_combobox.addItems([_("Off"), _("Region")])
+        self.loop_mode_combobox.addItems([_("Off"), _("On")])
         self.loop_mode_combobox.setMinimumWidth(90)
         self.loop_mode_combobox.currentIndexChanged.connect(
             self.on_loop_mode_changed)
