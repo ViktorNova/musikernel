@@ -152,9 +152,10 @@ typedef struct
     long current_sample;
     long f_next_current_sample;
     float tempo;
+    float playback_inc;
     //The number of samples per beat, for calculating length
     float samples_per_beat;
-    char padding[CACHE_LINE_SIZE - (2 * sizeof(float)) -
+    char padding[CACHE_LINE_SIZE - (3 * sizeof(float)) -
         (3 * sizeof(double)) - (2 * sizeof(long))];
 }t_dn_thread_storage;
 
@@ -168,8 +169,6 @@ typedef struct
 
     int loop_mode;  //0 == Off, 1 == On
     int overdub_mode;  //0 == Off, 1 == On
-
-    float playback_inc;
 
     t_dn_item * item_pool[DN_MAX_ITEM_COUNT];
 
@@ -1315,7 +1314,7 @@ void v_dn_process_external_midi(t_dawnext * self,
 inline void v_dn_set_time_params(t_dawnext * self, int sample_count)
 {
     self->ts[0].ml_sample_period_inc_beats =
-        ((self->playback_inc) * ((float)(sample_count)));
+        ((self->ts[0].playback_inc) * ((float)(sample_count)));
     self->ts[0].ml_current_beat =
         self->ts[0].ml_next_beat;
     self->ts[0].ml_next_beat = self->ts[0].ml_current_beat +
@@ -1364,10 +1363,10 @@ inline void v_dn_run_engine(int a_sample_count,
         self->ts[0].f_next_current_sample =
             f_seq_period->period.current_sample +
             f_seq_period->period.sample_count;
-        self->ts[0].samples_per_beat =
-            self->en_song->regions->events.samples_per_beat;
 
+        self->ts[0].samples_per_beat = f_seq_period->samples_per_beat;
         self->ts[0].tempo = f_seq_period->tempo;
+        self->ts[0].playback_inc = f_seq_period->playback_inc;
 
         if((musikernel->playback_mode) > 0)
         {
@@ -2255,8 +2254,6 @@ t_dawnext * g_dawnext_get()
 {
     t_dawnext * f_result;
     clalloc((void**)&f_result, sizeof(t_dawnext));
-
-    f_result->playback_inc = 0.0f;
 
     f_result->overdub_mode = 0;
     f_result->loop_mode = 0;

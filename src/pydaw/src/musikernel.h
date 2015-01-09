@@ -1272,13 +1272,11 @@ void v_mk_seq_event_result_set_default(t_mk_seq_event_result * self,
     f_period->input_buffer = a_input_buffers;
 }
 
-void v_set_sample_period(t_sample_period * self,
-        t_mk_seq_event_list * a_list,
+void v_set_sample_period(t_sample_period * self, float a_playback_inc,
         float ** a_buffers, float ** a_sc_buffers, float * a_input_buffers,
         int a_sample_count, long a_current_sample)
 {
-    self->period_inc_beats =
-        ((a_list->playback_inc) * ((float)(a_sample_count)));
+    self->period_inc_beats = a_playback_inc * ((float)(a_sample_count));
 
     self->current_sample = a_current_sample;
     self->sample_count = a_sample_count;
@@ -1357,7 +1355,7 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
         //temp variable for the outputted sample period
         t_mk_seq_event_period * f_period;
 
-        v_set_sample_period(&self->period, self,
+        v_set_sample_period(&self->period, self->playback_inc,
             a_buffers, NULL, a_input_buffers,
             a_sample_count, a_current_sample);
 
@@ -1369,9 +1367,8 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
             {
                 break;
             }
-
-            if(self->events[self->pos].beat >= self->period.start_beat &&
-            self->events[self->pos].beat < self->period.end_beat)
+            else if(self->events[self->pos].beat >= self->period.start_beat &&
+                    self->events[self->pos].beat < self->period.end_beat)
             {
                 if(self->events[self->pos].beat == self->period.start_beat)
                 {
@@ -1443,7 +1440,7 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
 
             f_period = &a_result->sample_periods[0];
 
-            v_set_sample_period(&f_period->period, self,
+            v_set_sample_period(&f_period->period, self->playback_inc,
                 a_buffers, NULL, a_input_buffers,
                 a_sample_count, a_current_sample);
 
@@ -1454,10 +1451,10 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
         else if(a_result->count == 1)
         {
             assert(0);  //don't use the splitter
-            f_tmp_period = &a_result->splitter.periods[0];
+            f_tmp_period = &self->period;
             f_period = &a_result->sample_periods[0];
 
-            v_set_sample_period(&f_period->period, self,
+            v_set_sample_period(&f_period->period, self->playback_inc,
                 f_tmp_period->buffers, NULL,
                 f_tmp_period->input_buffer,
                 f_tmp_period->sample_count,
@@ -1465,9 +1462,8 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
             f_period->period.start_beat = f_tmp_period->start_beat;
             f_period->period.end_beat = f_tmp_period->end_beat;
 
-            assert(0);  //how to do the next line?
-            f_period->period.period_inc_beats =
-                ((self->playback_inc) * ((float)(f_tmp_period->sample_count)));
+            f_period->period.period_inc_beats = ((f_period->playback_inc) *
+                ((float)(f_tmp_period->sample_count)));
         }
         else if(a_result->count == 2)
         {
@@ -1484,15 +1480,14 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
 
             f_tmp_period = &a_result->splitter.periods[0];
 
-            v_set_sample_period(&f_period->period, self,
+            v_set_sample_period(&f_period->period, self->playback_inc,
                 f_tmp_period->buffers, NULL,
                 f_tmp_period->input_buffer,
                 f_tmp_period->sample_count,
                 f_tmp_period->current_sample);
 
-            assert(0);  //how to do the next line?
-            f_period->period.period_inc_beats =
-                ((self->playback_inc) * ((float)(f_tmp_period->sample_count)));
+            f_period->period.period_inc_beats = ((f_period->playback_inc) *
+                ((float)(f_tmp_period->sample_count)));
 
             f_period->period.start_beat = f_tmp_period->start_beat;
 
@@ -1500,15 +1495,14 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
 
             f_period->period.end_beat = f_tmp_period->start_beat;
 
-            v_set_sample_period(&self->period, self,
+            v_set_sample_period(&self->period, self->playback_inc,
                 f_tmp_period->buffers, NULL,
                 f_tmp_period->input_buffer,
                 f_tmp_period->sample_count,
                 f_tmp_period->current_sample);
 
-            assert(0);  //how to do the next line?
-            f_period->period.period_inc_beats =
-                ((self->playback_inc) * ((float)(f_tmp_period->sample_count)));
+            f_period->period.period_inc_beats = ((f_period->playback_inc) *
+                ((float)(f_tmp_period->sample_count)));
         }
         else
         {
