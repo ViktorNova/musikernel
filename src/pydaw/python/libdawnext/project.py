@@ -764,7 +764,10 @@ class pydaw_sequencer_item:
 
 class pydaw_abstract_marker:
     def __lt__(self, other):
-        return self.beat < other.beat
+        if self.beat == other.beat:
+            return self.type < other.type
+        else:
+            return self.beat < other.beat
 
 class pydaw_sequencer_marker(pydaw_abstract_marker):
     def __init__(self, a_beat, a_text):

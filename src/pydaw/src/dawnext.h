@@ -1367,11 +1367,7 @@ inline void v_dn_run_engine(int a_sample_count,
         self->ts[0].samples_per_beat =
             self->en_song->regions->events.samples_per_beat;
 
-        if(f_seq_period->event &&
-        f_seq_period->event->type == SEQ_EVENT_TEMPO_CHANGE)
-        {
-            self->ts[0].tempo = f_seq_period->event->tempo;
-        }
+        self->ts[0].tempo = f_seq_period->tempo;
 
         if((musikernel->playback_mode) > 0)
         {
