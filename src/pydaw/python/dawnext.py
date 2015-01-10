@@ -1627,6 +1627,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         a_event.button() != QtCore.Qt.RightButton:
             f_beat = int(a_event.scenePos().x() / SEQUENCER_PX_PER_BEAT)
             self.set_playback_pos(f_beat)
+            TRANSPORT.set_time(f_beat)
 
     def check_line_count(self):
         """ Check that there are not too many vertical
@@ -1789,12 +1790,14 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_x = f_marker.start_beat * SEQUENCER_PX_PER_BEAT
                 f_start = QtGui.QGraphicsLineItem(
                     f_x, 0, f_x, REGION_EDITOR_HEADER_HEIGHT, self.ruler)
-                f_start.setPen(QtGui.QPen(QtCore.Qt.red))
+                f_start.setPen(
+                    QtGui.QPen(QtGui.QColor.fromRgb(120, 120, 255), 3.0))
 
                 f_x = f_marker.beat * SEQUENCER_PX_PER_BEAT
                 f_end = QtGui.QGraphicsLineItem(
                     f_x, 0, f_x, REGION_EDITOR_HEADER_HEIGHT, self.ruler)
-                f_end.setPen(QtGui.QPen(QtCore.Qt.blue))
+                f_end.setPen(
+                    QtGui.QPen(QtGui.QColor.fromRgb(255, 60, 60), 3.0))
             elif f_marker.type == 2:
                 f_text = "{} : {}".format(f_marker.tempo, f_marker.tsig)
                 f_item = QtGui.QGraphicsSimpleTextItem(f_text, self.ruler)
