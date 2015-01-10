@@ -1362,6 +1362,8 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
     {
         a_result->count = 0;
 
+        double f_loop_start = -1.0f;
+
         t_mk_seq_event * f_ev;
         //The scratchpad sample period for iterating
         t_sample_period * f_tmp_period;
@@ -1397,17 +1399,7 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
 
                 if(f_ev->type == SEQ_EVENT_LOOP && a_loop_mode)
                 {
-                    self->pos = 0;
-
-                    if(a_result->count == 1)
-                    {
-                        self->period.end_beat = f_ev->start_beat;
-                        v_mk_set_time_params(&self->period);
-                    }
-
-                    f_period = &a_result->sample_periods[a_result->count - 1];
-
-                    f_period->period.start_beat = f_ev->start_beat;
+                    f_loop_start = f_ev->start_beat;
                 }
                 else if(f_ev->type == SEQ_EVENT_TEMPO_CHANGE)
                 {
@@ -1428,7 +1420,6 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
                     f_period->playback_inc = self->playback_inc;
                     f_period->samples_per_beat = self->samples_per_beat;
                 }
-
                 ++self->pos;
             }
             else if(self->events[self->pos].beat < self->period.start_beat)
@@ -1476,10 +1467,20 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
                 f_tmp_period->sample_count,
                 f_tmp_period->current_sample);
 
-            f_period->period.start_beat = f_tmp_period->start_beat;
             f_period->period.period_inc_beats = ((f_period->playback_inc) *
                 ((float)(f_tmp_period->sample_count)));
-            f_period->period.end_beat = f_tmp_period->start_beat +
+
+            if(f_loop_start >= 0.0)
+            {
+                self->pos = 0;
+                f_period->period.start_beat = f_loop_start;
+            }
+            else
+            {
+                f_period->period.start_beat = f_tmp_period->start_beat;
+            }
+
+            f_period->period.end_beat = f_period->period.start_beat +
                 f_period->period.period_inc_beats;
             self->period.end_beat = f_period->period.end_beat;
         }
@@ -1516,13 +1517,21 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
             f_period = &a_result->sample_periods[1];
             f_tmp_period = &a_result->splitter.periods[1];
 
-            f_period->period.start_beat = f_tmp_period->start_beat;
-
             v_set_sample_period(&f_period->period, self->playback_inc,
                 f_tmp_period->buffers, NULL,
                 f_tmp_period->input_buffer,
                 f_tmp_period->sample_count,
                 f_tmp_period->current_sample);
+
+            if(f_loop_start >= 0.0)
+            {
+                self->pos = 0;
+                f_period->period.start_beat = f_loop_start;
+            }
+            else
+            {
+                f_period->period.start_beat = f_tmp_period->start_beat;
+            }
 
             f_period->period.period_inc_beats = ((f_period->playback_inc) *
                 ((float)(f_tmp_period->sample_count)));
