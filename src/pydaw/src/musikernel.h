@@ -1518,7 +1518,7 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
 
             f_period->period.start_beat = f_tmp_period->start_beat;
 
-            v_set_sample_period(&self->period, self->playback_inc,
+            v_set_sample_period(&f_period->period, self->playback_inc,
                 f_tmp_period->buffers, NULL,
                 f_tmp_period->input_buffer,
                 f_tmp_period->sample_count,

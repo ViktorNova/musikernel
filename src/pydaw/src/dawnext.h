@@ -737,7 +737,7 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
                 f_item_ref[f_item_ref_count] = &f_seq->refs[f_item_ref_index];
                 ++f_item_ref_count;
             }
-            else if(f_seq->refs[f_seq->pos].end < a_ts->ml_current_beat)
+            else if(f_seq->refs[f_seq->pos].end <= a_ts->ml_current_beat)
             {
                 ++f_seq->pos;
             }
