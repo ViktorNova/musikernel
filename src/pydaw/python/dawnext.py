@@ -6320,15 +6320,14 @@ class automation_viewer(QtGui.QGraphicsView):
         if self.clipboard:
             self.clear_range(
                 self.clipboard[0].start, self.clipboard[-1].start)
-            for f_item, f_index in self.clipboard:
-                if f_index < ITEM_EDITING_COUNT:
-                    f_item2 = f_item.clone()
-                    if self.is_cc:
-                        f_item2.cc_num = self.cc_num
-                        CURRENT_ITEM.add_cc(f_item2)
-                    else:
-                        CURRENT_ITEM.add_pb(f_item2)
-                    self.selected_str.append(hash(str(f_item2)))
+            for f_item in self.clipboard:
+                f_item2 = f_item.clone()
+                if self.is_cc:
+                    f_item2.cc_num = self.cc_num
+                    CURRENT_ITEM.add_cc(f_item2)
+                else:
+                    CURRENT_ITEM.add_pb(f_item2)
+                self.selected_str.append(hash(str(f_item2)))
             global_save_and_reload_items()
 
     def clear_range(self, a_start_beat, a_end_beat, a_save=False):
