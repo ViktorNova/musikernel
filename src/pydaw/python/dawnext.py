@@ -1781,6 +1781,10 @@ class ItemSequencer(QtGui.QGraphicsView):
         else:
             return self.loop_start, self.loop_end
 
+    def get_export_pos(self):
+        return 0.0, (pydaw_get_current_region_length() - 60)
+        #TODO:  Create an export marker and return that if present
+
     def draw_headers(self, a_cursor_pos=None):
         self.loop_start = self.loop_end = None
         f_region_length = pydaw_get_current_region_length()
@@ -8056,12 +8060,6 @@ class pydaw_main_window(QtGui.QScrollArea):
                 QtGui.QMessageBox.warning(
                     f_window, _("Error"), _("Name cannot be empty"))
                 return
-            if (f_end_region.value() < f_start_region.value()) or \
-            ((f_end_region.value() == f_start_region.value()) and \
-            (f_start_bar.value() >= f_end_bar.value())):
-                QtGui.QMessageBox.warning(f_window, _("Error"),
-                _("End point is before start point."))
-                return
 
             if f_copy_to_clipboard_checkbox.isChecked():
                 self.copy_to_clipboard_checked = True
@@ -8069,40 +8067,33 @@ class pydaw_main_window(QtGui.QScrollArea):
                 f_clipboard.setText(f_name.text())
             else:
                 self.copy_to_clipboard_checked = False
-            #TODO:  Check that the end is actually after the start....
 
             f_dir = PROJECT.project_folder
             f_out_file = f_name.text()
-            f_sr = f_start_region.value() - 1
-            f_sb = f_start_bar.value() - 1
-            f_er = f_end_region.value() - 1
-            f_eb = f_end_bar.value() - 1
             f_samp_rate = f_sample_rate.currentText()
             f_buff_size = pydaw_util.global_device_val_dict["bufferSize"]
             f_thread_count = pydaw_util.global_device_val_dict["threads"]
 
-            self.start_reg = f_start_region.value()
-            self.end_reg = f_end_region.value()
-            self.start_bar = f_start_bar.value()
-            self.end_bar = f_end_bar.value()
+            f_start_beat, f_end_beat = SEQUENCER.get_export_pos()
+
             self.last_offline_dir = os.path.dirname(str(f_name.text()))
 
             f_window.close()
 
             if f_debug_checkbox.isChecked():
-                f_cmd = "x-terminal-emulator -e bash -c " \
-                "'gdb {}-dbg'".format(pydaw_util.RENDER_BIN_PATH)
+                f_cmd = "{} -e bash -c 'gdb {}-dbg'".format(
+                    pydaw_util.TERMINAL, pydaw_util.RENDER_BIN_PATH)
                 f_run_cmd = [str(x) for x in
                     ("run", "dawnext", "'{}'".format(f_dir),
-                     "'{}'".format(f_out_file), f_sr, f_sb,
-                     f_er, f_eb, f_samp_rate, f_buff_size, f_thread_count)]
+                    "'{}'".format(f_out_file), f_start_beat, f_end_beat,
+                    f_samp_rate, f_buff_size, f_thread_count)]
                 f_clipboard = QtGui.QApplication.clipboard()
                 f_clipboard.setText(" ".join(f_run_cmd))
                 subprocess.Popen(f_cmd, shell=True)
             else:
                 f_cmd = [str(x) for x in
                     (pydaw_util.RENDER_BIN_PATH, "dawnext",
-                     f_dir, f_out_file, f_sr, f_sb, f_er, f_eb,
+                     f_dir, f_out_file, f_start_beat, f_end_beat,
                      f_samp_rate, f_buff_size, f_thread_count,
                      pydaw_util.USE_HUGEPAGES)]
                 libmk.MAIN_WINDOW.show_offline_rendering_wait_window_v2(
@@ -8127,13 +8118,6 @@ class pydaw_main_window(QtGui.QScrollArea):
             except Exception as ex:
                 libmk.pydaw_print_generic_exception(ex)
 
-        if self.first_offline_render:
-            self.first_offline_render = False
-            self.start_reg = 1
-            self.end_reg = 1
-            self.start_bar = 1
-            self.end_bar = 2
-
         f_window = QtGui.QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Offline Render"))
         f_layout = QtGui.QGridLayout()
@@ -8147,38 +8131,6 @@ class pydaw_main_window(QtGui.QScrollArea):
         f_select_file = QtGui.QPushButton(_("Select"))
         f_select_file.pressed.connect(file_name_select)
         f_layout.addWidget(f_select_file, 0, 2)
-
-        f_layout.addWidget(QtGui.QLabel(_("Start:")), 1, 0)
-        f_start_hlayout = QtGui.QHBoxLayout()
-        f_layout.addLayout(f_start_hlayout, 1, 1)
-        f_start_hlayout.addWidget(QtGui.QLabel(_("Region:")))
-        f_start_region = QtGui.QSpinBox()
-        f_start_region.setRange(1, 299)
-        f_start_region.setValue(self.start_reg)
-        f_start_hlayout.addWidget(f_start_region)
-        f_start_hlayout.addWidget(QtGui.QLabel(_("Bar:")))
-        f_start_bar = QtGui.QSpinBox()
-        f_start_bar.setRange(1, 8)
-        f_start_bar.setValue(self.start_bar)
-        f_start_hlayout.addWidget(f_start_bar)
-        f_start_region.valueChanged.connect(start_region_changed)
-        start_region_changed()
-
-        f_layout.addWidget(QtGui.QLabel(_("End:")), 2, 0)
-        f_end_hlayout = QtGui.QHBoxLayout()
-        f_layout.addLayout(f_end_hlayout, 2, 1)
-        f_end_hlayout.addWidget(QtGui.QLabel(_("Region:")))
-        f_end_region = QtGui.QSpinBox()
-        f_end_region.setRange(1, 299)
-        f_end_region.setValue(self.end_reg)
-        f_end_hlayout.addWidget(f_end_region)
-        f_end_hlayout.addWidget(QtGui.QLabel(_("Bar:")))
-        f_end_bar = QtGui.QSpinBox()
-        f_end_bar.setRange(1, 8)
-        f_end_bar.setValue(self.end_bar)
-        f_end_hlayout.addWidget(f_end_bar)
-        f_end_region.valueChanged.connect(end_region_changed)
-        end_region_changed()
 
         f_sample_rate_hlayout = QtGui.QHBoxLayout()
         f_layout.addLayout(f_sample_rate_hlayout, 3, 1)
