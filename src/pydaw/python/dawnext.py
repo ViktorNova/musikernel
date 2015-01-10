@@ -1836,28 +1836,29 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_total_height = (REGION_EDITOR_TRACK_COUNT *
             (REGION_EDITOR_TRACK_HEIGHT)) + REGION_EDITOR_HEADER_HEIGHT
 
-        f_bar_count = int(a_marker.length / a_marker.tsig)
-        f_beat_count = a_marker.tsig
         f_x_offset = a_marker.beat * SEQUENCER_PX_PER_BEAT
         i3 = f_x_offset
 
-        for i in range(f_bar_count):
-            f_number = QtGui.QGraphicsSimpleTextItem(str(i + 1), self.ruler)
-            f_number.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
-            f_number.setBrush(QtCore.Qt.white)
-            f_number.setZValue(1000.0)
-            self.text_list.append(f_number)
-            self.scene.addLine(i3, 0.0, i3, f_total_height, f_v_pen)
-            f_number.setPos(i3 + 3.0, 2)
-            if AUDIO_LINES_ENABLED:
-                for f_i4 in range(1, AUDIO_SNAP_RANGE):
-                    f_sub_x = i3 + (SEQUENCER_QUANTIZE_PX * f_i4)
-                    f_line = self.scene.addLine(
-                        f_sub_x, REGION_EDITOR_HEADER_HEIGHT,
-                        f_sub_x, f_total_height, f_16th_pen)
-                    self.beat_line_list.append(f_line)
-            for f_beat_i in range(1, f_beat_count):
-                f_beat_x = i3 + (SEQUENCER_PX_PER_BEAT * f_beat_i)
+        for i in range(int(a_marker.length)):
+            if i % a_marker.tsig == 0:
+                f_number = QtGui.QGraphicsSimpleTextItem(
+                    str((i // a_marker.tsig) + 1), self.ruler)
+                f_number.setFlag(
+                    QtGui.QGraphicsItem.ItemIgnoresTransformations)
+                f_number.setBrush(QtCore.Qt.white)
+                f_number.setZValue(1000.0)
+                self.text_list.append(f_number)
+                self.scene.addLine(i3, 0.0, i3, f_total_height, f_v_pen)
+                f_number.setPos(i3 + 3.0, 2)
+                if AUDIO_LINES_ENABLED:
+                    for f_i4 in range(1, AUDIO_SNAP_RANGE):
+                        f_sub_x = i3 + (SEQUENCER_QUANTIZE_PX * f_i4)
+                        f_line = self.scene.addLine(
+                            f_sub_x, REGION_EDITOR_HEADER_HEIGHT,
+                            f_sub_x, f_total_height, f_16th_pen)
+                        self.beat_line_list.append(f_line)
+            else:
+                f_beat_x = i3
                 f_line = self.scene.addLine(
                     f_beat_x, 0.0, f_beat_x, f_total_height, f_beat_pen)
                 self.beat_line_list.append(f_line)
@@ -1868,7 +1869,7 @@ class ItemSequencer(QtGui.QGraphicsView):
                             f_sub_x, REGION_EDITOR_HEADER_HEIGHT,
                             f_sub_x, f_total_height, f_16th_pen)
                         self.beat_line_list.append(f_line)
-            i3 += SEQUENCER_PX_PER_BEAT * f_beat_count
+            i3 += SEQUENCER_PX_PER_BEAT
         self.scene.addLine(
             i3, REGION_EDITOR_HEADER_HEIGHT, i3, f_total_height, f_reg_pen)
         for i2 in range(REGION_EDITOR_TRACK_COUNT):
