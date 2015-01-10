@@ -1364,11 +1364,11 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
 
         double f_loop_start = -1.0f;
 
-        t_mk_seq_event * f_ev;
+        t_mk_seq_event * f_ev = NULL;
         //The scratchpad sample period for iterating
-        t_sample_period * f_tmp_period;
+        t_sample_period * f_tmp_period = NULL;
         //temp variable for the outputted sample period
-        t_mk_seq_event_period * f_period;
+        t_mk_seq_event_period * f_period = NULL;
 
         v_set_sample_period(&self->period, self->playback_inc,
             a_buffers, NULL, a_input_buffers,
