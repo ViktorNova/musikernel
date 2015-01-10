@@ -5374,22 +5374,13 @@ class piano_roll_editor(QtGui.QGraphicsView):
             f_half = f_note.note_item.length * 0.5
             f_note.note_item.set_length(f_half)
             f_new_start = f_note.note_item.start + f_half
-            f_index = f_note.item_index
             f_note_num = f_note.note_item.note_num
             f_velocity = f_note.note_item.velocity
-            self.selected_note_strings.append(
-                "{}|{}".format(f_index, f_note.note_item))
-            if f_new_start >= 4.0:
-                f_index += int(f_new_start // 4)
-                if f_index >= len(OPEN_ITEM_UIDS):
-                    print("Item start exceeded item index length")
-                    continue
-                f_new_start = f_new_start % 4.0
+            self.selected_note_strings.append(str(f_note.note_item))
             f_new_note_item = pydaw_note(
                 f_new_start, f_half, f_note_num, f_velocity)
             CURRENT_ITEM.add_note(f_new_note_item, False)
-            self.selected_note_strings.append(
-                "{}|{}".format(f_index, f_new_note_item))
+            self.selected_note_strings.append(str(f_new_note_item))
 
         global_save_and_reload_items()
 
@@ -5421,8 +5412,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
                 f_max = -1.0
                 f_min = 99999999.9
                 for f_note in f_dict[k]:
-                    f_offset = f_note.item_index * 4.0
-                    f_start = f_note.note_item.start + f_offset
+                    f_start = f_note.note_item.start
                     if f_start < f_min:
                         f_min = f_start
                     f_end = f_note.note_item.length + f_start
@@ -5435,16 +5425,14 @@ class piano_roll_editor(QtGui.QGraphicsView):
                 print(str(f_min))
                 f_length = f_max - f_min
                 print(str(f_length))
-                f_index = int(f_min // 4)
-                print(str(f_index))
-                f_start = f_min % 4.0
+                f_start = f_min
                 print(str(f_start))
                 f_new_note = pydaw_note(f_start, f_length, k, f_vel)
                 print(str(f_new_note))
-                f_result.append((f_index, f_new_note))
+                f_result.append(f_new_note)
 
         self.delete_selected(False)
-        for f_index, f_new_note in f_result:
+        for f_new_note in f_result:
             CURRENT_ITEM.add_note(f_new_note, False)
         global_save_and_reload_items()
 
@@ -5453,8 +5441,8 @@ class piano_roll_editor(QtGui.QGraphicsView):
         if not ITEM_EDITOR.enabled:
             ITEM_EDITOR.show_not_enabled_warning()
             return 0
-        self.clipboard = [(str(x.note_item), x.item_index)
-                          for x in self.note_items if x.isSelected()]
+        self.clipboard = [
+            str(x.note_item) for x in self.note_items if x.isSelected()]
         return len(self.clipboard)
 
     def paste(self):
