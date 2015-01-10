@@ -1140,120 +1140,6 @@ class pydaw_atm_point:
         return pydaw_atm_point.from_str(str(self))
 
 
-def pydaw_smooth_automation_points(
-    a_items_list, a_is_cc, a_cc_num=-1):
-    if a_is_cc:
-        f_this_cc_arr = []
-        f_beat_offset = 0.0
-        f_index = 0
-        f_cc_num = int(a_cc_num)
-        f_result_arr = []
-        for f_item in a_items_list:
-            for f_cc in f_item.ccs:
-                if f_cc.cc_num == f_cc_num:
-                    f_new_cc = pydaw_cc(
-                        (f_cc.start + f_beat_offset), f_cc_num, f_cc.cc_val)
-                    f_new_cc.item_index = f_index
-                    f_new_cc.beat_offset = f_beat_offset
-                    f_this_cc_arr.append(f_new_cc)
-            f_beat_offset += 4.0
-            f_index += 1
-            f_result_arr.append([])
-
-        f_result_arr_len = len(f_result_arr)
-        f_this_cc_arr.sort()
-        for i in range(len(f_this_cc_arr) - 1):
-            f_val_diff = abs(
-                f_this_cc_arr[i + 1].cc_val - f_this_cc_arr[i].cc_val)
-            if f_val_diff == 0:
-                continue
-            f_time_inc = .0625  #1/16 of a beat
-            f_start = f_this_cc_arr[i].start + f_time_inc
-
-            f_start_diff = f_this_cc_arr[i + 1].start - f_this_cc_arr[i].start
-            if f_start_diff == 0.0:
-                continue
-
-            f_inc = (f_val_diff / (f_start_diff * 16.0))
-            if (f_this_cc_arr[i].cc_val) > (f_this_cc_arr[i + 1].cc_val):
-                f_inc *= -1.0
-            f_new_val = f_this_cc_arr[i].cc_val + f_inc
-            while True:
-                f_index_offset = 0
-                f_adjusted_start = f_start - f_this_cc_arr[i].beat_offset
-                while f_adjusted_start >= 4.0:
-                    f_index_offset += 1
-                    f_adjusted_start -= 4.0
-                f_interpolated_cc = pydaw_cc(
-                    f_adjusted_start, f_cc_num, f_new_val)
-                f_new_val += f_inc
-                f_new_index = f_this_cc_arr[i].item_index + f_index_offset
-                if f_new_index >= f_result_arr_len:
-                    print(
-                        "Error, {} >= {}".format(
-                        f_new_index, f_result_arr_len))
-                    break
-                f_result_arr[f_new_index].append(f_interpolated_cc)
-                f_start += f_time_inc
-                if f_start >= (f_this_cc_arr[i + 1].start - 0.0625):
-                    break
-        for f_i in range(len(a_items_list)):
-            a_items_list[f_i].ccs += f_result_arr[f_i]
-            a_items_list[f_i].ccs.sort()
-    else:
-        f_this_pb_arr = []
-        f_beat_offset = 0.0
-        f_index = 0
-        f_result_arr = []
-        for f_item in a_items_list:
-            for f_pb in f_item.pitchbends:
-                f_new_pb = pydaw_pitchbend(
-                    f_pb.start + f_beat_offset, f_pb.pb_val)
-                f_new_pb.item_index = f_index
-                f_new_pb.beat_offset = f_beat_offset
-                f_this_pb_arr.append(f_new_pb)
-            f_beat_offset += 4.0
-            f_index += 1
-            f_result_arr.append([])
-        f_result_arr_len = len(f_result_arr)
-        for i in range(len(f_this_pb_arr) - 1):
-            f_val_diff = abs(
-                f_this_pb_arr[i + 1].pb_val - f_this_pb_arr[i].pb_val)
-            if f_val_diff == 0.0:
-                continue
-            f_time_inc = 0.0625
-            f_start = f_this_pb_arr[i].start + f_time_inc
-            f_start_diff = f_this_pb_arr[i + 1].start - f_this_pb_arr[i].start
-            if f_start_diff == 0.0:
-                continue
-            f_val_inc = f_val_diff / (f_start_diff * 16.0)
-            if f_this_pb_arr[i].pb_val > f_this_pb_arr[i + 1].pb_val:
-                f_val_inc *= -1.0
-            f_new_val = f_this_pb_arr[i].pb_val + f_val_inc
-
-            while True:
-                f_index_offset = 0
-                f_adjusted_start = f_start - f_this_pb_arr[i].beat_offset
-                while f_adjusted_start >= 4.0:
-                    f_index_offset += 1
-                    f_adjusted_start -= 4.0
-                f_interpolated_pb = pydaw_pitchbend(
-                    f_adjusted_start, f_new_val)
-                f_new_val += f_val_inc
-                f_new_index = f_this_pb_arr[i].item_index + f_index_offset
-                if f_new_index >= f_result_arr_len:
-                    print(
-                        "Error, {} >= {}".format(
-                        f_new_index, f_result_arr_len))
-                    break
-                f_result_arr[f_new_index].append(f_interpolated_pb)
-                f_start += f_time_inc
-                if f_start >= (f_this_pb_arr[i + 1].start - 0.0625):
-                    break
-        for f_i in range(len(a_items_list)):
-            a_items_list[f_i].pitchbends += f_result_arr[f_i]
-            a_items_list[f_i].pitchbends.sort()
-
 def pydaw_velocity_mod(
         a_items, a_amt, a_line=False, a_end_amt=127,
         a_add=False, a_selected_only=False):
@@ -1571,6 +1457,74 @@ class pydaw_item:
             self.notes += f_duplicates
             self.notes.sort()
         return f_result
+
+    def smooth_automation_points(self, a_is_cc, a_cc_num=-1):
+        if a_is_cc:
+            f_this_cc_arr = []
+            f_result_arr = []
+            f_cc_num = int(a_cc_num)
+            for f_cc in self.ccs:
+                if f_cc.cc_num == f_cc_num:
+                    f_new_cc = pydaw_cc(f_cc.start, f_cc_num, f_cc.cc_val)
+                    f_this_cc_arr.append(f_new_cc)
+            f_this_cc_arr.sort()
+            for f_cc1, f_cc2 in zip(f_this_cc_arr, f_this_cc_arr[1:]):
+                f_val_diff = abs(f_cc2.cc_val - f_cc1.cc_val)
+                if f_val_diff == 0:
+                    continue
+                f_time_inc = .0625  #1/64th note
+                f_start = f_cc1.start + f_time_inc
+
+                f_start_diff = f_cc2.start - f_cc1.start
+                if f_start_diff == 0.0:
+                    continue
+
+                f_inc = (f_val_diff / (f_start_diff * 16.0))
+                if (f_cc1.cc_val) > (f_cc2.cc_val):
+                    f_inc *= -1.0
+                f_new_val = f_cc1.cc_val + f_inc
+                while True:
+                    f_interpolated_cc = pydaw_cc(f_start, f_cc_num, f_new_val)
+                    f_new_val += f_inc
+                    f_result_arr.append(f_interpolated_cc)
+                    f_start += f_time_inc
+                    if f_start >= (f_cc2.start - 0.0625):
+                        break
+
+            self.ccs += f_result_arr
+            self.ccs.sort()
+        else:
+            f_this_pb_arr = []
+            f_result_arr = []
+
+            for f_pb in self.pitchbends:
+                f_new_pb = pydaw_pitchbend(f_pb.start, f_pb.pb_val)
+                f_this_pb_arr.append(f_new_pb)
+
+            for f_pb1, f_pb2 in zip(f_this_pb_arr, f_this_pb_arr[1:]):
+                f_val_diff = abs(
+                    f_pb2.pb_val - f_pb1.pb_val)
+                if f_val_diff == 0.0:
+                    continue
+                f_time_inc = 0.0625
+                f_start = f_pb1.start + f_time_inc
+                f_start_diff = f_pb2.start - f_pb1.start
+                if f_start_diff == 0.0:
+                    continue
+                f_val_inc = f_val_diff / (f_start_diff * 16.0)
+                if f_pb1.pb_val > f_pb2.pb_val:
+                    f_val_inc *= -1.0
+                f_new_val = f_pb1.pb_val + f_val_inc
+
+                while True:
+                    f_interpolated_pb = pydaw_pitchbend(f_start, f_new_val)
+                    f_new_val += f_val_inc
+                    f_result_arr.append(f_interpolated_pb)
+                    f_start += f_time_inc
+                    if f_start >= (f_pb2.start - 0.0625):
+                        break
+            self.pitchbends += f_result_arr
+            self.pitchbends.sort()
 
     def fix_overlaps(self):
         """ Truncate the lengths of any notes that overlap

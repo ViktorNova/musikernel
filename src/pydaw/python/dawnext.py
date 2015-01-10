@@ -6646,10 +6646,9 @@ class automation_viewer_widget:
     def smooth_pressed(self):
         if self.is_cc:
             f_cc_num = int(str(self.control_combobox.currentText()))
-            pydaw_smooth_automation_points(
-                ITEM_EDITOR.items, self.is_cc, f_cc_num)
+            CURRENT_ITEM.smooth_automation_points(self.is_cc, f_cc_num)
         else:
-            pydaw_smooth_automation_points(ITEM_EDITOR.items, self.is_cc)
+            CURRENT_ITEM.smooth_automation_points(self.is_cc)
         self.automation_viewer.selected_str = []
         global_save_and_reload_items()
 
