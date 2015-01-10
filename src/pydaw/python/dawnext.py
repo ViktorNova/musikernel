@@ -3753,13 +3753,13 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                     f_stretch_item[2].wait()
                     libmk.PROJECT.get_wav_uid_by_name(
                         f_stretch_item[0], a_uid=f_stretch_item[1])
-                for f_audio_item in AUDIO_SEQ.get_selected():
-                    f_new_graph = libmk.PROJECT.get_sample_graph_by_uid(
-                        f_audio_item.audio_item.uid)
-                    f_audio_item.audio_item.clip_at_region_end(
-                        pydaw_get_current_region_length(),
-                        TRANSPORT.tempo_spinbox.value(),
-                        f_new_graph.length_in_seconds)
+#                for f_audio_item in AUDIO_SEQ.get_selected():
+#                    f_new_graph = libmk.PROJECT.get_sample_graph_by_uid(
+#                        f_audio_item.audio_item.uid)
+#                    f_audio_item.audio_item.clip_at_region_end(
+#                        pydaw_get_current_region_length(),
+#                        TRANSPORT.tempo_spinbox.value(),
+#                        f_new_graph.length_in_seconds)
             PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             PROJECT.commit(_("Update audio items"))
         global_open_audio_items(f_reset_selection)
@@ -4411,17 +4411,17 @@ class time_pitch_dialog_widget:
                 self.widget, _("Error"), _("No items selected"))
         else:
             if f_was_stretching:
-                f_current_region_length = pydaw_get_current_region_length()
-                f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
+#                f_current_region_length = pydaw_get_current_region_length()
+#                f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
                 libmk.PROJECT.save_stretch_dicts()
                 for f_stretch_item, f_audio_item in f_stretched_items:
                     f_stretch_item[2].wait()
-                    f_new_uid = libmk.PROJECT.get_wav_uid_by_name(
-                        f_stretch_item[0], a_uid=f_stretch_item[1])
-                    f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_new_uid)
-                    f_audio_item.clip_at_region_end(
-                        f_current_region_length, f_global_tempo,
-                        f_graph.length_in_seconds)
+#                    f_new_uid = libmk.PROJECT.get_wav_uid_by_name(
+#                        f_stretch_item[0], a_uid=f_stretch_item[1])
+#                    f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_new_uid)
+#                    f_audio_item.clip_at_region_end(
+#                        f_current_region_length, f_global_tempo,
+#                        f_graph.length_in_seconds)
             PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             global_open_audio_items(True)
             PROJECT.commit(_("Update audio items"))
@@ -4717,23 +4717,23 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
                 self.widget, _("Error"),
                 _("Nothing copied to the clipboard."))
         AUDIO_SEQ.reselect_on_stop = []
-        f_per_item_fx_dict = CURRENT_ITEM
-        f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
+#        f_per_item_fx_dict = CURRENT_ITEM
+#        f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
         for f_str, f_list in self.audio_items_clipboard:
             AUDIO_SEQ.reselect_on_stop.append(f_str)
             f_index = CURRENT_ITEM.get_next_index()
             if f_index == -1:
                 break
-            f_item = pydaw_audio_item.from_str(f_str)
-            f_start = f_item.start_beat
-            if f_start < CURRENT_ITEM_LEN:
-                f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_item.uid)
-                f_item.clip_at_region_end(
-                    CURRENT_ITEM_LEN, f_global_tempo,
-                    f_graph.length_in_seconds)
-                CURRENT_ITEM.add_item(f_index, f_item)
-                if f_list is not None:
-                    f_per_item_fx_dict.set_row(f_index, f_list)
+#            f_item = pydaw_audio_item.from_str(f_str)
+#            f_start = f_item.start_beat
+#            if f_start < CURRENT_ITEM_LEN:
+#                f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_item.uid)
+#                f_item.clip_at_region_end(
+#                    CURRENT_ITEM_LEN, f_global_tempo,
+#                    f_graph.length_in_seconds)
+#                CURRENT_ITEM.add_item(f_index, f_item)
+#                if f_list is not None:
+#                    f_per_item_fx_dict.set_row(f_index, f_list)
         CURRENT_ITEM.deduplicate_items()
         PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
         PROJECT.commit(_("Paste audio items"))
@@ -7898,6 +7898,7 @@ class transport_widget(libmk.AbstractTransport):
             f_file.setText(pydaw_remove_bad_chars(f_file.text()))
 
         f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window.setWindowTitle(_("Save Recorded Files"))
         f_window.setMinimumWidth(330)
         f_layout = QtGui.QGridLayout()
         f_window.setLayout(f_layout)
