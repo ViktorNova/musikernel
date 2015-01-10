@@ -371,26 +371,23 @@ class DawNextProject(libmk.AbstractProject):
         return pydaw_item.from_str(self.get_item_string(f_uid), f_uid)
 
     def save_recorded_items(
-            self, a_item_name, a_mrec_list, a_overdub, a_tempo, a_sr):
+            self, a_item_name, a_mrec_list, a_overdub,
+            a_sr, a_start_beat, a_end_beat):
         print("\n".join(a_mrec_list))
         # TODO:  Ensure that the user can't switch MIDI device/track during
         # recording, but can during playback...
         f_mrec_items = [x.split("|") for x in a_mrec_list]
         f_mrec_items.sort(key=lambda x: int(x[-1]))
         print("\n".join(str(x) for x in f_mrec_items))
-        f_song = self.get_song()
+        f_item_length = a_end_beat - a_start_beat
+        f_sequencer = self.get_region()
         f_note_tracker = {}
         f_items_to_save = {}
-        f_regions_to_save = {}
-        f_last_bar = -1
-        f_last_region = -1
         self.rec_item = None
-        f_current_region = None
-        f_beats_per_second = float(a_tempo) / 60.0
         f_item_name = str(a_item_name)
         f_items_dict = self.get_items_dict()
         f_orig_items = {}
-        self.rec_take = None
+        self.rec_take = {}
 
         def get_item(a_region, a_track_num, a_bar_num):
             if a_region in f_orig_items:
@@ -404,26 +401,22 @@ class DawNextProject(libmk.AbstractProject):
             self.rec_take = {}
 
         def copy_take(a_track_num):
-            f_length = f_current_region.get_length()
-            for f_i in range(f_length):
-                if a_overdub:
-                    copy_item(f_i)
-                else:
-                    new_item(f_i, a_track_num)
+            if a_overdub:
+                copy_item(a_track_num)
+            else:
+                new_item(a_track_num)
 
-        def new_item(a_bar, a_track_num):
+        def new_item(a_track_num):
             f_name = self.get_next_default_item_name(f_item_name)
             f_uid = self.create_empty_item(f_name)
             f_item = self.get_item_by_uid(f_uid)
             f_items_to_save[f_uid] = f_item
-            if a_track_num not in self.rec_take:
-                self.rec_take[a_track_num] = {}
-            self.rec_take[a_track_num][a_bar] = f_item
-            f_current_region.add_item_ref_by_uid(
-                a_track_num, a_bar, f_uid)
+            self.rec_take[a_track_num] = f_item
+            f_sequencer.add_item_ref_by_uid(
+                a_track_num, a_start_beat, f_item_length, f_uid)
 
-        def copy_item(a_bar, a_track_num):
-            f_uid = get_item(a_track_num, a_bar)
+        def copy_item(a_track_num):
+            f_uid = get_item(a_track_num, a_beat)
             if f_uid is not None:
                 f_old_name = f_items_dict.get_name_by_uid(f_uid)
                 f_name = self.get_next_default_item_name(
@@ -431,25 +424,19 @@ class DawNextProject(libmk.AbstractProject):
                 f_uid = self.copy_item(f_old_name, f_name)
                 f_item = self.get_item_by_uid(f_uid)
                 f_items_to_save[f_uid] = f_item
-                self.rec_take[a_track_num][a_bar] = f_item
-                f_current_region.add_item_ref_by_uid(
-                    a_track_num, a_bar, f_uid)
+                self.rec_take[a_track_num] = f_item
+                f_sequencer.add_item_ref_by_uid(
+                    a_track_num, a_beat, f_item_length, f_uid)
             else:
-                new_item(a_bar, a_track_num)
+                new_item(a_track_num)
 
-        def pos_subtract(a_start_bar, a_start_beat, a_end_bar, a_end_beat):
-            return (float(a_end_bar - a_start_bar)
-                * 4.0) + (a_end_beat - a_start_beat)
-
-        def set_note_length(a_track_num, f_note_num,
-        f_end_bar, f_end_beat, f_tick):
+        def set_note_length(a_track_num, f_note_num, f_end_beat, f_tick):
             f_note = f_note_tracker[a_track_num][f_note_num]
-            f_length = pos_subtract(
-                f_note.bar, f_note.start, f_end_bar, f_end_beat)
+            f_length = f_end_beat - f_note.start
             if f_length > 0.0:
-                print("Using beat length for:")
                 f_note.set_length(f_length)
             else:
+                assert(False)  # Need a different algorithm for this
                 print("Using tick length for:")
                 f_sample_count = f_tick - f_note.start_sample
                 f_seconds = float(f_sample_count) / float(a_sr)
@@ -457,67 +444,47 @@ class DawNextProject(libmk.AbstractProject):
             print(f_note_tracker[a_track_num].pop(f_note_num))
 
         for f_event in f_mrec_items:
-            f_type, f_region, f_bar, f_beat, f_track = f_event[:5]
-            f_region, f_bar, f_track = (
-                int(x) for x in (f_region, f_bar, f_track))
+            f_type, f_beat, f_track = f_event[:3]
+            f_track = int(f_track)
             f_beat = float(f_beat)
             if not f_track in f_note_tracker:
                 f_note_tracker[f_track] = {}
-            if f_region in f_song.regions:
-                if f_region not in f_regions_to_save:
-                    f_regions_to_save[f_region] = self.get_region_by_uid(
-                        f_song.regions[f_region])
-                    f_orig_items[f_region] = f_regions_to_save[
-                        f_region].items[:]
-            else:
-                f_name = self.get_next_default_region_name(f_item_name)
-                f_uid = self.create_empty_region(f_name)
-                f_regions_to_save[f_region] = self.get_region_by_uid(f_uid)
-                f_song.add_region_ref_by_uid(f_region, f_uid)
-
-            f_current_region = f_regions_to_save[f_region]
 
             f_is_looping = f_type == "loop"
 
-            if f_is_looping or \
-            f_last_region != f_region or \
-            f_last_bar != f_bar:
-                if f_is_looping or f_region != f_last_region:
-                    new_take()
-                f_last_region = f_region
-                f_last_bar = f_bar
+            if f_is_looping:
+                new_take()
 
             if f_type == "loop":
                 print("Loop event")
                 continue
 
             if not f_track in self.rec_take:
-                    copy_take(f_track)
+                copy_take(f_track)
 
-            self.rec_item = self.rec_take[f_track][f_bar]
+            self.rec_item = self.rec_take[f_track]
 
             if f_type == "on":
-                f_note_num, f_velocity, f_tick = (int(x) for x in f_event[5:])
-                print("New note: {} {} {}".format(f_bar, f_beat, f_note_num))
+                f_note_num, f_velocity, f_tick = (int(x) for x in f_event[3:])
+                print("New note: {} {}".format(f_beat, f_note_num))
                 f_note = pydaw_note(f_beat, 1.0, f_note_num, f_velocity)
-                f_note.bar = f_bar
                 f_note.start_sample = f_tick
                 if f_note_num in f_note_tracker[f_track]:
                     print("Terminating note early: {}".format(
                         (f_track, f_note_num, f_tick)))
                     set_note_length(
-                        f_track, f_note_num, f_bar, f_beat, f_tick)
+                        f_track, f_note_num, f_beat, f_tick)
                 f_note_tracker[f_track][f_note_num] = f_note
                 self.rec_item.add_note(f_note, a_check=False)
             elif f_type == "off":
-                f_note_num, f_tick = (int(x) for x in f_event[5:])
+                f_note_num, f_tick = (int(x) for x in f_event[3:])
                 if f_note_num in f_note_tracker[f_track]:
                     set_note_length(
-                        f_track, f_note_num, f_bar, f_beat, f_tick)
+                        f_track, f_note_num, f_beat, f_tick)
                 else:
                     print("Error:  note event not in note tracker")
             elif f_type == "cc":
-                f_port, f_val = f_event[5:]
+                f_port, f_val = f_event[3:]
                 f_port = int(f_port)
                 f_val = float(f_val)
                 f_cc = pydaw_cc(f_beat, f_port, f_val)
@@ -531,16 +498,9 @@ class DawNextProject(libmk.AbstractProject):
         for f_uid, f_item in f_items_to_save.items():
             f_item.fix_overlaps()
             self.save_item_by_uid(f_uid, f_item, a_new_item=True)
-            f_name = self.get_next_default_item_name(f_item_name)
 
-        f_region_dict = self.get_regions_dict()
-
-        for f_region in f_regions_to_save.values():
-            f_name = f_region_dict.get_name_by_uid(f_region.uid)
-            self.save_region(f_name, f_region)
-
-        self.save_song(f_song)
-        self.commit("Record MIDI")
+        self.save_region(f_sequencer)
+        self.commit("Record")
 
     def reorder_tracks(self, a_dict):
         f_tracks = self.get_tracks()

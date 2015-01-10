@@ -1775,7 +1775,14 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_time_modify_action.triggered.connect(self.ruler_time_modify)
         f_menu.exec_(QtGui.QCursor.pos())
 
+    def get_loop_pos(self):
+        if self.loop_start is None:
+            return None
+        else:
+            return self.loop_start, self.loop_end
+
     def draw_headers(self, a_cursor_pos=None):
+        self.loop_start = self.loop_end = None
         f_region_length = pydaw_get_current_region_length()
         f_size = SEQUENCER_PX_PER_BEAT * f_region_length
         self.ruler = QtGui.QGraphicsRectItem(
@@ -1787,6 +1794,8 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.scene.addItem(self.ruler)
         for f_marker in CURRENT_REGION.get_markers():
             if f_marker.type == 1:
+                self.loop_start = f_marker.start_beat
+                self.loop_end = f_marker.beat
                 f_x = f_marker.start_beat * SEQUENCER_PX_PER_BEAT
                 f_start = QtGui.QGraphicsLineItem(
                     f_x, 0, f_x, REGION_EDITOR_HEADER_HEIGHT, self.ruler)
@@ -7857,11 +7866,11 @@ class transport_widget(libmk.AbstractTransport):
         self.overdub_checkbox.setEnabled(True)
 
         if libmk.IS_RECORDING:
+            if self.rec_end is None:
+                self.rec_end = round(SEQUENCER.get_beat_value() + 0.5)
             self.show_save_items_dialog()
-            if CURRENT_REGION is not None and \
-            REGION_SETTINGS.enabled:
-                REGION_SETTINGS.open_region()
-        #REGION_SETTINGS.open_region(f_song_table_item_str)
+            REGION_SETTINGS.open_region()
+
         SEQUENCER.stop_playback()
         time.sleep(0.1)
         self.set_time(SEQUENCER.get_beat_value())
@@ -7874,9 +7883,10 @@ class transport_widget(libmk.AbstractTransport):
                     f_window, _("Error"),
                     _("You must select a name for the item"))
                 return
+
             PROJECT.save_recorded_items(
                 f_file_name, MREC_EVENTS, self.overdub_checkbox.isChecked(),
-                self.tempo_spinbox.value(), pydaw_util.SAMPLE_RATE)
+                pydaw_util.SAMPLE_RATE, self.rec_start, self.rec_end)
             REGION_SETTINGS.open_region()
             f_window.close()
 
@@ -7923,7 +7933,13 @@ class transport_widget(libmk.AbstractTransport):
         self.overdub_checkbox.setEnabled(False)
         global MREC_EVENTS
         MREC_EVENTS = []
-        PROJECT.IPC.pydaw_en_playback(2, SEQUENCER.get_beat_value())
+        f_loop_pos = SEQUENCER.get_loop_pos()
+        if self.loop_mode_combobox.currentIndex() == 0 or not f_loop_pos:
+            self.rec_start = SEQUENCER.get_beat_value()
+            self.rec_end = None
+        else:
+            self.rec_start, self.rec_end = f_loop_pos
+        PROJECT.IPC.pydaw_en_playback(2, self.rec_start)
         return True
 
     def on_loop_mode_changed(self, a_loop_mode):
