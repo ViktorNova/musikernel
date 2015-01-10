@@ -748,17 +748,20 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         }
         else if(f_item_ref_count == 1)
         {
-            if(f_seq->refs[f_item_ref_index].start ==
-                    f_seq->refs[f_seq->pos].end)
+            if(f_seq->refs[f_item_ref_index].start < a_ts->ml_next_beat)
             {
-                f_item_ref[f_item_ref_count] = &f_seq->refs[f_item_ref_index];
-                ++f_item_ref_count;
-                break;
-            }
-            else if(f_seq->refs[f_item_ref_index].start < a_ts->ml_next_beat)
-            {
-                f_item_ref[2] = &f_seq->refs[f_item_ref_index];
-                f_item_ref_count = 3;
+                if(f_seq->refs[f_item_ref_index].start ==
+                        f_seq->refs[f_seq->pos].end)
+                {
+                    f_item_ref[f_item_ref_count] =
+                        &f_seq->refs[f_item_ref_index];
+                    ++f_item_ref_count;
+                }
+                else
+                {
+                    f_item_ref[2] = &f_seq->refs[f_item_ref_index];
+                    f_item_ref_count = 3;
+                }
                 break;
             }
             else
@@ -781,6 +784,13 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         case 1:
             f_current_beat = f_item_ref[0]->start;
             f_next_beat = f_item_ref[0]->end;
+
+            if(f_current_beat >= a_ts->ml_current_beat &&
+            f_current_beat < a_ts->ml_next_beat)
+            {
+                f_track->item_event_index = 0;
+            }
+
             break;
         case 2:
             f_current_beat = f_item_ref[0]->end;

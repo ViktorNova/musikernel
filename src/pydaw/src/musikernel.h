@@ -1510,9 +1510,10 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
                 ((float)(f_tmp_period->sample_count)));
 
             f_period->period.start_beat = f_tmp_period->start_beat;
-            f_period->period.end_beat = f_period->period.start_beat +
-                f_period->period.period_inc_beats;
 
+            f_period->period.end_beat = f_tmp_period->end_beat;
+
+            f_period = &a_result->sample_periods[1];
             f_tmp_period = &a_result->splitter.periods[1];
 
             f_period->period.start_beat = f_tmp_period->start_beat;
