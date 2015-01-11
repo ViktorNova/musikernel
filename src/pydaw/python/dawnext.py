@@ -919,6 +919,12 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
         return f_lane_num, f_y_pos
 
+    def lane_number_to_y_pos(self, a_lane_num):
+        a_lane_num = pydaw_util.pydaw_clip_value(
+            a_lane_num, 0, project.TRACK_COUNT_ALL)
+        return (a_lane_num *
+            REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
+
     def quantize_all(self, a_x):
         f_x = a_x
         if AUDIO_QUANTIZE:
@@ -1003,11 +1009,14 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             else:
                 f_max_x = (pydaw_get_current_region_length() *
                     SEQUENCER_PX_PER_BEAT) - AUDIO_ITEM_HANDLE_SIZE
+            f_new_lane, f_ignored = self.y_pos_to_lane_number(
+                a_event.scenePos().y())
+            f_lane_offset = f_new_lane - self.audio_item.track_num
             for f_item in SEQUENCER.get_selected():
                 f_pos_x = f_item.pos().x()
-                f_pos_y = f_item.pos().y()
                 f_pos_x = pydaw_clip_value(f_pos_x, 0.0, f_max_x)
-                f_ignored, f_pos_y = f_item.y_pos_to_lane_number(f_pos_y)
+                f_pos_y = self.lane_number_to_y_pos(
+                    f_lane_offset + f_item.audio_item.track_num)
                 f_pos_x = f_item.quantize_scene(f_pos_x)
                 f_item.setPos(f_pos_x, f_pos_y)
                 if not f_item.is_moving:
@@ -1284,8 +1293,9 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_beat = float(f_pos_x // SEQUENCER_PX_PER_BEAT)
                 f_track = int(f_pos_y // REGION_EDITOR_TRACK_HEIGHT)
                 f_uid = PROJECT.create_empty_item()
-                CURRENT_REGION.add_item_ref_by_uid(
+                f_result = CURRENT_REGION.add_item_ref_by_uid(
                     f_track, f_beat, LAST_ITEM_LENGTH, f_uid)
+                self.selected_item_strings = {str(f_result)}
                 TRACK_PANEL.tracks[f_track].check_output()
                 PROJECT.save_region(CURRENT_REGION)
                 REGION_SETTINGS.open_region()

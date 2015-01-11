@@ -856,6 +856,7 @@ class pydaw_sequencer:
             a_track_num, a_start_beat, a_length_beats, a_item_uid)
         self.remove_item_ref(f_result)
         self.items.append(f_result)
+        return f_result
 
     def add_item(self, a_item):
         self.items.append(a_item)
