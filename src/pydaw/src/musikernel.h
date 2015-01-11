@@ -334,7 +334,7 @@ void v_sample_period_split(
     self->periods[0].current_sample = a_current_sample;
 
     if(a_event1_beat <= a_period_start_beat ||
-    (a_event1_beat > a_period_end_beat && a_event2_beat > a_period_end_beat))
+    (a_event1_beat >= a_period_end_beat && a_event2_beat >= a_period_end_beat))
     {
         self->count = 1;
         self->periods[0].sample_count = a_sample_count;
