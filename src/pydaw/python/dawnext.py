@@ -6074,8 +6074,8 @@ class piano_roll_editor_widget:
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
 
     def open_last(self):
-        if LAST_OPEN_ITEM_NAMES:
-            global_open_items(LAST_OPEN_ITEM_NAMES)
+        if LAST_ITEM_NAME:
+            global_open_items(LAST_ITEM_NAME)
 
     def draw_last(self):
         global DRAW_LAST_ITEMS
