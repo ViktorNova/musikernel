@@ -6549,7 +6549,7 @@ LAST_IPB_VALUE = 18  #For the 'add point' dialog to remember settings
 class automation_viewer_widget:
     def __init__(self, a_viewer, a_is_cc=True):
         self.is_cc = a_is_cc
-        self.widget = QtGui.QGroupBox()
+        self.widget = QtGui.QWidget()
         self.vlayout = QtGui.QVBoxLayout()
         self.widget.setLayout(self.vlayout)
         self.automation_viewer = a_viewer
@@ -6935,13 +6935,13 @@ class item_list_editor:
 
         self.tab_widget.addTab(AUDIO_SEQ_WIDGET.widget, _("Audio"))
 
-        self.piano_roll_tab = QtGui.QGroupBox()
+        self.piano_roll_tab = QtGui.QWidget()
         self.tab_widget.addTab(self.piano_roll_tab, _("Piano Roll"))
-        self.notes_tab = QtGui.QGroupBox()
-        self.cc_tab = QtGui.QGroupBox()
+        self.notes_tab = QtGui.QWidget()
+        self.cc_tab = QtGui.QWidget()
         self.tab_widget.addTab(self.cc_tab, _("CC"))
 
-        self.pitchbend_tab = QtGui.QGroupBox()
+        self.pitchbend_tab = QtGui.QWidget()
         self.tab_widget.addTab(self.pitchbend_tab, _("Pitchbend"))
 
         self.editing_hboxlayout = QtGui.QHBoxLayout()
@@ -7328,6 +7328,9 @@ class item_list_editor:
         self.pitchbend_table_widget.clear()
         self.set_headers()
         self.notes_table_widget.setSortingEnabled(False)
+
+        if not CURRENT_ITEM:
+            return
 
         for note, f_i in zip(
         CURRENT_ITEM.notes, range(len(CURRENT_ITEM.notes))):
