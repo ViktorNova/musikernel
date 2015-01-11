@@ -150,6 +150,7 @@ typedef struct
     long current_sample;
     long f_next_current_sample;
     int is_looping;
+    int is_first_period;   //since playback started
     float tempo;
     float playback_inc;
     //The number of samples per beat, for calculating length
@@ -816,7 +817,7 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         f_current_beat, f_next_beat, a_ts->current_sample,
         NULL, 0);
 
-    if(a_ts->is_looping)
+    if(a_ts->is_looping || a_ts->is_first_period)
     {
         f_track->item_event_index = 0;
         if(f_item_ref[0])
@@ -1448,6 +1449,7 @@ inline void v_dn_run_engine(int a_sample_count,
         v_pydaw_zero_buffer(f_master_buff, sample_count);
 
         dawnext->ts[0].current_sample = f_next_current_sample;
+        dawnext->ts[0].is_first_period = 0;
     }
 }
 
@@ -2321,6 +2323,7 @@ t_dawnext * g_dawnext_get()
     f_result->ts[0].f_next_current_sample = 0;
     f_result->ts[0].playback_inc = 0.0f;
     f_result->ts[0].is_looping = 0;
+    f_result->ts[0].is_first_period = 0;
 
     g_seq_event_result_init(&f_result->seq_event_result);
 
@@ -2445,8 +2448,8 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
             }
 
             v_dn_set_playback_cursor(self, a_beat);
-
             musikernel->playback_mode = a_mode;
+            dawnext->ts[0].is_first_period = 1;
 
             if(a_lock)
             {
@@ -2466,8 +2469,8 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
             }
 
             v_dn_set_playback_cursor(self, a_beat);
-
             musikernel->playback_mode = a_mode;
+            dawnext->ts[0].is_first_period = 1;
 
             if(a_lock)
             {
