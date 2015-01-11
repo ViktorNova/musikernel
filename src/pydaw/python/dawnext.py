@@ -6882,12 +6882,6 @@ def global_open_items(a_items=None, a_reset_scrollbar=False, a_len=None):
         #ITEM_EDITOR.zoom_slider.setSingleStep(ITEM_EDITING_COUNT)
         pydaw_set_piano_roll_quantize(
             PIANO_ROLL_EDITOR_WIDGET.snap_combobox.currentIndex())
-        ITEM_EDITOR.item_index_enabled = False
-        ITEM_EDITOR.item_name_combobox.clear()
-        ITEM_EDITOR.item_name_combobox.clearEditText()
-        ITEM_EDITOR.item_name_combobox.addItem(a_items)
-        ITEM_EDITOR.item_name_combobox.setCurrentIndex(0)
-        ITEM_EDITOR.item_index_enabled = True
         if a_reset_scrollbar:
             for f_editor in MIDI_EDITORS:
                 f_editor.horizontalScrollBar().setSliderPosition(0)
@@ -6897,6 +6891,7 @@ def global_open_items(a_items=None, a_reset_scrollbar=False, a_len=None):
         f_uid = f_items_dict.get_uid_by_name(a_items)
         CURRENT_ITEM = PROJECT.get_item_by_uid(f_uid)
         CURRENT_ITEM_NAME = a_items
+        ITEM_EDITOR.item_name_lineedit.setText(a_items)
 
     CC_EDITOR.clear_drawn_items()
     PB_EDITOR.clear_drawn_items()
@@ -6957,17 +6952,6 @@ class item_list_editor:
 
         self.cc_vlayout = QtGui.QVBoxLayout()
         self.cc_tab.setLayout(self.cc_vlayout)
-
-        self.editing_hboxlayout.addWidget(QtGui.QLabel(_("Viewing Item:")))
-        self.item_name_combobox = QtGui.QComboBox()
-        self.item_name_combobox.setMinimumWidth(150)
-        self.item_name_combobox.setEditable(False)
-        self.item_name_combobox.currentIndexChanged.connect(
-            self.item_index_changed)
-        self.item_index_enabled = True
-        self.editing_hboxlayout.addWidget(self.item_name_combobox)
-        self.editing_hboxlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
 
         self.notes_table_widget = QtGui.QTableWidget()
         self.notes_table_widget.setVerticalScrollMode(
@@ -7046,6 +7030,11 @@ class item_list_editor:
         self.zoom_hlayout = QtGui.QHBoxLayout(self.zoom_widget)
         self.zoom_hlayout.setMargin(0)
         self.zoom_hlayout.setSpacing(0)
+
+        self.item_name_lineedit = QtGui.QLineEdit()
+        self.item_name_lineedit.setReadOnly(True)
+        self.item_name_lineedit.setMinimumWidth(150)
+        self.zoom_hlayout.addWidget(self.item_name_lineedit)
 
         self.zoom_hlayout.addWidget(QtGui.QLabel("V"))
         self.vzoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
@@ -7298,10 +7287,6 @@ class item_list_editor:
             MAIN_WINDOW, _("Error"),
            _("You must open an item first by double-clicking on one in "
            "the region editor on the 'Song/Region' tab."))
-
-    def item_index_changed(self, a_index=None):
-        if self.item_index_enabled:
-            self.open_item_list()
 
     def set_midi_vzoom(self, a_val):
         global PIANO_ROLL_NOTE_HEIGHT
