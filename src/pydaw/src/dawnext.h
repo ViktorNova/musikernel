@@ -149,11 +149,12 @@ typedef struct
     double ml_next_beat;
     long current_sample;
     long f_next_current_sample;
+    int is_looping;
     float tempo;
     float playback_inc;
     //The number of samples per beat, for calculating length
     float samples_per_beat;
-    char padding[CACHE_LINE_SIZE - (3 * sizeof(float)) -
+    char padding[CACHE_LINE_SIZE - sizeof(int) - (3 * sizeof(float)) -
         (3 * sizeof(double)) - (2 * sizeof(long))];
 }t_dn_thread_storage;
 
@@ -253,7 +254,8 @@ void g_dn_instantiate()
 }
 
 void v_dn_reset_audio_item_read_heads(t_dawnext * self,
-        t_pydaw_audio_items * f_audio_items, double a_start_beat)
+        t_pydaw_audio_items * f_audio_items, double a_start_beat,
+        double a_start_offset)
 {
     if(a_start_beat == 0.0f)
     {
@@ -276,7 +278,7 @@ void v_dn_reset_audio_item_read_heads(t_dawnext * self,
         if(f_audio_items->items[f_i])
         {
             f_audio_item = f_audio_items->items[f_i];
-            double f_start_beat = f_audio_item->start_beat;
+            double f_start_beat = f_audio_item->start_beat + a_start_offset;
 
             double f_end_beat =
                 f_start_beat + f_pydaw_samples_to_beat_count(
@@ -715,6 +717,11 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
     t_dn_item_ref * f_item_ref[3] = {NULL, NULL, NULL};
     t_pydaw_plugin * f_plugin;
 
+    if(a_ts->is_looping)
+    {
+        f_seq->pos = 0;
+    }
+
     while(1)
     {
         if(!f_seq->refs)
@@ -809,6 +816,18 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         f_current_beat, f_next_beat, a_ts->current_sample,
         NULL, 0);
 
+    if(a_ts->is_looping)
+    {
+        f_track->item_event_index = 0;
+        if(f_item_ref[0])
+        {
+            t_dn_item * f_item = self->item_pool[f_item_ref[0]->item_uid];
+            v_dn_reset_audio_item_read_heads(
+                self, f_item->audio_items, a_ts->ml_current_beat,
+                f_item_ref[0]->start + f_item_ref[0]->start_offset);
+        }
+    }
+
     if(a_playback_mode > 0)
     {
         for(f_i = 0; f_i < f_track->splitter.count; ++f_i)
@@ -844,6 +863,15 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
     {
         if(f_item_ref[f_i])
         {
+            if(f_item_ref[f_i]->start >= a_ts->ml_current_beat &&
+               f_item_ref[f_i]->end < a_ts->ml_next_beat)
+            {
+                t_dn_item * f_item = self->item_pool[f_item_ref[0]->item_uid];
+                v_dn_reset_audio_item_read_heads(
+                    self, f_item->audio_items, a_ts->ml_current_beat,
+                    f_item_ref[0]->start + f_item_ref[0]->start_offset);
+            }
+
             v_dn_audio_items_run(self, f_item_ref[f_i], a_sample_count,
                 f_track->buffers, f_track->sc_buffers,
                 &f_track->sc_buffers_dirty, a_ts);
@@ -1377,8 +1405,9 @@ inline void v_dn_run_engine(int a_sample_count,
         self->ts[0].samples_per_beat = f_seq_period->samples_per_beat;
         self->ts[0].tempo = f_seq_period->tempo;
         self->ts[0].playback_inc = f_seq_period->playback_inc;
+        self->ts[0].is_looping = f_seq_period->is_looping;
 
-        if((musikernel->playback_mode) > 0)
+        if(musikernel->playback_mode > 0)
         {
             self->ts[0].ml_sample_period_inc_beats =
                 f_seq_period->period.period_inc_beats;
@@ -2291,6 +2320,7 @@ t_dawnext * g_dawnext_get()
     f_result->ts[0].tempo = 128.0f;
     f_result->ts[0].f_next_current_sample = 0;
     f_result->ts[0].playback_inc = 0.0f;
+    f_result->ts[0].is_looping = 0;
 
     g_seq_event_result_init(&f_result->seq_event_result);
 

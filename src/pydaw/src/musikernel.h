@@ -115,6 +115,7 @@ typedef struct
 
 typedef struct
 {
+    int is_looping;
     float tempo;
     float playback_inc;
     float samples_per_beat;
@@ -1353,6 +1354,13 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
         float ** a_buffers, float * a_input_buffers, int a_input_count,
         int a_sample_count, long a_current_sample, int a_loop_mode)
 {
+    int f_i;
+    for(f_i = 0; f_i < 2; ++f_i)
+    {
+        a_result->sample_periods[f_i].is_looping = 0;
+        a_result->sample_periods[f_i].tempo = self->tempo;
+    }
+
     if(self->pos >= self->count)
     {
         v_mk_seq_event_result_set_default(a_result, self,
@@ -1401,6 +1409,8 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
                 if(f_ev->type == SEQ_EVENT_LOOP && a_loop_mode)
                 {
                     f_loop_start = f_ev->start_beat;
+                    f_period = &a_result->sample_periods[a_result->count - 1];
+                    f_period->is_looping = 1;
                 }
                 else if(f_ev->type == SEQ_EVENT_TEMPO_CHANGE)
                 {
