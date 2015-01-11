@@ -608,12 +608,10 @@ class MkMainWindow(QtGui.QMainWindow):
                     pass
                 elif exitCode == 1000:
                     QtGui.QMessageBox.warning(
-                        self, _("Error"),
-                        _("Audio device not found"))
+                        self, _("Error"), _("Audio device not found"))
                 elif exitCode == 1001:
                     QtGui.QMessageBox.warning(
-                        self, _("Error"),
-                        _("Device config not found"))
+                        self, _("Error"), _("Device config not found"))
                 elif exitCode == 1002:
                     QtGui.QMessageBox.warning(
                         self, _("Error"),
