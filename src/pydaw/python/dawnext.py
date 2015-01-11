@@ -1764,10 +1764,10 @@ class ItemSequencer(QtGui.QGraphicsView):
     def rulerContextMenuEvent(self, a_event):
         self.ruler_event_pos = int(a_event.pos().x() / SEQUENCER_PX_PER_BEAT)
         f_menu = QtGui.QMenu(self)
-        f_loop_start_action = f_menu.addAction(_("Set Loop Start"))
+        f_loop_start_action = f_menu.addAction(_("Set Loop/Export Start"))
         f_loop_start_action.triggered.connect(self.ruler_loop_start)
         if CURRENT_REGION.loop_marker:
-            f_loop_end_action = f_menu.addAction(_("Set Loop End"))
+            f_loop_end_action = f_menu.addAction(_("Set Loop/Export End"))
             f_loop_end_action.triggered.connect(self.ruler_loop_end)
         f_marker_action = f_menu.addAction(_("Marker..."))
         f_marker_action.triggered.connect(self.ruler_marker_modify)
@@ -1780,10 +1780,6 @@ class ItemSequencer(QtGui.QGraphicsView):
             return None
         else:
             return self.loop_start, self.loop_end
-
-    def get_export_pos(self):
-        return 0.0, (pydaw_get_current_region_length() - 60)
-        #TODO:  Create an export marker and return that if present
 
     def draw_headers(self, a_cursor_pos=None):
         self.loop_start = self.loop_end = None
@@ -8074,8 +8070,6 @@ class pydaw_main_window(QtGui.QScrollArea):
             f_buff_size = pydaw_util.global_device_val_dict["bufferSize"]
             f_thread_count = pydaw_util.global_device_val_dict["threads"]
 
-            f_start_beat, f_end_beat = SEQUENCER.get_export_pos()
-
             self.last_offline_dir = os.path.dirname(str(f_name.text()))
 
             f_window.close()
@@ -8117,6 +8111,17 @@ class pydaw_main_window(QtGui.QScrollArea):
                     self.last_offline_dir = os.path.dirname(f_file_name)
             except Exception as ex:
                 libmk.pydaw_print_generic_exception(ex)
+
+        f_marker_pos = SEQUENCER.get_loop_pos()
+
+        if not f_marker_pos:
+            QtGui.QMessageBox.warning(
+                MAIN_WINDOW, _("Error"),
+                _("You must set the Loop/Export markers first by "
+                "right-clicking on the sequencer timeline"))
+            return
+
+        f_start_beat, f_end_beat = f_marker_pos
 
         f_window = QtGui.QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Offline Render"))
