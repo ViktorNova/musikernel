@@ -137,7 +137,7 @@ class transport_widget:
         self.grid_layout1.addWidget(QtGui.QLabel(_("Host")), 0, 55)
         self.host_combobox = QtGui.QComboBox()
         self.host_combobox.setMinimumWidth(120)
-        self.host_combobox.addItems(["EDM-Next", "Wave-Next", "DAW-Next"])
+        self.host_combobox.addItems(["DAW-Next", "EDM-Next", "Wave-Next"])
         self.host_combobox.currentIndexChanged.connect(
             libmk.MAIN_WINDOW.set_host)
         self.grid_layout1.addWidget(self.host_combobox, 1, 55)
@@ -270,17 +270,17 @@ class MkMainWindow(QtGui.QMainWindow):
         self.main_stack = QtGui.QStackedWidget()
         self.transport_splitter.addWidget(self.main_stack)
 
+        import dawnext
         import edmnext
         import wavenext
-        import dawnext
 
         self.wave_editor_module = wavenext
 
-        self.host_modules = (edmnext, wavenext, dawnext)
+        self.host_modules = (dawnext, edmnext, wavenext)
         self.host_windows = tuple(x.MAIN_WINDOW for x in self.host_modules)
 
-        self.current_module = edmnext
-        self.current_window = edmnext.MAIN_WINDOW
+        self.current_module = dawnext
+        self.current_window = dawnext.MAIN_WINDOW
 
         for f_module in self.host_modules:
             self.transport_stack.addWidget(f_module.TRANSPORT.group_box)
@@ -451,7 +451,7 @@ class MkMainWindow(QtGui.QMainWindow):
         self.show()
 
     def open_in_wave_editor(self, a_file):
-        libmk.TRANSPORT.host_combobox.setCurrentIndex(1)
+        libmk.TRANSPORT.host_combobox.setCurrentIndex(2)
         self.main_stack.repaint()
         self.wave_editor_module.WAVE_EDITOR.open_file(a_file)
         #self.wave_editor_module.WAVE_EDITOR.sample_graph.repaint()
