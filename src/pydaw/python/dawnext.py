@@ -1018,6 +1018,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
     def mouseReleaseEvent(self, a_event):
         if libmk.IS_PLAYING or self.event_pos_orig is None:
             return
+        f_was_resizing = self.is_resizing
         QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
         QtGui.QApplication.restoreOverrideCursor()
         #Set to True when testing, set to False for better UI performance...
@@ -1109,6 +1110,10 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             f_audio_item.is_stretching = False
             f_audio_item.setGraphicsEffect(None)
             f_audio_item.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape)
+        if f_was_resizing:
+            global LAST_ITEM_LENGTH
+            LAST_ITEM_LENGTH = self.audio_item.length_beats
+
         if f_did_change:
             #f_audio_items.deduplicate_items()
             if f_was_stretching:
@@ -1118,6 +1123,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         SEQUENCER.set_selected_strings()
         REGION_SETTINGS.open_region()
 
+LAST_ITEM_LENGTH = 4
 
 class ItemSequencer(QtGui.QGraphicsView):
     def __init__(self):
@@ -1278,10 +1284,12 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_beat = float(f_pos_x // SEQUENCER_PX_PER_BEAT)
                 f_track = int(f_pos_y // REGION_EDITOR_TRACK_HEIGHT)
                 f_uid = PROJECT.create_empty_item()
-                CURRENT_REGION.add_item_ref_by_uid(f_track, f_beat, 4, f_uid)
+                CURRENT_REGION.add_item_ref_by_uid(
+                    f_track, f_beat, LAST_ITEM_LENGTH, f_uid)
                 TRACK_PANEL.tracks[f_track].check_output()
                 PROJECT.save_region(CURRENT_REGION)
                 REGION_SETTINGS.open_region()
+                return
             elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
                 self.deleted_items = []
                 region_editor_set_delete_mode(True)
@@ -2062,7 +2070,6 @@ class ItemSequencer(QtGui.QGraphicsView):
             global_update_items_label()
             if DRAW_LAST_ITEMS:
                 global_open_items()
-                OPEN_ITEM_NAMES = ITEM_EDITOR.item_names[:]
             f_window.close()
 
         def cancel_handler():
