@@ -1442,7 +1442,6 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
     int f_i = 0;
     int f_index_pos = 0;
     int f_send_num = 0;
-    float ** f_buff = a_buff;
 
     while(f_index_pos < f_region->index_counts[0])
     {
@@ -1450,17 +1449,17 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
         //f_send_num = f_region->indexes[0][f_index_pos].send_num;
         ++f_index_pos;
 
-        if(f_region->items[f_i] == 0)
+        if(!f_region->items[f_i])
         {
             ++f_i;
             continue;
         }
 
         t_pydaw_audio_item * f_audio_item = f_region->items[f_i];
+        int f_output_mode = f_audio_item->outputs[0];
 
-        if(f_audio_item->sidechain[f_send_num])
+        if(f_output_mode > 0)
         {
-            f_buff = a_sc_buff;
             *a_sc_dirty = 1;
         }
 
@@ -1565,8 +1564,17 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
                         }
                     }
 
-                    f_buff[0][f_i2] += f_tmp_sample0;
-                    f_buff[1][f_i2] += f_tmp_sample1;
+                    if(f_output_mode != 1)
+                    {
+                        a_buff[0][f_i2] += f_tmp_sample0;
+                        a_buff[1][f_i2] += f_tmp_sample1;
+                    }
+
+                    if(f_output_mode > 0)
+                    {
+                        a_sc_buff[0][f_i2] += f_tmp_sample0;
+                        a_sc_buff[1][f_i2] += f_tmp_sample1;
+                    }
                 }
                 else if(f_audio_item->wav_pool_item->channels == 2)
                 {
@@ -1611,8 +1619,17 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
                         }
                     }
 
-                    f_buff[0][f_i2] += f_tmp_sample0;
-                    f_buff[1][f_i2] += f_tmp_sample1;
+                    if(f_output_mode != 1)
+                    {
+                        a_buff[0][f_i2] += f_tmp_sample0;
+                        a_buff[1][f_i2] += f_tmp_sample1;
+                    }
+
+                    if(f_output_mode > 0)
+                    {
+                        a_sc_buff[0][f_i2] += f_tmp_sample0;
+                        a_sc_buff[1][f_i2] += f_tmp_sample1;
+                    }
 
                 }
                 else
@@ -2181,7 +2198,7 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
             t_pydaw_audio_items * f_audio_items =
                 f_result->audio_items;
 
-            int f_global_index = f_new->outputs[0];
+            int f_global_index = 0;
             int f_index_count =
                 f_audio_items->index_counts[f_global_index];
 
@@ -2190,21 +2207,6 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
             f_audio_items->indexes[
                 f_global_index][f_index_count].send_num = 0;
             ++f_audio_items->index_counts[f_global_index];
-
-            int f_i2;
-
-            for(f_i2 = 1; f_i2 < 3; ++f_i2)
-            {
-                f_global_index = f_new->outputs[f_i2];
-                if(f_global_index > -1)
-                {
-                    f_audio_items->indexes[f_global_index][
-                        f_index_count].item_num = f_new->index;
-                    f_audio_items->indexes[f_global_index][
-                        f_index_count].send_num = f_i2;
-                    ++f_audio_items->index_counts[f_global_index];
-                }
-            }
 
             f_audio_items->items[f_new->index] = f_new;
         }

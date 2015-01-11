@@ -3012,6 +3012,19 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                     f_action.setCheckable(True)
                     f_action.setChecked(True)
 
+        f_output_modes = {x.audio_item.output_track
+            for x in AUDIO_SEQ.get_selected()}
+
+        f_output_menu = f_properties_menu.addMenu(_("Output"))
+        f_output_menu.triggered.connect(self.output_mode_triggered)
+        for f_i, f_name in zip(
+        range(3), [_("Normal"), _("Sidechain"), _("Both")]):
+            f_action = f_output_menu.addAction(f_name)
+            f_action.output_val = f_i
+            if len(f_output_modes) == 1 and f_i in f_output_modes:
+                f_action.setCheckable(True)
+                f_action.setChecked(True)
+
         f_volume_action = f_properties_menu.addAction(_("Volume..."))
         f_volume_action.triggered.connect(self.volume_dialog)
         f_normalize_action = f_properties_menu.addAction(_("Normalize..."))
@@ -3067,6 +3080,15 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
         f_menu.exec_(QtGui.QCursor.pos())
         CURRENT_AUDIO_ITEM_INDEX = f_CURRENT_AUDIO_ITEM_INDEX
+
+    def output_mode_triggered(self, a_action):
+        f_list = AUDIO_SEQ.get_selected()
+        for f_item in f_list:
+            f_item.audio_item.output_track = a_action.output_val
+        PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
+        PROJECT.commit(_("Set audio items output mode"))
+        global_open_audio_items(True)
+
 
     def time_pitch_dialog(self):
         f_dialog = time_pitch_dialog_widget(self.audio_item)
