@@ -772,6 +772,14 @@ class MkMainWindow(QtGui.QMainWindow):
                 self.osc_server.free()
             for f_host in self.host_windows:
                 f_host.prepare_to_quit()
+                self.main_stack.removeWidget(f_host)
+                f_host.setParent(None)
+
+            for f_module in self.host_modules:
+                self.transport_stack.removeWidget(
+                    f_module.TRANSPORT.group_box)
+                f_module.TRANSPORT.group_box.setParent(None)
+
             self.ignore_close_event = False
             if self.subprocess_timer:
                 self.subprocess_timer.stop()

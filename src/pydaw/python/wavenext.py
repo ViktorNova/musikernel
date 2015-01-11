@@ -592,7 +592,7 @@ class pydaw_main_window(QtGui.QScrollArea):
                     libmk.PLUGIN_UI_DICT[f_plugin_uid].set_cc_val(f_cc, f_val)
 
     def prepare_to_quit(self):
-        pass
+        WAVE_EDITOR.sample_graph.scene.clear()
 
 def global_update_peak_meters(a_val):
     for f_val in a_val.split("|"):
