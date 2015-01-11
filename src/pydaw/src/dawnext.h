@@ -28,7 +28,6 @@ GNU General Public License for more details.
 #define DN_CONFIGURE_KEY_PANIC "panic"
 //Update a single control for a per-audio-item-fx
 #define DN_CONFIGURE_KEY_PER_AUDIO_ITEM_FX "paif"
-#define DN_CONFIGURE_KEY_GLUE_AUDIO_ITEMS "ga"
 #define DN_CONFIGURE_KEY_MIDI_DEVICE "md"
 #define DN_CONFIGURE_KEY_SET_POS "pos"
 #define DN_CONFIGURE_KEY_PLUGIN_INDEX "pi"
@@ -207,10 +206,9 @@ void v_dn_update_track_send(t_dawnext * self, int a_lock);
 void v_dn_process_external_midi(t_dawnext * pydaw_data,
         t_pytrack * a_track, int sample_count, int a_thread_num,
         t_dn_thread_storage * a_ts);
-void v_dn_offline_render(t_dawnext*, double, double,
-    char*, int, int, t_dn_item_ref*);
+void v_dn_offline_render(t_dawnext*, double, double, char*, int);
 void v_dn_audio_items_run(t_dawnext*, t_dn_item_ref*,
-    int, float**, float**, int, int*, t_dn_thread_storage*);
+    int, float**, float**, int*, t_dn_thread_storage*);
 
 void v_dn_paif_set_control(t_dawnext*, int, int, int, float);
 
@@ -847,7 +845,7 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         if(f_item_ref[f_i])
         {
             v_dn_audio_items_run(self, f_item_ref[f_i], a_sample_count,
-                f_track->buffers, f_track->sc_buffers, 0,
+                f_track->buffers, f_track->sc_buffers,
                 &f_track->sc_buffers_dirty, a_ts);
         }
     }
@@ -1426,14 +1424,12 @@ inline void v_dn_run_engine(int a_sample_count,
 
 
 void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
-    int a_sample_count, float** a_buff, float ** a_sc_buff,
-    int a_is_audio_glue, int * a_sc_dirty,
+    int a_sample_count, float** a_buff, float ** a_sc_buff, int * a_sc_dirty,
     t_dn_thread_storage * a_ts)
 {
     t_dn_item * f_item = self->item_pool[a_item_ref->item_uid];
 
-    if(!a_is_audio_glue &&
-    (!f_item->audio_items->index_counts[0]))
+    if(!f_item->audio_items->index_counts[0])
     {
         return;
     }
@@ -1448,22 +1444,11 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
     int f_send_num = 0;
     float ** f_buff = a_buff;
 
-    while(a_is_audio_glue ||
-        f_index_pos < f_region->index_counts[0])
+    while(f_index_pos < f_region->index_counts[0])
     {
-        if(!a_is_audio_glue)
-        {
-            f_i = f_region->indexes[0][f_index_pos].item_num;
-            //f_send_num = f_region->indexes[0][f_index_pos].send_num;
-            ++f_index_pos;
-        }
-        else
-        {
-            if(f_i >= PYDAW_MAX_AUDIO_ITEM_COUNT)
-            {
-                break;
-            }
-        }
+        f_i = f_region->indexes[0][f_index_pos].item_num;
+        //f_send_num = f_region->indexes[0][f_index_pos].send_num;
+        ++f_index_pos;
 
         if(f_region->items[f_i] == 0)
         {
@@ -1473,7 +1458,7 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
 
         t_pydaw_audio_item * f_audio_item = f_region->items[f_i];
 
-        if(!a_is_audio_glue && f_audio_item->sidechain[f_send_num])
+        if(f_audio_item->sidechain[f_send_num])
         {
             f_buff = a_sc_buff;
             *a_sc_dirty = 1;
@@ -1481,12 +1466,6 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
 
         if(self->suppress_new_audio_items &&
             ((f_audio_item->adsrs[f_send_num].stage) == ADSR_STAGE_OFF))
-        {
-            ++f_i;
-            continue;
-        }
-
-        if(a_is_audio_glue  && !self->audio_glue_indexes[f_i])
         {
             ++f_i;
             continue;
@@ -2546,8 +2525,7 @@ void v_dn_offline_render_prep(t_dawnext * self)
 }
 
 void v_dn_offline_render(t_dawnext * self, double a_start_beat,
-        double a_end_beat, char * a_file_out, int a_is_audio_glue,
-        int a_create_file, t_dn_item_ref * a_glue_item)
+        double a_end_beat, char * a_file_out, int a_create_file)
 {
     pthread_spin_lock(&musikernel->main_lock);
     musikernel->is_offline_rendering = 1;
@@ -2608,17 +2586,7 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
             ++f_i;
         }
 
-        if(a_is_audio_glue)
-        {
-            v_dn_set_time_params(self, f_block_size);
-            v_dn_audio_items_run(
-                self, a_glue_item, f_block_size, f_buffer, NULL, 1, NULL,
-                &self->ts[0]);
-        }
-        else
-        {
-            v_dn_run_engine(f_block_size, f_buffer, NULL);
-        }
+        v_dn_run_engine(f_block_size, f_buffer, NULL);
 
         f_i = 0;
         /*Interleave the samples...*/
@@ -3048,40 +3016,6 @@ void v_dn_configure(const char* a_key, const char* a_value)
         pthread_spin_lock(&musikernel->main_lock);
         self->overdub_mode = f_bool;
         pthread_spin_unlock(&musikernel->main_lock);
-    }
-    else if(!strcmp(a_key, DN_CONFIGURE_KEY_GLUE_AUDIO_ITEMS))
-    {
-        t_pydaw_line_split * f_val_arr = g_split_line('|', a_value);
-        char * f_path = f_val_arr->str_arr[0];  //Don't free this
-        double f_start_beat = atof(f_val_arr->str_arr[1]);
-        double f_end_beat = atof(f_val_arr->str_arr[2]);
-        int f_item_uid = atoi(f_val_arr->str_arr[3]);
-
-        int f_i = 0;
-        while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
-        {
-            self->audio_glue_indexes[f_i] = 0;
-            ++f_i;
-        }
-
-        f_i = 4;
-        while(f_i < f_val_arr->count)
-        {
-            int f_index = atoi(f_val_arr->str_arr[f_i]);
-            self->audio_glue_indexes[f_index] = 1;
-            ++f_i;
-        }
-
-        t_dn_item_ref f_item_ref;
-        f_item_ref.item_uid = f_item_uid;
-        f_item_ref.start = 0.0d;
-        f_item_ref.end = f_end_beat;
-
-        v_dn_offline_render(self, f_start_beat, f_end_beat,
-            f_path, 1, 1, &f_item_ref);
-
-        v_free_split_line(f_val_arr);
-
     }
     else if(!strcmp(a_key, DN_CONFIGURE_KEY_PANIC))
     {
