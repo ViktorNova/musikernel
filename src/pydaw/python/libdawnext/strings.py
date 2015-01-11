@@ -16,6 +16,8 @@ from libpydaw.translate import _
 
 sequencer = _(
 """This is sequencer, it consists of items, tracks and automation.
+Click on the timeline at the top of the sequencer to set playback position,
+or right-click to set various markers.
 
 Tracks:
 
