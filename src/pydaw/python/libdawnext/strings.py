@@ -50,6 +50,15 @@ See the right-click context menu for additional actions and keyboard shortcuts.
 
 Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
 
+sequencer_item = _(
+"""Right click on an item to see the various tools and actions available.
+Click and drag selected to move.
+SHIFT+Click to split items
+CTRL+drag to copy selected items
+
+You can glue together multiple items by selecting items and pressing CTRL+G
+""")
+
 transport = _(
 """
 The MIDI controllers and audio inputs used for recording can be

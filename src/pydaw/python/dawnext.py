@@ -612,7 +612,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 
     def set_tooltips(self, a_on):
         if a_on:
-            self.setToolTip(libpydaw.strings.audio_viewer_item)
+            self.setToolTip(libdawnext.strings.sequencer_item)
             self.start_handle.setToolTip(
                 _("Use this handle to resize the item by changing "
                 "the start point."))
