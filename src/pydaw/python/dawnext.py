@@ -6948,7 +6948,6 @@ class item_list_editor:
         self.notes_table_widget.setVerticalScrollMode(
             QtGui.QAbstractItemView.ScrollPerPixel)
         self.notes_table_widget.setColumnCount(5)
-        self.notes_table_widget.setRowCount(256)
         self.notes_table_widget.setSortingEnabled(True)
         self.notes_table_widget.sortItems(0)
         self.notes_table_widget.setEditTriggers(
@@ -6976,7 +6975,6 @@ class item_list_editor:
         self.ccs_table_widget.setVerticalScrollMode(
             QtGui.QAbstractItemView.ScrollPerPixel)
         self.ccs_table_widget.setColumnCount(3)
-        self.ccs_table_widget.setRowCount(256)
         self.ccs_table_widget.setSortingEnabled(True)
         self.ccs_table_widget.sortItems(0)
         self.ccs_table_widget.setEditTriggers(
@@ -6999,7 +6997,6 @@ class item_list_editor:
         self.pitchbend_table_widget.setVerticalScrollMode(
             QtGui.QAbstractItemView.ScrollPerPixel)
         self.pitchbend_table_widget.setColumnCount(2)
-        self.pitchbend_table_widget.setRowCount(256)
         self.pitchbend_table_widget.setSortingEnabled(True)
         self.pitchbend_table_widget.sortItems(0)
         self.pitchbend_table_widget.setEditTriggers(
@@ -7218,9 +7215,15 @@ class item_list_editor:
             [_('Start'), _('Value')])
 
     def set_row_counts(self):
-        self.notes_table_widget.setRowCount(256)
-        self.ccs_table_widget.setRowCount(256)
-        self.pitchbend_table_widget.setRowCount(256)
+        if CURRENT_ITEM:
+            self.notes_table_widget.setRowCount(len(CURRENT_ITEM.notes))
+            self.ccs_table_widget.setRowCount(len(CURRENT_ITEM.ccs))
+            self.pitchbend_table_widget.setRowCount(
+                len(CURRENT_ITEM.pitchbends))
+        else:
+            self.notes_table_widget.setRowCount(0)
+            self.ccs_table_widget.setRowCount(0)
+            self.pitchbend_table_widget.setRowCount(0)
 
     def add_cc(self, a_cc):
         CURRENT_ITEM.add_cc(a_cc)
@@ -7237,6 +7240,7 @@ class item_list_editor:
         self.pitchbend_table_widget.clear()
         self.set_headers()
         self.notes_table_widget.setSortingEnabled(False)
+        self.set_row_counts()
 
         if not CURRENT_ITEM:
             return

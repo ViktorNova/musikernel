@@ -1597,15 +1597,20 @@ class pydaw_item:
                     f_result.set_row(f_item_index, f_items_arr)
                 elif f_event_arr[0] == "U":
                     f_result.uid = int(f_event_arr[1])
+                elif f_event_arr[0] == "M":
+                    pass
                 else:
                     print("Error: {}".format(f_event_arr))
                     assert(False)
         return f_result
 
     def __str__(self):
-        f_result = [str(x) for x in
-            sorted(self.notes + self.ccs + self.pitchbends)]
+        f_result = []
         f_result.append("U|{}".format(self.uid))
+        f_midi_count = len(self.notes) + len(self.ccs) + len(self.pitchbends)
+        f_result.append("M|{}".format(f_midi_count))
+        f_result += [str(x) for x in
+            sorted(self.notes + self.ccs + self.pitchbends)]
         for k, f_item in list(self.items.items()):
             f_result.append("a|{}|{}".format(k, f_item))
         for k, v in self.fx_list.items():

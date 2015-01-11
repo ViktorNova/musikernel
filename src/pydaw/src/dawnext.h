@@ -38,7 +38,6 @@ GNU General Public License for more details.
 #define DN_LOOP_MODE_REGION 1
 
 #define DN_MAX_ITEM_COUNT 5000
-#define DN_MAX_EVENTS_PER_ITEM_COUNT 1024
 
 #define DN_TRACK_COUNT 32
 
@@ -79,7 +78,7 @@ typedef struct
 
 typedef struct
 {
-    t_pydaw_seq_event events[DN_MAX_EVENTS_PER_ITEM_COUNT];
+    t_pydaw_seq_event * events;
     int event_count;
     t_pydaw_audio_items * audio_items;
     int uid;
@@ -230,6 +229,8 @@ void v_dn_set_midi_device(int, int, int);
 void v_dn_set_midi_devices();
 
 void g_dn_midi_routing_list_init(t_dn_midi_routing_list*);
+
+void g_dn_item_free(t_dn_item*);
 
 #ifdef	__cplusplus
 }
@@ -1796,7 +1797,7 @@ void v_dn_open_project(int a_first_load)
     {
         if(dawnext->item_pool[f_i])
         {
-            free(dawnext->item_pool[f_i]);
+            g_dn_item_free(dawnext->item_pool[f_i]);
             dawnext->item_pool[f_i] = NULL;
         }
         ++f_i;
@@ -2093,6 +2094,15 @@ t_dn_region * g_dn_region_get(t_dawnext* self)
     return f_result;
 }
 
+void g_dn_item_free(t_dn_item * self)
+{
+    if(self->events)
+    {
+        free(self->events);
+    }
+
+    free(self);
+}
 
 void g_dn_item_get(t_dawnext* self, int a_uid)
 {
@@ -2103,6 +2113,7 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
 
     f_result->event_count = 0;
     f_result->uid = a_uid;
+    f_result->events = NULL;
 
     char f_full_path[2048];
     sprintf(f_full_path, "%s%i", self->item_folder, a_uid);
@@ -2110,12 +2121,12 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
     t_2d_char_array * f_current_string = g_get_2d_array_from_file(f_full_path,
             PYDAW_LARGE_STRING);
 
-    int f_i = 0;
+    int f_event_pos = 0;
 
     f_result->audio_items = g_pydaw_audio_items_get(
         musikernel->thread_storage[0].sample_rate);
 
-    while(f_i < DN_MAX_EVENTS_PER_ITEM_COUNT)
+    while(1)
     {
         v_iterate_2d_char_array(f_current_string);
 
@@ -2124,9 +2135,23 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
             break;
         }
 
+        assert(f_event_pos <= f_result->event_count);
+
         char f_type = f_current_string->current_str[0];
 
-        if(f_type == 'n')  //note
+        if(f_type == 'M')  //MIDI event count
+        {
+            assert(!f_result->events);
+            v_iterate_2d_char_array(f_current_string);
+            f_result->event_count = atoi(f_current_string->current_str);
+
+            if(f_result->event_count)
+            {
+                lmalloc((void**)&f_result->events,
+                    sizeof(t_pydaw_seq_event) * f_result->event_count);
+            }
+        }
+        else if(f_type == 'n')  //note
         {
             v_iterate_2d_char_array(f_current_string);
             float f_start = atof(f_current_string->current_str);
@@ -2136,10 +2161,9 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
             int f_note = atoi(f_current_string->current_str);
             v_iterate_2d_char_array(f_current_string);
             int f_vel = atoi(f_current_string->current_str);
-            assert((f_result->event_count) < DN_MAX_EVENTS_PER_ITEM_COUNT);
-            g_pynote_init(&f_result->events[(f_result->event_count)],
+            g_pynote_init(&f_result->events[f_event_pos],
                     f_note, f_vel, f_start, f_length);
-            ++f_result->event_count;
+            ++f_event_pos;
         }
         else if(f_type == 'c') //cc
         {
@@ -2150,9 +2174,9 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
             v_iterate_2d_char_array(f_current_string);
             float f_cc_val = atof(f_current_string->current_str);
 
-            g_pycc_init(&f_result->events[(f_result->event_count)],
+            g_pycc_init(&f_result->events[f_event_pos],
                 f_cc_num, f_cc_val, f_start);
-            ++f_result->event_count;
+            ++f_event_pos;
         }
         else if(f_type == 'p') //pitchbend
         {
@@ -2161,9 +2185,9 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
             v_iterate_2d_char_array(f_current_string);
             float f_pb_val = atof(f_current_string->current_str) * 8192.0f;
 
-            g_pypitchbend_init(&f_result->events[(f_result->event_count)],
+            g_pypitchbend_init(&f_result->events[f_event_pos],
                     f_start, f_pb_val);
-            ++f_result->event_count;
+            ++f_event_pos;
         }
         else if(f_type == 'a') //audio item
         {
@@ -2248,14 +2272,13 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         {
             printf("Invalid event type %c\n", f_type);
         }
-        ++f_i;
     }
 
     g_free_2d_char_array(f_current_string);
 
     if(self->item_pool[a_uid])
     {
-        free(self->item_pool[a_uid]);
+        g_dn_item_free(self->item_pool[a_uid]);
     }
 
     self->item_pool[a_uid] = f_result;
