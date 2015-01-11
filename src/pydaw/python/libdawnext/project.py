@@ -1101,60 +1101,6 @@ class pydaw_atm_point:
         return pydaw_atm_point.from_str(str(self))
 
 
-def pydaw_velocity_mod(
-        a_items, a_amt, a_line=False, a_end_amt=127,
-        a_add=False, a_selected_only=False):
-    f_start_beat = 0.0
-    f_range_beats = 0.0
-    f_tmp_index = 0
-    f_break = False
-    f_result = []
-
-    for f_item in a_items:
-        for note in f_item.notes:
-            if not a_selected_only or (a_selected_only and note.is_selected):
-                f_start_beat = note.start + (f_tmp_index * 4.0)
-                f_break = True
-                break
-        if f_break:
-            break
-        f_tmp_index += 1
-    f_tmp_index = len(a_items) - 1
-    f_break = False
-    for f_item in reversed(a_items):
-        for note in reversed(f_item.notes):
-            if not a_selected_only or note.is_selected:
-                f_range_beats = note.start + (4.0 * f_tmp_index) - f_start_beat
-                f_break = True
-                break
-        if f_break:
-            break
-        f_tmp_index -= 1
-
-    f_beat_offset = 0.0
-    for f_index, f_item in zip(range(len(a_items)), a_items):
-        for note in f_item.notes:
-            if a_selected_only and not note.is_selected:
-                continue
-            if a_line and f_range_beats != 0.0:
-                f_frac = ((note.start + f_beat_offset -
-                    f_start_beat) / f_range_beats)
-                f_value = int(((a_end_amt - a_amt) * f_frac) + a_amt)
-            else:
-                f_value = int(a_amt)
-            if a_add:
-                note.velocity += f_value
-            else:
-                note.velocity = f_value
-            if note.velocity > 127:
-                note.velocity = 127
-            elif note.velocity < 1:
-                note.velocity = 1
-            f_result.append("{}|{}".format(f_index, note))
-        f_beat_offset += 4.0
-    return f_result
-
-
 class pydaw_item:
     def __init__(self, a_uid):
         self.items = {}  # audio items:  TODO rename
@@ -1329,8 +1275,9 @@ class pydaw_item:
                 elif note.velocity < 1:
                     note.velocity = 1
 
-    def quantize(self, a_beat_frac, a_events_move_with_item=False,
-                 a_notes=None, a_selected_only=False, a_index=0):
+    def quantize(
+            self, a_beat_frac, a_events_move_with_item=False,
+            a_notes=None, a_selected_only=False):
         f_notes = []
         f_ccs = []
         f_pbs = []
@@ -1374,7 +1321,7 @@ class pydaw_item:
             if f_new_length == 0.0:
                 f_new_length = f_quantized_value
             note.set_length(f_new_length)
-            f_result.append("{}|{}".format(a_index, note))
+            f_result.append(str(note))
 
         self.fix_overlaps()
 
@@ -1386,8 +1333,9 @@ class pydaw_item:
 
         return f_result
 
-    def transpose(self, a_semitones, a_octave=0, a_notes=None,
-                  a_selected_only=False, a_duplicate=False, a_index=0):
+    def transpose(
+            self, a_semitones, a_octave=0, a_notes=None,
+            a_selected_only=False, a_duplicate=False):
         f_total = a_semitones + (a_octave * 12)
         f_notes = []
         f_result = []
@@ -1409,11 +1357,7 @@ class pydaw_item:
                 f_duplicates.append(pydaw_note.from_str(str(note)))
             note.note_num += f_total
             note.note_num = pydaw_clip_value(note.note_num, 0, 120)
-            if note.note_num < 0:
-                note.note_num = 0
-            elif note.note_num > 127:
-                note.note_num = 127
-            f_result.append("{}|{}".format(a_index, note))
+            f_result.append(str(note))
         if a_duplicate:
             self.notes += f_duplicates
             self.notes.sort()

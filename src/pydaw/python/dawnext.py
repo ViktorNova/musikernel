@@ -5862,31 +5862,6 @@ class piano_roll_editor(QtGui.QGraphicsView):
 
 
 class piano_roll_editor_widget:
-    def quantize_dialog(self):
-        if not ITEM_EDITOR.enabled:
-            ITEM_EDITOR.show_not_enabled_warning()
-            return
-        ITEM_EDITOR.quantize_dialog(PIANO_ROLL_EDITOR.has_selected)
-
-    def transpose_dialog(self):
-        if not ITEM_EDITOR.enabled:
-            ITEM_EDITOR.show_not_enabled_warning()
-            return
-        ITEM_EDITOR.transpose_dialog(PIANO_ROLL_EDITOR.has_selected)
-
-    def velocity_dialog(self):
-        if not ITEM_EDITOR.enabled:
-            ITEM_EDITOR.show_not_enabled_warning()
-            return
-        ITEM_EDITOR.velocity_dialog(PIANO_ROLL_EDITOR.has_selected)
-
-    def select_all(self):
-        if not ITEM_EDITOR.enabled:
-            ITEM_EDITOR.show_not_enabled_warning()
-            return
-        for f_note in PIANO_ROLL_EDITOR.note_items:
-            f_note.setSelected(True)
-
     def __init__(self):
         self.widget = QtGui.QWidget()
         self.vlayout = QtGui.QVBoxLayout()
@@ -5990,9 +5965,6 @@ class piano_roll_editor_widget:
 
         self.velocity_menu = self.edit_menu.addMenu(_("Velocity"))
 
-        self.velocity_action = self.velocity_menu.addAction(_("Dialog..."))
-        self.velocity_action.triggered.connect(self.velocity_dialog)
-
         self.velocity_menu.addSeparator()
 
         self.vel_random_index = 0
@@ -6072,6 +6044,25 @@ class piano_roll_editor_widget:
         self.controls_grid_layout.addWidget(QtGui.QLabel(_("Snap:")), 0, 0)
         self.controls_grid_layout.addWidget(self.snap_combobox, 0, 1)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
+
+    def quantize_dialog(self):
+        if not ITEM_EDITOR.enabled:
+            ITEM_EDITOR.show_not_enabled_warning()
+            return
+        ITEM_EDITOR.quantize_dialog(PIANO_ROLL_EDITOR.has_selected)
+
+    def transpose_dialog(self):
+        if not ITEM_EDITOR.enabled:
+            ITEM_EDITOR.show_not_enabled_warning()
+            return
+        ITEM_EDITOR.transpose_dialog(PIANO_ROLL_EDITOR.has_selected)
+
+    def select_all(self):
+        if not ITEM_EDITOR.enabled:
+            ITEM_EDITOR.show_not_enabled_warning()
+            return
+        for f_note in PIANO_ROLL_EDITOR.note_items:
+            f_note.setSelected(True)
 
     def open_last(self):
         if LAST_ITEM_NAME:
@@ -7076,7 +7067,6 @@ class item_list_editor:
         self.pitchbend_table_widget.clearContents()
         PIANO_ROLL_EDITOR.clear_drawn_items()
         self.item = None
-        self.items = []
 
     def quantize_dialog(self, a_selected_only=False):
         if not self.enabled:
@@ -7086,12 +7076,10 @@ class item_list_editor:
         def quantize_ok_handler():
             f_quantize_text = f_quantize_combobox.currentText()
             self.events_follow_default = f_events_follow_notes.isChecked()
-            f_clip = []
-            for f_i in range(len(self.items)):
-                f_clip += self.items[f_i].quantize(f_quantize_text,
-                    f_events_follow_notes.isChecked(),
-                    a_selected_only=f_selected_only.isChecked(), a_index=f_i)
-                PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
+            f_clip = CURRENT_ITEM.quantize(f_quantize_text,
+                f_events_follow_notes.isChecked(),
+                a_selected_only=f_selected_only.isChecked())
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
 
             if f_selected_only.isChecked():
                 PIANO_ROLL_EDITOR.selected_note_strings = f_clip
@@ -7133,96 +7121,17 @@ class item_list_editor:
         f_ok_cancel_layout.addWidget(f_cancel)
         f_window.exec_()
 
-    def velocity_dialog(self, a_selected_only=False):
-        if not self.enabled:
-            self.show_not_enabled_warning()
-            return
-
-        def ok_handler():
-            if f_draw_line.isChecked() and \
-            not f_add_values.isChecked() and \
-            f_end_amount.value() < 1:
-                QtGui.QMessageBox.warning(
-                    f_window, _("Error"),
-                    _("Cannot have end value less than 1 if not using "
-                    "'Add Values'"))
-                return
-
-            f_clip = pydaw_velocity_mod(
-                self.items, f_amount.value(), f_draw_line.isChecked(),
-                f_end_amount.value(), f_add_values.isChecked(),
-                a_selected_only=f_selected_only.isChecked())
-            print(f_clip)
-            print(PIANO_ROLL_EDITOR.selected_note_strings)
-            if f_selected_only.isChecked():
-                PIANO_ROLL_EDITOR.selected_note_strings = f_clip
-            else:
-                PIANO_ROLL_EDITOR.selected_note_strings = []
-
-            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
-            global_open_items()
-            PROJECT.commit(_("Velocity mod item(s)"))
-            f_window.close()
-
-        def cancel_handler():
-            f_window.close()
-
-        def end_value_changed(a_val=None):
-            f_draw_line.setChecked(True)
-
-        f_window = QtGui.QDialog(MAIN_WINDOW)
-        f_window.setWindowTitle(_("Velocity Mod"))
-        f_layout = QtGui.QGridLayout()
-        f_window.setLayout(f_layout)
-
-        f_layout.addWidget(QtGui.QLabel(_("Amount")), 0, 0)
-        f_amount = QtGui.QSpinBox()
-        f_amount.setRange(-127, 127)
-        f_amount.setValue(100)
-        f_layout.addWidget(f_amount, 0, 1)
-        f_draw_line = QtGui.QCheckBox(_("Draw line?"))
-        f_layout.addWidget(f_draw_line, 1, 1)
-
-        f_layout.addWidget(QtGui.QLabel(_("End Amount")), 2, 0)
-        f_end_amount = QtGui.QSpinBox()
-        f_end_amount.setRange(-127, 127)
-        f_end_amount.valueChanged.connect(end_value_changed)
-        f_layout.addWidget(f_end_amount, 2, 1)
-
-        f_add_values = QtGui.QCheckBox(_("Add Values?"))
-        f_add_values.setToolTip(
-            _("Check this to add Amount to the existing value, or leave\n"
-            "unchecked to set the value to Amount."))
-        f_layout.addWidget(f_add_values, 5, 1)
-
-        f_selected_only = QtGui.QCheckBox(_("Selected Notes Only?"))
-        f_selected_only.setChecked(a_selected_only)
-        f_layout.addWidget(f_selected_only, 6, 1)
-
-        f_ok = QtGui.QPushButton(_("OK"))
-        f_ok.pressed.connect(ok_handler)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
-        f_ok_cancel_layout.addWidget(f_ok)
-        f_layout.addLayout(f_ok_cancel_layout, 10, 1)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
-        f_cancel.pressed.connect(cancel_handler)
-        f_ok_cancel_layout.addWidget(f_cancel)
-        f_window.exec_()
-
     def transpose_dialog(self, a_selected_only=False):
         if not self.enabled:
             self.show_not_enabled_warning()
             return
 
         def transpose_ok_handler():
-            f_clip = []
-
-            for f_i in range(len(self.items)):
-                f_clip += self.items[f_i].transpose(
-                    f_semitone.value(), f_octave.value(),
-                    a_selected_only=f_selected_only.isChecked(),
-                    a_duplicate=f_duplicate_notes.isChecked(), a_index=f_i)
-                PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
+            f_clip = CURRENT_ITEM.transpose(
+                f_semitone.value(), f_octave.value(),
+                a_selected_only=f_selected_only.isChecked(),
+                a_duplicate=f_duplicate_notes.isChecked())
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
 
             if f_selected_only.isChecked():
                 PIANO_ROLL_EDITOR.selected_note_strings = f_clip
