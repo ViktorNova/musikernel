@@ -6933,7 +6933,6 @@ def global_open_items(a_items=None, a_reset_scrollbar=False, a_len=None):
         CC_EDITOR_WIDGET.set_cc_num(sorted(f_cc_set)[0])
 
     ITEM_EDITOR.tab_changed()
-    ITEM_EDITOR.open_item_list()
 
 
 def global_save_and_reload_items():
