@@ -7791,19 +7791,23 @@ class transport_widget(libmk.AbstractTransport):
             f_beat = float(a_beat)
             self.set_time(f_beat)
 
+    def set_controls_enabled(self, a_enabled):
+        for f_widget in (self.snap_combobox, self.overdub_checkbox):
+            f_widget.setEnabled(a_enabled)
+
     def on_play(self):
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
         SEQUENCER.start_playback()
         PROJECT.IPC.pydaw_en_playback(1, SEQUENCER.get_beat_value())
+        self.set_controls_enabled(False)
         return True
 
     def on_stop(self):
         PROJECT.IPC.pydaw_en_playback(0)
         REGION_SETTINGS.on_stop()
         AUDIO_SEQ_WIDGET.on_stop()
-
-        self.overdub_checkbox.setEnabled(True)
+        self.set_controls_enabled(True)
 
         if libmk.IS_RECORDING:
             if self.rec_end is None:
@@ -7870,7 +7874,7 @@ class transport_widget(libmk.AbstractTransport):
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
         SEQUENCER.start_playback()
-        self.overdub_checkbox.setEnabled(False)
+        self.set_controls_enabled(False)
         global MREC_EVENTS
         MREC_EVENTS = []
         f_loop_pos = SEQUENCER.get_loop_pos()
