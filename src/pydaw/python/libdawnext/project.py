@@ -1148,6 +1148,25 @@ class pydaw_item:
                 f_notes_path.addRect(f_x_pos, f_y_pos, f_width, f_note_height)
         return f_audio_path, f_notes_path
 
+    def get_length(self, a_tempo):
+        f_result = 0.0
+        f_spb = 60.0 / a_tempo
+        for f_note in self.notes:
+            f_end = f_note.start + f_note.length
+            if f_end > f_result:
+                f_result = f_end
+        for f_ev in self.ccs + self.pitchbends:
+            if f_ev.start > f_result:
+                f_result = f_ev.start
+        for f_item in self.items.values():
+            f_graph = libmk.PROJECT.get_sample_graph_by_uid(
+                f_item.uid)
+            f_end = (f_graph.length_in_seconds / f_spb) + f_item.start_beat
+            if f_end > f_result:
+                f_end = f_result
+        return f_result
+
+
     def extend(self, a_item2, a_offset, a_start_offset):
         """ Glue 2 items together, adding a_offset to the
             event positions of a_item2

@@ -32,6 +32,10 @@ import libmk
 from libmk import mk_project
 from libdawnext import *
 
+
+START_PEN = QtGui.QPen(QtGui.QColor.fromRgb(120, 120, 255), 3.0)
+END_PEN = QtGui.QPen(QtGui.QColor.fromRgb(255, 60, 60), 3.0)
+
 def pydaw_get_current_region_length():
     return CURRENT_REGION.get_length() if CURRENT_REGION else 32
 
@@ -539,8 +543,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         global CURRENT_ITEM_REF
         CURRENT_ITEM_REF = self.audio_item
         global_open_items(
-            self.name, a_reset_scrollbar=True,
-            a_len=self.audio_item.length_beats)
+            self.name, a_reset_scrollbar=True)
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
 
     def generic_hoverEnterEvent(self, a_event):
@@ -1808,14 +1811,12 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_x = f_marker.start_beat * SEQUENCER_PX_PER_BEAT
                 f_start = QtGui.QGraphicsLineItem(
                     f_x, 0, f_x, REGION_EDITOR_HEADER_HEIGHT, self.ruler)
-                f_start.setPen(
-                    QtGui.QPen(QtGui.QColor.fromRgb(120, 120, 255), 3.0))
+                f_start.setPen(START_PEN)
 
                 f_x = f_marker.beat * SEQUENCER_PX_PER_BEAT
                 f_end = QtGui.QGraphicsLineItem(
                     f_x, 0, f_x, REGION_EDITOR_HEADER_HEIGHT, self.ruler)
-                f_end.setPen(
-                    QtGui.QPen(QtGui.QColor.fromRgb(255, 60, 60), 3.0))
+                f_end.setPen(END_PEN)
             elif f_marker.type == 2:
                 f_text = "{} : {}".format(f_marker.tempo, f_marker.tsig)
                 f_item = QtGui.QGraphicsSimpleTextItem(f_text, self.ruler)
@@ -4132,6 +4133,16 @@ class audio_items_viewer(QtGui.QGraphicsView):
         self.ruler.setBrush(AUDIO_ITEMS_HEADER_GRADIENT)
         self.ruler.mousePressEvent = self.ruler_click_event
         self.scene.addItem(self.ruler)
+        if ITEM_REF_POS:
+            f_start, f_end = ITEM_REF_POS
+            f_start_x = f_start * AUDIO_PX_PER_BEAT
+            f_end_x = f_end * AUDIO_PX_PER_BEAT
+            f_start_line = QtGui.QGraphicsLineItem(
+                f_start_x, 0.0, f_start_x, AUDIO_RULER_HEIGHT, self.ruler)
+            f_start_line.setPen(START_PEN)
+            f_end_line = QtGui.QGraphicsLineItem(
+                f_end_x, 0.0, f_end_x, AUDIO_RULER_HEIGHT, self.ruler)
+            f_end_line.setPen(END_PEN)
         f_v_pen = QtGui.QPen(QtCore.Qt.black)
         f_beat_pen = QtGui.QPen(QtGui.QColor(210, 210, 210))
         f_16th_pen = QtGui.QPen(QtGui.QColor(120, 120, 120))
@@ -5613,6 +5624,17 @@ class piano_roll_editor(QtGui.QGraphicsView):
         self.beat_width = self.viewer_width / CURRENT_ITEM_LEN
         self.value_width = self.beat_width / self.grid_div
         self.header.setZValue(1003.0)
+        if ITEM_REF_POS:
+            f_start, f_end = ITEM_REF_POS
+            f_start_x = f_start * self.beat_width
+            f_end_x = f_end * self.beat_width
+            f_start_line = QtGui.QGraphicsLineItem(
+                f_start_x, 0.0, f_start_x,
+                PIANO_ROLL_HEADER_HEIGHT, self.header)
+            f_start_line.setPen(START_PEN)
+            f_end_line = QtGui.QGraphicsLineItem(
+                f_end_x, 0.0, f_end_x, PIANO_ROLL_HEADER_HEIGHT, self.header)
+            f_end_line.setPen(END_PEN)
 
     def draw_piano(self):
         self.piano_keys = {}
@@ -6421,6 +6443,17 @@ class automation_viewer(QtGui.QGraphicsView):
             0, 0, self.axis_size, self.viewer_height)
         self.y_axis.setPos(0, self.axis_size)
         self.scene.addItem(self.y_axis)
+        if ITEM_REF_POS:
+            f_start, f_end = ITEM_REF_POS
+            f_start_x = f_start * self.beat_width
+            f_end_x = f_end * self.beat_width
+            f_start_line = QtGui.QGraphicsLineItem(
+                f_start_x, 0.0, f_start_x, self.axis_size, self.x_axis)
+            f_start_line.setPen(START_PEN)
+            f_end_line = QtGui.QGraphicsLineItem(
+                f_end_x, 0.0, f_end_x, self.axis_size, self.x_axis)
+            f_end_line.setPen(END_PEN)
+
 
     def draw_grid(self):
         f_beat_pen = QtGui.QPen()
@@ -6879,6 +6912,7 @@ def global_check_midi_items():
 
 DRAW_LAST_ITEMS = False
 MIDI_SCALE = 1.0
+ITEM_REF_POS = None
 
 def global_set_midi_zoom(a_val):
     global MIDI_SCALE
@@ -6887,16 +6921,17 @@ def global_set_midi_zoom(a_val):
     global_set_automation_zoom()
 
 
-def global_open_items(a_items=None, a_reset_scrollbar=False, a_len=None):
+def global_open_items(a_items=None, a_reset_scrollbar=False):
     """ a_items is a str which is the name of the item.
         Leave blank to open the existing list
     """
-    global CURRENT_ITEM, CURRENT_ITEM_NAME, LAST_ITEM, \
-        LAST_ITEM_NAME, CURRENT_ITEM_LEN
+    global CURRENT_ITEM, CURRENT_ITEM_NAME, LAST_ITEM, LAST_ITEM_NAME, \
+        CURRENT_ITEM_LEN, ITEM_REF_POS
+
+    f_ref_end = CURRENT_ITEM_REF.length_beats + CURRENT_ITEM_REF.start_offset
+    ITEM_REF_POS = (CURRENT_ITEM_REF.start_offset, f_ref_end)
 
     if a_items is not None:
-        if a_len:
-            CURRENT_ITEM_LEN = a_len
         ITEM_EDITOR.enabled = True
         PIANO_ROLL_EDITOR.selected_note_strings = []
         global_set_piano_roll_zoom()
@@ -6914,6 +6949,11 @@ def global_open_items(a_items=None, a_reset_scrollbar=False, a_len=None):
         CURRENT_ITEM = PROJECT.get_item_by_uid(f_uid)
         CURRENT_ITEM_NAME = a_items
         ITEM_EDITOR.item_name_lineedit.setText(a_items)
+
+    CURRENT_ITEM_LEN = CURRENT_ITEM.get_length(
+        CURRENT_REGION.get_tempo_at_pos(CURRENT_ITEM_REF.start_beat))
+    CURRENT_ITEM_LEN = max(
+        (CURRENT_ITEM_LEN, CURRENT_ITEM_REF.length_beats)) + 4
 
     CC_EDITOR.clear_drawn_items()
     PB_EDITOR.clear_drawn_items()
