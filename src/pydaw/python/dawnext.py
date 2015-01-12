@@ -2185,9 +2185,8 @@ class ItemSequencer(QtGui.QGraphicsView):
             CURRENT_REGION.remove_item_ref(f_item_obj)
             f_item_obj.uid = f_uid
             self.selected_item_strings.add(str(f_item_obj))
-            f_item_ref = project.pydaw_sequencer_item(
-                f_item_obj.track_num, f_item_obj.start_beat,
-                f_item_obj.length_beats, f_uid)
+            f_item_ref = f_item_obj.clone()
+            f_item_ref.item_uid = f_uid
             CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
         PROJECT.save_region(CURRENT_REGION)
         PROJECT.commit(_("Auto-Unlink items"))
