@@ -2025,9 +2025,10 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_new_ref.length_beats = (f_last_ref.start_beat -
                     f_new_ref.start_beat) + f_last_ref.length_beats
                 for f_ref in f_track_items[1:]:
-                    f_offset = f_ref.start_beat - f_new_ref.start_beat
+                    f_offset = (f_ref.start_beat - f_new_ref.start_beat -
+                        f_ref.start_offset)
                     f_item = PROJECT.get_item_by_uid(f_ref.item_uid)
-                    f_new_item.extend(f_item, f_offset)
+                    f_new_item.extend(f_item, f_offset, f_ref.start_offset)
                     CURRENT_REGION.remove_item_ref(f_ref)
                 PROJECT.save_item(f_new_name, f_new_item)
         if f_did_something:
@@ -4698,38 +4699,33 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         f_list = self.list_file.selectedItems()
         if f_list:
             libmk.IPC.pydaw_preview_audio(
-                "{}/{}".format(self.last_open_dir, f_list[0].text()))
+                os.path.join(
+                str(x) for x in (self.last_open_dir, f_list[0].text())))
 
     def on_stop_preview(self):
         libmk.IPC.pydaw_stop_preview()
 
     def on_modulex_copy(self):
-        if CURRENT_AUDIO_ITEM_INDEX is not None and \
-        CURRENT_REGION is not None:
-            f_paif = PROJECT.get_audio_per_item_fx_region(CURRENT_REGION.uid)
-            self.modulex_clipboard = f_paif.get_row(
-                CURRENT_AUDIO_ITEM_INDEX)
+        if CURRENT_AUDIO_ITEM_INDEX is not None and CURRENT_ITEM:
+            f_paif = CURRENT_ITEM
+            self.modulex_clipboard = f_paif.get_row(CURRENT_AUDIO_ITEM_INDEX)
 
     def on_modulex_paste(self):
-        if self.modulex_clipboard is not None and CURRENT_REGION is not None:
-            f_paif = PROJECT.get_audio_per_item_fx_region(CURRENT_REGION.uid)
+        if self.modulex_clipboard is not None and CURRENT_ITEM:
+            f_paif = CURRENT_ITEM
             for f_item in AUDIO_SEQ.audio_items:
                 if f_item.isSelected():
                     f_paif.set_row(f_item.track_num, self.modulex_clipboard)
-            PROJECT.save_audio_per_item_fx_region(CURRENT_REGION.uid, f_paif)
-            PROJECT.IPC.pydaw_audio_per_item_fx_region(
-                CURRENT_REGION.uid)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             AUDIO_SEQ_WIDGET.modulex.set_from_list(self.modulex_clipboard)
 
     def on_modulex_clear(self):
-        if CURRENT_REGION is not None:
-            f_paif = PROJECT.get_audio_per_item_fx_region(CURRENT_REGION.uid)
+        if CURRENT_ITEM:
+            f_paif = CURRENT_ITEM
             for f_item in AUDIO_SEQ.audio_items:
                 if f_item.isSelected():
                     f_paif.clear_row(f_item.track_num)
-            PROJECT.save_audio_per_item_fx_region(CURRENT_REGION.uid, f_paif)
-            PROJECT.IPC.pydaw_audio_per_item_fx_region(
-                CURRENT_REGION.uid)
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
             self.modulex.clear_effects()
 
     def on_copy(self):

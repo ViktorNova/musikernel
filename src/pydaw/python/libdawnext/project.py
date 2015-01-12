@@ -1148,29 +1148,31 @@ class pydaw_item:
                 f_notes_path.addRect(f_x_pos, f_y_pos, f_width, f_note_height)
         return f_audio_path, f_notes_path
 
-    def extend(self, a_item2, a_offset):
+    def extend(self, a_item2, a_offset, a_start_offset):
         """ Glue 2 items together, adding a_offset to the
             event positions of a_item2
         """
-        for f_note in a_item2.notes:
+        for f_note in (x for x in a_item2.notes if x.start >= a_start_offset):
             f_note.start += a_offset
             self.add_note(f_note, False)
         self.notes.sort()
-        for f_cc in a_item2.ccs:
+        for f_cc in (x for x in a_item2.ccs if x.start >= a_start_offset):
             f_cc.start += a_offset
             self.add_cc(f_cc)
         self.ccs.sort()
-        for f_pb in a_item2.pitchbends:
+        for f_pb in (x for x in a_item2.pitchbends
+        if x.start >= a_start_offset):
             f_pb.start += a_offset
             self.add_pb(f_pb)
         self.pitchbends.sort()
         for k, v in a_item2.items.items():
+            if v.start_beat < a_start_offset:
+                continue
             f_index = self.get_next_index()
             v.start_beat += a_offset
             self.add_item(f_index, v)
             if k in a_item2.fx_list:
                 self.set_row(f_index, a_item2.fx_list[k])
-
 
     #per-audio-item-fx
 
