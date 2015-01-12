@@ -151,12 +151,15 @@ typedef struct
     long f_next_current_sample;
     int is_looping;
     int is_first_period;   //since playback started
+    int playback_mode;
+    int suppress_new_audio_items;
+    int sample_count;
     float tempo;
     float playback_inc;
     //The number of samples per beat, for calculating length
     float samples_per_beat;
-    char padding[CACHE_LINE_SIZE - sizeof(int) - (3 * sizeof(float)) -
-        (3 * sizeof(double)) - (2 * sizeof(long))];
+    char padding[(CACHE_LINE_SIZE * 2) - (4 * sizeof(int)) -
+        (3 * sizeof(float)) - (3 * sizeof(double)) - (2 * sizeof(long))];
 }t_dn_thread_storage;
 
 typedef struct
@@ -173,10 +176,6 @@ typedef struct
     t_dn_item * item_pool[DN_MAX_ITEM_COUNT];
 
     int is_soloed;
-
-    /*used to prevent new audio items from playing while
-     * the existing are being faded out.*/
-    int suppress_new_audio_items;
 
     int audio_glue_indexes[PYDAW_MAX_AUDIO_ITEM_COUNT];
 
@@ -864,7 +863,8 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
     {
         if(f_item_ref[f_i])
         {
-            if(f_item_ref[f_i]->start >= a_ts->ml_current_beat &&
+            if(a_playback_mode > 0 &&
+               f_item_ref[f_i]->start >= a_ts->ml_current_beat &&
                f_item_ref[f_i]->end < a_ts->ml_next_beat)
             {
                 t_dn_item * f_item = self->item_pool[f_item_ref[0]->item_uid];
@@ -926,8 +926,6 @@ inline void v_dn_process(t_pydaw_thread_args * f_args)
     int f_i = f_args->thread_num;
     int f_sorted_count = self->routing_graph->track_pool_sorted_count;
     int * f_sorted = self->routing_graph->track_pool_sorted[f_args->thread_num];
-    int f_sample_count = musikernel->sample_count;
-    int f_playback_mode = musikernel->playback_mode;
 
     t_dn_thread_storage * f_ts = &dawnext->ts[f_args->thread_num];
 
@@ -935,6 +933,9 @@ inline void v_dn_process(t_pydaw_thread_args * f_args)
     {
         memcpy(f_ts, &dawnext->ts[0], sizeof(t_dn_thread_storage));
     }
+
+    int f_playback_mode = f_ts->playback_mode;
+    int f_sample_count = f_ts->sample_count;
 
     while(f_i < f_sorted_count)
     {
@@ -1407,6 +1408,8 @@ inline void v_dn_run_engine(int a_sample_count,
         self->ts[0].tempo = f_seq_period->tempo;
         self->ts[0].playback_inc = f_seq_period->playback_inc;
         self->ts[0].is_looping = f_seq_period->is_looping;
+        self->ts[0].playback_mode = musikernel->playback_mode;
+        self->ts[0].sample_count = sample_count;
 
         if(musikernel->playback_mode > 0)
         {
@@ -1494,7 +1497,7 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
             *a_sc_dirty = 1;
         }
 
-        if(self->suppress_new_audio_items &&
+        if(a_ts->suppress_new_audio_items &&
             ((f_audio_item->adsrs[f_send_num].stage) == ADSR_STAGE_OFF))
         {
             ++f_i;
@@ -1502,7 +1505,7 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
         }
 
         if(f_playback_mode == PYDAW_PLAYBACK_MODE_OFF &&
-            f_audio_item->adsrs[f_send_num].stage < ADSR_STAGE_RELEASE)
+           f_audio_item->adsrs[f_send_num].stage < ADSR_STAGE_RELEASE)
         {
             v_adsr_release(&f_audio_item->adsrs[f_send_num]);
         }
@@ -2312,9 +2315,9 @@ t_dawnext * g_dawnext_get()
 
     f_result->en_song = NULL;
     f_result->is_soloed = 0;
-    f_result->suppress_new_audio_items = 0;
 
     f_result->ts[0].samples_per_beat = 0;
+    f_result->ts[0].sample_count = 0;
     f_result->ts[0].current_sample = 0;
     f_result->ts[0].ml_sample_period_inc_beats = 0.0f;
     f_result->ts[0].ml_current_beat = 0.0f;
@@ -2324,6 +2327,8 @@ t_dawnext * g_dawnext_get()
     f_result->ts[0].playback_inc = 0.0f;
     f_result->ts[0].is_looping = 0;
     f_result->ts[0].is_first_period = 0;
+    f_result->ts[0].playback_mode = 0;
+    f_result->ts[0].suppress_new_audio_items = 0;
 
     g_seq_event_result_init(&f_result->seq_event_result);
 
@@ -2383,28 +2388,8 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
                 pthread_spin_lock(&musikernel->main_lock);
             }
 
-            self->suppress_new_audio_items = 1;
-            /*
-            //Fade out the playing audio tracks
-            if(self->en_song->audio_items[self->current_region])
-            {
-                while(f_i < PYDAW_MAX_AUDIO_ITEM_COUNT)
-                {
-                    if(self->en_song->audio_items[
-                            self->current_region]->items[f_i])
-                    {
-                        for(f_i2 = 0; f_i2 < MK_AUDIO_ITEM_SEND_COUNT; ++f_i2)
-                        {
-                            v_adsr_release(&self->en_song->audio_items[
-                                self->current_region]->items[f_i]->adsrs[f_i2]);
-                        }
-                    }
-                    ++f_i;
-                }
-            }
-            */
+            self->ts[0].suppress_new_audio_items = 1;
 
-            self->suppress_new_audio_items = 0;
             musikernel->playback_mode = a_mode;
 
             f_i = 0;
@@ -2450,6 +2435,7 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
             v_dn_set_playback_cursor(self, a_beat);
             musikernel->playback_mode = a_mode;
             dawnext->ts[0].is_first_period = 1;
+            self->ts[0].suppress_new_audio_items = 0;
 
             if(a_lock)
             {
@@ -2471,6 +2457,7 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
             v_dn_set_playback_cursor(self, a_beat);
             musikernel->playback_mode = a_mode;
             dawnext->ts[0].is_first_period = 1;
+            self->ts[0].suppress_new_audio_items = 0;
 
             if(a_lock)
             {
