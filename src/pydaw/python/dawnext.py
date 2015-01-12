@@ -6195,14 +6195,10 @@ class piano_roll_editor_widget:
         else:
             PIANO_ROLL_EDITOR.clear_drawn_items()
 
-def global_set_automation_zoom():
-    global AUTOMATION_WIDTH
-    AUTOMATION_WIDTH = 690.0 * MIDI_SCALE
 
 AUTOMATION_POINT_DIAMETER = 15.0
 AUTOMATION_POINT_RADIUS = AUTOMATION_POINT_DIAMETER * 0.5
 AUTOMATION_RULER_WIDTH = 36.0
-AUTOMATION_WIDTH = 690.0
 
 AUTOMATION_MIN_HEIGHT = AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS
 
@@ -6301,8 +6297,9 @@ class automation_viewer(QtGui.QGraphicsView):
     def __init__(self, a_is_cc=True):
         QtGui.QGraphicsView.__init__(self)
         self.is_cc = a_is_cc
+        self.set_width()
         self.set_scale()
-        self.grid_max_start_time = AUTOMATION_WIDTH + \
+        self.grid_max_start_time = self.automation_width + \
             AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS
         self.automation_points = []
         self.clipboard = []
@@ -6310,7 +6307,7 @@ class automation_viewer(QtGui.QGraphicsView):
 
         self.axis_size = AUTOMATION_RULER_WIDTH
 
-        self.beat_width = AUTOMATION_WIDTH / CURRENT_ITEM_LEN
+        self.beat_width = self.automation_width / CURRENT_ITEM_LEN
         self.value_width = self.beat_width / 16.0
         self.lines = []
 
@@ -6333,6 +6330,9 @@ class automation_viewer(QtGui.QGraphicsView):
         AUTOMATION_EDITORS.append(self)
         self.selection_enabled = True
         self.scene.selectionChanged.connect(self.selection_changed)
+
+    def set_width(self):
+        self.automation_width = MIDI_SCALE * self.width()
 
     def selection_changed(self, a_event=None):
         if self.selection_enabled:
@@ -6454,7 +6454,7 @@ class automation_viewer(QtGui.QGraphicsView):
 
     def draw_axis(self):
         self.x_axis = QtGui.QGraphicsRectItem(
-            0, 0, AUTOMATION_WIDTH, self.axis_size)
+            0, 0, self.automation_width, self.axis_size)
         self.x_axis.setPos(self.axis_size, 0)
         self.scene.addItem(self.x_axis)
         self.y_axis = QtGui.QGraphicsRectItem(
@@ -6474,20 +6474,17 @@ class automation_viewer(QtGui.QGraphicsView):
 
 
     def draw_grid(self):
+        self.set_width()
         f_beat_pen = QtGui.QPen()
         f_beat_pen.setWidth(2)
-        f_bar_pen = QtGui.QPen()
-        f_bar_pen.setWidth(2)
-        f_bar_pen.setColor(QtGui.QColor(224, 60, 60))
-        f_line_pen = QtGui.QPen()
-        f_line_pen.setColor(QtGui.QColor(0, 0, 0, 40))
+
         if self.is_cc:
             f_labels = [0, '127', 0, '64', 0, '0']
         else:
             f_labels = [0, '1.0', 0, '0', 0, '-1.0']
         for i in range(1, 6):
             f_line = QtGui.QGraphicsLineItem(
-                0, 0, AUTOMATION_WIDTH, 0, self.y_axis)
+                0, 0, self.automation_width, 0, self.y_axis)
             f_line.setPos(self.axis_size, self.viewer_height * (i - 1) / 4)
             if i % 2:
                 f_label = QtGui.QGraphicsSimpleTextItem(
@@ -6545,7 +6542,7 @@ class automation_viewer(QtGui.QGraphicsView):
         f_width = float(f_rect.width()) - self.verticalScrollBar().width() - \
             30.0 - AUTOMATION_RULER_WIDTH
         self.region_scale = f_width / 690.0
-        self.item_width = AUTOMATION_WIDTH * self.region_scale
+        self.item_width = self.automation_width * self.region_scale
         self.viewer_height = float(f_rect.height()) - \
             self.horizontalScrollBar().height() - \
             30.0 - AUTOMATION_RULER_WIDTH
@@ -6560,9 +6557,9 @@ class automation_viewer(QtGui.QGraphicsView):
     def draw_item(self):
         self.setUpdatesEnabled(False)
         self.set_scale()
-        self.beat_width = AUTOMATION_WIDTH / CURRENT_ITEM_LEN
+        self.beat_width = self.automation_width / CURRENT_ITEM_LEN
         self.value_width = self.beat_width / 16.0
-        self.grid_max_start_time = (AUTOMATION_WIDTH +
+        self.grid_max_start_time = (self.automation_width +
             AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS)
         self.clear_drawn_items()
         if not ITEM_EDITOR.enabled:
@@ -6936,7 +6933,6 @@ def global_set_midi_zoom(a_val):
     global MIDI_SCALE
     MIDI_SCALE = a_val
     global_set_piano_roll_zoom()
-    global_set_automation_zoom()
 
 
 def global_open_items(a_items=None, a_reset_scrollbar=False):
