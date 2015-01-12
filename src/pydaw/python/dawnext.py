@@ -5939,6 +5939,16 @@ class piano_roll_editor_widget:
         self.controls_grid_layout.addWidget(QtGui.QLabel(_("Scale:")), 0, 5)
         self.controls_grid_layout.addWidget(self.scale_combobox, 0, 6)
 
+        self.controls_grid_layout.addWidget(QtGui.QLabel("V"), 0, 45)
+        self.vzoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.controls_grid_layout.addWidget(self.vzoom_slider, 0, 46)
+        self.vzoom_slider.setObjectName("zoom_slider")
+        self.vzoom_slider.setMaximumWidth(72)
+        self.vzoom_slider.setRange(9, 24)
+        self.vzoom_slider.setValue(PIANO_ROLL_NOTE_HEIGHT)
+        self.vzoom_slider.valueChanged.connect(self.set_midi_vzoom)
+        self.vzoom_slider.sliderReleased.connect(self.save_vzoom)
+
         self.controls_grid_layout.addItem(
             QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding), 0, 30)
 
@@ -6097,6 +6107,14 @@ class piano_roll_editor_widget:
         self.controls_grid_layout.addWidget(QtGui.QLabel(_("Snap:")), 0, 0)
         self.controls_grid_layout.addWidget(self.snap_combobox, 0, 1)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
+
+    def set_midi_vzoom(self, a_val):
+        global PIANO_ROLL_NOTE_HEIGHT
+        PIANO_ROLL_NOTE_HEIGHT = a_val
+        global_open_items()
+
+    def save_vzoom(self):
+        pydaw_util.set_file_setting("PIANO_VZOOM", self.vzoom_slider.value())
 
     def quantize_dialog(self):
         if not ITEM_EDITOR.enabled:
@@ -7094,15 +7112,6 @@ class item_list_editor:
         self.item_name_lineedit.setMinimumWidth(150)
         self.zoom_hlayout.addWidget(self.item_name_lineedit)
 
-        self.zoom_hlayout.addWidget(QtGui.QLabel("V"))
-        self.vzoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
-        self.zoom_hlayout.addWidget(self.vzoom_slider)
-        self.vzoom_slider.setObjectName("zoom_slider")
-        self.vzoom_slider.setRange(9, 24)
-        self.vzoom_slider.setValue(PIANO_ROLL_NOTE_HEIGHT)
-        self.vzoom_slider.valueChanged.connect(self.set_midi_vzoom)
-        self.vzoom_slider.sliderReleased.connect(self.save_vzoom)
-
         self.zoom_hlayout.addWidget(QtGui.QLabel("H"))
         self.zoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.zoom_hlayout.addWidget(self.zoom_slider)
@@ -7263,14 +7272,6 @@ class item_list_editor:
             MAIN_WINDOW, _("Error"),
            _("You must open an item first by double-clicking on one in "
            "the region editor on the 'Song/Region' tab."))
-
-    def set_midi_vzoom(self, a_val):
-        global PIANO_ROLL_NOTE_HEIGHT
-        PIANO_ROLL_NOTE_HEIGHT = a_val
-        global_open_items()
-
-    def save_vzoom(self):
-        pydaw_util.set_file_setting("PIANO_VZOOM", self.vzoom_slider.value())
 
     def set_midi_zoom(self, a_val):
         global_set_midi_zoom(a_val * 0.1)
