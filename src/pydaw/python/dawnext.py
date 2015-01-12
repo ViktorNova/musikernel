@@ -7798,6 +7798,7 @@ class transport_widget(libmk.AbstractTransport):
         REGION_SETTINGS.on_stop()
         AUDIO_SEQ_WIDGET.on_stop()
         self.set_controls_enabled(True)
+        self.loop_mode_combobox.setEnabled(True)
 
         if libmk.IS_RECORDING:
             if self.rec_end is None:
@@ -7865,6 +7866,7 @@ class transport_widget(libmk.AbstractTransport):
         AUDIO_SEQ_WIDGET.on_play()
         SEQUENCER.start_playback()
         self.set_controls_enabled(False)
+        self.loop_mode_combobox.setEnabled(False)
         global MREC_EVENTS
         MREC_EVENTS = []
         f_loop_pos = SEQUENCER.get_loop_pos()
