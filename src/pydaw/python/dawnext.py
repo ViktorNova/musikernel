@@ -3140,7 +3140,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 f_audio_item.audio_item.uid)
             f_audio_item.audio_item.clip_at_region_end(
                 pydaw_get_current_region_length(),
-                TRANSPORT.tempo_spinbox.value(),
+                CURRENT_REGION.get_tempo_at_pos(CURRENT_ITEM_REF.start_beat),
                 f_new_graph.length_in_seconds)
 
         PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
@@ -3231,7 +3231,8 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_list = AUDIO_SEQ.get_selected()
         if f_list:
             f_current_region_length = pydaw_get_current_region_length()
-            f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
+            f_global_tempo = CURRENT_REGION.get_tempo_at_pos(
+                CURRENT_ITEM_REF.start_beat)
             for f_item in f_list:
                 f_item.audio_item.clip_at_region_end(
                     f_current_region_length, f_global_tempo,
@@ -3897,7 +3898,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
                 _("You must have at least 2 items selected to crossfade"))
             return
 
-        f_tempo = float(TRANSPORT.tempo_spinbox.value())
+        f_tempo = CURRENT_REGION.get_tempo_at_pos(CURRENT_ITEM_REF.start_beat)
         f_changed = False
 
         for f_item in f_list:
