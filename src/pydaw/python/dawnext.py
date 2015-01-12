@@ -387,18 +387,6 @@ REGION_CLIPBOARD_COL_OFFSET = 0
 
 REGION_CLIPBOARD = []
 
-def global_tablewidget_to_region():
-    CURRENT_REGION.items = []
-    f_uid_dict = PROJECT.get_items_dict()
-    f_result = SEQUENCER.tablewidget_to_list()
-    for f_tuple in f_result:
-        CURRENT_REGION.add_item_ref_by_name(
-            f_tuple[0], f_tuple[1], f_tuple[2], f_uid_dict)
-    PROJECT.save_region(CURRENT_REGION)
-    PROJECT.commit(_("Edit region"))
-    SEQUENCER.open_region()
-
-
 def global_update_track_comboboxes(a_index=None, a_value=None):
     if not a_index is None and not a_value is None:
         TRACK_NAMES[int(a_index)] = str(a_value)
@@ -1278,6 +1266,7 @@ class ItemSequencer(QtGui.QGraphicsView):
                 self.show_context_menu()
 
         if REGION_EDITOR_MODE == 0:
+            self.current_item = self.get_item(f_pos)
             self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
             if a_event.modifiers() == QtCore.Qt.ControlModifier:
                 f_item = self.get_item(f_pos)
@@ -1293,9 +1282,10 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_beat = float(f_pos_x // SEQUENCER_PX_PER_BEAT)
                 f_track = int(f_pos_y // REGION_EDITOR_TRACK_HEIGHT)
                 f_uid = PROJECT.create_empty_item()
-                f_result = CURRENT_REGION.add_item_ref_by_uid(
+                f_item_ref = project.pydaw_sequencer_item(
                     f_track, f_beat, LAST_ITEM_LENGTH, f_uid)
-                self.selected_item_strings = {str(f_result)}
+                CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
+                self.selected_item_strings = {str(f_item_ref)}
                 TRACK_PANEL.tracks[f_track].check_output()
                 PROJECT.save_region(CURRENT_REGION)
                 REGION_SETTINGS.open_region()
@@ -1589,8 +1579,9 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_uid = libmk.PROJECT.get_wav_uid_by_name(f_file_name_str)
                 f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_uid)
                 f_length = f_graph.length_in_seconds / f_seconds_per_beat
-                CURRENT_REGION.add_item_ref_by_uid(
+                f_item_ref = project.pydaw_sequencer_item(
                     f_lane_num, f_beat_frac, f_length, f_item_uid)
+                CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
                 f_item = pydaw_audio_item(
                     f_uid, a_start_bar=0, a_start_beat=0.0,
                     a_lane_num=0)
@@ -2112,12 +2103,15 @@ class ItemSequencer(QtGui.QGraphicsView):
         """
         if REGION_EDITOR_MODE != 0:
             return
-        f_current_item = self.get_item()
-        if not self.current_coord or not f_current_item:
+
+        if not self.current_coord or not self.current_item:
             return
 
-        f_current_item_text = f_current_item.name
-        x, y, f_beat = self.current_coord[:3]
+        f_uid_dict = PROJECT.get_items_dict()
+        f_current_item = self.current_item.audio_item
+
+        f_current_item_text = f_uid_dict.get_name_by_uid(
+            f_current_item.item_uid)
 
         def note_ok_handler():
             f_cell_text = str(f_new_lineedit.text())
@@ -2134,12 +2128,12 @@ class ItemSequencer(QtGui.QGraphicsView):
                 return
             f_uid = PROJECT.copy_item(
                 f_current_item_text, str(f_new_lineedit.text()))
-            global_open_items([f_cell_text], a_reset_scrollbar=True)
             self.last_item_copied = f_cell_text
-            CURRENT_REGION.add_item_ref_by_uid(x, y, f_uid)
-            PROJECT.save_region(
-                str(REGION_SETTINGS.region_name_lineedit.text()),
-                CURRENT_REGION)
+
+            f_item_ref = f_current_item.clone()
+            f_item_ref.item_uid = f_uid
+            CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
+            PROJECT.save_region(CURRENT_REGION)
             PROJECT.commit(
                 _("Unlink item '{}' as '{}'").format(
                 f_current_item_text, f_cell_text))
@@ -2190,9 +2184,10 @@ class ItemSequencer(QtGui.QGraphicsView):
             CURRENT_REGION.remove_item_ref(f_item_obj)
             f_item_obj.uid = f_uid
             self.selected_item_strings.add(str(f_item_obj))
-            CURRENT_REGION.add_item_ref_by_uid(
+            f_item_ref = project.pydaw_sequencer_item(
                 f_item_obj.track_num, f_item_obj.start_beat,
                 f_item_obj.length_beats, f_uid)
+            CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
         PROJECT.save_region(CURRENT_REGION)
         PROJECT.commit(_("Auto-Unlink items"))
         REGION_SETTINGS.open_region()
@@ -2223,9 +2218,9 @@ class ItemSequencer(QtGui.QGraphicsView):
             f_new_uid = old_new_map[k]
             v.uid = f_new_uid
             self.selected_item_strings.add(str(v))
-            CURRENT_REGION.add_item_ref_by_uid(
-                v.track_num, v.start_beat,
-                v.length_beats, f_new_uid)
+            f_item_ref = project.pydaw_sequencer_item(
+                v.track_num, v.start_beat, v.length_beats, f_new_uid)
+            CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
         PROJECT.save_region(CURRENT_REGION)
         PROJECT.commit(_("Auto-Unlink unique items"))
         REGION_SETTINGS.open_region()
@@ -2276,6 +2271,7 @@ class ItemSequencer(QtGui.QGraphicsView):
             self.warn_no_region_selected()
             return
         if REGION_EDITOR_MODE == 0:
+            assert(False)
             if a_original_pos:
                 f_base_row = REGION_CLIPBOARD_ROW_OFFSET
                 f_base_column = REGION_CLIPBOARD_COL_OFFSET

@@ -412,8 +412,9 @@ class DawNextProject(libmk.AbstractProject):
             f_item = self.get_item_by_uid(f_uid)
             f_items_to_save[f_uid] = f_item
             self.rec_take[a_track_num] = f_item
-            f_sequencer.add_item_ref_by_uid(
+            f_item_ref = pydaw_sequencer_item(
                 a_track_num, a_start_beat, f_item_length, f_uid)
+            f_sequencer.add_item_ref_by_uid(f_item_ref)
 
         def copy_item(a_track_num):
             f_uid = get_item(a_track_num, a_beat)
@@ -425,8 +426,9 @@ class DawNextProject(libmk.AbstractProject):
                 f_item = self.get_item_by_uid(f_uid)
                 f_items_to_save[f_uid] = f_item
                 self.rec_take[a_track_num] = f_item
-                f_sequencer.add_item_ref_by_uid(
-                    a_track_num, a_beat, f_item_length, f_uid)
+                f_item_ref = pydaw_sequencer_item(
+                    a_track_num, a_start_beat, f_item_length, f_uid)
+                f_sequencer.add_item_ref_by_uid(f_item_ref)
             else:
                 new_item(a_track_num)
 
@@ -699,7 +701,7 @@ class DawNextProject(libmk.AbstractProject):
 class pydaw_sequencer_item:
     def __init__(
             self, a_track_num, a_start_beat, a_length_beats,
-            a_item_uid, a_start_pos=0.0):
+            a_item_uid=-1, a_start_pos=0.0):
         self.track_num = int(a_track_num)
         self.start_beat = float(a_start_beat)
         self.length_beats = float(a_length_beats)
@@ -712,6 +714,7 @@ class pydaw_sequencer_item:
         return pydaw_sequencer_item(*f_self)
 
     def __str__(self):
+        assert(self.item_uid >= 0)
         return "|".join(str(x) for x in
             (self.track_num, round(self.start_beat, 6),
             round(self.length_beats, 6), self.item_uid,
@@ -843,20 +846,13 @@ class pydaw_sequencer:
         for f_item in self.items:
             f_item.track_num = a_dict[f_item.track_num]
 
-    def add_item_ref_by_name(
-            self, a_track_num, a_start_beat,
-            a_length_beats, a_item_name, a_uid_dict):
-        f_item_uid = a_uid_dict.get_uid_by_name(a_item_name)
-        self.add_item_ref_by_uid(
-            a_track_num, a_start_beat, a_length_beats, f_item_uid)
+    def add_item_ref_by_name(self, a_item_ref, a_item_name, a_uid_dict):
+        a_item_ref.item_uid = a_uid_dict.get_uid_by_name(a_item_name)
+        self.add_item_ref_by_uid(a_item_ref)
 
-    def add_item_ref_by_uid(
-            self, a_track_num, a_start_beat, a_length_beats, a_item_uid):
-        f_result = pydaw_sequencer_item(
-            a_track_num, a_start_beat, a_length_beats, a_item_uid)
-        self.remove_item_ref(f_result)
-        self.items.append(f_result)
-        return f_result
+    def add_item_ref_by_uid(self, a_item_ref):
+        self.remove_item_ref(a_item_ref)
+        self.items.append(a_item_ref)
 
     def add_item(self, a_item):
         self.items.append(a_item)
