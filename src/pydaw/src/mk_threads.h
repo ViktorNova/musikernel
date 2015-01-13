@@ -92,7 +92,7 @@ void v_pydaw_activate(int a_thread_count,
 
     musikernel->hosts[MK_HOST_DAWNEXT].run = v_dn_run_engine;
     musikernel->hosts[MK_HOST_DAWNEXT].osc_send = v_dn_osc_send;
-    musikernel->hosts[MK_HOST_DAWNEXT].audio_inputs = NULL;
+    musikernel->hosts[MK_HOST_DAWNEXT].audio_inputs = v_dn_update_audio_inputs;
 
     musikernel->hosts[MK_HOST_EDMNEXT].run = v_en_run_engine;
     musikernel->hosts[MK_HOST_EDMNEXT].osc_send = v_en_osc_send;

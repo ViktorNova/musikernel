@@ -7847,10 +7847,14 @@ class AudioInputWidget:
             f_input = AudioInput(f_i, self.layout, self.callback, f_count - 1)
             self.inputs.append(f_input)
 
-    def callback(self, a_notify):
+    def get_inputs(self):
         f_result = libmk.mk_project.AudioInputTracks()
         for f_i, f_input in zip(range(len(self.inputs)), self.inputs):
             f_result.add_track(f_i, f_input.get_value())
+        return f_result
+
+    def callback(self, a_notify):
+        f_result = self.get_inputs()
         PROJECT.save_audio_inputs(f_result)
         if a_notify:
             PROJECT.IPC.save_audio_inputs()
@@ -7925,6 +7929,9 @@ class transport_widget(libmk.AbstractTransport):
 
         self.suppress_osc = False
 
+    def open_project(self):
+        self.audio_inputs.open_project()
+
     def set_snap(self, a_val=None):
         pydaw_set_audio_snap(a_val)
         MAIN_WINDOW.tab_changed()
@@ -7959,6 +7966,7 @@ class transport_widget(libmk.AbstractTransport):
         AUDIO_SEQ_WIDGET.on_stop()
         self.set_controls_enabled(True)
         self.loop_mode_combobox.setEnabled(True)
+        self.playback_menu_button.setEnabled(True)
 
         if libmk.IS_RECORDING:
             if self.rec_end is None:
@@ -7971,6 +7979,7 @@ class transport_widget(libmk.AbstractTransport):
         self.set_time(SEQUENCER.get_beat_value())
 
     def show_save_items_dialog(self):
+        f_inputs = self.audio_inputs.inputs
         def ok_handler():
             f_file_name = str(f_file.text())
             if f_file_name is None or f_file_name == "":
@@ -7979,9 +7988,13 @@ class transport_widget(libmk.AbstractTransport):
                     _("You must select a name for the item"))
                 return
 
+            f_sample_count = CURRENT_REGION.get_sample_count(
+                self.rec_start, self.rec_end, pydaw_util.SAMPLE_RATE)
+
             PROJECT.save_recorded_items(
                 f_file_name, MREC_EVENTS, self.overdub_checkbox.isChecked(),
-                pydaw_util.SAMPLE_RATE, self.rec_start, self.rec_end)
+                pydaw_util.SAMPLE_RATE, self.rec_start, self.rec_end,
+                f_inputs, f_sample_count, f_file_name)
             REGION_SETTINGS.open_region()
             f_window.close()
 
@@ -8009,24 +8022,27 @@ class transport_widget(libmk.AbstractTransport):
         f_layout.addLayout(f_ok_cancel_layout, 8, 2)
         f_window.exec_()
 
+
     def on_rec(self):
         self.active_devices = [x for x in MIDI_DEVICES_DIALOG.devices
             if x.record_checkbox.isChecked()]
-        if not self.active_devices:
-            QtGui.QMessageBox.warning(
-                self.group_box, _("Error"), _("No track record-armed"))
-            return False
-        if self.overdub_checkbox.isChecked() and \
-        self.loop_mode_combobox.currentIndex() > 0:
+        if not self.active_devices and not self.audio_inputs.active():
             QtGui.QMessageBox.warning(
                 self.group_box, _("Error"),
-                _("Cannot use overdub mode with loop mode to record"))
+                _("No MIDI or audio inputs record-armed"))
             return False
+#        if self.overdub_checkbox.isChecked() and \
+#        self.loop_mode_combobox.currentIndex() > 0:
+#            QtGui.QMessageBox.warning(
+#                self.group_box, _("Error"),
+#                _("Cannot use overdub mode with loop mode to record"))
+#            return False
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
         SEQUENCER.start_playback()
         self.set_controls_enabled(False)
         self.loop_mode_combobox.setEnabled(False)
+        self.playback_menu_button.setEnabled(False)
         global MREC_EVENTS
         MREC_EVENTS = []
         f_loop_pos = SEQUENCER.get_loop_pos()
@@ -8442,6 +8458,7 @@ def global_open_project(a_project_file):
     MIDI_DEVICES_DIALOG.set_routings()
     REGION_SETTINGS.open_region()
     TRANSPORT.snap_combobox.setCurrentIndex(1)
+    TRANSPORT.open_project()
 
 def global_new_project(a_project_file):
     global PROJECT

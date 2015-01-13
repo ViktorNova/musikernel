@@ -159,8 +159,12 @@ typedef struct
     float playback_inc;
     //The number of samples per beat, for calculating length
     float samples_per_beat;
-    char padding[(CACHE_LINE_SIZE * 2) - (4 * sizeof(int)) -
-        (3 * sizeof(float)) - (3 * sizeof(double)) - (2 * sizeof(long))];
+    float * input_buffer;
+    int input_count;
+    int * input_index;
+    char padding[(CACHE_LINE_SIZE * 2) - (5 * sizeof(int)) -
+        (3 * sizeof(float)) - (3 * sizeof(double)) - (2 * sizeof(long)) -
+        (sizeof(void*) * 2)];
 }t_dn_thread_storage;
 
 typedef struct
@@ -880,6 +884,15 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         }
     }
 
+    for(f_i = 0; f_i < a_ts->input_count; ++f_i)
+    {
+        if(a_ts->input_index[f_i] == a_global_track_num)
+        {
+            v_audio_input_run(f_i, f_track->buffers,
+                a_ts->input_buffer, a_ts->sample_count);
+        }
+    }
+
     f_i = 0;
 
     while(f_i < MAX_PLUGIN_COUNT)
@@ -1411,6 +1424,7 @@ inline void v_dn_run_engine(int a_sample_count,
         self->ts[0].is_looping = f_seq_period->is_looping;
         self->ts[0].playback_mode = musikernel->playback_mode;
         self->ts[0].sample_count = sample_count;
+        self->ts[0].input_buffer = a_input_buffers;
 
         if(musikernel->playback_mode > 0)
         {
@@ -2330,14 +2344,27 @@ t_dawnext * g_dawnext_get()
     f_result->ts[0].is_first_period = 0;
     f_result->ts[0].playback_mode = 0;
     f_result->ts[0].suppress_new_audio_items = 0;
+    f_result->ts[0].input_buffer = NULL;
+    f_result->ts[0].input_count = PYDAW_AUDIO_INPUT_TRACK_COUNT;
+
+    int f_i;
+
+    for(f_i = 0; f_i < MAX_WORKER_THREADS; ++f_i)
+    {
+        clalloc((void**)&f_result->ts[f_i].input_index,
+            sizeof(int) * MAX_AUDIO_INPUT_COUNT);
+        //MAX_AUDIO_INPUT_COUNT is done for padding instead of
+        //PYDAW_AUDIO_INPUT_TRACK_COUNT
+    }
+
+    assert(PYDAW_AUDIO_INPUT_TRACK_COUNT < MAX_AUDIO_INPUT_COUNT);
 
     g_seq_event_result_init(&f_result->seq_event_result);
 
     f_result->routing_graph = NULL;
 
-    int f_i = 0;
+    f_i = 0;
     int f_track_total = 0;
-
 
     while(f_i < DN_TRACK_COUNT)
     {
@@ -2383,6 +2410,7 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
             register int f_i = 0;
             int f_i2;
             t_pytrack * f_track;
+            int f_old_mode = musikernel->playback_mode;
 
             if(a_lock)
             {
@@ -2424,6 +2452,11 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
                 pthread_spin_unlock(&musikernel->main_lock);
             }
 
+            if(f_old_mode == PYDAW_PLAYBACK_MODE_REC)
+            {
+                v_stop_record_audio();
+            }
+
         }
             break;
         case 1:  //play
@@ -2450,6 +2483,9 @@ void v_dn_set_playback_mode(t_dawnext * self, int a_mode,
             {
                 return;
             }
+
+            v_prepare_to_record_audio();
+
             if(a_lock)
             {
                 pthread_spin_lock(&musikernel->main_lock);
@@ -2893,6 +2929,17 @@ void v_dn_set_midi_devices()
 void v_dn_update_audio_inputs()
 {
     v_pydaw_update_audio_inputs(dawnext->project_folder);
+
+    pthread_spin_lock(&musikernel->main_lock);
+
+    int f_i;
+    for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
+    {
+        dawnext->ts[0].input_index[f_i] =
+            musikernel->audio_inputs[f_i].output_track;
+    }
+
+    pthread_spin_unlock(&musikernel->main_lock);
 }
 
 

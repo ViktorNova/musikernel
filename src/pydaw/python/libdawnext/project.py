@@ -34,6 +34,8 @@ from libdawnext.osc import DawNextOsc
 from PyQt4 import QtGui
 from libpydaw import pydaw_history
 
+import wavefile
+
 TRACK_COUNT_ALL = 32
 MAX_AUDIO_ITEM_COUNT = 256
 MAX_REGION_LENGTH = 512 #measures
@@ -387,10 +389,42 @@ class DawNextProject(libmk.AbstractProject):
 
     def save_recorded_items(
             self, a_item_name, a_mrec_list, a_overdub,
-            a_sr, a_start_beat, a_end_beat):
+            a_sr, a_start_beat, a_end_beat, a_audio_inputs,
+            a_sample_count, a_file_name):
         print("\n".join(a_mrec_list))
-        # TODO:  Ensure that the user can't switch MIDI device/track during
-        # recording, but can during playback...
+
+        f_audio_files_dict = {}
+
+        for f_i, f_ai in zip(range(len(a_audio_inputs)), a_audio_inputs):
+            f_val = f_ai.get_value()
+            if f_val.rec:
+                f_path = os.path.join(
+                    libmk.PROJECT.audio_tmp_folder, "{}.wav".format(f_i))
+                if os.path.isfile(f_path):
+                    f_file_name = "-".join(
+                        str(x) for x in (a_file_name, f_i, f_ai.get_name()))
+                    f_new_path = os.path.join(
+                        libmk.PROJECT.audio_rec_folder, f_file_name)
+                    if f_new_path.lower().endswith(".wav"):
+                        f_new_path = f_new_path[:-4]
+                    if os.path.exists(f_new_path + ".wav"):
+                        for f_i in range(10000):
+                            f_tmp = "{}-{}.wav".format(f_new_path, f_i)
+                            if not os.path.exists(f_tmp):
+                                f_new_path = f_tmp
+                                break
+                    else:
+                        f_new_path += ".wav"
+                    shutil.move(f_path, f_new_path)
+                    f_uid = libmk.PROJECT.get_wav_uid_by_name(f_new_path)
+                    with wavefile.WaveReader(f_new_path) as f_reader:
+                        f_audio_files_dict[f_i] = (
+                            f_new_path, f_uid, f_reader.frames, f_ai.output)
+                else:
+                    print("Error, path did not exist: {}".format(f_path))
+
+        f_audio_frame = 0
+
         f_mrec_items = [x.split("|") for x in a_mrec_list]
         f_mrec_items.sort(key=lambda x: int(x[-1]))
         print("\n".join(str(x) for x in f_mrec_items))
@@ -404,6 +438,10 @@ class DawNextProject(libmk.AbstractProject):
         f_orig_items = {}
         self.rec_take = {}
 
+        f_audio_tracks = [x[3] for x in f_audio_files_dict.values()]
+        f_midi_tracks = [x[2] for x in f_mrec_items]
+        f_active_tracks = set(f_audio_tracks + f_midi_tracks)
+
         def get_item(a_region, a_track_num, a_bar_num):
             if a_region in f_orig_items:
                 for f_item in f_orig_items[a_region]:
@@ -414,6 +452,21 @@ class DawNextProject(libmk.AbstractProject):
 
         def new_take():
             self.rec_take = {}
+            for f_track in f_active_tracks:
+                copy_take(f_track)
+            for k, v in f_audio_files_dict.items():
+                f_path, f_frames, f_uid, f_output = v
+                f_item = self.rec_take[f_output]
+                f_lane = f_item.get_next_lane()
+                f_start = (f_frames / f_audio_frame) * 1000.0
+                f_end = ((f_frames + a_sample_count) / f_audio_frame) * 1000.0
+                f_start = pydaw_util.pydaw_clip_value(f_start, 0.0, f_end)
+                f_end = pydaw_util.pydaw_clip_value(f_end, f_start, 1000.0)
+                f_audio_item = pydaw_audio_item(
+                    f_uid, a_sample_start=f_start, a_sample_end=f_end,
+                    a_lane_num=f_lane)
+                f_index = f_item.get_next_index()
+                f_item.add_item(f_index, f_audio_item)
 
         def copy_take(a_track_num):
             if a_overdub:
@@ -474,10 +527,8 @@ class DawNextProject(libmk.AbstractProject):
 
             if f_type == "loop":
                 print("Loop event")
+                f_audio_frame += a_sample_count
                 continue
-
-            if not f_track in self.rec_take:
-                copy_take(f_track)
 
             self.rec_item = self.rec_take[f_track]
 
@@ -838,7 +889,7 @@ class pydaw_sequencer:
                 return f_t1.tempo
         return f_tempo_markers[-1].tempo
 
-    def get_time_at_beat(self, a_beat):
+    def get_seconds_at_beat(self, a_beat):
         f_time = 0.0
         f_found = False
         f_tempo_markers = self.get_tempo_markers()
@@ -852,10 +903,19 @@ class pydaw_sequencer:
         if not f_found:
             f_t1 = f_tempo_markers[-1]
             f_time += (a_beat - f_t1.beat) * (60.0 / f_t1.tempo)
+        return f_time
+
+    def get_time_at_beat(self, a_beat):
+        f_time = self.get_seconds_at_beat(a_beat)
         f_minutes = int(f_time / 60)
         f_seconds = str(round(f_time % 60, 1))
         f_seconds, f_frac = f_seconds.split('.', 1)
         return "{}:{}.{}".format(f_minutes, str(f_seconds).zfill(2), f_frac)
+
+    def get_sample_count(self, a_beat1, a_beat2, a_sr):
+        f_time1 = self.get_seconds_at_beat(a_beat1)
+        f_time2 = self.get_seconds_at_beat(a_beat2)
+        return int(round((f_time1 - f_time2) * a_sr))
 
     def reorder(self, a_dict):
         for f_item in self.items:
