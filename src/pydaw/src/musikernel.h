@@ -1116,6 +1116,9 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
                 f_right_ch = -1;
             }
 
+            v_iterate_2d_char_array(f_2d_array);
+            int f_output_mode = atoi(f_2d_array->current_str);
+
             // name, ignored by the engine
             v_iterate_2d_char_array_to_next_line(f_2d_array);
 
@@ -1128,6 +1131,7 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
             f_ai->rec = f_rec;
             f_ai->monitor = f_monitor;
             f_ai->output_track = f_out;
+            f_ai->output_mode = f_output_mode;
             f_ai->stereo_ch = f_right_ch;
             f_ai->vol = f_vol;
             f_ai->vol_linear = f_db_to_linear_fast(f_vol);

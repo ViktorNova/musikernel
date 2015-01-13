@@ -1069,11 +1069,11 @@ class AudioInputTracks:
         self.tracks = {}
 
     def __str__(self):
-        f_result = ""
+        f_result = []
         for k, v in list(self.tracks.items()):
-            f_result += "{}|{}".format(k, v)
-        f_result += pydaw_terminating_char
-        return f_result
+            f_result.append("{}|{}".format(k, v))
+        f_result.append(pydaw_terminating_char)
+        return "\n".join(f_result)
 
     @staticmethod
     def from_str(a_str):
@@ -1091,19 +1091,20 @@ class AudioInputTracks:
 class AudioInputTrack:
     def __init__(
             self, a_rec=0, a_monitor=0, a_vol=0.0, a_output=0,
-            a_stereo=-1, a_name=""):
+            a_stereo=-1, a_sidechain=0, a_name=""):
         self.rec = int(a_rec)
         self.monitor = int(a_monitor)
         self.output = int(a_output)
         self.vol = float(a_vol)
         self.name = str(a_name)
         self.stereo = int(a_stereo)
+        self.sidechain = int(a_sidechain)
 
     def __str__(self):
-        return "{}\n".format("|".join(
+        return "|".join(
             str(x) for x in
             (self.rec, self.monitor, self.vol, self.output,
-             self.stereo, self.name)))
+             self.stereo, self.sidechain, self.name))
 
 
 class MkAudioItem:

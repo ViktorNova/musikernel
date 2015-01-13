@@ -33,6 +33,7 @@ typedef struct
     int channels;
     int stereo_ch;
     int output_track;
+    int output_mode;  //0=normal,1=sidechain,2=both
     float vol, vol_linear;
     SF_INFO sf_info;
     SNDFILE * sndfile;
@@ -73,6 +74,7 @@ void g_pyaudio_input_init(t_pyaudio_input * f_result, float a_sr)
     f_result->buffer_to_flush = 0;
     f_result->flush_last_buffer_pending = 0;
     f_result->output_track = 0;
+    f_result->output_mode = 0;
     f_result->vol = 0.0f;
     f_result->vol_linear = 1.0f;
 }
