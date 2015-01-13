@@ -274,7 +274,7 @@ class AudioInput:
         f_stereo = self.stereo_combobox.currentIndex() - 1
         return libmk.mk_project.AudioInputTrack(
             f_on, f_monitor, f_vol, 0,
-            f_stereo, self.name_lineedit.text())
+            f_stereo, 0, self.name_lineedit.text())
 
     def set_value(self, a_val):
         self.suppress_updates = True
