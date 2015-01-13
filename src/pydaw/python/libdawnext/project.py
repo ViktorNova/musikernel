@@ -49,6 +49,7 @@ pydaw_file_midi_routing = os.path.join(
     pydaw_folder_dawnext, "midi_routing.txt")
 pydaw_file_pyitems = os.path.join(pydaw_folder_dawnext, "items.txt")
 pydaw_file_pytracks = os.path.join(pydaw_folder_dawnext, "tracks.txt")
+pydaw_file_pyinput = os.path.join(pydaw_folder_dawnext, "input.txt")
 pydaw_file_notes = os.path.join(pydaw_folder_dawnext, "notes.txt")
 
 #Anything smaller gets deleted when doing a transform
@@ -144,6 +145,8 @@ class DawNextProject(libmk.AbstractProject):
             self.project_folder, pydaw_file_midi_routing)
         self.automation_file = os.path.join(
             self.project_folder, pydaw_file_regions_atm)
+        self.audio_inputs_file = os.path.join(
+            self.project_folder, pydaw_file_pyinput)
 
         self.project_folders = [
             self.project_folder, self.items_folder, self.track_pool_folder,]
@@ -369,6 +372,18 @@ class DawNextProject(libmk.AbstractProject):
         f_items_dict = self.get_items_dict()
         f_uid = f_items_dict.get_uid_by_name(a_item_name)
         return pydaw_item.from_str(self.get_item_string(f_uid), f_uid)
+
+    def save_audio_inputs(self, a_tracks):
+        if not self.suppress_updates:
+            self.save_file("", pydaw_file_pyinput, str(a_tracks))
+
+    def get_audio_inputs(self):
+        if os.path.isfile(self.audio_inputs_file):
+            with open(self.audio_inputs_file) as f_file:
+                f_str = f_file.read()
+            return libmk.mk_project.AudioInputTracks.from_str(f_str)
+        else:
+            return libmk.mk_project.AudioInputTracks()
 
     def save_recorded_items(
             self, a_item_name, a_mrec_list, a_overdub,
