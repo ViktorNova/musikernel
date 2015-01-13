@@ -4646,20 +4646,10 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         self.v_zoom_slider.setRange(10, 100)
         self.v_zoom_slider.setValue(10)
         self.v_zoom_slider.setSingleStep(1)
-        self.v_zoom_slider.setMaximumWidth(210)
+        self.v_zoom_slider.setMaximumWidth(150)
         self.v_zoom_slider.valueChanged.connect(self.set_v_zoom)
-        self.controls_grid_layout.addWidget(QtGui.QLabel(_("V-Zoom:")), 0, 45)
+        self.controls_grid_layout.addWidget(QtGui.QLabel(_("V")), 0, 45)
         self.controls_grid_layout.addWidget(self.v_zoom_slider, 0, 46)
-
-        self.h_zoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
-        self.h_zoom_slider.setObjectName("zoom_slider")
-        self.h_zoom_slider.setRange(10, 200)
-        self.h_zoom_slider.setValue(10)
-        self.h_zoom_slider.setSingleStep(1)
-        self.h_zoom_slider.setMaximumWidth(210)
-        self.h_zoom_slider.valueChanged.connect(self.set_zoom)
-        self.controls_grid_layout.addWidget(QtGui.QLabel(_("H-Zoom:")), 0, 49)
-        self.controls_grid_layout.addWidget(self.h_zoom_slider, 0, 50)
 
         self.audio_items_clipboard = []
         self.disable_on_play = (self.menu_button,)
@@ -4794,10 +4784,6 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
 
     def set_v_zoom(self, a_val=None):
         AUDIO_SEQ.set_v_zoom(float(a_val) * 0.1)
-        global_open_audio_items(a_reload=False)
-
-    def set_zoom(self, a_val=None):
-        AUDIO_SEQ.set_zoom(float(a_val) * 0.1)
         global_open_audio_items(a_reload=False)
 
 
@@ -7272,6 +7258,7 @@ class item_list_editor:
     def set_midi_zoom(self, a_val):
         global_set_midi_zoom(a_val * 0.1)
         global_open_items()
+        AUDIO_SEQ.set_zoom(float(a_val) * 0.1)
 
     def set_headers(self): #Because clearing the table clears the headers
         self.notes_table_widget.setHorizontalHeaderLabels(
