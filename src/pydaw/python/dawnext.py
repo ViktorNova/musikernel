@@ -871,8 +871,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                 if a_event.modifiers() == QtCore.Qt.ControlModifier:
                     f_item.is_copying = True
                     f_item.width_orig = f_item.rect().width()
-                    SEQUENCER.draw_item(
-                        f_item.name, f_item.audio_item)
+                    SEQUENCER.draw_item(f_item.name, f_item.audio_item)
                 if self.is_start_resizing:
                     f_item.width_orig = 0.0
                 else:
@@ -1011,8 +1010,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                 f_pos_x = f_item.quantize_scene(f_pos_x)
                 f_item.setPos(f_pos_x, f_pos_y)
                 if not f_item.is_moving:
-                    f_item.setGraphicsEffect(
-                        QtGui.QGraphicsOpacityEffect())
+                    f_item.setGraphicsEffect(QtGui.QGraphicsOpacityEffect())
                     f_item.is_moving = True
 
     def mouseReleaseEvent(self, a_event):
@@ -1032,7 +1030,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
             a_event.accept()
         for f_audio_item in SEQUENCER.get_selected():
             f_item = f_audio_item.audio_item
-            f_pos_x = f_audio_item.pos().x()
+            f_pos_x = pydaw_util.pydaw_clip_min(f_audio_item.pos().x(), 0.0)
             if f_audio_item.is_resizing:
                 f_x = (f_audio_item.width_orig + f_event_diff +
                     f_audio_item.quantize_offset)
