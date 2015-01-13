@@ -3664,7 +3664,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             for f_item in AUDIO_SEQ.audio_items:
                 if f_item.isSelected():
                     f_pos_x = f_item.pos().x()
-                    f_pos_y = f_item.pos().y()
+                    f_pos_y = a_event.scenePos().y()
                     f_pos_x = pydaw_clip_value(f_pos_x, 0.0, f_max_x)
                     f_ignored, f_pos_y = f_item.y_pos_to_lane_number(f_pos_y)
                     f_pos_x = f_item.quantize_scene(f_pos_x)
