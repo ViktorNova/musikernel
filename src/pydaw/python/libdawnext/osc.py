@@ -108,3 +108,6 @@ class DawNextOsc(libmk.AbstractIPC):
 
     def pydaw_set_pos(self, a_beat):
         self.send_configure("pos", str(a_beat))
+
+    def save_audio_inputs(self):
+        self.send_configure("ai", "")

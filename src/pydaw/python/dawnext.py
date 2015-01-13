@@ -7762,10 +7762,20 @@ class AudioInput:
         self.vol_layout.addWidget(self.vol_label)
         self.stereo_combobox = QtGui.QComboBox()
         a_layout.addWidget(self.stereo_combobox, a_num, 4)
-        self.stereo_combobox.setMinimumWidth(72)
+        self.stereo_combobox.setMinimumWidth(75)
         self.stereo_combobox.addItems([_("None")] +
             [str(x) for x in range(a_count + 1)])
         self.stereo_combobox.currentIndexChanged.connect(self.update_engine)
+        self.output_mode_combobox = QtGui.QComboBox()
+        self.output_mode_combobox.setMinimumWidth(100)
+        self.output_mode_combobox.addItems(
+            [_("Normal"), _("Sidechain"), _("Both")])
+        a_layout.addWidget(self.output_mode_combobox, a_num, 5)
+        self.output_track_combobox = QtGui.QComboBox()
+        self.output_track_combobox.setMinimumWidth(140)
+        AUDIO_TRACK_COMBOBOXES.append(self.output_track_combobox)
+        self.output_track_combobox.addItems(TRACK_NAMES)
+        a_layout.addWidget(self.output_track_combobox, a_num, 6)
         self.suppress_updates = False
 
     def name_update(self, a_val=None):
@@ -7792,9 +7802,12 @@ class AudioInput:
         f_vol = self.get_vol()
         f_monitor = 1 if self.monitor_checkbox.isChecked() else 0
         f_stereo = self.stereo_combobox.currentIndex() - 1
+        f_mode = self.output_mode_combobox.currentIndex()
+        f_output = self.output_track_combobox.currentIndex()
+        f_name = self.name_lineedit.text()
+
         return libmk.mk_project.AudioInputTrack(
-            f_on, f_monitor, f_vol, 0,
-            f_stereo, self.name_lineedit.text())
+            f_on, f_monitor, f_vol, f_output, f_stereo, f_mode, f_name)
 
     def set_value(self, a_val):
         self.suppress_updates = True
@@ -7816,7 +7829,8 @@ class AudioInputWidget:
         self.main_layout.addWidget(QtGui.QLabel(_("Audio Inputs")))
         self.main_layout.addLayout(self.layout)
         f_labels = (
-            _("Name"), _("Rec."), _("Mon."), _("Gain"), _("Stereo"))
+            _("Name"), _("Rec."), _("Mon."), _("Gain"), _("Stereo"),
+            _("Mode"), _("Output"))
         for f_i, f_label in zip(range(len(f_labels)), f_labels):
             self.layout.addWidget(QtGui.QLabel(f_label), 0, f_i)
         self.inputs = []
@@ -7833,7 +7847,7 @@ class AudioInputWidget:
             f_result.add_track(f_i, f_input.get_value())
         PROJECT.save_audio_inputs(f_result)
         if a_notify:
-            PROJECT.wn_osc.save_audio_inputs()
+            PROJECT.IPC.save_audio_inputs()
 
     def active(self):
         return [x.get_value() for x in self.inputs
