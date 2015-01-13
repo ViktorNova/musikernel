@@ -7771,10 +7771,14 @@ class AudioInput:
         self.output_mode_combobox.addItems(
             [_("Normal"), _("Sidechain"), _("Both")])
         a_layout.addWidget(self.output_mode_combobox, a_num, 5)
+        self.output_mode_combobox.currentIndexChanged.connect(
+            self.update_engine)
         self.output_track_combobox = QtGui.QComboBox()
         self.output_track_combobox.setMinimumWidth(140)
         AUDIO_TRACK_COMBOBOXES.append(self.output_track_combobox)
         self.output_track_combobox.addItems(TRACK_NAMES)
+        self.output_track_combobox.currentIndexChanged.connect(
+            self.update_engine)
         a_layout.addWidget(self.output_track_combobox, a_num, 6)
         self.suppress_updates = False
 
@@ -7818,6 +7822,8 @@ class AudioInput:
         self.monitor_checkbox.setChecked(f_monitor)
         self.vol_slider.setValue(int(a_val.vol * 10.0))
         self.stereo_combobox.setCurrentIndex(a_val.stereo + 1)
+        self.output_mode_combobox.setCurrentIndex(a_val.sidechain)
+        self.output_track_combobox.setCurrentIndex(a_val.output)
         self.suppress_updates = False
 
 

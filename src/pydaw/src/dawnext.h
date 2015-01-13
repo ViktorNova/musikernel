@@ -32,6 +32,7 @@ GNU General Public License for more details.
 #define DN_CONFIGURE_KEY_SET_POS "pos"
 #define DN_CONFIGURE_KEY_PLUGIN_INDEX "pi"
 #define DN_CONFIGURE_KEY_UPDATE_SEND "ts"
+#define DN_CONFIGURE_KEY_AUDIO_INPUTS "ai"
 
 #define DN_LOOP_MODE_OFF 0
 #define DN_LOOP_MODE_REGION 1
@@ -2889,6 +2890,12 @@ void v_dn_set_midi_devices()
 }
 
 
+void v_dn_update_audio_inputs()
+{
+    v_pydaw_update_audio_inputs(dawnext->project_folder);
+}
+
+
 void v_dn_configure(const char* a_key, const char* a_value)
 {
     t_dawnext * self = dawnext;
@@ -3030,6 +3037,10 @@ void v_dn_configure(const char* a_key, const char* a_value)
     else if(!strcmp(a_key, DN_CONFIGURE_KEY_UPDATE_SEND))
     {
         v_dn_update_track_send(self, 1);
+    }
+    else if(!strcmp(a_key, DN_CONFIGURE_KEY_AUDIO_INPUTS))
+    {
+        v_dn_update_audio_inputs();
     }
     else if(!strcmp(a_key, DN_CONFIGURE_KEY_SET_OVERDUB_MODE))
     {
