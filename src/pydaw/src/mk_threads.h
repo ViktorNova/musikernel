@@ -106,6 +106,8 @@ void v_pydaw_activate(int a_thread_count,
     g_en_instantiate();
     g_wavenext_get();
 
+    v_open_project(a_project_path, 1);
+
     char * f_host_str = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
     get_file_setting(f_host_str, "host", "0");
     int f_host = atoi(f_host_str);
@@ -113,8 +115,6 @@ void v_pydaw_activate(int a_thread_count,
     free(f_host_str);
 
     v_pydaw_set_host(f_host);
-
-    v_open_project(a_project_path, 1);
 
     v_pydaw_init_worker_threads(
         a_thread_count, a_set_thread_affinity, a_aux_threads);
