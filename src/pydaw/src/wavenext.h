@@ -316,7 +316,7 @@ inline void v_pydaw_run_wave_editor(int sample_count,
 
     for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
     {
-        v_audio_input_run(f_i, output, a_input, sample_count);
+        v_audio_input_run(f_i, output, NULL, a_input, sample_count, NULL);
     }
 
     if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_PLAY)

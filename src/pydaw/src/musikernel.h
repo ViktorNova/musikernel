@@ -973,12 +973,19 @@ void * v_pydaw_audio_recording_thread(void* a_arg)
     return (void*)1;
 }
 
-void v_audio_input_run(int f_index, float ** output,
-        float * a_input, int sample_count)
+void v_audio_input_run(int f_index, float ** output, float ** sc_output,
+        float * a_input, int sample_count, int * a_sc_dirty)
 {
     int f_i2;
     float f_tmp_sample;
     t_pyaudio_input * f_ai = &musikernel->audio_inputs[f_index];
+
+    int f_output_mode = f_ai->output_mode;
+
+    if(f_output_mode)
+    {
+        *a_sc_dirty = 1;
+    }
 
     if(f_ai->rec && musikernel->playback_mode == PYDAW_PLAYBACK_MODE_REC)
     {
@@ -1044,11 +1051,27 @@ void v_audio_input_run(int f_index, float ** output,
         {
             f_tmp_sample = a_input[f_buffer_pos] * (f_ai->vol_linear);
 
-            output[0][f_i2] += f_tmp_sample;
+            if(f_output_mode != 1)
+            {
+                output[0][f_i2] += f_tmp_sample;
+            }
+
+            if(f_output_mode > 0)
+            {
+                sc_output[0][f_i2] += f_tmp_sample;
+            }
 
             if(f_ai->stereo_ch == -1)
             {
-                output[1][f_i2] += f_tmp_sample;
+                if(f_output_mode != 1)
+                {
+                    output[1][f_i2] += f_tmp_sample;
+                }
+
+                if(f_output_mode > 0)
+                {
+                    sc_output[1][f_i2] += f_tmp_sample;
+                }
             }
 
             f_buffer_pos += PYDAW_AUDIO_INPUT_TRACK_COUNT;
@@ -1062,7 +1085,15 @@ void v_audio_input_run(int f_index, float ** output,
             {
                 f_tmp_sample = a_input[f_buffer_pos] * (f_ai->vol_linear);
 
-                output[1][f_i2] += f_tmp_sample;
+                if(f_output_mode != 1)
+                {
+                    output[1][f_i2] += f_tmp_sample;
+                }
+
+                if(f_output_mode > 0)
+                {
+                    sc_output[1][f_i2] += f_tmp_sample;
+                }
 
                 f_buffer_pos += PYDAW_AUDIO_INPUT_TRACK_COUNT;
             }

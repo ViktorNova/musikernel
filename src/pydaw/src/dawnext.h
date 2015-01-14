@@ -888,8 +888,9 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
     {
         if(a_ts->input_index[f_i] == a_global_track_num)
         {
-            v_audio_input_run(f_i, f_track->buffers,
-                a_ts->input_buffer, a_ts->sample_count);
+            v_audio_input_run(f_i, f_track->buffers, f_track->sc_buffers,
+                a_ts->input_buffer, a_ts->sample_count,
+                &f_track->sc_buffers_dirty);
         }
     }
 
