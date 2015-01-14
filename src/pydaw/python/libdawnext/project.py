@@ -419,7 +419,7 @@ class DawNextProject(libmk.AbstractProject):
                     f_uid = libmk.PROJECT.get_wav_uid_by_name(f_new_path)
                     with wavefile.WaveReader(f_new_path) as f_reader:
                         f_audio_files_dict[f_i] = (
-                            f_new_path, f_uid, f_reader.frames, f_ai.output)
+                            f_new_path, f_uid, f_reader.frames, f_val.output)
                 else:
                     print("Error, path did not exist: {}".format(f_path))
 
@@ -442,12 +442,9 @@ class DawNextProject(libmk.AbstractProject):
         f_midi_tracks = [x[2] for x in f_mrec_items]
         f_active_tracks = set(f_audio_tracks + f_midi_tracks)
 
-        def get_item(a_region, a_track_num, a_bar_num):
-            if a_region in f_orig_items:
-                for f_item in f_orig_items[a_region]:
-                    if f_item.bar_num == int(a_bar_num) and \
-                    f_item.track_num == int(a_track_num):
-                        return f_item.item_uid
+        def get_item(a_track_num):
+            if a_track_num in f_orig_items:
+                return f_orig_items[a_track_num].item_uid
             return None
 
         def new_take():
@@ -455,11 +452,11 @@ class DawNextProject(libmk.AbstractProject):
             for f_track in f_active_tracks:
                 copy_take(f_track)
             for k, v in f_audio_files_dict.items():
-                f_path, f_frames, f_uid, f_output = v
+                f_path, f_uid, f_frames, f_output = v
                 f_item = self.rec_take[f_output]
                 f_lane = f_item.get_next_lane()
-                f_start = (f_frames / f_audio_frame) * 1000.0
-                f_end = ((f_frames + a_sample_count) / f_audio_frame) * 1000.0
+                f_start = (f_audio_frame / f_frames) * 1000.0
+                f_end = (f_audio_frame / (f_frames + a_sample_count)) * 1000.0
                 f_start = pydaw_util.pydaw_clip_value(f_start, 0.0, f_end)
                 f_end = pydaw_util.pydaw_clip_value(f_end, f_start, 1000.0)
                 f_audio_item = pydaw_audio_item(
@@ -485,7 +482,7 @@ class DawNextProject(libmk.AbstractProject):
             f_sequencer.add_item_ref_by_uid(f_item_ref)
 
         def copy_item(a_track_num):
-            f_uid = get_item(a_track_num, a_beat)
+            f_uid = get_item(a_track_num)
             if f_uid is not None:
                 f_old_name = f_items_dict.get_name_by_uid(f_uid)
                 f_name = self.get_next_default_item_name(
@@ -512,6 +509,8 @@ class DawNextProject(libmk.AbstractProject):
                 f_seconds = float(f_sample_count) / float(a_sr)
                 f_note.set_length(f_seconds * f_beats_per_second)
             print(f_note_tracker[a_track_num].pop(f_note_num))
+
+        new_take()
 
         for f_event in f_mrec_items:
             f_type, f_beat, f_track = f_event[:3]
@@ -1181,6 +1180,13 @@ class pydaw_item:
         self.pitchbends = []
         self.uid = int(a_uid)
         self.fx_list = {} #per-audio-item-fx
+
+    def get_next_lane(self):
+        f_lanes = set(x.lane_num for x in self.items.values())
+        for f_i in range(24):
+            if f_i not in f_lanes:
+                return f_i
+        return 0
 
     def painter_path(self, a_px_per_beat, a_height, a_tempo):
         f_seconds_per_beat = 60.0 / a_tempo
