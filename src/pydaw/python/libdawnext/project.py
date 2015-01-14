@@ -456,7 +456,8 @@ class DawNextProject(libmk.AbstractProject):
                 f_item = self.rec_take[f_output]
                 f_lane = f_item.get_next_lane()
                 f_start = (f_audio_frame / f_frames) * 1000.0
-                f_end = (f_audio_frame / (f_frames + a_sample_count)) * 1000.0
+                f_end = 1000.0
+                #(f_audio_frame / (f_frames + a_sample_count)) * 1000.0
                 f_start = pydaw_util.pydaw_clip_value(f_start, 0.0, f_end)
                 f_end = pydaw_util.pydaw_clip_value(f_end, f_start, 1000.0)
                 f_audio_item = pydaw_audio_item(
