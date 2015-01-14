@@ -7759,8 +7759,11 @@ class AudioInput:
     def output_track_changed(self, a_val=None):
         if not self.suppress_updates:
             f_track = self.output_track_combobox.currentIndex()
-            TRACK_PANEL.tracks[f_track].check_output()
-            self.update_engine()
+            if f_track in TRACK_PANEL.tracks:
+                TRACK_PANEL.tracks[f_track].check_output()
+                self.update_engine()
+            else:
+                print("{} not in TRACK_PANEL".format(f_track))
 
     def name_update(self, a_val=None):
         self.update_engine(a_notify=False)
@@ -7900,6 +7903,7 @@ class transport_widget(libmk.AbstractTransport):
         self.overdub_checkbox = QtGui.QCheckBox(_("Overdub"))
         self.overdub_checkbox.clicked.connect(self.on_overdub_changed)
         self.playback_vlayout.addWidget(self.overdub_checkbox)
+        self.playback_vlayout.addWidget(QtGui.QLabel(_("MIDI Input Devices")))
 
         self.playback_vlayout.addLayout(MIDI_DEVICES_DIALOG.layout)
         self.active_devices = []
