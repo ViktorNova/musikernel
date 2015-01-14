@@ -131,10 +131,22 @@ class region_settings:
         self.unmute_action.triggered.connect(self.unmute_all)
         self.unmute_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+M"))
 
-        f_scrollbar = SEQUENCER.horizontalScrollBar()
-        f_scrollbar.setSizePolicy(
+        self.snap_combobox = QtGui.QComboBox()
+        self.snap_combobox.setFixedWidth(90)
+        self.snap_combobox.addItems(
+            [_("None"), _("Beat"), "1/8", "1/12", "1/16"])
+        self.hlayout0.addWidget(QtGui.QLabel(_("Snap:")))
+        self.hlayout0.addWidget(self.snap_combobox)
+        self.snap_combobox.currentIndexChanged.connect(self.set_snap)
+
+        self.scrollbar = SEQUENCER.horizontalScrollBar()
+        self.scrollbar.setSizePolicy(
             QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.hlayout0.addWidget(f_scrollbar)
+        self.hlayout0.addWidget(self.scrollbar)
+
+    def set_snap(self, a_val=None):
+        pydaw_set_audio_snap(a_val)
+        MAIN_WINDOW.tab_changed()
 
     def edit_mode_changed(self, a_value=None):
         global REGION_EDITOR_MODE
@@ -7889,14 +7901,6 @@ class transport_widget(libmk.AbstractTransport):
             self.on_loop_mode_changed)
         self.grid_layout1.addWidget(self.loop_mode_combobox, 1, 30)
 
-        self.snap_combobox = QtGui.QComboBox()
-        self.snap_combobox.setFixedWidth(90)
-        self.snap_combobox.addItems(
-            [_("None"), _("Beat"), "1/8", "1/12", "1/16"])
-        self.grid_layout1.addWidget(QtGui.QLabel(_("Snap:")), 0, 40)
-        self.grid_layout1.addWidget(self.snap_combobox, 1, 40)
-        self.snap_combobox.currentIndexChanged.connect(self.set_snap)
-
         self.grid_layout1.addItem(
             QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding), 1, 60)
 
@@ -7915,10 +7919,6 @@ class transport_widget(libmk.AbstractTransport):
 
     def open_project(self):
         self.audio_inputs.open_project()
-
-    def set_snap(self, a_val=None):
-        pydaw_set_audio_snap(a_val)
-        MAIN_WINDOW.tab_changed()
 
     def on_panic(self):
         PROJECT.IPC.pydaw_panic()
@@ -8441,7 +8441,7 @@ def global_open_project(a_project_file):
     global_open_mixer()
     MIDI_DEVICES_DIALOG.set_routings()
     REGION_SETTINGS.open_region()
-    TRANSPORT.snap_combobox.setCurrentIndex(1)
+    REGION_SETTINGS.snap_combobox.setCurrentIndex(1)
     TRANSPORT.open_project()
 
 def global_new_project(a_project_file):
@@ -8454,7 +8454,7 @@ def global_new_project(a_project_file):
     ROUTING_GRAPH_WIDGET.scene.clear()
     global_open_mixer()
     REGION_SETTINGS.open_region()
-    TRANSPORT.snap_combobox.setCurrentIndex(1)
+    REGION_SETTINGS.snap_combobox.setCurrentIndex(1)
 
 PROJECT = DawNextProject(global_pydaw_with_audio)
 
