@@ -145,7 +145,7 @@ class region_settings:
         self.hlayout0.addWidget(self.scrollbar)
 
     def set_snap(self, a_val=None):
-        pydaw_set_audio_snap(a_val)
+        pydaw_set_seq_snap(a_val)
         MAIN_WINDOW.tab_changed()
 
     def edit_mode_changed(self, a_value=None):
@@ -929,14 +929,14 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 
     def quantize_all(self, a_x):
         f_x = a_x
-        if AUDIO_QUANTIZE:
+        if SEQ_QUANTIZE:
             f_x = round(f_x / SEQUENCER_QUANTIZE_PX) * SEQUENCER_QUANTIZE_PX
         return f_x
 
     def quantize(self, a_x):
         f_x = a_x
         f_x = self.quantize_all(f_x)
-        if AUDIO_QUANTIZE and f_x < SEQUENCER_QUANTIZE_PX:
+        if SEQ_QUANTIZE and f_x < SEQUENCER_QUANTIZE_PX:
             f_x = SEQUENCER_QUANTIZE_PX
         return f_x
 
@@ -1005,7 +1005,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
                         (AUDIO_ITEM_HANDLE_HEIGHT * 0.5))
         else:
             QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
-            if AUDIO_QUANTIZE:
+            if SEQ_QUANTIZE:
                 f_max_x = (pydaw_get_current_region_length() *
                     SEQUENCER_PX_PER_BEAT) - SEQUENCER_QUANTIZE_PX
             else:
@@ -1566,9 +1566,9 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_seconds_per_beat = (60.0 /
             CURRENT_REGION.get_tempo_at_pos(f_beat_frac))
 
-        if AUDIO_QUANTIZE:
+        if SEQ_QUANTIZE:
             f_beat_frac = int(f_beat_frac *
-                AUDIO_QUANTIZE_AMT) / AUDIO_QUANTIZE_AMT
+                SEQ_QUANTIZE_AMT) / SEQ_QUANTIZE_AMT
 
         f_lane_num = int((f_y - REGION_EDITOR_HEADER_HEIGHT) /
             REGION_EDITOR_TRACK_HEIGHT)
@@ -1879,8 +1879,8 @@ class ItemSequencer(QtGui.QGraphicsView):
                 self.text_list.append(f_number)
                 self.scene.addLine(i3, 0.0, i3, f_total_height, f_v_pen)
                 f_number.setPos(i3 + 3.0, 2)
-                if AUDIO_LINES_ENABLED:
-                    for f_i4 in range(1, AUDIO_SNAP_RANGE):
+                if SEQ_LINES_ENABLED:
+                    for f_i4 in range(1, SEQ_SNAP_RANGE):
                         f_sub_x = i3 + (SEQUENCER_QUANTIZE_PX * f_i4)
                         f_line = self.scene.addLine(
                             f_sub_x, REGION_EDITOR_HEADER_HEIGHT,
@@ -1891,8 +1891,8 @@ class ItemSequencer(QtGui.QGraphicsView):
                 f_line = self.scene.addLine(
                     f_beat_x, 0.0, f_beat_x, f_total_height, f_beat_pen)
                 self.beat_line_list.append(f_line)
-                if AUDIO_LINES_ENABLED:
-                    for f_i4 in range(1, AUDIO_SNAP_RANGE):
+                if SEQ_LINES_ENABLED:
+                    for f_i4 in range(1, SEQ_SNAP_RANGE):
                         f_sub_x = f_beat_x + (SEQUENCER_QUANTIZE_PX * f_i4)
                         f_line = self.scene.addLine(
                             f_sub_x, REGION_EDITOR_HEADER_HEIGHT,
@@ -2446,40 +2446,48 @@ def pydaw_set_audio_seq_zoom(a_horizontal, a_vertical):
     pydaw_set_audio_snap(AUDIO_SNAP_VAL)
     AUDIO_ITEM_HEIGHT = 75.0 * a_vertical
 
+SEQUENCER_QUANTIZE_PX = 100.0
+SEQ_QUANTIZE = True
+SEQ_QUANTIZE_AMT = 1.0
+SEQ_LINES_ENABLED = False
+SEQ_SNAP_RANGE = 8
+
+
+def pydaw_set_seq_snap(a_val):
+    global SEQUENCER_QUANTIZE_PX, SEQ_QUANTIZE, SEQ_QUANTIZE_AMT, \
+        SEQ_LINES_ENABLED, SEQ_SNAP_RANGE
+    SEQ_SNAP_RANGE = 8
+    f_divisor = ITEM_SNAP_DIVISORS[a_val]
+    if a_val > 0:
+        SEQ_QUANTIZE = True
+        SEQ_LINES_ENABLED = False
+    else:
+        SEQ_QUANTIZE = False
+        SEQ_LINES_ENABLED = False
+    SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT / f_divisor
+    SEQ_QUANTIZE_AMT = f_divisor
 
 def pydaw_set_audio_snap(a_val):
     global AUDIO_QUANTIZE, AUDIO_QUANTIZE_PX, AUDIO_QUANTIZE_AMT, \
-        AUDIO_SNAP_VAL, AUDIO_LINES_ENABLED, AUDIO_SNAP_RANGE, \
-        SEQUENCER_QUANTIZE_PX
+        AUDIO_SNAP_VAL, AUDIO_LINES_ENABLED, AUDIO_SNAP_RANGE
+
     AUDIO_SNAP_VAL = a_val
     AUDIO_QUANTIZE = True
     AUDIO_LINES_ENABLED = True
     AUDIO_SNAP_RANGE = 8
+
+    f_divisor = ITEM_SNAP_DIVISORS[a_val]
+
+    AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT / f_divisor
+    AUDIO_SNAP_RANGE = int(f_divisor)
+    AUDIO_QUANTIZE_AMT = f_divisor
+
     if a_val == 0:
         AUDIO_QUANTIZE = False
-        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT
-        SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT
         AUDIO_LINES_ENABLED = False
     elif a_val == 1:
-        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT
-        SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT
         AUDIO_LINES_ENABLED = False
-        AUDIO_QUANTIZE_AMT = 1.0
-    elif a_val == 2:
-        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT / 2.0
-        SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT / 2.0
-        AUDIO_SNAP_RANGE = 2
-        AUDIO_QUANTIZE_AMT = 2.0
-    elif a_val == 3:
-        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT / 3.0
-        SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT / 3.0
-        AUDIO_SNAP_RANGE = 3
-        AUDIO_QUANTIZE_AMT = 3.0
-    elif a_val == 4:
-        AUDIO_QUANTIZE_PX = AUDIO_PX_PER_BEAT / 4.0
-        SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT / 4.0
-        AUDIO_SNAP_RANGE = 4
-        AUDIO_QUANTIZE_AMT = 4.0
+
 
 AUDIO_LINES_ENABLED = True
 AUDIO_SNAP_RANGE = 8
@@ -4843,6 +4851,10 @@ SELECTED_NOTE_GRADIENT.setColorAt(1, QtGui.QColor(240, 240, 240))
 
 SELECTED_PIANO_NOTE = None   #Used for mouse click hackery
 
+ITEM_SNAP_DIVISORS = {
+    0:4.0, 1:1.0, 2:2.0, 3:3.0, 4:4.0, 5:8.0, 6:16.0, 7:32.0
+    }
+
 def pydaw_set_piano_roll_quantize(a_index):
     global PIANO_ROLL_SNAP, PIANO_ROLL_SNAP_VALUE, PIANO_ROLL_SNAP_DIVISOR, \
         PIANO_ROLL_SNAP_BEATS, LAST_NOTE_RESIZE, PIANO_ROLL_QUANTIZE_INDEX, \
@@ -4855,22 +4867,7 @@ def pydaw_set_piano_roll_quantize(a_index):
     else:
         PIANO_ROLL_SNAP = True
 
-    if a_index == 0:
-        PIANO_ROLL_SNAP_DIVISOR = 4.0
-    elif a_index == 7:
-        PIANO_ROLL_SNAP_DIVISOR = 32.0
-    elif a_index == 6:
-        PIANO_ROLL_SNAP_DIVISOR = 16.0
-    elif a_index == 5:
-        PIANO_ROLL_SNAP_DIVISOR = 8.0
-    elif a_index == 4:
-        PIANO_ROLL_SNAP_DIVISOR = 4.0
-    elif a_index == 3:
-        PIANO_ROLL_SNAP_DIVISOR = 3.0
-    elif a_index == 2:
-        PIANO_ROLL_SNAP_DIVISOR = 2.0
-    elif a_index == 1:
-        PIANO_ROLL_SNAP_DIVISOR = 1.0
+    PIANO_ROLL_SNAP_DIVISOR = ITEM_SNAP_DIVISORS[a_index]
 
     PIANO_ROLL_SNAP_BEATS = 1.0 / PIANO_ROLL_SNAP_DIVISOR
     LAST_NOTE_RESIZE = pydaw_clip_min(LAST_NOTE_RESIZE, PIANO_ROLL_SNAP_BEATS)
@@ -6070,13 +6067,6 @@ class piano_roll_editor_widget:
 
         self.vlayout.addLayout(self.controls_grid_layout)
         self.vlayout.addWidget(PIANO_ROLL_EDITOR)
-        self.snap_combobox = QtGui.QComboBox()
-        self.snap_combobox.setMinimumWidth(90)
-        self.snap_combobox.addItems(
-            [_("None"), "1/4", "1/8", "1/12", "1/16", "1/32", "1/64", "1/128"])
-        self.controls_grid_layout.addWidget(QtGui.QLabel(_("Snap:")), 0, 0)
-        self.controls_grid_layout.addWidget(self.snap_combobox, 0, 1)
-        self.snap_combobox.currentIndexChanged.connect(self.set_snap)
 
     def set_midi_vzoom(self, a_val):
         global PIANO_ROLL_NOTE_HEIGHT
@@ -6145,15 +6135,6 @@ class piano_roll_editor_widget:
     def on_cut(self):
         if PIANO_ROLL_EDITOR.copy_selected():
             self.on_delete_selected()
-
-    def set_snap(self, a_val=None):
-        f_index = self.snap_combobox.currentIndex()
-        pydaw_set_piano_roll_quantize(f_index)
-        if CURRENT_ITEM:
-            PIANO_ROLL_EDITOR.set_selected_strings()
-            global_open_items()
-        else:
-            PIANO_ROLL_EDITOR.clear_drawn_items()
 
     def reload_handler(self, a_val=None):
         PROJECT.set_midi_scale(
@@ -6922,7 +6903,7 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
         #ITEM_EDITOR.zoom_slider.setMaximum(100)
         #ITEM_EDITOR.zoom_slider.setSingleStep(ITEM_EDITING_COUNT)
         pydaw_set_piano_roll_quantize(
-            PIANO_ROLL_EDITOR_WIDGET.snap_combobox.currentIndex())
+            REGION_SETTINGS.snap_combobox.currentIndex())
         if a_reset_scrollbar:
             for f_editor in MIDI_EDITORS:
                 f_editor.horizontalScrollBar().setSliderPosition(0)
@@ -7073,6 +7054,14 @@ class item_list_editor:
         self.zoom_hlayout.setMargin(0)
         self.zoom_hlayout.setSpacing(0)
 
+        self.snap_combobox = QtGui.QComboBox()
+        self.snap_combobox.setMinimumWidth(90)
+        self.snap_combobox.addItems(
+            [_("None"), "1/4", "1/8", "1/12", "1/16", "1/32", "1/64", "1/128"])
+        self.zoom_hlayout.addWidget(QtGui.QLabel(_("Snap:")))
+        self.zoom_hlayout.addWidget(self.snap_combobox)
+        self.snap_combobox.currentIndexChanged.connect(self.set_snap)
+
         self.item_name_lineedit = QtGui.QLineEdit()
         self.item_name_lineedit.setReadOnly(True)
         self.item_name_lineedit.setMinimumWidth(150)
@@ -7101,6 +7090,15 @@ class item_list_editor:
         self.default_pb_val = 0
         self.default_pb_quantize = 0
 
+    def set_snap(self, a_val=None):
+        f_index = self.snap_combobox.currentIndex()
+        pydaw_set_piano_roll_quantize(f_index)
+        pydaw_set_audio_snap(f_index)
+        if CURRENT_ITEM:
+            PIANO_ROLL_EDITOR.set_selected_strings()
+            global_open_items()
+        else:
+            PIANO_ROLL_EDITOR.clear_drawn_items()
 
     def clear_new(self):
         self.enabled = False
@@ -8510,7 +8508,7 @@ MAIN_WINDOW = pydaw_main_window()
 
 PIANO_ROLL_EDITOR.verticalScrollBar().setSliderPosition(
     PIANO_ROLL_EDITOR.scene.height() * 0.4)
-PIANO_ROLL_EDITOR_WIDGET.snap_combobox.setCurrentIndex(4)
+ITEM_EDITOR.snap_combobox.setCurrentIndex(4)
 
 if libmk.TOOLTIPS_ENABLED:
     set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
