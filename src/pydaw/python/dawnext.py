@@ -3819,7 +3819,6 @@ AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(1.0, QtGui.QColor.fromRgb(65, 65, 65))
 class audio_items_viewer(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
-        self.playback_cursor = None
         self.reset_line_lists()
         self.h_zoom = 1.0
         self.v_zoom = 1.0
@@ -4050,26 +4049,6 @@ class audio_items_viewer(QtGui.QGraphicsView):
         global_open_audio_items()
         self.last_open_dir = os.path.dirname(f_file_name_str)
 
-    def set_playback_pos(self, a_beat=0.0):
-        f_beat = float(a_beat)
-        f_pos = (f_beat * AUDIO_PX_PER_BEAT)
-        self.playback_cursor.setPos(f_pos, 0.0)
-
-    def set_playback_clipboard(self):
-        self.reselect_on_stop = []
-        for f_item in self.audio_items:
-            if f_item.isSelected():
-                self.reselect_on_stop.append(str(f_item.audio_item))
-
-    def start_playback(self, a_bpm):
-        self.is_playing = True
-
-    def stop_playback(self, a_beat=None):
-        if self.is_playing:
-            self.is_playing = False
-            self.reset_selection()
-            self.set_playback_pos(a_beat)
-
     def reset_selection(self):
         for f_item in self.audio_items:
             if str(f_item.audio_item) in self.reselect_on_stop:
@@ -4147,10 +4126,6 @@ class audio_items_viewer(QtGui.QGraphicsView):
         f_reg_pen = QtGui.QPen(QtCore.Qt.white)
         f_total_height = (AUDIO_ITEM_LANE_COUNT *
             (AUDIO_ITEM_HEIGHT)) + AUDIO_RULER_HEIGHT
-        self.scene.setSceneRect(0.0, 0.0, f_size, f_total_height)
-        self.playback_cursor = self.scene.addLine(
-            0.0, 0.0, 0.0, f_total_height, QtGui.QPen(QtCore.Qt.red, 2.0))
-        self.playback_cursor.setZValue(1000.0)
         i3 = 0.0
         for i in range(int(f_region_length) + 1):
             f_number = QtGui.QGraphicsSimpleTextItem(
@@ -4186,7 +4161,6 @@ class audio_items_viewer(QtGui.QGraphicsView):
         for i2 in range(AUDIO_ITEM_LANE_COUNT):
             f_y = ((AUDIO_ITEM_HEIGHT) * (i2 + 1)) + AUDIO_RULER_HEIGHT
             self.scene.addLine(0, f_y, f_size, f_y)
-        #self.set_playback_pos(a_cursor_pos)
         self.check_line_count()
         self.set_ruler_y_pos()
 
