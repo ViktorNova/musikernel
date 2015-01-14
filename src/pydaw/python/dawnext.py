@@ -33,8 +33,8 @@ from libmk import mk_project
 from libdawnext import *
 
 
-START_PEN = QtGui.QPen(QtGui.QColor.fromRgb(120, 120, 255), 3.0)
-END_PEN = QtGui.QPen(QtGui.QColor.fromRgb(255, 60, 60), 3.0)
+START_PEN = QtGui.QPen(QtGui.QColor.fromRgb(120, 120, 255), 6.0)
+END_PEN = QtGui.QPen(QtGui.QColor.fromRgb(255, 60, 60), 6.0)
 
 def pydaw_get_current_region_length():
     return CURRENT_REGION.get_length() if CURRENT_REGION else 32
@@ -5815,7 +5815,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
         self.has_selected = False #Reset the selected-ness state...
         self.viewer_width = PIANO_ROLL_GRID_WIDTH
         self.setSceneRect(
-            0.0, 0.0, self.viewer_width + PIANO_ROLL_GRID_WIDTH,
+            0.0, 0.0, self.viewer_width,
             self.piano_height + PIANO_ROLL_HEADER_HEIGHT + 24.0)
         global PIANO_ROLL_GRID_MAX_START_TIME
         PIANO_ROLL_GRID_MAX_START_TIME = (PIANO_ROLL_GRID_WIDTH -
@@ -6543,7 +6543,7 @@ class automation_viewer(QtGui.QGraphicsView):
             self.scene.addItem(f_note_item)
 
         self.setSceneRect(
-            0.0, 0.0, self.grid_max_start_time + 100.0, self.height())
+            0.0, 0.0, self.grid_max_start_time + 20.0, self.height())
         self.setUpdatesEnabled(True)
         self.update()
 
@@ -6898,8 +6898,12 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
     global CURRENT_ITEM, CURRENT_ITEM_NAME, LAST_ITEM, LAST_ITEM_NAME, \
         CURRENT_ITEM_LEN, ITEM_REF_POS
 
-    f_ref_end = CURRENT_ITEM_REF.length_beats + CURRENT_ITEM_REF.start_offset
-    ITEM_REF_POS = (CURRENT_ITEM_REF.start_offset, f_ref_end)
+    if CURRENT_ITEM_REF:
+        f_ref_end = \
+            CURRENT_ITEM_REF.length_beats + CURRENT_ITEM_REF.start_offset
+        ITEM_REF_POS = (CURRENT_ITEM_REF.start_offset, f_ref_end)
+    else:
+        ITEM_REF_POS = (0.0, 4.0)
 
     if a_items is not None:
         ITEM_EDITOR.enabled = True
@@ -6920,23 +6924,27 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
         CURRENT_ITEM_NAME = a_items
         ITEM_EDITOR.item_name_lineedit.setText(a_items)
 
-    CURRENT_ITEM_LEN = CURRENT_ITEM.get_length(
-        CURRENT_REGION.get_tempo_at_pos(CURRENT_ITEM_REF.start_beat))
-    CURRENT_ITEM_LEN = max(
-        (CURRENT_ITEM_LEN, CURRENT_ITEM_REF.length_beats)) + 4
+    if CURRENT_ITEM:
+        CURRENT_ITEM_LEN = CURRENT_ITEM.get_length(
+            CURRENT_REGION.get_tempo_at_pos(CURRENT_ITEM_REF.start_beat))
+        CURRENT_ITEM_LEN = max(
+            (CURRENT_ITEM_LEN, CURRENT_ITEM_REF.length_beats)) + 4
+    else:
+        CURRENT_ITEM_LEN = 4
 
     CC_EDITOR.clear_drawn_items()
     PB_EDITOR.clear_drawn_items()
     ITEM_EDITOR.items = []
     f_cc_set = set()
 
-    for cc in CURRENT_ITEM.ccs:
-        f_cc_set.add(cc.cc_num)
+    if CURRENT_ITEM:
+        for cc in CURRENT_ITEM.ccs:
+            f_cc_set.add(cc.cc_num)
 
-    CC_EDITOR_WIDGET.update_ccs_in_use(list(f_cc_set))
+        CC_EDITOR_WIDGET.update_ccs_in_use(list(f_cc_set))
 
-    if a_items is not None and f_cc_set:
-        CC_EDITOR_WIDGET.set_cc_num(sorted(f_cc_set)[0])
+        if a_items is not None and f_cc_set:
+            CC_EDITOR_WIDGET.set_cc_num(sorted(f_cc_set)[0])
 
     ITEM_EDITOR.tab_changed()
 
@@ -7054,10 +7062,10 @@ class item_list_editor:
         self.tab_widget.addTab(self.notes_tab, _("List Viewers"))
 
         self.zoom_widget = QtGui.QWidget()
-        self.zoom_widget.setContentsMargins(0, 0, 0, 0)
+        #self.zoom_widget.setContentsMargins(0, 0, 2, 0)
         self.zoom_hlayout = QtGui.QHBoxLayout(self.zoom_widget)
-        self.zoom_hlayout.setMargin(0)
-        self.zoom_hlayout.setSpacing(0)
+        self.zoom_hlayout.setContentsMargins(2, 0, 2, 0)
+        #self.zoom_hlayout.setSpacing(0)
 
         self.snap_combobox = QtGui.QComboBox()
         self.snap_combobox.setMinimumWidth(90)
