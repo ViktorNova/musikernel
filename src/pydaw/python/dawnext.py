@@ -139,6 +139,9 @@ class region_settings:
         self.hlayout0.addWidget(self.snap_combobox)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
 
+        self.follow_checkbox = QtGui.QCheckBox(_("Follow"))
+        self.hlayout0.addWidget(self.follow_checkbox)
+
         self.scrollbar = SEQUENCER.horizontalScrollBar()
         self.scrollbar.setSizePolicy(
             QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -1613,6 +1616,8 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.playback_pos = float(a_beat)
         f_pos = (self.playback_pos * SEQUENCER_PX_PER_BEAT)
         self.playback_cursor.setPos(f_pos, 0.0)
+        if REGION_SETTINGS.follow_checkbox.isChecked():
+            REGION_SETTINGS.scrollbar.setValue(int(f_pos))
 
     def start_playback(self):
         self.playback_pos_orig = self.playback_pos
@@ -7931,7 +7936,8 @@ class transport_widget(libmk.AbstractTransport):
             self.set_time(f_beat)
 
     def set_controls_enabled(self, a_enabled):
-        for f_widget in (self.snap_combobox, self.overdub_checkbox):
+        for f_widget in (
+        REGION_SETTINGS.snap_combobox, self.overdub_checkbox):
             f_widget.setEnabled(a_enabled)
 
     def on_play(self):
