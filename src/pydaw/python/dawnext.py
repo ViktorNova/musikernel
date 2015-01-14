@@ -7778,9 +7778,15 @@ class AudioInput:
         AUDIO_TRACK_COMBOBOXES.append(self.output_track_combobox)
         self.output_track_combobox.addItems(TRACK_NAMES)
         self.output_track_combobox.currentIndexChanged.connect(
-            self.update_engine)
+            self.output_track_changed)
         a_layout.addWidget(self.output_track_combobox, a_num, 6)
         self.suppress_updates = False
+
+    def output_track_changed(self, a_val=None):
+        if not self.suppress_updates:
+            f_track = self.output_track_combobox.currentIndex()
+            TRACK_PANEL.tracks[f_track].check_output()
+            self.update_engine()
 
     def name_update(self, a_val=None):
         self.update_engine(a_notify=False)
