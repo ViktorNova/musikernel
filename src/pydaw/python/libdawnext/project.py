@@ -439,7 +439,7 @@ class DawNextProject(libmk.AbstractProject):
         self.rec_take = {}
 
         f_audio_tracks = [x[3] for x in f_audio_files_dict.values()]
-        f_midi_tracks = [x[2] for x in f_mrec_items]
+        f_midi_tracks = [int(x[2]) for x in f_mrec_items]
         f_active_tracks = set(f_audio_tracks + f_midi_tracks)
 
         def get_item(a_track_num):
