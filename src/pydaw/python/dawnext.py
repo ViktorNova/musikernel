@@ -142,10 +142,32 @@ class region_settings:
         self.follow_checkbox = QtGui.QCheckBox(_("Follow"))
         self.hlayout0.addWidget(self.follow_checkbox)
 
+        self.hzoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.hlayout0.addWidget(self.hzoom_slider)
+        self.hzoom_slider.setObjectName("zoom_slider")
+        self.hzoom_slider.setRange(0, 5)
+        self.hzoom_slider.setValue(3)
+        self.hzoom_slider.setFixedWidth(60)
+        self.hzoom_slider.valueChanged.connect(self.set_hzoom)
+
         self.scrollbar = SEQUENCER.horizontalScrollBar()
         self.scrollbar.setSizePolicy(
             QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.hlayout0.addWidget(self.scrollbar)
+
+    def set_hzoom(self, a_val=None):
+        global SEQUENCER_PX_PER_BEAT
+        f_val = self.hzoom_slider.value()
+        if f_val < 3:
+            f_length = pydaw_get_current_region_length()
+            f_width = SEQUENCER.width()
+            f_factor = {0:1, 1:2, 2:4}[f_val]
+            SEQUENCER_PX_PER_BEAT = (f_width / f_length) * f_factor
+        else:
+            SEQUENCER_PX_PER_BEAT = {3:24, 4:48, 5:128}[f_val]
+        pydaw_set_seq_snap()
+        PROJECT.painter_path_cache = {}
+        self.open_region()
 
     def set_snap(self, a_val=None):
         pydaw_set_seq_snap(a_val)
@@ -2451,16 +2473,21 @@ def pydaw_set_audio_seq_zoom(a_horizontal, a_vertical):
     pydaw_set_audio_snap(AUDIO_SNAP_VAL)
     AUDIO_ITEM_HEIGHT = 75.0 * a_vertical
 
-SEQUENCER_QUANTIZE_PX = 100.0
+SEQUENCER_SNAP_VAL = 3
+SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT
 SEQ_QUANTIZE = True
 SEQ_QUANTIZE_AMT = 1.0
 SEQ_LINES_ENABLED = False
 SEQ_SNAP_RANGE = 8
 
 
-def pydaw_set_seq_snap(a_val):
+def pydaw_set_seq_snap(a_val=None):
     global SEQUENCER_QUANTIZE_PX, SEQ_QUANTIZE, SEQ_QUANTIZE_AMT, \
-        SEQ_LINES_ENABLED, SEQ_SNAP_RANGE
+        SEQ_LINES_ENABLED, SEQ_SNAP_RANGE, SEQUENCER_SNAP_VAL
+    if a_val is None:
+        a_val = SEQUENCER_SNAP_VAL
+    else:
+        SEQUENCER_SNAP_VAL = a_val
     SEQ_SNAP_RANGE = 8
     f_divisor = ITEM_SNAP_DIVISORS[a_val]
     if a_val > 0:
@@ -2501,7 +2528,6 @@ AUDIO_PX_PER_BEAT = 100.0
 
 AUDIO_QUANTIZE = False
 AUDIO_QUANTIZE_PX = 100.0
-SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT
 AUDIO_QUANTIZE_AMT = 1.0
 
 AUDIO_RULER_HEIGHT = 20.0
