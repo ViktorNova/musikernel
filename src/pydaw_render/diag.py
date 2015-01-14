@@ -68,7 +68,7 @@ HOST = {
 
 TIME = {
     "e":"0 0 3 3",
-    "d":"0 32"
+    "d":"0 96"
 }[sys.argv[1]]
 
 TOOL = sys.argv[2]
