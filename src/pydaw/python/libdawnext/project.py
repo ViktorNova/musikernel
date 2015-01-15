@@ -419,7 +419,8 @@ class DawNextProject(libmk.AbstractProject):
                     f_uid = libmk.PROJECT.get_wav_uid_by_name(f_new_path)
                     with wavefile.WaveReader(f_new_path) as f_reader:
                         f_audio_files_dict[f_i] = (
-                            f_new_path, f_uid, f_reader.frames, f_val.output)
+                            f_new_path, f_uid, f_reader.frames,
+                            f_val.output, f_val.sidechain)
                 else:
                     print("Error, path did not exist: {}".format(f_path))
 
@@ -452,7 +453,7 @@ class DawNextProject(libmk.AbstractProject):
             for f_track in f_active_tracks:
                 copy_take(f_track)
             for k, v in f_audio_files_dict.items():
-                f_path, f_uid, f_frames, f_output = v
+                f_path, f_uid, f_frames, f_output, f_mode = v
                 f_item = self.rec_take[f_output]
                 f_lane = f_item.get_next_lane()
                 f_start = (f_audio_frame / f_frames) * 1000.0
@@ -462,7 +463,7 @@ class DawNextProject(libmk.AbstractProject):
                 f_end = pydaw_util.pydaw_clip_value(f_end, f_start, 1000.0)
                 f_audio_item = pydaw_audio_item(
                     f_uid, a_sample_start=f_start, a_sample_end=f_end,
-                    a_lane_num=f_lane)
+                    a_output_track=f_mode, a_lane_num=f_lane)
                 f_index = f_item.get_next_index()
                 f_item.add_item(f_index, f_audio_item)
 
