@@ -4724,7 +4724,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         if f_list:
             libmk.IPC.pydaw_preview_audio(
                 os.path.join(
-                str(x) for x in (self.last_open_dir, f_list[0].text())))
+                *(str(x) for x in (self.last_open_dir, f_list[0].text()))))
 
     def on_stop_preview(self):
         libmk.IPC.pydaw_stop_preview()
