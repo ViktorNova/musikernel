@@ -105,13 +105,22 @@ class region_settings:
         self.edit_mode_combobox.addItems([_("Items"), _("Automation")])
         self.edit_mode_combobox.currentIndexChanged.connect(
             self.edit_mode_changed)
-        self.hlayout0.addWidget(QtGui.QLabel(_("Edit Mode:")))
-        self.hlayout0.addWidget(self.edit_mode_combobox)
 
         self.menu_button = QtGui.QPushButton(_("Menu"))
         self.hlayout0.addWidget(self.menu_button)
         self.menu = QtGui.QMenu(self.menu_button)
         self.menu_button.setMenu(self.menu)
+
+        self.menu_widget = QtGui.QWidget()
+        self.menu_layout = QtGui.QGridLayout(self.menu_widget)
+        self.action_widget = QtGui.QWidgetAction(self.menu)
+        self.action_widget.setDefaultWidget(self.menu_widget)
+        self.menu.addAction(self.action_widget)
+        self.menu.addSeparator()
+
+        self.menu_layout.addWidget(QtGui.QLabel(_("Edit Mode:")), 0, 0)
+        self.menu_layout.addWidget(self.edit_mode_combobox, 0, 1)
+
         self.reorder_tracks_action = self.menu.addAction(
             _("Reorder Tracks..."))
         self.reorder_tracks_action.triggered.connect(self.set_track_order)
@@ -132,12 +141,12 @@ class region_settings:
         self.unmute_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+M"))
 
         self.snap_combobox = QtGui.QComboBox()
-        self.snap_combobox.setFixedWidth(90)
         self.snap_combobox.addItems(
             [_("None"), _("Beat"), "1/8", "1/12", "1/16"])
-        self.hlayout0.addWidget(QtGui.QLabel(_("Snap:")))
-        self.hlayout0.addWidget(self.snap_combobox)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
+
+        self.menu_layout.addWidget(QtGui.QLabel(_("Snap:")), 1, 0)
+        self.menu_layout.addWidget(self.snap_combobox, 1, 1)
 
         self.follow_checkbox = QtGui.QCheckBox(_("Follow"))
         self.hlayout0.addWidget(self.follow_checkbox)
@@ -164,6 +173,9 @@ class region_settings:
         self.scrollbar.setSizePolicy(
             QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.hlayout0.addWidget(self.scrollbar)
+
+        self.widgets_to_disable = (
+            self.hzoom_slider, self.vzoom_slider, self.menu_button)
 
     def set_vzoom(self, a_val=None):
         global REGION_EDITOR_TRACK_HEIGHT
@@ -231,10 +243,12 @@ class region_settings:
         SEQUENCER.clear_new()
 
     def on_play(self):
-        pass
+        for f_widget in self.widgets_to_disable:
+            f_widget.setEnabled(False)
 
     def on_stop(self):
-        pass
+        for f_widget in self.widgets_to_disable:
+            f_widget.setEnabled(True)
 
     def set_track_order(self):
         f_result = pydaw_widgets.ordered_table_dialog(
