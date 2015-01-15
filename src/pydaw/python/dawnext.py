@@ -142,6 +142,7 @@ class region_settings:
         self.follow_checkbox = QtGui.QCheckBox(_("Follow"))
         self.hlayout0.addWidget(self.follow_checkbox)
 
+        self.hlayout0.addWidget(QtGui.QLabel("H"))
         self.hzoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.hlayout0.addWidget(self.hzoom_slider)
         self.hzoom_slider.setObjectName("zoom_slider")
@@ -150,10 +151,28 @@ class region_settings:
         self.hzoom_slider.setFixedWidth(60)
         self.hzoom_slider.valueChanged.connect(self.set_hzoom)
 
+        self.hlayout0.addWidget(QtGui.QLabel("V"))
+        self.vzoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.hlayout0.addWidget(self.vzoom_slider)
+        self.vzoom_slider.setObjectName("zoom_slider")
+        self.vzoom_slider.setRange(1, 5)
+        self.vzoom_slider.setValue(1)
+        self.vzoom_slider.setFixedWidth(60)
+        self.vzoom_slider.valueChanged.connect(self.set_vzoom)
+
         self.scrollbar = SEQUENCER.horizontalScrollBar()
         self.scrollbar.setSizePolicy(
             QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.hlayout0.addWidget(self.scrollbar)
+
+    def set_vzoom(self, a_val=None):
+        global REGION_EDITOR_TRACK_HEIGHT
+        f_val = self.vzoom_slider.value()
+        REGION_EDITOR_TRACK_HEIGHT = f_val * 64
+        PROJECT.painter_path_cache = {}
+
+        TRACK_PANEL.set_track_height()
+        self.open_region()
 
     def set_hzoom(self, a_val=None):
         global SEQUENCER_PX_PER_BEAT
@@ -302,10 +321,6 @@ class tracks_widget:
         self.tracks_widget = QtGui.QWidget()
         self.tracks_widget.setObjectName("plugin_ui")
         self.tracks_widget.setContentsMargins(0, 0, 0, 0)
-        self.tracks_widget.setFixedSize(
-            QtCore.QSize(REGION_TRACK_WIDTH,
-            (REGION_EDITOR_TRACK_HEIGHT * REGION_EDITOR_TRACK_COUNT) +
-            REGION_EDITOR_HEADER_HEIGHT))
         self.tracks_layout = QtGui.QVBoxLayout(self.tracks_widget)
         self.tracks_layout.addItem(
             QtGui.QSpacerItem(0, REGION_EDITOR_HEADER_HEIGHT + 2.0,
@@ -317,6 +332,17 @@ class tracks_widget:
             self.tracks_layout.addWidget(f_track.group_box)
         self.automation_dict = {
             x:(None, None) for x in range(REGION_EDITOR_TRACK_COUNT)}
+        self.set_track_height()
+
+    def set_track_height(self):
+        self.tracks_widget.setUpdatesEnabled(False)
+        self.tracks_widget.setFixedSize(
+            QtCore.QSize(REGION_TRACK_WIDTH,
+            (REGION_EDITOR_TRACK_HEIGHT * REGION_EDITOR_TRACK_COUNT) +
+            REGION_EDITOR_HEADER_HEIGHT))
+        for f_track in self.tracks.values():
+            f_track.group_box.setFixedHeight(REGION_EDITOR_TRACK_HEIGHT)
+        self.tracks_widget.setUpdatesEnabled(True)
 
     def get_track_names(self):
         return [
@@ -7463,7 +7489,6 @@ class seq_track:
         self.automation_plugin = None
         self.track_number = a_track_num
         self.group_box = QtGui.QWidget()
-        self.group_box.setFixedHeight(REGION_EDITOR_TRACK_HEIGHT)
         self.group_box.contextMenuEvent = self.context_menu_event
         self.group_box.setObjectName("track_panel")
         self.main_hlayout = QtGui.QHBoxLayout()
