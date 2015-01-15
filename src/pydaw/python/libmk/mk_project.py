@@ -1075,6 +1075,13 @@ class AudioInputTracks:
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 
+    def reorder(self, a_dict):
+        for f_track in self.tracks.values():
+            if f_track.output in a_dict:
+                print("AudioInputTracks.reorder : {} : {}".format(
+                    f_track.output, a_dict[f_track.output]))
+                f_track.output = a_dict[f_track.output]
+
     @staticmethod
     def from_str(a_str):
         f_result = AudioInputTracks()

@@ -574,7 +574,9 @@ class DawNextProject(libmk.AbstractProject):
     def reorder_tracks(self, a_dict):
         f_tracks = self.get_tracks()
         f_tracks.reorder(a_dict)
-        self.save_tracks(f_tracks)
+
+        f_audio_inputs = self.get_audio_inputs()
+        f_audio_inputs.reorder(a_dict)
 
         f_track_plugins = {k:self.get_track_plugins(k)
             for k in f_tracks.tracks}
@@ -590,11 +592,15 @@ class DawNextProject(libmk.AbstractProject):
 
         f_graph = self.get_routing_graph()
         f_graph.reorder(a_dict)
-        self.save_routing_graph(f_graph)
 
         f_region = self.get_region()
         f_region.reorder(a_dict)
+
+        self.save_tracks(f_tracks)
+        self.save_audio_inputs(f_audio_inputs)
+        self.save_routing_graph(f_graph)
         self.save_region(f_region)
+
         self.IPC.pydaw_open_song(self.project_folder)
         self.commit("Re-order tracks")
 
