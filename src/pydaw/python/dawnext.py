@@ -7989,7 +7989,7 @@ class transport_widget(libmk.AbstractTransport):
 
         self.overdub_checkbox = QtGui.QCheckBox(_("Overdub"))
         self.overdub_checkbox.clicked.connect(self.on_overdub_changed)
-        self.playback_vlayout.addWidget(self.overdub_checkbox)
+        #self.playback_vlayout.addWidget(self.overdub_checkbox)
         self.playback_vlayout.addWidget(QtGui.QLabel(_("MIDI Input Devices")))
 
         self.playback_vlayout.addLayout(MIDI_DEVICES_DIALOG.layout)
