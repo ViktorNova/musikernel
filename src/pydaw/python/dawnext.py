@@ -7026,6 +7026,7 @@ def global_save_and_reload_items():
     PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
     global_open_items()
     PROJECT.commit(_("Edit item"))
+    ITEM_EDITOR.tab_changed()
 
 CURRENT_ITEM_NAME = None
 LAST_ITEM_NAME = None
