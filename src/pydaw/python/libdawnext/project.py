@@ -578,6 +578,9 @@ class DawNextProject(libmk.AbstractProject):
         f_audio_inputs = self.get_audio_inputs()
         f_audio_inputs.reorder(a_dict)
 
+        f_midi_routings = self.get_midi_routing()
+        f_midi_routings.reorder(a_dict)
+
         f_track_plugins = {k:self.get_track_plugins(k)
             for k in f_tracks.tracks}
         # Delete the existing track files
@@ -600,6 +603,7 @@ class DawNextProject(libmk.AbstractProject):
         self.save_audio_inputs(f_audio_inputs)
         self.save_routing_graph(f_graph)
         self.save_region(f_region)
+        self.save_midi_routing(f_midi_routings)
 
         self.IPC.pydaw_open_song(self.project_folder)
         self.commit("Re-order tracks")
@@ -1850,6 +1854,11 @@ class pydaw_midi_route:
 class pydaw_midi_routings:
     def __init__(self, a_routings=[]):
         self.routings = a_routings
+
+    def reorder(self, a_dict):
+        for f_route in self.routings:
+            if f_route.track_num in a_dict:
+                f_route.track_num = a_dict[f_route.track_num]
 
     def __str__(self):
         return "\n".join(str(x) for x in self.routings + ["\\"])
