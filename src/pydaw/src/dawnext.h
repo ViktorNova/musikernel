@@ -2096,8 +2096,14 @@ t_dn_region * g_dn_region_get(t_dawnext* self)
             {
                 v_iterate_2d_char_array(f_current_string);
                 f_ev->tempo = atof(f_current_string->current_str);
-                //time signature, ignored by the engine
+
+                //time signature numerator, not used by the engine
                 v_iterate_2d_char_array(f_current_string);
+
+                v_iterate_2d_char_array(f_current_string);
+                float f_tsig_den = atof(f_current_string->current_str);
+
+                f_ev->tempo *= (f_tsig_den / 4.0);
             }
         }
         else  //item reference

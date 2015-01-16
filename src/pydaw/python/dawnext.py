@@ -1752,7 +1752,8 @@ class ItemSequencer(QtGui.QGraphicsView):
     def ruler_time_modify(self):
         def ok_handler():
             f_marker = project.pydaw_tempo_marker(
-                self.ruler_event_pos, f_tempo.value(), f_tsig.value())
+                self.ruler_event_pos, f_tempo.value(),
+                f_tsig_num.value(), int(str(f_tsig_den.currentText())))
             CURRENT_REGION.set_marker(f_marker)
             PROJECT.save_region(CURRENT_REGION)
             REGION_SETTINGS.open_region()
@@ -1777,17 +1778,28 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_tempo.setRange(30, 240)
         f_layout.addWidget(QtGui.QLabel(_("Tempo")), 0, 0)
         f_layout.addWidget(f_tempo, 0, 1)
-        f_tsig = QtGui.QSpinBox()
-        f_tsig.setRange(1, 16)
-        f_layout.addWidget(QtGui.QLabel(_("Beats per Measure")), 1, 0)
-        f_layout.addWidget(f_tsig, 1, 1)
+        f_tsig_layout = QtGui.QHBoxLayout()
+        f_layout.addLayout(f_tsig_layout, 1, 1)
+        f_tsig_num = QtGui.QSpinBox()
+        f_tsig_num.setRange(1, 16)
+        f_layout.addWidget(QtGui.QLabel(_("Time Signature")), 1, 0)
+        f_tsig_layout.addWidget(f_tsig_num)
+        f_tsig_layout.addWidget(QtGui.QLabel("/"))
+
+        f_tsig_den = QtGui.QComboBox()
+        f_tsig_den.setMinimumWidth(60)
+        f_tsig_layout.addWidget(f_tsig_den)
+        f_tsig_den.addItems(["2", "4", "8", "16"])
 
         if f_marker:
             f_tempo.setValue(f_marker.tempo)
-            f_tsig.setValue(f_marker.tsig)
+            f_tsig_num.setValue(f_marker.tsig_num)
+            f_tsig_den.setCurrentIndex(
+                f_tsig_den.findText(str(f_marker.tsig_den)))
         else:
             f_tempo.setValue(128)
-            f_tsig.setValue(4)
+            f_tsig_num.setValue(4)
+            f_tsig_den.setCurrentIndex(1)
 
         f_ok = QtGui.QPushButton(_("Save"))
         f_ok.pressed.connect(ok_handler)
@@ -1895,7 +1907,8 @@ class ItemSequencer(QtGui.QGraphicsView):
                     f_x, 0, f_x, REGION_EDITOR_HEADER_HEIGHT, self.ruler)
                 f_end.setPen(END_PEN)
             elif f_marker.type == 2:
-                f_text = "{} : {}".format(f_marker.tempo, f_marker.tsig)
+                f_text = "{} : {}/{}".format(
+                    f_marker.tempo, f_marker.tsig_num, f_marker.tsig_den)
                 f_item = QtGui.QGraphicsSimpleTextItem(f_text, self.ruler)
                 f_item.setBrush(QtCore.Qt.white)
                 f_item.setPos(
@@ -1936,9 +1949,9 @@ class ItemSequencer(QtGui.QGraphicsView):
         i3 = f_x_offset
 
         for i in range(int(a_marker.length)):
-            if i % a_marker.tsig == 0:
+            if i % a_marker.tsig_num == 0:
                 f_number = QtGui.QGraphicsSimpleTextItem(
-                    str((i // a_marker.tsig) + 1), self.ruler)
+                    str((i // a_marker.tsig_num) + 1), self.ruler)
                 f_number.setFlag(
                     QtGui.QGraphicsItem.ItemIgnoresTransformations)
                 f_number.setBrush(QtCore.Qt.white)

@@ -821,15 +821,18 @@ class pydaw_sequencer_marker(pydaw_abstract_marker):
         return pydaw_sequencer_marker(*a_str.split("|", 1))
 
 class pydaw_tempo_marker(pydaw_abstract_marker):
-    def __init__(self, a_beat, a_tempo, a_tsig):
+    def __init__(self, a_beat, a_tempo, a_tsig_num, a_tsig_den):
         self.type = 2
         self.beat = int(a_beat)
         self.tempo = round(float(a_tempo), 1)
-        self.tsig = int(a_tsig)
+        self.tsig_num = int(a_tsig_num)
+        self.tsig_den = int(a_tsig_den)
+        self.real_tempo = (float(a_tsig_den) / 4.0) * self.tempo
 
     def __str__(self):
-        return "|".join(str(x) for x in
-            ("E", self.type, self.beat, self.tempo, self.tsig))
+        return "|".join(str(x) for x in (
+            "E", self.type, self.beat, self.tempo,
+            self.tsig_num, self.tsig_den))
 
     @staticmethod
     def from_str(self, a_str):
@@ -854,7 +857,7 @@ class pydaw_sequencer:
         self.items = []
         self.markers = {}
         self.loop_marker = None
-        self.set_marker(pydaw_tempo_marker(0, 128.0, 4))
+        self.set_marker(pydaw_tempo_marker(0, 128.0, 4, 4))
 
     def set_marker(self, a_marker):
         self.markers[(a_marker.beat, a_marker.type)] = a_marker
@@ -893,8 +896,8 @@ class pydaw_sequencer:
         f_tempo_markers = self.get_tempo_markers()
         for f_t1, f_t2 in zip(f_tempo_markers, f_tempo_markers[1:]):
             if a_beat < f_t2.beat and a_beat > f_t1.beat:
-                return f_t1.tempo
-        return f_tempo_markers[-1].tempo
+                return f_t1.real_tempo
+        return f_tempo_markers[-1].real_tempo
 
     def get_seconds_at_beat(self, a_beat):
         f_time = 0.0
@@ -902,14 +905,14 @@ class pydaw_sequencer:
         f_tempo_markers = self.get_tempo_markers()
         for f_t1, f_t2 in zip(f_tempo_markers, f_tempo_markers[1:]):
             if a_beat < f_t2.beat and a_beat > f_t1.beat:
-                f_time += (a_beat - f_t1.beat) * (60.0 / f_t1.tempo)
+                f_time += (a_beat - f_t1.beat) * (60.0 / f_t1.real_tempo)
                 f_found = True
                 break
             else:
-                f_time += (f_t2.beat - f_t1.beat) * (60.0 / f_t1.tempo)
+                f_time += (f_t2.beat - f_t1.beat) * (60.0 / f_t1.real_tempo)
         if not f_found:
             f_t1 = f_tempo_markers[-1]
-            f_time += (a_beat - f_t1.beat) * (60.0 / f_t1.tempo)
+            f_time += (a_beat - f_t1.beat) * (60.0 / f_t1.real_tempo)
         return f_time
 
     def get_time_at_beat(self, a_beat):
