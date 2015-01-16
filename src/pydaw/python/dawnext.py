@@ -18,6 +18,7 @@ import subprocess
 import time
 import random
 import shutil
+import traceback
 
 from PyQt4 import QtGui, QtCore
 from libpydaw import *
@@ -619,8 +620,7 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         QtGui.QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
         global CURRENT_ITEM_REF
         CURRENT_ITEM_REF = self.audio_item
-        global_open_items(
-            self.name, a_reset_scrollbar=True)
+        global_open_items(self.name, a_reset_scrollbar=True)
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
 
     def generic_hoverEnterEvent(self, a_event):
@@ -4902,17 +4902,6 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
         AUDIO_SEQ.update()
 
 
-def global_set_piano_roll_zoom():
-    global PIANO_ROLL_GRID_WIDTH
-
-    f_width = float(PIANO_ROLL_EDITOR.rect().width()) - \
-        float(PIANO_ROLL_EDITOR.verticalScrollBar().width()) - 6.0 - \
-        PIANO_KEYS_WIDTH
-    f_region_scale = f_width / 1000.0
-
-    PIANO_ROLL_GRID_WIDTH = 1000.0 * MIDI_SCALE * f_region_scale
-    pydaw_set_piano_roll_quantize(PIANO_ROLL_QUANTIZE_INDEX)
-
 PIANO_ROLL_SNAP = False
 PIANO_ROLL_GRID_WIDTH = 1000.0
 PIANO_KEYS_WIDTH = 34  #Width of the piano keys in px
@@ -4926,6 +4915,7 @@ PIANO_ROLL_HEADER_HEIGHT = 45
 #gets updated by the piano roll to it's real value:
 PIANO_ROLL_TOTAL_HEIGHT = 1000
 PIANO_ROLL_QUANTIZE_INDEX = 4
+PIANO_ROLL_MIN_NOTE_LENGTH = PIANO_ROLL_GRID_WIDTH / 128.0
 
 SELECTED_NOTE_GRADIENT = QtGui.QLinearGradient(
     QtCore.QPointF(0, 0), QtCore.QPointF(0, 12))
@@ -4938,19 +4928,29 @@ ITEM_SNAP_DIVISORS = {
     0:4.0, 1:1.0, 2:2.0, 3:3.0, 4:4.0, 5:8.0, 6:16.0, 7:32.0
     }
 
-def pydaw_set_piano_roll_quantize(a_index):
+LAST_NOTE_RESIZE = 0.25
+
+def pydaw_set_piano_roll_quantize(a_index=None):
     global PIANO_ROLL_SNAP, PIANO_ROLL_SNAP_VALUE, PIANO_ROLL_SNAP_DIVISOR, \
         PIANO_ROLL_SNAP_BEATS, LAST_NOTE_RESIZE, PIANO_ROLL_QUANTIZE_INDEX, \
-        PIANO_ROLL_MIN_NOTE_LENGTH
+        PIANO_ROLL_MIN_NOTE_LENGTH, PIANO_ROLL_GRID_WIDTH
 
-    PIANO_ROLL_QUANTIZE_INDEX = a_index
+    if a_index is not None:
+        PIANO_ROLL_QUANTIZE_INDEX = a_index
 
-    if a_index == 0:
+    f_width = float(PIANO_ROLL_EDITOR.rect().width()) - \
+        float(PIANO_ROLL_EDITOR.verticalScrollBar().width()) - 6.0 - \
+        PIANO_KEYS_WIDTH
+    f_region_scale = f_width / 1000.0
+
+    PIANO_ROLL_GRID_WIDTH = 1000.0 * MIDI_SCALE * f_region_scale
+
+    if PIANO_ROLL_QUANTIZE_INDEX == 0:
         PIANO_ROLL_SNAP = False
     else:
         PIANO_ROLL_SNAP = True
 
-    PIANO_ROLL_SNAP_DIVISOR = ITEM_SNAP_DIVISORS[a_index]
+    PIANO_ROLL_SNAP_DIVISOR = ITEM_SNAP_DIVISORS[PIANO_ROLL_QUANTIZE_INDEX]
 
     PIANO_ROLL_SNAP_BEATS = 1.0 / PIANO_ROLL_SNAP_DIVISOR
     LAST_NOTE_RESIZE = pydaw_clip_min(LAST_NOTE_RESIZE, PIANO_ROLL_SNAP_BEATS)
@@ -4959,8 +4959,6 @@ def pydaw_set_piano_roll_quantize(a_index):
         PIANO_ROLL_SNAP_DIVISOR)
     PIANO_ROLL_MIN_NOTE_LENGTH = (PIANO_ROLL_GRID_WIDTH /
         CURRENT_ITEM_LEN / 32.0)
-
-PIANO_ROLL_MIN_NOTE_LENGTH = PIANO_ROLL_GRID_WIDTH / 128.0
 
 PIANO_ROLL_NOTE_LABELS = [
     "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -4971,8 +4969,6 @@ PIANO_NOTE_GRADIENT_TUPLE = \
 
 PIANO_ROLL_DELETE_MODE = False
 PIANO_ROLL_DELETED_NOTES = []
-
-LAST_NOTE_RESIZE = 0.25
 
 PIANO_ROLL_HEADER_GRADIENT = QtGui.QLinearGradient(
     0.0, 0.0, 0.0, PIANO_ROLL_HEADER_HEIGHT)
@@ -5433,8 +5429,9 @@ class piano_roll_editor(QtGui.QGraphicsView):
         self.header.setPos(self.piano_width + self.padding, f_point.y())
 
     def get_scene_pos(self):
-        return QtCore.QPointF(self.horizontalScrollBar().value(),
-                              self.verticalScrollBar().value())
+        return QtCore.QPointF(
+            self.horizontalScrollBar().value(),
+            self.verticalScrollBar().value())
 
     def highlight_selected(self):
         self.has_selected = False
@@ -6966,7 +6963,7 @@ ITEM_REF_POS = None
 def global_set_midi_zoom(a_val):
     global MIDI_SCALE
     MIDI_SCALE = a_val
-    global_set_piano_roll_zoom()
+    pydaw_set_piano_roll_quantize()
 
 
 def global_open_items(a_items=None, a_reset_scrollbar=False):
@@ -6986,11 +6983,7 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
     if a_items is not None:
         ITEM_EDITOR.enabled = True
         PIANO_ROLL_EDITOR.selected_note_strings = []
-        global_set_piano_roll_zoom()
-        #ITEM_EDITOR.zoom_slider.setMaximum(100)
-        #ITEM_EDITOR.zoom_slider.setSingleStep(ITEM_EDITING_COUNT)
-        pydaw_set_piano_roll_quantize(
-            REGION_SETTINGS.snap_combobox.currentIndex())
+        pydaw_set_piano_roll_quantize()
         if a_reset_scrollbar:
             for f_editor in MIDI_EDITORS:
                 f_editor.horizontalScrollBar().setSliderPosition(0)
@@ -7024,7 +7017,7 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
         if a_items is not None and f_cc_set:
             CC_EDITOR_WIDGET.set_cc_num(sorted(f_cc_set)[0])
 
-    ITEM_EDITOR.tab_changed()
+    #ITEM_EDITOR.tab_changed()
 
 
 def global_save_and_reload_items():
@@ -7314,7 +7307,7 @@ class item_list_editor:
             global_open_audio_items()
         else:
             if f_index == 1:
-                global_set_piano_roll_zoom()
+                pydaw_set_piano_roll_quantize()
             elif f_index == 4:
                 ITEM_EDITOR.open_item_list()
             if f_index < len(f_list):
@@ -8563,6 +8556,7 @@ REGION_SETTINGS = region_settings()
 TRACK_PANEL = tracks_widget()
 
 PIANO_ROLL_EDITOR = piano_roll_editor()
+pydaw_set_piano_roll_quantize(4)
 PIANO_ROLL_EDITOR_WIDGET = piano_roll_editor_widget()
 AUDIO_SEQ = audio_items_viewer()
 AUDIO_SEQ_WIDGET = audio_items_viewer_widget()
@@ -8599,7 +8593,6 @@ MAIN_WINDOW = pydaw_main_window()
 
 PIANO_ROLL_EDITOR.verticalScrollBar().setSliderPosition(
     PIANO_ROLL_EDITOR.scene.height() * 0.4)
-ITEM_EDITOR.snap_combobox.setCurrentIndex(4)
 
 if libmk.TOOLTIPS_ENABLED:
     set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
