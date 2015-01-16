@@ -3158,26 +3158,26 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_paif_clear.triggered.connect(
             AUDIO_SEQ_WIDGET.on_modulex_clear)
 
-        f_per_file_menu = f_menu.addMenu("For All Instances of This File Set")
-        f_all_volumes_action = f_per_file_menu.addAction(_("Volume..."))
-        f_all_volumes_action.triggered.connect(self.set_vol_for_all_instances)
-        f_all_fades_action = f_per_file_menu.addAction(_("Fades"))
-        f_all_fades_action.triggered.connect(self.set_fades_for_all_instances)
-        f_all_paif_action = f_per_file_menu.addAction(_("Per-Item FX"))
-        f_all_paif_action.triggered.connect(self.set_paif_for_all_instance)
-
-        f_groove_menu = f_menu.addMenu(_("Groove"))
-        f_copy_as_cc_action = f_groove_menu.addAction(
-            _("Copy Volume Envelope as CC Automation"))
-        f_copy_as_cc_action.triggered.connect(
-            self.copy_as_cc_automation)
-        f_copy_as_pb_action = f_groove_menu.addAction(
-            _("Copy Volume Envelope as Pitchbend Automation"))
-        f_copy_as_pb_action.triggered.connect(
-            self.copy_as_pb_automation)
-        f_copy_as_notes_action = f_groove_menu.addAction(
-            _("Copy Volume Envelope as MIDI Notes"))
-        f_copy_as_notes_action.triggered.connect(self.copy_as_notes)
+#        f_per_file_menu = f_menu.addMenu("For All Instances of This File Set")
+#        f_all_volumes_action = f_per_file_menu.addAction(_("Volume..."))
+#        f_all_volumes_action.triggered.connect(self.set_vol_for_all_instances)
+#        f_all_fades_action = f_per_file_menu.addAction(_("Fades"))
+#        f_all_fades_action.triggered.connect(self.set_fades_for_all_instances)
+#        f_all_paif_action = f_per_file_menu.addAction(_("Per-Item FX"))
+#        f_all_paif_action.triggered.connect(self.set_paif_for_all_instance)
+#
+#        f_groove_menu = f_menu.addMenu(_("Groove"))
+#        f_copy_as_cc_action = f_groove_menu.addAction(
+#            _("Copy Volume Envelope as CC Automation"))
+#        f_copy_as_cc_action.triggered.connect(
+#            self.copy_as_cc_automation)
+#        f_copy_as_pb_action = f_groove_menu.addAction(
+#            _("Copy Volume Envelope as Pitchbend Automation"))
+#        f_copy_as_pb_action.triggered.connect(
+#            self.copy_as_pb_automation)
+#        f_copy_as_notes_action = f_groove_menu.addAction(
+#            _("Copy Volume Envelope as MIDI Notes"))
+#        f_copy_as_notes_action.triggered.connect(self.copy_as_notes)
 
         f_menu.exec_(QtGui.QCursor.pos())
         CURRENT_AUDIO_ITEM_INDEX = f_CURRENT_AUDIO_ITEM_INDEX
