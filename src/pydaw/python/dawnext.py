@@ -8092,6 +8092,11 @@ class transport_widget(libmk.AbstractTransport):
 
 
     def on_rec(self):
+        if self.loop_mode_combobox.currentIndex() == 1:
+            QtGui.QMessageBox.warning(
+                self.group_box, _("Error"),
+                _("Loop recording is not yet supported"))
+            return False
         self.active_devices = [x for x in MIDI_DEVICES_DIALOG.devices
             if x.record_checkbox.isChecked()]
         if not self.active_devices and not self.audio_inputs.active():
