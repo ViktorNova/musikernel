@@ -7143,7 +7143,8 @@ class item_list_editor:
         self.snap_combobox = QtGui.QComboBox()
         self.snap_combobox.setMinimumWidth(90)
         self.snap_combobox.addItems(
-            [_("None"), "1/4", "1/8", "1/12", "1/16", "1/32", "1/64", "1/128"])
+            [_("None"), "1/4", "1/8", "1/12", "1/16",
+            "1/32", "1/64", "1/128"])
         self.zoom_hlayout.addWidget(QtGui.QLabel(_("Snap:")))
         self.zoom_hlayout.addWidget(self.snap_combobox)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
@@ -7183,6 +7184,7 @@ class item_list_editor:
         if CURRENT_ITEM:
             PIANO_ROLL_EDITOR.set_selected_strings()
             global_open_items()
+            self.tab_changed()
         else:
             PIANO_ROLL_EDITOR.clear_drawn_items()
 
@@ -8563,7 +8565,6 @@ REGION_SETTINGS = region_settings()
 TRACK_PANEL = tracks_widget()
 
 PIANO_ROLL_EDITOR = piano_roll_editor()
-pydaw_set_piano_roll_quantize(4)
 PIANO_ROLL_EDITOR_WIDGET = piano_roll_editor_widget()
 AUDIO_SEQ = audio_items_viewer()
 AUDIO_SEQ_WIDGET = audio_items_viewer_widget()
@@ -8600,6 +8601,8 @@ MAIN_WINDOW = pydaw_main_window()
 
 PIANO_ROLL_EDITOR.verticalScrollBar().setSliderPosition(
     PIANO_ROLL_EDITOR.scene.height() * 0.4)
+
+ITEM_EDITOR.snap_combobox.setCurrentIndex(4)
 
 if libmk.TOOLTIPS_ENABLED:
     set_tooltips_enabled(libmk.TOOLTIPS_ENABLED)
