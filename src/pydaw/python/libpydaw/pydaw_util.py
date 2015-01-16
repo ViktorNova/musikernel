@@ -23,7 +23,7 @@ import numpy
 
 pydaw_terminating_char = "\\"
 
-global_pydaw_version_string = "musikernel"
+global_pydaw_version_string = "musikernel1"
 global_pydaw_file_type_string = 'MusiKernel Project (default.musikernel)'
 global_euphoria_file_type_string = 'Euphoria Sample File (*.u4ia4)'
 global_euphoria_file_type_ext = '.u4ia4'

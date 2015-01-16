@@ -26,7 +26,7 @@ try:
     global_locale, global_encoding = locale.getdefaultlocale()
     print("locale: {}".format(global_locale))
     print("encoding: {}".format(global_encoding))
-    global_language = gettext.translation("musikernel",
+    global_language = gettext.translation("musikernel1",
         "{}/share/locale".format(INSTALL_PREFIX),
         [global_locale])
     print("global_language.info: {}".format(global_language.info()))
