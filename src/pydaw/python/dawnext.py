@@ -7452,13 +7452,13 @@ class midi_device:
 class midi_devices_dialog:
     def __init__(self):
         self.layout = QtGui.QGridLayout()
+        self.devices = []
+        self.devices_dict = {}
         if not pydaw_util.MIDI_IN_DEVICES:
             return
         self.layout.addWidget(QtGui.QLabel(_("On")), 0, 0)
         self.layout.addWidget(QtGui.QLabel(_("MIDI Device")), 0, 1)
         self.layout.addWidget(QtGui.QLabel(_("Output")), 0, 2)
-        self.devices = []
-        self.devices_dict = {}
         for f_name, f_i in zip(
         pydaw_util.MIDI_IN_DEVICES, range(len(pydaw_util.MIDI_IN_DEVICES))):
             f_device = midi_device(
