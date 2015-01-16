@@ -443,6 +443,8 @@ class DawNextProject(libmk.AbstractProject):
         f_midi_tracks = [int(x[2]) for x in f_mrec_items]
         f_active_tracks = set(f_audio_tracks + f_midi_tracks)
 
+        f_sequencer.clear_range(f_active_tracks, a_start_beat, a_end_beat)
+
         def get_item(a_track_num):
             if a_track_num in f_orig_items:
                 return f_orig_items[a_track_num].item_uid
@@ -953,6 +955,21 @@ class pydaw_sequencer:
         for f_item in self.items:
             if str(f_item) == f_to_remove:
                 self.items.remove(f_item)
+
+    def clear_range(self, a_track_list, a_start_beat, a_end_beat):
+        for f_item in [x for x in self.items if x.track_num in a_track_list]:
+            f_end_beat = f_item.start_beat + f_item.length_beats
+            if f_item.start_beat >= a_start_beat and \
+            a_start_beat < a_end_beat:
+                if f_end_beat <= a_end_beat:
+                    self.items.remove(f_item)
+                else:
+                    f_item.start_offset += a_end_beat - f_item.start_beat
+                    f_item.start_beat = a_end_beat
+            elif f_item.start_beat < a_start_beat:
+                if f_end_beat >= a_start_beat and \
+                f_end_beat < a_end_beat:
+                    f_item.length_beats = a_start_beat - f_item.start_beat
 
     def get_length(self):
         f_item_max = max(x.start_beat + x.length_beats
