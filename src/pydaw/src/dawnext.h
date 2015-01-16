@@ -1385,10 +1385,23 @@ inline void v_dn_run_engine(int a_sample_count,
     int f_period, sample_count;
     float * output[2];
 
-    v_mk_seq_event_list_set(&self->en_song->regions->events,
-        &self->seq_event_result, a_output, a_input_buffers,
-        PYDAW_AUDIO_INPUT_TRACK_COUNT,
-        a_sample_count, self->ts[0].current_sample, self->loop_mode);
+    if(musikernel->playback_mode != PYDAW_PLAYBACK_MODE_OFF)
+    {
+        v_mk_seq_event_list_set(&self->en_song->regions->events,
+            &self->seq_event_result, a_output, a_input_buffers,
+            PYDAW_AUDIO_INPUT_TRACK_COUNT,
+            a_sample_count, self->ts[0].current_sample, self->loop_mode);
+    }
+    else
+    {
+        self->seq_event_result.count = 1;
+        f_seq_period = &self->seq_event_result.sample_periods[0];
+        f_seq_period->is_looping = 0;
+        v_mk_seq_event_result_set_default(&self->seq_event_result,
+            &self->en_song->regions->events, a_output, a_input_buffers,
+            PYDAW_AUDIO_INPUT_TRACK_COUNT, a_sample_count,
+            self->ts[0].current_sample);
+    }
 
     for(f_period = 0; f_period < self->seq_event_result.count; ++f_period)
     {
@@ -1398,7 +1411,7 @@ inline void v_dn_run_engine(int a_sample_count,
         output[0] = f_seq_period->period.buffers[0];
         output[1] = f_seq_period->period.buffers[1];
         //notify the worker threads to wake up
-        register int f_i = 1;
+        int f_i = 1;
         while(f_i < musikernel->worker_thread_count)
         {
             pthread_spin_lock(&musikernel->thread_locks[f_i]);
