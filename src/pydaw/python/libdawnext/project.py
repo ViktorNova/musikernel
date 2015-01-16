@@ -572,6 +572,7 @@ class DawNextProject(libmk.AbstractProject):
         self.commit("Record")
 
     def reorder_tracks(self, a_dict):
+        libmk.IPC.pause_engine()
         f_tracks = self.get_tracks()
         f_tracks.reorder(a_dict)
 
@@ -606,6 +607,7 @@ class DawNextProject(libmk.AbstractProject):
         self.save_midi_routing(f_midi_routings)
 
         self.IPC.pydaw_open_song(self.project_folder)
+        libmk.IPC.resume_engine()
         self.commit("Re-order tracks")
 
     def get_tracks_string(self):

@@ -73,6 +73,7 @@ int PYDAW_AUDIO_INPUT_TRACK_COUNT = 0;
 #define MK_CONFIGURE_KEY_WAVPOOL_ITEM_RELOAD "wr"
 #define MK_CONFIGURE_KEY_LOAD_AB_SET "abs"
 #define MK_CONFIGURE_KEY_AUDIO_IN_VOL "aiv"
+#define MK_CONFIGURE_KEY_ENGINE "engine"
 
 #define MK_HOST_DAWNEXT 0
 #define MK_HOST_EDMNEXT 1
@@ -1741,6 +1742,14 @@ void v_mk_configure(const char* a_key, const char* a_value)
     {
         int f_mode = atoi(a_value);
         v_pydaw_set_host(f_mode);
+    }
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_ENGINE))
+    {
+        int f_val = atoi(a_value);
+        assert(f_val == 0 || f_val == 1);
+        pthread_spin_lock(&musikernel->main_lock);
+        musikernel->is_offline_rendering = f_val;
+        pthread_spin_unlock(&musikernel->main_lock);
     }
     else if(!strcmp(a_key, MK_CONFIGURE_KEY_PITCH_ENV))
     {

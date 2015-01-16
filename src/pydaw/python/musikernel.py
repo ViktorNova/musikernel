@@ -92,6 +92,13 @@ class MkIpc(libmk.AbstractIPC):
         self.send_configure(
             "aiv", "|".join(str(x) for x in (a_index, a_vol)))
 
+    def pause_engine(self):
+        self.send_configure("engine", "1")
+
+    def resume_engine(self):
+        self.send_configure("engine", "0")
+
+
 class transport_widget:
     def __init__(self):
         self.suppress_osc = True
