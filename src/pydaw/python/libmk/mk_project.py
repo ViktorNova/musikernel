@@ -972,7 +972,18 @@ class pydaw_sample_graph:
 
     def create_sample_graph(
             self, a_for_scene=False, a_width=None, a_height=None,
-            a_vol=1.0, a_reverse=False):
+            a_audio_item=None):
+        if a_audio_item:
+            f_vol = pydaw_util.pydaw_db_to_lin(a_audio_item.vol)
+            f_slice_low = int(a_audio_item.sample_start * 0.001 *
+                len(self.high_peaks[0]))
+            f_slice_high = int(a_audio_item.sample_end * 0.001 *
+                len(self.high_peaks[0]))
+            a_width *= (a_audio_item.sample_end * 0.001) - (
+                a_audio_item.sample_start * 0.001)
+        else:
+            f_slice_low = None
+            f_slice_high = None
         if a_width or a_height or self.sample_graph_cache is None:
             if not a_width:
                 a_width = pydaw_audio_item_scene_width
@@ -993,20 +1004,28 @@ class pydaw_sample_graph:
                     f_result = QtGui.QPainterPath()
                     f_width_pos = 1.0
                     f_result.moveTo(f_width_pos, f_section_div2)
-                    if a_reverse:
-                        f_high_peaks = list(reversed(self.high_peaks[f_i]))
+                    if a_audio_item and a_audio_item.reversed:
+                        f_high_peaks = list(
+                            reversed(self.high_peaks[f_i][
+                                f_slice_low:f_slice_high]))
                         f_low_peaks = list(reversed(self.low_peaks[f_i]))
+                        f_low_peaks = f_low_peaks[f_slice_low:f_slice_high]
                     else:
-                        f_high_peaks = self.high_peaks[f_i]
-                        f_low_peaks = self.low_peaks[f_i]
+                        f_high_peaks = self.high_peaks[f_i][
+                            f_slice_low:f_slice_high]
+                        f_low_peaks = list(reversed(self.low_peaks[f_i]))
+                        f_low_peaks = f_low_peaks[f_slice_low:f_slice_high]
+                        f_low_peaks.reverse()
                     for f_peak in f_high_peaks:
-                        f_peak *= a_vol
+                        if a_audio_item:
+                            f_peak *= f_vol
                         f_peak_clipped = pydaw_clip_value(f_peak, 0.01, 0.99)
                         f_result.lineTo(f_width_pos, f_section_div2 -
                             (f_peak_clipped * f_section_div2))
                         f_width_pos += f_width_inc
                     for f_peak in f_low_peaks:
-                        f_peak *= a_vol
+                        if a_audio_item:
+                            f_peak *= f_vol
                         f_peak_clipped = pydaw_clip_value(f_peak, -0.99, -0.01)
                         f_result.lineTo(f_width_pos, (f_peak_clipped * -1.0 *
                             f_section_div2) + f_section_div2)
@@ -1026,12 +1045,17 @@ class pydaw_sample_graph:
                     f_result = QtGui.QPainterPath()
                     f_width_pos = 1.0
                     f_result.moveTo(f_width_pos, f_section_div2)
-                    if a_reverse:
-                        f_high_peaks = list(reversed(self.high_peaks[f_i]))
+                    if a_audio_item and a_audio_item.reversed:
+                        f_high_peaks = list(
+                            reversed(self.high_peaks[f_i][
+                                f_slice_low:f_slice_high]))
                     else:
-                        f_high_peaks = self.high_peaks[f_i]
+                        f_high_peaks = self.high_peaks[f_i][
+                            f_slice_low:f_slice_high]
                     for f_i2 in range(len(f_high_peaks)):
-                        f_peak = f_high_peaks[f_i2] * a_vol
+                        f_peak = f_high_peaks[f_i2]
+                        if a_audio_item:
+                            f_peak *= f_vol
                         f_result.lineTo(
                             f_width_pos, f_section_div2 -
                             (f_peak * f_section_div2))
