@@ -4806,17 +4806,16 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
             self.modulex.clear_effects()
 
     def on_copy(self):
-        if CURRENT_REGION is None or libmk.IS_PLAYING:
+        if not CURRENT_ITEM or libmk.IS_PLAYING:
             return 0
         self.audio_items_clipboard = []
         f_per_item_fx_dict = CURRENT_ITEM
         f_count = False
-        for f_item in AUDIO_SEQ.audio_items:
-            if f_item.isSelected():
-                f_count = True
-                self.audio_items_clipboard.append(
-                    (str(f_item.audio_item),
-                     f_per_item_fx_dict.get_row(f_item.track_num, True)))
+        for f_item in AUDIO_SEQ.get_selected():
+            f_count = True
+            self.audio_items_clipboard.append(
+                (str(f_item.audio_item),
+                 f_per_item_fx_dict.get_row(f_item.track_num, True)))
         if not f_count:
             QtGui.QMessageBox.warning(
                 self.widget, _("Error"), _("Nothing selected."))
@@ -4834,23 +4833,23 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
                 self.widget, _("Error"),
                 _("Nothing copied to the clipboard."))
         AUDIO_SEQ.reselect_on_stop = []
-#        f_per_item_fx_dict = CURRENT_ITEM
+        f_per_item_fx_dict = CURRENT_ITEM
 #        f_global_tempo = float(TRANSPORT.tempo_spinbox.value())
         for f_str, f_list in self.audio_items_clipboard:
             AUDIO_SEQ.reselect_on_stop.append(f_str)
             f_index = CURRENT_ITEM.get_next_index()
             if f_index == -1:
                 break
-#            f_item = pydaw_audio_item.from_str(f_str)
-#            f_start = f_item.start_beat
-#            if f_start < CURRENT_ITEM_LEN:
+            f_item = pydaw_audio_item.from_str(f_str)
+            f_start = f_item.start_beat
+            if f_start < CURRENT_ITEM_LEN:
 #                f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_item.uid)
 #                f_item.clip_at_region_end(
 #                    CURRENT_ITEM_LEN, f_global_tempo,
 #                    f_graph.length_in_seconds)
-#                CURRENT_ITEM.add_item(f_index, f_item)
-#                if f_list is not None:
-#                    f_per_item_fx_dict.set_row(f_index, f_list)
+                CURRENT_ITEM.add_item(f_index, f_item)
+                if f_list is not None:
+                    f_per_item_fx_dict.set_row(f_index, f_list)
         CURRENT_ITEM.deduplicate_items()
         PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
         PROJECT.commit(_("Paste audio items"))
