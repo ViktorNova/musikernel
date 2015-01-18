@@ -1866,16 +1866,30 @@ class ItemSequencer(QtGui.QGraphicsView):
     def rulerContextMenuEvent(self, a_event):
         self.ruler_event_pos = int(a_event.pos().x() / SEQUENCER_PX_PER_BEAT)
         f_menu = QtGui.QMenu(self)
-        f_loop_start_action = f_menu.addAction(_("Set Loop/Export Start"))
+        f_loop_start_action = f_menu.addAction(_("Set Region Start"))
         f_loop_start_action.triggered.connect(self.ruler_loop_start)
         if CURRENT_REGION.loop_marker:
-            f_loop_end_action = f_menu.addAction(_("Set Loop/Export End"))
+            f_loop_end_action = f_menu.addAction(_("Set Region End"))
             f_loop_end_action.triggered.connect(self.ruler_loop_end)
+            f_select_region = f_menu.addAction(_("Select Items in Region"))
+            f_select_region.triggered.connect(self.select_region_items)
         f_marker_action = f_menu.addAction(_("Marker..."))
         f_marker_action.triggered.connect(self.ruler_marker_modify)
         f_time_modify_action = f_menu.addAction(_("Time/Tempo Marker..."))
         f_time_modify_action.triggered.connect(self.ruler_time_modify)
         f_menu.exec_(QtGui.QCursor.pos())
+
+    def select_region_items(self):
+        SEQUENCER.scene.clearSelection()
+        f_region_start = CURRENT_REGION.loop_marker.start_beat
+        f_region_end = CURRENT_REGION.loop_marker.beat
+        for f_item in SEQUENCER.audio_items:
+            f_seq_item = f_item.audio_item
+            f_item_start = f_seq_item.start_beat
+            f_item_end = f_item_start + f_seq_item.length_beats
+            if f_item_start >= f_region_start and \
+            f_item_end <= f_region_end:
+                f_item.setSelected(True)
 
     def get_loop_pos(self):
         if self.loop_start is None:
@@ -7983,7 +7997,7 @@ class transport_widget(libmk.AbstractTransport):
 
         self.grid_layout1.addWidget(QtGui.QLabel(_("Loop Mode:")), 0, 30)
         self.loop_mode_combobox = QtGui.QComboBox()
-        self.loop_mode_combobox.addItems([_("Off"), _("On")])
+        self.loop_mode_combobox.addItems([_("Off"), _("Region")])
         self.loop_mode_combobox.setMinimumWidth(90)
         self.loop_mode_combobox.currentIndexChanged.connect(
             self.on_loop_mode_changed)
