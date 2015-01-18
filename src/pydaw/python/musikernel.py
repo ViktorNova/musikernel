@@ -102,8 +102,6 @@ class MkIpc(libmk.AbstractIPC):
 class transport_widget:
     def __init__(self):
         self.suppress_osc = True
-        self.start_region = 0
-        self.last_bar = 0
         self.last_open_dir = pydaw_util.global_home
         self.group_box = QtGui.QGroupBox()
         self.group_box.setObjectName("transport_panel")
@@ -154,7 +152,6 @@ class transport_widget:
         self.hlayout1.addWidget(self.master_vol_knob)
         self.master_vol_knob.valueChanged.connect(self.master_vol_changed)
         self.master_vol_knob.sliderReleased.connect(self.master_vol_released)
-        self.last_region_num = -99
         self.suppress_osc = False
 
         self.controls_to_disable = (self.menu_button, self.host_combobox)
