@@ -1211,6 +1211,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.clipboard = []
         self.automation_points = []
         self.painter_path_cache = {}
+        self.region_clipboard = None
 
         self.atm_select_pos_x = None
         self.atm_select_track = None
@@ -1866,6 +1867,11 @@ class ItemSequencer(QtGui.QGraphicsView):
     def rulerContextMenuEvent(self, a_event):
         self.ruler_event_pos = int(a_event.pos().x() / SEQUENCER_PX_PER_BEAT)
         f_menu = QtGui.QMenu(self)
+        f_marker_action = f_menu.addAction(_("Marker..."))
+        f_marker_action.triggered.connect(self.ruler_marker_modify)
+        f_time_modify_action = f_menu.addAction(_("Time/Tempo Marker..."))
+        f_time_modify_action.triggered.connect(self.ruler_time_modify)
+        f_menu.addSeparator()
         f_loop_start_action = f_menu.addAction(_("Set Region Start"))
         f_loop_start_action.triggered.connect(self.ruler_loop_start)
         if CURRENT_REGION.loop_marker:
@@ -1873,23 +1879,49 @@ class ItemSequencer(QtGui.QGraphicsView):
             f_loop_end_action.triggered.connect(self.ruler_loop_end)
             f_select_region = f_menu.addAction(_("Select Items in Region"))
             f_select_region.triggered.connect(self.select_region_items)
-        f_marker_action = f_menu.addAction(_("Marker..."))
-        f_marker_action.triggered.connect(self.ruler_marker_modify)
-        f_time_modify_action = f_menu.addAction(_("Time/Tempo Marker..."))
-        f_time_modify_action.triggered.connect(self.ruler_time_modify)
+            f_copy_region_action = f_menu.addAction(_("Copy Region"))
+            f_copy_region_action.triggered.connect(self.copy_region)
+            if self.region_clipboard:
+                f_insert_region_action = f_menu.addAction(_("Insert Region"))
+                f_insert_region_action.triggered.connect(self.insert_region)
         f_menu.exec_(QtGui.QCursor.pos())
 
-    def select_region_items(self):
-        SEQUENCER.scene.clearSelection()
+    def copy_region(self):
         f_region_start = CURRENT_REGION.loop_marker.start_beat
         f_region_end = CURRENT_REGION.loop_marker.beat
-        for f_item in SEQUENCER.audio_items:
+        f_region_length = f_region_end - f_region_start
+        f_list = [x.audio_item.clone() for x in self.get_region_items()]
+        for f_item in f_list:
+            f_item.start_beat -= f_region_start
+        self.region_clipboard = (f_region_length, f_list)
+
+    def insert_region(self):
+        f_region_length, f_list = self.region_clipboard
+        f_list = [x.clone() for x in f_list]
+        CURRENT_REGION.insert_space(self.ruler_event_pos, f_region_length)
+        for f_item in f_list:
+            f_item.start_beat += self.ruler_event_pos
+            CURRENT_REGION.add_item_ref_by_uid(f_item)
+        PROJECT.save_region(CURRENT_REGION)
+        REGION_SETTINGS.open_region()
+
+    def get_region_items(self):
+        f_region_start = CURRENT_REGION.loop_marker.start_beat
+        f_region_end = CURRENT_REGION.loop_marker.beat
+        f_result = []
+        for f_item in self.audio_items:
             f_seq_item = f_item.audio_item
             f_item_start = f_seq_item.start_beat
             f_item_end = f_item_start + f_seq_item.length_beats
             if f_item_start >= f_region_start and \
             f_item_end <= f_region_end:
-                f_item.setSelected(True)
+                f_result.append(f_item)
+        return f_result
+
+    def select_region_items(self):
+        self.scene.clearSelection()
+        for f_item in self.get_region_items():
+            f_item.setSelected(True)
 
     def get_loop_pos(self):
         if self.loop_start is None:

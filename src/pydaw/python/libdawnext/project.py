@@ -956,6 +956,10 @@ class pydaw_sequencer:
             if str(f_item) == f_to_remove:
                 self.items.remove(f_item)
 
+    def insert_space(self, a_start, a_length):
+        for f_item in (x for x in self.items if x.start_beat >= a_start):
+            f_item.start_beat += a_length
+
     def clear_range(self, a_track_list, a_start_beat, a_end_beat):
         for f_item in [x for x in self.items if x.track_num in a_track_list]:
             f_end_beat = f_item.start_beat + f_item.length_beats
