@@ -21,7 +21,7 @@ GNU General Public License for more details.
 #define CACHE_LINE_SIZE 64
 #warning "CACHE_LINE_SIZE not defined by compiler defaulting to 64"
 
-#elif (CACHE_LINE_SIZE < 64)
+#elif (CACHE_LINE_SIZE < 64) || (CACHE_LINE_SIZE > 128)
 
 #undef CACHE_LINE_SIZE
 #define CACHE_LINE_SIZE 64

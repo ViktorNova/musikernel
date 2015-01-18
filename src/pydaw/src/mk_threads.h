@@ -119,7 +119,9 @@ void v_pydaw_activate(int a_thread_count,
     v_pydaw_init_worker_threads(
         a_thread_count, a_set_thread_affinity, a_aux_threads);
 
+#ifdef __linux__
     mlockall(MCL_CURRENT | MCL_FUTURE);
+#endif
 }
 
 void v_pydaw_destructor()
