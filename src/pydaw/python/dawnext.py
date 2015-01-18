@@ -6273,6 +6273,7 @@ class piano_roll_editor_widget:
         if CURRENT_ITEM:
             PIANO_ROLL_EDITOR.set_selected_strings()
             global_open_items()
+            PIANO_ROLL_EDITOR.draw_item()
         else:
             PIANO_ROLL_EDITOR.clear_drawn_items()
 
