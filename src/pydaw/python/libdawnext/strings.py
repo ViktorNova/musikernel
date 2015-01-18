@@ -17,7 +17,7 @@ from libpydaw.translate import _
 sequencer = _(
 """This is sequencer, it consists of items, tracks and automation.
 Click on the timeline at the top of the sequencer to set playback position,
-or right-click to set various markers.
+or right-click the timeline to set various markers.
 
 Tracks:
 
@@ -62,14 +62,10 @@ You can glue together multiple items by selecting items and pressing CTRL+G
 """)
 
 transport = _(
-"""
-The MIDI controllers and audio inputs used for recording can be
+"""The MIDI controllers and audio inputs used for recording can be
 configured in the dropdown
 
 The 'Loop Mode' combobox can be used to loop a region.
-The 'Follow' checkbox causes the UI to follow the project's playback position
-The 'Overdub' checkbox causes recorded MIDI notes to be appended to existing
-items, rather than placed in new items that replace the existing items.
 
 Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
 
