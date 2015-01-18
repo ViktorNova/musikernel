@@ -1888,7 +1888,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_region_length = pydaw_get_current_region_length()
         f_size = SEQUENCER_PX_PER_BEAT * f_region_length
         self.setSceneRect(
-            0.0, 0.0, f_size + self.width(), REGION_EDITOR_TOTAL_HEIGHT)
+            -3.0, 0.0, f_size + self.width() + 3.0, REGION_EDITOR_TOTAL_HEIGHT)
         self.ruler = QtGui.QGraphicsRectItem(
             0, 0, f_size, REGION_EDITOR_HEADER_HEIGHT)
         self.ruler.setZValue(1500.0)
