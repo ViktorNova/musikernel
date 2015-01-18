@@ -69,6 +69,7 @@ char * hugepage_align(char * a_pos, int a_alignment)
 
 int alloc_hugepage_data()
 {
+#ifdef __linux__
     huge_page_data * f_data = &HUGE_PAGE_DATA[HUGE_PAGE_DATA_COUNT];
     f_data->start = (char*)mmap(NULL, HUGEPAGE_ALLOC_SIZE,
         PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS |
@@ -84,6 +85,8 @@ int alloc_hugepage_data()
     ++HUGE_PAGE_DATA_COUNT;
     f_data->pos = hugepage_align(f_data->start, HUGEPAGE_MIN_ALIGN);
     f_data->end = f_data->start + HUGEPAGE_ALLOC_SIZE;
+#endif
+    
     return 1;
 }
 
@@ -93,6 +96,7 @@ int alloc_hugepage_data()
 
 inline void hp_aligned_alloc(void ** a_ptr, size_t a_size, int a_alignment)
 {
+#ifdef __linux__
     if(USE_HUGEPAGES)
     {
         if(!HUGE_PAGE_DATA_COUNT && !alloc_hugepage_data())
@@ -136,6 +140,11 @@ inline void hp_aligned_alloc(void ** a_ptr, size_t a_size, int a_alignment)
     {
         small_page_aligned_alloc(a_ptr, a_size, a_alignment);
     }
+
+#else
+    small_page_aligned_alloc(a_ptr, a_size, a_alignment);
+#endif
+
 }
 
 void hpalloc(void ** a_ptr, size_t a_size)
