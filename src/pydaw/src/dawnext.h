@@ -1550,8 +1550,9 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
 
         register int f_i2 = 0;
 
-        if((f_audio_start >= a_ts->ml_current_beat) &&
-            (f_audio_start < a_ts->ml_next_beat))
+        if(f_playback_mode != PYDAW_PLAYBACK_MODE_OFF &&
+           f_audio_start >= a_ts->ml_current_beat &&
+           f_audio_start < a_ts->ml_next_beat)
         {
             if(f_audio_item->is_reversed)
             {
