@@ -3992,7 +3992,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
             f_paif.clear_row_if_exists(f_item.track_num)
         PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
         PROJECT.commit(_("Delete audio item(s)"))
-        global_open_items()
+        global_open_audio_items(True)
 
     def crossfade_selected(self):
         f_list = self.get_selected()
@@ -4855,7 +4855,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         CURRENT_ITEM.deduplicate_items()
         PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
         PROJECT.commit(_("Paste audio items"))
-        global_open_items()
+        global_open_audio_items(True)
         AUDIO_SEQ.scene.clearSelection()
         AUDIO_SEQ.reset_selection()
 
