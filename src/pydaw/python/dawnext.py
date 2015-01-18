@@ -4902,6 +4902,7 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
                 f_item.setSelected(True)
         AUDIO_SEQ.setUpdatesEnabled(True)
         AUDIO_SEQ.update()
+        AUDIO_SEQ.horizontalScrollBar().setMinimum(0)
 
 
 PIANO_ROLL_SNAP = False
