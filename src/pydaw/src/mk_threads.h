@@ -434,12 +434,16 @@ void v_pydaw_init_worker_threads(
         sizeof(pthread_spinlock_t) * (musikernel->worker_thread_count));
 
     pthread_attr_t threadAttr;
+    pthread_attr_init(&threadAttr);
+
+#ifdef __linux__
     struct sched_param param;
     param.__sched_priority = sched_get_priority_max(RT_SCHED);
     printf(" Attempting to set .__sched_priority = %i\n",
             param.__sched_priority);
-    pthread_attr_init(&threadAttr);
     pthread_attr_setschedparam(&threadAttr, &param);
+#endif
+
     pthread_attr_setstacksize(&threadAttr, f_stack_size);
     pthread_attr_setdetachstate(&threadAttr, PTHREAD_CREATE_DETACHED);
     pthread_attr_setschedpolicy(&threadAttr, RT_SCHED);
@@ -478,6 +482,7 @@ void v_pydaw_init_worker_threads(
             pthread_create(&musikernel->worker_threads[f_i],
                     &threadAttr, v_pydaw_worker_thread, (void*)f_args);
 
+#ifdef __linux__
             if(a_set_thread_affinity)
             {
                 cpu_set_t cpuset;
@@ -503,6 +508,8 @@ void v_pydaw_init_worker_threads(
             {
                 printf("Scheduling was not successfully applied\n");
             }
+#endif
+
         }
         else
         {
