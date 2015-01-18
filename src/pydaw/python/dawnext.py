@@ -3656,6 +3656,11 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_y_pos = (f_lane_num * AUDIO_ITEM_HEIGHT) + AUDIO_RULER_HEIGHT
         return f_lane_num, f_y_pos
 
+    def lane_number_to_y_pos(self, a_lane_num):
+        a_lane_num = pydaw_util.pydaw_clip_value(
+            a_lane_num, 0, project.TRACK_COUNT_ALL)
+        return (a_lane_num * AUDIO_ITEM_HEIGHT) + AUDIO_RULER_HEIGHT
+
     def quantize_all(self, a_x):
         f_x = a_x
         if AUDIO_QUANTIZE:
@@ -3816,13 +3821,16 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             else:
                 f_max_x = (CURRENT_ITEM_LEN *
                     AUDIO_PX_PER_BEAT) - AUDIO_ITEM_HANDLE_SIZE
+            f_new_lane, f_ignored = self.y_pos_to_lane_number(
+                a_event.scenePos().y())
+            f_lane_offset = f_new_lane - self.audio_item.lane_num
             for f_item in AUDIO_SEQ.audio_items:
                 if f_item.isSelected():
                     f_pos_x = f_item.pos().x()
-                    f_pos_y = a_event.scenePos().y()
                     f_pos_x = pydaw_clip_value(f_pos_x, 0.0, f_max_x)
-                    f_ignored, f_pos_y = f_item.y_pos_to_lane_number(f_pos_y)
                     f_pos_x = f_item.quantize_scene(f_pos_x)
+                    f_pos_y = self.lane_number_to_y_pos(
+                        f_lane_offset + f_item.audio_item.lane_num)
                     f_item.setPos(f_pos_x, f_pos_y)
                     if not f_item.is_moving:
                         f_item.setGraphicsEffect(
