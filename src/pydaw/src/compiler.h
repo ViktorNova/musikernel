@@ -15,6 +15,8 @@ GNU General Public License for more details.
 #define	MK_COMPILER_H
 
 #include <stdlib.h>
+#include <lo/lo.h>
+#include <sndfile.h>
 
 #if !defined(CACHE_LINE_SIZE)
 
@@ -25,7 +27,7 @@ GNU General Public License for more details.
 
 #undef CACHE_LINE_SIZE
 #define CACHE_LINE_SIZE 64
-#warning "CACHE_LINE_SIZE < 64, using 64 as the cache line size"
+#warning "CACHE_LINE_SIZE < 64 or > 128, using 64 as the cache line size"
 
 #endif
 
