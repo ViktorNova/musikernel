@@ -9,11 +9,13 @@ PYDAW_VERSION = $(shell cat ../major-version.txt)
 PLAT_FLAGS     ?= -mstackrealign -msse -msse2 -msse3 -mfpmath=sse \
 -mtune=generic
 
+CACHE_LINE_SIZE = 64  # $(shell getconf LEVEL1_DCACHE_LINESIZE)
+
 BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
 -floop-optimize -fsingle-precision-constant -funroll-loops -Wall \
 -Isrc -Iportaudio/include -fstrength-reduce -fstrict-aliasing \
 -finline-functions \
--DCACHE_LINE_SIZE=$(shell getconf LEVEL1_DCACHE_LINESIZE)
+-DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
 
 PYDAW_LIB_DIR   ?= /usr/lib
 PYDAW_LIB64_DIR ?= $(shell if [ -e "/usr/lib/x86_64-linux-gnu" ]; \

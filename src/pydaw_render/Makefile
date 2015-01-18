@@ -6,6 +6,7 @@ CC  ?= gcc
 PYDAW_VERSION = $(shell cat ../major-version.txt)
 PYDAW_FILE = $(PYDAW_VERSION)_render
 PYDAW_DBG = $(PYDAW_FILE)-dbg
+CACHE_LINE_SIZE = 64  # $(shell getconf LEVEL1_DCACHE_LINESIZE)
 
 #BASE_FLAGS     = -Wall -mstackrealign -fsingle-precision-constant -mtune=generic -msse 
 #-msse2 -msse3 -mfpmath=sse -fstrength-reduce -fstrict-aliasing -fprefetch-loop-arrays -finline-functions
@@ -18,7 +19,7 @@ BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
 -floop-optimize -fsingle-precision-constant -funroll-loops -Wall \
 -Isrc -Iportaudio/include -fstrength-reduce -fstrict-aliasing \
 -finline-functions -Wstrict-aliasing \
--DCACHE_LINE_SIZE=$(shell getconf LEVEL1_DCACHE_LINESIZE)
+-DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
 
 
 BUILD_CFLAGS   = $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
