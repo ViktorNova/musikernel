@@ -156,8 +156,10 @@ class MkProject(libmk.AbstractProject):
     def create_backup(self, a_name=None):
         f_backup_name = a_name if a_name else \
             datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        f_file_path = "{}/{}.tar.bz2".format(self.backups_folder, f_backup_name)
+        f_file_path = os.path.join(
+            self.backups_folder, "{}.tar.bz2".format(f_backup_name))
         if os.path.exists(f_file_path):
+            print("create_backup:  '{}' exists".format(f_file_path))
             return False
         with tarfile.open(f_file_path, "w:bz2") as f_tar:
             f_tar.add(
