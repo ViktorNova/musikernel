@@ -1322,6 +1322,8 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.addAction(self.glue_action)
 
     def show_context_menu(self):
+        if libmk.IS_PLAYING:
+            return
         if REGION_EDITOR_MODE == 0:
             self.menu.exec_(QtGui.QCursor.pos())
         elif REGION_EDITOR_MODE == 1:
