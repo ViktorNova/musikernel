@@ -1374,6 +1374,7 @@ def global_new_project(a_project_file, a_wait=True):
 if "cygwin" in sys.platform:
     if not "DISPLAY" in os.environ:
         os.environ["DISPLAY"] = ":0.0"
+    XSERVER = subprocess.Popen(["XWin.exe", "-multiwindow"])
 
 libmk.APP = QtGui.QApplication(sys.argv)
 
@@ -1455,5 +1456,12 @@ if RESPAWN:
     #CHILD_PROC.wait()
     time.sleep(6.0)
     print("Parent UI process exiting")
+else:
+    if "cygwin" in sys.platform:
+        import signal
+        try:
+            XSERVER.send_signal(signal.SIGINT)
+        except Exception as ex:
+            print(ex)
 
 #exit(0)
