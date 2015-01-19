@@ -1371,6 +1371,10 @@ def global_new_project(a_project_file, a_wait=True):
 
 #########  Setup and run #########
 
+if "cygwin" in sys.platform:
+    if not "DISPLAY" in os.environ:
+        os.environ["DISPLAY"] = ":0.0"
+
 libmk.APP = QtGui.QApplication(sys.argv)
 
 libmk.APP.setWindowIcon(
