@@ -52,7 +52,9 @@ GNU General Public License for more details.
 #include <cpufreq.h>
 #endif
 
+#ifdef __linux__
 #include <linux/sched.h>
+#endif
 
 #include "compiler.h"
 #include "pydaw_files.h"
@@ -360,10 +362,14 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     int j;
 
     pthread_attr_t f_ui_threadAttr;
+    pthread_attr_init(&f_ui_threadAttr);
+
+#ifdef __linux__
     struct sched_param param;
     param.__sched_priority = 1; //90;
-    pthread_attr_init(&f_ui_threadAttr);
     pthread_attr_setschedparam(&f_ui_threadAttr, &param);
+#endif
+
     pthread_attr_setstacksize(&f_ui_threadAttr, 1000000); //8388608);
     pthread_attr_setdetachstate(&f_ui_threadAttr, PTHREAD_CREATE_DETACHED);
 
@@ -424,6 +430,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         }
     }
 
+#ifdef __linux__
     int f_current_proc_sched = sched_getscheduler(0);
 
     if(f_current_proc_sched == RT_SCHED)
@@ -441,6 +448,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         sched_setscheduler(0, RT_SCHED, &f_proc_param);
         printf("Process scheduler is now %i\n\n", sched_getscheduler(0));
     }
+#endif
 
     setsid();
     sigemptyset (&_signals);
