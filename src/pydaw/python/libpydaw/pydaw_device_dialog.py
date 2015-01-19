@@ -131,8 +131,11 @@ class pydaw_device_dialog:
             ctypes.POINTER(portaudio.PaStreamParameters), ctypes.c_double]
         self.pyaudio.Pa_Initialize()
 
-        ctypes.cdll.LoadLibrary("libportmidi.so")
-        self.pypm = ctypes.CDLL("libportmidi.so")
+        f_pm_dll = "libportmidi-0.dll" if "cygwin" in sys.platform \
+            else "libportmidi.so"
+
+        ctypes.cdll.LoadLibrary(f_pm_dll)
+        self.pypm = ctypes.CDLL(f_pm_dll)
         self.pypm.Pm_GetDeviceInfo.restype = ctypes.POINTER(
             portmidi.PmDeviceInfo)
         self.pypm.Pm_Initialize()
