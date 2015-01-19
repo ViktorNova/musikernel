@@ -61,9 +61,12 @@ then printf "$(PYDAW_LIB64_DIR)/librt.a" ; \
 else printf " -lrt" ; \
 fi)
 
+ALSA_FLAG ?= $(shell pkg-config --libs alsa)
+
 LINK_CFLAGS  = $(RT_LIB_FLAG) -pthread $(LIBLO_FLAG) $(PORTMIDI_FLAG) \
 portaudio/lib/.libs/libportaudio*.a -fno-stack-protector \
-$(LDFLAGS) $(shell pkg-config --libs sndfile alsa fftw3f) $(MATH_LIB_FLAG)
+$(LDFLAGS) $(shell pkg-config --libs sndfile fftw3f) $(ALSA_FLAG) \
+$(MATH_LIB_FLAG)
 
 C_OBJS   = src/main.o
 
