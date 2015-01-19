@@ -14,7 +14,7 @@ CACHE_LINE_SIZE = 64  # $(shell getconf LEVEL1_DCACHE_LINESIZE)
 BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
 -floop-optimize -fsingle-precision-constant -funroll-loops -Wall \
 -Isrc -Iportaudio/include -fstrength-reduce -fstrict-aliasing \
--finline-functions \
+-finline-functions -fno-stack-protector \
 -DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
 
 PYDAW_LIB_DIR   ?= /usr/lib
@@ -62,7 +62,7 @@ else printf " -lrt" ; \
 fi)
 
 LINK_CFLAGS  = $(RT_LIB_FLAG) -pthread $(LIBLO_FLAG) $(PORTMIDI_FLAG) \
-portaudio/lib/.libs/libportaudio.a \
+portaudio/lib/.libs/libportaudio.a -fno-stack-protector \
 $(LDFLAGS) $(shell pkg-config --libs sndfile alsa fftw3f) $(MATH_LIB_FLAG)
 
 C_OBJS   = src/main.o

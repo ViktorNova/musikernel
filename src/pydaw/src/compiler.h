@@ -37,6 +37,8 @@ GNU General Public License for more details.
 #define prefetch __builtin_prefetch
 #define PREFETCH_STRIDE 64
 
+#ifdef __linux__
+
 inline void prefetch_range(void *addr, size_t len)
 {
     char *cp;
@@ -47,6 +49,8 @@ inline void prefetch_range(void *addr, size_t len)
         prefetch(cp);
     }
 }
+
+#endif
 
 #endif	/* MK_COMPILER_H */
 
