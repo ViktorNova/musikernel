@@ -62,7 +62,7 @@ else printf " -lrt" ; \
 fi)
 
 LINK_CFLAGS  = $(RT_LIB_FLAG) -pthread $(LIBLO_FLAG) $(PORTMIDI_FLAG) \
-portaudio/lib/.libs/libportaudio.a -fno-stack-protector \
+portaudio/lib/.libs/libportaudio*.a -fno-stack-protector \
 $(LDFLAGS) $(shell pkg-config --libs sndfile alsa fftw3f) $(MATH_LIB_FLAG)
 
 C_OBJS   = src/main.o
