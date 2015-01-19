@@ -63,7 +63,7 @@ fi)
 
 ALSA_FLAG ?= $(shell pkg-config --libs alsa)
 
-LINK_CFLAGS  = $(RT_LIB_FLAG) -pthread $(LIBLO_FLAG) $(PORTMIDI_FLAG) \
+LINK_CFLAGS  = $(RT_LIB_FLAG) -lpthread $(LIBLO_FLAG) $(PORTMIDI_FLAG) \
 portaudio/lib/.libs/libportaudio*.a -fno-stack-protector \
 $(LDFLAGS) $(shell pkg-config --libs sndfile fftw3f) $(ALSA_FLAG) \
 $(MATH_LIB_FLAG)
