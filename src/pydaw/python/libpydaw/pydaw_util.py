@@ -14,6 +14,7 @@ GNU General Public License for more details.
 
 import random
 import os
+import sys
 import re
 import subprocess
 import time
@@ -46,6 +47,9 @@ global_cpu_count = cpu_count()
 
 if "src/pydaw/python/" in __file__:
     INSTALL_PREFIX = "/usr"
+elif "cygwin" in sys.platform:
+    INSTALL_PREFIX = os.path.abspath(os.path.join(
+        os.path.dirname(__file__), ".."))
 else:
     INSTALL_PREFIX = os.path.abspath(os.path.join(
         os.path.dirname(__file__), *([".."] * 5)))
