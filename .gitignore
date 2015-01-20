@@ -1,3 +1,4 @@
+*.exe
 callgrind.out.*
 cachegrind.out.*
 tags
