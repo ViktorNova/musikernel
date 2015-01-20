@@ -38,7 +38,12 @@ int PYDAW_AUDIO_INPUT_TRACK_COUNT = 0;
 #define PYDAW_OSC_SEND_QUEUE_SIZE 256
 #define PYDAW_OSC_MAX_MESSAGE_SIZE 65536
 
+#ifdef __linux__
 #define FRAMES_PER_BUFFER 4096
+#else
+// Lest no low-latency back-end is available
+#define FRAMES_PER_BUFFER 8192
+#endif
 
 #define STATUS_NOT_PROCESSED 0
 #define STATUS_PROCESSING 1
