@@ -417,6 +417,13 @@ void v_pydaw_init_worker_threads(
         }
     }
 
+#ifdef __CYGWIN__
+#warning "Detected Cygwin as the target platform, disabling multithread support"
+
+    musikernel->worker_thread_count = 1;
+
+#endif
+
     printf("Spawning %i worker threads\n", musikernel->worker_thread_count);
 
     musikernel->track_block_mutexes = (pthread_mutex_t*)malloc(
