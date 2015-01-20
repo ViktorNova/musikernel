@@ -527,7 +527,7 @@ class MkMainWindow(QtGui.QMainWindow):
             f_window.close()
 
         def timeout_handler():
-            if f_proc.poll() != None:
+            if f_proc.poll() is not None:
                 f_timer.stop()
                 f_ok.setEnabled(True)
                 f_cancel.setEnabled(False)
@@ -605,7 +605,7 @@ class MkMainWindow(QtGui.QMainWindow):
 
     def subprocess_monitor(self):
         try:
-            if PYDAW_SUBPROCESS and PYDAW_SUBPROCESS.poll() != None:
+            if PYDAW_SUBPROCESS and PYDAW_SUBPROCESS.poll() is not None:
                 self.subprocess_timer.stop()
                 exitCode = PYDAW_SUBPROCESS.returncode
                 if exitCode == 0:
@@ -1206,7 +1206,7 @@ def close_pydaw_engine():
     if PYDAW_SUBPROCESS is not None:
         f_exited = False
         for i in range(20):
-            if PYDAW_SUBPROCESS.poll() == None:
+            if PYDAW_SUBPROCESS.poll() is not None:
                 f_exited = True
                 break
             else:
@@ -1449,6 +1449,17 @@ libmk.APP = None
 time.sleep(0.6)
 final_gc()
 
+if "cygwin" in sys.platform:
+        import signal
+        try:
+            XSERVER.send_signal(signal.SIGINT)
+            for f_i in range(10):
+                if XSERVER.poll() is None:
+                    break
+                time.sleep(0.5)
+        except Exception as ex:
+            print(ex)
+
 if RESPAWN:
     print("Spawning child UI process {}".format(sys.argv))
     CHILD_PROC = subprocess.Popen(sys.argv)
@@ -1456,12 +1467,5 @@ if RESPAWN:
     #CHILD_PROC.wait()
     time.sleep(6.0)
     print("Parent UI process exiting")
-else:
-    if "cygwin" in sys.platform:
-        import signal
-        try:
-            XSERVER.send_signal(signal.SIGINT)
-        except Exception as ex:
-            print(ex)
 
 #exit(0)
