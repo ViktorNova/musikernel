@@ -58,11 +58,11 @@ deps_clean:
 install:
 	install -d $(MK_DIR)
 	install -d $(MK_DIR)/sbsms
+	install -d $(MK_DIR)/sbsms/bin
 	install -d $(MK_DIR)/rubberband
 	install -d $(MK_DIR)/rubberband/bin
 	make -C pydaw PREFIX=$(PREFIX) DESTDIR=$(DESTDIR) install
-	make -C sbsms/cli PREFIX=$(SBSMS_PREFIX) \
-	DESTDIR=$(DESTDIR) install
+	install sbsms/cli/sbsms $(MK_DIR)/sbsms/bin
 	install rubberband/bin/rubberband $(MK_DIR)/rubberband/bin
 	make -C pydaw_render DESTDIR=$(DESTDIR) PREFIX=$(PREFIX) install
 

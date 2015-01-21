@@ -14,6 +14,7 @@ GNU General Public License for more details.
 
 import random
 import os
+import sys
 import re
 import subprocess
 import time
@@ -197,6 +198,11 @@ pydaw_sbsms_util = "{}/lib/{}/sbsms/bin/sbsms".format(
 pydaw_paulstretch_util = ("{}/lib/{}/pydaw/python/libpydaw/"
     "pydaw_paulstretch.py".format(
     INSTALL_PREFIX, global_pydaw_version_string))
+
+if "cygwin" in sys.platform:
+    pydaw_rubberband_util += ".exe"
+    #this one doesn't get a .exe extension
+    #pydaw_sbsms_util += ".exe"
 
 def pydaw_rubberband(a_src_path, a_dest_path, a_timestretch_amt, a_pitch_shift,
                      a_crispness, a_preserve_formants=False):
