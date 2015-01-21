@@ -25,6 +25,7 @@ src/pydaw/midicomp/midicomp
 src/pydaw/python/libpydaw/midicomp
 src/pydaw/pyliblo-0.9.2/build/
 src/pydaw/python/libpydaw/*.so
+src/pydaw/python/libpydaw/*.dll
 src/pydaw/portaudio/Makefile
 src/pydaw/portaudio/bin-stamp
 src/pydaw/portaudio/bin/
@@ -57,8 +58,8 @@ tools/wavetable_maker/wt.h
 tools/wavetable_maker/test.txt
 src/way_v/WAY_V_qt
 tools/wavetable_maker/wtgen
-src/libmodsynth/libmodsynth.so
 core
+core.*
 src/pydaw_render/musikernel*_render*
 src/pydaw_render/*.wav
 src/build-suffix.txt
