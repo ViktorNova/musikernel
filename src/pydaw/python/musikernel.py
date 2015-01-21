@@ -1374,7 +1374,8 @@ def global_new_project(a_project_file, a_wait=True):
 if "cygwin" in sys.platform:
     if not "DISPLAY" in os.environ:
         os.environ["DISPLAY"] = ":0.0"
-    XSERVER = subprocess.Popen(["XWin.exe", "-multiwindow"])
+    XSERVER = subprocess.Popen(
+        ["XWin.exe", "-multiwindow", "-silent-dup-error", "-terminate"])
     print("Waiting for XServer")
     time.sleep(1.0)
 
