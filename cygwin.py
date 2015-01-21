@@ -29,6 +29,8 @@ if os.path.isdir(DESTDIR):
 else:
     OLD_DIR = None
 
+os.mkdir(DESTDIR)
+
 f_cwd = os.path.join(os.path.abspath(os.path.dirname(__file__)), "src")
 
 os.chdir(f_cwd)
