@@ -19,7 +19,7 @@ import shutil
 with open("src/major-version.txt") as f_file:
     MAJOR_VERSION = f_file.read().strip()
 
-DESTDIR = os.path.join("", MAJOR_VERSION)
+DESTDIR = os.sep + MAJOR_VERSION
 
 if os.path.isdir(DESTDIR):
     OLD_DIR = "{}-OLD".format(DESTDIR)
