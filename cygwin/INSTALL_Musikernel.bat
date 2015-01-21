@@ -1,8 +1,16 @@
 REM Get current drive letter into WD.
 for /F %%A in ('cd') do set WD=%%~dA
 
+
+REM Store any existing mounts, unmount them, and replace with mounts to current drive letter.
+cygwin64\bin\mount -m | cygwin64\bin\sed s/mount/"%WD%\/cygwin64\\/bin\\/mount"/ > cygwin64\tmp\mount.log
+cygwin64\bin\umount -U
+cygwin64\bin\mount -f %WD%cygwin64/ /
+cygwin64\bin\mount -f %WD%cygwin64\bin /usr/bin
+cygwin64\bin\mount -f %WD%cygwin64\lib /usr/lib
+
 REM Set some general environment variables
-set path=%WD%cygwin64\bin;%WD%cygwin64\usr\X11R6\bin;%path%
+set path=%path%;%WD%cygwin64\bin;%WD%cygwin64\usr\X11R6\bin
 set ALLUSERSPROFILE=%WD%ProgramData
 set ProgramData=%WD%ProgramData
 set CYGWIN=nodosfilewarning
@@ -33,9 +41,6 @@ set GROUP=
 REM Make a symlink from /curdrive to the current drive letter.
 cygwin64\bin\rm.exe /curdrive
 cygwin64\bin\ln.exe -s %WD% /curdrive
-
-cygwin64\bin\bash --login -c "/bin/python3.2m /musikernel1/usr/bin/musikernel1"
-
 
 REM Cleanup and replace pre-existing mounts.
 cygwin64\bin\rm.exe /curdrive

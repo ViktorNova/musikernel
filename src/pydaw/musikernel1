@@ -33,5 +33,8 @@ else:
         f_prefix_dir, pydaw_version)
     f_path = os.path.abspath(f_path)
     print(f_path)
-    subprocess.Popen([f_path])
+    if "cygwin" in sys.platform:
+        subprocess.Popen(["/bin/python3.2m.exe", f_path])
+    else:
+        subprocess.Popen([f_path])
 
