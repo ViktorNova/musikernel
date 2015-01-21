@@ -7388,8 +7388,9 @@ class item_list_editor:
 
     def set_midi_zoom(self, a_val):
         global_set_midi_zoom(a_val * 0.1)
-        global_open_items()
+        #global_open_items()
         AUDIO_SEQ.set_zoom(float(a_val) * 0.1)
+        self.tab_changed()
 
     def set_headers(self): #Because clearing the table clears the headers
         self.notes_table_widget.setHorizontalHeaderLabels(
