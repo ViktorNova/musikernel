@@ -1252,8 +1252,8 @@ class ItemSequencer(QtGui.QGraphicsView):
         #Somewhat slow on my AMD 5450 using the FOSS driver
         #self.setRenderHint(QtGui.QPainter.Antialiasing)
 
-        self.menu = QtGui.QMenu()
-        self.atm_menu = QtGui.QMenu()
+        self.menu = QtGui.QMenu(self)
+        self.atm_menu = QtGui.QMenu(self)
 
         self.copy_action = self.atm_menu.addAction(_("Copy"))
         self.copy_action.triggered.connect(self.copy_selected)
@@ -1593,6 +1593,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         if libmk.IS_PLAYING:
             return
         QtGui.QGraphicsScene.contextMenuEvent(self.scene, a_event)
+        self.show_context_menu()
 
     def highlight_selected(self):
         self.setUpdatesEnabled(False)
