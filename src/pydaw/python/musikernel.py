@@ -1453,15 +1453,15 @@ time.sleep(0.6)
 final_gc()
 
 if "cygwin" in sys.platform:
-        import signal
-        try:
-            XSERVER.send_signal(signal.SIGINT)
-            for f_i in range(10):
-                if XSERVER.poll() is None:
-                    break
-                time.sleep(0.5)
-        except Exception as ex:
-            print(ex)
+    import signal
+    try:
+        XSERVER.send_signal(signal.SIGINT)
+        for f_i in range(10):
+            if XSERVER.poll() is None:
+                break
+            time.sleep(0.5)
+    except Exception as ex:
+        print(ex)
 
 if RESPAWN:
     print("Spawning child UI process {}".format(sys.argv))
