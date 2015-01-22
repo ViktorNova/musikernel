@@ -1394,6 +1394,10 @@ global_check_device()
 MAIN_WINDOW = MkMainWindow()
 MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
 
+# Fix the taskbar overlapping the bottom of the window
+if "cygwin" in sys.platform:
+    MAIN_WINDOW.setGeometry(libmk.APP.desktop().availableGeometry())
+
 PYDAW_SUBPROCESS = None
 
 libmk.APP.lastWindowClosed.connect(libmk.APP.quit)
