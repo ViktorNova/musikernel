@@ -3550,7 +3550,16 @@ void v_en_configure(const char* a_key, const char* a_value)
     {
         t_key_value_pair * f_kvp = g_kvp_get(a_value);
         int f_first_open = atoi(f_kvp->key);
+
+        pthread_spin_lock(&musikernel->main_lock);
+        musikernel->is_offline_rendering = 1;
+        pthread_spin_unlock(&musikernel->main_lock);
+
         v_en_open_project(f_first_open);
+
+        pthread_spin_lock(&musikernel->main_lock);
+        musikernel->is_offline_rendering = 0;
+        pthread_spin_unlock(&musikernel->main_lock);
     }
     else if(!strcmp(a_key, EN_CONFIGURE_KEY_TEMPO)) //Change tempo
     {
