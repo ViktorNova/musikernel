@@ -23,8 +23,7 @@ import shutil
 with open("src/major-version.txt") as f_file:
     MAJOR_VERSION = f_file.read().strip()
 
-for f_file in (x for x in os.listdir("cygwin") if os.path.isfile(x)):
-    shutil.copy(f_file, "..")
+shutil.copy(os.path.join("cygwin", "RUN_MusiKernel1.bat"), "..")
 
 DESTDIR = os.sep + MAJOR_VERSION
 
