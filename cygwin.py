@@ -13,11 +13,18 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
+# This script is meant to be in a git repository in the file system root,
+# it copies files from ./cygwin up one level where the Windows packager
+# looks for them
+
 import os
 import shutil
 
 with open("src/major-version.txt") as f_file:
     MAJOR_VERSION = f_file.read().strip()
+
+for f_file in (x for x in os.listdir("cygwin") if os.path.isfile(x)):
+    shutil.copy(f_file, "..")
 
 DESTDIR = os.sep + MAJOR_VERSION
 
