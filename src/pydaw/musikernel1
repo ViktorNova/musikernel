@@ -23,7 +23,10 @@ if len(sys.argv) > 1:
 
     f_path = "{}/{}-engine".format(os.path.dirname(__file__), pydaw_version)
     print(f_path)
-    f_proc = subprocess.Popen([f_path] + sys.argv[1:])
+    if "cygwin" in sys.platform:
+        f_proc = subprocess.Popen(["/bin/python3.2m", f_path] + sys.argv[1:])
+    else:
+        f_proc = subprocess.Popen([f_path] + sys.argv[1:])
     f_proc.wait()
     print("helper script:  f_proc returned with {}".format(f_proc.returncode))
     sys.exit(f_proc.returncode)
