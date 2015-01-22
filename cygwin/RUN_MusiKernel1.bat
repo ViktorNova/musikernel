@@ -13,6 +13,9 @@ set HOME=/home/%USERNAME%
 set GROUP=None
 set GRP=
 
+bin\umount -U
+bin\rm.exe -rf "%HOME%"
+bin\mkdir.exe "%HOME%"
 bin\mount.exe -f "%USERPROFILE%" "%HOME%"
 
 REM If this is the current user's first time running Cygwin, add them to /etc/passwd
