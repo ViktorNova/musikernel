@@ -1,7 +1,3 @@
-#Warning:  beta software
-
-The project is believed to be reasonably stable, BUT MAY break backwards compatibility between now and the final release, and could contain undiscovered bugs with unknown consequences.  You should wait for the final release to create any projects that you intend to keep forever.
-
 #What is MusiKernel ?
 
 MusiKernel is DAWs, plugins, and a new approach to developing an audio software ecosystem.  By promoting centralized development and quality control with maximal code re-use, MusiKernel aims to avoid many of the compatibility problems that have plagued traditional host/plugin architectures.
