@@ -14,10 +14,19 @@ OutFile "C:\musikernel-win-64.exe"
 InstallDir "C:\musikernel64"
 ShowInstDetails show
  
-Section "install" SEC01
+Section "install"
+  RMDir /r $INSTDIR
   SetOutPath $INSTDIR
+  writeUninstaller "$INSTDIR\uninstall.exe"
   File /r "C:\cygwin64\*" 
   CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
-  createShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" "C:\musikernel64\RUN_MusiKernel1.bat" "" "C:\musikernel64\musikernel1.ico"
+  createShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" \
+    "$INSTDIR\RUN_MusiKernel1.bat" "" "$INSTDIR\musikernel1.ico"
+SectionEnd
+
+Section "uninstall"
+  RMDir /r $INSTDIR
+  delete "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk"
+  RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
 SectionEnd
 
