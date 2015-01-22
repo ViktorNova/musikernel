@@ -10,7 +10,7 @@ RequestExecutionLevel admin ;Require admin rights on NT6+ (When UAC is turned on
 SetCompressor lzma
  
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "C:\musikernel-win-64.exe"
+OutFile "musikernel-installer-win-x64.exe"
 InstallDir "C:\musikernel64"
 ShowInstDetails show
  
