@@ -17,6 +17,7 @@ ShowInstDetails show
 Section "install" SEC01
   SetOutPath $INSTDIR
   File /r "C:\cygwin64\*" 
+  CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
   createShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" "C:\musikernel64\RUN_MusiKernel1.bat" "" "C:\musikernel64\musikernel1.ico"
 SectionEnd
 
