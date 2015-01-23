@@ -460,7 +460,7 @@ class MkMainWindow(QtGui.QMainWindow):
             return
         QtGui.QMainWindow.resizeEvent(self, a_event)
         # Fix the taskbar overlapping the bottom of the window
-        if self.isMaximized() and "cygwin" in sys.platform:
+        if self.isMaximized() and pydaw_util.IS_CYGWIN:
             self.suppress_resize_events = True
             MAIN_WINDOW.setGeometry(libmk.APP.desktop().availableGeometry())
             self.suppress_resize_events = False
@@ -1382,7 +1382,7 @@ def global_new_project(a_project_file, a_wait=True):
 
 #########  Setup and run #########
 
-if "cygwin" in sys.platform:
+if pydaw_util.IS_CYGWIN:
     if not "DISPLAY" in os.environ:
         os.environ["DISPLAY"] = ":0.0"
     XSERVER = subprocess.Popen(
@@ -1463,7 +1463,7 @@ libmk.APP = None
 time.sleep(0.6)
 final_gc()
 
-if "cygwin" in sys.platform:
+if pydaw_util.IS_CYGWIN:
     import signal
     try:
         XSERVER.send_signal(signal.SIGINT)
@@ -1476,7 +1476,10 @@ if "cygwin" in sys.platform:
 
 if RESPAWN:
     print("Spawning child UI process {}".format(sys.argv))
-    CHILD_PROC = subprocess.Popen(sys.argv)
+    if pydaw_util.IS_CYGWIN:
+        CHILD_PROC = subprocess.Popen(["/bin/python3.2m"] + sys.argv)
+    else:
+        CHILD_PROC = subprocess.Popen(sys.argv)
         #, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
     #CHILD_PROC.wait()
     time.sleep(6.0)
