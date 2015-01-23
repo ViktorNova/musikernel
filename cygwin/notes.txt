@@ -21,7 +21,8 @@ not be installed, instead it should be installed with:
 ./configure --prefix=/usr --with-winapi=asio,wasapi,wmme --with-asiodir=ASIO2.3
 make
 make install
-
+# cd to musikernel-git/src/pydaw
+cp portaudio/lib/.libs/cygportaudio-2.dll python/libpydaw/libportaudio.so 
 
 
 
