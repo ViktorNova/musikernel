@@ -467,6 +467,23 @@ global_show_create_folder_error = False
 
 global_is_live_mode = False
 global_home = os.path.expanduser("~")
+
+def _set_cygwin_home():
+    if not "USERPROFILE" in os.environ:
+        return
+    f_up = os.environ["USERPROFILE"]
+    f_home = "/cygdrive/{}/{}".format(
+        f_up[0].lower(), f_up[2:].replace("\\", "/"))
+    if os.path.exists(f_home) and os.access(f_home, os.W_OK):
+        global global_home
+        global_home = f_home
+        os.environ["HOME"] = f_home
+    else:
+        print("Could not set HOME to {}".format(f_home))
+
+if IS_CYGWIN:
+    _set_cygwin_home()
+
 global_default_project_folder = global_home
 global_pydaw_home = os.path.join(global_home, global_pydaw_version_string)
 

@@ -13,11 +13,6 @@ set HOME=/home/%USERNAME%
 set GROUP=None
 set GRP=
 
-bin\umount -U
-bin\rm.exe -rf "%HOME%"
-bin\mkdir.exe "%HOME%"
-bin\mount.exe -f "%USERPROFILE%" "%HOME%"
-
 REM If this is the current user's first time running Cygwin, add them to /etc/passwd
 for /F %%A in ('bin\mkpasswd.exe -c ^| bin\gawk.exe -F":" '{ print $5 }'') do set SID=%%A
 findstr /m %SID% etc\passwd
@@ -33,17 +28,13 @@ set GRP=
 set SID=
 set GROUP=
 
-
 REM Make a symlink from /curdrive to the current drive letter.
 bin\rm.exe /curdrive
 bin\ln.exe -s %WD% /curdrive
 
 bin\bash --login -c "/bin/python3.2m /musikernel1/usr/bin/musikernel1"
 
-
 REM Cleanup and replace pre-existing mounts.
 bin\rm.exe /curdrive
 bin\umount -U
-bin\bash tmp\mount.log
-bin\rm tmp\mount.log
 
