@@ -42,7 +42,7 @@ f_cwd = os.path.join(os.path.abspath(os.path.dirname(__file__)), "src")
 os.chdir(f_cwd)
 
 f_retcode = os.system(
-    "make clean && make && make DESTDIR={} install".format(DESTDIR))
+    "make clean && make pydaw_src && make DESTDIR={} install".format(DESTDIR))
 
 if(f_retcode):
     print("Error:  clean, build and install returned {}".format(f_retcode))
