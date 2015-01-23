@@ -63,7 +63,7 @@ global_rpm_dir = os.path.abspath("{}/..".format(os.getcwd()))
 pydaw_rpm_file = None
 
 for f_rpm_file in os.listdir(global_rpm_dir):
-    if f_rpm_file.startswith("musikernel") and \
+    if f_rpm_file.startswith(global_pydaw_version) and \
     f_rpm_file.endswith(".rpm") and \
     pydaw_version in f_rpm_file and \
     "debuginfo" not in f_rpm_file:
@@ -74,10 +74,9 @@ if pydaw_rpm_file is None:
     print("No MusiKernel .rpm files with current version {} found in {}, \n"
         "please run the following commands before running this script:".format(
         pydaw_version, global_rpm_dir))
-    print("\n\ncd ../../..")
+    print("\n\ncd ..")
     print("./rpm.py")
-    print("cd '{}'".format(os.getcwd()))
-    print("./copy_rpms.py")
+    print("cd fedora")
     exit(1)
 
 rpm_file = open("{}/{}".format(global_rpm_dir, pydaw_rpm_file), "rb")
