@@ -232,6 +232,7 @@ class transport_widget:
 
 class MkMainWindow(QtGui.QMainWindow):
     def __init__(self):
+        self.suppress_resize_events = False
         QtGui.QMainWindow.__init__(self)
         libmk.MAIN_WINDOW = self
         try:
@@ -453,6 +454,16 @@ class MkMainWindow(QtGui.QMainWindow):
 
         self.on_restore_splitters()
         self.show()
+
+    def resizeEvent(self, a_event):
+        if self.suppress_resize_events:
+            return
+        QtGui.QMainWindow.resizeEvent(self, a_event)
+        # Fix the taskbar overlapping the bottom of the window
+        if self.isMaximized() and "cygwin" in sys.platform:
+            self.suppress_resize_events = True
+            MAIN_WINDOW.setGeometry(libmk.APP.desktop().availableGeometry())
+            self.suppress_resize_events = False
 
     def open_in_wave_editor(self, a_file):
         libmk.TRANSPORT.host_combobox.setCurrentIndex(2)
@@ -1393,10 +1404,6 @@ global_check_device()
 
 MAIN_WINDOW = MkMainWindow()
 MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
-
-# Fix the taskbar overlapping the bottom of the window
-if "cygwin" in sys.platform:
-    MAIN_WINDOW.setGeometry(libmk.APP.desktop().availableGeometry())
 
 PYDAW_SUBPROCESS = None
 
