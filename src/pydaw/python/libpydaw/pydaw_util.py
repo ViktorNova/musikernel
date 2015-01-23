@@ -18,6 +18,7 @@ import sys
 import re
 import subprocess
 import time
+import datetime
 from math import log, pow
 from multiprocessing import cpu_count
 import numpy
@@ -88,6 +89,14 @@ def pydaw_which(a_file):
         if os.path.exists(f_file_path) and not os.path.isdir(f_file_path):
             return f_file_path
     return None
+
+IS_CYGWIN = "cygwin" in sys.platform
+
+def get_unix_timestamp(a_dt):
+    if IS_CYGWIN:
+        return int(time.mktime(a_dt.timetuple()))
+    else:
+        return int(a_dt.strftime("%s"))
 
 
 def pydaw_remove_bad_chars(a_str):

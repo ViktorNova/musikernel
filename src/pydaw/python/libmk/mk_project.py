@@ -461,7 +461,7 @@ class MkProject(libmk.AbstractProject):
         #  are not consistent with length, need to fix it.
         with wavefile.WaveReader(f_path) as f_reader:
             f_result = "meta|filename|{}\n".format(f_path)
-            f_ts = int(datetime.datetime.now().strftime("%s"))
+            f_ts = get_unix_timestamp(datetime.datetime.now())
             f_result += "meta|timestamp|{}\n".format(f_ts)
             f_result += "meta|channels|{}\n".format(f_reader.channels)
             f_result += "meta|frame_count|{}\n".format(f_reader.frames)
