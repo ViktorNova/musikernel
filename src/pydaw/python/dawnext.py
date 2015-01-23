@@ -1320,9 +1320,13 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.glue_action.setShortcut(
             QtGui.QKeySequence.fromString("CTRL+G"))
         self.addAction(self.glue_action)
+        self.context_menu_enabled = True
 
     def show_context_menu(self):
         if libmk.IS_PLAYING:
+            return
+        if not self.context_menu_enabled:
+            self.context_menu_enabled = True
             return
         if REGION_EDITOR_MODE == 0:
             self.menu.exec_(QtGui.QCursor.pos())
@@ -1868,6 +1872,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         REGION_SETTINGS.open_region()
 
     def rulerContextMenuEvent(self, a_event):
+        self.context_menu_enabled = False
         self.ruler_event_pos = int(a_event.pos().x() / SEQUENCER_PX_PER_BEAT)
         f_menu = QtGui.QMenu(self)
         f_marker_action = f_menu.addAction(_("Marker..."))
