@@ -1204,6 +1204,7 @@ class ItemSequencer(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
 
+        self.ignore_selection_change = False
         self.playback_pos = 0.0
         self.playback_pos_orig = 0.0
         self.selected_item_strings = set([])
@@ -1349,6 +1350,7 @@ class ItemSequencer(QtGui.QGraphicsView):
                 if f_item and not f_item.isSelected():
                     self.scene.clearSelection()
                     f_item.setSelected(True)
+                    self.selected_item_strings = {f_item.get_selected_string()}
                 self.show_context_menu()
 
         if REGION_EDITOR_MODE == 0:
@@ -1379,6 +1381,12 @@ class ItemSequencer(QtGui.QGraphicsView):
             elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
                 self.deleted_items = []
                 region_editor_set_delete_mode(True)
+            else:
+                f_item = self.get_item(f_pos)
+                if f_item:
+                    self.selected_item_strings = {
+                        f_item.get_selected_string()}
+
         elif REGION_EDITOR_MODE == 1:
             self.setDragMode(QtGui.QGraphicsView.NoDrag)
             self.atm_select_pos_x = None
@@ -1485,6 +1493,8 @@ class ItemSequencer(QtGui.QGraphicsView):
         return [x for x in self.audio_items if x.isSelected()]
 
     def set_selected_strings(self):
+        if self.ignore_selection_change:
+            return
         self.selected_item_strings = {x.get_selected_string()
             for x in self.get_selected_items()}
 
@@ -2047,7 +2057,9 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.reset_line_lists()
         self.audio_items = []
         self.automation_points = []
+        self.ignore_selection_change = True
         self.scene.clear()
+        self.ignore_selection_change = False
         self.draw_headers()
 
     def draw_item(self, a_name, a_item):
