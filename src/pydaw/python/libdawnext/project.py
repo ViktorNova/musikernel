@@ -1817,8 +1817,6 @@ class pydaw_item:
             self.items.pop(f_key)
 
 
-
-
 class pydaw_audio_item(MkAudioItem):
     def clip_at_region_end(self, a_region_length, a_tempo,
             a_sample_length_seconds, a_truncate=True):
@@ -1862,38 +1860,6 @@ class pydaw_audio_item(MkAudioItem):
     def from_arr(a_arr):
         f_result = pydaw_audio_item(*a_arr)
         return f_result
-
-
-class pydaw_midi_route:
-    def __init__(self, a_on, a_track_num, a_device_name):
-        self.on = int(a_on)
-        self.track_num = int(a_track_num)
-        self.device_name = str(a_device_name)
-
-    def __str__(self):
-        return "|".join(
-            str(x) for x in (self.on, self.track_num, self.device_name))
-
-class pydaw_midi_routings:
-    def __init__(self, a_routings=[]):
-        self.routings = a_routings
-
-    def reorder(self, a_dict):
-        for f_route in self.routings:
-            if f_route.track_num in a_dict:
-                f_route.track_num = a_dict[f_route.track_num]
-
-    def __str__(self):
-        return "\n".join(str(x) for x in self.routings + ["\\"])
-
-    @staticmethod
-    def from_str(a_str):
-        f_routings = []
-        for f_line in a_str.split("\n"):
-            if f_line == "\\":
-                break
-            f_routings.append(pydaw_midi_route(*f_line.split("|", 2)))
-        return pydaw_midi_routings(f_routings)
 
 
 class pydaw_midicomp_event:
