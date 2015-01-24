@@ -58,8 +58,6 @@ tools/wavetable_maker/wt.h
 tools/wavetable_maker/test.txt
 src/way_v/WAY_V_qt
 tools/wavetable_maker/wtgen
-core
-core.*
 src/pydaw_render/musikernel*_render*
 src/pydaw_render/*.wav
 src/build-suffix.txt
