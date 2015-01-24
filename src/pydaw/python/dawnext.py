@@ -265,6 +265,8 @@ class region_settings:
             for k, f_track in TRACK_PANEL.tracks.items():
                 f_track.refresh()
             self.open_region()
+            MIDI_DEVICES_DIALOG.set_routings()
+            TRANSPORT.open_project()
 
 def global_set_region_editor_zoom():
     global REGION_EDITOR_GRID_WIDTH

@@ -796,6 +796,7 @@ class region_settings:
                 f_track.refresh()
             if CURRENT_REGION:
                 self.open_region_by_uid(CURRENT_REGION.uid)
+            MIDI_DEVICES_DIALOG.set_routings()
 
 def global_set_region_editor_zoom():
     global REGION_EDITOR_GRID_WIDTH
