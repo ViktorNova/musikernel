@@ -625,6 +625,7 @@ class EdmNextProject(libmk.AbstractProject):
         self.commit("Record MIDI")
 
     def reorder_tracks(self, a_dict):
+        libmk.IPC.pause_engine()
         f_tracks = self.get_tracks()
         f_tracks.reorder(a_dict)
         self.save_tracks(f_tracks)
@@ -655,6 +656,7 @@ class EdmNextProject(libmk.AbstractProject):
             f_audio_region.reorder(a_dict)
             self.save_audio_region(f_uid, f_audio_region)
         self.IPC.pydaw_open_song(self.project_folder)
+        libmk.IPC.resume_engine()
         self.commit("Re-order tracks")
 
     def get_tracks_string(self):
