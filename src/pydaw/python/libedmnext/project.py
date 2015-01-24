@@ -305,6 +305,7 @@ class EdmNextProject(libmk.AbstractProject):
     def save_atm_region(self, a_region, a_uid):
         self.save_file(pydaw_folder_regions_atm, a_uid, str(a_region))
         self.IPC.pydaw_save_atm_region(a_uid)
+        self.commit("Save automation")
 
     def rename_items(self, a_item_names, a_new_item_name):
         f_items_dict = self.get_items_dict()
