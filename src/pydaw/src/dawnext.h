@@ -1890,7 +1890,6 @@ void v_dn_open_project(int a_first_load)
             g_dn_item_get(dawnext, atoi(f_item_dir_list->dir_list[f_i]));
         }
 
-        v_dn_open_tracks();
     }
     else
     {
@@ -1898,6 +1897,8 @@ void v_dn_open_project(int a_first_load)
                 "loading project.  This is to be expected if launching PyDAW "
                 "for the first time\n");
     }
+
+    v_dn_open_tracks();
 
     g_dn_song_get(dawnext, 0);
 

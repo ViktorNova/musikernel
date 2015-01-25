@@ -211,9 +211,10 @@ class DawNextProject(libmk.AbstractProject):
         else:
             return pydaw_routing_graph()
 
-    def save_routing_graph(self, a_graph):
+    def save_routing_graph(self, a_graph, a_notify=True):
         self.save_file("", pydaw_file_routing_graph, str(a_graph))
-        self.IPC.pydaw_update_track_send()
+        if a_notify:
+            self.IPC.pydaw_update_track_send()
 
     def get_midi_routing(self):
         if os.path.isfile(self.midi_routing_file):
@@ -604,8 +605,8 @@ class DawNextProject(libmk.AbstractProject):
 
         self.save_tracks(f_tracks)
         self.save_audio_inputs(f_audio_inputs)
-        self.save_routing_graph(f_graph)
-        self.save_region(f_region)
+        self.save_routing_graph(f_graph, a_notify=False)
+        self.save_region(f_region, a_notify=False)
         self.save_midi_routing(f_midi_routings)
 
         self.IPC.pydaw_open_song(self.project_folder, False)
@@ -685,11 +686,12 @@ class DawNextProject(libmk.AbstractProject):
                 pydaw_folder_items, str(f_uid), str(a_item), a_new_item)
             self.IPC.pydaw_save_item(f_uid)
 
-    def save_region(self, a_region):
+    def save_region(self, a_region, a_notify=True):
         if not self.suppress_updates:
             a_region.fix_overlaps()
             self.save_file("", FILE_SEQUENCER, str(a_region))
-            self.IPC.pydaw_save_region()
+            if a_notify:
+                self.IPC.pydaw_save_region()
 
     def save_tracks(self, a_tracks):
         if not self.suppress_updates:

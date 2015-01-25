@@ -729,6 +729,14 @@ void v_pydaw_open_track(t_pytrack * a_track, char * a_tracks_folder,
 
         g_free_2d_char_array(f_2d_array);
     }
+    else
+    {
+        int f_i;
+        for(f_i = 0; f_i < MAX_PLUGIN_COUNT; ++f_i)
+        {
+            v_pydaw_set_plugin_index(a_track, f_i, 0, -1, 0, 0);
+        }
+    }
 }
 
 t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
@@ -1839,6 +1847,7 @@ __attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
         t_pytrack * f_track, int a_index, int a_plugin_index, int a_plugin_uid,
         int a_power, int a_lock)
 {
+    int f_i = 0;
     t_pydaw_plugin * f_plugin = NULL;
 
     if(a_plugin_index)
@@ -1852,15 +1861,7 @@ __attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
                 a_plugin_index, g_pydaw_wavpool_item_get,
                 a_plugin_uid, v_queue_osc_message);
 
-            int f_i = 0;
-            while(f_i < f_track->channels)
-            {
-                f_plugin->descriptor->connect_buffer(
-                    f_plugin->PYFX_handle, f_i, f_track->buffers[f_i], 0);
-                f_plugin->descriptor->connect_buffer(
-                    f_plugin->PYFX_handle, f_i, f_track->sc_buffers[f_i], 1);
-                ++f_i;
-            }
+
             char f_file_name[1024];
             sprintf(f_file_name, "%s%i",
                 musikernel->plugins_folder, a_plugin_uid);
@@ -1881,6 +1882,17 @@ __attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
     if(a_lock)
     {
         pthread_spin_lock(&musikernel->main_lock);
+    }
+
+    if(f_plugin)
+    {
+        for(f_i = 0; f_i < f_track->channels; ++f_i)
+        {
+            f_plugin->descriptor->connect_buffer(
+                f_plugin->PYFX_handle, f_i, f_track->buffers[f_i], 0);
+            f_plugin->descriptor->connect_buffer(
+                f_plugin->PYFX_handle, f_i, f_track->sc_buffers[f_i], 1);
+        }
     }
 
     f_track->plugins[a_index] = f_plugin;
