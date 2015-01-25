@@ -68,6 +68,12 @@ install:
 
 # --------------------------------------------------------------
 
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(PYDAW_VERSION)*
+	rm -rf $(MK_DIR)
+
+# --------------------------------------------------------------
+
 clean:
 	make -C pydaw clean
 	make -C pydaw_render clean
