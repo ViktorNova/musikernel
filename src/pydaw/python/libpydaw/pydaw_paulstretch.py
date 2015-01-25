@@ -29,7 +29,7 @@ except ImportError:
     from pydaw_util import *
 
 f_parent_dir = os.path.dirname(os.path.abspath(__file__))
-f_parent_dir = os.path.abspath("{}/..".format(f_parent_dir))
+f_parent_dir = os.path.abspath(os.path.join(f_parent_dir, ".."))
 
 sys.path.insert(0, f_parent_dir)
 
@@ -63,17 +63,19 @@ def paulstretch(file_path, stretch, windowsize_seconds, onset_level,
         f_src_path = file_path
         f_dest_path = outfilename.replace(".wav", "-tmp.wav")
         if a_end_pitch is not None:
-            f_cmd = ["{}/lib/{}/sbsms/bin/sbsms".format(
-                        INSTALL_PREFIX,
-                        global_pydaw_version_string),
-                     f_src_path, f_dest_path, "1.0", "1.0",
-                     str(a_start_pitch), str(a_end_pitch)]
+            f_cmd = [
+                os.path.join(
+                    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+                    "sbsms", "bin", "sbsms"),
+                f_src_path, f_dest_path, "1.0", "1.0",
+                str(a_start_pitch), str(a_end_pitch)]
         else:
-            f_cmd = ["{}/lib/{}/rubberband/bin/rubberband".format(
-                        INSTALL_PREFIX,
-                        global_pydaw_version_string),
-                        "-p", str(a_start_pitch), "-R",
-                     "--pitch-hq", f_src_path, f_dest_path]
+            f_cmd = [
+                os.path.join(
+                    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+                    "rubberband", "bin", "rubberband"),
+                    "-p", str(a_start_pitch), "-R",
+                    "--pitch-hq", f_src_path, f_dest_path]
         print("Running {}".format(" ".join(f_cmd)))
         f_proc = subprocess.Popen(f_cmd)
         f_proc.wait()

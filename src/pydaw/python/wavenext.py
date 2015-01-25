@@ -157,7 +157,7 @@ class WaveNextProject(libmk.AbstractProject):
 
     def get_track_plugins(self,  a_track_num):
         f_folder = self.wn_track_pool_folder
-        f_path = "{}/{}".format(f_folder, a_track_num)
+        f_path = os.path.join(*(str(x) for x in (f_folder, a_track_num)))
         if os.path.isfile(f_path):
             with open(f_path) as f_handle:
                 f_str = f_handle.read()

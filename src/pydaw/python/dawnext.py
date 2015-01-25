@@ -4836,7 +4836,8 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         AUDIO_ITEMS_TO_DROP = []
         for f_item in self.list_file.selectedItems():
             AUDIO_ITEMS_TO_DROP.append(
-                "{}/{}".format(self.last_open_dir, f_item.text()))
+                os.path.join(
+                    *(str(x) for x in (self.last_open_dir, f_item.text()))))
 
     def on_select_all(self):
         if CURRENT_REGION is None or libmk.IS_PLAYING:

@@ -803,10 +803,11 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
         f_logo_label = QtGui.QLabel()
         f_pixmap = QtGui.QPixmap(
-            "{}/lib/{}/themes/default/euphoria.png".format(
-            pydaw_util.INSTALL_PREFIX,
-            pydaw_util.global_pydaw_version_string)).scaled(
-            80, 80, transformMode=QtCore.Qt.SmoothTransformation)
+            os.path.join(
+                pydaw_util.INSTALL_PREFIX, "lib",
+                pydaw_util.global_pydaw_version_string,
+                "themes", "default", "euphoria.png")
+            ).scaled(80, 80, transformMode=QtCore.Qt.SmoothTransformation)
         f_logo_label.setPixmap(f_pixmap)
         f_logo_label.setAlignment(QtCore.Qt.AlignCenter)
         f_logo_label.setSizePolicy(
@@ -1793,8 +1794,9 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     self.sample_high_notes[f_selected_index].set_value(
                         f_new_note + f_step_m1, True)
                     f_selected_index += 1
-                f_file = "{}/{}-{}-{}.wav".format(
-                    f_dir, f_uid, f_base_file_name, f_note_str)
+                f_file = os.path.join(
+                    f_dir, "{}-{}-{}.wav".format(
+                        f_uid, f_base_file_name, f_note_str))
                 if f_algo == 0:
                     f_proc = pydaw_util.pydaw_rubberband(
                         f_path, f_file, f_stretch, f_i,
@@ -1927,14 +1929,14 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             if f_current_file_path == "":
                 continue
             if not os.path.exists(f_current_file_path):
-                f_current_file_path = "{}/{}".format(
+                f_current_file_path = os.path.join(
                     self.mk_project.samples_folder, f_current_file_path)
                 if not os.path.exists(f_current_file_path):
                     print("File no longer exists on disk or"
                     " in cache, skipping {}".format(f_current_file_path))
                     continue
             f_file_name = os.path.basename(str(f_current_file_path))
-            f_new_file_path = "{}/{}".format(f_dir, f_file_name)
+            f_new_file_path = os.path.join(f_dir, f_file_name)
             if f_current_file_path == f_new_file_path:
                 print("Source and destination are the same, "
                     "not copying:\n{}\n{}".format(
@@ -2015,14 +2017,14 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     break
                 if f_line_arr[0] == "sample":
                     f_index = int(f_line_arr[1])
-                    f_new_file_path = "{}/{}".format(f_dir, f_line_arr[2])
+                    f_new_file_path = os.path.join(f_dir, f_line_arr[2])
                     f_item = QtGui.QTableWidgetItem()
                     f_item.setText(f_new_file_path)
                     f_item.setFlags(
                         QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
                     self.sample_table.setItem(
                         f_index, SMP_TB_FILE_PATH_INDEX, f_item)
-                    f_path_sections = f_new_file_path.split(("/"))
+                    f_path_sections = os.path.split(f_new_file_path)
                     self.set_selected_sample_combobox_item(
                         f_index, f_path_sections[-1])
                 else:
@@ -2117,7 +2119,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     return
                 if "sample" in f_sample.dict:
                     f_sample_file = f_sample.dict["sample"].replace("\\", "/")
-                    f_new_file_path = "{}/{}".format(f_sfz_dir, f_sample_file)
+                    f_new_file_path = os.path.join(f_sfz_dir, f_sample_file)
                     f_new_file_path = pydaw_util.case_insensitive_path(
                         f_new_file_path)
                     f_new_file_path = f_new_file_path.replace("//", "/")

@@ -36,9 +36,11 @@ def prepare_to_quit():
     MAIN_WINDOW = TRANSPORT = IPC = OSC = PROJECT = None
 
 def set_window_title():
-    MAIN_WINDOW.setWindowTitle('MusiKernel - {}/{}.{}'.format(
-        PROJECT.project_folder, PROJECT.project_file,
-        pydaw_util.global_pydaw_version_string))
+    MAIN_WINDOW.setWindowTitle('MusiKernel - {}'.format(
+        os.path.join(
+            PROJECT.project_folder, '{}.{}'.format(
+                PROJECT.project_file,
+                pydaw_util.global_pydaw_version_string))))
 
 def pydaw_print_generic_exception(a_ex):
     QtGui.QMessageBox.warning(
@@ -78,7 +80,7 @@ class AbstractProject:
 
     def create_file(self, a_folder, a_file, a_text):
         """  Call save_file only if the file doesn't exist... """
-        if not os.path.isfile("{}/{}/{}".format(
+        if not os.path.isfile(os.path.join(
         self.project_folder, a_folder, a_file)):
             self.save_file(a_folder, a_file, a_text)
         else:
@@ -88,7 +90,8 @@ class AbstractProject:
         """ Writes a file to disk and updates the project
             history to reflect the changes
         """
-        f_full_path = "{}/{}/{}".format(self.project_folder, a_folder, a_file)
+        f_full_path = os.path.join(
+            *(str(x) for x in (self.project_folder, a_folder, a_file)))
         if not a_force_new and os.path.isfile(f_full_path):
             f_old = pydaw_util.pydaw_read_file_text(f_full_path)
             if f_old == a_text:

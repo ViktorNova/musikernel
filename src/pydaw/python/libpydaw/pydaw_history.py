@@ -27,7 +27,7 @@ class pydaw_history_file:
 
     def __str__(self):
         """ Generate a human-readable summary of the changes """
-        f_file_name = "{}/{}".format(self.folder, self.file_name)
+        f_file_name = os.path.join(self.folder, self.file_name)
         f_result = "\n\n{}, existed: {}\n".format(f_file_name, self.existed)
         for f_line in difflib.unified_diff(
         self.old_text.split("\n"), self.new_text.split("\n"),
@@ -43,7 +43,7 @@ class pydaw_history_commit:
 
     def undo(self, a_project_folder):
         for f_file in self.files:
-            f_full_path = "{}/{}/{}".format(
+            f_full_path = os.path.join(
                 a_project_folder, f_file.folder, f_file.file_name)
             if f_file.existed == 0:
                 os.remove(f_full_path)
@@ -52,7 +52,7 @@ class pydaw_history_commit:
 
     def redo(self, a_project_folder):
         for f_file in self.files:
-            f_full_path = "{}/{}/{}".format(
+            f_full_path = os.path.join(
                 a_project_folder, f_file.folder, f_file.file_name)
             self._write_file(f_full_path, f_file.new_text)
 

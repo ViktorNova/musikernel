@@ -1883,8 +1883,9 @@ class pydaw_midi_file_to_items:
     """ Convert the MIDI file at a_file to a dict of pydaw_item's with keys
         in the format (track#, channel#, bar#)"""
     def __init__(self, a_file):
-        f_midi_comp = "{}/../libpydaw/midicomp".format(
-            os.path.dirname(os.path.abspath(__file__)))
+        f_midi_comp = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..", "libpydaw", "midicomp")
         f_midi_text_arr = subprocess.check_output(
             [f_midi_comp, str(a_file)]).decode("utf-8").split("\n")
         #First fix the lengths of events that have note-off events

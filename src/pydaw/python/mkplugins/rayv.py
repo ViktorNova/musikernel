@@ -120,10 +120,11 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
         f_logo_label = QtGui.QLabel()
         f_pixmap = QtGui.QPixmap(
-            "{}/lib/{}/themes/default/rayv.png".format(
-            pydaw_util.INSTALL_PREFIX,
-            pydaw_util.global_pydaw_version_string)).scaled(
-                120, 60, transformMode=QtCore.Qt.SmoothTransformation)
+            os.path.join(
+                pydaw_util.INSTALL_PREFIX, "lib",
+                pydaw_util.global_pydaw_version_string,
+                "themes", "default", "rayv.png")
+            ).scaled(120, 60, transformMode=QtCore.Qt.SmoothTransformation)
         f_logo_label.setMinimumSize(90, 30)
         f_logo_label.setPixmap(f_pixmap)
         f_knob_size = 55

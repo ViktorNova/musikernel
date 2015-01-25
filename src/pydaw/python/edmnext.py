@@ -5047,7 +5047,8 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         AUDIO_ITEMS_TO_DROP = []
         for f_item in self.list_file.selectedItems():
             AUDIO_ITEMS_TO_DROP.append(
-                "{}/{}".format(self.last_open_dir, f_item.text()))
+                os.path.join(
+                    *(str(x) for x in (self.last_open_dir, f_item.text()))))
 
     def default_track_changed(self, a_val):
         global DEFAULT_AUDIO_TRACK
@@ -5073,7 +5074,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         f_list = self.list_file.selectedItems()
         if f_list:
             libmk.IPC.pydaw_preview_audio(
-                "{}/{}".format(self.last_open_dir, f_list[0].text()))
+                os.path.join(self.last_open_dir, f_list[0].text()))
 
     def on_stop_preview(self):
         libmk.IPC.pydaw_stop_preview()

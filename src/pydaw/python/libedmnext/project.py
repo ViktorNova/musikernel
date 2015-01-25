@@ -121,7 +121,7 @@ class EdmNextProject(libmk.AbstractProject):
             f_files = os.listdir(a_folder)
         for f_file in f_files:
             f_result[f_file] = pydaw_read_file_text(
-                "{}/{}".format(a_folder, f_file))
+                os.path.join(a_folder, f_file))
         return f_result
 
     def set_project_folders(self, a_project_file):
@@ -277,7 +277,8 @@ class EdmNextProject(libmk.AbstractProject):
     def get_region_string(self, a_region_uid):
         try:
             f_file = open(
-                "{}/{}".format(self.regions_folder, a_region_uid), "r")
+                os.path.join(
+                    *(str(x) for x in (self.regions_folder, a_region_uid))))
         except:
             return "\\"  #TODO:  allow the exception to happen???
         f_result = f_file.read()
@@ -295,7 +296,8 @@ class EdmNextProject(libmk.AbstractProject):
         return pydaw_region.from_str(f_uid, self.get_region_string(f_uid))
 
     def get_atm_region_by_uid(self, a_region_uid):
-        f_path = "{}/{}".format(self.regions_atm_folder, a_region_uid)
+        f_path = os.path.join(
+            *(str(x) for x in (self.regions_atm_folder, a_region_uid)))
         if os.path.isfile(f_path):
             with open(f_path) as f_file:
                 return pydaw_atm_region.from_str(f_file.read())
@@ -437,7 +439,9 @@ class EdmNextProject(libmk.AbstractProject):
 
     def get_item_string(self, a_item_uid):
         try:
-            f_file = open("{}/{}".format(self.items_folder, a_item_uid), "r")
+            f_file = open(
+                os.path.join(
+                    *(str(x) for x in (self.items_folder, a_item_uid))))
         except:
             return ""
         f_result = f_file.read()
@@ -678,7 +682,7 @@ class EdmNextProject(libmk.AbstractProject):
 
     def get_track_plugins(self, a_track_num):
         f_folder = self.track_pool_folder
-        f_path = "{}/{}".format(f_folder, a_track_num)
+        f_path = os.path.join(*(str(x) for x in (f_folder, a_track_num)))
         if os.path.isfile(f_path):
             with open(f_path) as f_handle:
                 f_str = f_handle.read()
@@ -688,7 +692,8 @@ class EdmNextProject(libmk.AbstractProject):
 
     def get_audio_region_string(self, a_region_uid):
         f_file = open(
-            "{}/{}".format(self.regions_audio_folder, a_region_uid), "r")
+            os.path.join(
+                *(str(x) for x in (self.regions_audio_folder, a_region_uid))))
         f_result = f_file.read()
         f_file.close()
         return f_result
@@ -698,7 +703,8 @@ class EdmNextProject(libmk.AbstractProject):
             self.get_audio_region_string(a_region_uid))
 
     def get_audio_per_item_fx_region(self, a_region_uid):
-        f_path = "{}/{}".format(self.audio_per_item_fx_folder, a_region_uid)
+        f_path = os.path.join(
+            *(str(x) for x in (self.audio_per_item_fx_folder, a_region_uid)))
         #TODO:  Sort this out at PyDAWv4 and create an empty file first
         if not os.path.isfile(f_path):
             return pydaw_audio_item_fx_region()
@@ -717,13 +723,14 @@ class EdmNextProject(libmk.AbstractProject):
     def get_transport(self):
         try:
             f_file = open(
-                "{}/{}".format(self.project_folder, pydaw_file_pytransport))
+                os.path.join(self.project_folder, pydaw_file_pytransport))
         except:
             return pydaw_transport()  #defaults
         f_str = f_file.read()
         f_file.close()
         f_result = pydaw_transport.from_str(f_str)
-        f_file_name = "{}/default.pymididevice".format(self.project_folder)
+        f_file_name = os.path.join(
+            self.project_folder, "default.pymididevice")
         if os.path.isfile(f_file_name):
             f_file = open(f_file_name)
             f_result.midi_keybd = f_file.read()
@@ -762,16 +769,21 @@ class EdmNextProject(libmk.AbstractProject):
         self.save_file(
             pydaw_folder_regions,  str(f_uid),
             pydaw_read_file_text(
-                "{}/{}".format(self.regions_folder, f_old_uid)))
+                os.path.join(
+                    *(str(x) for x in (self.regions_folder, f_old_uid)))))
         self.save_file(
             pydaw_folder_regions_audio,  str(f_uid),
             pydaw_read_file_text(
-                "{}/{}".format(self.regions_audio_folder, f_old_uid)))
+                os.path.join(
+                    *(str(x) for x in
+                        (self.regions_audio_folder, f_old_uid)))))
         self.save_file(
             pydaw_folder_regions_atm,  str(f_uid),
             pydaw_read_file_text(
-                "{}/{}".format(self.regions_atm_folder, f_old_uid)))
-        f_paif_file = "{}/{}".format(self.audio_per_item_fx_folder, f_old_uid)
+                os.path.join(
+                    *(str(x) for x in (self.regions_atm_folder, f_old_uid)))))
+        f_paif_file = os.path.join(
+            *(str(x) for x in (self.audio_per_item_fx_folder, f_old_uid)))
         if os.path.isfile(f_paif_file):
             self.save_file(pydaw_folder_audio_per_item_fx, str(f_uid),
                            pydaw_read_file_text(f_paif_file))
@@ -784,8 +796,10 @@ class EdmNextProject(libmk.AbstractProject):
         self.save_file(
             pydaw_folder_regions_audio, str(a_dest_region_uid),
             pydaw_read_file_text(
-                "{}/{}".format(self.regions_audio_folder, f_uid)))
-        f_paif_file = "{}/{}".format(self.audio_per_item_fx_folder, f_uid)
+                os.path.join(
+                    *(str(x) for x in (self.regions_audio_folder, f_uid)))))
+        f_paif_file = os.path.join(
+            *(str(x) for x in (self.audio_per_item_fx_folder, f_uid)))
         if os.path.isfile(f_paif_file):
             self.save_file(
                 pydaw_folder_audio_per_item_fx, str(a_dest_region_uid),
@@ -799,8 +813,10 @@ class EdmNextProject(libmk.AbstractProject):
         f_items_dict = self.get_items_dict()
         f_uid = f_items_dict.add_new_item(a_new_item)
         f_old_uid = f_items_dict.get_uid_by_name(a_old_item)
-        self.save_file(pydaw_folder_items,  str(f_uid), pydaw_read_file_text(
-            "{}/{}".format(self.items_folder, f_old_uid)))
+        self.save_file(
+            pydaw_folder_items,  str(f_uid),
+            pydaw_read_file_text(os.path.join(
+                *(str(x) for x in (self.items_folder, f_old_uid)))))
         self.IPC.pydaw_save_item(f_uid)
         self.save_items_dict(f_items_dict)
         return f_uid
@@ -906,9 +922,9 @@ class EdmNextProject(libmk.AbstractProject):
         return sorted(f_result.uid_lookup.keys())
 
     def error_log_write(self, a_message):
-        f_file = open("{}/error.log".format(self.project_folder), "a")
-        f_file.write(a_message)
-        f_file.close()
+        with open(os.path.join(
+        self.project_folder, "error.log"), "a") as f_file:
+            f_file.write(a_message)
 
     def check_audio_files(self):
         """ Verify that all audio files exist  """
@@ -2009,8 +2025,9 @@ class pydaw_midi_file_to_items:
     """ Convert the MIDI file at a_file to a dict of pydaw_item's with keys
         in the format (track#, channel#, bar#)"""
     def __init__(self, a_file):
-        f_midi_comp = "{}/../libpydaw/midicomp".format(
-            os.path.dirname(os.path.abspath(__file__)))
+        f_midi_comp = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..", "libpydaw", "midicomp")
         f_midi_text_arr = subprocess.check_output(
             [f_midi_comp, str(a_file)]).decode("utf-8").split("\n")
         #First fix the lengths of events that have note-off events
