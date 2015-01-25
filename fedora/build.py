@@ -92,12 +92,9 @@ kickstart_template = \
 
 #PyDAW Dependencies
 python3-PyQt4
-gcc
 alsa-lib-devel
 liblo-devel
 libsndfile-devel
-gcc-c++
-git
 python3-numpy
 python3-scipy
 fftw-devel
