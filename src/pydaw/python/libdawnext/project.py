@@ -608,7 +608,7 @@ class DawNextProject(libmk.AbstractProject):
         self.save_region(f_region)
         self.save_midi_routing(f_midi_routings)
 
-        self.IPC.pydaw_open_song(self.project_folder)
+        self.IPC.pydaw_open_song(self.project_folder, False)
         libmk.IPC.resume_engine()
         self.commit("Re-order tracks")
 

@@ -7935,7 +7935,7 @@ class AudioInput:
         self.suppress_updates = False
 
     def output_track_changed(self, a_val=None):
-        if not self.suppress_updates:
+        if not self.suppress_updates and not SUPPRESS_TRACK_COMBOBOX_CHANGES:
             f_track = self.output_track_combobox.currentIndex()
             if f_track in TRACK_PANEL.tracks:
                 TRACK_PANEL.tracks[f_track].check_output()

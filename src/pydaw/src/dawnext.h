@@ -235,6 +235,8 @@ void v_dn_set_midi_devices();
 void g_dn_midi_routing_list_init(t_dn_midi_routing_list*);
 
 void g_dn_item_free(t_dn_item*);
+void v_dn_update_audio_inputs();
+
 
 #ifdef	__cplusplus
 }
@@ -1881,32 +1883,23 @@ void v_dn_open_project(int a_first_load)
         //&& S_ISDIR(f_reg_stat.st_mode) && S_ISREG(f_song_file_stat.st_mode)
         )
     {
-        t_dir_list * f_item_dir_list =
-                g_get_dir_list(dawnext->item_folder);
-        f_i = 0;
+        t_dir_list * f_item_dir_list = g_get_dir_list(dawnext->item_folder);
 
-        while(f_i < f_item_dir_list->dir_count)
+        for(f_i = 0; f_i < f_item_dir_list->dir_count; ++f_i)
         {
             g_dn_item_get(dawnext, atoi(f_item_dir_list->dir_list[f_i]));
-            ++f_i;
         }
 
-        g_dn_song_get(dawnext, 0);
-
-        if(a_first_load)
-        {
-            v_dn_open_tracks();
-        }
+        v_dn_open_tracks();
     }
     else
     {
         printf("Song file and project directory structure not found, not "
                 "loading project.  This is to be expected if launching PyDAW "
                 "for the first time\n");
-        //Loads empty...  TODO:  Make this a separate function for getting an
-        //empty en_song or loading a file into one...
-        g_dn_song_get(dawnext, 0);
     }
+
+    g_dn_song_get(dawnext, 0);
 
     v_dn_update_track_send(dawnext, 0);
 
@@ -1914,7 +1907,12 @@ void v_dn_open_project(int a_first_load)
 
     v_dn_set_midi_devices();
 
-    v_dn_set_playback_cursor(dawnext, 0.0f);
+    if(!a_first_load)
+    {
+        v_dn_update_audio_inputs();
+    }
+
+    //v_dn_set_playback_cursor(dawnext, 0.0f);
 }
 
 t_dn_atm_region * g_dn_atm_region_get(t_dawnext * self)
