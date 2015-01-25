@@ -2838,6 +2838,8 @@ class routing_graph_widget(QtGui.QGraphicsView):
             f_connections = [(x.output, x.index, x.sidechain)
                 for x in a_graph.graph[f_i].values()]
             for f_dest_pos, f_wire_index, f_sidechain in f_connections:
+                if f_dest_pos < 0:
+                    continue
                 f_pen = f_sc_wire_pen if f_sidechain else f_wire_pen
                 if f_dest_pos > f_i:
                     f_src_x = f_x + self.node_width
