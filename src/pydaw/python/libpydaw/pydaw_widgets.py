@@ -147,7 +147,7 @@ def get_scaled_pixmap_knob(a_size):
     global PYDAW_KNOB_PIXMAP, PYDAW_KNOB_PIXMAP_CACHE
     if PYDAW_KNOB_PIXMAP is None:
         PYDAW_KNOB_PIXMAP = QtGui.QPixmap(
-            "{}/pydaw-knob.png".format(pydaw_util.global_stylesheet_dir))
+            os.path.join(pydaw_util.global_stylesheet_dir, "pydaw-knob.png"))
 
     if not a_size in PYDAW_KNOB_PIXMAP_CACHE:
         PYDAW_KNOB_PIXMAP_CACHE[
@@ -1722,7 +1722,9 @@ class pydaw_abstract_file_browser_widget():
     def files_selected(self):
         f_result = []
         for f_file in self.list_file.selectedItems():
-            f_result.append("{}/{}".format(self.last_open_dir, f_file.text()))
+            f_result.append(
+                os.path.join(
+                    *(str(x) for x in (self.last_open_dir, f_file.text()))))
         return f_result
 
 
@@ -1733,7 +1735,7 @@ class pydaw_file_browser_widget(pydaw_abstract_file_browser_widget):
         self.file_hlayout.addWidget(self.load_button)
         self.list_file.setSelectionMode(QtGui.QListWidget.ExtendedSelection)
 
-PYSOUND_FOLDER = "{}/presets".format(pydaw_util.global_pydaw_home)
+PYSOUND_FOLDER = os.path.join(pydaw_util.global_pydaw_home, "presets")
 
 class pysound_file:
     """ Pre-production, work in progress... """
@@ -1903,15 +1905,16 @@ class pydaw_preset_manager_widget:
         self.plugin_name = str(a_plugin_name)
         self.configure_dict = a_configure_dict
         self.reconfigure_callback = a_reconfigure_callback
-        self.factory_preset_path = "{}/lib/{}/presets/{}.mkp".format(
-            pydaw_util.INSTALL_PREFIX,
-            pydaw_util.global_pydaw_version_string, a_plugin_name)
-        self.bank_dir = "{}/{}".format(pydaw_util.PRESET_DIR, a_plugin_name)
+        self.factory_preset_path = os.path.join(
+            pydaw_util.INSTALL_PREFIX, "lib",
+            pydaw_util.global_pydaw_version_string, "presets",
+            "{}.mkp".format(a_plugin_name))
+        self.bank_dir = os.path.join(pydaw_util.PRESET_DIR, a_plugin_name)
         if not os.path.isdir(self.bank_dir):
             os.makedirs(self.bank_dir)
-        self.user_factory_presets = "{}/factory.mkp".format(self.bank_dir)
-        self.bank_file = "{}/{}-last-bank.txt".format(
-            pydaw_util.PRESET_DIR, a_plugin_name)
+        self.user_factory_presets = os.path.join(self.bank_dir, "factory.mkp")
+        self.bank_file = os.path.join(
+            pydaw_util.PRESET_DIR, "{}-last-bank.txt".format(a_plugin_name))
         self.group_box = QtGui.QWidget()
         self.group_box.setObjectName("plugin_groupbox")
         self.layout = QtGui.QHBoxLayout(self.group_box)
@@ -2000,8 +2003,8 @@ class pydaw_preset_manager_widget:
     def bank_changed(self, a_val=None):
         if self.suppress_bank_changes:
             return
-        self.preset_path = "{}/{}.mkp".format(
-            self.bank_dir, self.bank_combobox.currentText())
+        self.preset_path = os.path.join(
+            self.bank_dir, "{}.mkp".format(self.bank_combobox.currentText()))
         pydaw_util.pydaw_write_file_text(self.bank_file, self.preset_path)
         self.load_presets()
 
@@ -2012,7 +2015,7 @@ class pydaw_preset_manager_widget:
             if os.path.isfile(f_text):
                 print("Setting self.preset_path to {}".format(f_text))
                 self.preset_path = f_text
-                self.bank_name = f_text.rsplit("/", 1)[1].rsplit(".", 1)[0]
+                self.bank_name = os.path.basename(f_text).rsplit(".", 1)[0]
                 return
             else:
                 print("{} does not exist".format(f_text))
@@ -2054,7 +2057,7 @@ class pydaw_preset_manager_widget:
     def on_save_as(self, a_new=False):
         def ok_handler():
             f_name = pydaw_util.pydaw_remove_bad_chars(f_lineedit.text())
-            f_file = "{}/{}".format(self.bank_dir, f_name)
+            f_file = os.path.join(self.bank_dir, f_name)
             if not f_file.endswith(".mkp"):
                 f_file += ".mkp"
             if os.path.exists(f_file):
@@ -4654,7 +4657,8 @@ class pydaw_abstract_plugin_ui:
 
     def open_plugin_file(self):
         if self.folder is not None:
-            f_file_path = "{}/{}".format(self.folder, self.plugin_uid)
+            f_file_path = os.path.join(
+                *(str(x) for x in (self.folder, self.plugin_uid)))
             if os.path.isfile(f_file_path):
                 f_file = pydaw_plugin_file(f_file_path)
                 for k, v in f_file.port_dict.items():

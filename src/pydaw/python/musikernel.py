@@ -656,8 +656,9 @@ class MkMainWindow(QtGui.QMainWindow):
             while True:
                 f_file = QtGui.QFileDialog.getSaveFileName(
                     parent=self, caption=_('New Project'),
-                    directory="{}/default.{}".format(
-                        global_home, global_pydaw_version_string),
+                    directory=os.path.join(
+                        global_home,
+                        "default.{}".format(global_pydaw_version_string)),
                     filter=global_pydaw_file_type_string)
                 if not f_file is None and not str(f_file) == "":
                     f_file = str(f_file)
@@ -752,8 +753,11 @@ class MkMainWindow(QtGui.QMainWindow):
             while True:
                 f_new_file = QtGui.QFileDialog.getSaveFileName(
                     self, _("Save copy of project as..."),
-                    directory="{}/{}.{}".format(global_default_project_folder,
-                    libmk.PROJECT.project_file, global_pydaw_version_string))
+                    directory=os.path.join(
+                        global_default_project_folder,
+                        "{}.{}".format(
+                        libmk.PROJECT.project_file,
+                        global_pydaw_version_string)))
                 if not f_new_file is None and not str(f_new_file) == "":
                     f_new_file = str(f_new_file)
                     if not self.check_for_empty_directory(f_new_file) or \
@@ -841,10 +845,12 @@ class MkMainWindow(QtGui.QMainWindow):
 
     def on_open_theme(self):
         try:
-            f_file = QtGui.QFileDialog.getOpenFileName(self,
-                _("Open a theme file"), "{}/lib/{}/themes".format(
-                pydaw_util.INSTALL_PREFIX,
-                global_pydaw_version_string), "MusiKernel Style(*.pytheme)")
+            f_file = QtGui.QFileDialog.getOpenFileName(
+                self, _("Open a theme file"),
+                os.path.join(
+                    pydaw_util.INSTALL_PREFIX, "lib",
+                    global_pydaw_version_string,"themes"),
+                "MusiKernel Style(*.pytheme)")
             if f_file is not None and str(f_file) != "":
                 f_file = str(f_file)
                 f_style = pydaw_read_file_text(f_file)
@@ -864,9 +870,9 @@ class MkMainWindow(QtGui.QMainWindow):
         f_layout = QtGui.QVBoxLayout()
         f_window.setLayout(f_layout)
         f_minor_version = pydaw_read_file_text(
-            "{}/lib/{}/minor-version.txt".format(
-                pydaw_util.INSTALL_PREFIX,
-                global_pydaw_version_string))
+            os.path.join(
+                pydaw_util.INSTALL_PREFIX, "lib",
+                global_pydaw_version_string, "minor-version.txt"))
         f_version = QtGui.QLabel(
             "{}-{}".format(global_pydaw_version_string, f_minor_version))
         f_version.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
@@ -967,9 +973,10 @@ class MkMainWindow(QtGui.QMainWindow):
                     return
                 f_proc_list = []
                 for f_file in f_list:
-                    f_in = "{}/{}".format(f_input_file, f_file)
-                    f_out = "{}/{}{}".format(f_output_file,
-                        f_file.rsplit(".", 1)[0], self.ac_ext)
+                    f_in = os.path.join(f_input_file, f_file)
+                    f_out = os.path.join(
+                        f_output_file, "{}{}".format(
+                            f_file.rsplit(".", 1)[0], self.ac_ext))
                     f_cmd = get_cmd(f_in, f_out)
                     f_proc = subprocess.Popen(f_cmd)
                     f_proc_list.append((f_proc, f_out))
@@ -1393,8 +1400,9 @@ if pydaw_util.IS_CYGWIN:
 libmk.APP = QtGui.QApplication(sys.argv)
 
 libmk.APP.setWindowIcon(
-    QtGui.QIcon("{}/share/pixmaps/{}.png".format(
-    pydaw_util.INSTALL_PREFIX, global_pydaw_version_string)))
+    QtGui.QIcon(os.path.join(
+        pydaw_util.INSTALL_PREFIX, "share", "pixmaps",
+        "{}.png".format(global_pydaw_version_string))))
 
 libmk.APP.setStyleSheet(global_stylesheet)
 
@@ -1419,8 +1427,9 @@ if not os.access(global_pydaw_home, os.W_OK):
 default_project_file = pydaw_util.get_file_setting("last-project", str, None)
 
 if not default_project_file:
-    default_project_file = "{}/default-project/default.{}".format(
-        global_pydaw_home, global_pydaw_version_string)
+    default_project_file = os.path.join(
+        global_pydaw_home, "default-project",
+        "default.{}".format(global_pydaw_version_string))
     print("No default project using {}".format(default_project_file))
 
 if os.path.exists(default_project_file) and \

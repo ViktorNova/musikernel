@@ -118,7 +118,7 @@ class DawNextProject(libmk.AbstractProject):
             f_files = os.listdir(a_folder)
         for f_file in f_files:
             f_result[f_file] = pydaw_read_file_text(
-                "{}/{}".format(a_folder, f_file))
+                os.path.join(a_folder, f_file))
         return f_result
 
     def set_project_folders(self, a_project_file):
@@ -359,7 +359,9 @@ class DawNextProject(libmk.AbstractProject):
 
     def get_item_string(self, a_item_uid):
         try:
-            f_file = open("{}/{}".format(self.items_folder, a_item_uid), "r")
+            f_file = open(
+                os.path.join(
+                    *(str(x) for x in (self.items_folder, a_item_uid))))
         except:
             return ""
         f_result = f_file.read()
@@ -628,7 +630,7 @@ class DawNextProject(libmk.AbstractProject):
 
     def get_track_plugins(self, a_track_num):
         f_folder = self.track_pool_folder
-        f_path = "{}/{}".format(f_folder, a_track_num)
+        f_path = os.path.join(*(str(x) for x in (f_folder, a_track_num)))
         if os.path.isfile(f_path):
             with open(f_path) as f_handle:
                 f_str = f_handle.read()
@@ -743,7 +745,7 @@ class DawNextProject(libmk.AbstractProject):
         return sorted(f_result.uid_lookup.keys())
 
     def error_log_write(self, a_message):
-        f_file = open("{}/error.log".format(self.project_folder), "a")
+        f_file = open(os.path.join(self.project_folder, "error.log"), "a")
         f_file.write(a_message)
         f_file.close()
 

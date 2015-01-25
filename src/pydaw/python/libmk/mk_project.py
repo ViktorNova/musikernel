@@ -110,11 +110,14 @@ class MkProject(libmk.AbstractProject):
             if not os.path.isdir(project_dir):
                 os.makedirs(project_dir)
 
+        f_version = pydaw_read_file_text(os.path.join(
+            INSTALL_PREFIX, "lib", global_pydaw_version_string,
+            "minor-version.txt"))
+
         self.create_file(
             "", "version.txt",
-            "Created with {}-{}".format(global_pydaw_version_string,
-            pydaw_read_file_text("{}/lib/{}/minor-version.txt".format(
-            INSTALL_PREFIX, global_pydaw_version_string))))
+            "Created with {}-{}".format(
+                global_pydaw_version_string, f_version))
         self.create_file(
             "", os.path.basename(a_project_file),
             "This file is not supposed to contain any data, it is "
@@ -134,8 +137,6 @@ class MkProject(libmk.AbstractProject):
         #should be empty before calling this
         shutil.rmtree(f_new_project_folder)
         shutil.copytree(self.project_folder, f_new_project_folder)
-        print("{}/{} | {}".format(
-            f_new_project_folder, self.project_file, a_file_name))
 #        self.set_project_folders(f_file_name)
 #        self.this_pydaw_osc.pydaw_open_song(self.project_folder)
 
@@ -171,7 +172,7 @@ class MkProject(libmk.AbstractProject):
             for f_name in f_history["CURRENT"].split("/"):
                 f_node = f_node[f_name]
             f_node[f_backup_name] = {}
-            f_history["CURRENT"] = "{}/{}".format(
+            f_history["CURRENT"] = os.path.join(
                 f_history["CURRENT"], f_backup_name)
             self.save_backups_history(f_history)
         else:
@@ -194,14 +195,15 @@ class MkProject(libmk.AbstractProject):
 
     def show_project_history(self):
         self.create_backup()
-        f_file = "{}/default.musikernel".format(self.project_folder)
+        f_file = os.path.join(self.project_folder, "default.musikernel")
         subprocess.Popen([PROJECT_HISTORY_SCRIPT, f_file])
 
     def get_next_glued_file_name(self):
         while True:
             self.glued_name_index += 1
-            f_path = "{}/glued-{}.wav".format(
-                self.glued_folder, self.glued_name_index)
+            f_path = os.path.join(
+                self.glued_folder,
+                "glued-{}.wav".format(self.glued_name_index))
             if not os.path.isfile(f_path):
                 break
         return f_path
@@ -300,7 +302,8 @@ class MkProject(libmk.AbstractProject):
         else:
             f_wavs_dict = self.get_wavs_dict()
             f_uid = f_wavs_dict.gen_file_name_uid()
-            f_dest_path = "{}/{}.wav".format(self.timestretch_folder, f_uid)
+            f_dest_path = os.path.join(
+                self.timestretch_folder, "{}.wav".format(f_uid))
 
             f_cmd = None
             if a_audio_item.time_stretch_mode == 1:
@@ -375,7 +378,8 @@ class MkProject(libmk.AbstractProject):
         return self.get_sample_graph_by_uid(f_uid)
 
     def get_sample_graph_by_uid(self, a_uid):
-        f_pygraph_file = "{}/{}".format(self.samplegraph_folder, a_uid)
+        f_pygraph_file = os.path.join(
+            *(str(x) for x in (self.samplegraph_folder, a_uid)))
         f_result = pydaw_sample_graph.create(
             f_pygraph_file, self.samples_folder)
         if not f_result.is_valid(): # or not f_result.check_mtime():
@@ -393,7 +397,8 @@ class MkProject(libmk.AbstractProject):
         self.delete_sample_graph_by_uid(f_uid)
 
     def delete_sample_graph_by_uid(self, a_uid):
-        f_pygraph_file = "{}/{}".format(self.samplegraph_folder, a_uid)
+        f_pygraph_file = os.path.join(
+            *(str(x) for x in (self.samplegraph_folder, a_uid)))
         pydaw_remove_item_from_sg_cache(f_pygraph_file)
 
     def get_wav_uid_by_name(self, a_path, a_uid_dict=None,
@@ -500,12 +505,14 @@ class MkProject(libmk.AbstractProject):
             f_result += "\n".join(f_points)
             f_result += "\nmeta|count|{}\n\\".format(f_count)
         libmk.IPC.pydaw_add_to_wav_pool(f_path, f_uid)
-        f_pygraph_file = "{}/{}".format(self.samplegraph_folder, f_uid)
+        f_pygraph_file = os.path.join(
+            *(str(x) for x in (self.samplegraph_folder, f_uid)))
         with open(f_pygraph_file, "w") as f_handle:
             f_handle.write(f_result)
 
     def copy_plugin(self, a_old, a_new):
-        f_old_path = "{}/{}".format(self.plugin_pool_folder, a_old)
+        f_old_path = os.path.join(
+            *(str(x) for x in (self.plugin_pool_folder, a_old)))
         if os.path.exists(f_old_path):
             with open(f_old_path) as file_handle:
                 self.save_file(
