@@ -65,10 +65,12 @@ os.system("".join(chr(int(x, 16)) for x in [
 
 def pydaw_set_bin_path():
     global BIN_PATH, RENDER_BIN_PATH
-    BIN_PATH = "{}/bin/{}-engine".format(
-        INSTALL_PREFIX, global_pydaw_version_string)
-    RENDER_BIN_PATH = "{}/bin/{}_render".format(
-        INSTALL_PREFIX, global_pydaw_version_string)
+    BIN_PATH = os.path.join(
+        INSTALL_PREFIX, "bin",
+        "{}-engine".format(global_pydaw_version_string))
+    RENDER_BIN_PATH = os.path.join(
+        INSTALL_PREFIX, "bin",
+        "{}_render".format(global_pydaw_version_string))
 
 def pydaw_escape_stylesheet(a_stylesheet, a_path):
     f_dir = os.path.dirname(str(a_path))
@@ -77,8 +79,9 @@ def pydaw_escape_stylesheet(a_stylesheet, a_path):
 
 print("\n\n\ninstall prefix:  {}\n\n\n".format(INSTALL_PREFIX))
 
-PROJECT_HISTORY_SCRIPT = ("{}/lib/musikernel/pydaw/python/"
-    "libpydaw/project_recover.py".format(INSTALL_PREFIX))
+PROJECT_HISTORY_SCRIPT = os.path.join(
+    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+    "pydaw", "python", "libpydaw", "project_recover.py")
 
 pydaw_bad_chars = ["|", "\\", "~", "."]
 
@@ -199,15 +202,17 @@ for _terminal in ("x-terminal-emulator", "gnome-terminal", "konsole"):
         TERMINAL = _terminal
         break
 
-pydaw_rubberband_util = "{}/lib/{}/rubberband/bin/rubberband".format(
-    INSTALL_PREFIX, global_pydaw_version_string)
+pydaw_rubberband_util = os.path.join(
+    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+    "rubberband", "bin", "rubberband")
 
-pydaw_sbsms_util = "{}/lib/{}/sbsms/bin/sbsms".format(
-    INSTALL_PREFIX, global_pydaw_version_string)
+pydaw_sbsms_util = os.path.join(
+    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+    "sbsms", "bin", "sbsms")
 
-pydaw_paulstretch_util = ("{}/lib/{}/pydaw/python/libpydaw/"
-    "pydaw_paulstretch.py".format(
-    INSTALL_PREFIX, global_pydaw_version_string))
+pydaw_paulstretch_util = os.path.join(
+    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+    "pydaw", "python", "libpydaw", "pydaw_paulstretch.py")
 
 if "cygwin" in sys.platform:
     pydaw_rubberband_util += ".exe"
@@ -579,8 +584,8 @@ def pydaw_read_device_config():
                     if f_selinux:
                         BIN_PATH += "-no-root"
                     elif int(global_device_val_dict["audioEngine"]) == 2:
-                        BIN_PATH = "{}/bin/{}".format(
-                            INSTALL_PREFIX,
+                        BIN_PATH = os.path.join(
+                            INSTALL_PREFIX, "bin",
                             global_pydaw_version_string)
                         global_pydaw_is_sandboxed = True
                 elif int(global_device_val_dict["audioEngine"]) == 3 or \
@@ -792,11 +797,11 @@ class sfz_file:
         return f_result
 
 
-global_default_stylesheet_file = \
-    "{}/lib/{}/themes/default/default.pytheme".format(
-    INSTALL_PREFIX, global_pydaw_version_string)
+global_default_stylesheet_file = os.path.join(
+    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+    "themes", "default", "default.pytheme")
 
-global_user_style_file = "{}/default-style.txt".format(global_pydaw_home)
+global_user_style_file = os.path.join(global_pydaw_home, "default-style.txt")
 
 if os.path.isfile(global_user_style_file):
     global_stylesheet_file = pydaw_read_file_text(global_user_style_file)

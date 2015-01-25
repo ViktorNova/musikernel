@@ -76,13 +76,13 @@ class project_history_widget(QtGui.QTreeWidget):
     def set_selected_as_project(self):
         f_items = self.selectedItems()
         if f_items and len(f_items) == 1:
-            f_project_dir = "{}/projects".format(self.project_dir)
+            f_project_dir = os.path.join(self.project_dir, "projects")
             f_tmp_dir = "{}-tmp-{}".format(
                 f_project_dir,
                 datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S"))
             f_item = f_items[0]
-            f_tar_path = "{}/{}.tar.bz2".format(
-                self.backup_dir, f_item.text(0))
+            f_tar_path = os.path.join(
+                self.backup_dir, "{}.tar.bz2".format(f_item.text(0)))
             shutil.move(f_project_dir, f_tmp_dir)
             with tarfile.open(f_tar_path, "r:bz2") as f_tar:
                 f_tar.extractall(self.project_dir)
@@ -114,13 +114,13 @@ def project_recover_dialog(a_file):
     else:
         f_file = a_file
     f_project_dir = os.path.dirname(str(f_file))
-    f_backup_file = "{}/backups.json".format(f_project_dir)
+    f_backup_file = os.path.join(f_project_dir, "backups.json")
     if not os.path.isfile(f_backup_file):
         QtGui.QMessageBox.warning(
             f_window, _("Error"), _("No backups exist for this "
             "project, recovery is not possible."))
         return
-    f_backup_dir = "{}/backups".format(f_project_dir)
+    f_backup_dir = os.path.join(f_project_dir, "backups")
     f_central_widget = QtGui.QWidget()
     f_layout = QtGui.QVBoxLayout(f_central_widget)
     f_window.setCentralWidget(f_central_widget)

@@ -21,13 +21,15 @@ except ImportError:
 
 import locale
 import gettext
+import os
 
 try:
     global_locale, global_encoding = locale.getdefaultlocale()
     print("locale: {}".format(global_locale))
     print("encoding: {}".format(global_encoding))
-    global_language = gettext.translation("musikernel1",
-        "{}/share/locale".format(INSTALL_PREFIX),
+    global_language = gettext.translation(
+        "musikernel1",
+        os.path.join(INSTALL_PREFIX, "share", "locale"),
         [global_locale])
     print("global_language.info: {}".format(global_language.info()))
     global_language.install()
