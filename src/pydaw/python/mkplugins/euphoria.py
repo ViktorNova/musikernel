@@ -1369,7 +1369,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             if f_item is None or str(f_item.text()) == "":
                 f_combobox_items.append("")
             else:
-                f_arr = str(f_item.text()).split("/")
+                f_arr = os.path.split(str(f_item.text()))
                 f_combobox_items.append(f_arr[-1])
         self.selected_sample_index_combobox.clear()
         self.selected_sample_index_combobox.addItems(f_combobox_items)
@@ -1598,7 +1598,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                         continue
                     self.mk_project.get_wav_uid_by_name(path)
                     self.set_selected_sample_combobox_item(
-                        f_sample_index_to_load, path.rsplit("/", 1)[1])
+                        f_sample_index_to_load, os.path.split(path)[1])
                     f_item = QtGui.QTableWidgetItem()
                     f_item.setText(path)
                     f_item.setFlags(
@@ -1749,7 +1749,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                 self.widget, _("Error"), _("No sample selected"))
             return
 
-        f_base_file_name = f_path.rsplit("/", 1)[1]
+        f_base_file_name = os.path.split(f_path)[1]
         f_base_file_name = f_base_file_name.rsplit(".", 1)[0]
         print(f_base_file_name)
 

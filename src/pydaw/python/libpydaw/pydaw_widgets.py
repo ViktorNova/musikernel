@@ -1504,7 +1504,7 @@ class pydaw_abstract_file_browser_widget():
         if self.last_open_dir != "/":
             f_menu = QtGui.QMenu(self.up_button)
             f_menu.triggered.connect(self.open_path_from_action)
-            f_arr = self.last_open_dir.split("/")[1:]
+            f_arr = self.last_open_dir.split(os.path.sep)[1:]
             f_paths = []
             for f_i in range(len(f_arr)):
                 f_paths.append("/{}".format("/".join(f_arr[:f_i])))

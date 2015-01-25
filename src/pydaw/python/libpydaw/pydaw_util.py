@@ -124,7 +124,7 @@ def case_insensitive_path(a_path, a_assert=True):
     if os.path.exists(f_path):
         return a_path
     else:
-        f_path_arr = f_path.split("/")
+        f_path_arr = f_path.split(os.path.sep)
         f_path_arr = [x for x in f_path_arr if x != ""]
         f_path = ""
         for f_dir in f_path_arr:
