@@ -1105,7 +1105,8 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         f_stretched_items = []
         f_event_pos = a_event.pos().x()
         f_event_diff = f_event_pos - self.event_pos_orig
-        if self.is_copying:
+        f_was_copying = self.is_copying
+        if f_was_copying:
             a_event.accept()
         for f_audio_item in SEQUENCER.get_selected():
             f_item = f_audio_item.audio_item
@@ -1539,6 +1540,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_items_dict = PROJECT.get_items_dict()
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
+        self.ignore_selection_change = True
         #, key=lambda x: x.bar_num,
         for f_item in sorted(CURRENT_REGION.items, reverse=True):
             if f_item.start_beat < pydaw_get_current_region_length():
@@ -1547,6 +1549,7 @@ class ItemSequencer(QtGui.QGraphicsView):
                 if f_new_item.get_selected_string() in \
                 self.selected_item_strings:
                     f_new_item.setSelected(True)
+        self.ignore_selection_change = False
         if REGION_EDITOR_MODE == 1:
             self.open_atm_region()
             TRACK_PANEL.update_ccs_in_use()
