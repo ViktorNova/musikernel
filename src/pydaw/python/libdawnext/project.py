@@ -1026,7 +1026,6 @@ class pydaw_sequencer:
             if f_line == pydaw_terminating_char:
                 break
             else:
-                print(f_line)
                 f_item_arr = f_line.split("|")
                 if f_item_arr[0] == "E":
                     f_type = int(f_item_arr[1])
