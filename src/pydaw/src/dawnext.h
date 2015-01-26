@@ -1357,9 +1357,10 @@ void v_dn_process_external_midi(t_dawnext * self,
                         f_sample_rate);
 
                 sprintf(f_osc_msg,
-                    "cc|%f|%i|%i|%f",
+                    "cc|%f|%i|%i|%f|%ld",
                     f_beat,
-                    a_track->track_num, controller, events[f_i2].value);
+                    a_track->track_num, controller, events[f_i2].value,
+                    a_ts->current_sample + events[f_i2].tick);
                 v_queue_osc_message("mrec", f_osc_msg);
             }
         }

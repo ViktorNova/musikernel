@@ -558,7 +558,7 @@ class DawNextProject(libmk.AbstractProject):
                 else:
                     print("Error:  note event not in note tracker")
             elif f_type == "cc":
-                f_port, f_val = f_event[3:]
+                f_port, f_val, f_tick = f_event[3:]
                 f_port = int(f_port)
                 f_val = float(f_val)
                 f_cc = pydaw_cc(f_beat, f_port, f_val)
