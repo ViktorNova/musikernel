@@ -279,6 +279,7 @@ int i_cpu_has_hyperthreading()
 
 void v_pre_fault_thread_stack(int stacksize)
 {
+#ifdef __linux__
     int pagesize = sysconf(_SC_PAGESIZE);
     stacksize -= pagesize * 20;
 
@@ -291,6 +292,7 @@ void v_pre_fault_thread_stack(int stacksize)
     }
 
     if(buffer[0]){}  //avoid a compiler warning
+#endif
 }
 
 __attribute__((optimize("-O0"))) void v_self_set_thread_affinity()
