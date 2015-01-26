@@ -446,7 +446,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         sched_setscheduler(0, RT_SCHED, &f_proc_param);
         printf("Process scheduler is now %i\n\n", sched_getscheduler(0));
     }
-#endif
 
     setsid();
     sigemptyset (&_signals);
@@ -458,6 +457,8 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     sigaddset(&_signals, SIGUSR1);
     sigaddset(&_signals, SIGUSR2);
     pthread_sigmask(SIG_BLOCK, &_signals, 0);
+#endif
+
 
     j = 0;
 
@@ -726,6 +727,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     MASTER_VOL = f_db_to_linear(f_master_vol * 0.1);
     printf("MASTER_VOL = %f\n", MASTER_VOL);
 
+#ifdef __linux__
     free(f_key_char);
     free(f_value_char);
 
@@ -734,6 +736,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     signal(SIGHUP, signalHandler);
     signal(SIGQUIT, signalHandler);
     pthread_sigmask(SIG_UNBLOCK, &_signals, 0);
+#endif
 
     v_pydaw_activate(f_thread_count, f_thread_affinity, argv[2],
         sample_rate, &MIDI_DEVICES, 1);
@@ -877,10 +880,12 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     }
 #endif
 
+#ifdef __linux__
     sigemptyset (&_signals);
     sigaddset(&_signals, SIGHUP);
     pthread_sigmask(SIG_BLOCK, &_signals, 0);
     kill(0, SIGHUP);
+#endif
 
     printf("MusiKernel main() returning\n\n\n");
     return 0;
