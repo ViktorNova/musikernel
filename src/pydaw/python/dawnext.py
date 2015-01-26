@@ -2119,7 +2119,6 @@ class ItemSequencer(QtGui.QGraphicsView):
     def transpose_dialog(self):
         if REGION_EDITOR_MODE != 0:
             return
-
         f_item_set = {x.name for x in self.get_selected_items()}
         if len(f_item_set) == 0:
             QtGui.QMessageBox.warning(
@@ -2136,7 +2135,7 @@ class ItemSequencer(QtGui.QGraphicsView):
                 PROJECT.save_item(f_item_name, f_item)
             PROJECT.commit(_("Transpose item(s)"))
             if CURRENT_ITEM:
-                global_open_items()
+                global_open_items(CURRENT_ITEM_NAME)
             f_window.close()
 
         def transpose_cancel_handler():
