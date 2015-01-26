@@ -25,8 +25,6 @@ GNU General Public License for more details.
 
 #endif
 
-#include <sys/mman.h>
-
 #include "edmnext.h"
 #include "dawnext.h"
 #include "wavenext.h"
