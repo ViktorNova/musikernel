@@ -77,7 +77,9 @@ static float **pluginOutputBuffers;
 t_midi_device_list MIDI_DEVICES;
 lo_server_thread serverThread;
 
+#ifdef __linux__
 static sigset_t _signals;
+#endif
 
 int PYDAW_NO_HARDWARE = 0;
 PmError f_midi_err;
@@ -132,7 +134,7 @@ void v_pydaw_set_cpu_governor()
 
 #endif
 
-
+#ifdef __linux__
 static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
 {
     int f_i;
@@ -147,6 +149,7 @@ static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
         }
     }
 }
+#endif
 
 inline void v_pydaw_run(float ** buffers, float * a_input, int sample_count)
 {
@@ -396,12 +399,14 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         ++j;
     }
 
+#ifdef __linux__
     timer_t timerid;
     struct sigevent sev;
     struct itimerspec its;
     long long freq_nanosecs;
     sigset_t mask;
     struct sigaction sa;
+#endif
 
     int f_usleep = 0;
 
@@ -782,6 +787,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
     if(f_with_midi)
     {
+#ifdef __linux__
         /* Establish handler for timer signal */
 
        sa.sa_flags = SA_SIGINFO;
@@ -823,7 +829,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
        {
            //errExit("timer_settime");
        }
-
+#endif
     } //if(f_with_midi)
 
 
@@ -850,7 +856,9 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
     if(f_with_midi)
     {
+#ifdef __linux__
         timer_delete(timerid);
+#endif
     }
 
     f_i = 0;
