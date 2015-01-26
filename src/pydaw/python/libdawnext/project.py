@@ -564,7 +564,9 @@ class DawNextProject(libmk.AbstractProject):
                 f_cc = pydaw_cc(f_beat, f_port, f_val)
                 self.rec_item.add_cc(f_cc)
             elif f_type == "pb":
-                f_pb = pydaw_pitchbend(f_beat, float(f_event[4]) / 8192.0)
+                f_val = float(f_event[3]) / 8192.0
+                f_val = pydaw_util.pydaw_clip_value(f_val, -1.0, 1.0)
+                f_pb = pydaw_pitchbend(f_beat, f_val)
                 self.rec_item.add_pb(f_pb)
             else:
                 print("Invalid mrec event type {}".format(f_type))
