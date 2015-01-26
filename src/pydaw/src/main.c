@@ -37,8 +37,6 @@ GNU General Public License for more details.
 #include <signal.h>
 #include <dirent.h>
 #include <time.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
 #include <errno.h>
 
 #include <lo/lo.h>
@@ -53,6 +51,7 @@ GNU General Public License for more details.
 
 #ifdef __linux__
 #include <linux/sched.h>
+#include <sys/resource.h>
 #endif
 
 #include "compiler.h"
@@ -397,12 +396,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         ++j;
     }
 
-    if(setpriority(PRIO_PROCESS, 0, -20))
-    {
-        printf("Unable to renice process (this was to be expected if "
-            "the process is not running as root)\n");
-    }
-
     timer_t timerid;
     struct sigevent sev;
     struct itimerspec its;
@@ -430,6 +423,12 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     }
 
 #ifdef __linux__
+    if(setpriority(PRIO_PROCESS, 0, -20))
+    {
+        printf("Unable to renice process (this was to be expected if "
+            "the process is not running as root)\n");
+    }
+
     int f_current_proc_sched = sched_getscheduler(0);
 
     if(f_current_proc_sched == RT_SCHED)
