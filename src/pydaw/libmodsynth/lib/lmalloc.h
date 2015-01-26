@@ -47,7 +47,11 @@ void lmalloc(void**, size_t);
 
 void small_page_aligned_alloc(void ** a_ptr, size_t a_size, int a_alignment)
 {
+#ifdef __linux__
     assert(posix_memalign(a_ptr, a_alignment, a_size) == 0);
+#else
+    *a_ptr = (void*)malloc(a_size);  //unaligned, but completely portable
+#endif
 }
 
 /* void lmalloc(void ** a_ptr, size_t a_size)
