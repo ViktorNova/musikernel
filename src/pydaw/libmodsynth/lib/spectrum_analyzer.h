@@ -21,10 +21,6 @@ GNU General Public License for more details.
 #include <string.h>
 #include <unistd.h>
 
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <complex.h>
 #include <fftw3.h>
 
