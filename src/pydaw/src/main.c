@@ -34,7 +34,6 @@ GNU General Public License for more details.
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/wait.h>
 #include <signal.h>
 #include <dirent.h>
 #include <time.h>
