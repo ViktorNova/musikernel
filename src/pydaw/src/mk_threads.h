@@ -355,7 +355,11 @@ void * v_pydaw_worker_thread(void* a_arg)
 void v_pydaw_init_worker_threads(
         int a_thread_count, int a_set_thread_affinity, int a_aux_threads)
 {
+#ifdef __linux__
     int f_cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
+#else
+    int f_cpu_count = 1;
+#endif
     int f_cpu_core_inc = 1;
     int f_has_ht = i_cpu_has_hyperthreading();
 
