@@ -18,7 +18,11 @@ GNU General Public License for more details.
 #include <stdlib.h>
 #include <assert.h>
 #include <stdlib.h>
+
+#ifdef __linux__
 #include <sys/mman.h>
+#endif
+
 
 //allocate 100MB at a time and slice it up on request
 #define HUGEPAGE_ALLOC_SIZE (1024 * 1024 * 100)
@@ -86,7 +90,7 @@ int alloc_hugepage_data()
     f_data->pos = hugepage_align(f_data->start, HUGEPAGE_MIN_ALIGN);
     f_data->end = f_data->start + HUGEPAGE_ALLOC_SIZE;
 #endif
-    
+
     return 1;
 }
 
