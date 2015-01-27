@@ -264,11 +264,6 @@ void v_dn_reset_audio_item_read_heads(t_dawnext * self,
         t_pydaw_audio_items * f_audio_items, double a_start_beat,
         double a_start_offset)
 {
-    if(a_start_beat == 0.0f)
-    {
-        return;  //no need to run because the audio loop will reset it all
-    }
-
     if(!f_audio_items)
     {
         return;
@@ -293,19 +288,36 @@ void v_dn_reset_audio_item_read_heads(t_dawnext * self,
                      f_audio_item->sample_start_offset),
                     f_tempo, f_sr);
 
-            if((a_start_beat > f_start_beat) && (a_start_beat < f_end_beat))
+            if(a_start_beat < f_end_beat)
             {
-                double f_beats_offset = (a_start_beat - f_start_beat);
                 int f_sample_start = i_beat_count_to_samples(
-                        f_beats_offset, f_tempo, f_sr);
+                    f_start_beat, f_tempo, f_sr);
+
+                if(f_sample_start < 0)
+                {
+                    f_sample_start = 0;
+                }
 
                 for(f_i2 = 0; f_i2 < MK_AUDIO_ITEM_SEND_COUNT; ++f_i2)
                 {
-                    v_ifh_retrigger(
-                        &f_audio_item->sample_read_heads[f_i2], f_sample_start);
+                    if(f_audio_item->is_reversed)
+                    {
+                        v_ifh_retrigger(
+                            &f_audio_item->sample_read_heads[f_i2],
+                            f_audio_item->sample_end_offset -
+                            f_sample_start);
+                    }
+                    else
+                    {
+                        v_ifh_retrigger(
+                            &f_audio_item->sample_read_heads[f_i2],
+                            f_audio_item->sample_start_offset +
+                            f_sample_start);
+                    }
 
                     v_adsr_retrigger(&f_audio_item->adsrs[f_i2]);
                 }
+
             }
         }
     }
@@ -894,13 +906,13 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
             {
                 if(a_playback_mode > 0 &&
                    f_item_ref[f_i]->start >= a_ts->ml_current_beat &&
-                   f_item_ref[f_i]->end < a_ts->ml_next_beat)
+                   f_item_ref[f_i]->start < a_ts->ml_next_beat)
                 {
                     t_dn_item * f_item =
                         self->item_pool[f_item_ref[0]->item_uid];
                     v_dn_reset_audio_item_read_heads(
                         self, f_item->audio_items, a_ts->ml_current_beat,
-                        f_item_ref[0]->start + f_item_ref[0]->start_offset);
+                        f_item_ref[0]->start_offset);
                 }
 
                 v_dn_audio_items_run(self, f_item_ref[f_i], a_sample_count,
