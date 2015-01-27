@@ -835,7 +835,30 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         }
     }
 
-    if(a_playback_mode > 0)
+    int f_is_recording = 0;
+    if(a_ts->playback_mode == PYDAW_PLAYBACK_MODE_REC &&
+       f_track->midi_device)
+    {
+        f_is_recording = 1;
+    }
+
+    v_dn_wait_for_bus(f_track);
+
+    for(f_i = 0; f_i < a_ts->input_count; ++f_i)
+    {
+        if(a_ts->input_index[f_i] == a_global_track_num)
+        {
+            v_audio_input_run(f_i, f_track->buffers, f_track->sc_buffers,
+                a_ts->input_buffer, a_ts->sample_count,
+                &f_track->sc_buffers_dirty);
+            if(a_ts->playback_mode == PYDAW_PLAYBACK_MODE_REC)
+            {
+                f_is_recording = 1;
+            }
+        }
+    }
+
+    if(a_ts->playback_mode == PYDAW_PLAYBACK_MODE_PLAY || !f_is_recording)
     {
         for(f_i = 0; f_i < f_track->splitter.count; ++f_i)
         {
@@ -863,36 +886,27 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
 
     v_dn_process_note_offs(self, a_global_track_num, a_ts);
 
-    v_dn_wait_for_bus(f_track);
-
-
-    for(f_i = 0; f_i < f_track->splitter.count; ++f_i)
+    if(!f_is_recording)
     {
-        if(f_item_ref[f_i])
+        for(f_i = 0; f_i < f_track->splitter.count; ++f_i)
         {
-            if(a_playback_mode > 0 &&
-               f_item_ref[f_i]->start >= a_ts->ml_current_beat &&
-               f_item_ref[f_i]->end < a_ts->ml_next_beat)
+            if(f_item_ref[f_i])
             {
-                t_dn_item * f_item = self->item_pool[f_item_ref[0]->item_uid];
-                v_dn_reset_audio_item_read_heads(
-                    self, f_item->audio_items, a_ts->ml_current_beat,
-                    f_item_ref[0]->start + f_item_ref[0]->start_offset);
+                if(a_playback_mode > 0 &&
+                   f_item_ref[f_i]->start >= a_ts->ml_current_beat &&
+                   f_item_ref[f_i]->end < a_ts->ml_next_beat)
+                {
+                    t_dn_item * f_item =
+                        self->item_pool[f_item_ref[0]->item_uid];
+                    v_dn_reset_audio_item_read_heads(
+                        self, f_item->audio_items, a_ts->ml_current_beat,
+                        f_item_ref[0]->start + f_item_ref[0]->start_offset);
+                }
+
+                v_dn_audio_items_run(self, f_item_ref[f_i], a_sample_count,
+                    f_track->buffers, f_track->sc_buffers,
+                    &f_track->sc_buffers_dirty, a_ts);
             }
-
-            v_dn_audio_items_run(self, f_item_ref[f_i], a_sample_count,
-                f_track->buffers, f_track->sc_buffers,
-                &f_track->sc_buffers_dirty, a_ts);
-        }
-    }
-
-    for(f_i = 0; f_i < a_ts->input_count; ++f_i)
-    {
-        if(a_ts->input_index[f_i] == a_global_track_num)
-        {
-            v_audio_input_run(f_i, f_track->buffers, f_track->sc_buffers,
-                a_ts->input_buffer, a_ts->sample_count,
-                &f_track->sc_buffers_dirty);
         }
     }
 
