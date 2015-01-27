@@ -974,7 +974,9 @@ class pydaw_sequencer:
                 if f_end_beat <= a_end_beat:
                     self.items.remove(f_item)
                 else:
-                    f_item.start_offset += a_end_beat - f_item.start_beat
+                    f_diff = a_end_beat - f_item.start_beat
+                    f_item.start_offset += f_diff
+                    f_item.length_beats -= f_diff
                     f_item.start_beat = a_end_beat
             elif f_item.start_beat < a_start_beat:
                 if f_end_beat >= a_start_beat and \
