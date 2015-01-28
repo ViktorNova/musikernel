@@ -3224,15 +3224,15 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_dialog.widget.exec_()
 
     def copy_as_cc_automation(self):
-        CC_EDITOR.clipboard = en_project.envelope_to_automation(
+        CC_EDITOR.clipboard = project.envelope_to_automation(
             self.graph_object, True, TRANSPORT.tempo_spinbox.value())
 
     def copy_as_pb_automation(self):
-        PB_EDITOR.clipboard = en_project.envelope_to_automation(
+        PB_EDITOR.clipboard = project.envelope_to_automation(
             self.graph_object, False, TRANSPORT.tempo_spinbox.value())
 
     def copy_as_notes(self):
-        PIANO_ROLL_EDITOR.clipboard = en_project.envelope_to_notes(
+        PIANO_ROLL_EDITOR.clipboard = project.envelope_to_notes(
             self.graph_object, TRANSPORT.tempo_spinbox.value())
 
     def output_menu_triggered(self, a_action):

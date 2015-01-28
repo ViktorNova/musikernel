@@ -18,7 +18,6 @@ import sys
 import re
 import subprocess
 import time
-import datetime
 from math import log, pow
 from multiprocessing import cpu_count
 import numpy
@@ -390,6 +389,27 @@ def cubic_interpolate(a_arr, a_pos):
     f_a3 = a_arr[f_int_pos_minus1]
 
     return (f_a0 * f_mu * f_mu2 + f_a1 * f_mu2 + f_a2 * f_mu + f_a3)
+
+def np_linear_interpolate(a_array, a_pos):
+    f_int = int(a_pos)
+    f_frac = a_pos - f_int
+    try:
+        f_point1 = a_array[f_int]
+        f_point2 = a_array[f_int + 1]
+    except IndexError:
+        return a_array[-1]
+    return ((f_point2 - f_point1) * f_frac) + f_point1
+
+def np_resample(a_array, a_new_size):
+    a_new_size = int(a_new_size) + 1
+    f_result = numpy.zeros(a_new_size)
+    f_len = a_array.shape[0]
+    f_stride = float(f_len) / a_new_size
+    f_pos = 0.0
+    for f_i in range(a_new_size):
+        f_result[f_i] = np_linear_interpolate(a_array, f_pos)
+        f_pos += f_stride
+    return f_result
 
 def window_rms(a_arr, a_window_size):
   a2 = numpy.power(a_arr, 2)

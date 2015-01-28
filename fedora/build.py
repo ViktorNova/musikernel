@@ -96,7 +96,6 @@ alsa-lib-devel
 liblo-devel
 libsndfile-devel
 python3-numpy
-python3-scipy
 fftw-devel
 portmidi-devel
 libsamplerate-devel

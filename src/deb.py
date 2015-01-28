@@ -95,11 +95,11 @@ f_debian_control = \
 "Priority: extra\n"
 "Section: sound\n"
 "Installed-Size: {}\n"
-"Maintainer: PyDAW Team <pydaw@pydaw.org>\n"
+"Maintainer: MusiKernel Team <musikernel@nospam.org>\n"
 "Architecture: {}\n"
 "Version: {}\n"
 "Depends: libasound2-dev, liblo-dev, libsndfile1-dev, "
-"libportmidi-dev, python3-pyqt4, python3, python3-scipy, "
+"libportmidi-dev, python3-pyqt4, python3, "
 "python3-numpy, libsamplerate0-dev, libfftw3-dev, libcpufreq-dev, "
 "libav-tools, lame, vorbis-tools\n"
 "Provides: {}\n"
@@ -107,7 +107,7 @@ f_debian_control = \
 "Replaces:\n"
 "Description: A digital audio workstation with a full suite of "
 "instrument and effects plugins.\n"
-" PyDAW is a full featured audio and MIDI sequencer with a suite of "
+" MusiKernel is a full featured audio and MIDI sequencer with a suite of "
 "high quality instrument and effects plugins.\n"
 "").format(f_short_name, f_size, f_arch, f_version, f_short_name)
 
