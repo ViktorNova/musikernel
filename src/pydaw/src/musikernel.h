@@ -581,7 +581,7 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
 
     musikernel->serverThread = lo_server_thread_new(NULL, pydaw_osc_error);
     musikernel->uiTarget = lo_address_new_from_url(
-        "osc.udp://localhost:30321/");
+        "osc.udp://localhost:30321");
 
     for(f_i = 0; f_i < MAX_PLUGIN_POOL_COUNT; ++f_i)
     {

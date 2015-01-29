@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 from PyQt4 import QtGui, QtCore
 
-from libpydaw import liblo, pydaw_util, pydaw_widgets, pydaw_device_dialog
+from libpydaw import pydaw_util, pydaw_widgets, pydaw_device_dialog
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
 import libmk
@@ -27,7 +27,12 @@ import time
 import gc
 import sys
 import subprocess
+import threading
 
+import pythonosc
+import pythonosc.udp_client
+import pythonosc.dispatcher
+import pythonosc.osc_server
 
 class MkIpc(libmk.AbstractIPC):
     def __init__(self):
@@ -229,6 +234,17 @@ class transport_widget:
             self.panic_button.setToolTip("")
             self.group_box.setToolTip("")
 
+class OscThread(QtCore.QThread):
+    def __init__(self, a_osc_server):
+        QtCore.QThread.__init__(self)
+        self.osc_server = a_osc_server
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+        self.osc_server.serve_forever()
+        self.terminate()
 
 class MkMainWindow(QtGui.QMainWindow):
     def __init__(self):
@@ -236,13 +252,10 @@ class MkMainWindow(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
         libmk.MAIN_WINDOW = self
         try:
-            libmk.OSC = liblo.Address(19271)
-        except liblo.AddressError as err:
-            print((str(err)))
+            libmk.OSC = pythonosc.udp_client.UDPClient("localhost", 19271)
+        except Exception as ex:
+            print(str(ex))
             sys.exit()
-        except:
-            print("Unable to start OSC with {}".format(19271))
-            libmk.OSC = None
         libmk.IPC = MkIpc()
         libmk.TRANSPORT = transport_widget()
         self.setObjectName("mainwindow")
@@ -423,26 +436,22 @@ class MkMainWindow(QtGui.QMainWindow):
             QtGui.QKeySequence(QtCore.Qt.Key_Space))
 
         try:
-            self.osc_server = liblo.Server(30321)
-        except liblo.ServerError as err:
+            self.dispatcher = pythonosc.dispatcher.Dispatcher()
+            self.dispatcher.map(
+                "musikernel/edmnext", edmnext.MAIN_WINDOW.configure_callback)
+            self.dispatcher.map(
+                "musikernel/wavenext", wavenext.MAIN_WINDOW.configure_callback)
+            self.dispatcher.map(
+                "musikernel/dawnext", dawnext.MAIN_WINDOW.configure_callback)
+
+            self.osc_server = pythonosc.osc_server.BlockingOSCUDPServer(
+                ("localhost", 30321), self.dispatcher)
+            self.osc_server.server_activate()
+            self.server_thread = OscThread(self.osc_server)
+            self.server_thread.start()
+        except Exception as err:
             print("Error creating OSC server: {}".format(err))
             self.osc_server = None
-        if self.osc_server is not None:
-            print(self.osc_server.get_url())
-            self.osc_server.add_method(
-                "musikernel/edmnext", 's',
-                edmnext.MAIN_WINDOW.configure_callback)
-            self.osc_server.add_method(
-                "musikernel/wavenext", 's',
-                wavenext.MAIN_WINDOW.configure_callback)
-            self.osc_server.add_method(
-                "musikernel/dawnext", 's',
-                dawnext.MAIN_WINDOW.configure_callback)
-            self.osc_server.add_method(None, None, self.osc_fallback)
-            self.osc_timer = QtCore.QTimer(self)
-            self.osc_timer.setSingleShot(False)
-            self.osc_timer.timeout.connect(self.osc_time_callback)
-            self.osc_timer.start(0)
 
         if pydaw_util.global_pydaw_with_audio:
             self.subprocess_timer = QtCore.QTimer(self)
@@ -641,9 +650,6 @@ class MkMainWindow(QtGui.QMainWindow):
         except Exception as ex:
             print("subprocess_monitor: {}".format(ex))
 
-    def osc_time_callback(self):
-        self.osc_server.recv(1)
-
     def osc_fallback(self, path, args, types, src):
         print("got unknown message '{}' from '{}'".format(path, src))
         for a, t in zip(args, types):
@@ -785,8 +791,8 @@ class MkMainWindow(QtGui.QMainWindow):
             close_pydaw_engine()
             libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
             if self.osc_server is not None:
-                self.osc_timer.stop()
-                self.osc_server.free()
+                print("Shutting down OSC server")
+                self.osc_server.shutdown()
             for f_host in self.host_windows:
                 f_host.prepare_to_quit()
                 self.main_stack.removeWidget(f_host)

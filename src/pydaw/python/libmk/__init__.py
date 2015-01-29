@@ -14,9 +14,11 @@ GNU General Public License for more details.
 
 import os
 from libpydaw import pydaw_util
-from libpydaw import liblo
 from PyQt4 import QtGui
 from libpydaw.translate import _
+
+import pythonosc
+import pythonosc.osc_message_builder
 
 # These are dynamically assigned by musikernel.py so that
 # hosts can access them from this module
@@ -64,7 +66,16 @@ class AbstractIPC:
 
     def send_configure(self, key, value):
         if self.with_osc:
-            liblo.send(OSC, self.configure_path, key, value)
+            msg = pythonosc.osc_message_builder.OscMessageBuilder(
+                address=self.configure_path)
+            msg.add_arg(key)
+            #because pythonosc bitches if it's empty, and we're obviously
+            #not looking for a value if it is empty
+            if not value:
+                value = "None"
+            msg.add_arg(value)
+            msg = msg.build()
+            OSC.send(msg)
         else:
             print("Running standalone UI without OSC.  "
                 "Would've sent configure message: key: \""

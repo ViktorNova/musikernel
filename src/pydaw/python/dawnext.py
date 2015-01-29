@@ -8501,6 +8501,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         SEQUENCER.set_ruler_y_pos(f_y)
 
     def configure_callback(self, path, arr):
+        print((path, arr))
         f_pc_dict = {}
         f_ui_dict = {}
         f_cc_dict = {}
