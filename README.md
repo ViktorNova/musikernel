@@ -14,7 +14,7 @@ make deps
 
 make deb
 
-cd ..
+cd ../ubuntu
 
 sudo dpkg -i musikernel[your_version].deb
 
