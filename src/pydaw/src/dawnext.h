@@ -261,8 +261,7 @@ void g_dn_instantiate()
 }
 
 void v_dn_reset_audio_item_read_heads(t_dawnext * self,
-        t_pydaw_audio_items * f_audio_items, double a_start_beat,
-        double a_start_offset)
+        t_pydaw_audio_items * f_audio_items, double a_start_offset)
 {
     if(!f_audio_items)
     {
@@ -288,7 +287,7 @@ void v_dn_reset_audio_item_read_heads(t_dawnext * self,
                      f_audio_item->sample_start_offset),
                     f_tempo, f_sr);
 
-            if(a_start_beat < f_end_beat)
+            if(f_start_beat < f_end_beat)
             {
                 int f_sample_start = i_beat_count_to_samples(
                     f_start_beat, f_tempo, f_sr);
@@ -842,8 +841,9 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
         {
             t_dn_item * f_item = self->item_pool[f_item_ref[0]->item_uid];
             v_dn_reset_audio_item_read_heads(
-                self, f_item->audio_items, a_ts->ml_current_beat,
-                f_item_ref[0]->start + f_item_ref[0]->start_offset);
+                self, f_item->audio_items,
+                f_item_ref[0]->start_offset +
+                (a_ts->ml_current_beat - f_item_ref[0]->start));
         }
     }
 
@@ -911,8 +911,9 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
                     t_dn_item * f_item =
                         self->item_pool[f_item_ref[0]->item_uid];
                     v_dn_reset_audio_item_read_heads(
-                        self, f_item->audio_items, a_ts->ml_current_beat,
-                        f_item_ref[0]->start_offset);
+                        self, f_item->audio_items,
+                        f_item_ref[0]->start_offset +
+                        (a_ts->ml_current_beat - f_item_ref[0]->start));
                 }
 
                 v_dn_audio_items_run(self, f_item_ref[f_i], a_sample_count,
