@@ -1217,23 +1217,23 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
     }
 }
 
-inline float f_bpm_to_seconds_per_beat(float a_tempo)
+inline double f_bpm_to_seconds_per_beat(double a_tempo)
 {
     return (60.0f / a_tempo);
 }
 
-inline float f_pydaw_samples_to_beat_count(int a_sample_count, float a_tempo,
+inline double f_pydaw_samples_to_beat_count(int a_sample_count, double a_tempo,
         float a_sr)
 {
-    float f_seconds_per_beat = f_bpm_to_seconds_per_beat(a_tempo);
-    float f_seconds = (float)(a_sample_count) / a_sr;
+    double f_seconds_per_beat = f_bpm_to_seconds_per_beat(a_tempo);
+    double f_seconds = (double)(a_sample_count) / a_sr;
     return f_seconds / f_seconds_per_beat;
 }
 
-inline int i_beat_count_to_samples(float a_beat_count, float a_tempo,
+inline int i_beat_count_to_samples(double a_beat_count, float a_tempo,
         float a_sr)
 {
-    float f_seconds = f_bpm_to_seconds_per_beat(a_tempo) * a_beat_count;
+    double f_seconds = f_bpm_to_seconds_per_beat(a_tempo) * a_beat_count;
     return (int)(f_seconds * a_sr);
 }
 
