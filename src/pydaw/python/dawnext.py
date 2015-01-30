@@ -2225,15 +2225,12 @@ class ItemSequencer(QtGui.QGraphicsView):
                 QtGui.QMessageBox.warning(
                     self.group_box, _("Error"), _("Name cannot be blank"))
                 return
-            global REGION_CLIPBOARD, LAST_OPEN_ITEM_NAMES, LAST_OPEN_ITEM_UIDS
+            global REGION_CLIPBOARD
             #Clear the clipboard, otherwise the names could be invalid
             REGION_CLIPBOARD = []
-            LAST_OPEN_ITEM_NAMES = []
-            LAST_OPEN_ITEM_UIDS = []
             PROJECT.rename_items(f_result, f_new_name)
             PROJECT.commit(_("Rename items"))
             REGION_SETTINGS.open_region()
-            global_update_items_label()
             if DRAW_LAST_ITEMS:
                 global_open_items()
             f_window.close()
@@ -6855,25 +6852,20 @@ class automation_viewer_widget:
             return
 
         def ok_handler():
-            f_bar = f_bar_spinbox.value() - 1
-            f_item = ITEM_EDITOR.items[f_bar]
-
             f_cc = pydaw_cc(
                 f_pos_spinbox.value() - 1.0, self.automation_viewer.cc_num,
                 f_value_spinbox.value())
-            f_item.add_cc(f_cc)
+            CURRENT_ITEM.add_cc(f_cc)
 
-            PROJECT.save_item(
-                ITEM_EDITOR.item_names[f_bar], ITEM_EDITOR.items[f_bar])
-            global_open_items()
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
+            global_open_items(CURRENT_ITEM_NAME)
             PROJECT.commit(_("Add automation point"))
+            self.automation_viewer.draw_item()
 
         def goto_start():
-            f_bar_spinbox.setValue(f_bar_spinbox.minimum())
             f_pos_spinbox.setValue(f_pos_spinbox.minimum())
 
         def goto_end():
-            f_bar_spinbox.setValue(f_bar_spinbox.maximum())
             f_pos_spinbox.setValue(f_pos_spinbox.maximum())
 
         def cancel_handler():
@@ -6884,14 +6876,9 @@ class automation_viewer_widget:
         f_layout = QtGui.QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_layout.addWidget(QtGui.QLabel(_("Position (bars)")), 2, 0)
-        f_bar_spinbox = QtGui.QSpinBox()
-        f_bar_spinbox.setRange(1, len(OPEN_ITEM_UIDS))
-        f_layout.addWidget(f_bar_spinbox, 2, 1)
-
         f_layout.addWidget(QtGui.QLabel(_("Position (beats)")), 5, 0)
         f_pos_spinbox = QtGui.QDoubleSpinBox()
-        f_pos_spinbox.setRange(1.0, 4.99)
+        f_pos_spinbox.setRange(1.0, CURRENT_ITEM_LEN + 1.0)
         f_pos_spinbox.setDecimals(2)
         f_pos_spinbox.setSingleStep(0.25)
         f_layout.addWidget(f_pos_spinbox, 5, 1)
@@ -6932,22 +6919,19 @@ class automation_viewer_widget:
             return
 
         def ok_handler():
-            f_bar = f_bar_spinbox.value() - 1
-            f_item = ITEM_EDITOR.items[f_bar]
-
             f_value = pydaw_clip_value(
                 f_epb_spinbox.value() / f_ipb_spinbox.value(),
                 -1.0, 1.0, a_round=True)
             f_pb = pydaw_pitchbend(f_pos_spinbox.value() - 1.0, f_value)
-            f_item.add_pb(f_pb)
+            CURRENT_ITEM.add_pb(f_pb)
 
             global LAST_IPB_VALUE
             LAST_IPB_VALUE = f_ipb_spinbox.value()
 
-            PROJECT.save_item(
-                ITEM_EDITOR.item_names[f_bar], ITEM_EDITOR.items[f_bar])
-            global_open_items()
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
+            global_open_items(CURRENT_ITEM_NAME)
             PROJECT.commit(_("Add pitchbend automation point"))
+            self.automation_viewer.draw_item()
 
         def cancel_handler():
             f_window.close()
@@ -6957,11 +6941,9 @@ class automation_viewer_widget:
                 f_ipb_spinbox.value() * -1, f_ipb_spinbox.value())
 
         def goto_start():
-            f_bar_spinbox.setValue(f_bar_spinbox.minimum())
             f_pos_spinbox.setValue(f_pos_spinbox.minimum())
 
         def goto_end():
-            f_bar_spinbox.setValue(f_bar_spinbox.maximum())
             f_pos_spinbox.setValue(f_pos_spinbox.maximum())
 
         f_window = QtGui.QDialog(MAIN_WINDOW)
@@ -6969,14 +6951,9 @@ class automation_viewer_widget:
         f_layout = QtGui.QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_layout.addWidget(QtGui.QLabel(_("Position (bars)")), 2, 0)
-        f_bar_spinbox = QtGui.QSpinBox()
-        f_bar_spinbox.setRange(1, len(OPEN_ITEM_UIDS))
-        f_layout.addWidget(f_bar_spinbox, 2, 1)
-
         f_layout.addWidget(QtGui.QLabel(_("Position (beats)")), 5, 0)
         f_pos_spinbox = QtGui.QDoubleSpinBox()
-        f_pos_spinbox.setRange(1.0, 4.99)
+        f_pos_spinbox.setRange(1.0, CURRENT_ITEM_LEN + 1.0)
         f_pos_spinbox.setDecimals(2)
         f_pos_spinbox.setSingleStep(0.25)
         f_layout.addWidget(f_pos_spinbox, 5, 1)
@@ -7021,24 +6998,6 @@ class automation_viewer_widget:
         f_ok_cancel_layout.addWidget(f_cancel)
         f_window.exec_()
 
-def global_update_items_label():
-    print("global_update_items_label does not currently do anything")
-
-def global_check_midi_items():
-    """ Return True if OK, otherwise clear the the item
-        editors and return False
-    """
-    f_items_dict = PROJECT.get_items_dict()
-    f_invalid = False
-    for f_uid in OPEN_ITEM_UIDS:
-        if not f_items_dict.uid_exists(f_uid):
-            f_invalid = True
-            break
-    if f_invalid:
-        ITEM_EDITOR.clear_new()
-        return False
-    else:
-        return True
 
 DRAW_LAST_ITEMS = False
 MIDI_SCALE = 1.0
@@ -8576,7 +8535,7 @@ def global_update_peak_meters(a_val):
 
 
 def global_close_all():
-    global OPEN_ITEM_UIDS, AUDIO_ITEMS_TO_DROP
+    global AUDIO_ITEMS_TO_DROP
     if libmk.PLUGIN_UI_DICT:
         libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
     REGION_SETTINGS.clear_new()
@@ -8584,7 +8543,6 @@ def global_close_all():
     AUDIO_SEQ.clear_drawn_items()
     PB_EDITOR.clear_drawn_items()
     TRANSPORT.reset()
-    OPEN_ITEM_UIDS = []
     AUDIO_ITEMS_TO_DROP = []
 
 def global_ui_refresh_callback(a_restore_all=False):
