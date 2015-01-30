@@ -1202,6 +1202,7 @@ class ItemSequencer(QtGui.QGraphicsView):
 
         self.setCacheMode(QtGui.QGraphicsView.CacheBackground)
         self.setViewportUpdateMode(QtGui.QGraphicsView.SmartViewportUpdate)
+        self.setOptimizationFlag(QtGui.QGraphicsView.DontSavePainterState)
 
         self.ignore_selection_change = False
         self.playback_pos = 0.0
