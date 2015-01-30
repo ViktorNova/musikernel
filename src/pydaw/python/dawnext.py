@@ -1873,10 +1873,13 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_window.exec_()
 
     def ruler_loop_start(self):
+        f_tsig_beats = CURRENT_REGION.get_tsig_at_pos(self.ruler_event_pos)
         if CURRENT_REGION.loop_marker:
-            f_end = CURRENT_REGION.loop_marker.beat
+            f_end = pydaw_util.pydaw_clip_min(
+                CURRENT_REGION.loop_marker.beat,
+                self.ruler_event_pos + f_tsig_beats)
         else:
-            f_end = self.ruler_event_pos + 4
+            f_end = self.ruler_event_pos + f_tsig_beats
 
         f_marker = project.pydaw_loop_marker(f_end, self.ruler_event_pos)
         CURRENT_REGION.set_loop_marker(f_marker)
@@ -1884,7 +1887,12 @@ class ItemSequencer(QtGui.QGraphicsView):
         REGION_SETTINGS.open_region()
 
     def ruler_loop_end(self):
-        CURRENT_REGION.loop_marker.beat = self.ruler_event_pos
+        f_tsig_beats = CURRENT_REGION.get_tsig_at_pos(self.ruler_event_pos)
+        CURRENT_REGION.loop_marker.beat = pydaw_util.pydaw_clip_min(
+            self.ruler_event_pos, f_tsig_beats)
+        CURRENT_REGION.loop_marker.start_beat = pydaw_util.pydaw_clip_max(
+            CURRENT_REGION.loop_marker.start_beat,
+            CURRENT_REGION.loop_marker.beat - f_tsig_beats)
         PROJECT.save_region(CURRENT_REGION)
         REGION_SETTINGS.open_region()
 
@@ -1892,7 +1900,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.context_menu_enabled = False
         self.ruler_event_pos = int(a_event.pos().x() / SEQUENCER_PX_PER_BEAT)
         f_menu = QtGui.QMenu(self)
-        f_marker_action = f_menu.addAction(_("Marker..."))
+        f_marker_action = f_menu.addAction(_("Text Marker..."))
         f_marker_action.triggered.connect(self.ruler_marker_modify)
         f_time_modify_action = f_menu.addAction(_("Time/Tempo Marker..."))
         f_time_modify_action.triggered.connect(self.ruler_time_modify)

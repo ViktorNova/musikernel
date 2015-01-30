@@ -895,10 +895,10 @@ class pydaw_sequencer:
         return sorted(self.markers.values())
 
     def set_loop_marker(self, a_marker=None):
+        if self.loop_marker:
+            self.delete_marker(self.loop_marker)
         if a_marker:
             self.set_marker(a_marker)
-        elif self.loop_marker:
-            self.delete_marker(self.loop_marker)
         self.loop_marker = a_marker
 
     def get_tempo_markers(self):
@@ -910,6 +910,13 @@ class pydaw_sequencer:
             if a_beat < f_t2.beat and a_beat > f_t1.beat:
                 return f_t1.real_tempo
         return f_tempo_markers[-1].real_tempo
+
+    def get_tsig_at_pos(self, a_beat):
+        f_tempo_markers = self.get_tempo_markers()
+        for f_t1, f_t2 in zip(f_tempo_markers, f_tempo_markers[1:]):
+            if a_beat < f_t2.beat and a_beat > f_t1.beat:
+                return f_t1.tsig_num
+        return f_tempo_markers[-1].tsig_num
 
     def get_seconds_at_beat(self, a_beat):
         f_time = 0.0
