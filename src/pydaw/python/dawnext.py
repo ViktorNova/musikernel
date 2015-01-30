@@ -1207,6 +1207,8 @@ class ItemSequencer(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
 
+        self.setCacheMode(QtGui.QGraphicsView.CacheBackground)
+
         self.ignore_selection_change = False
         self.playback_pos = 0.0
         self.playback_pos_orig = 0.0
