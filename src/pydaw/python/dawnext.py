@@ -96,6 +96,7 @@ def global_update_hidden_rows(a_val=None):
 
 CURRENT_REGION = None
 CURRENT_REGION_NAME = None
+DRAW_SEQUENCER_GRAPHS = True
 
 class region_settings:
     def __init__(self):
@@ -182,23 +183,23 @@ class region_settings:
         global REGION_EDITOR_TRACK_HEIGHT
         f_val = self.vzoom_slider.value()
         REGION_EDITOR_TRACK_HEIGHT = f_val * 64
-        PROJECT.painter_path_cache = {}
 
         TRACK_PANEL.set_track_height()
         self.open_region()
 
     def set_hzoom(self, a_val=None):
-        global SEQUENCER_PX_PER_BEAT
+        global SEQUENCER_PX_PER_BEAT, DRAW_SEQUENCER_GRAPHS
         f_val = self.hzoom_slider.value()
         if f_val < 3:
+            DRAW_SEQUENCER_GRAPHS = False
             f_length = pydaw_get_current_region_length()
             f_width = SEQUENCER.width()
             f_factor = {0:1, 1:2, 2:4}[f_val]
             SEQUENCER_PX_PER_BEAT = (f_width / f_length) * f_factor
         else:
+            DRAW_SEQUENCER_GRAPHS = True
             SEQUENCER_PX_PER_BEAT = {3:24, 4:48, 5:128}[f_val]
         pydaw_set_seq_snap()
-        PROJECT.painter_path_cache = {}
         self.open_region()
 
     def set_snap(self, a_val=None):
@@ -267,17 +268,6 @@ class region_settings:
             self.open_region()
             MIDI_DEVICES_DIALOG.set_routings()
             TRANSPORT.open_project()
-
-def global_set_region_editor_zoom():
-    global REGION_EDITOR_GRID_WIDTH
-    global MIDI_SCALE
-
-    f_width = float(SEQUENCER.rect().width()) - \
-        float(SEQUENCER.verticalScrollBar().width()) - 6.0 - \
-        REGION_TRACK_WIDTH
-    f_region_scale = f_width / 1000.0
-
-    REGION_EDITOR_GRID_WIDTH = 1000.0 * MIDI_SCALE * f_region_scale
 
 
 REGION_EDITOR_SNAP = True
@@ -513,22 +503,23 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.orig_string = str(a_audio_item)
         self.track_num = a_audio_item.track_num
 
-        f_audio_path, f_notes_path = PROJECT.get_item_path(
-            a_audio_item.item_uid, SEQUENCER_PX_PER_BEAT,
-            REGION_EDITOR_TRACK_HEIGHT,
-            CURRENT_REGION.get_tempo_at_pos(a_audio_item.start_beat))
+        if DRAW_SEQUENCER_GRAPHS:
+            f_audio_path, f_notes_path = PROJECT.get_item_path(
+                a_audio_item.item_uid, SEQUENCER_PX_PER_BEAT,
+                REGION_EDITOR_TRACK_HEIGHT,
+                CURRENT_REGION.get_tempo_at_pos(a_audio_item.start_beat))
 
-        self.audio_path_item = QtGui.QGraphicsPathItem(f_audio_path)
-        self.audio_path_item.setBrush(QtCore.Qt.darkGray)
-        self.audio_path_item.setPen(QtGui.QPen(QtCore.Qt.darkGray))
-        self.audio_path_item.setParentItem(self)
-        self.audio_path_item.setZValue(1900.0)
+            self.audio_path_item = QtGui.QGraphicsPathItem(f_audio_path)
+            self.audio_path_item.setBrush(QtCore.Qt.darkGray)
+            self.audio_path_item.setPen(QtGui.QPen(QtCore.Qt.darkGray))
+            self.audio_path_item.setParentItem(self)
+            self.audio_path_item.setZValue(1900.0)
 
-        self.path_item = QtGui.QGraphicsPathItem(f_notes_path)
-        self.path_item.setBrush(QtCore.Qt.white)
-        self.path_item.setPen(QtGui.QPen(QtCore.Qt.black))
-        self.path_item.setParentItem(self)
-        self.path_item.setZValue(2000.0)
+            self.path_item = QtGui.QGraphicsPathItem(f_notes_path)
+            self.path_item.setBrush(QtCore.Qt.white)
+            self.path_item.setPen(QtGui.QPen(QtCore.Qt.black))
+            self.path_item.setParentItem(self)
+            self.path_item.setZValue(2000.0)
 
         self.label = QtGui.QGraphicsSimpleTextItem(
             str(a_name), parent=self)
@@ -658,8 +649,10 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 #                f_length / self.audio_item.timestretch_amt
 
         self.sample_start_offset_px = -self.length_px_start
-        self.audio_path_item.setPos(self.sample_start_offset_px, 0.0)
-        self.path_item.setPos(self.sample_start_offset_px, 0.0)
+
+        if DRAW_SEQUENCER_GRAPHS:
+            self.audio_path_item.setPos(self.sample_start_offset_px, 0.0)
+            self.path_item.setPos(self.sample_start_offset_px, 0.0)
 
         self.start_handle_scene_min = f_start + self.sample_start_offset_px
         self.start_handle_scene_max = self.start_handle_scene_min + f_length
@@ -1217,7 +1210,6 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.selected_point_strings = set([])
         self.clipboard = []
         self.automation_points = []
-        self.painter_path_cache = {}
         self.region_clipboard = None
 
         self.atm_select_pos_x = None
@@ -2042,14 +2034,14 @@ class ItemSequencer(QtGui.QGraphicsView):
                 self.text_list.append(f_number)
                 self.scene.addLine(i3, 0.0, i3, f_total_height, f_v_pen)
                 f_number.setPos(i3 + 3.0, 2)
-                if SEQ_LINES_ENABLED:
+                if SEQ_LINES_ENABLED and DRAW_SEQUENCER_GRAPHS:
                     for f_i4 in range(1, SEQ_SNAP_RANGE):
                         f_sub_x = i3 + (SEQUENCER_QUANTIZE_PX * f_i4)
                         f_line = self.scene.addLine(
                             f_sub_x, REGION_EDITOR_HEADER_HEIGHT,
                             f_sub_x, f_total_height, f_16th_pen)
                         self.beat_line_list.append(f_line)
-            else:
+            elif DRAW_SEQUENCER_GRAPHS:
                 f_beat_x = i3
                 f_line = self.scene.addLine(
                     f_beat_x, 0.0, f_beat_x, f_total_height, f_beat_pen)
