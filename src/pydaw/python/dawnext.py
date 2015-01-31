@@ -7046,7 +7046,8 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
         CURRENT_ITEM_LEN = CURRENT_ITEM.get_length(
             CURRENT_REGION.get_tempo_at_pos(CURRENT_ITEM_REF.start_beat))
         CURRENT_ITEM_LEN = max(
-            (CURRENT_ITEM_LEN, CURRENT_ITEM_REF.length_beats)) + 4
+            (CURRENT_ITEM_LEN,
+            CURRENT_ITEM_REF.length_beats + CURRENT_ITEM_REF.start_offset))
     else:
         CURRENT_ITEM_LEN = 4
 
