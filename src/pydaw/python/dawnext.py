@@ -8093,9 +8093,9 @@ class transport_widget(libmk.AbstractTransport):
             if self.rec_end is None:
                 self.rec_end = round(SEQUENCER.get_beat_value() + 0.5)
             self.show_save_items_dialog()
-            REGION_SETTINGS.open_region()
 
         SEQUENCER.stop_playback()
+        REGION_SETTINGS.open_region()
         time.sleep(0.1)
         self.set_time(SEQUENCER.get_beat_value())
 
