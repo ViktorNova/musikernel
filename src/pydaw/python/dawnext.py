@@ -4316,7 +4316,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
         f_total_height = (AUDIO_ITEM_LANE_COUNT *
             (AUDIO_ITEM_HEIGHT)) + AUDIO_RULER_HEIGHT
         i3 = 0.0
-        for i in range(int(f_region_length) + 1):
+        for i in range(int(f_region_length)):
             f_number = QtGui.QGraphicsSimpleTextItem(
                 "{}".format(i + 1), self.ruler)
             f_number.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
