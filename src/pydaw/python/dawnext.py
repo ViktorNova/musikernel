@@ -96,6 +96,7 @@ def global_update_hidden_rows(a_val=None):
 
 CURRENT_REGION = None
 CURRENT_REGION_NAME = None
+DRAW_SEQUENCER_GRAPHS = True
 
 class region_settings:
     def __init__(self):
@@ -182,23 +183,23 @@ class region_settings:
         global REGION_EDITOR_TRACK_HEIGHT
         f_val = self.vzoom_slider.value()
         REGION_EDITOR_TRACK_HEIGHT = f_val * 64
-        PROJECT.painter_path_cache = {}
 
         TRACK_PANEL.set_track_height()
         self.open_region()
 
     def set_hzoom(self, a_val=None):
-        global SEQUENCER_PX_PER_BEAT
+        global SEQUENCER_PX_PER_BEAT, DRAW_SEQUENCER_GRAPHS
         f_val = self.hzoom_slider.value()
         if f_val < 3:
+            DRAW_SEQUENCER_GRAPHS = False
             f_length = pydaw_get_current_region_length()
             f_width = SEQUENCER.width()
             f_factor = {0:1, 1:2, 2:4}[f_val]
             SEQUENCER_PX_PER_BEAT = (f_width / f_length) * f_factor
         else:
+            DRAW_SEQUENCER_GRAPHS = True
             SEQUENCER_PX_PER_BEAT = {3:24, 4:48, 5:128}[f_val]
         pydaw_set_seq_snap()
-        PROJECT.painter_path_cache = {}
         self.open_region()
 
     def set_snap(self, a_val=None):
@@ -267,17 +268,6 @@ class region_settings:
             self.open_region()
             MIDI_DEVICES_DIALOG.set_routings()
             TRANSPORT.open_project()
-
-def global_set_region_editor_zoom():
-    global REGION_EDITOR_GRID_WIDTH
-    global MIDI_SCALE
-
-    f_width = float(SEQUENCER.rect().width()) - \
-        float(SEQUENCER.verticalScrollBar().width()) - 6.0 - \
-        REGION_TRACK_WIDTH
-    f_region_scale = f_width / 1000.0
-
-    REGION_EDITOR_GRID_WIDTH = 1000.0 * MIDI_SCALE * f_region_scale
 
 
 REGION_EDITOR_SNAP = True
@@ -513,22 +503,23 @@ class SequencerItem(QtGui.QGraphicsRectItem):
         self.orig_string = str(a_audio_item)
         self.track_num = a_audio_item.track_num
 
-        f_audio_path, f_notes_path = PROJECT.get_item_path(
-            a_audio_item.item_uid, SEQUENCER_PX_PER_BEAT,
-            REGION_EDITOR_TRACK_HEIGHT,
-            CURRENT_REGION.get_tempo_at_pos(a_audio_item.start_beat))
+        if DRAW_SEQUENCER_GRAPHS:
+            f_audio_path, f_notes_path = PROJECT.get_item_path(
+                a_audio_item.item_uid, SEQUENCER_PX_PER_BEAT,
+                REGION_EDITOR_TRACK_HEIGHT,
+                CURRENT_REGION.get_tempo_at_pos(a_audio_item.start_beat))
 
-        self.audio_path_item = QtGui.QGraphicsPathItem(f_audio_path)
-        self.audio_path_item.setBrush(QtCore.Qt.darkGray)
-        self.audio_path_item.setPen(QtGui.QPen(QtCore.Qt.darkGray))
-        self.audio_path_item.setParentItem(self)
-        self.audio_path_item.setZValue(1900.0)
+            self.audio_path_item = QtGui.QGraphicsPathItem(f_audio_path)
+            self.audio_path_item.setBrush(QtCore.Qt.darkGray)
+            self.audio_path_item.setPen(QtGui.QPen(QtCore.Qt.darkGray))
+            self.audio_path_item.setParentItem(self)
+            self.audio_path_item.setZValue(1900.0)
 
-        self.path_item = QtGui.QGraphicsPathItem(f_notes_path)
-        self.path_item.setBrush(QtCore.Qt.white)
-        self.path_item.setPen(QtGui.QPen(QtCore.Qt.black))
-        self.path_item.setParentItem(self)
-        self.path_item.setZValue(2000.0)
+            self.path_item = QtGui.QGraphicsPathItem(f_notes_path)
+            self.path_item.setBrush(QtCore.Qt.white)
+            self.path_item.setPen(QtGui.QPen(QtCore.Qt.black))
+            self.path_item.setParentItem(self)
+            self.path_item.setZValue(2000.0)
 
         self.label = QtGui.QGraphicsSimpleTextItem(
             str(a_name), parent=self)
@@ -658,8 +649,10 @@ class SequencerItem(QtGui.QGraphicsRectItem):
 #                f_length / self.audio_item.timestretch_amt
 
         self.sample_start_offset_px = -self.length_px_start
-        self.audio_path_item.setPos(self.sample_start_offset_px, 0.0)
-        self.path_item.setPos(self.sample_start_offset_px, 0.0)
+
+        if DRAW_SEQUENCER_GRAPHS:
+            self.audio_path_item.setPos(self.sample_start_offset_px, 0.0)
+            self.path_item.setPos(self.sample_start_offset_px, 0.0)
 
         self.start_handle_scene_min = f_start + self.sample_start_offset_px
         self.start_handle_scene_max = self.start_handle_scene_min + f_length
@@ -1207,6 +1200,10 @@ class ItemSequencer(QtGui.QGraphicsView):
     def __init__(self):
         QtGui.QGraphicsView.__init__(self)
 
+        self.setCacheMode(QtGui.QGraphicsView.CacheBackground)
+        self.setViewportUpdateMode(QtGui.QGraphicsView.SmartViewportUpdate)
+        self.setOptimizationFlag(QtGui.QGraphicsView.DontSavePainterState)
+
         self.ignore_selection_change = False
         self.playback_pos = 0.0
         self.playback_pos_orig = 0.0
@@ -1214,7 +1211,6 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.selected_point_strings = set([])
         self.clipboard = []
         self.automation_points = []
-        self.painter_path_cache = {}
         self.region_clipboard = None
 
         self.atm_select_pos_x = None
@@ -1538,6 +1534,8 @@ class ItemSequencer(QtGui.QGraphicsView):
         global ATM_REGION
         ATM_REGION = PROJECT.get_atm_region()
         f_items_dict = PROJECT.get_items_dict()
+        f_scrollbar = self.horizontalScrollBar()
+        f_scrollbar_value = f_scrollbar.value()
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
         self.ignore_selection_change = True
@@ -1553,6 +1551,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         if REGION_EDITOR_MODE == 1:
             self.open_atm_region()
             TRACK_PANEL.update_ccs_in_use()
+        f_scrollbar.setValue(f_scrollbar_value)
         self.setUpdatesEnabled(True)
         self.update()
         self.enabled = True
@@ -1871,10 +1870,13 @@ class ItemSequencer(QtGui.QGraphicsView):
         f_window.exec_()
 
     def ruler_loop_start(self):
+        f_tsig_beats = CURRENT_REGION.get_tsig_at_pos(self.ruler_event_pos)
         if CURRENT_REGION.loop_marker:
-            f_end = CURRENT_REGION.loop_marker.beat
+            f_end = pydaw_util.pydaw_clip_min(
+                CURRENT_REGION.loop_marker.beat,
+                self.ruler_event_pos + f_tsig_beats)
         else:
-            f_end = self.ruler_event_pos + 4
+            f_end = self.ruler_event_pos + f_tsig_beats
 
         f_marker = project.pydaw_loop_marker(f_end, self.ruler_event_pos)
         CURRENT_REGION.set_loop_marker(f_marker)
@@ -1882,7 +1884,12 @@ class ItemSequencer(QtGui.QGraphicsView):
         REGION_SETTINGS.open_region()
 
     def ruler_loop_end(self):
-        CURRENT_REGION.loop_marker.beat = self.ruler_event_pos
+        f_tsig_beats = CURRENT_REGION.get_tsig_at_pos(self.ruler_event_pos)
+        CURRENT_REGION.loop_marker.beat = pydaw_util.pydaw_clip_min(
+            self.ruler_event_pos, f_tsig_beats)
+        CURRENT_REGION.loop_marker.start_beat = pydaw_util.pydaw_clip_max(
+            CURRENT_REGION.loop_marker.start_beat,
+            CURRENT_REGION.loop_marker.beat - f_tsig_beats)
         PROJECT.save_region(CURRENT_REGION)
         REGION_SETTINGS.open_region()
 
@@ -1890,7 +1897,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         self.context_menu_enabled = False
         self.ruler_event_pos = int(a_event.pos().x() / SEQUENCER_PX_PER_BEAT)
         f_menu = QtGui.QMenu(self)
-        f_marker_action = f_menu.addAction(_("Marker..."))
+        f_marker_action = f_menu.addAction(_("Text Marker..."))
         f_marker_action.triggered.connect(self.ruler_marker_modify)
         f_time_modify_action = f_menu.addAction(_("Time/Tempo Marker..."))
         f_time_modify_action.triggered.connect(self.ruler_time_modify)
@@ -2003,7 +2010,7 @@ class ItemSequencer(QtGui.QGraphicsView):
             0.0, 0.0, 0.0, f_total_height, QtGui.QPen(QtCore.Qt.red, 2.0))
         self.playback_cursor.setZValue(1000.0)
 
-        self.set_playback_pos()
+        self.set_playback_pos(self.playback_pos)
         self.check_line_count()
         self.set_ruler_y_pos()
 
@@ -2031,14 +2038,14 @@ class ItemSequencer(QtGui.QGraphicsView):
                 self.text_list.append(f_number)
                 self.scene.addLine(i3, 0.0, i3, f_total_height, f_v_pen)
                 f_number.setPos(i3 + 3.0, 2)
-                if SEQ_LINES_ENABLED:
+                if SEQ_LINES_ENABLED and DRAW_SEQUENCER_GRAPHS:
                     for f_i4 in range(1, SEQ_SNAP_RANGE):
                         f_sub_x = i3 + (SEQUENCER_QUANTIZE_PX * f_i4)
                         f_line = self.scene.addLine(
                             f_sub_x, REGION_EDITOR_HEADER_HEIGHT,
                             f_sub_x, f_total_height, f_16th_pen)
                         self.beat_line_list.append(f_line)
-            else:
+            elif DRAW_SEQUENCER_GRAPHS:
                 f_beat_x = i3
                 f_line = self.scene.addLine(
                     f_beat_x, 0.0, f_beat_x, f_total_height, f_beat_pen)
@@ -2225,15 +2232,12 @@ class ItemSequencer(QtGui.QGraphicsView):
                 QtGui.QMessageBox.warning(
                     self.group_box, _("Error"), _("Name cannot be blank"))
                 return
-            global REGION_CLIPBOARD, LAST_OPEN_ITEM_NAMES, LAST_OPEN_ITEM_UIDS
+            global REGION_CLIPBOARD
             #Clear the clipboard, otherwise the names could be invalid
             REGION_CLIPBOARD = []
-            LAST_OPEN_ITEM_NAMES = []
-            LAST_OPEN_ITEM_UIDS = []
             PROJECT.rename_items(f_result, f_new_name)
             PROJECT.commit(_("Rename items"))
             REGION_SETTINGS.open_region()
-            global_update_items_label()
             if DRAW_LAST_ITEMS:
                 global_open_items()
             f_window.close()
@@ -4312,7 +4316,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
         f_total_height = (AUDIO_ITEM_LANE_COUNT *
             (AUDIO_ITEM_HEIGHT)) + AUDIO_RULER_HEIGHT
         i3 = 0.0
-        for i in range(int(f_region_length) + 1):
+        for i in range(int(f_region_length)):
             f_number = QtGui.QGraphicsSimpleTextItem(
                 "{}".format(i + 1), self.ruler)
             f_number.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
@@ -6855,25 +6859,20 @@ class automation_viewer_widget:
             return
 
         def ok_handler():
-            f_bar = f_bar_spinbox.value() - 1
-            f_item = ITEM_EDITOR.items[f_bar]
-
             f_cc = pydaw_cc(
                 f_pos_spinbox.value() - 1.0, self.automation_viewer.cc_num,
                 f_value_spinbox.value())
-            f_item.add_cc(f_cc)
+            CURRENT_ITEM.add_cc(f_cc)
 
-            PROJECT.save_item(
-                ITEM_EDITOR.item_names[f_bar], ITEM_EDITOR.items[f_bar])
-            global_open_items()
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
+            global_open_items(CURRENT_ITEM_NAME)
             PROJECT.commit(_("Add automation point"))
+            self.automation_viewer.draw_item()
 
         def goto_start():
-            f_bar_spinbox.setValue(f_bar_spinbox.minimum())
             f_pos_spinbox.setValue(f_pos_spinbox.minimum())
 
         def goto_end():
-            f_bar_spinbox.setValue(f_bar_spinbox.maximum())
             f_pos_spinbox.setValue(f_pos_spinbox.maximum())
 
         def cancel_handler():
@@ -6884,14 +6883,9 @@ class automation_viewer_widget:
         f_layout = QtGui.QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_layout.addWidget(QtGui.QLabel(_("Position (bars)")), 2, 0)
-        f_bar_spinbox = QtGui.QSpinBox()
-        f_bar_spinbox.setRange(1, len(OPEN_ITEM_UIDS))
-        f_layout.addWidget(f_bar_spinbox, 2, 1)
-
         f_layout.addWidget(QtGui.QLabel(_("Position (beats)")), 5, 0)
         f_pos_spinbox = QtGui.QDoubleSpinBox()
-        f_pos_spinbox.setRange(1.0, 4.99)
+        f_pos_spinbox.setRange(1.0, CURRENT_ITEM_LEN + 1.0)
         f_pos_spinbox.setDecimals(2)
         f_pos_spinbox.setSingleStep(0.25)
         f_layout.addWidget(f_pos_spinbox, 5, 1)
@@ -6932,22 +6926,19 @@ class automation_viewer_widget:
             return
 
         def ok_handler():
-            f_bar = f_bar_spinbox.value() - 1
-            f_item = ITEM_EDITOR.items[f_bar]
-
             f_value = pydaw_clip_value(
                 f_epb_spinbox.value() / f_ipb_spinbox.value(),
                 -1.0, 1.0, a_round=True)
             f_pb = pydaw_pitchbend(f_pos_spinbox.value() - 1.0, f_value)
-            f_item.add_pb(f_pb)
+            CURRENT_ITEM.add_pb(f_pb)
 
             global LAST_IPB_VALUE
             LAST_IPB_VALUE = f_ipb_spinbox.value()
 
-            PROJECT.save_item(
-                ITEM_EDITOR.item_names[f_bar], ITEM_EDITOR.items[f_bar])
-            global_open_items()
+            PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
+            global_open_items(CURRENT_ITEM_NAME)
             PROJECT.commit(_("Add pitchbend automation point"))
+            self.automation_viewer.draw_item()
 
         def cancel_handler():
             f_window.close()
@@ -6957,11 +6948,9 @@ class automation_viewer_widget:
                 f_ipb_spinbox.value() * -1, f_ipb_spinbox.value())
 
         def goto_start():
-            f_bar_spinbox.setValue(f_bar_spinbox.minimum())
             f_pos_spinbox.setValue(f_pos_spinbox.minimum())
 
         def goto_end():
-            f_bar_spinbox.setValue(f_bar_spinbox.maximum())
             f_pos_spinbox.setValue(f_pos_spinbox.maximum())
 
         f_window = QtGui.QDialog(MAIN_WINDOW)
@@ -6969,14 +6958,9 @@ class automation_viewer_widget:
         f_layout = QtGui.QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_layout.addWidget(QtGui.QLabel(_("Position (bars)")), 2, 0)
-        f_bar_spinbox = QtGui.QSpinBox()
-        f_bar_spinbox.setRange(1, len(OPEN_ITEM_UIDS))
-        f_layout.addWidget(f_bar_spinbox, 2, 1)
-
         f_layout.addWidget(QtGui.QLabel(_("Position (beats)")), 5, 0)
         f_pos_spinbox = QtGui.QDoubleSpinBox()
-        f_pos_spinbox.setRange(1.0, 4.99)
+        f_pos_spinbox.setRange(1.0, CURRENT_ITEM_LEN + 1.0)
         f_pos_spinbox.setDecimals(2)
         f_pos_spinbox.setSingleStep(0.25)
         f_layout.addWidget(f_pos_spinbox, 5, 1)
@@ -7021,24 +7005,6 @@ class automation_viewer_widget:
         f_ok_cancel_layout.addWidget(f_cancel)
         f_window.exec_()
 
-def global_update_items_label():
-    print("global_update_items_label does not currently do anything")
-
-def global_check_midi_items():
-    """ Return True if OK, otherwise clear the the item
-        editors and return False
-    """
-    f_items_dict = PROJECT.get_items_dict()
-    f_invalid = False
-    for f_uid in OPEN_ITEM_UIDS:
-        if not f_items_dict.uid_exists(f_uid):
-            f_invalid = True
-            break
-    if f_invalid:
-        ITEM_EDITOR.clear_new()
-        return False
-    else:
-        return True
 
 DRAW_LAST_ITEMS = False
 MIDI_SCALE = 1.0
@@ -7083,7 +7049,8 @@ def global_open_items(a_items=None, a_reset_scrollbar=False):
         CURRENT_ITEM_LEN = CURRENT_ITEM.get_length(
             CURRENT_REGION.get_tempo_at_pos(CURRENT_ITEM_REF.start_beat))
         CURRENT_ITEM_LEN = max(
-            (CURRENT_ITEM_LEN, CURRENT_ITEM_REF.length_beats)) + 4
+            (CURRENT_ITEM_LEN,
+            CURRENT_ITEM_REF.length_beats + CURRENT_ITEM_REF.start_offset))
     else:
         CURRENT_ITEM_LEN = 4
 
@@ -8126,9 +8093,9 @@ class transport_widget(libmk.AbstractTransport):
             if self.rec_end is None:
                 self.rec_end = round(SEQUENCER.get_beat_value() + 0.5)
             self.show_save_items_dialog()
-            REGION_SETTINGS.open_region()
 
         SEQUENCER.stop_playback()
+        REGION_SETTINGS.open_region()
         time.sleep(0.1)
         self.set_time(SEQUENCER.get_beat_value())
 
@@ -8577,7 +8544,7 @@ def global_update_peak_meters(a_val):
 
 
 def global_close_all():
-    global OPEN_ITEM_UIDS, AUDIO_ITEMS_TO_DROP
+    global AUDIO_ITEMS_TO_DROP
     if libmk.PLUGIN_UI_DICT:
         libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
     REGION_SETTINGS.clear_new()
@@ -8585,7 +8552,6 @@ def global_close_all():
     AUDIO_SEQ.clear_drawn_items()
     PB_EDITOR.clear_drawn_items()
     TRANSPORT.reset()
-    OPEN_ITEM_UIDS = []
     AUDIO_ITEMS_TO_DROP = []
 
 def global_ui_refresh_callback(a_restore_all=False):

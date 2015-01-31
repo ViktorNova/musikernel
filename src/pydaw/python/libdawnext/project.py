@@ -668,25 +668,27 @@ class DawNextProject(libmk.AbstractProject):
 
     def get_item_path(self, a_uid, a_px_per_beat, a_height, a_tempo):
         a_uid = int(a_uid)
-        f_key = (a_uid, round(a_tempo, 1))
-        if f_key in self.painter_path_cache:
-            return self.painter_path_cache[f_key]
+        f_key = (a_px_per_beat, a_height, round(a_tempo, 1))
+        if a_uid in self.painter_path_cache and \
+        f_key in self.painter_path_cache[a_uid]:
+            return self.painter_path_cache[a_uid][f_key]
         else:
             f_item_obj = self.get_item_by_uid(a_uid)
             f_path = f_item_obj.painter_path(
                 a_px_per_beat, a_height, a_tempo)
-            self.painter_path_cache[f_key] = f_path
+            if a_uid not in self.painter_path_cache:
+                self.painter_path_cache[a_uid] = {}
+            self.painter_path_cache[a_uid][f_key] = f_path
             return f_path
 
     def save_item_by_uid(self, a_uid, a_item, a_new_item=False):
         a_uid = int(a_uid)
-        for x in [y for y in self.painter_path_cache if y[0] == a_uid]:
-            self.painter_path_cache.pop(x)
+        if a_uid in self.painter_path_cache:
+            self.painter_path_cache.pop(a_uid)
         if not self.suppress_updates:
-            f_uid = int(a_uid)
             self.save_file(
-                pydaw_folder_items, str(f_uid), str(a_item), a_new_item)
-            self.IPC.pydaw_save_item(f_uid)
+                pydaw_folder_items, str(a_uid), str(a_item), a_new_item)
+            self.IPC.pydaw_save_item(a_uid)
 
     def save_region(self, a_region, a_notify=True):
         if not self.suppress_updates:
@@ -895,10 +897,10 @@ class pydaw_sequencer:
         return sorted(self.markers.values())
 
     def set_loop_marker(self, a_marker=None):
+        if self.loop_marker:
+            self.delete_marker(self.loop_marker)
         if a_marker:
             self.set_marker(a_marker)
-        elif self.loop_marker:
-            self.delete_marker(self.loop_marker)
         self.loop_marker = a_marker
 
     def get_tempo_markers(self):
@@ -910,6 +912,13 @@ class pydaw_sequencer:
             if a_beat < f_t2.beat and a_beat > f_t1.beat:
                 return f_t1.real_tempo
         return f_tempo_markers[-1].real_tempo
+
+    def get_tsig_at_pos(self, a_beat):
+        f_tempo_markers = self.get_tempo_markers()
+        for f_t1, f_t2 in zip(f_tempo_markers, f_tempo_markers[1:]):
+            if a_beat < f_t2.beat and a_beat > f_t1.beat:
+                return f_t1.tsig_num
+        return f_tempo_markers[-1].tsig_num
 
     def get_seconds_at_beat(self, a_beat):
         f_time = 0.0

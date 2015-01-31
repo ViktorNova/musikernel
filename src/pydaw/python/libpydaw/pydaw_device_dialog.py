@@ -363,6 +363,8 @@ class pydaw_device_dialog:
                 f_midi_device.contents.output, f_midi_device.contents.opened))
             if f_midi_device.contents.input == 1:
                 f_checkbox = QtGui.QCheckBox(f_midi_device_name)
+                if f_midi_device_name in pydaw_util.MIDI_IN_DEVICES:
+                    f_checkbox.setChecked(True)
                 self.midi_in_checkboxes[f_midi_device_name] = f_checkbox
 
         for f_cbox in sorted(
@@ -512,10 +514,6 @@ class pydaw_device_dialog:
         if "hugePages" in pydaw_util.global_device_val_dict and \
         int(pydaw_util.global_device_val_dict["hugePages"]) == 1:
             f_hugepages_checkbox.setChecked(True)
-
-        for f_device_name in pydaw_util.MIDI_IN_DEVICES:
-            if f_device_name in self.midi_in_checkboxes:
-                self.midi_in_checkboxes[f_device_name].setChecked(True)
 
         if "audioEngine" in pydaw_util.global_device_val_dict:
             f_audio_engine_combobox.setCurrentIndex(
