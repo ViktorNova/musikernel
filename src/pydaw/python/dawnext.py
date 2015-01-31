@@ -1534,6 +1534,8 @@ class ItemSequencer(QtGui.QGraphicsView):
         global ATM_REGION
         ATM_REGION = PROJECT.get_atm_region()
         f_items_dict = PROJECT.get_items_dict()
+        f_scrollbar = self.horizontalScrollBar()
+        f_scrollbar_value = f_scrollbar.value()
         self.setUpdatesEnabled(False)
         self.clear_drawn_items()
         self.ignore_selection_change = True
@@ -1549,6 +1551,7 @@ class ItemSequencer(QtGui.QGraphicsView):
         if REGION_EDITOR_MODE == 1:
             self.open_atm_region()
             TRACK_PANEL.update_ccs_in_use()
+        f_scrollbar.setValue(f_scrollbar_value)
         self.setUpdatesEnabled(True)
         self.update()
         self.enabled = True
@@ -2007,7 +2010,7 @@ class ItemSequencer(QtGui.QGraphicsView):
             0.0, 0.0, 0.0, f_total_height, QtGui.QPen(QtCore.Qt.red, 2.0))
         self.playback_cursor.setZValue(1000.0)
 
-        self.set_playback_pos()
+        self.set_playback_pos(self.playback_pos)
         self.check_line_count()
         self.set_ruler_y_pos()
 
