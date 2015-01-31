@@ -845,6 +845,14 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
                 f_item_ref[0]->start_offset +
                 (a_ts->ml_current_beat - f_item_ref[0]->start));
         }
+
+        for(f_i = 0; f_i < MAX_PLUGIN_COUNT; ++f_i)
+        {
+            if(f_track->plugins[f_i])
+            {
+                f_track->plugins[f_i]->atm_pos = 0;
+            }
+        }
     }
 
     int f_is_recording = 0;
@@ -1036,60 +1044,58 @@ inline void v_dn_process_atm(
         return;
     }
 
+    if(!self->en_song->regions_atm ||
+    !self->en_song->regions_atm->plugins[f_pool_index].point_count)
+    {
+        return;
+    }
+
     while(1)
     {
-        if(self->en_song->regions_atm &&
-            self->en_song->regions_atm->plugins[f_pool_index].point_count)
+        t_dn_atm_plugin * f_current_item =
+            &self->en_song->regions_atm->plugins[f_pool_index];
+
+        if((f_plugin->atm_pos) >= (f_current_item->point_count))
         {
-            t_dn_atm_plugin * f_current_item =
-                &self->en_song->regions_atm->plugins[f_pool_index];
+            break;
+        }
 
-            if((f_plugin->atm_pos) >= (f_current_item->point_count))
+        t_dn_atm_point * f_point =
+            &f_current_item->points[f_plugin->atm_pos];
+
+        if(f_point->beat < f_track_current_period_beats)
+        {
+            ++f_plugin->atm_pos;
+            continue;
+        }
+
+        if((f_point->beat >= f_track_current_period_beats) &&
+            (f_point->beat < f_track_next_period_beats))
+        {
+            t_pydaw_seq_event * f_buff_ev =
+                &f_plugin->atm_buffer[f_plugin->atm_count];
+
+            int f_note_sample_offset = 0;
+            float f_note_start_diff =
+                ((f_point->beat) - f_track_current_period_beats) +
+                f_track_beats_offset;
+            float f_note_start_frac =
+                f_note_start_diff / a_ts->ml_sample_period_inc_beats;
+            f_note_sample_offset =
+                (int)(f_note_start_frac * (float)sample_count);
+
+            if(f_plugin->uid == f_point->plugin)
             {
-                break;
+                float f_val = f_atm_to_ctrl_val(
+                    f_plugin->descriptor, f_point->port, f_point->val);
+                v_pydaw_ev_clear(f_buff_ev);
+                v_pydaw_ev_set_atm(f_buff_ev, f_point->port, f_val);
+                f_buff_ev->tick = f_note_sample_offset;
+                v_pydaw_set_control_from_atm(
+                    f_buff_ev, f_plugin->pool_uid, f_track);
+                ++f_plugin->atm_count;
             }
-
-            t_dn_atm_point * f_point =
-                &f_current_item->points[f_plugin->atm_pos];
-
-            if(f_point->beat < f_track_current_period_beats)
-            {
-                ++f_plugin->atm_pos;
-                continue;
-            }
-
-            if((f_point->beat >= f_track_current_period_beats) &&
-                (f_point->beat < f_track_next_period_beats))
-            {
-                t_pydaw_seq_event * f_buff_ev =
-                    &f_plugin->atm_buffer[f_plugin->atm_count];
-
-                int f_note_sample_offset = 0;
-                float f_note_start_diff =
-                    ((f_point->beat) - f_track_current_period_beats) +
-                    f_track_beats_offset;
-                float f_note_start_frac =
-                    f_note_start_diff / a_ts->ml_sample_period_inc_beats;
-                f_note_sample_offset =
-                    (int)(f_note_start_frac * (float)sample_count);
-
-                if(f_plugin->uid == f_point->plugin)
-                {
-                    float f_val = f_atm_to_ctrl_val(
-                        f_plugin->descriptor, f_point->port, f_point->val);
-                    v_pydaw_ev_clear(f_buff_ev);
-                    v_pydaw_ev_set_atm(f_buff_ev, f_point->port, f_val);
-                    f_buff_ev->tick = f_note_sample_offset;
-                    v_pydaw_set_control_from_atm(
-                        f_buff_ev, f_plugin->pool_uid, f_track);
-                    ++f_plugin->atm_count;
-                }
-                ++f_plugin->atm_pos;
-            }
-            else
-            {
-                break;
-            }
+            ++f_plugin->atm_pos;
         }
         else
         {
@@ -2576,12 +2582,6 @@ void v_dn_set_playback_cursor(t_dawnext * self, double a_beat)
     }
 
     f_i = 0;
-
-    while(f_i < MAX_PLUGIN_POOL_COUNT)
-    {
-        musikernel->plugin_pool[f_i].atm_pos = 0;
-        ++f_i;
-    }
 }
 
 void v_dn_set_is_soloed(t_dawnext * self)
