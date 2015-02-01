@@ -1402,6 +1402,8 @@ class ItemSequencer(QGraphicsView):
                 if a_event.modifiers() == QtCore.Qt.ShiftModifier:
                     self.atm_delete = True
                     return
+            elif a_event.button() == QtCore.Qt.RightButton:
+                pass
             elif self.current_coord is not None:
                 f_port, f_index = TRACK_PANEL.has_automation(
                     self.current_coord[0])
@@ -2491,107 +2493,23 @@ class ItemSequencer(QGraphicsView):
     def paste_atm_point(self):
         if libmk.IS_PLAYING:
             return
+        self.context_menu_enabled = False
         if pydaw_widgets.CC_CLIPBOARD is None:
             QMessageBox.warning(
                 self, _("Error"),
                 _("Nothing copied to the clipboard.\n"
                 "Right-click->'Copy' on any knob on any plugin."))
             return
-        self.add_atm_point(pydaw_widgets.CC_CLIPBOARD)
+        f_track, f_beat, f_val = self.current_coord
+        f_val = pydaw_widgets.CC_CLIPBOARD
+        f_port, f_index = TRACK_PANEL.has_automation(self.current_coord[0])
+        if f_port is not None:
+            f_point = pydaw_atm_point(
+                f_beat, f_port, f_val, *TRACK_PANEL.get_atm_params(f_track))
+            ATM_REGION.add_point(f_point)
+            self.draw_point(f_point)
+            self.automation_save_callback()
 
-    def add_atm_point(self, a_value=None):
-        if libmk.IS_PLAYING:
-            return
-
-        def ok_handler():
-            f_track = f_track_cbox.currentIndex()
-            f_port, f_index = TRACK_PANEL.has_automation(f_track)
-
-            if f_port is not None:
-                f_bar = f_bar_spinbox.value() - 1
-                f_beat = f_pos_spinbox.value() - 1.0
-                f_val = f_value_spinbox.value()
-                f_point = pydaw_atm_point(
-                    f_bar, f_beat, f_port, f_val,
-                    *TRACK_PANEL.get_atm_params(f_track))
-                ATM_REGION.add_point(f_point)
-                self.draw_point(f_point)
-                self.automation_save_callback()
-
-        def goto_start():
-            f_bar_spinbox.setValue(f_bar_spinbox.minimum())
-            f_pos_spinbox.setValue(f_pos_spinbox.minimum())
-
-        def goto_end():
-            f_bar_spinbox.setValue(f_bar_spinbox.maximum())
-            f_pos_spinbox.setValue(f_pos_spinbox.maximum())
-
-        def value_paste():
-            f_value_spinbox.setValue(pydaw_widgets.CC_CLIPBOARD)
-
-        def cancel_handler():
-            f_window.close()
-
-        f_window = QDialog(self)
-        f_window.setWindowTitle(_("Add automation point"))
-        f_layout = QGridLayout()
-        f_window.setLayout(f_layout)
-
-        f_layout.addWidget(QLabel(_("Track")), 0, 0)
-        f_track_cbox = QComboBox()
-        f_track_cbox.addItems(TRACK_NAMES)
-        f_layout.addWidget(f_track_cbox, 0, 1)
-
-        f_layout.addWidget(QLabel(_("Position (bars)")), 2, 0)
-        f_bar_spinbox = QSpinBox()
-        f_bar_spinbox.setRange(1, pydaw_get_current_region_length())
-        f_layout.addWidget(f_bar_spinbox, 2, 1)
-
-        f_layout.addWidget(QLabel(_("Position (beats)")), 5, 0)
-        f_pos_spinbox = QDoubleSpinBox()
-        f_pos_spinbox.setRange(1.0, 4.99)
-        f_pos_spinbox.setDecimals(2)
-        f_pos_spinbox.setSingleStep(0.25)
-        f_layout.addWidget(f_pos_spinbox, 5, 1)
-
-        f_begin_end_layout = QHBoxLayout()
-        f_layout.addLayout(f_begin_end_layout, 6, 1)
-        f_start_button = QPushButton("<<")
-        f_start_button.pressed.connect(goto_start)
-        f_begin_end_layout.addWidget(f_start_button)
-        f_begin_end_layout.addItem(
-            QSpacerItem(1, 1, QSizePolicy.Expanding))
-        f_end_button = QPushButton(">>")
-        f_end_button.pressed.connect(goto_end)
-        f_begin_end_layout.addWidget(f_end_button)
-
-        f_layout.addWidget(QLabel(_("Value")), 10, 0)
-        f_value_spinbox = QDoubleSpinBox()
-        f_value_spinbox.setRange(0.0, 127.0)
-        f_value_spinbox.setDecimals(4)
-        if a_value is not None:
-            f_value_spinbox.setValue(a_value)
-        f_layout.addWidget(f_value_spinbox, 10, 1)
-        f_value_paste = QPushButton(_("Paste"))
-        f_layout.addWidget(f_value_paste, 10, 2)
-        f_value_paste.pressed.connect(value_paste)
-
-        if self.current_coord:
-            f_track, f_bar, f_beat, f_val = self.current_coord
-            f_track_cbox.setCurrentIndex(f_track)
-            f_bar_spinbox.setValue(f_bar + 1)
-            f_pos_spinbox.setValue(f_beat + 1.0)
-
-        f_ok = QPushButton(_("Add"))
-        f_ok.pressed.connect(ok_handler)
-        f_ok_cancel_layout = QHBoxLayout()
-        f_ok_cancel_layout.addWidget(f_ok)
-
-        f_layout.addLayout(f_ok_cancel_layout, 40, 1)
-        f_cancel = QPushButton(_("Close"))
-        f_cancel.pressed.connect(cancel_handler)
-        f_ok_cancel_layout.addWidget(f_cancel)
-        f_window.show()
 
 def pydaw_set_audio_seq_zoom(a_horizontal, a_vertical):
     global AUDIO_PX_PER_BEAT, AUDIO_ITEM_HEIGHT
