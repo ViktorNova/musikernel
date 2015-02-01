@@ -53,33 +53,33 @@ class triggerfx_plugin_ui(pydaw_abstract_plugin_ui):
         self.is_instrument = False
 
         self.preset_manager = None
-        self.tab_widget = QtGui.QTabWidget()
+        self.tab_widget = QTabWidget()
         self.layout.addWidget(self.tab_widget)
-        self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
+        self.layout.setSizeConstraint(QLayout.SetFixedSize)
 
-        self.misc_tab = QtGui.QWidget()
+        self.misc_tab = QWidget()
         self.tab_widget.addTab(self.misc_tab, _("Effects"))
-        self.delay_vlayout = QtGui.QVBoxLayout()
+        self.delay_vlayout = QVBoxLayout()
         self.misc_tab.setLayout(self.delay_vlayout)
-        self.delay_hlayout = QtGui.QHBoxLayout()
+        self.delay_hlayout = QHBoxLayout()
         self.delay_vlayout.addLayout(self.delay_hlayout)
 
         f_knob_size = 48
 
-        f_note_triggered_label = QtGui.QLabel(_("Note-Triggered Effects"))
+        f_note_triggered_label = QLabel(_("Note-Triggered Effects"))
         f_note_triggered_label.setToolTip(
             _("The below effects are triggered when you play their \n"
             "selected note.  Usually you will want to change the note\n"
             "range on any instrument plugins on the same track to not\n"
             "include the selected note for these effects."))
         self.delay_vlayout.addWidget(f_note_triggered_label)
-        self.note_triggered_hlayout = QtGui.QHBoxLayout()
+        self.note_triggered_hlayout = QHBoxLayout()
         self.delay_vlayout.addLayout(self.note_triggered_hlayout)
 
-        self.gate_groupbox = QtGui.QGroupBox(_("Gate"))
+        self.gate_groupbox = QGroupBox(_("Gate"))
         self.gate_groupbox.setObjectName("plugin_groupbox")
         self.note_triggered_hlayout.addWidget(self.gate_groupbox)
-        self.gate_gridlayout = QtGui.QGridLayout(self.gate_groupbox)
+        self.gate_gridlayout = QGridLayout(self.gate_groupbox)
         self.gate_on_checkbox = pydaw_checkbox_control(
             "On", TRIGGERFX_GATE_MODE,
             self.plugin_rel_callback, self.plugin_val_callback,
@@ -102,12 +102,12 @@ class triggerfx_plugin_ui(pydaw_abstract_plugin_ui):
             20, 120, 60, KC_PITCH, self.port_dict, self.preset_manager)
         self.gate_pitch_knob.add_to_grid_layout(self.gate_gridlayout, 12)
 
-        self.glitch_groupbox = QtGui.QGroupBox(_("Glitch"))
+        self.glitch_groupbox = QGroupBox(_("Glitch"))
         self.glitch_groupbox.setObjectName("plugin_groupbox")
         self.note_triggered_hlayout.addWidget(self.glitch_groupbox)
         self.note_triggered_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        self.glitch_gridlayout = QtGui.QGridLayout(self.glitch_groupbox)
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
+        self.glitch_gridlayout = QGridLayout(self.glitch_groupbox)
 
         self.glitch_on_checkbox = pydaw_checkbox_control(
             "On", TRIGGERFX_GLITCH_ON,
@@ -130,10 +130,10 @@ class triggerfx_plugin_ui(pydaw_abstract_plugin_ui):
             0, 36, 0, KC_INTEGER, self.port_dict, self.preset_manager)
         self.glitch_pb_knob.add_to_grid_layout(self.glitch_gridlayout, 12)
 
-        self.delay_spacer_layout = QtGui.QVBoxLayout()
+        self.delay_spacer_layout = QVBoxLayout()
         self.delay_vlayout.addLayout(self.delay_spacer_layout)
         self.delay_spacer_layout.addItem(
-            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, vPolicy=QSizePolicy.Expanding))
 
         self.open_plugin_file()
         self.set_midi_learn(TRIGGERFX_PORT_MAP)

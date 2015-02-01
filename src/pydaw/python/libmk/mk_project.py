@@ -12,7 +12,9 @@ GNU General Public License for more details.
 
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtCore
+from PyQt4.QtGui import *
+
 from libpydaw import *
 from libpydaw.pydaw_util import *
 import libmk
@@ -872,17 +874,17 @@ pydaw_audio_item_scene_width = 6000.0
 pydaw_audio_item_scene_rect = QtCore.QRectF(
     0.0, 0.0, pydaw_audio_item_scene_width, pydaw_audio_item_scene_height)
 
-pydaw_audio_item_scene_gradient = QtGui.QLinearGradient(0, 0, 0, 1200)
+pydaw_audio_item_scene_gradient = QLinearGradient(0, 0, 0, 1200)
 pydaw_audio_item_scene_gradient.setColorAt(
-    0.0, QtGui.QColor.fromRgb(60, 60, 60, 120))
+    0.0, QColor.fromRgb(60, 60, 60, 120))
 pydaw_audio_item_scene_gradient.setColorAt(
-    1.0, QtGui.QColor.fromRgb(30, 30, 30, 120))
+    1.0, QColor.fromRgb(30, 30, 30, 120))
 
-pydaw_audio_item_editor_gradient = QtGui.QLinearGradient(0, 0, 0, 1200)
+pydaw_audio_item_editor_gradient = QLinearGradient(0, 0, 0, 1200)
 pydaw_audio_item_editor_gradient.setColorAt(
-    0.0, QtGui.QColor.fromRgb(190, 192, 123, 120))
+    0.0, QColor.fromRgb(190, 192, 123, 120))
 pydaw_audio_item_editor_gradient.setColorAt(
-    1.0, QtGui.QColor.fromRgb(130, 130, 100, 120))
+    1.0, QColor.fromRgb(130, 130, 100, 120))
 #end from sample_graph.py
 
 def pydaw_clear_sample_graph_cache():
@@ -1050,7 +1052,7 @@ class pydaw_sample_graph:
                 f_paths = []
 
                 for f_i in range(self.channels):
-                    f_result = QtGui.QPainterPath()
+                    f_result = QPainterPath()
                     f_width_pos = 1.0
                     f_result.moveTo(f_width_pos, f_section_div2)
                     if a_audio_item and a_audio_item.reversed:
@@ -1091,7 +1093,7 @@ class pydaw_sample_graph:
                 f_paths = []
 
                 for f_i in range(self.channels):
-                    f_result = QtGui.QPainterPath()
+                    f_result = QPainterPath()
                     f_width_pos = 1.0
                     f_result.moveTo(f_width_pos, f_section_div2)
                     if a_audio_item and a_audio_item.reversed:

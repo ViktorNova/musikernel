@@ -15,7 +15,9 @@ GNU General Public License for more details.
 import os
 from libpydaw import pydaw_util
 from libpydaw import liblo
-from PyQt4 import QtGui
+
+from PyQt4.QtGui import *
+
 from libpydaw.translate import _
 
 # These are dynamically assigned by musikernel.py so that
@@ -43,7 +45,7 @@ def set_window_title():
                 pydaw_util.global_pydaw_version_string))))
 
 def pydaw_print_generic_exception(a_ex):
-    QtGui.QMessageBox.warning(
+    QMessageBox.warning(
         MAIN_WINDOW, _("Warning"),
         _("The following error happened:\n{}").format(a_ex))
 

@@ -20,16 +20,18 @@ except ImportError:
     import pydaw_util
     from translate import _
 
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtCore
+from PyQt4.QtGui import *
+
 import json
 import os
 import shutil
 import tarfile
 import datetime
 
-class project_history_widget(QtGui.QTreeWidget):
+class project_history_widget(QTreeWidget):
     def __init__(self, a_backup_dir, a_backup_file, a_project_dir):
-        QtGui.QTreeWidget.__init__(self)
+        QTreeWidget.__init__(self)
         self.header().close()
         self.backup_file = a_backup_file
         self.backup_dir = a_backup_dir
@@ -55,7 +57,7 @@ class project_history_widget(QtGui.QTreeWidget):
                 f_node.setSelected(True)
 
     def get_node(self, a_text, a_path):
-        f_node = QtGui.QTreeWidgetItem()
+        f_node = QTreeWidgetItem()
         f_node.setText(0, a_text)
         f_node.node_path = a_path
         self.nodes.append(f_node)
@@ -70,8 +72,8 @@ class project_history_widget(QtGui.QTreeWidget):
             self.recursive_node_add(f_path, v, f_node)
 
     def node_context_menu_event(self, a_event):
-        f_menu = QtGui.QMenu()
-        f_menu.exec_(QtGui.QCursor.pos())
+        f_menu = QMenu()
+        f_menu.exec_(QCursor.pos())
 
     def set_selected_as_project(self):
         f_items = self.selectedItems()
@@ -92,7 +94,7 @@ class project_history_widget(QtGui.QTreeWidget):
                     self.project_data, f_handle, sort_keys=True,
                     indent=4, separators=(',', ': '))
             shutil.rmtree(f_tmp_dir)
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self, _("Complete"),
                 _("Reverted project to {}".format(f_item.node_path)))
             self.draw_tree()
@@ -100,12 +102,12 @@ class project_history_widget(QtGui.QTreeWidget):
 
 
 def project_recover_dialog(a_file):
-    f_window = QtGui.QMainWindow()
+    f_window = QMainWindow()
     f_window.setStyleSheet(pydaw_util.global_stylesheet)
     f_window.setWindowState(QtCore.Qt.WindowMaximized)
     f_window.setWindowTitle("Project History")
     if a_file is None:
-        f_file = QtGui.QFileDialog.getOpenFileName(
+        f_file = QFileDialog.getOpenFileName(
             caption='Open Project',
             filter=pydaw_util.global_pydaw_file_type_string,
             directory=pydaw_util.global_home)
@@ -116,26 +118,26 @@ def project_recover_dialog(a_file):
     f_project_dir = os.path.dirname(str(f_file))
     f_backup_file = os.path.join(f_project_dir, "backups.json")
     if not os.path.isfile(f_backup_file):
-        QtGui.QMessageBox.warning(
+        QMessageBox.warning(
             f_window, _("Error"), _("No backups exist for this "
             "project, recovery is not possible."))
         return
     f_backup_dir = os.path.join(f_project_dir, "backups")
-    f_central_widget = QtGui.QWidget()
-    f_layout = QtGui.QVBoxLayout(f_central_widget)
+    f_central_widget = QWidget()
+    f_layout = QVBoxLayout(f_central_widget)
     f_window.setCentralWidget(f_central_widget)
     f_widget = project_history_widget(
         f_backup_dir, f_backup_file, f_project_dir)
     f_layout.addWidget(f_widget)
-    f_hlayout = QtGui.QHBoxLayout()
+    f_hlayout = QHBoxLayout()
     f_layout.addLayout(f_hlayout)
-    f_set_project_button = QtGui.QPushButton(
+    f_set_project_button = QPushButton(
         _("Revert Project to Selected"))
     f_set_project_button.pressed.connect(
         f_widget.set_selected_as_project)
     f_hlayout.addWidget(f_set_project_button)
     f_hlayout.addItem(
-        QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+        QSpacerItem(1, 1, QSizePolicy.Expanding))
     print("showing")
     f_window.show()
     return f_window
@@ -144,7 +146,7 @@ def project_recover_dialog(a_file):
 if __name__ == "__main__":
     def _main():
         import sys
-        app = QtGui.QApplication(sys.argv)
+        app = QApplication(sys.argv)
         f_window = project_recover_dialog(
             sys.argv[1] if len(sys.argv) == 2 else None)
         exit(app.exec_())

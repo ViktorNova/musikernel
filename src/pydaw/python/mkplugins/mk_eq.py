@@ -57,7 +57,7 @@ class mkeq_plugin_ui(pydaw_abstract_plugin_ui):
         self.preset_manager = None
         self.spectrum_enabled = None
 
-        self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
+        self.layout.setSizeConstraint(QLayout.SetFixedSize)
 
         f_knob_size = 48
 

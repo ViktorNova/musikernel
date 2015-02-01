@@ -13,25 +13,26 @@ GNU General Public License for more details.
 """
 
 
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtCore
+from PyQt4.QtGui import *
 
-class wire_input_port(QtGui.QGraphicsRectItem):
+class wire_input_port(QGraphicsRectItem):
     def __init__(self):
         pass
 
-class wire_output_port(QtGui.QGraphicsRectItem):
+class wire_output_port(QGraphicsRectItem):
     def __init__(self):
         pass
 
-class wire_block(QtGui.QGraphicsRectItem):
+class wire_block(QGraphicsRectItem):
     """ Over-ride to add extra controls to the middle-area """
     def __init__(self, a_in_count, a_out_count, a_brush, a_drag=False):
-        QtGui.QGraphicsRectItem.__init__(self)
+        QGraphicsRectItem.__init__(self)
 
 class wire_canvas:
     def __init__(self):
-        self.view = QtGui.QGraphicsView()
-        self.scene = QtGui.QGraphicsScene()
+        self.view = QGraphicsView()
+        self.scene = QGraphicsScene()
         self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
         self.view.setScene(self.scene)
 
@@ -66,7 +67,7 @@ ROUTING_STRUCT_PROTOTYPE = {
 if __name__ == "__main__":
 
     import sys
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     f_widget = wire_canvas()
     f_widget.view.show()
 

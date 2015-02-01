@@ -48,24 +48,24 @@ class mkdelay_plugin_ui(pydaw_abstract_plugin_ui):
         self.set_window_title(a_track_name)
         self.is_instrument = False
 
-        self.tab_widget = QtGui.QTabWidget()
+        self.tab_widget = QTabWidget()
         self.layout.addWidget(self.tab_widget)
-        self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
+        self.layout.setSizeConstraint(QLayout.SetFixedSize)
 
-        self.misc_tab = QtGui.QWidget()
+        self.misc_tab = QWidget()
         self.tab_widget.addTab(self.misc_tab, _("Delay"))
-        self.delay_vlayout = QtGui.QVBoxLayout()
+        self.delay_vlayout = QVBoxLayout()
         self.misc_tab.setLayout(self.delay_vlayout)
-        self.delay_hlayout = QtGui.QHBoxLayout()
+        self.delay_hlayout = QHBoxLayout()
         self.delay_vlayout.addLayout(self.delay_hlayout)
 
         f_knob_size = 48
         self.preset_manager = None
 
-        delay_groupbox = QtGui.QGroupBox(_("Delay"))
+        delay_groupbox = QGroupBox(_("Delay"))
         delay_groupbox.setObjectName("plugin_groupbox")
         self.delay_hlayout.addWidget(delay_groupbox)
-        delay_gridlayout = QtGui.QGridLayout(delay_groupbox)
+        delay_gridlayout = QGridLayout(delay_groupbox)
         self.delay_hlayout.addWidget(delay_groupbox)
         self.delay_time_knob = pydaw_knob_control(
             f_knob_size, _("Time"), MKDELAY_DELAY_TIME,
