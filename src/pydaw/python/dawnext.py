@@ -6243,7 +6243,7 @@ class piano_roll_editor_widget:
     def set_midi_vzoom(self, a_val):
         global PIANO_ROLL_NOTE_HEIGHT
         PIANO_ROLL_NOTE_HEIGHT = a_val
-        global_open_items()
+        PIANO_ROLL_EDITOR.draw_item()
 
     def save_vzoom(self):
         pydaw_util.set_file_setting("PIANO_VZOOM", self.vzoom_slider.value())
