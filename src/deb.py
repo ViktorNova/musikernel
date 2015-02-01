@@ -99,7 +99,7 @@ f_debian_control = \
 "Architecture: {}\n"
 "Version: {}\n"
 "Depends: libasound2-dev, liblo-dev, libsndfile1-dev, "
-"libportmidi-dev, python3-pyqt4, python3, "
+"libportmidi-dev, python3-pyqt5, python3, "
 "python3-numpy, libsamplerate0-dev, libfftw3-dev, libcpufreq-dev, "
 "libav-tools, lame, vorbis-tools\n"
 "Provides: {}\n"

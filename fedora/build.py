@@ -91,7 +91,7 @@ kickstart_template = \
 %packages
 
 #PyDAW Dependencies
-python3-PyQt4
+python3-qt5
 alsa-lib-devel
 liblo-devel
 libsndfile-devel
