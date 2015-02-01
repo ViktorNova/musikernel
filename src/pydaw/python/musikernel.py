@@ -454,6 +454,7 @@ class MkMainWindow(QMainWindow):
         else:
             self.subprocess_timer = None
 
+        self.setWindowState(QtCore.Qt.WindowMaximized)
         self.on_restore_splitters()
         self.show()
 
@@ -1413,7 +1414,6 @@ QtCore.QTextCodec.setCodecForLocale(QtCore.QTextCodec.codecForName("UTF-8"))
 global_check_device()
 
 MAIN_WINDOW = MkMainWindow()
-MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
 
 PYDAW_SUBPROCESS = None
 

@@ -8099,7 +8099,6 @@ class transport_widget(libmk.AbstractTransport):
 
         SEQUENCER.stop_playback()
         REGION_SETTINGS.open_region()
-        time.sleep(0.1)
         self.set_time(SEQUENCER.get_beat_value())
 
     def show_save_items_dialog(self):
