@@ -20,6 +20,7 @@ import ctypes
 
 from PyQt5 import QtCore
 from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 try:
     from libpydaw import pydaw_util, portaudio, portmidi
