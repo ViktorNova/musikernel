@@ -3973,6 +3973,7 @@ class audio_items_viewer(QGraphicsView):
     def set_ruler_y_pos(self):
         f_point = self.get_scene_pos()
         self.ruler.setPos(0.0, f_point.y())
+        self.verticalScrollBar().setMinimum(0)
 
     def get_scene_pos(self):
         return QtCore.QPointF(
