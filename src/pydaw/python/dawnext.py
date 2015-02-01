@@ -464,6 +464,9 @@ REGION_CLIPBOARD_COL_OFFSET = 0
 
 REGION_CLIPBOARD = []
 
+NO_PEN = QPen(QtCore.Qt.NoPen)
+NO_PEN.setWidth(0)
+
 def global_update_track_comboboxes(a_index=None, a_value=None):
     if not a_index is None and not a_value is None:
         TRACK_NAMES[int(a_index)] = str(a_value)
@@ -514,19 +517,19 @@ class SequencerItem(QGraphicsRectItem):
 
             self.audio_path_item = QGraphicsPathItem(f_audio_path)
             self.audio_path_item.setBrush(QtCore.Qt.darkGray)
-            self.audio_path_item.setPen(QPen(QtCore.Qt.darkGray))
+            self.audio_path_item.setPen(NO_PEN)
             self.audio_path_item.setParentItem(self)
             self.audio_path_item.setZValue(1900.0)
 
             self.path_item = QGraphicsPathItem(f_notes_path)
             self.path_item.setBrush(QtCore.Qt.white)
-            self.path_item.setPen(QPen(QtCore.Qt.black))
+            self.path_item.setPen(NO_PEN)
             self.path_item.setParentItem(self)
             self.path_item.setZValue(2000.0)
 
         self.label = QGraphicsSimpleTextItem(
             str(a_name), parent=self)
-        self.label.setPen(QPen(QtCore.Qt.NoPen))
+        self.label.setPen(NO_PEN)
         self.label.setBrush(QtCore.Qt.white)
 
         self.label.setPos(1.0, 1.0)
@@ -2670,6 +2673,7 @@ class audio_viewer_item(QGraphicsRectItem):
             f_path_item = QGraphicsPathItem(f_painter_path)
             f_path_item.setBrush(
                 mk_project.pydaw_audio_item_scene_gradient)
+            f_path_item.setPen(NO_PEN)
             f_path_item.setParentItem(self)
             f_path_item.mapToParent(0.0, 0.0)
             self.path_items.append(f_path_item)
