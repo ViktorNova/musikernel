@@ -510,22 +510,14 @@ class SequencerItem(QGraphicsRectItem):
         self.track_num = a_audio_item.track_num
 
         if DRAW_SEQUENCER_GRAPHS:
-            f_audio_path, f_notes_path = PROJECT.get_item_path(
+            f_pixmap = PROJECT.get_item_path(
                 a_audio_item.item_uid, SEQUENCER_PX_PER_BEAT,
                 REGION_EDITOR_TRACK_HEIGHT,
                 CURRENT_REGION.get_tempo_at_pos(a_audio_item.start_beat))
 
-            self.audio_path_item = QGraphicsPathItem(f_audio_path)
-            self.audio_path_item.setBrush(QtCore.Qt.darkGray)
-            self.audio_path_item.setPen(NO_PEN)
-            self.audio_path_item.setParentItem(self)
-            self.audio_path_item.setZValue(1900.0)
-
-            self.path_item = QGraphicsPathItem(f_notes_path)
-            self.path_item.setBrush(QtCore.Qt.white)
-            self.path_item.setPen(NO_PEN)
-            self.path_item.setParentItem(self)
-            self.path_item.setZValue(2000.0)
+            self.pixmap_item = QGraphicsPixmapItem(f_pixmap)
+            self.pixmap_item.setParentItem(self)
+            self.pixmap_item.setZValue(1900.0)
 
         self.label = QGraphicsSimpleTextItem(
             str(a_name), parent=self)
@@ -657,8 +649,7 @@ class SequencerItem(QGraphicsRectItem):
         self.sample_start_offset_px = -self.length_px_start
 
         if DRAW_SEQUENCER_GRAPHS:
-            self.audio_path_item.setPos(self.sample_start_offset_px, 0.0)
-            self.path_item.setPos(self.sample_start_offset_px, 0.0)
+            self.pixmap_item.setPos(self.sample_start_offset_px, 0.0)
 
         self.start_handle_scene_min = f_start + self.sample_start_offset_px
         self.start_handle_scene_max = self.start_handle_scene_min + f_length
@@ -2671,8 +2662,7 @@ class audio_viewer_item(QGraphicsRectItem):
         self.path_items = []
         for f_painter_path in self.painter_paths:
             f_path_item = QGraphicsPathItem(f_painter_path)
-            f_path_item.setBrush(
-                mk_project.pydaw_audio_item_scene_gradient)
+            f_path_item.setBrush(QtCore.Qt.darkGray)
             f_path_item.setPen(NO_PEN)
             f_path_item.setParentItem(self)
             f_path_item.mapToParent(0.0, 0.0)

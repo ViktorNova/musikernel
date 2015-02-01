@@ -31,6 +31,7 @@ from libdawnext.osc import DawNextOsc
 
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from PyQt5 import QtCore
 
 from libpydaw import pydaw_history
 
@@ -1280,7 +1281,23 @@ class pydaw_item:
                 f_x_pos = f_note.start * a_px_per_beat
                 f_width = f_note.length * a_px_per_beat
                 f_notes_path.addRect(f_x_pos, f_y_pos, f_width, f_note_height)
-        return f_audio_path, f_notes_path
+
+        f_audio_width = f_audio_path.boundingRect().width()
+        f_notes_width = f_notes_path.boundingRect().width()
+
+        f_width = max(f_audio_width, f_notes_width)
+
+        f_pixmap = QPixmap(f_width, a_height)
+        f_pixmap.fill(QtCore.Qt.transparent)
+        f_painter = QPainter(f_pixmap)
+        f_painter.setBackground(QtCore.Qt.transparent)
+        f_painter.setPen(QtCore.Qt.darkGray)
+        f_painter.setBrush(QtCore.Qt.lightGray)
+        f_painter.drawPath(f_audio_path)
+        f_painter.setPen(QtCore.Qt.white)
+        f_painter.setBrush(QtCore.Qt.white)
+        f_painter.drawPath(f_notes_path)
+        return f_pixmap
 
     def get_length(self, a_tempo):
         f_result = 0.0
