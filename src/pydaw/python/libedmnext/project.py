@@ -29,7 +29,8 @@ from libpydaw.pydaw_widgets import pydaw_modulex_settings
 
 from libedmnext.osc import EdmNextOsc
 
-from PyQt4.QtGui import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 from libpydaw import pydaw_history
 

@@ -20,8 +20,9 @@ import random
 import shutil
 import traceback
 
-from PyQt4 import QtCore
-from PyQt4.QtGui import *
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 from libpydaw import *
 from mkplugins import *
@@ -7138,7 +7139,7 @@ class item_list_editor:
         self.notes_hlayout.addWidget(self.notes_groupbox)
 
         self.piano_roll_hlayout = QHBoxLayout(self.piano_roll_tab)
-        self.piano_roll_hlayout.setMargin(2)
+        self.piano_roll_hlayout.setContentsMargins(2, 2, 2, 2)
         self.piano_roll_hlayout.addWidget(PIANO_ROLL_EDITOR_WIDGET.widget)
 
         self.ccs_groupbox = QGroupBox(_("CCs"))
@@ -8234,7 +8235,7 @@ class pydaw_main_window(QScrollArea):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
 
         self.main_layout = QVBoxLayout()
-        self.main_layout.setMargin(2)
+        self.main_layout.setContentsMargins(2, 2, 2, 2)
         self.widget.setLayout(self.main_layout)
 
         self.loop_mode_action = QAction(self)
@@ -8251,7 +8252,7 @@ class pydaw_main_window(QScrollArea):
 
         self.song_region_tab = QWidget()
         self.song_region_vlayout = QVBoxLayout()
-        self.song_region_vlayout.setMargin(1)
+        self.song_region_vlayout.setContentsMargins(1, 1, 1, 1)
         self.song_region_tab.setLayout(self.song_region_vlayout)
         self.sequencer_widget = QWidget()
         self.sequencer_vlayout = QVBoxLayout(self.sequencer_widget)

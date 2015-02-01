@@ -12,8 +12,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-from PyQt4 import QtCore
-from PyQt4.QtGui import *
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 from libedmnext.project import TRACK_COUNT_ALL
 

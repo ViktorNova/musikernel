@@ -16,7 +16,8 @@ import os
 from libpydaw import pydaw_util
 from libpydaw import liblo
 
-from PyQt4.QtGui import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 from libpydaw.translate import _
 

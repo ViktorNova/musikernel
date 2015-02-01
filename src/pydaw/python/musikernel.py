@@ -13,8 +13,9 @@ GNU General Public License for more details.
 
 """
 
-from PyQt4 import QtCore
-from PyQt4.QtGui import *
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 from libpydaw import liblo, pydaw_util, pydaw_widgets, pydaw_device_dialog
 from libpydaw.pydaw_util import *
@@ -254,13 +255,13 @@ class MkMainWindow(QMainWindow):
         self.widget.setObjectName("plugin_ui")
         self.setCentralWidget(self.widget)
         self.main_layout = QVBoxLayout(self.widget)
-        self.main_layout.setMargin(0)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.transport_splitter = QSplitter(QtCore.Qt.Vertical)
         self.main_layout.addWidget(self.transport_splitter)
 
         self.transport_widget = QWidget()
         self.transport_hlayout = QHBoxLayout(self.transport_widget)
-        self.transport_hlayout.setMargin(2)
+        self.transport_hlayout.setContentsMargins(2, 2, 2, 2)
         self.transport_splitter.addWidget(self.transport_widget)
         self.transport_widget.setSizePolicy(
             QSizePolicy.Minimum, QSizePolicy.Minimum)

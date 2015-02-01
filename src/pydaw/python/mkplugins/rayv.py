@@ -110,7 +110,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.preset_manager = pydaw_preset_manager_widget(
             self.get_plugin_name())
         self.main_layout = QVBoxLayout()
-        self.main_layout.setMargin(3)
+        self.main_layout.setContentsMargins(3, 3, 3, 3)
         self.layout.addLayout(self.main_layout)
         self.layout.setSizeConstraint(QLayout.SetFixedSize)
         self.hlayout0 = QHBoxLayout()
@@ -175,7 +175,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.sync_groupbox.setObjectName("plugin_groupbox")
         self.hlayout2.addWidget(self.sync_groupbox)
         self.sync_gridlayout = QGridLayout(self.sync_groupbox)
-        self.sync_gridlayout.setMargin(3)
+        self.sync_gridlayout.setContentsMargins(3, 3, 3, 3)
         self.hard_sync = pydaw_checkbox_control(
             "On", RAYV_OSC_HARD_SYNC,
             self.plugin_rel_callback, self.plugin_val_callback,
@@ -188,7 +188,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.groupbox_noise = QGroupBox(_("Noise"))
         self.groupbox_noise.setObjectName("plugin_groupbox")
         self.noise_layout = QGridLayout(self.groupbox_noise)
-        self.noise_layout.setMargin(3)
+        self.noise_layout.setContentsMargins(3, 3, 3, 3)
         self.hlayout2.addWidget(self.groupbox_noise)
         self.noise_amp = pydaw_knob_control(
             f_knob_size, _("Vol"), RAYV_NOISE_AMP,

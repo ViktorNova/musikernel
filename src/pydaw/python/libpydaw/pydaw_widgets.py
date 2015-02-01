@@ -21,8 +21,9 @@ from . import pydaw_util
 from libmk.mk_project import pydaw_folder_plugins
 from libpydaw.translate import _
 
-from PyQt4 import QtCore
-from PyQt4.QtGui import *
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 import numpy
 
@@ -958,7 +959,7 @@ class pydaw_adsr_widget:
         self.groupbox.contextMenuEvent = self.context_menu_event
         self.groupbox.setObjectName("plugin_groupbox")
         self.layout = QGridLayout(self.groupbox)
-        self.layout.setMargin(3)
+        self.layout.setContentsMargins(3, 3, 3, 3)
 
         if a_delay_port is not None:
             self.delay_knob = pydaw_knob_control(
@@ -1036,7 +1037,7 @@ class pydaw_filter_widget:
         self.groupbox = QGroupBox(str(a_label))
         self.groupbox.setObjectName("plugin_groupbox")
         self.layout = QGridLayout(self.groupbox)
-        self.layout.setMargin(3)
+        self.layout.setContentsMargins(3, 3, 3, 3)
         self.cutoff_knob = pydaw_knob_control(
             a_size, _("Cutoff"), a_cutoff_port,
             a_rel_callback, a_val_callback,
@@ -1064,7 +1065,7 @@ class pydaw_perc_env_widget:
         self.groupbox = QGroupBox(str(a_label))
         self.groupbox.setObjectName("plugin_groupbox")
         self.layout = QGridLayout(self.groupbox)
-        self.layout.setMargin(3)
+        self.layout.setContentsMargins(3, 3, 3, 3)
 
         self.time1_knob = pydaw_knob_control(
             a_size, _("Time1"), a_time1_port,
@@ -1101,7 +1102,7 @@ class pydaw_ramp_env_widget:
         self.groupbox = QGroupBox(str(a_label))
         self.groupbox.setObjectName("plugin_groupbox")
         self.layout = QGridLayout(self.groupbox)
-        self.layout.setMargin(3)
+        self.layout.setContentsMargins(3, 3, 3, 3)
 
         if a_amt_port is not None:
             self.amt_knob = pydaw_knob_control(
@@ -1127,7 +1128,7 @@ class pydaw_lfo_widget:
         self.groupbox = QGroupBox(str(a_label))
         self.groupbox.setObjectName("plugin_groupbox")
         self.layout = QGridLayout(self.groupbox)
-        self.layout.setMargin(3)
+        self.layout.setContentsMargins(3, 3, 3, 3)
         self.freq_knob = pydaw_knob_control(
             a_size, _("Freq"), a_freq_port, a_rel_callback, a_val_callback,
             10, 1600, 200, KC_HZ_DECIMAL, a_port_dict, a_preset_mgr)
@@ -1201,7 +1202,7 @@ class pydaw_note_selector_widget:
         self.octave_spinbox.contextMenuEvent = self.context_menu_event
         self.widget = QWidget()
         self.layout = QHBoxLayout()
-        self.layout.setMargin(0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.widget.setLayout(self.layout)
         self.layout.addWidget(self.note_combobox)
         self.layout.addWidget(self.octave_spinbox)
@@ -1283,7 +1284,7 @@ class pydaw_file_select_widget:
     def __init__(self, a_load_callback):
         self.load_callback = a_load_callback
         self.layout = QHBoxLayout()
-        self.layout.setMargin(2)
+        self.layout.setContentsMargins(2, 2, 2, 2)
         self.clear_button = QPushButton(_("Clear"))
         self.clear_button.setMaximumWidth(60)
         self.copy_to_clipboard = QPushButton(_("Copy"))
@@ -1926,7 +1927,7 @@ class pydaw_preset_manager_widget:
         self.bank_combobox.setMinimumWidth(210)
         self.layout.addWidget(self.bank_combobox)
         self.layout.addWidget(QLabel(_("Presets")))
-        self.layout.setMargin(3)
+        self.layout.setContentsMargins(3, 3, 3, 3)
         self.program_combobox = QComboBox()
         self.program_combobox.setEditable(True)
         self.program_combobox.setMinimumWidth(300)
@@ -2222,7 +2223,7 @@ class pydaw_master_widget:
         self.group_box.setObjectName("plugin_groupbox")
         self.group_box.setTitle(str(a_title))
         self.layout = QGridLayout(self.group_box)
-        self.layout.setMargin(3)
+        self.layout.setContentsMargins(3, 3, 3, 3)
         self.vol_knob = pydaw_knob_control(
             a_size, _("Vol"), a_vol_port, a_rel_callback, a_val_callback, -30,
             12, -6, KC_INTEGER, a_port_dict, a_preset_mgr)
@@ -2426,8 +2427,8 @@ class eq_viewer(QGraphicsView):
         for i in range(4):
             self.scene.addLine(
                 0.0, f_y_pos, EQ_WIDTH, f_y_pos, f_hline_pen)
-            f_label = QGraphicsSimpleTextItem(
-                "{}".format(f_db), scene=self.scene)
+            f_label = QGraphicsSimpleTextItem(str(f_db))
+            self.scene.addItem(f_label)
             f_label.setPos(EQ_WIDTH - 36.0, f_y_pos + 3.0)
             f_label.setBrush(QtCore.Qt.white)
             f_db -= 6.0
@@ -2444,8 +2445,8 @@ class eq_viewer(QGraphicsView):
         for i in range(4):
             self.scene.addLine(
                 0.0, f_y_pos, EQ_WIDTH, f_y_pos, f_hline_pen)
-            f_label = QGraphicsSimpleTextItem(
-                "{}".format(f_db), scene=self.scene)
+            f_label = QGraphicsSimpleTextItem(str(f_db))
+            self.scene.addItem(f_label)
             f_label.setPos(EQ_WIDTH - 36.0, f_y_pos - 24.0)
             f_label.setBrush(QtCore.Qt.white)
             f_db += 6.0
@@ -2461,8 +2462,8 @@ class eq_viewer(QGraphicsView):
             if f_hz > 950:
                 f_hz = round(f_hz, -1)
                 f_hz = "{}khz".format(round(f_hz / 1000, 1))
-            f_label = QGraphicsSimpleTextItem(
-                "{}".format(f_hz), scene=self.scene)
+            f_label = QGraphicsSimpleTextItem(str(f_hz))
+            self.scene.addItem(f_label)
             f_label.setPos(f_label_pos + 4.0, EQ_HEIGHT - 30.0)
             self.scene.addLine(
                 f_label_pos, 0.0, f_label_pos, EQ_HEIGHT, f_vline_pen)
@@ -4107,7 +4108,7 @@ class pydaw_modulex_single:
         if a_title is not None:
             self.group_box.setTitle(str(a_title))
         self.layout = QGridLayout()
-        self.layout.setMargin(3)
+        self.layout.setContentsMargins(3, 3, 3, 3)
         #self.layout.setAlignment(QtCore.Qt.AlignCenter)
         self.group_box.setLayout(self.layout)
         self.knobs = []
@@ -4564,7 +4565,7 @@ class pydaw_abstract_plugin_ui:
         self.widget.setWidget(self.scrollarea_widget)
 
         self.layout = QVBoxLayout()
-        self.layout.setMargin(2)
+        self.layout.setContentsMargins(2, 2, 2, 2)
         self.scrollarea_widget.setLayout(self.layout)
         self.port_dict = {}
         self.effects = []

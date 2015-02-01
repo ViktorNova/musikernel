@@ -18,8 +18,8 @@ import sys
 import time
 import ctypes
 
-from PyQt4 import QtCore
-from PyQt4.QtGui import *
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
 
 try:
     from libpydaw import pydaw_util, portaudio, portmidi

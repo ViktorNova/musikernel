@@ -702,9 +702,9 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.fm_matrix.setHorizontalScrollBarPolicy(
             QtCore.Qt.ScrollBarAlwaysOff)
         self.fm_matrix.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.fm_matrix.horizontalHeader().setResizeMode(
+        self.fm_matrix.horizontalHeader().setSectionResizeMode(
             QHeaderView.Fixed)
-        self.fm_matrix.verticalHeader().setResizeMode(QHeaderView.Fixed)
+        self.fm_matrix.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
 
         self.fm_matrix_hlayout.addWidget(self.fm_matrix)
 
@@ -801,9 +801,9 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
                 QtCore.Qt.ScrollBarAlwaysOff)
             f_fm_macro_matrix.setVerticalScrollBarPolicy(
                 QtCore.Qt.ScrollBarAlwaysOff)
-            f_fm_macro_matrix.horizontalHeader().setResizeMode(
+            f_fm_macro_matrix.horizontalHeader().setSectionResizeMode(
                 QHeaderView.Fixed)
-            f_fm_macro_matrix.verticalHeader().setResizeMode(
+            f_fm_macro_matrix.verticalHeader().setSectionResizeMode(
                 QHeaderView.Fixed)
 
             self.fm_macro_matrix_hlayout.addWidget(f_fm_macro_matrix)
@@ -965,9 +965,9 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             QtCore.Qt.ScrollBarAlwaysOff)
         self.mod_matrix.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarAlwaysOff)
-        self.mod_matrix.horizontalHeader().setResizeMode(
+        self.mod_matrix.horizontalHeader().setSectionResizeMode(
             QHeaderView.Fixed)
-        self.mod_matrix.verticalHeader().setResizeMode(QHeaderView.Fixed)
+        self.mod_matrix.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         f_hlabels = ["FX{}\nCtrl{}".format(x, y)
             for x in range(4) for y in range(1, 4)]
         self.mod_matrix.setHorizontalHeaderLabels(f_hlabels)

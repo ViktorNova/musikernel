@@ -393,9 +393,9 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             QAbstractItemView.ScrollPerPixel)
         self.sample_table.setVerticalScrollMode(
             QAbstractItemView.ScrollPerPixel)
-        self.sample_table.horizontalHeader().setResizeMode(
+        self.sample_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.Fixed)
-        self.sample_table.verticalHeader().setResizeMode(
+        self.sample_table.verticalHeader().setSectionResizeMode(
             QHeaderView.Fixed)
 
         self.selected_radiobuttons = []
@@ -752,9 +752,9 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                 f_eq_list.append(f_gain)
 
         self.sample_table.setHorizontalHeaderLabels(f_sample_table_columns)
-        self.sample_table.verticalHeader().setResizeMode(
+        self.sample_table.verticalHeader().setSectionResizeMode(
             QHeaderView.Fixed)
-        self.sample_table.horizontalHeader().setResizeMode(
+        self.sample_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.Fixed)
         self.sample_table.resizeRowsToContents()
 
@@ -988,7 +988,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         f_knob_size = 46
 
         self.polyfx_tab_layout = QVBoxLayout(self.poly_fx_tab)
-        self.polyfx_tab_layout.setMargin(0)
+        self.polyfx_tab_layout.setContentsMargins(0, 0, 0, 0)
         self.polyfx_tab_widget = QWidget()
         self.polyfx_tab_layout.addWidget(
             self.polyfx_tab_widget,

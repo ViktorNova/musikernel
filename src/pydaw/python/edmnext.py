@@ -19,8 +19,9 @@ import time
 import random
 import shutil
 
-from PyQt4 import QtCore
-from PyQt4.QtGui import *
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 from libpydaw import *
 from mkplugins import *
@@ -131,9 +132,9 @@ class song_editor:
         self.table_widget.setAutoScroll(True)
         self.table_widget.setAutoScrollMargin(1)
         self.table_widget.setRowHeight(0, 50)
-        self.table_widget.horizontalHeader().setResizeMode(
+        self.table_widget.horizontalHeader().setSectionResizeMode(
             QHeaderView.Fixed)
-        self.table_widget.verticalHeader().setResizeMode(
+        self.table_widget.verticalHeader().setSectionResizeMode(
             QHeaderView.Fixed)
         self.table_widget.cellClicked.connect(self.cell_clicked)
         self.table_widget.setDragDropOverwriteMode(False)
@@ -7556,7 +7557,7 @@ class item_list_editor:
         self.notes_hlayout.addWidget(self.notes_groupbox)
 
         self.piano_roll_hlayout = QHBoxLayout(self.piano_roll_tab)
-        self.piano_roll_hlayout.setMargin(2)
+        self.piano_roll_hlayout.setContentsMargins(2, 2, 2, 2)
         self.piano_roll_hlayout.addWidget(PIANO_ROLL_EDITOR_WIDGET.widget)
 
         self.ccs_groupbox = QGroupBox(_("CCs"))
@@ -7609,7 +7610,7 @@ class item_list_editor:
         self.zoom_widget = QWidget()
         self.zoom_widget.setContentsMargins(0, 0, 0, 0)
         self.zoom_hlayout = QHBoxLayout(self.zoom_widget)
-        self.zoom_hlayout.setMargin(0)
+        self.zoom_hlayout.setContentsMargins(0, 0, 0, 0)
         self.zoom_hlayout.setSpacing(0)
 
         self.zoom_hlayout.addWidget(QLabel("V"))
@@ -8695,7 +8696,7 @@ class pydaw_main_window(QScrollArea):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
 
         self.main_layout = QVBoxLayout()
-        self.main_layout.setMargin(2)
+        self.main_layout.setContentsMargins(2, 2, 2, 2)
         self.widget.setLayout(self.main_layout)
 
         self.loop_mode_action = QAction(self)
@@ -8711,7 +8712,7 @@ class pydaw_main_window(QScrollArea):
         self.regions_tab_widget = QTabWidget()
         self.song_region_tab = QWidget()
         self.song_region_vlayout = QVBoxLayout()
-        self.song_region_vlayout.setMargin(3)
+        self.song_region_vlayout.setContentsMargins(3, 3, 3, 3)
         self.song_region_tab.setLayout(self.song_region_vlayout)
         self.song_region_splitter = QSplitter(QtCore.Qt.Vertical)
         self.song_region_splitter.addWidget(self.song_region_tab)

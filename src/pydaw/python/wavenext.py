@@ -15,8 +15,9 @@ GNU General Public License for more details.
 
 import os
 
-from PyQt4 import QtCore
-from PyQt4.QtGui import *
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 from libpydaw import *
 from mkplugins import *
@@ -515,7 +516,7 @@ class pydaw_main_window(QScrollArea):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
 
         self.main_layout = QVBoxLayout()
-        self.main_layout.setMargin(2)
+        self.main_layout.setContentsMargins(2, 2, 2, 2)
         self.widget.setLayout(self.main_layout)
 
         #The tabs
