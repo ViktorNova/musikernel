@@ -2954,7 +2954,9 @@ class audio_viewer_item(QGraphicsRectItem):
                 f_x_scale, f_y_scale = pydaw_scale_to_rect(
                     mk_project.pydaw_audio_item_scene_rect, self.rect_orig)
                 f_y_scale *= self.vol_linear
-                f_path_item.scale(f_x_scale, f_y_scale)
+                f_scale_transform = QTransform()
+                f_scale_transform.scale(f_x_scale, f_y_scale)
+                f_path_item.setTransform(f_scale_transform)
                 f_i += f_i_inc
                 f_y_inc += self.y_inc
         self.waveforms_scaled = True
