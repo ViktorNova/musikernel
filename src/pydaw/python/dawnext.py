@@ -1331,6 +1331,8 @@ class ItemSequencer(QGraphicsView):
         return None
 
     def mousePressEvent(self, a_event):
+        if libmk.IS_PLAYING:
+            return
         f_pos = self.mapToScene(a_event.pos())
 
         self.current_coord = self.get_item_coord(f_pos)
