@@ -678,12 +678,12 @@ class DawNextProject(libmk.AbstractProject):
         else:
             if a_uid not in self.pixmap_cache_unscaled:
                 f_item_obj = self.get_item_by_uid(a_uid)
-                f_path = f_item_obj.painter_path(100.0, 200.0, a_tempo)
+                f_path = f_item_obj.painter_path(100.0, 100.0, a_tempo)
                 self.pixmap_cache_unscaled[a_uid] = f_path
             if a_uid not in self.painter_path_cache:
                 self.painter_path_cache[a_uid] = {}
             f_x, f_y = pydaw_util.scale_sizes(
-                100, 200, a_px_per_beat, a_height)
+                100, 100, a_px_per_beat, a_height)
             f_transform = QTransform()
             f_transform.scale(f_x, f_y)
             self.painter_path_cache[a_uid][f_key] = (
