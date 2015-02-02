@@ -484,11 +484,11 @@ class MkProject(libmk.AbstractProject):
                 f_peak_size = 16 #int(f_reader.samplerate * 0.0005)
                 f_chunk_size = 3000 * 16
             elif f_length < 20.0:
-                f_peak_size = int(f_reader.samplerate * 0.01)
-                f_chunk_size = 100
+                f_peak_size = int(f_reader.samplerate * 0.005)
+                f_chunk_size = 200
             else:
-                f_peak_size = int(f_reader.samplerate * 0.1)
-                f_chunk_size = 50
+                f_peak_size = int(f_reader.samplerate * 0.025)
+                f_chunk_size = 100
             f_count = 0
             for f_chunk in f_reader.read_iter(size=f_peak_size * f_chunk_size):
                 for f_i2 in range(f_chunk_size):
