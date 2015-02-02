@@ -508,9 +508,10 @@ class SequencerItem(QGraphicsRectItem):
                 REGION_EDITOR_TRACK_HEIGHT,
                 CURRENT_REGION.get_tempo_at_pos(a_audio_item.start_beat))
 
-            self.pixmap_item = QGraphicsPixmapItem(f_pixmap)
+            self.pixmap_item = QGraphicsPixmapItem(self)
+            self.pixmap_item.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
+            self.pixmap_item.setPixmap(f_pixmap)
             self.pixmap_item.setTransform(f_transform)
-            self.pixmap_item.setParentItem(self)
             self.pixmap_item.setZValue(1900.0)
 
         self.label = QGraphicsSimpleTextItem(
