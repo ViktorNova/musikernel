@@ -1462,7 +1462,7 @@ else:
 
 RESPAWN = False
 
-QPixmapCache.setCacheLimit(402400)
+QPixmapCache.setCacheLimit(1024 * 1024 * 1024)
 
 libmk.set_window_title()
 libmk.APP.setStyle(QStyleFactory.create("Fusion"))

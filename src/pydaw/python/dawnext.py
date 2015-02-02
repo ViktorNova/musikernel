@@ -1217,7 +1217,8 @@ class ItemSequencer(QGraphicsView):
         self.v_zoom = 1.0
         self.ruler_y_pos = 0.0
         self.scene = QGraphicsScene(self)
-        self.scene.setItemIndexMethod(QGraphicsScene.BspTreeIndex)
+        self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
+        #self.scene.setItemIndexMethod(QGraphicsScene.BspTreeIndex)
         self.scene.dropEvent = self.sceneDropEvent
         self.scene.dragEnterEvent = self.sceneDragEnterEvent
         self.scene.dragMoveEvent = self.sceneDragMoveEvent
