@@ -186,6 +186,12 @@ bar_fracs_dict = {'1/4':0.25, '1/8':0.125, '1/12':0.083333333,
 def bar_frac_text_to_float(a_text):
     return bar_fracs_dict[str(a_text)] * 4.0
 
+def scale_to_rect(a_to_scale, a_scale_to):
+    """ Returns a tuple that scales one QRectF to another """
+    f_x = (a_scale_to.width() / a_to_scale.width())
+    f_y = (a_scale_to.height() / a_to_scale.height())
+    return (f_x, f_y)
+
 def pydaw_beats_to_index(a_beat, a_divisor=4.0):
     f_index = int(a_beat / a_divisor)
     f_start = a_beat - (float(f_index) * a_divisor)

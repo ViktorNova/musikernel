@@ -40,13 +40,6 @@ def set_tooltips_enabled(a_enabled):
         f_widget.set_tooltips(a_enabled)
 
 
-def pydaw_scale_to_rect(a_to_scale, a_scale_to):
-    """ Returns a tuple that scales one QRectF to another """
-    f_x = (a_scale_to.width() / a_to_scale.width())
-    f_y = (a_scale_to.height() / a_to_scale.height())
-    return (f_x, f_y)
-
-
 class WaveNextOsc(libmk.AbstractIPC):
     def __init__(self, a_with_audio=False,
              a_configure_path="/musikernel/wavenext"):

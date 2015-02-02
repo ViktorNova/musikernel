@@ -108,12 +108,6 @@ def pydaw_current_region_is_none():
         return True
     return False
 
-def pydaw_scale_to_rect(a_to_scale, a_scale_to):
-    """ Returns a tuple that scales one QRectF to another """
-    f_x = (a_scale_to.width() / a_to_scale.width())
-    f_y = (a_scale_to.height() / a_to_scale.height())
-    return (f_x, f_y)
-
 
 CURRENT_SONG_INDEX = None
 
@@ -2895,7 +2889,7 @@ class audio_viewer_item(QGraphicsRectItem):
                     f_path_item.setPos(
                         self.sample_start_offset_px,
                         f_y_offset + (f_y_inc * f_i))
-                f_x_scale, f_y_scale = pydaw_scale_to_rect(
+                f_x_scale, f_y_scale = pydaw_util.scale_to_rect(
                     mk_project.pydaw_audio_item_scene_rect, self.rect_orig)
                 f_y_scale *= self.vol_linear
                 f_scale_transform = QTransform()
