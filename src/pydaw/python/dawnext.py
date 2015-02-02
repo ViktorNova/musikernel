@@ -1231,7 +1231,7 @@ class ItemSequencer(QGraphicsView):
         self.scene.selectionChanged.connect(self.highlight_selected)
         self.scene.mouseMoveEvent = self.sceneMouseMoveEvent
         self.scene.mouseReleaseEvent = self.sceneMouseReleaseEvent
-        self.scene.selectionChanged.connect(self.set_selected_strings)
+        #self.scene.selectionChanged.connect(self.set_selected_strings)
         self.setAcceptDrops(True)
         self.setScene(self.scene)
         self.audio_items = []
