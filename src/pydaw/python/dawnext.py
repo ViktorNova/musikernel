@@ -503,12 +503,13 @@ class SequencerItem(QGraphicsRectItem):
         self.track_num = a_audio_item.track_num
 
         if DRAW_SEQUENCER_GRAPHS:
-            f_pixmap = PROJECT.get_item_path(
+            f_pixmap, f_transform = PROJECT.get_item_path(
                 a_audio_item.item_uid, SEQUENCER_PX_PER_BEAT,
                 REGION_EDITOR_TRACK_HEIGHT,
                 CURRENT_REGION.get_tempo_at_pos(a_audio_item.start_beat))
 
             self.pixmap_item = QGraphicsPixmapItem(f_pixmap)
+            self.pixmap_item.setTransform(f_transform)
             self.pixmap_item.setParentItem(self)
             self.pixmap_item.setZValue(1900.0)
 
@@ -527,8 +528,8 @@ class SequencerItem(QGraphicsRectItem):
         self.start_handle.hoverEnterEvent = self.generic_hoverEnterEvent
         self.start_handle.hoverLeaveEvent = self.generic_hoverLeaveEvent
         self.start_handle.setRect(
-            QtCore.QRectF(0.0, 0.0, AUDIO_ITEM_HANDLE_SIZE,
-                          AUDIO_ITEM_HANDLE_HEIGHT))
+            QtCore.QRectF(
+                0.0, 0.0, AUDIO_ITEM_HANDLE_SIZE, AUDIO_ITEM_HANDLE_HEIGHT))
         self.start_handle.mousePressEvent = self.start_handle_mouseClickEvent
         self.start_handle_line = QGraphicsLineItem(
             0.0, AUDIO_ITEM_HANDLE_HEIGHT, 0.0,

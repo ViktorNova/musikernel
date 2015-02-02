@@ -192,6 +192,12 @@ def scale_to_rect(a_to_scale, a_scale_to):
     f_y = (a_scale_to.height() / a_to_scale.height())
     return (f_x, f_y)
 
+def scale_sizes(a_width_from, a_height_from, a_width_to, a_height_to):
+    f_x = a_width_to / a_width_from
+    f_y = a_height_to / a_height_from
+    return (f_x, f_y)
+
+
 def pydaw_beats_to_index(a_beat, a_divisor=4.0):
     f_index = int(a_beat / a_divisor)
     f_start = a_beat - (float(f_index) * a_divisor)

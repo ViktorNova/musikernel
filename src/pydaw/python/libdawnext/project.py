@@ -39,7 +39,6 @@ import wavefile
 
 TRACK_COUNT_ALL = 32
 MAX_AUDIO_ITEM_COUNT = 256
-MAX_REGION_LENGTH = 512 #measures
 
 pydaw_folder_dawnext = os.path.join("projects", "dawnext")
 pydaw_folder_items = os.path.join(pydaw_folder_dawnext, "items")
@@ -66,6 +65,7 @@ class DawNextProject(libmk.AbstractProject):
         self.history_files = []
         self.history_commits = []
         self.painter_path_cache = {}
+        self.pixmap_cache_unscaled = {}
         self.history_undo_cursor = 0
         self.IPC = DawNextOsc(a_with_audio)
         self.suppress_updates = False
@@ -676,18 +676,26 @@ class DawNextProject(libmk.AbstractProject):
         f_key in self.painter_path_cache[a_uid]:
             return self.painter_path_cache[a_uid][f_key]
         else:
-            f_item_obj = self.get_item_by_uid(a_uid)
-            f_path = f_item_obj.painter_path(
-                a_px_per_beat, a_height, a_tempo)
+            if a_uid not in self.pixmap_cache_unscaled:
+                f_item_obj = self.get_item_by_uid(a_uid)
+                f_path = f_item_obj.painter_path(100.0, 200.0, a_tempo)
+                self.pixmap_cache_unscaled[a_uid] = f_path
             if a_uid not in self.painter_path_cache:
                 self.painter_path_cache[a_uid] = {}
-            self.painter_path_cache[a_uid][f_key] = f_path
-            return f_path
+            f_x, f_y = pydaw_util.scale_sizes(
+                100, 200, a_px_per_beat, a_height)
+            f_transform = QTransform()
+            f_transform.scale(f_x, f_y)
+            self.painter_path_cache[a_uid][f_key] = (
+                self.pixmap_cache_unscaled[a_uid], f_transform)
+            return self.painter_path_cache[a_uid][f_key]
 
     def save_item_by_uid(self, a_uid, a_item, a_new_item=False):
         a_uid = int(a_uid)
         if a_uid in self.painter_path_cache:
             self.painter_path_cache.pop(a_uid)
+        if a_uid in self.pixmap_cache_unscaled:
+            self.pixmap_cache_unscaled.pop(a_uid)
         if not self.suppress_updates:
             self.save_file(
                 pydaw_folder_items, str(a_uid), str(a_item), a_new_item)
@@ -2015,6 +2023,8 @@ class pydaw_midi_file_to_items:
         f_result_region = a_project.get_region_by_uid(f_region_uid)
         f_song.add_region_ref_by_uid(a_index, f_region_uid)
         a_project.save_song(f_song)
+
+        MAX_REGION_LENGTH = 512 #measures
 
         if self.bar_count > MAX_REGION_LENGTH:
             f_result_region.length_bars = MAX_REGION_LENGTH
