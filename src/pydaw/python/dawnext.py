@@ -1199,8 +1199,8 @@ class ItemSequencer(QGraphicsView):
         self.ignore_selection_change = False
         self.playback_pos = 0.0
         self.playback_pos_orig = 0.0
-        self.selected_item_strings = set([])
-        self.selected_point_strings = set([])
+        self.selected_item_strings = set()
+        self.selected_point_strings = set()
         self.clipboard = []
         self.automation_points = []
         self.region_clipboard = None
@@ -1325,6 +1325,7 @@ class ItemSequencer(QGraphicsView):
             self.menu.exec_(QCursor.pos())
         elif REGION_EDITOR_MODE == 1:
             self.atm_menu.exec_(QCursor.pos())
+        self.context_menu_enabled = False
 
     def get_item(self, a_pos):
         for f_item in self.scene.items(a_pos):
@@ -1358,6 +1359,7 @@ class ItemSequencer(QGraphicsView):
                     f_item.setSelected(True)
                     QGraphicsView.mousePressEvent(self, a_event)
                     return
+                self.clear_selected_item_strings()
                 self.scene.clearSelection()
                 f_pos_x = f_pos.x()
                 f_pos_y = f_pos.y() - REGION_EDITOR_HEADER_HEIGHT
@@ -1493,6 +1495,9 @@ class ItemSequencer(QGraphicsView):
             return
         self.selected_item_strings = {x.get_selected_string()
             for x in self.get_selected_items()}
+
+    def clear_selected_item_strings(self):
+        self.selected_item_strings = set()
 
     def set_selected_point_strings(self):
         self.selected_point_strings = {
