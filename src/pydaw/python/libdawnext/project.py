@@ -40,6 +40,8 @@ import wavefile
 TRACK_COUNT_ALL = 32
 MAX_AUDIO_ITEM_COUNT = 256
 
+PIXMAP_TILE_WIDTH = 2000
+
 pydaw_folder_dawnext = os.path.join("projects", "dawnext")
 pydaw_folder_items = os.path.join(pydaw_folder_dawnext, "items")
 pydaw_folder_tracks = os.path.join(pydaw_folder_dawnext, "tracks")
@@ -687,7 +689,7 @@ class DawNextProject(libmk.AbstractProject):
             f_transform = QTransform()
             f_transform.scale(f_x, f_y)
             self.painter_path_cache[a_uid][f_key] = (
-                self.pixmap_cache_unscaled[a_uid], f_transform)
+                self.pixmap_cache_unscaled[a_uid], f_transform, f_x, f_y)
             return self.painter_path_cache[a_uid][f_key]
 
     def save_item_by_uid(self, a_uid, a_item, a_new_item=False):
@@ -1295,19 +1297,28 @@ class pydaw_item:
 
         f_width = max(f_audio_width, f_notes_width)
 
-        print("painter_path:  f_width = {}".format(f_width))
+        f_x = 0
+        f_count = int(f_width // PIXMAP_TILE_WIDTH) + 1
+        f_result = []
 
-        f_pixmap = QPixmap(f_width, a_height)
-        f_pixmap.fill(QtCore.Qt.transparent)
-        f_painter = QPainter(f_pixmap)
-        f_painter.setBackground(QtCore.Qt.transparent)
-        f_painter.setPen(QtCore.Qt.darkGray)
-        f_painter.setBrush(QtCore.Qt.lightGray)
-        f_painter.drawPath(f_audio_path)
-        f_painter.setPen(QtCore.Qt.white)
-        f_painter.setBrush(QtCore.Qt.white)
-        f_painter.drawPath(f_notes_path)
-        return f_pixmap
+        for f_i in range(f_count):
+            f_pixmap = QPixmap(min(f_width, PIXMAP_TILE_WIDTH), a_height)
+            f_result.append(f_pixmap)
+            f_width -= PIXMAP_TILE_WIDTH
+            f_pixmap.fill(QtCore.Qt.transparent)
+            f_painter = QPainter(f_pixmap)
+            f_painter.setBackground(QtCore.Qt.transparent)
+            f_painter.setPen(QtCore.Qt.darkGray)
+            f_painter.setBrush(QtCore.Qt.lightGray)
+            f_painter.drawPath(f_audio_path)
+            f_painter.setPen(QtCore.Qt.white)
+            f_painter.setBrush(QtCore.Qt.white)
+            f_painter.drawPath(f_notes_path)
+            #f_x -= PIXMAP_TILE_WIDTH
+            for f_path in (f_notes_path, f_audio_path):
+                f_path.translate(-PIXMAP_TILE_WIDTH, 0)
+                #f_path.translate(f_x, 0)
+        return f_result
 
     def get_length(self, a_tempo):
         f_result = 0.0

@@ -502,17 +502,22 @@ class SequencerItem(QGraphicsRectItem):
         self.orig_string = str(a_audio_item)
         self.track_num = a_audio_item.track_num
 
-        if DRAW_SEQUENCER_GRAPHS:
-            f_pixmap, f_transform = PROJECT.get_item_path(
-                a_audio_item.item_uid, SEQUENCER_PX_PER_BEAT,
-                REGION_EDITOR_TRACK_HEIGHT,
-                CURRENT_REGION.get_tempo_at_pos(a_audio_item.start_beat))
+        self.pixmap_items = []
 
-            self.pixmap_item = QGraphicsPixmapItem(self)
-            self.pixmap_item.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
-            self.pixmap_item.setPixmap(f_pixmap)
-            self.pixmap_item.setTransform(f_transform)
-            self.pixmap_item.setZValue(1900.0)
+        if DRAW_SEQUENCER_GRAPHS:
+            f_pixmaps, f_transform, self.x_scale, self.y_scale = \
+                PROJECT.get_item_path(
+                    a_audio_item.item_uid, SEQUENCER_PX_PER_BEAT,
+                    REGION_EDITOR_TRACK_HEIGHT,
+                    CURRENT_REGION.get_tempo_at_pos(a_audio_item.start_beat))
+            for f_pixmap in f_pixmaps:
+                f_pixmap_item = QGraphicsPixmapItem(self)
+                f_pixmap_item.setCacheMode(
+                    QGraphicsItem.DeviceCoordinateCache)
+                f_pixmap_item.setPixmap(f_pixmap)
+                f_pixmap_item.setTransform(f_transform)
+                f_pixmap_item.setZValue(1900.0)
+                self.pixmap_items.append(f_pixmap_item)
 
         self.label = QGraphicsSimpleTextItem(str(a_name), parent=self)
         self.label.setPen(NO_PEN)
@@ -643,7 +648,12 @@ class SequencerItem(QGraphicsRectItem):
         self.sample_start_offset_px = -self.length_px_start
 
         if DRAW_SEQUENCER_GRAPHS:
-            self.pixmap_item.setPos(self.sample_start_offset_px, 0.0)
+            f_offset = 0
+            f_offset_inc = project.PIXMAP_TILE_WIDTH * self.x_scale
+            for f_pixmap_item in self.pixmap_items:
+                f_pixmap_item.setPos(
+                    f_offset + self.sample_start_offset_px, 0.0)
+                f_offset += f_offset_inc
 
         self.start_handle_scene_min = f_start + self.sample_start_offset_px
         self.start_handle_scene_max = self.start_handle_scene_min + f_length
