@@ -1899,39 +1899,6 @@ void v_dn_open_project(int a_first_load)
         ++f_i;
     }
 
-    //char f_song_file[1024];
-    //sprintf(f_song_file,
-    //    "%s/projects/dawnext/song.txt", musikernel->project_folder);
-
-    struct stat f_proj_stat;
-    stat((musikernel->project_folder), &f_proj_stat);
-    struct stat f_item_stat;
-    stat((dawnext->item_folder), &f_item_stat);
-    struct stat f_reg_stat;
-    stat((dawnext->region_folder), &f_reg_stat);
-    //struct stat f_song_file_stat;
-    //stat(f_song_file, &f_song_file_stat);
-
-    if(S_ISDIR(f_proj_stat.st_mode) &&
-        S_ISDIR(f_item_stat.st_mode)
-        //&& S_ISDIR(f_reg_stat.st_mode) && S_ISREG(f_song_file_stat.st_mode)
-        )
-    {
-        t_dir_list * f_item_dir_list = g_get_dir_list(dawnext->item_folder);
-
-        for(f_i = 0; f_i < f_item_dir_list->dir_count; ++f_i)
-        {
-            g_dn_item_get(dawnext, atoi(f_item_dir_list->dir_list[f_i]));
-        }
-
-    }
-    else
-    {
-        printf("Song file and project directory structure not found, not "
-                "loading project.  This is to be expected if launching PyDAW "
-                "for the first time\n");
-    }
-
     v_dn_open_tracks();
 
     g_dn_song_get(dawnext, 0);
@@ -2177,6 +2144,11 @@ t_dn_region * g_dn_region_get(t_dawnext* self)
             v_iterate_2d_char_array(f_current_string);
             f_item_ref->item_uid = atoi(f_current_string->current_str);
 
+            if(!dawnext->item_pool[f_item_ref->item_uid])
+            {
+                g_dn_item_get(dawnext, f_item_ref->item_uid);
+            }
+
             v_iterate_2d_char_array(f_current_string);
             f_item_ref->start_offset = atof(f_current_string->current_str);
 
@@ -2298,12 +2270,10 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
                 break;
             }
 
-            t_pydaw_audio_items * f_audio_items =
-                f_result->audio_items;
+            t_pydaw_audio_items * f_audio_items = f_result->audio_items;
 
             int f_global_index = 0;
-            int f_index_count =
-                f_audio_items->index_counts[f_global_index];
+            int f_index_count = f_audio_items->index_counts[f_global_index];
 
             f_audio_items->indexes[
                 f_global_index][f_index_count].item_num = f_new->index;
