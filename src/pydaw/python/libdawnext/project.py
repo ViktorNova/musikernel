@@ -1295,6 +1295,8 @@ class pydaw_item:
 
         f_width = max(f_audio_width, f_notes_width)
 
+        print("painter_path:  f_width = {}".format(f_width))
+
         f_pixmap = QPixmap(f_width, a_height)
         f_pixmap.fill(QtCore.Qt.transparent)
         f_painter = QPainter(f_pixmap)

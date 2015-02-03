@@ -1466,7 +1466,7 @@ class pydaw_abstract_file_browser_widget():
             _("The folder did not exist:\n\n{}").format(f_dir))
 
     def on_bookmark_save_as(self):
-        f_file = QFileDialog.getSaveFileName(
+        f_file, f_filter = QFileDialog.getSaveFileName(
             parent=self.bookmarks_tab, caption=_('Save bookmark file...'),
             directory=pydaw_util.global_home,
             filter=BM_FILE_DIALOG_STRING)
@@ -1477,7 +1477,7 @@ class pydaw_abstract_file_browser_widget():
             shutil.copy(pydaw_util.BOOKMARKS_FILE, f_file)
 
     def on_bookmark_open(self):
-        f_file = QFileDialog.getOpenFileName(
+        f_file, f_filter = QFileDialog.getOpenFileName(
             parent=self.bookmarks_tab, caption=_('Open bookmark file...'),
             directory=pydaw_util.global_home,
             filter=BM_FILE_DIALOG_STRING)
@@ -2096,7 +2096,7 @@ class pydaw_preset_manager_widget:
         f_dialog.exec_()
 
     def on_open_bank(self):
-        f_file = QFileDialog.getOpenFileName(
+        f_file, f_filter = QFileDialog.getOpenFileName(
             parent=self.group_box, caption=_('Open preset bank...'),
             directory=pydaw_util.global_home,
             filter=PRESET_FILE_DIALOG_STRING)

@@ -657,7 +657,7 @@ class MkMainWindow(QMainWindow):
             return
         try:
             while True:
-                f_file = QFileDialog.getSaveFileName(
+                f_file, f_filter = QFileDialog.getSaveFileName(
                     parent=self, caption=_('New Project'),
                     directory=os.path.join(
                         global_home,
@@ -683,7 +683,7 @@ class MkMainWindow(QMainWindow):
         if libmk.IS_PLAYING:
             return
         try:
-            f_file = QFileDialog.getOpenFileName(
+            f_file, f_filter = QFileDialog.getOpenFileName(
                 parent=self, caption=_('Open Project'),
                 directory=global_default_project_folder,
                 filter=global_pydaw_file_type_string)
@@ -754,7 +754,7 @@ class MkMainWindow(QMainWindow):
             return
         try:
             while True:
-                f_new_file = QFileDialog.getSaveFileName(
+                f_new_file, f_filter = QFileDialog.getSaveFileName(
                     self, _("Save copy of project as..."),
                     directory=os.path.join(
                         global_default_project_folder,
@@ -848,7 +848,7 @@ class MkMainWindow(QMainWindow):
 
     def on_open_theme(self):
         try:
-            f_file = QFileDialog.getOpenFileName(
+            f_file, f_filter = QFileDialog.getOpenFileName(
                 self, _("Open a theme file"),
                 os.path.join(
                     pydaw_util.INSTALL_PREFIX, "lib",
@@ -913,18 +913,20 @@ class MkMainWindow(QMainWindow):
 
 
     def mp3_converter_dialog(self):
-        if pydaw_which("avconv") is None and \
-        pydaw_which("ffmpeg") is not None:
-            f_avconv = "ffmpeg"
+        if pydaw_which("avconv"):
+            f_enc = "avconv"
+        elif pydaw_which("ffmpeg"):
+            f_enc = "ffmpeg"
         else:
-            f_avconv = "avconv"
+            f_enc = "avconv"
+
         f_lame = "lame"
-        for f_app in (f_avconv, f_lame):
+        for f_app in (f_enc, f_lame):
             if pydaw_which(f_app) is None:
                 QMessageBox.warning(self, _("Error"),
                     libpydaw.strings.avconv_error.format(f_app))
                 return
-        self.audio_converter_dialog("lame", "avconv", "mp3")
+        self.audio_converter_dialog("lame", f_enc, "mp3")
 
     def ogg_converter_dialog(self):
         if pydaw_which("oggenc") is None or \
@@ -1020,7 +1022,7 @@ class MkMainWindow(QMainWindow):
                     f_name.setText(f_dir)
                     self.last_ac_dir = f_dir
                 else:
-                    f_file_name = QFileDialog.getOpenFileName(
+                    f_file_name, f_filter = QFileDialog.getOpenFileName(
                         f_window, _("Select a file name to save to..."),
                         self.last_ac_dir,
                         filter=_("Audio Files {}").format(
@@ -1052,7 +1054,7 @@ class MkMainWindow(QMainWindow):
                     f_output_name.setText(f_dir)
                     self.last_ac_dir = f_dir
                 else:
-                    f_file_name = QFileDialog.getSaveFileName(
+                    f_file_name, f_filter = QFileDialog.getSaveFileName(
                         f_window, _("Select a file name to save to..."),
                         self.last_ac_dir)
                     if not f_file_name is None and str(f_file_name) != "":

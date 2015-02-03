@@ -108,7 +108,7 @@ def project_recover_dialog(a_file):
     f_window.setWindowState(QtCore.Qt.WindowMaximized)
     f_window.setWindowTitle("Project History")
     if a_file is None:
-        f_file = QFileDialog.getOpenFileName(
+        f_file, f_filter = QFileDialog.getOpenFileName(
             caption='Open Project',
             filter=pydaw_util.global_pydaw_file_type_string,
             directory=pydaw_util.global_home)

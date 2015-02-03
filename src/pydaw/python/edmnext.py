@@ -300,7 +300,7 @@ class song_editor:
                 f_dir_name = global_default_project_folder
             else:
                 f_dir_name = self.last_midi_dir
-            f_file_name = QFileDialog.getOpenFileName(
+            f_file_name, f_filter = QFileDialog.getOpenFileName(
                 parent=self.table_widget, caption=_('Open MIDI File'),
                 directory=f_dir_name, filter='MIDI File (*.mid)')
             if not f_file_name is None and not str(f_file_name) == "":
@@ -3576,7 +3576,7 @@ class audio_viewer_item(QGraphicsRectItem):
 
     def save_a_copy(self):
         global LAST_AUDIO_ITEM_DIR
-        f_file = QFileDialog.getSaveFileName(
+        f_file, f_filter = QFileDialog.getSaveFileName(
             parent=AUDIO_SEQ,
             caption=_('Save audio item as .wav'),
             directory=LAST_AUDIO_ITEM_DIR)
@@ -8818,9 +8818,10 @@ class pydaw_main_window(QScrollArea):
             try:
                 if not os.path.isdir(self.last_offline_dir):
                     self.last_offline_dir = global_home
-                f_file_name = str(QFileDialog.getSaveFileName(
+                f_file_name, f_filter = QFileDialog.getSaveFileName(
                     f_window, _("Select a file name to save to..."),
-                    self.last_offline_dir))
+                    self.last_offline_dir)
+                f_file_name = str(f_file_name)
                 if not f_file_name is None and f_file_name != "":
                     if not f_file_name.endswith(".wav"):
                         f_file_name += ".wav"

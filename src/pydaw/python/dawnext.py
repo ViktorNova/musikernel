@@ -3449,7 +3449,7 @@ class audio_viewer_item(QGraphicsRectItem):
 
     def save_a_copy(self):
         global LAST_AUDIO_ITEM_DIR
-        f_file = QFileDialog.getSaveFileName(
+        f_file, f_filter = QFileDialog.getSaveFileName(
             parent=AUDIO_SEQ,
             caption=_('Save audio item as .wav'),
             directory=LAST_AUDIO_ITEM_DIR)
@@ -8258,7 +8258,7 @@ class pydaw_main_window(QScrollArea):
             try:
                 if not os.path.isdir(self.last_offline_dir):
                     self.last_offline_dir = global_home
-                f_file_name = str(QFileDialog.getSaveFileName(
+                f_file_name, f_filter = str(QFileDialog.getSaveFileName(
                     f_window, _("Select a file name to save to..."),
                     self.last_offline_dir))
                 if not f_file_name is None and f_file_name != "":
