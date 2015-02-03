@@ -39,6 +39,8 @@ def prepare_to_quit():
     MAIN_WINDOW = TRANSPORT = IPC = OSC = PROJECT = None
 
 def set_window_title():
+    if not MAIN_WINDOW:
+        return
     MAIN_WINDOW.setWindowTitle('MusiKernel - {}'.format(
         os.path.join(
             PROJECT.project_folder, '{}.{}'.format(

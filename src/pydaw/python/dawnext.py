@@ -514,8 +514,7 @@ class SequencerItem(QGraphicsRectItem):
             self.pixmap_item.setTransform(f_transform)
             self.pixmap_item.setZValue(1900.0)
 
-        self.label = QGraphicsSimpleTextItem(
-            str(a_name), parent=self)
+        self.label = QGraphicsSimpleTextItem(str(a_name), parent=self)
         self.label.setPen(NO_PEN)
         self.label.setBrush(QtCore.Qt.white)
 
