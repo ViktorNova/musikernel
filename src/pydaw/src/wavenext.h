@@ -152,10 +152,10 @@ void v_pydaw_we_export(t_wavenext * self, const char * a_file_out)
     long f_size = 0;
     long f_block_size = (musikernel->sample_count);
 
-    float * f_output;
+    float * f_output = NULL;
     lmalloc((void**)&f_output, sizeof(float) * (f_block_size * 2));
 
-    float ** f_buffer;
+    float ** f_buffer = NULL;
     lmalloc((void**)&f_buffer, sizeof(float*) * 2);
 
     int f_i = 0;
@@ -314,9 +314,12 @@ inline void v_pydaw_run_wave_editor(int sample_count,
         output[1][f_i] = 0.0f;
     }
 
-    for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
+    if(a_input)
     {
-        v_audio_input_run(f_i, output, NULL, a_input, sample_count, NULL);
+        for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
+        {
+            v_audio_input_run(f_i, output, NULL, a_input, sample_count, NULL);
+        }
     }
 
     if(musikernel->playback_mode == PYDAW_PLAYBACK_MODE_PLAY)

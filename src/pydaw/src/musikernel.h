@@ -538,6 +538,7 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     musikernel->wav_pool = g_wav_pool_get(a_sr);
     musikernel->midi_devices = a_midi_devices;
     musikernel->current_host = NULL;
+    musikernel->sample_count = 512;
     musikernel->midi_learn = 0;
     musikernel->is_offline_rendering = 0;
     pthread_spin_init(&musikernel->main_lock, 0);
