@@ -1205,6 +1205,16 @@ class ItemSequencer(QGraphicsView):
         self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
         self.setOptimizationFlag(QGraphicsView.DontSavePainterState)
 
+        # The below code is broken on Qt5.3.<=2, so not using it for
+        # now, but this will obviously be quite desirable some day
+#        self.opengl_widget = QOpenGLWidget()
+#        self.surface_format = QSurfaceFormat()
+#        self.surface_format.setRenderableType(QSurfaceFormat.OpenGL)
+#        #self.surface_format.setSamples(4)
+#        #self.surface_format.setSwapInterval(10)
+#        self.opengl_widget.setFormat(self.surface_format)
+#        self.setViewport(self.opengl_widget)
+
         self.ignore_selection_change = False
         self.playback_pos = 0.0
         self.playback_pos_orig = 0.0
