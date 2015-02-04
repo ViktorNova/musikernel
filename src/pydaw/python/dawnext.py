@@ -927,7 +927,7 @@ class SequencerItem(QGraphicsRectItem):
                 f_scene_pos) - f_item_old.start_beat
             f_item.start_beat = f_item.start_beat + f_musical_pos
             f_item.length_beats = f_item_old.length_beats - f_musical_pos
-            f_item.start_offset = f_musical_pos
+            f_item.start_offset = f_musical_pos + f_item_old.start_offset
             f_item_old.length_beats = f_musical_pos
             PROJECT.save_region(CURRENT_REGION)
             PROJECT.commit(_("Split sequencer item"))
