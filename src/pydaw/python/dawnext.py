@@ -1376,9 +1376,9 @@ class ItemSequencer(QGraphicsView):
                     if not f_item.isSelected():
                         self.scene.clearSelection()
                     f_item.setSelected(True)
+                    self.selected_item_strings = {f_item.get_selected_string()}
                     QGraphicsView.mousePressEvent(self, a_event)
                     return
-                self.clear_selected_item_strings()
                 self.scene.clearSelection()
                 f_pos_x = f_pos.x()
                 f_pos_y = f_pos.y() - REGION_EDITOR_HEADER_HEIGHT
@@ -1401,6 +1401,8 @@ class ItemSequencer(QGraphicsView):
                 if f_item:
                     self.selected_item_strings = {
                         f_item.get_selected_string()}
+                else:
+                    self.clear_selected_item_strings()
 
         elif REGION_EDITOR_MODE == 1:
             self.setDragMode(QGraphicsView.NoDrag)
