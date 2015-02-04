@@ -1725,7 +1725,10 @@ class ItemSequencer(QGraphicsView):
         f_pos = (self.playback_pos * SEQUENCER_PX_PER_BEAT)
         self.playback_cursor.setPos(f_pos, 0.0)
         if REGION_SETTINGS.follow_checkbox.isChecked():
-            REGION_SETTINGS.scrollbar.setValue(int(f_pos))
+            f_port_rect = self.viewport().rect()
+            f_rect = self.mapToScene(f_port_rect).boundingRect()
+            if not (f_pos > f_rect.left() and f_pos < f_rect.right()):
+                REGION_SETTINGS.scrollbar.setValue(int(f_pos))
 
     def start_playback(self):
         self.playback_pos_orig = self.playback_pos
