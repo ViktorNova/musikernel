@@ -8279,9 +8279,10 @@ class pydaw_main_window(QScrollArea):
             try:
                 if not os.path.isdir(self.last_offline_dir):
                     self.last_offline_dir = global_home
-                f_file_name, f_filter = str(QFileDialog.getSaveFileName(
+                f_file_name, f_filter = QFileDialog.getSaveFileName(
                     f_window, _("Select a file name to save to..."),
-                    self.last_offline_dir))
+                    self.last_offline_dir)
+                f_file_name = str(f_file_name)
                 if not f_file_name is None and f_file_name != "":
                     if not f_file_name.endswith(".wav"):
                         f_file_name += ".wav"
