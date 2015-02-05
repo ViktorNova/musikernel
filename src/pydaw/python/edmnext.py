@@ -3087,6 +3087,8 @@ class audio_viewer_item(QGraphicsRectItem):
         CURRENT_AUDIO_ITEM_INDEX = self.track_num
         f_menu = QMenu(MAIN_WINDOW)
 
+        AUDIO_SEQ.context_menu_enabled = False
+
         f_file_menu = f_menu.addMenu(_("File"))
         f_save_a_copy_action = f_file_menu.addAction(_("Save a Copy..."))
         f_save_a_copy_action.triggered.connect(self.save_a_copy)
@@ -4101,6 +4103,7 @@ class audio_items_viewer(QGraphicsView):
         self.playback_cursor = None
         #Somewhat slow on my AMD 5450 using the FOSS driver
         #self.setRenderHint(QPainter.Antialiasing)
+        self.context_menu_enabled = True
 
     def reset_line_lists(self):
         self.text_list = []
@@ -4218,6 +4221,9 @@ class audio_items_viewer(QGraphicsView):
 
     def sceneContextMenuEvent(self, a_event):
         if self.check_running():
+            return
+        if not self.context_menu_enabled:
+            self.context_menu_enabled = True
             return
         QGraphicsScene.contextMenuEvent(self.scene, a_event)
         self.context_menu_pos = a_event.scenePos()
