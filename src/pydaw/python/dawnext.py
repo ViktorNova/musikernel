@@ -170,10 +170,15 @@ class region_settings:
         self.scrollbar = SEQUENCER.horizontalScrollBar()
         self.scrollbar.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.scrollbar.sliderPressed.connect(self.scrollbar_pressed)
         self.hlayout0.addWidget(self.scrollbar)
 
         self.widgets_to_disable = (
             self.hzoom_slider, self.vzoom_slider, self.menu_button)
+
+    def scrollbar_pressed(self, a_val=None):
+        if libmk.IS_PLAYING and self.follow_checkbox.isChecked():
+            self.follow_checkbox.setChecked(False)
 
     def set_vzoom(self, a_val=None):
         global REGION_EDITOR_TRACK_HEIGHT
