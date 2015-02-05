@@ -8080,7 +8080,7 @@ class transport_widget(libmk.AbstractTransport):
         f_window.setMinimumWidth(330)
         f_layout = QGridLayout()
         f_window.setLayout(f_layout)
-        f_layout.addWidget(QLabel(_("Save recorded MIDI items")), 0, 2)
+        f_layout.addWidget(QLabel(_("Save recorded items")), 0, 2)
         f_layout.addWidget(QLabel(_("Item Name:")), 3, 1)
         f_file = QLineEdit()
         f_file.setMaxLength(24)
