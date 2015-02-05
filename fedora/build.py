@@ -97,6 +97,7 @@ liblo-devel
 libsndfile-devel
 python3-numpy
 fftw-devel
+portaudio-devel
 portmidi-devel
 libsamplerate-devel
 python3-devel
@@ -107,7 +108,7 @@ vorbis-tools
 %post
 
 # I know, I should configure SELinux to only look the other
-# way for PyDAW instead of disabling it, grumble, grumble...
+# way for MusiKernel instead of disabling it, grumble, grumble...
 sed -i s/SELINUX=enforcing/SELINUX=disabled/g /etc/selinux/config
 
 %end
