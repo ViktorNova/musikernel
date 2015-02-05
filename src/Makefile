@@ -37,10 +37,6 @@ deb:
 deps:
 	make -C pydaw/midicomp && cp pydaw/midicomp/midicomp pydaw/python/libpydaw
 	cd pydaw/pyliblo-0.9.2 && python3 setup.py build && cp build/lib*/liblo* ../python/libpydaw
-	cd pydaw/portaudio && ./configure --with-jack=no --with-oss=no
-	make -C pydaw/portaudio
-	cp pydaw/portaudio/lib/.libs/libportaudio.*.2.0.0 pydaw/python/libpydaw/libportaudio.so || true
-	cp pydaw/portaudio/lib/.libs/cygportaudio-2.dll pydaw/python/libpydaw/libportaudio.so || true
 	cd sbsms && ( ./configure || ./configure --enable-sse=no ) && make
 	cd sbsms/cli && make
 	cd rubberband && ./configure --prefix=$(RUBBERBAND_PREFIX) && make
@@ -48,7 +44,6 @@ deps:
 deps_clean:
 	make -C pydaw/midicomp clean
 	cd pydaw/pyliblo-0.9.2 && python3 setup.py clean
-	make -C pydaw/portaudio clean
 	make -C sbsms clean
 	make -C sbsms/cli clean
 	make -C rubberband clean

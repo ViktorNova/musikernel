@@ -122,8 +122,7 @@ class pydaw_device_dialog:
         self.buffer_sizes = ["32", "64", "128", "256", "512", "1024", "2048"]
 
     def open_devices(self):
-        f_portaudio_so_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "libportaudio.so")
+        f_portaudio_so_path = "libportaudio.so"
         ctypes.cdll.LoadLibrary(f_portaudio_so_path)
         self.pyaudio = ctypes.CDLL(f_portaudio_so_path)
         self.pyaudio.Pa_GetDeviceInfo.restype = ctypes.POINTER(

@@ -88,7 +88,7 @@ Source0:        {2}
 
 Requires:      python3-qt5 alsa-lib-devel liblo-devel \
 libsndfile-devel python3-numpy fftw-devel portmidi-devel \
-libsamplerate-devel python3-devel vorbis-tools
+portaudio-devel libsamplerate-devel python3-devel vorbis-tools
 
 %define __provides_exclude_from ^/usr/lib/{0}/.*$
 
@@ -133,7 +133,6 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/presets/WAYV.mkp
 /usr/lib/{0}/pydaw/python/libpydaw/__init__.py
 /usr/lib/{0}/pydaw/python/libpydaw/liblo.cpython-{4}m.so
-/usr/lib/{0}/pydaw/python/libpydaw/libportaudio.so
 /usr/lib/{0}/pydaw/python/libpydaw/midicomp
 /usr/lib/{0}/pydaw/python/libpydaw/portaudio.py
 /usr/lib/{0}/pydaw/python/libpydaw/portmidi.py
