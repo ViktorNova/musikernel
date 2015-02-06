@@ -114,6 +114,16 @@ disable this if it causes performance problems on your configuration.
 """
 )
 
+DEVICE_TOOLTIP = _("""Select your audio interface from this list.
+
+If using JACK, the interface will be called the name of the JACK
+virtual device, like "system" or similar.
+
+Unless you are using Firewire (for which JACK is the only choice on Linux),
+it is recommended that you stop the JACK server and select your
+device directly from this list for best performance, stability and latency.
+""")
+
 class pydaw_device_dialog:
     def __init__(self, a_is_running=False):
         self.is_running = a_is_running
@@ -244,6 +254,7 @@ class pydaw_device_dialog:
 
         f_window_layout.addWidget(QLabel(_("Audio Device:")), 0, 0)
         f_device_name_combobox = QComboBox()
+        f_device_name_combobox.setToolTip(DEVICE_TOOLTIP)
         f_device_name_combobox.setMinimumWidth(390)
         f_window_layout.addWidget(f_device_name_combobox, 0, 1)
         f_window_layout.addWidget(QLabel(_("Sample Rate:")), 1, 0)
