@@ -1337,53 +1337,76 @@ class pydaw_item:
                 f_end = f_result
         return f_result
 
+    def confine_audio_items(self, a_ref, a_tempo):
+        f_to_delete = []
+        f_start = a_ref.start_offset
+        f_end = a_ref.length_beats + f_start
 
-    def extend(
-            self, a_item2, a_offset, a_start_offset,
-            a_end_offset, a_tempo):
-        """ Glue 2 items together, adding a_offset to the
-            event positions of a_item2
-        """
         f_spb = 60.0 / a_tempo
-        for f_note in (x for x in a_item2.notes
-        if x.start >= a_start_offset and x.start < a_end_offset):
-            f_note.start += a_offset
-            self.add_note(f_note, False)
-        self.notes.sort()
-        for f_cc in (x for x in a_item2.ccs
-        if x.start >= a_start_offset and x.start < a_end_offset):
-            f_cc.start += a_offset
-            self.add_cc(f_cc)
-        self.ccs.sort()
-        for f_pb in (x for x in a_item2.pitchbends
-        if x.start >= a_start_offset and x.start < a_end_offset):
-            f_pb.start += a_offset
-            self.add_pb(f_pb)
-        self.pitchbends.sort()
-        for k, v in a_item2.items.items():
-            v.start_beat += a_offset
-            if v.start_beat > a_end_offset:
+        for k, v in self.items.items():
+            f_item_start = v.start_beat
+            if f_item_start > f_end:
+                print("Delete after {} {}".format(f_item_start, f_end))
+                f_to_delete.append(k)
                 continue
             f_graph = libmk.PROJECT.get_sample_graph_by_uid(v.uid)
             f_ss, f_se = (x * 0.001 for x in (v.sample_start, v.sample_end))
             f_diff = f_se - f_ss
             f_end_beat = ((f_graph.length_in_seconds / f_spb) *
-                f_diff) + v.start_beat
-            if f_end_beat < a_start_offset:
+                f_diff) + f_item_start
+            if f_end_beat < f_start:
+                print("Delete before {} {}".format(f_end_beat, f_start))
+                f_to_delete.append(k)
                 continue
-            f_index = self.get_next_index()
-            if v.start_beat < a_start_offset:
-                f_beat_diff = a_start_offset - v.start_beat
+            if f_item_start < f_start:
+                f_beat_diff = f_start - f_item_start
                 f_seconds = f_spb * f_beat_diff
                 f_offset = (f_seconds / f_graph.length_in_seconds) * 1000.0
                 v.sample_start += f_offset
-                print(locals())
-            if f_end_beat > a_end_offset:
-                f_beat_diff = f_end_beat - a_end_offset
+                print("LT")
+            if f_end_beat > f_end:
+                f_beat_diff = f_end_beat - f_end
                 f_seconds = f_spb * f_beat_diff
                 f_offset = (f_seconds / f_graph.length_in_seconds) * 1000.0
                 v.sample_end -= f_offset
-                print(locals())
+                print("GT")
+            for f_tuple in locals().items():
+                print(f_tuple)
+        for k in f_to_delete:
+            self.items.pop(k)
+
+    def extend(self, a_new_ref, a_ref, a_item2, a_tempo):
+        """ Glue 2 items together, adding f_offset to the
+            event positions of a_item2
+        """
+#        f_offset = (a_ref.start_beat - a_new_ref.start_beat -
+#            a_ref.start_offset)
+        f_offset = (a_ref.start_beat - a_new_ref.start_beat)
+        print("f_offset {}".format(f_offset))
+        f_end_offset = a_ref.start_offset + a_ref.length_beats
+        for f_note in (x for x in a_item2.notes
+        if x.start >= a_start_offset and x.start < f_end_offset):
+            f_note.start += f_offset
+            self.add_note(f_note, False)
+        self.notes.sort()
+        for f_cc in (x for x in a_item2.ccs
+        if x.start >= a_start_offset and x.start < f_end_offset):
+            f_cc.start += f_offset
+            self.add_cc(f_cc)
+        self.ccs.sort()
+        for f_pb in (x for x in a_item2.pitchbends
+        if x.start >= a_start_offset and x.start < f_end_offset):
+            f_pb.start += f_offset
+            self.add_pb(f_pb)
+        self.pitchbends.sort()
+        print("confine2")
+        a_item2.confine_audio_items(a_ref, a_tempo)
+        for k, v in a_item2.items.items():
+            f_index = self.get_next_index()
+            if f_index == -1:
+                print("Exceeded the max audio item count, dropping items")
+                break
+            v.start_beat += f_offset
             self.add_item(f_index, v)
             if k in a_item2.fx_list:
                 self.set_row(f_index, a_item2.fx_list[k])

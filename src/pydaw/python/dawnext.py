@@ -2225,19 +2225,17 @@ class ItemSequencer(QGraphicsView):
                     f_old_name, f_items_dict)
                 f_new_uid = PROJECT.copy_item(f_old_name, f_new_name)
                 f_new_item = PROJECT.get_item_by_uid(f_new_uid)
+                f_tempo = CURRENT_REGION.get_tempo_at_pos(f_new_ref.start_beat)
+                print("confine1")
+                f_new_item.confine_audio_items(f_new_ref, f_tempo)
                 f_last_ref = f_track_items[-1]
                 f_new_ref.item_uid = f_new_uid
                 f_new_ref.length_beats = (f_last_ref.start_beat -
                     f_new_ref.start_beat) + f_last_ref.length_beats
                 for f_ref in f_track_items[1:]:
                     f_tempo = CURRENT_REGION.get_tempo_at_pos(f_ref.start_beat)
-                    f_offset = (f_ref.start_beat - f_new_ref.start_beat -
-                        f_ref.start_offset)
                     f_item = PROJECT.get_item_by_uid(f_ref.item_uid)
-                    f_end = f_ref.start_offset + f_ref.length_beats
-                    f_new_item.extend(
-                        f_item, f_offset, f_ref.start_offset, f_end,
-                        f_tempo)
+                    f_new_item.extend(f_new_ref, f_ref, f_item, f_tempo)
                     CURRENT_REGION.remove_item_ref(f_ref)
                 PROJECT.save_item(f_new_name, f_new_item)
         if f_did_something:
