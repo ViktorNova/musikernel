@@ -90,7 +90,7 @@ kickstart_template = \
 
 %packages
 
-#PyDAW Dependencies
+#MusiKernel Dependencies
 python3-qt5
 alsa-lib-devel
 liblo-devel
@@ -102,6 +102,12 @@ portmidi-devel
 libsamplerate-devel
 python3-devel
 vorbis-tools
+
+#Not actually dependencies, but giving people with Firewire devices
+#a fighting chance of being able to use the live DVD/USB after an excessive
+#amount of configuration
+ffado
+qjackctl
 
 %end
 
