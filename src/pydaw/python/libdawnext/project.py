@@ -1331,28 +1331,32 @@ class pydaw_item:
             if f_ev.start > f_result:
                 f_result = f_ev.start
         for f_item in self.items.values():
-            f_graph = libmk.PROJECT.get_sample_graph_by_uid(
-                f_item.uid)
+            f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_item.uid)
             f_end = (f_graph.length_in_seconds / f_spb) + f_item.start_beat
             if f_end > f_result:
                 f_end = f_result
         return f_result
 
 
-    def extend(self, a_item2, a_offset, a_start_offset):
+    def extend(
+            self, a_item2, a_offset, a_start_offset,
+            a_end_offset, a_tempo):
         """ Glue 2 items together, adding a_offset to the
             event positions of a_item2
         """
-        for f_note in (x for x in a_item2.notes if x.start >= a_start_offset):
+        f_spb = 60.0 / a_tempo
+        for f_note in (x for x in a_item2.notes
+        if x.start >= a_start_offset and x.start < a_end_offset):
             f_note.start += a_offset
             self.add_note(f_note, False)
         self.notes.sort()
-        for f_cc in (x for x in a_item2.ccs if x.start >= a_start_offset):
+        for f_cc in (x for x in a_item2.ccs
+        if x.start >= a_start_offset and x.start < a_end_offset):
             f_cc.start += a_offset
             self.add_cc(f_cc)
         self.ccs.sort()
         for f_pb in (x for x in a_item2.pitchbends
-        if x.start >= a_start_offset):
+        if x.start >= a_start_offset and x.start < a_end_offset):
             f_pb.start += a_offset
             self.add_pb(f_pb)
         self.pitchbends.sort()
@@ -1361,6 +1365,16 @@ class pydaw_item:
                 continue
             f_index = self.get_next_index()
             v.start_beat += a_offset
+            f_graph = libmk.PROJECT.get_sample_graph_by_uid(v.uid)
+            f_ss, f_se = (x * 0.001 for x in (v.sample_start, v.sample_end))
+            f_diff = f_se - f_ss
+            f_end_beat = ((f_graph.length_in_seconds / f_spb) *
+                f_diff) + v.start_beat
+            if f_end_beat > a_end_offset:
+                f_beat_diff = f_end_beat - a_end_offset
+                f_seconds = f_spb * f_beat_diff
+                f_offset = (f_seconds / f_graph.length_in_seconds) * 1000.0
+                v.sample_end -= f_offset
             self.add_item(f_index, v)
             if k in a_item2.fx_list:
                 self.set_row(f_index, a_item2.fx_list[k])
