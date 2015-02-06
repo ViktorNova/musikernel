@@ -1361,20 +1361,29 @@ class pydaw_item:
             self.add_pb(f_pb)
         self.pitchbends.sort()
         for k, v in a_item2.items.items():
-            if v.start_beat < a_start_offset:
-                continue
-            f_index = self.get_next_index()
             v.start_beat += a_offset
+            if v.start_beat > a_end_offset:
+                continue
             f_graph = libmk.PROJECT.get_sample_graph_by_uid(v.uid)
             f_ss, f_se = (x * 0.001 for x in (v.sample_start, v.sample_end))
             f_diff = f_se - f_ss
             f_end_beat = ((f_graph.length_in_seconds / f_spb) *
                 f_diff) + v.start_beat
+            if f_end_beat < a_start_offset:
+                continue
+            f_index = self.get_next_index()
+            if v.start_beat < a_start_offset:
+                f_beat_diff = a_start_offset - v.start_beat
+                f_seconds = f_spb * f_beat_diff
+                f_offset = (f_seconds / f_graph.length_in_seconds) * 1000.0
+                v.sample_start += f_offset
+                print(locals())
             if f_end_beat > a_end_offset:
                 f_beat_diff = f_end_beat - a_end_offset
                 f_seconds = f_spb * f_beat_diff
                 f_offset = (f_seconds / f_graph.length_in_seconds) * 1000.0
                 v.sample_end -= f_offset
+                print(locals())
             self.add_item(f_index, v)
             if k in a_item2.fx_list:
                 self.set_row(f_index, a_item2.fx_list[k])
