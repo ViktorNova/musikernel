@@ -1379,24 +1379,39 @@ class pydaw_item:
         """ Glue 2 items together, adding f_offset to the
             event positions of a_item2
         """
-#        f_offset = (a_ref.start_beat - a_new_ref.start_beat -
-#            a_ref.start_offset)
+        f_start_offset = a_ref.start_offset
         f_offset = (a_ref.start_beat - a_new_ref.start_beat)
-        print("f_offset {}".format(f_offset))
         f_end_offset = a_ref.start_offset + a_ref.length_beats
-        for f_note in (x for x in a_item2.notes
-        if x.start >= a_start_offset and x.start < f_end_offset):
+
+        print(locals())
+
+        f_notes = [x.clone() for x in a_item2.notes
+            if x.start >= f_start_offset and x.start < f_end_offset]
+        print(f_notes)
+
+        for f_note in f_notes:
             f_note.start += f_offset
+            print(f_note.__dict__)
             self.add_note(f_note, False)
         self.notes.sort()
-        for f_cc in (x for x in a_item2.ccs
-        if x.start >= a_start_offset and x.start < f_end_offset):
+
+        f_ccs = [x.clone() for x in a_item2.ccs
+            if x.start >= f_start_offset and x.start < f_end_offset]
+        print(f_ccs)
+
+        for f_cc in f_ccs:
             f_cc.start += f_offset
+            print(f_cc.__dict__)
             self.add_cc(f_cc)
         self.ccs.sort()
-        for f_pb in (x for x in a_item2.pitchbends
-        if x.start >= a_start_offset and x.start < f_end_offset):
+
+        f_pbs = [x.clone() for x in a_item2.pitchbends
+            if x.start >= f_start_offset and x.start < f_end_offset]
+        print(f_pbs)
+
+        for f_pb in f_pbs:
             f_pb.start += f_offset
+            print(f_pb.__dict__)
             self.add_pb(f_pb)
         self.pitchbends.sort()
         print("confine2")

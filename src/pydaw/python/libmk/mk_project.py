@@ -590,6 +590,9 @@ class pydaw_note(pydaw_abstract_midi_event):
             ("n", round(self.start, 6), round(self.length, 6),
              self.note_num, self.velocity))
 
+    def clone(self):
+        return pydaw_note.from_str(str(self))
+
 
 class pydaw_cc(pydaw_abstract_midi_event):
     def __init__(self, a_start, a_cc_num, a_cc_val):
