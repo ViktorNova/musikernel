@@ -1363,6 +1363,7 @@ class pydaw_item:
                 f_seconds = f_spb * f_beat_diff
                 f_offset = (f_seconds / f_graph.length_in_seconds) * 1000.0
                 v.sample_start += f_offset
+                v.start_beat = f_start
                 print("LT")
             if f_end_beat > f_end:
                 f_beat_diff = f_end_beat - f_end
@@ -1380,8 +1381,8 @@ class pydaw_item:
             event positions of a_item2
         """
         f_start_offset = a_ref.start_offset
-        f_offset = (a_ref.start_beat - a_new_ref.start_beat)
-        f_midi_offset = f_offset - a_ref.start_offset
+        f_offset = (a_ref.start_beat - a_new_ref.start_beat -
+            a_ref.start_offset)
         f_end_offset = a_ref.start_offset + a_ref.length_beats
 
         print(locals())
@@ -1391,7 +1392,7 @@ class pydaw_item:
         print(f_notes)
 
         for f_note in f_notes:
-            f_note.start += f_midi_offset
+            f_note.start += f_offset
             print(f_note.__dict__)
             self.add_note(f_note, False)
         self.notes.sort()
@@ -1401,7 +1402,7 @@ class pydaw_item:
         print(f_ccs)
 
         for f_cc in f_ccs:
-            f_cc.start += f_midi_offset
+            f_cc.start += f_offset
             print(f_cc.__dict__)
             self.add_cc(f_cc)
         self.ccs.sort()
@@ -1411,7 +1412,7 @@ class pydaw_item:
         print(f_pbs)
 
         for f_pb in f_pbs:
-            f_pb.start += f_midi_offset
+            f_pb.start += f_offset
             print(f_pb.__dict__)
             self.add_pb(f_pb)
         self.pitchbends.sort()
