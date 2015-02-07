@@ -2219,24 +2219,27 @@ class ItemSequencer(QGraphicsView):
             if len(f_track_items) > 1:
                 f_did_something = True
                 f_track_items.sort()
-                f_new_ref = f_track_items[0]
+                f_new_ref = f_track_items[0].clone()
                 f_old_name = f_items_dict.get_name_by_uid(f_new_ref.item_uid)
                 f_new_name = PROJECT.get_next_default_item_name(
                     f_old_name, f_items_dict)
-                f_new_uid = PROJECT.copy_item(f_old_name, f_new_name)
+                f_new_uid = PROJECT.create_empty_item(f_new_name)
                 f_new_item = PROJECT.get_item_by_uid(f_new_uid)
                 f_tempo = CURRENT_REGION.get_tempo_at_pos(f_new_ref.start_beat)
-                print("confine1")
-                f_new_item.confine_audio_items(f_new_ref, f_tempo)
                 f_last_ref = f_track_items[-1]
                 f_new_ref.item_uid = f_new_uid
                 f_new_ref.length_beats = (f_last_ref.start_beat -
                     f_new_ref.start_beat) + f_last_ref.length_beats
-                for f_ref in f_track_items[1:]:
+                CURRENT_REGION.add_item_ref_by_uid(f_new_ref)
+                f_first = True
+                for f_ref in f_track_items:
                     f_tempo = CURRENT_REGION.get_tempo_at_pos(f_ref.start_beat)
                     f_item = PROJECT.get_item_by_uid(f_ref.item_uid)
                     f_new_item.extend(f_new_ref, f_ref, f_item, f_tempo)
-                    CURRENT_REGION.remove_item_ref(f_ref)
+                    if not f_first:
+                        CURRENT_REGION.remove_item_ref(f_ref)
+                    else:
+                        f_first = False
                 PROJECT.save_item(f_new_name, f_new_item)
         if f_did_something:
             PROJECT.save_region(CURRENT_REGION)
