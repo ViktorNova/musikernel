@@ -1026,13 +1026,14 @@ class pydaw_sample_graph:
             self, a_for_scene=False, a_width=None, a_height=None,
             a_audio_item=None):
         if a_audio_item:
+            f_ss = a_audio_item.sample_start * 0.001
+            f_se = a_audio_item.sample_end * 0.001
+            #f_width_frac = f_se - f_ss
             f_vol = pydaw_util.pydaw_db_to_lin(a_audio_item.vol)
-            f_slice_low = int(a_audio_item.sample_start * 0.001 *
-                len(self.high_peaks[0]))
-            f_slice_high = int(a_audio_item.sample_end * 0.001 *
-                len(self.high_peaks[0]))
-            a_width *= (a_audio_item.sample_end * 0.001) - (
-                a_audio_item.sample_start * 0.001)
+            f_len = len(self.high_peaks[0])
+            f_slice_low = int(f_ss * f_len)
+            f_slice_high = int(f_se * f_len)
+            #a_width *= f_width_frac
         else:
             f_slice_low = None
             f_slice_high = None
