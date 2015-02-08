@@ -42,8 +42,8 @@ MAX_AUDIO_ITEM_COUNT = 256
 
 PIXMAP_TILE_WIDTH = 2000
 
-PIXMAP_BEAT_WIDTH = 128
-PIXMAP_TILE_HEIGHT = 64
+PIXMAP_BEAT_WIDTH = 48
+PIXMAP_TILE_HEIGHT = 32
 
 pydaw_folder_dawnext = os.path.join("projects", "dawnext")
 pydaw_folder_items = os.path.join(pydaw_folder_dawnext, "items")
