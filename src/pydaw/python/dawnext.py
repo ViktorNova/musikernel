@@ -1672,7 +1672,9 @@ class ItemSequencer(QGraphicsView):
         if AUDIO_ITEMS_TO_DROP:
             f_x = a_event.scenePos().x()
             f_y = a_event.scenePos().y()
+            libmk.APP.setOverrideCursor(QtCore.Qt.WaitCursor)
             self.add_items(f_x, f_y, AUDIO_ITEMS_TO_DROP)
+            libmk.APP.restoreOverrideCursor()
 
     def add_items(self, f_x, f_y, a_item_list):
         if self.check_running():
