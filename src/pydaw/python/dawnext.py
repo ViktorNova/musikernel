@@ -1399,8 +1399,10 @@ class ItemSequencer(QGraphicsView):
                 REGION_SETTINGS.open_region()
                 return
             elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
-                self.deleted_items = []
-                region_editor_set_delete_mode(True)
+                f_item = self.get_item(f_pos)
+                if not f_item:
+                    self.deleted_items = []
+                    region_editor_set_delete_mode(True)
             else:
                 f_item = self.get_item(f_pos)
                 if f_item:
