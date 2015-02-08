@@ -71,6 +71,7 @@ class AbstractIPC:
 
     def send_configure(self, key, value):
         if self.with_osc:
+            print((key, value))
             msg = pythonosc.osc_message_builder.OscMessageBuilder(
                 address=self.configure_path)
             msg.add_arg(key)

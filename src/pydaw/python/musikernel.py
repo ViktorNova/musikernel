@@ -437,23 +437,23 @@ class MkMainWindow(QMainWindow):
         self.spacebar_action.setShortcut(
             QKeySequence(QtCore.Qt.Key_Space))
 
-        try:
-            self.dispatcher = pythonosc.dispatcher.Dispatcher()
-            self.dispatcher.map(
-                "musikernel/edmnext", edmnext.MAIN_WINDOW.configure_callback)
-            self.dispatcher.map(
-                "musikernel/wavenext", wavenext.MAIN_WINDOW.configure_callback)
-            self.dispatcher.map(
-                "musikernel/dawnext", dawnext.MAIN_WINDOW.configure_callback)
+#        try:
+        self.dispatcher = pythonosc.dispatcher.Dispatcher()
+        self.dispatcher.map(
+            "musikernel/edmnext", edmnext.MAIN_WINDOW.configure_callback)
+        self.dispatcher.map(
+            "musikernel/wavenext", wavenext.MAIN_WINDOW.configure_callback)
+        self.dispatcher.map(
+            "musikernel/dawnext", dawnext.MAIN_WINDOW.configure_callback)
 
-            self.osc_server = pythonosc.osc_server.BlockingOSCUDPServer(
-                ("localhost", 30321), self.dispatcher)
-            self.osc_server.server_activate()
-            self.server_thread = OscThread(self.osc_server)
-            self.server_thread.start()
-        except Exception as err:
-            print("Error creating OSC server: {}".format(err))
-            self.osc_server = None
+        self.osc_server = pythonosc.osc_server.BlockingOSCUDPServer(
+            ("127.0.0.1", 30321), self.dispatcher)
+        self.osc_server.server_activate()
+        self.server_thread = OscThread(self.osc_server)
+        self.server_thread.start()
+#        except Exception as err:
+#            print("Error creating OSC server: {}".format(err))
+#            self.osc_server = None
 
         if pydaw_util.global_pydaw_with_audio:
             self.subprocess_timer = QtCore.QTimer(self)
