@@ -12,7 +12,10 @@ GNU General Public License for more details.
 
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 from libpydaw import *
 from libpydaw.pydaw_util import *
 import libmk
@@ -478,14 +481,17 @@ class MkProject(libmk.AbstractProject):
             f_result.append("meta|length|{}\n".format(f_length))
             #f_peak_count = int(f_length * 32.0)
             if f_length < 3.0:
-                f_peak_size = int(f_reader.samplerate * 0.001)
+                f_peak_size = 16 #int(f_reader.samplerate * 0.0005)
+                f_chunk_size = 3000 * 16
             elif f_length < 20.0:
-                f_peak_size = int(f_reader.samplerate * 0.01)
+                f_peak_size = int(f_reader.samplerate * 0.005)
+                f_chunk_size = 200
             else:
-                f_peak_size = int(f_reader.samplerate * 0.1)
+                f_peak_size = int(f_reader.samplerate * 0.025)
+                f_chunk_size = 100
             f_count = 0
-            for f_chunk in f_reader.read_iter(size=f_peak_size * 50):
-                for f_i2 in range(50):
+            for f_chunk in f_reader.read_iter(size=f_peak_size * f_chunk_size):
+                for f_i2 in range(f_chunk_size):
                     f_pos = f_i2 * f_peak_size
                     f_break = False
                     for f_i in range(f_chunk.shape[0]):
@@ -583,6 +589,9 @@ class pydaw_note(pydaw_abstract_midi_event):
         return "|".join(str(x) for x in
             ("n", round(self.start, 6), round(self.length, 6),
              self.note_num, self.velocity))
+
+    def clone(self):
+        return pydaw_note.from_str(str(self))
 
 
 class pydaw_cc(pydaw_abstract_midi_event):
@@ -869,17 +878,17 @@ pydaw_audio_item_scene_width = 6000.0
 pydaw_audio_item_scene_rect = QtCore.QRectF(
     0.0, 0.0, pydaw_audio_item_scene_width, pydaw_audio_item_scene_height)
 
-pydaw_audio_item_scene_gradient = QtGui.QLinearGradient(0, 0, 0, 1200)
+pydaw_audio_item_scene_gradient = QLinearGradient(0, 0, 0, 1200)
 pydaw_audio_item_scene_gradient.setColorAt(
-    0.0, QtGui.QColor.fromRgb(60, 60, 60, 120))
+    0.0, QColor.fromRgb(60, 60, 60, 120))
 pydaw_audio_item_scene_gradient.setColorAt(
-    1.0, QtGui.QColor.fromRgb(30, 30, 30, 120))
+    1.0, QColor.fromRgb(30, 30, 30, 120))
 
-pydaw_audio_item_editor_gradient = QtGui.QLinearGradient(0, 0, 0, 1200)
+pydaw_audio_item_editor_gradient = QLinearGradient(0, 0, 0, 1200)
 pydaw_audio_item_editor_gradient.setColorAt(
-    0.0, QtGui.QColor.fromRgb(190, 192, 123, 120))
+    0.0, QColor.fromRgb(190, 192, 123, 120))
 pydaw_audio_item_editor_gradient.setColorAt(
-    1.0, QtGui.QColor.fromRgb(130, 130, 100, 120))
+    1.0, QColor.fromRgb(130, 130, 100, 120))
 #end from sample_graph.py
 
 def pydaw_clear_sample_graph_cache():
@@ -1020,13 +1029,14 @@ class pydaw_sample_graph:
             self, a_for_scene=False, a_width=None, a_height=None,
             a_audio_item=None):
         if a_audio_item:
+            f_ss = a_audio_item.sample_start * 0.001
+            f_se = a_audio_item.sample_end * 0.001
+            #f_width_frac = f_se - f_ss
             f_vol = pydaw_util.pydaw_db_to_lin(a_audio_item.vol)
-            f_slice_low = int(a_audio_item.sample_start * 0.001 *
-                len(self.high_peaks[0]))
-            f_slice_high = int(a_audio_item.sample_end * 0.001 *
-                len(self.high_peaks[0]))
-            a_width *= (a_audio_item.sample_end * 0.001) - (
-                a_audio_item.sample_start * 0.001)
+            f_len = len(self.high_peaks[0])
+            f_slice_low = int(f_ss * f_len)
+            f_slice_high = int(f_se * f_len)
+            #a_width *= f_width_frac
         else:
             f_slice_low = None
             f_slice_high = None
@@ -1047,7 +1057,7 @@ class pydaw_sample_graph:
                 f_paths = []
 
                 for f_i in range(self.channels):
-                    f_result = QtGui.QPainterPath()
+                    f_result = QPainterPath()
                     f_width_pos = 1.0
                     f_result.moveTo(f_width_pos, f_section_div2)
                     if a_audio_item and a_audio_item.reversed:
@@ -1088,7 +1098,7 @@ class pydaw_sample_graph:
                 f_paths = []
 
                 for f_i in range(self.channels):
-                    f_result = QtGui.QPainterPath()
+                    f_result = QPainterPath()
                     f_width_pos = 1.0
                     f_result.moveTo(f_width_pos, f_section_div2)
                     if a_audio_item and a_audio_item.reversed:

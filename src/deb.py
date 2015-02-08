@@ -67,11 +67,6 @@ f_makefile_exit_code = os.system(f_build_cmd)
 if f_makefile_exit_code != 0:
     print("Makefile exited abnormally with exit code {}, "
           "see output for error messages.".format(f_makefile_exit_code))
-    print("If the build failed while compiling Portaudio, you "
-        "should try this workaround:")
-    print("cd pydaw/portaudio")
-    print("./configure --with-jack=no --with-oss=no && make clean && make")
-    print("...and then retry running deb.py")
     sys.exit(f_makefile_exit_code)
 
 f_version = pydaw_read_file_text(f_version_file).strip()
@@ -99,7 +94,7 @@ f_debian_control = \
 "Architecture: {}\n"
 "Version: {}\n"
 "Depends: libasound2-dev, liblo-dev, libsndfile1-dev, "
-"libportmidi-dev, python3-pyqt4, python3, "
+"libportmidi-dev, portaudio19-dev, python3-pyqt5, python3, "
 "python3-numpy, libsamplerate0-dev, libfftw3-dev, libcpufreq-dev, "
 "libav-tools, lame, vorbis-tools\n"
 "Provides: {}\n"

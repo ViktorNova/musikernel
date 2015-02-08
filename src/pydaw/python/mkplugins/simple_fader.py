@@ -34,8 +34,8 @@ class sfader_plugin_ui(pydaw_abstract_plugin_ui):
         self._plugin_name = "SFADER"
         self.set_window_title(a_track_name)
         self.is_instrument = False
-        #self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
-        self.volume_gridlayout = QtGui.QGridLayout()
+        #self.layout.setSizeConstraint(QLayout.SetFixedSize)
+        self.volume_gridlayout = QGridLayout()
         self.layout.addLayout(self.volume_gridlayout)
         self.volume_slider = pydaw_slider_control(
             QtCore.Qt.Vertical, "Vol", SFADER_VOL_SLIDER,
@@ -44,7 +44,7 @@ class sfader_plugin_ui(pydaw_abstract_plugin_ui):
         self.volume_slider.add_to_grid_layout(self.volume_gridlayout, 0)
         self.volume_slider.control.setMinimumHeight(300)
         self.volume_slider.control.setSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+            QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.widget.setFixedWidth(100)
         self.volume_slider.value_label.setMinimumWidth(91)
         self.widget.setWidgetResizable(True)

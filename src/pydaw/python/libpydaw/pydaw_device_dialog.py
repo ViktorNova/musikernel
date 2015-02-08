@@ -13,8 +13,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 """
 
-import os, sys, time, ctypes
-from PyQt4 import QtGui, QtCore
+import os
+import sys
+import time
+import ctypes
+
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 try:
     from libpydaw import pydaw_util, portaudio, portmidi
@@ -108,6 +114,16 @@ disable this if it causes performance problems on your configuration.
 """
 )
 
+DEVICE_TOOLTIP = _("""Select your audio interface from this list.
+
+If using JACK, the interface will be called the name of the JACK
+virtual device, like "system" or similar.
+
+Unless you are using Firewire (for which JACK is the only choice on Linux),
+it is recommended that you stop the JACK server and select your
+device directly from this list for best performance, stability and latency.
+""")
+
 class pydaw_device_dialog:
     def __init__(self, a_is_running=False):
         self.is_running = a_is_running
@@ -116,8 +132,7 @@ class pydaw_device_dialog:
         self.buffer_sizes = ["32", "64", "128", "256", "512", "1024", "2048"]
 
     def open_devices(self):
-        f_portaudio_so_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "libportaudio.so")
+        f_portaudio_so_path = "libportaudio.so"
         ctypes.cdll.LoadLibrary(f_portaudio_so_path)
         self.pyaudio = ctypes.CDLL(f_portaudio_so_path)
         self.pyaudio.Pa_GetDeviceInfo.restype = ctypes.POINTER(
@@ -207,9 +222,9 @@ class pydaw_device_dialog:
         self.dialog_result = False
         self.open_devices()
         if self.is_running:
-            f_window = QtGui.QDialog()
+            f_window = QDialog()
         else:
-            f_window = QtGui.QWidget()
+            f_window = QWidget()
             f_window.setObjectName("plugin_ui")
 
         def f_close_event(a_self=None, a_event=None):
@@ -221,52 +236,53 @@ class pydaw_device_dialog:
         f_window.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         f_window.setStyleSheet(pydaw_util.global_stylesheet)
         f_window.setWindowTitle(_("Hardware Settings..."))
-        f_main_layout = QtGui.QVBoxLayout(f_window)
-        f_tab_widget = QtGui.QTabWidget()
+        f_main_layout = QVBoxLayout(f_window)
+        f_tab_widget = QTabWidget()
         f_main_layout.addWidget(f_tab_widget)
 
-        f_audio_out_tab = QtGui.QWidget()
+        f_audio_out_tab = QWidget()
         f_tab_widget.addTab(f_audio_out_tab, _("Audio Out"))
-        f_window_layout = QtGui.QGridLayout(f_audio_out_tab)
+        f_window_layout = QGridLayout(f_audio_out_tab)
 
-        f_audio_in_tab = QtGui.QWidget()
+        f_audio_in_tab = QWidget()
         f_tab_widget.addTab(f_audio_in_tab, _("Audio In"))
-        f_audio_in_layout = QtGui.QGridLayout(f_audio_in_tab)
+        f_audio_in_layout = QGridLayout(f_audio_in_tab)
 
-        f_midi_in_tab = QtGui.QTabWidget()
+        f_midi_in_tab = QTabWidget()
         f_tab_widget.addTab(f_midi_in_tab, _("MIDI In"))
-        f_midi_in_layout = QtGui.QVBoxLayout(f_midi_in_tab)
+        f_midi_in_layout = QVBoxLayout(f_midi_in_tab)
 
-        f_window_layout.addWidget(QtGui.QLabel(_("Audio Device:")), 0, 0)
-        f_device_name_combobox = QtGui.QComboBox()
+        f_window_layout.addWidget(QLabel(_("Audio Device:")), 0, 0)
+        f_device_name_combobox = QComboBox()
+        f_device_name_combobox.setToolTip(DEVICE_TOOLTIP)
         f_device_name_combobox.setMinimumWidth(390)
         f_window_layout.addWidget(f_device_name_combobox, 0, 1)
-        f_window_layout.addWidget(QtGui.QLabel(_("Sample Rate:")), 1, 0)
-        f_samplerate_combobox = QtGui.QComboBox()
+        f_window_layout.addWidget(QLabel(_("Sample Rate:")), 1, 0)
+        f_samplerate_combobox = QComboBox()
         f_samplerate_combobox.addItems(self.sample_rates)
         f_window_layout.addWidget(f_samplerate_combobox, 1, 1)
-        f_buffer_size_combobox = QtGui.QComboBox()
+        f_buffer_size_combobox = QComboBox()
         f_buffer_size_combobox.addItems(self.buffer_sizes)
         f_buffer_size_combobox.setCurrentIndex(4)
-        f_window_layout.addWidget(QtGui.QLabel(_("Buffer Size:")), 2, 0)
+        f_window_layout.addWidget(QLabel(_("Buffer Size:")), 2, 0)
         f_window_layout.addWidget(f_buffer_size_combobox, 2, 1)
-        f_latency_label = QtGui.QLabel("")
+        f_latency_label = QLabel("")
         f_window_layout.addWidget(f_latency_label, 2, 2)
-        f_window_layout.addWidget(QtGui.QLabel(_("Worker Threads:")), 3, 0)
-        f_worker_threads_combobox = QtGui.QComboBox()
+        f_window_layout.addWidget(QLabel(_("Worker Threads:")), 3, 0)
+        f_worker_threads_combobox = QComboBox()
         f_worker_threads_combobox.addItems(
             [_("Auto")] + [str(x) for x in range(1, 9)])
         f_worker_threads_combobox.setToolTip(THREADS_TOOLTIP)
         f_window_layout.addWidget(f_worker_threads_combobox, 3, 1)
-        f_window_layout.addWidget(QtGui.QLabel(_("Audio Engine")), 4, 0)
-        f_audio_engine_combobox = QtGui.QComboBox()
+        f_window_layout.addWidget(QLabel(_("Audio Engine")), 4, 0)
+        f_audio_engine_combobox = QComboBox()
         f_audio_engine_combobox.addItems(
             [_("Normal"), _("Elevated"), _("Elevated(sandbox)"),
              _("Debug"), _("GDB"), _("Valgrind"),
              _("GUI Only"), _("No Audio")])
         f_audio_engine_combobox.setToolTip(f_device_tooltip)
         f_window_layout.addWidget(f_audio_engine_combobox, 4, 1)
-        f_thread_affinity_checkbox = QtGui.QCheckBox(
+        f_thread_affinity_checkbox = QCheckBox(
             _("Lock worker threads to own core?"))
         f_thread_affinity_checkbox.setToolTip(
             _("This may give better performance with fewer "
@@ -277,7 +293,7 @@ class pydaw_device_dialog:
             "'Elevated(Sandbox)', otherwise this setting has no effect."))
         f_window_layout.addWidget(f_thread_affinity_checkbox, 5, 1)
 
-        f_governor_checkbox = QtGui.QCheckBox(
+        f_governor_checkbox = QCheckBox(
             _("Force CPU governor to performance mode "
                 "when MusiKernel is running?"))
         f_governor_checkbox.setToolTip(
@@ -304,17 +320,17 @@ class pydaw_device_dialog:
             "certain security configurations.  Disable this if the "
             "engine crashes on startup."))
         f_window_layout.addWidget(f_governor_checkbox, 6, 1)
-        f_hugepages_checkbox = QtGui.QCheckBox(
+        f_hugepages_checkbox = QCheckBox(
             _("Use HugePages? (You must configure HugePages on your "
             "system first)"))
         f_hugepages_checkbox.setToolTip(_(HUGEPAGES_TOOLTIP))
         f_window_layout.addWidget(f_hugepages_checkbox, 7, 1)
 
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_main_layout.addLayout(f_ok_cancel_layout)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_cancel_layout.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_ok_cancel_layout.addWidget(f_cancel_button)
 
         #f_count = self.pyaudio.Pa_GetHostApiCount()
@@ -342,15 +358,15 @@ class pydaw_device_dialog:
 
         print("\n")
 
-        f_audio_in_layout.addWidget(QtGui.QLabel(_("Input Count")), 0, 0)
-        f_audio_in_spinbox = QtGui.QSpinBox()
+        f_audio_in_layout.addWidget(QLabel(_("Input Count")), 0, 0)
+        f_audio_in_spinbox = QSpinBox()
         f_audio_in_spinbox.setRange(0, 0)
         f_audio_in_layout.addWidget(f_audio_in_spinbox, 0, 1)
 
         f_audio_in_layout.addItem(
-            QtGui.QSpacerItem(
-                1, 1, QtGui.QSizePolicy.Expanding,
-                QtGui.QSizePolicy.Expanding), 200, 0)
+            QSpacerItem(
+                1, 1, QSizePolicy.Expanding,
+                QSizePolicy.Expanding), 200, 0)
 
         self.midi_in_checkboxes = {}
 
@@ -362,7 +378,7 @@ class pydaw_device_dialog:
                 loop, f_midi_device_name, f_midi_device.contents.input,
                 f_midi_device.contents.output, f_midi_device.contents.opened))
             if f_midi_device.contents.input == 1:
-                f_checkbox = QtGui.QCheckBox(f_midi_device_name)
+                f_checkbox = QCheckBox(f_midi_device_name)
                 if f_midi_device_name in pydaw_util.MIDI_IN_DEVICES:
                     f_checkbox.setChecked(True)
                 self.midi_in_checkboxes[f_midi_device_name] = f_checkbox
@@ -372,7 +388,7 @@ class pydaw_device_dialog:
             f_midi_in_layout.addWidget(self.midi_in_checkboxes[f_cbox])
 
         f_midi_in_layout.addItem(
-            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, vPolicy=QSizePolicy.Expanding))
 
         def latency_changed(a_self=None, a_val=None):
             f_sample_rate = float(str(f_samplerate_combobox.currentText()))
@@ -401,7 +417,7 @@ class pydaw_device_dialog:
             f_midi_in_devices = sorted(str(k)
                 for k, v in self.midi_in_checkboxes.items() if v.isChecked())
             if len(f_midi_in_devices) >= 8:
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     f_window, _("Error"),
                     _("Using more than 8 MIDI devices is not supported, "
                     "please de-select some devices"))
@@ -452,7 +468,7 @@ class pydaw_device_dialog:
                 f_window.close()
 
             except Exception as ex:
-                QtGui.QMessageBox.warning(f_window, _("Error"),
+                QMessageBox.warning(f_window, _("Error"),
                     _("Couldn't open audio device\n\n{}\n\n"
                     "This may (or may not) be because the "
                     "device is already open by another application or "
@@ -520,9 +536,9 @@ class pydaw_device_dialog:
                 int(pydaw_util.global_device_val_dict["audioEngine"]))
 
         if a_msg is not None:
-            QtGui.QMessageBox.warning(f_window, _("Error"), a_msg)
+            QMessageBox.warning(f_window, _("Error"), a_msg)
 
-        f_screen = QtGui.QDesktopWidget().screenGeometry()
+        f_screen = QDesktopWidget().screenGeometry()
         f_size = f_window.geometry()
         f_hpos = (f_screen.width() - f_size.width()) / 2
         f_vpos = (f_screen.height() - f_size.height()) / 2
@@ -535,7 +551,7 @@ class pydaw_device_dialog:
 
 if __name__ == "__main__":
     def _pydaw_device_dialog_standalone():
-        app = QtGui.QApplication(sys.argv)
+        app = QApplication(sys.argv)
         if len(sys.argv) == 2:
             f_msg = sys.argv[1]
         else:

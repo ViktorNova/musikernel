@@ -90,24 +90,31 @@ kickstart_template = \
 
 %packages
 
-#PyDAW Dependencies
-python3-PyQt4
+#MusiKernel Dependencies
+python3-qt5
 alsa-lib-devel
 liblo-devel
 libsndfile-devel
 python3-numpy
 fftw-devel
+portaudio-devel
 portmidi-devel
 libsamplerate-devel
 python3-devel
 vorbis-tools
+
+#Not actually dependencies, but giving people with Firewire devices
+#a fighting chance of being able to use the live DVD/USB after an excessive
+#amount of configuration
+ffado
+qjackctl
 
 %end
 
 %post
 
 # I know, I should configure SELinux to only look the other
-# way for PyDAW instead of disabling it, grumble, grumble...
+# way for MusiKernel instead of disabling it, grumble, grumble...
 sed -i s/SELINUX=enforcing/SELINUX=disabled/g /etc/selinux/config
 
 %end

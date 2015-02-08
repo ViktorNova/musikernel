@@ -40,28 +40,28 @@ class mk_lim_plugin_ui(pydaw_abstract_plugin_ui):
         self.is_instrument = False
 
         self.preset_manager = None
-        self.tab_widget = QtGui.QTabWidget()
+        self.tab_widget = QTabWidget()
         self.layout.addWidget(self.tab_widget)
-        self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
+        self.layout.setSizeConstraint(QLayout.SetFixedSize)
 
-        self.misc_tab = QtGui.QWidget()
+        self.misc_tab = QWidget()
         self.tab_widget.addTab(self.misc_tab, "MK Limiter")
-        self.delay_vlayout = QtGui.QVBoxLayout()
+        self.delay_vlayout = QVBoxLayout()
         self.misc_tab.setLayout(self.delay_vlayout)
-        self.delay_hlayout = QtGui.QHBoxLayout()
+        self.delay_hlayout = QHBoxLayout()
         self.delay_vlayout.addLayout(self.delay_hlayout)
 
         f_knob_size = 48
 
-        self.reverb_groupbox = QtGui.QGroupBox("MK Limiter")
+        self.reverb_groupbox = QGroupBox("MK Limiter")
         self.reverb_groupbox.setObjectName("plugin_groupbox")
-        self.groupbox_gridlayout = QtGui.QGridLayout(
+        self.groupbox_gridlayout = QGridLayout(
             self.reverb_groupbox)
-        self.reverb_hlayout = QtGui.QHBoxLayout()
+        self.reverb_hlayout = QHBoxLayout()
         self.delay_vlayout.addLayout(self.reverb_hlayout)
         self.reverb_hlayout.addWidget(self.reverb_groupbox)
         self.reverb_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
 
         self.thresh_knob = pydaw_knob_control(
             f_knob_size, _("Thresh"), MK_LIM_THRESHOLD,
@@ -84,10 +84,10 @@ class mk_lim_plugin_ui(pydaw_abstract_plugin_ui):
         self.peak_meter = peak_meter(16, False)
         self.reverb_hlayout.addWidget(self.peak_meter.widget)
 
-        self.delay_spacer_layout = QtGui.QVBoxLayout()
+        self.delay_spacer_layout = QVBoxLayout()
         self.delay_vlayout.addLayout(self.delay_spacer_layout)
         self.delay_spacer_layout.addItem(
-            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, vPolicy=QSizePolicy.Expanding))
 
         self.ui_msg_enabled = pydaw_null_control(
             MK_LIM_UI_MSG_ENABLED,

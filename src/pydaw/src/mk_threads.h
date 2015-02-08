@@ -297,7 +297,7 @@ void v_pre_fault_thread_stack(int stacksize)
 
 __attribute__((optimize("-O0"))) void v_self_set_thread_affinity()
 {
-    v_pre_fault_thread_stack(1024 * 1024);
+    v_pre_fault_thread_stack(1024 * 512);
 
 #ifdef __linux__
     pthread_attr_t threadAttr;

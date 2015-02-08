@@ -29,14 +29,21 @@ from libpydaw.pydaw_widgets import pydaw_modulex_settings
 
 from libdawnext.osc import DawNextOsc
 
-from PyQt4 import QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore
+
 from libpydaw import pydaw_history
 
 import wavefile
 
 TRACK_COUNT_ALL = 32
 MAX_AUDIO_ITEM_COUNT = 256
-MAX_REGION_LENGTH = 512 #measures
+
+PIXMAP_TILE_WIDTH = 2000
+
+PIXMAP_BEAT_WIDTH = 48
+PIXMAP_TILE_HEIGHT = 32
 
 pydaw_folder_dawnext = os.path.join("projects", "dawnext")
 pydaw_folder_items = os.path.join(pydaw_folder_dawnext, "items")
@@ -63,6 +70,7 @@ class DawNextProject(libmk.AbstractProject):
         self.history_files = []
         self.history_commits = []
         self.painter_path_cache = {}
+        self.pixmap_cache_unscaled = {}
         self.history_undo_cursor = 0
         self.IPC = DawNextOsc(a_with_audio)
         self.suppress_updates = False
@@ -673,18 +681,28 @@ class DawNextProject(libmk.AbstractProject):
         f_key in self.painter_path_cache[a_uid]:
             return self.painter_path_cache[a_uid][f_key]
         else:
-            f_item_obj = self.get_item_by_uid(a_uid)
-            f_path = f_item_obj.painter_path(
-                a_px_per_beat, a_height, a_tempo)
+            if a_uid not in self.pixmap_cache_unscaled:
+                f_item_obj = self.get_item_by_uid(a_uid)
+                f_path = f_item_obj.painter_path(
+                    PIXMAP_BEAT_WIDTH, PIXMAP_TILE_HEIGHT, a_tempo)
+                self.pixmap_cache_unscaled[a_uid] = f_path
             if a_uid not in self.painter_path_cache:
                 self.painter_path_cache[a_uid] = {}
-            self.painter_path_cache[a_uid][f_key] = f_path
-            return f_path
+            f_x, f_y = pydaw_util.scale_sizes(
+                PIXMAP_BEAT_WIDTH, PIXMAP_TILE_HEIGHT,
+                a_px_per_beat, a_height)
+            f_transform = QTransform()
+            f_transform.scale(f_x, f_y)
+            self.painter_path_cache[a_uid][f_key] = (
+                self.pixmap_cache_unscaled[a_uid], f_transform, f_x, f_y)
+            return self.painter_path_cache[a_uid][f_key]
 
     def save_item_by_uid(self, a_uid, a_item, a_new_item=False):
         a_uid = int(a_uid)
         if a_uid in self.painter_path_cache:
             self.painter_path_cache.pop(a_uid)
+        if a_uid in self.pixmap_cache_unscaled:
+            self.pixmap_cache_unscaled.pop(a_uid)
         if not self.suppress_updates:
             self.save_file(
                 pydaw_folder_items, str(a_uid), str(a_item), a_new_item)
@@ -1242,7 +1260,7 @@ class pydaw_item:
 
     def painter_path(self, a_px_per_beat, a_height, a_tempo):
         f_seconds_per_beat = 60.0 / a_tempo
-        f_audio_path = QtGui.QPainterPath()
+        f_audio_path = QPainterPath()
         for f_item in sorted(
         self.items.values(), key=lambda x: x.start_beat):
             f_graph = libmk.PROJECT.get_sample_graph_by_uid(
@@ -1259,7 +1277,7 @@ class pydaw_item:
                 f_audio_path.addPath(f_painter_path)
                 f_y_pos += f_y_inc
 
-        f_notes_path = QtGui.QPainterPath()
+        f_notes_path = QPainterPath()
         if self.notes:
             f_note_set = sorted(
                 set(x.note_num for x in self.notes), reverse=True)
@@ -1278,7 +1296,34 @@ class pydaw_item:
                 f_x_pos = f_note.start * a_px_per_beat
                 f_width = f_note.length * a_px_per_beat
                 f_notes_path.addRect(f_x_pos, f_y_pos, f_width, f_note_height)
-        return f_audio_path, f_notes_path
+
+        f_audio_width = f_audio_path.boundingRect().width()
+        f_notes_width = f_notes_path.boundingRect().width()
+
+        f_width = max(f_audio_width, f_notes_width)
+
+        f_x = 0
+        f_count = int(f_width // PIXMAP_TILE_WIDTH) + 1
+        f_result = []
+
+        for f_i in range(f_count):
+            f_pixmap = QPixmap(min(f_width, PIXMAP_TILE_WIDTH), a_height)
+            f_result.append(f_pixmap)
+            f_width -= PIXMAP_TILE_WIDTH
+            f_pixmap.fill(QtCore.Qt.transparent)
+            f_painter = QPainter(f_pixmap)
+            f_painter.setBackground(QtCore.Qt.transparent)
+            f_painter.setPen(QtCore.Qt.darkGray)
+            f_painter.setBrush(QtCore.Qt.lightGray)
+            f_painter.drawPath(f_audio_path)
+            f_painter.setPen(QtCore.Qt.white)
+            f_painter.setBrush(QtCore.Qt.white)
+            f_painter.drawPath(f_notes_path)
+            #f_x -= PIXMAP_TILE_WIDTH
+            for f_path in (f_notes_path, f_audio_path):
+                f_path.translate(-PIXMAP_TILE_WIDTH, 0)
+                #f_path.translate(f_x, 0)
+        return f_result
 
     def get_length(self, a_tempo):
         f_result = 0.0
@@ -1291,36 +1336,99 @@ class pydaw_item:
             if f_ev.start > f_result:
                 f_result = f_ev.start
         for f_item in self.items.values():
-            f_graph = libmk.PROJECT.get_sample_graph_by_uid(
-                f_item.uid)
+            f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_item.uid)
             f_end = (f_graph.length_in_seconds / f_spb) + f_item.start_beat
             if f_end > f_result:
                 f_end = f_result
         return f_result
 
+    def confine_audio_items(self, a_ref, a_tempo):
+        f_to_delete = []
+        f_start = a_ref.start_offset
+        f_end = a_ref.length_beats + f_start
 
-    def extend(self, a_item2, a_offset, a_start_offset):
-        """ Glue 2 items together, adding a_offset to the
+        f_spb = 60.0 / a_tempo
+        for k, v in self.items.items():
+            f_item_start = v.start_beat
+            if f_item_start > f_end:
+                print("Delete after {} {}".format(f_item_start, f_end))
+                f_to_delete.append(k)
+                continue
+            f_graph = libmk.PROJECT.get_sample_graph_by_uid(v.uid)
+            f_ss, f_se = (x * 0.001 for x in (v.sample_start, v.sample_end))
+            f_diff = f_se - f_ss
+            f_end_beat = ((f_graph.length_in_seconds / f_spb) *
+                f_diff) + f_item_start
+            if f_end_beat < f_start:
+                print("Delete before {} {}".format(f_end_beat, f_start))
+                f_to_delete.append(k)
+                continue
+            if f_item_start < f_start:
+                f_beat_diff = f_start - f_item_start
+                f_seconds = f_spb * f_beat_diff
+                f_offset = (f_seconds / f_graph.length_in_seconds) * 1000.0
+                v.sample_start += f_offset
+                v.start_beat = f_start
+                print("LT")
+            if f_end_beat > f_end:
+                f_beat_diff = f_end_beat - f_end
+                f_seconds = f_spb * f_beat_diff
+                f_offset = (f_seconds / f_graph.length_in_seconds) * 1000.0
+                v.sample_end -= f_offset
+                print("GT")
+            for f_tuple in locals().items():
+                print(f_tuple)
+        for k in f_to_delete:
+            self.items.pop(k)
+
+    def extend(self, a_new_ref, a_ref, a_item2, a_tempo):
+        """ Glue 2 items together, adding f_offset to the
             event positions of a_item2
         """
-        for f_note in (x for x in a_item2.notes if x.start >= a_start_offset):
-            f_note.start += a_offset
+        f_start_offset = a_ref.start_offset
+        f_offset = (a_ref.start_beat - a_new_ref.start_beat -
+            a_ref.start_offset)
+        f_end_offset = a_ref.start_offset + a_ref.length_beats
+
+        print(locals())
+
+        f_notes = [x.clone() for x in a_item2.notes
+            if x.start >= f_start_offset and x.start < f_end_offset]
+        print(f_notes)
+
+        for f_note in f_notes:
+            f_note.start += f_offset
+            print(f_note.__dict__)
             self.add_note(f_note, False)
         self.notes.sort()
-        for f_cc in (x for x in a_item2.ccs if x.start >= a_start_offset):
-            f_cc.start += a_offset
+
+        f_ccs = [x.clone() for x in a_item2.ccs
+            if x.start >= f_start_offset and x.start < f_end_offset]
+        print(f_ccs)
+
+        for f_cc in f_ccs:
+            f_cc.start += f_offset
+            print(f_cc.__dict__)
             self.add_cc(f_cc)
         self.ccs.sort()
-        for f_pb in (x for x in a_item2.pitchbends
-        if x.start >= a_start_offset):
-            f_pb.start += a_offset
+
+        f_pbs = [x.clone() for x in a_item2.pitchbends
+            if x.start >= f_start_offset and x.start < f_end_offset]
+        print(f_pbs)
+
+        for f_pb in f_pbs:
+            f_pb.start += f_offset
+            print(f_pb.__dict__)
             self.add_pb(f_pb)
         self.pitchbends.sort()
+
+        a_item2.confine_audio_items(a_ref, a_tempo)
         for k, v in a_item2.items.items():
-            if v.start_beat < a_start_offset:
-                continue
             f_index = self.get_next_index()
-            v.start_beat += a_offset
+            if f_index == -1:
+                print("Exceeded the max audio item count, dropping items")
+                break
+            v.start_beat += f_offset
             self.add_item(f_index, v)
             if k in a_item2.fx_list:
                 self.set_row(f_index, a_item2.fx_list[k])
@@ -1996,6 +2104,8 @@ class pydaw_midi_file_to_items:
         f_result_region = a_project.get_region_by_uid(f_region_uid)
         f_song.add_region_ref_by_uid(a_index, f_region_uid)
         a_project.save_song(f_song)
+
+        MAX_REGION_LENGTH = 512 #measures
 
         if self.bar_count > MAX_REGION_LENGTH:
             f_result_region.length_bars = MAX_REGION_LENGTH

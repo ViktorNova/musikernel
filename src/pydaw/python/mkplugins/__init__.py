@@ -32,7 +32,9 @@ import mkplugins.mk_compressor
 import mkplugins.mk_vocoder
 import mkplugins.mk_limiter
 
-from PyQt4 import QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 from libpydaw.pydaw_util import pydaw_clip_value
 
 PLUGIN_INSTRUMENT_COUNT = 3  # For inserting the split line into the menu
@@ -118,7 +120,7 @@ def pydaw_load_controller_maps():
 pydaw_load_controller_maps()
 
 def pydaw_center_widget_on_screen(a_widget):
-    f_desktop_center = QtGui.QApplication.desktop().screen().rect().center()
+    f_desktop_center = QApplication.desktop().screen().rect().center()
     f_widget_center = a_widget.rect().center()
     f_x = pydaw_clip_value(f_desktop_center.x() - f_widget_center.x(), 0, 300)
     f_y = pydaw_clip_value(f_desktop_center.y() - f_widget_center.y(), 0, 200)
@@ -219,21 +221,21 @@ class plugin_settings_base:
         self.index = a_index
         self.send = a_send
         self.plugin_index = None
-        self.plugin_combobox = QtGui.QComboBox()
+        self.plugin_combobox = QComboBox()
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
         self.plugin_combobox.addItems(self.plugin_list)
         self.plugin_combobox.currentIndexChanged.connect(
             self.on_plugin_change)
-        self.ui_button = QtGui.QPushButton("UI")
+        self.ui_button = QPushButton("UI")
         self.ui_button.released.connect(self.on_show_ui)
         self.ui_button.setObjectName("uibutton")
         self.ui_button.setFixedWidth(24)
         if a_automation_callback is not None:
-            self.automation_radiobutton = QtGui.QRadioButton("")
+            self.automation_radiobutton = QRadioButton("")
             self.automation_radiobutton.clicked.connect(
                 self.automation_check_changed)
-        self.power_checkbox = QtGui.QCheckBox("")
+        self.power_checkbox = QCheckBox("")
         self.power_checkbox.setChecked(True)
         self.power_checkbox.clicked.connect(self.on_power_changed)
         self.add_to_layout()
@@ -351,8 +353,8 @@ class plugin_settings_main(plugin_settings_base):
             a_automation_callback, a_offset=0, a_send=None):
         self.plugin_list = ["None"] + PLUGIN_NAMES
 
-        self.menu_button = QtGui.QPushButton(_("Menu"))
-        self.menu = QtGui.QMenu()
+        self.menu_button = QPushButton(_("Menu"))
+        self.menu = QMenu()
         self.menu_button.setMenu(self.menu)
         f_copy_action = self.menu.addAction(_("Copy"))
         f_copy_action.triggered.connect(self.copy)
@@ -417,11 +419,11 @@ class track_send:
         self.suppress_osc = True
         self.track_num = a_track_num
         self.index = int(a_index)
-        self.bus_combobox = QtGui.QComboBox()
+        self.bus_combobox = QComboBox()
         self.bus_combobox.setMinimumWidth(180)
         self.bus_combobox.wheelEvent = self.wheel_event
         self.bus_combobox.currentIndexChanged.connect(self.on_bus_changed)
-        self.sidechain_checkbox = QtGui.QCheckBox()
+        self.sidechain_checkbox = QCheckBox()
         self.sidechain_checkbox.clicked.connect(self.sidechain_toggled)
         self.update_names(a_track_names)
         a_layout.addWidget(self.bus_combobox, a_index + 1, 20)
@@ -446,7 +448,7 @@ class track_send:
                 f_feedback = f_graph.check_for_feedback(
                     f_index, self.track_num, self.index)
                 if f_feedback:
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self.bus_combobox, _("Error"),
                         _("Can't set the route, it would create "
                         "a feedback loop"))

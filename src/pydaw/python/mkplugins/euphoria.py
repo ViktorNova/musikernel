@@ -386,21 +386,21 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.noise_types_list = [_("Off"), _("White"), _("Pink")]
 
-        self.sample_table = QtGui.QTableWidget(
+        self.sample_table = QTableWidget(
             EUPHORIA_MAX_SAMPLE_COUNT, len(f_sample_table_columns))
         self.sample_table.setAlternatingRowColors(True)
         self.sample_table.setHorizontalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
+            QAbstractItemView.ScrollPerPixel)
         self.sample_table.setVerticalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
-        self.sample_table.horizontalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
-        self.sample_table.verticalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
+            QAbstractItemView.ScrollPerPixel)
+        self.sample_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Fixed)
+        self.sample_table.verticalHeader().setSectionResizeMode(
+            QHeaderView.Fixed)
 
         self.selected_radiobuttons = []
         for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
-            f_radiobutton = QtGui.QRadioButton(self.sample_table)
+            f_radiobutton = QRadioButton(self.sample_table)
             self.selected_radiobuttons.append(f_radiobutton)
             self.sample_table.setCellWidget(f_i, 0, f_radiobutton)
             f_radiobutton.clicked.connect(self.selectionChanged)
@@ -752,21 +752,21 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                 f_eq_list.append(f_gain)
 
         self.sample_table.setHorizontalHeaderLabels(f_sample_table_columns)
-        self.sample_table.verticalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
-        self.sample_table.horizontalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
+        self.sample_table.verticalHeader().setSectionResizeMode(
+            QHeaderView.Fixed)
+        self.sample_table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Fixed)
         self.sample_table.resizeRowsToContents()
 
         self.file_selector = pydaw_file_select_widget(self.load_files)
         self.file_selector.clear_button.pressed.connect(self.clearFile)
         self.file_selector.reload_button.pressed.connect(self.reloadSample)
 
-        self.main_tab = QtGui.QTabWidget()
+        self.main_tab = QTabWidget()
 
-        self.sample_tab = QtGui.QWidget()
+        self.sample_tab = QWidget()
         self.sample_tab.setObjectName("plugin_widget")
-        self.sample_tab_layout = QtGui.QVBoxLayout(self.sample_tab)
+        self.sample_tab_layout = QVBoxLayout(self.sample_tab)
 
         self.file_browser = pydaw_file_browser_widget()
         self.sample_tab_layout.addWidget(self.file_browser.hsplitter)
@@ -780,29 +780,29 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.file_browser.stop_preview_button.pressed.connect(
             self.file_browser_stop_preview)
 
-        self.smp_tab_main_widget = QtGui.QWidget()
+        self.smp_tab_main_widget = QWidget()
         self.smp_tab_main_widget.setMinimumWidth(420)
-        self.smp_tab_main_verticalLayout = QtGui.QVBoxLayout(
+        self.smp_tab_main_verticalLayout = QVBoxLayout(
             self.smp_tab_main_widget)
         self.file_browser.hsplitter.addWidget(self.smp_tab_main_widget)
 
         self.smp_tab_main_verticalLayout.addWidget(
             self.sample_table, QtCore.Qt.AlignCenter)
 
-        menubar = QtGui.QPushButton(_("Menu"))
-        self.menubar_layout = QtGui.QHBoxLayout()
-        self.main_bottom_layout = QtGui.QVBoxLayout()
-        self.main_bottom_hlayout = QtGui.QHBoxLayout()
+        menubar = QPushButton(_("Menu"))
+        self.menubar_layout = QHBoxLayout()
+        self.main_bottom_layout = QVBoxLayout()
+        self.main_bottom_hlayout = QHBoxLayout()
         self.main_bottom_hlayout.addLayout(self.main_bottom_layout)
         self.main_bottom_layout.addLayout(self.menubar_layout)
         self.main_bottom_layout.addLayout(self.file_selector.layout)
         self.menubar_layout.addWidget(menubar)
-        self.menubar_layout.addItem(QtGui.QSpacerItem(
-            1, 1, QtGui.QSizePolicy.Expanding))
+        self.menubar_layout.addItem(QSpacerItem(
+            1, 1, QSizePolicy.Expanding))
         self.smp_tab_main_verticalLayout.addLayout(self.main_bottom_hlayout)
 
-        f_logo_label = QtGui.QLabel()
-        f_pixmap = QtGui.QPixmap(
+        f_logo_label = QLabel()
+        f_pixmap = QPixmap(
             os.path.join(
                 pydaw_util.INSTALL_PREFIX, "lib",
                 pydaw_util.global_pydaw_version_string,
@@ -811,11 +811,11 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         f_logo_label.setPixmap(f_pixmap)
         f_logo_label.setAlignment(QtCore.Qt.AlignCenter)
         f_logo_label.setSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.main_bottom_hlayout.addWidget(
             f_logo_label, alignment=QtCore.Qt.AlignRight)
 
-        menuFile = QtGui.QMenu("Menu", menubar)
+        menuFile = QMenu("Menu", menubar)
         action_open_in_browser = menuFile.addAction(
             _("Open Selected Sample in Browser"))
         menuFile.addSeparator()
@@ -884,17 +884,17 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         actionSetAllNoiseAmps.triggered.connect(self.set_all_noise_amps)
 
         self.main_tab.addTab(self.sample_tab, _("Samples"))
-        self.poly_fx_tab = QtGui.QWidget()
+        self.poly_fx_tab = QWidget()
         self.main_tab.addTab(self.poly_fx_tab, _("Poly FX"))
-        self.mono_fx_tab = QtGui.QWidget()
+        self.mono_fx_tab = QWidget()
         self.main_tab.addTab(self.mono_fx_tab, _("Mono FX"))
         self.layout.addWidget(self.main_tab)
         self.main_tab.setCurrentIndex(0)
         self.sample_table.resizeColumnsToContents()
         #m_view_sample_tab
-        self.view_sample_tab = QtGui.QWidget()
+        self.view_sample_tab = QWidget()
         self.main_tab.addTab(self.view_sample_tab, _("View"))
-        self.view_sample_tab_main_vlayout = QtGui.QVBoxLayout(
+        self.view_sample_tab_main_vlayout = QVBoxLayout(
             self.view_sample_tab)
         self.view_sample_tab_main_vlayout.setContentsMargins(0, 0, 0, 0)
 
@@ -913,19 +913,19 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.loop_all_action.triggered.connect(self.on_loop_all)
         self.view_sample_tab_main_vlayout.addWidget(self.sample_graph)
         #The combobox for selecting the sample on the 'view' tab
-        self.sample_view_select_sample_widget = QtGui.QWidget()
+        self.sample_view_select_sample_widget = QWidget()
         self.sample_view_select_sample_widget.setMaximumHeight(200)
-        self.sample_view_select_sample_hlayout = QtGui.QHBoxLayout(
+        self.sample_view_select_sample_hlayout = QHBoxLayout(
             self.sample_view_select_sample_widget)
 
-        #self.sample_view_select_sample_hlayout.addItem(QtGui.QSpacerItem(
-        #    40, 20, QtGui.QSizePolicy.Expanding))
+        #self.sample_view_select_sample_hlayout.addItem(QSpacerItem(
+        #    40, 20, QSizePolicy.Expanding))
         self.sample_view_select_sample_hlayout.addWidget(
             self.sample_graph.label)
-        self.sample_view_extra_controls_gridview = QtGui.QGridLayout()
-        self.selected_sample_index_combobox = QtGui.QComboBox()
-        sizePolicy1 = QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.sample_view_extra_controls_gridview = QGridLayout()
+        self.selected_sample_index_combobox = QComboBox()
+        sizePolicy1 = QSizePolicy(
+            QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(
@@ -939,41 +939,41 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.viewSampleSelectedIndexChanged)
         self.sample_view_extra_controls_gridview.addWidget(
             self.selected_sample_index_combobox, 1, 0, 1, 1)
-        self.selected_sample_index_label = QtGui.QLabel(_("Selected Sample"))
+        self.selected_sample_index_label = QLabel(_("Selected Sample"))
         self.sample_view_extra_controls_gridview.addWidget(
             self.selected_sample_index_label, 0, 0, 1, 1)
         self.sample_view_select_sample_hlayout.addItem(
-            QtGui.QSpacerItem(30, 1))
+            QSpacerItem(30, 1))
         self.sample_view_select_sample_hlayout.addLayout(
             self.sample_view_extra_controls_gridview)
         self.sample_view_select_sample_hlayout.addItem(
-            QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(40, 20, QSizePolicy.Expanding))
         self.view_sample_tab_main_vlayout.addWidget(
             self.sample_view_select_sample_widget)
         #The loop mode combobox
-        self.loop_mode_combobox = QtGui.QComboBox(self.view_sample_tab)
+        self.loop_mode_combobox = QComboBox(self.view_sample_tab)
         self.loop_mode_combobox.addItems([_("Off"), _("On")])
         self.loop_mode_combobox.currentIndexChanged.connect(
             self.loopModeChanged)
         self.loop_tune_note_selector = pydaw_note_selector_widget(
             0, None, None)
-        self.loop_tune_button = QtGui.QPushButton(_("Tune"))
+        self.loop_tune_button = QPushButton(_("Tune"))
         self.loop_tune_button.pressed.connect(self.on_loop_tune)
         self.sample_view_extra_controls_gridview.addWidget(
-            QtGui.QLabel(_("Loop Mode")), 0, 1)
+            QLabel(_("Loop Mode")), 0, 1)
         self.sample_view_extra_controls_gridview.addWidget(
             self.loop_mode_combobox, 1, 1)
         self.sample_view_extra_controls_gridview.addItem(
-            QtGui.QSpacerItem(30, 1), 1, 2)
+            QSpacerItem(30, 1), 1, 2)
         self.sample_view_extra_controls_gridview.addWidget(
-            QtGui.QLabel(_("Loop Tune")), 0, 3)
+            QLabel(_("Loop Tune")), 0, 3)
         self.sample_view_extra_controls_gridview.addWidget(
             self.loop_tune_note_selector.widget, 1, 3)
         self.sample_view_extra_controls_gridview.addWidget(
             self.loop_tune_button, 2, 3)
 
         #The file select on the 'view' tab
-        self.sample_view_file_select_hlayout = QtGui.QHBoxLayout()
+        self.sample_view_file_select_hlayout = QHBoxLayout()
         self.view_file_selector = pydaw_file_select_widget(self.load_files)
         self.view_file_selector.clear_button.pressed.connect(self.clearFile)
         self.view_file_selector.reload_button.pressed.connect(
@@ -987,15 +987,15 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
         f_knob_size = 46
 
-        self.polyfx_tab_layout = QtGui.QVBoxLayout(self.poly_fx_tab)
-        self.polyfx_tab_layout.setMargin(0)
-        self.polyfx_tab_widget = QtGui.QWidget()
+        self.polyfx_tab_layout = QVBoxLayout(self.poly_fx_tab)
+        self.polyfx_tab_layout.setContentsMargins(0, 0, 0, 0)
+        self.polyfx_tab_widget = QWidget()
         self.polyfx_tab_layout.addWidget(
             self.polyfx_tab_widget,
             alignment=QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        self.main_layout = QtGui.QVBoxLayout(self.polyfx_tab_widget)
+        self.main_layout = QVBoxLayout(self.polyfx_tab_widget)
 
-        self.hlayout0 = QtGui.QHBoxLayout()
+        self.hlayout0 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout0)
         self.fx0 = pydaw_modulex_single(
             _("FX0"), EUPHORIA_FX0_KNOB0,
@@ -1007,7 +1007,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, a_knob_size=f_knob_size)
         self.hlayout0.addWidget(self.fx1.group_box)
-        self.hlayout1 = QtGui.QHBoxLayout()
+        self.hlayout1 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout1)
         self.fx2 = pydaw_modulex_single(
             _("FX2"), EUPHORIA_FX2_KNOB0,
@@ -1020,7 +1020,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             a_knob_size=f_knob_size)
         self.hlayout1.addWidget(self.fx3.group_box)
 
-        self.mod_matrix = QtGui.QTableWidget()
+        self.mod_matrix = QTableWidget()
         self.mod_matrix.setRowCount(6)
         self.mod_matrix.setColumnCount(12)
         self.mod_matrix.setFixedHeight(228)
@@ -1065,7 +1065,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.main_layout.addWidget(self.mod_matrix)
         self.mod_matrix.resizeColumnsToContents()
 
-        self.hlayout2 = QtGui.QHBoxLayout()
+        self.hlayout2 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout2)
 
         self.adsr_amp = pydaw_adsr_widget(
@@ -1114,11 +1114,11 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.lfo_pitch_fine.add_to_grid_layout(self.lfo.layout, 8)
 
         #MonoFX Tab
-        self.mono_fx_tab_main_layout = QtGui.QVBoxLayout(self.mono_fx_tab)
-        self.mono_fx_tab_selected_hlayout = QtGui.QHBoxLayout()
-        self.mono_fx_tab_selected_sample = QtGui.QComboBox(self.mono_fx_tab)
+        self.mono_fx_tab_main_layout = QVBoxLayout(self.mono_fx_tab)
+        self.mono_fx_tab_selected_hlayout = QHBoxLayout()
+        self.mono_fx_tab_selected_sample = QComboBox(self.mono_fx_tab)
         self.mono_fx_tab_selected_sample.setMinimumWidth(330)
-        self.mono_fx_tab_selected_group = QtGui.QComboBox(self.mono_fx_tab)
+        self.mono_fx_tab_selected_group = QComboBox(self.mono_fx_tab)
         for f_i in range(1, EUPHORIA_MONO_FX_GROUPS_COUNT):
             self.mono_fx_tab_selected_group.addItem(str(f_i))
         for f_i in range(EUPHORIA_MAX_SAMPLE_COUNT):
@@ -1129,33 +1129,33 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             self.monoFXSampleSelectedIndexChanged)
         self.mono_fx_tab_selected_group.setMinimumWidth(75)
         self.mono_fx_tab_selected_hlayout.addWidget(
-            QtGui.QLabel(_("Selected Sample:")))
+            QLabel(_("Selected Sample:")))
         self.mono_fx_tab_selected_hlayout.addWidget(
             self.mono_fx_tab_selected_sample)
         self.mono_fx_tab_selected_hlayout.addWidget(
-            QtGui.QLabel(_("FX Group:")))
+            QLabel(_("FX Group:")))
         self.mono_fx_tab_selected_hlayout.addWidget(
             self.mono_fx_tab_selected_group)
         self.mono_fx_tab_selected_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
         self.mono_fx_tab_main_layout.addLayout(
             self.mono_fx_tab_selected_hlayout)
 
-        self.monofx_sub_tab = QtGui.QTabWidget()
+        self.monofx_sub_tab = QTabWidget()
         self.mono_fx_tab_main_layout.addWidget(self.monofx_sub_tab)
 
-        self.monofx_sub_tab_fx = QtGui.QWidget()
+        self.monofx_sub_tab_fx = QWidget()
         self.monofx_sub_tab.addTab(self.monofx_sub_tab_fx, _("Effects"))
-        self.monofx_sub_tab_fx_main_layout = QtGui.QVBoxLayout(
+        self.monofx_sub_tab_fx_main_layout = QVBoxLayout(
             self.monofx_sub_tab_fx)
-        self.monofx_sub_tab_fx_widget = QtGui.QWidget()
-        self.monofx_sub_tab_fx_layout = QtGui.QVBoxLayout(
+        self.monofx_sub_tab_fx_widget = QWidget()
+        self.monofx_sub_tab_fx_layout = QVBoxLayout(
             self.monofx_sub_tab_fx_widget)
         self.monofx_sub_tab_fx_main_layout.addWidget(
             self.monofx_sub_tab_fx_widget,
             alignment=QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
 
-        self.hlayout11 = QtGui.QHBoxLayout()
+        self.hlayout11 = QHBoxLayout()
         self.monofx_sub_tab_fx_layout.addLayout(self.hlayout11)
         self.mono_fx0 = pydaw_modulex_single(
             _("FX0"), 0, None, self.monofx0_callback)
@@ -1163,7 +1163,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.mono_fx1 = pydaw_modulex_single(
             _("FX1"), 0, None, self.monofx1_callback)
         self.hlayout11.addWidget(self.mono_fx1.group_box)
-        self.hlayout12 = QtGui.QHBoxLayout()
+        self.hlayout12 = QHBoxLayout()
         self.monofx_sub_tab_fx_layout.addLayout(self.hlayout12)
         self.mono_fx2 = pydaw_modulex_single(
             _("FX2"), 0, None, self.monofx2_callback)
@@ -1192,9 +1192,9 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.eq6 = eq6_widget(
             0, self.eq6_rel_callback, self.eq6_val_callback, a_vlayout=False)
-        self.eq6_tab = QtGui.QWidget()
+        self.eq6_tab = QWidget()
         self.monofx_sub_tab.addTab(self.eq6_tab, _("EQ"))
-        self.eq6_layout = QtGui.QVBoxLayout(self.eq6_tab)
+        self.eq6_layout = QVBoxLayout(self.eq6_tab)
         self.eq6_layout.addWidget(
             self.eq6.widget,
             alignment=QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
@@ -1398,7 +1398,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     f_path = ""
                 else:
                     f_path = self.mk_project.get_wav_path_by_uid(f_arr[f_i])
-                f_table_item = QtGui.QTableWidgetItem(f_path)
+                f_table_item = QTableWidgetItem(f_path)
                 self.sample_table.setItem(
                     f_i, SMP_TB_FILE_PATH_INDEX, f_table_item)
         else:
@@ -1482,20 +1482,20 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         def on_cancel(a_val=None):
             f_window.close()
 
-        f_window = QtGui.QDialog(self.widget)
+        f_window = QDialog(self.widget)
         f_window.setMinimumWidth(300)
         f_window.setWindowTitle(a_title)
-        f_layout = QtGui.QVBoxLayout()
+        f_layout = QVBoxLayout()
         f_window.setLayout(f_layout)
-        f_hlayout0 = QtGui.QHBoxLayout()
+        f_hlayout0 = QHBoxLayout()
         f_hlayout0.addWidget(a_widget.widget)
         f_layout.addLayout(f_hlayout0)
-        f_hlayout2 = QtGui.QHBoxLayout()
+        f_hlayout2 = QHBoxLayout()
         f_layout.addLayout(f_hlayout2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(on_ok)
         f_hlayout2.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(on_cancel)
         f_hlayout2.addWidget(f_cancel_button)
         f_window.exec_()
@@ -1504,7 +1504,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         for i in range(EUPHORIA_MAX_SAMPLE_COUNT):
             self.set_selected_sample_combobox_item(i, "")
             self.sample_graph.clear_drawn_items()
-            f_item = QtGui.QTableWidgetItem()
+            f_item = QTableWidgetItem()
             f_item.setText((""))
             f_item.setFlags(QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled)
             self.sample_table.setItem(i, SMP_TB_FILE_PATH_INDEX, f_item)
@@ -1592,14 +1592,14 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                 path = str(paths[i])
                 if path != "":
                     if not os.path.isfile(path):
-                        QtGui.QMessageBox.warning(
+                        QMessageBox.warning(
                             self, _("Error"),
                             _("File '{}' cannot be read.").format(path))
                         continue
                     self.mk_project.get_wav_uid_by_name(path)
                     self.set_selected_sample_combobox_item(
                         f_sample_index_to_load, os.path.split(path)[1])
-                    f_item = QtGui.QTableWidgetItem()
+                    f_item = QTableWidgetItem()
                     f_item.setText(path)
                     f_item.setFlags(
                         QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled)
@@ -1631,7 +1631,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.find_selected_radio_button()
         self.sample_graph.clear_drawn_items()
         self.set_selected_sample_combobox_item((self.selected_row_index), (""))
-        f_item = QtGui.QTableWidgetItem()
+        f_item = QTableWidgetItem()
         f_item.setText((""))
         f_item.setFlags(QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled)
         self.sample_table.setItem(
@@ -1745,7 +1745,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
     def stretch_shift_dialog(self):
         f_path = str(self.file_selector.file_path.text()).strip()
         if f_path == "":
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.widget, _("Error"), _("No sample selected"))
             return
 
@@ -1807,12 +1807,12 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                 f_file_list.append(f_file)
                 f_proc_list.append(f_proc)
                 f_status_lineedit.setText("Starting {}".format(f_file))
-                QtGui.qApp.processEvents()
+                qApp.processEvents()
                 time.sleep(0.1)
 
             for f_item, f_file in zip(f_proc_list, f_file_list):
                 f_status_lineedit.setText("Finished {}".format(f_file))
-                QtGui.qApp.processEvents()
+                qApp.processEvents()
                 f_item.wait()
 
             self.load_files(f_file_list)
@@ -1825,92 +1825,92 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         def on_cancel(a_val=None):
             f_window.close()
 
-        f_window = QtGui.QDialog(self.widget)
+        f_window = QDialog(self.widget)
         f_window.setMinimumWidth(390)
         f_window.setWindowTitle(_("Time-Stretch/Pitch-Shift Current Sample"))
-        f_layout = QtGui.QVBoxLayout()
+        f_layout = QVBoxLayout()
         f_window.setLayout(f_layout)
 
-        f_time_gridlayout = QtGui.QGridLayout()
+        f_time_gridlayout = QGridLayout()
         f_layout.addLayout(f_time_gridlayout)
 
-        f_time_gridlayout.addWidget(QtGui.QLabel(_("Base Pitch")), 1, 0)
+        f_time_gridlayout.addWidget(QLabel(_("Base Pitch")), 1, 0)
         f_base_note_selector = pydaw_note_selector_widget(0, None, None)
         f_time_gridlayout.addWidget(f_base_note_selector.widget, 1, 1)
         self.find_selected_radio_button()
         f_base_note_selector.set_value(
             self.sample_base_pitches[self.selected_row_index].get_value())
 
-        f_time_gridlayout.addWidget(QtGui.QLabel(_("Stretch:")), 3, 0)
-        f_timestretch_amt = QtGui.QDoubleSpinBox()
+        f_time_gridlayout.addWidget(QLabel(_("Stretch:")), 3, 0)
+        f_timestretch_amt = QDoubleSpinBox()
         f_timestretch_amt.setRange(0.2, 4.0)
         f_timestretch_amt.setDecimals(6)
         f_timestretch_amt.setSingleStep(0.1)
         f_timestretch_amt.setValue(1.0)
         f_time_gridlayout.addWidget(f_timestretch_amt, 3, 1)
-        f_time_gridlayout.addWidget(QtGui.QLabel(_("Algorithm:")), 6, 0)
-        f_algo_combobox = QtGui.QComboBox()
+        f_time_gridlayout.addWidget(QLabel(_("Algorithm:")), 6, 0)
+        f_algo_combobox = QComboBox()
         f_algo_combobox.addItems(["Rubberband", "SBSMS"])
         f_time_gridlayout.addWidget(f_algo_combobox, 6, 1)
 
-        f_time_gridlayout.addWidget(QtGui.QLabel(_("Crispness")), 12, 0)
-        f_crispness_combobox = QtGui.QComboBox()
+        f_time_gridlayout.addWidget(QLabel(_("Crispness")), 12, 0)
+        f_crispness_combobox = QComboBox()
         f_crispness_combobox.setToolTip(_("Only valid for Rubberband mode."))
         f_crispness_combobox.addItems(
             [_("0 (smeared)"), _("1 (piano)"), "2", "3",
              "4", "5 (normal)", _("6 (sharp, drums)")])
         f_crispness_combobox.setCurrentIndex(5)
         f_time_gridlayout.addWidget(f_crispness_combobox, 12, 1)
-        f_preserve_formants_checkbox = QtGui.QCheckBox(
+        f_preserve_formants_checkbox = QCheckBox(
             _("Preserve formants?"))
         f_preserve_formants_checkbox.setToolTip(
             _("Only valid for Rubberband mode."))
         f_preserve_formants_checkbox.setChecked(True)
         f_time_gridlayout.addWidget(f_preserve_formants_checkbox, 18, 1)
 
-        f_single_rb = QtGui.QRadioButton(_("Single"))
+        f_single_rb = QRadioButton(_("Single"))
         f_single_rb.setChecked(True)
         f_layout.addWidget(f_single_rb, alignment=QtCore.Qt.AlignLeft)
 
-        f_pitch_gridlayout = QtGui.QGridLayout()
+        f_pitch_gridlayout = QGridLayout()
         f_layout.addLayout(f_pitch_gridlayout)
-        f_pitch_gridlayout.addWidget(QtGui.QLabel(_("Pitch:")), 0, 0)
-        f_pitch_shift = QtGui.QDoubleSpinBox()
+        f_pitch_gridlayout.addWidget(QLabel(_("Pitch:")), 0, 0)
+        f_pitch_shift = QDoubleSpinBox()
         f_pitch_shift.setRange(-36, 36)
         f_pitch_shift.setValue(0.0)
         f_pitch_shift.setDecimals(6)
         f_pitch_gridlayout.addWidget(f_pitch_shift, 0, 1)
 
-        f_multi_rb = QtGui.QRadioButton(_("Multi"))
+        f_multi_rb = QRadioButton(_("Multi"))
         f_layout.addWidget(f_multi_rb, alignment=QtCore.Qt.AlignLeft)
-        f_multi_gridlayout = QtGui.QGridLayout()
+        f_multi_gridlayout = QGridLayout()
         f_layout.addLayout(f_multi_gridlayout)
         f_multi_gridlayout.addWidget(
-            QtGui.QLabel(_("Step Size(semitones)")), 0, 0)
-        f_step_spinbox = QtGui.QSpinBox()
+            QLabel(_("Step Size(semitones)")), 0, 0)
+        f_step_spinbox = QSpinBox()
         f_step_spinbox.setRange(1, 3)
         f_multi_gridlayout.addWidget(f_step_spinbox, 0, 1)
-        f_multi_gridlayout.addWidget(QtGui.QLabel(_("Below (count)")), 1, 0)
-        f_below_spinbox = QtGui.QSpinBox()
+        f_multi_gridlayout.addWidget(QLabel(_("Below (count)")), 1, 0)
+        f_below_spinbox = QSpinBox()
         f_below_spinbox.setRange(0, 20)
         f_below_spinbox.setValue(12)
         f_multi_gridlayout.addWidget(f_below_spinbox, 1, 1)
-        f_multi_gridlayout.addWidget(QtGui.QLabel(_("Above (count)")), 2, 0)
-        f_above_spinbox = QtGui.QSpinBox()
+        f_multi_gridlayout.addWidget(QLabel(_("Above (count)")), 2, 0)
+        f_above_spinbox = QSpinBox()
         f_above_spinbox.setRange(0, 20)
         f_above_spinbox.setValue(12)
         f_multi_gridlayout.addWidget(f_above_spinbox, 2, 1)
 
-        f_hlayout2 = QtGui.QHBoxLayout()
+        f_hlayout2 = QHBoxLayout()
         f_layout.addLayout(f_hlayout2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(on_ok)
         f_hlayout2.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(on_cancel)
         f_hlayout2.addWidget(f_cancel_button)
 
-        f_status_lineedit = QtGui.QLineEdit()
+        f_status_lineedit = QLineEdit()
         f_status_lineedit.setReadOnly(True)
         f_layout.addWidget(f_status_lineedit)
 
@@ -1968,7 +1968,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
     def saveToFile(self, a_copy=False):
         while True:
-            f_selected_path = QtGui.QFileDialog.getSaveFileName(
+            f_selected_path, f_filter = QFileDialog.getSaveFileName(
                 self.widget, _("Select a directory to copy the samples to..."),
                 pydaw_util.global_home,
                 filter=pydaw_util.global_euphoria_file_type_string)
@@ -1981,13 +1981,13 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     f_selected_path += pydaw_util.global_euphoria_file_type_ext
                 f_dir = os.path.dirname(f_selected_path)
                 if len(os.listdir(f_dir)) > 0:
-                    f_answer = QtGui.QMessageBox.warning(
+                    f_answer = QMessageBox.warning(
                         self.widget, _("Warning"),
                         _("{} is not an empty directory, are you "
                         "sure you want to save here?").format(f_dir),
-                        QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-                        QtGui.QMessageBox.No)
-                    if f_answer == QtGui.QMessageBox.No:
+                        QMessageBox.Yes | QMessageBox.No,
+                        QMessageBox.No)
+                    if f_answer == QMessageBox.No:
                         continue
                 f_sample_str = self.copySamplesToSingleDirectory(f_dir)
                 f_plugin_file = pydaw_plugin_file.from_dict(
@@ -1998,7 +1998,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                 break
 
     def openFromFile(self):
-        f_selected_path = QtGui.QFileDialog.getOpenFileName(
+        f_selected_path, f_filter = QFileDialog.getOpenFileName(
             self.widget,
             _("Select a directory to move the samples to..."),
             pydaw_util.global_home,
@@ -2018,7 +2018,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                 if f_line_arr[0] == "sample":
                     f_index = int(f_line_arr[1])
                     f_new_file_path = os.path.join(f_dir, f_line_arr[2])
-                    f_item = QtGui.QTableWidgetItem()
+                    f_item = QTableWidgetItem()
                     f_item.setText(f_new_file_path)
                     f_item.setFlags(
                         QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
@@ -2039,9 +2039,9 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
     def sfz_dialog(self):
         def on_file_open(a_val=None):
-            f_selected_path = QtGui.QFileDialog.getOpenFileName(self.widget,
-            _("Import SFZ instrument..."), pydaw_util.global_home,
-            filter="SFZ file (*.sfz)")
+            f_selected_path, f_filter = QFileDialog.getOpenFileName(
+                self.widget, _("Import SFZ instrument..."),
+                pydaw_util.global_home, filter="SFZ file (*.sfz)")
             if f_selected_path is not None:
                 f_selected_path = str(f_selected_path)
                 if f_selected_path == "":
@@ -2051,7 +2051,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     pydaw_util.sfz_file(f_selected_path)
                     f_file_lineedit.setText(f_selected_path)
                 except Exception as ex:
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self.widget, _("Error"),
                         _("Error importing {}\n{}").format(
                         f_selected_path, ex))
@@ -2062,40 +2062,40 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             if f_text != "":
                 for f_path in self.import_sfz(f_text):
                     f_status_label.setText(_("Loading {}").format(f_path))
-                    QtGui.qApp.processEvents()
+                    qApp.processEvents()
                 f_window.close()
 
         def on_cancel(a_val=None):
             f_window.close()
 
-        f_window = QtGui.QDialog(self.widget)
+        f_window = QDialog(self.widget)
         f_window.setWindowTitle(_("Import SFZ"))
         f_window.setFixedSize(720, 180)
-        f_layout = QtGui.QVBoxLayout()
+        f_layout = QVBoxLayout()
         f_window.setLayout(f_layout)
-        f_hlayout0 = QtGui.QHBoxLayout()
-        f_file_lineedit = QtGui.QLineEdit()
+        f_hlayout0 = QHBoxLayout()
+        f_file_lineedit = QLineEdit()
         f_hlayout0.addWidget(f_file_lineedit)
-        f_open_file_button = QtGui.QPushButton(_("Open"))
+        f_open_file_button = QPushButton(_("Open"))
         f_open_file_button.pressed.connect(on_file_open)
         f_hlayout0.addWidget(f_open_file_button)
         f_layout.addLayout(f_hlayout0)
-        f_layout.addWidget(QtGui.QLabel(
+        f_layout.addWidget(QLabel(
             _("Euphoria only supports basic SFZ parameters such as "
             "key and velocity mapping.\nAny effects such as filters, etc... "
             "should be set manually after import.")))
-        f_hlayout1 = QtGui.QHBoxLayout()
+        f_hlayout1 = QHBoxLayout()
         f_layout.addItem(
-            QtGui.QSpacerItem(10, 10, vPolicy=QtGui.QSizePolicy.Expanding))
+            QSpacerItem(10, 10, vPolicy=QSizePolicy.Expanding))
         f_layout.addLayout(f_hlayout1)
-        f_status_label = QtGui.QLabel()
+        f_status_label = QLabel()
         f_hlayout1.addWidget(f_status_label)
-        f_hlayout2 = QtGui.QHBoxLayout()
+        f_hlayout2 = QHBoxLayout()
         f_layout.addLayout(f_hlayout2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(on_ok)
         f_hlayout2.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(on_cancel)
         f_hlayout2.addWidget(f_cancel_button)
         f_window.exec_()
@@ -2110,7 +2110,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
             for f_index, f_sample in zip(
             range(len(f_sfz.samples)), f_sfz.samples):
                 if f_index >= EUPHORIA_MAX_SAMPLE_COUNT:
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self.widget, _("Error"),
                         _("Sample count {} exceeds maximum of {}, not "
                         "loading all samples").format(
@@ -2126,7 +2126,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
                     yield f_new_file_path
 
-                    f_item = QtGui.QTableWidgetItem()
+                    f_item = QTableWidgetItem()
                     f_item.setText(f_new_file_path)
                     f_item.setFlags(
                         QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
@@ -2223,7 +2223,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                         self.sample_vols[f_index].control_value_changed(f_val)
 
         except Exception as ex:
-            QtGui.QMessageBox.warning(self.widget, _("Error"),
+            QMessageBox.warning(self.widget, _("Error"),
             _("Error parsing {}\n{}").format(a_sfz_path, ex))
 
         self.generate_files_string()

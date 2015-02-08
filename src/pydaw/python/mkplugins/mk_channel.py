@@ -38,9 +38,9 @@ class mkchnl_plugin_ui(pydaw_abstract_plugin_ui):
         self._plugin_name = "MKCHNL"
         self.set_window_title(a_track_name)
         self.is_instrument = False
-        #self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
+        #self.layout.setSizeConstraint(QLayout.SetFixedSize)
         f_knob_size = 32
-        self.gain_gridlayout = QtGui.QGridLayout()
+        self.gain_gridlayout = QGridLayout()
         self.layout.addLayout(self.gain_gridlayout)
         self.gain_knob = pydaw_knob_control(
             f_knob_size, _("Gain"), MKCHNL_GAIN,
@@ -59,7 +59,7 @@ class mkchnl_plugin_ui(pydaw_abstract_plugin_ui):
             -600, 0, -300, KC_DECIMAL, self.port_dict, None)
         self.pan_law_knob.add_to_grid_layout(self.gain_gridlayout, 2)
 
-        self.volume_gridlayout = QtGui.QGridLayout()
+        self.volume_gridlayout = QGridLayout()
         self.layout.addLayout(self.volume_gridlayout)
         self.volume_slider = pydaw_slider_control(
             QtCore.Qt.Vertical, "Vol", MKCHNL_VOL_SLIDER,
@@ -68,7 +68,7 @@ class mkchnl_plugin_ui(pydaw_abstract_plugin_ui):
         self.volume_slider.add_to_grid_layout(self.volume_gridlayout, 0)
         self.volume_slider.control.setMinimumHeight(240)
         self.volume_slider.control.setSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+            QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.widget.setFixedWidth(130)
         self.volume_slider.value_label.setMinimumWidth(91)
         self.widget.setWidgetResizable(True)

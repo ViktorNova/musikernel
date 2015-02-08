@@ -29,7 +29,9 @@ from libpydaw.pydaw_widgets import pydaw_modulex_settings
 
 from libedmnext.osc import EdmNextOsc
 
-from PyQt4 import QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 from libpydaw import pydaw_history
 
 TRACK_COUNT_ALL = 32
@@ -1474,7 +1476,7 @@ class pydaw_item:
         self.pitchbends = []
 
     def painter_path(self, a_width, a_height):
-        f_result = QtGui.QPainterPath()
+        f_result = QPainterPath()
         f_note_height = float(a_height) / 128.0
         f_beat_width = a_width * 0.25
         for f_note in self.notes:

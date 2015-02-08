@@ -44,10 +44,10 @@ class mk_vocoder_plugin_ui(pydaw_abstract_plugin_ui):
         self._plugin_name = "MK Vocoder"
         self.set_window_title(a_track_name)
         self.is_instrument = False
-        #self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
+        #self.layout.setSizeConstraint(QLayout.SetFixedSize)
         f_knob_size = 48
 
-        self.groupbox_gridlayout = QtGui.QGridLayout()
+        self.groupbox_gridlayout = QGridLayout()
         self.layout.addLayout(self.groupbox_gridlayout)
 
         self.wet_knob = pydaw_knob_control(
@@ -68,7 +68,7 @@ class mk_vocoder_plugin_ui(pydaw_abstract_plugin_ui):
             -500, 0, -500, KC_TENTH, self.port_dict)
         self.carrier_knob.add_to_grid_layout(self.groupbox_gridlayout, 6)
 
-        self.layout.addWidget(QtGui.QLabel(MK_VOCODER_TEXT))
+        self.layout.addWidget(QLabel(MK_VOCODER_TEXT))
         self.scrollarea_widget.setFixedHeight(240)
         self.scrollarea_widget.setFixedWidth(360)
         self.open_plugin_file()

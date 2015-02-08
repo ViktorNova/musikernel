@@ -109,17 +109,17 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
         f_lfo_types = [_("Off"), _("Sine"), _("Triangle")]
         self.preset_manager = pydaw_preset_manager_widget(
             self.get_plugin_name())
-        self.main_layout = QtGui.QVBoxLayout()
-        self.main_layout.setMargin(3)
+        self.main_layout = QVBoxLayout()
+        self.main_layout.setContentsMargins(3, 3, 3, 3)
         self.layout.addLayout(self.main_layout)
-        self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
-        self.hlayout0 = QtGui.QHBoxLayout()
+        self.layout.setSizeConstraint(QLayout.SetFixedSize)
+        self.hlayout0 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout0)
         self.hlayout0.addWidget(self.preset_manager.group_box)
         self.hlayout0.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        f_logo_label = QtGui.QLabel()
-        f_pixmap = QtGui.QPixmap(
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
+        f_logo_label = QLabel()
+        f_pixmap = QPixmap(
             os.path.join(
                 pydaw_util.INSTALL_PREFIX, "lib",
                 pydaw_util.global_pydaw_version_string,
@@ -130,7 +130,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
         f_knob_size = 55
 
         self.hlayout0.addWidget(f_logo_label)
-        self.hlayout1 = QtGui.QHBoxLayout()
+        self.hlayout1 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout1)
         self.osc1 = pydaw_osc_widget(
             f_knob_size, RAYV_OSC1_PITCH,
@@ -147,9 +147,9 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.port_dict, self.preset_manager,
             a_prefx_port=RAYV_ADSR_PREFX, a_knob_type=KC_LOG_TIME)
         self.hlayout1.addWidget(self.adsr_amp.groupbox)
-        self.groupbox_distortion = QtGui.QGroupBox(_("Distortion"))
+        self.groupbox_distortion = QGroupBox(_("Distortion"))
         self.groupbox_distortion.setObjectName("plugin_groupbox")
-        self.groupbox_distortion_layout = QtGui.QGridLayout(
+        self.groupbox_distortion_layout = QGridLayout(
             self.groupbox_distortion)
         self.hlayout1.addWidget(self.groupbox_distortion)
         self.dist = pydaw_knob_control(
@@ -162,7 +162,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             0, 100, 0, KC_NONE, self.port_dict, self.preset_manager)
         self.dist_wet.add_to_grid_layout(self.groupbox_distortion_layout, 1)
-        self.hlayout2 = QtGui.QHBoxLayout()
+        self.hlayout2 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout2)
         self.osc2 = pydaw_osc_widget(
             f_knob_size, RAYV_OSC2_PITCH,
@@ -171,11 +171,11 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             _("Oscillator 2"), self.port_dict, self.preset_manager)
         self.hlayout2.addWidget(self.osc2.group_box)
-        self.sync_groupbox = QtGui.QGroupBox(_("Sync"))
+        self.sync_groupbox = QGroupBox(_("Sync"))
         self.sync_groupbox.setObjectName("plugin_groupbox")
         self.hlayout2.addWidget(self.sync_groupbox)
-        self.sync_gridlayout = QtGui.QGridLayout(self.sync_groupbox)
-        self.sync_gridlayout.setMargin(3)
+        self.sync_gridlayout = QGridLayout(self.sync_groupbox)
+        self.sync_gridlayout.setContentsMargins(3, 3, 3, 3)
         self.hard_sync = pydaw_checkbox_control(
             "On", RAYV_OSC_HARD_SYNC,
             self.plugin_rel_callback, self.plugin_val_callback,
@@ -185,10 +185,10 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             "would want to distort and pitchbend if this is enabled."))
         self.sync_gridlayout.addWidget(
             self.hard_sync.control, 1, 0, QtCore.Qt.AlignCenter)
-        self.groupbox_noise = QtGui.QGroupBox(_("Noise"))
+        self.groupbox_noise = QGroupBox(_("Noise"))
         self.groupbox_noise.setObjectName("plugin_groupbox")
-        self.noise_layout = QtGui.QGridLayout(self.groupbox_noise)
-        self.noise_layout.setMargin(3)
+        self.noise_layout = QGridLayout(self.groupbox_noise)
+        self.noise_layout.setContentsMargins(3, 3, 3, 3)
         self.hlayout2.addWidget(self.groupbox_noise)
         self.noise_amp = pydaw_knob_control(
             f_knob_size, _("Vol"), RAYV_NOISE_AMP,
@@ -217,7 +217,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             0, 100, 0, KC_NONE, self.port_dict, self.preset_manager)
         self.filter_keytrk.add_to_grid_layout(self.filter.layout, 3)
-        self.hlayout3 = QtGui.QHBoxLayout()
+        self.hlayout3 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout3)
         self.master = pydaw_master_widget(
             f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,

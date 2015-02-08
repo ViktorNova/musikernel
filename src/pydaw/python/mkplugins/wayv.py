@@ -579,46 +579,46 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.fm_macro_spinboxes = [[] for x in range(2)]
 
         f_lfo_types = [_("Off"), _("Sine"), _("Triangle")]
-        self.tab_widget = QtGui.QTabWidget()
+        self.tab_widget = QTabWidget()
         self.layout.addWidget(self.tab_widget)
-        self.layout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
-        self.osc_tab = QtGui.QWidget()
-        self.osc_tab_vlayout = QtGui.QVBoxLayout(self.osc_tab)
-        self.osc_scrollarea = QtGui.QScrollArea()
+        self.layout.setSizeConstraint(QLayout.SetFixedSize)
+        self.osc_tab = QWidget()
+        self.osc_tab_vlayout = QVBoxLayout(self.osc_tab)
+        self.osc_scrollarea = QScrollArea()
         self.osc_scrollarea.setHorizontalScrollBarPolicy(
             QtCore.Qt.ScrollBarAlwaysOff)
         self.osc_scrollarea.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarAlwaysOn)
         self.tab_widget.addTab(self.osc_tab, _("Oscillators"))
-        self.fm_tab = QtGui.QWidget()
+        self.fm_tab = QWidget()
         self.tab_widget.addTab(self.fm_tab, _("FM"))
-        self.modulation_tab = QtGui.QWidget()
+        self.modulation_tab = QWidget()
         self.tab_widget.addTab(self.modulation_tab, _("Modulation"))
-        self.poly_fx_tab = QtGui.QWidget()
+        self.poly_fx_tab = QWidget()
         self.tab_widget.addTab(self.poly_fx_tab, _("PolyFX"))
-        self.osc_tab_widget = QtGui.QWidget()
+        self.osc_tab_widget = QWidget()
         self.osc_tab_widget.setObjectName("plugin_ui")
         self.osc_scrollarea.setWidget(self.osc_tab_widget)
         self.osc_scrollarea.setWidgetResizable(True)
-        self.oscillator_layout = QtGui.QVBoxLayout(self.osc_tab_widget)
+        self.oscillator_layout = QVBoxLayout(self.osc_tab_widget)
         self.preset_manager = pydaw_preset_manager_widget(
             self.get_plugin_name(), self.configure_dict,
             self.reconfigure_plugin)
-        self.preset_hlayout = QtGui.QHBoxLayout()
+        self.preset_hlayout = QHBoxLayout()
         self.preset_hlayout.addWidget(self.preset_manager.group_box)
         self.preset_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
         self.osc_tab_vlayout.addLayout(self.preset_hlayout)
         self.osc_tab_vlayout.addWidget(self.osc_scrollarea)
 
-        self.hlayout0 = QtGui.QHBoxLayout()
+        self.hlayout0 = QHBoxLayout()
         self.oscillator_layout.addLayout(self.hlayout0)
         self.hlayout0.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
         f_knob_size = 48
 
         for f_i in range(1, 7):
-            f_hlayout1 = QtGui.QHBoxLayout()
+            f_hlayout1 = QHBoxLayout()
             self.oscillator_layout.addLayout(f_hlayout1)
             f_osc1 = pydaw_osc_widget(
                 f_knob_size,
@@ -675,20 +675,20 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             f_adsr_amp1_checkbox.add_to_grid_layout(f_adsr_amp1.layout, 15)
 
             f_hlayout1.addItem(
-                QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+                QSpacerItem(1, 1, QSizePolicy.Expanding))
 
 
         ######################
 
 
-        self.fm_vlayout = QtGui.QVBoxLayout(self.fm_tab)
+        self.fm_vlayout = QVBoxLayout(self.fm_tab)
 
         # FM Matrix
 
-        self.fm_matrix_hlayout = QtGui.QHBoxLayout()
+        self.fm_matrix_hlayout = QHBoxLayout()
         self.fm_vlayout.addLayout(self.fm_matrix_hlayout)
-        self.fm_matrix_hlayout.addWidget(QtGui.QLabel("FM Matrix"))
-        self.fm_matrix = QtGui.QTableWidget()
+        self.fm_matrix_hlayout.addWidget(QLabel("FM Matrix"))
+        self.fm_matrix = QTableWidget()
 
         self.fm_matrix.setCornerButtonEnabled(False)
         self.fm_matrix.setRowCount(6)
@@ -702,9 +702,9 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.fm_matrix.setHorizontalScrollBarPolicy(
             QtCore.Qt.ScrollBarAlwaysOff)
         self.fm_matrix.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.fm_matrix.horizontalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
-        self.fm_matrix.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.fm_matrix.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Fixed)
+        self.fm_matrix.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
 
         self.fm_matrix_hlayout.addWidget(self.fm_matrix)
 
@@ -722,12 +722,12 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.fm_matrix.resizeColumnsToContents()
 
-        self.fm_matrix_button = QtGui.QPushButton(_("Menu"))
+        self.fm_matrix_button = QPushButton(_("Menu"))
         self.fm_matrix_hlayout.addWidget(
             self.fm_matrix_button,
             alignment=QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
-        self.fm_matrix_menu = QtGui.QMenu(self.widget)
+        self.fm_matrix_menu = QMenu(self.widget)
         self.fm_matrix_button.setMenu(self.fm_matrix_menu)
         f_origin_action = self.fm_matrix_menu.addAction(_("Set Origin"))
         f_origin_action.triggered.connect(self.set_fm_origin)
@@ -750,24 +750,24 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         f_clear_fm_action.triggered.connect(self.clear_all)
 
         self.fm_matrix_hlayout.addWidget(
-            QtGui.QLabel(_("FM\nModulation\nMacros")))
+            QLabel(_("FM\nModulation\nMacros")))
 
-        self.fm_macro_knobs_gridlayout = QtGui.QGridLayout()
+        self.fm_macro_knobs_gridlayout = QGridLayout()
         self.fm_macro_knobs_gridlayout.addItem(
-            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding),
+            QSpacerItem(1, 1, vPolicy=QSizePolicy.Expanding),
             10, 0)
 
         self.fm_matrix_hlayout.addLayout(self.fm_macro_knobs_gridlayout)
 
         self.fm_matrix_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
 
         self.fm_macro_knobs = []
         self.osc_amp_mod_matrix_spinboxes = [[] for x in range(2)]
 
-        self.fm_macro_labels_hlayout = QtGui.QHBoxLayout()
+        self.fm_macro_labels_hlayout = QHBoxLayout()
         self.fm_vlayout.addLayout(self.fm_macro_labels_hlayout)
-        self.fm_macro_matrix_hlayout = QtGui.QHBoxLayout()
+        self.fm_macro_matrix_hlayout = QHBoxLayout()
         self.fm_vlayout.addLayout(self.fm_macro_matrix_hlayout)
 
         for f_i in range(2):
@@ -780,9 +780,9 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             f_macro.add_to_grid_layout(self.fm_macro_knobs_gridlayout, f_i)
             self.fm_macro_knobs.append(f_macro)
 
-            f_fm_macro_matrix = QtGui.QTableWidget()
+            f_fm_macro_matrix = QTableWidget()
             self.fm_macro_labels_hlayout.addWidget(
-                QtGui.QLabel("Macro {}".format(f_i + 1),
+                QLabel("Macro {}".format(f_i + 1),
                 f_fm_macro_matrix), -1)
 
             f_fm_macro_matrix.setCornerButtonEnabled(False)
@@ -801,10 +801,10 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
                 QtCore.Qt.ScrollBarAlwaysOff)
             f_fm_macro_matrix.setVerticalScrollBarPolicy(
                 QtCore.Qt.ScrollBarAlwaysOff)
-            f_fm_macro_matrix.horizontalHeader().setResizeMode(
-                QtGui.QHeaderView.Fixed)
-            f_fm_macro_matrix.verticalHeader().setResizeMode(
-                QtGui.QHeaderView.Fixed)
+            f_fm_macro_matrix.horizontalHeader().setSectionResizeMode(
+                QHeaderView.Fixed)
+            f_fm_macro_matrix.verticalHeader().setSectionResizeMode(
+                QHeaderView.Fixed)
 
             self.fm_macro_matrix_hlayout.addWidget(f_fm_macro_matrix)
 
@@ -834,15 +834,15 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
                 self.osc_amp_mod_matrix_spinboxes[f_i].append(f_spinbox)
                 f_fm_macro_matrix.resizeColumnsToContents()
         self.fm_macro_matrix_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
         self.fm_vlayout.addItem(
-            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, vPolicy=QSizePolicy.Expanding))
 
         ############################
 
-        self.modulation_vlayout = QtGui.QVBoxLayout(self.modulation_tab)
+        self.modulation_vlayout = QVBoxLayout(self.modulation_tab)
 
-        self.hlayout_master = QtGui.QHBoxLayout()
+        self.hlayout_master = QHBoxLayout()
         self.modulation_vlayout.addLayout(self.hlayout_master)
         self.master = pydaw_master_widget(
             f_knob_size, self.plugin_rel_callback,
@@ -873,7 +873,7 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             WAYV_PERC_ENV_PITCH2, WAYV_PERC_ENV_ON,
             a_preset_mgr=self.preset_manager)
 
-        self.hlayout_master2 = QtGui.QHBoxLayout()
+        self.hlayout_master2 = QHBoxLayout()
         self.modulation_vlayout.addLayout(self.hlayout_master2)
         self.hlayout_master2.addWidget(self.perc_env.groupbox)
 
@@ -892,9 +892,9 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.port_dict, self.preset_manager)
         self.adsr_noise_on.add_to_grid_layout(self.adsr_noise.layout, 21)
 
-        self.groupbox_noise = QtGui.QGroupBox(_("Noise"))
+        self.groupbox_noise = QGroupBox(_("Noise"))
         self.groupbox_noise.setObjectName("plugin_groupbox")
-        self.groupbox_noise_layout = QtGui.QGridLayout(self.groupbox_noise)
+        self.groupbox_noise_layout = QGridLayout(self.groupbox_noise)
         self.hlayout_master2.addWidget(self.groupbox_noise)
         self.noise_amp = pydaw_knob_control(
             f_knob_size, _("Vol"), WAYV_NOISE_AMP,
@@ -917,22 +917,22 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.noise_prefx.add_to_grid_layout(self.groupbox_noise_layout, 6)
 
         self.modulation_vlayout.addItem(
-            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, vPolicy=QSizePolicy.Expanding))
 
         self.hlayout_master.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
 
         self.hlayout_master2.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
 
-        self.modulation_vlayout.addWidget(QtGui.QLabel(_("PolyFX")))
+        self.modulation_vlayout.addWidget(QLabel(_("PolyFX")))
 
         ############################
 
-        self.main_layout = QtGui.QVBoxLayout(self.poly_fx_tab)
-        self.hlayout5 = QtGui.QHBoxLayout()
+        self.main_layout = QVBoxLayout(self.poly_fx_tab)
+        self.hlayout5 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout5)
-        self.hlayout6 = QtGui.QHBoxLayout()
+        self.hlayout6 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout6)
         #From Modulex
         self.fx0 = pydaw_modulex_single(
@@ -956,7 +956,7 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.port_dict, self.preset_manager, a_knob_size=f_knob_size)
         self.hlayout6.addWidget(self.fx3.group_box)
 
-        self.mod_matrix = QtGui.QTableWidget()
+        self.mod_matrix = QTableWidget()
         self.mod_matrix.setCornerButtonEnabled(False)
         self.mod_matrix.setRowCount(8)
         self.mod_matrix.setColumnCount(12)
@@ -965,9 +965,9 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             QtCore.Qt.ScrollBarAlwaysOff)
         self.mod_matrix.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarAlwaysOff)
-        self.mod_matrix.horizontalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
-        self.mod_matrix.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.mod_matrix.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Fixed)
+        self.mod_matrix.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         f_hlabels = ["FX{}\nCtrl{}".format(x, y)
             for x in range(4) for y in range(1, 4)]
         self.mod_matrix.setHorizontalHeaderLabels(f_hlabels)
@@ -994,9 +994,9 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.mod_matrix.resizeColumnsToContents()
 
         self.main_layout.addItem(
-            QtGui.QSpacerItem(1, 1, vPolicy=QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, vPolicy=QSizePolicy.Expanding))
 
-        self.hlayout7 = QtGui.QHBoxLayout()
+        self.hlayout7 = QHBoxLayout()
         self.modulation_vlayout.addLayout(self.hlayout7)
 
         self.adsr_amp = pydaw_adsr_widget(
@@ -1032,7 +1032,7 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.pitch_env.amt_knob.control.setRange(-60, 60)
         self.hlayout7.addWidget(self.pitch_env.groupbox)
         self.hlayout7.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
 
         self.lfo = pydaw_lfo_widget(
             f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
@@ -1040,7 +1040,7 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
             WAYV_LFO_TYPE, f_lfo_types,
             _("LFO"), self.preset_manager, WAYV_LFO_PHASE)
 
-        self.lfo_hlayout = QtGui.QHBoxLayout()
+        self.lfo_hlayout = QHBoxLayout()
         self.modulation_vlayout.addLayout(self.lfo_hlayout)
         self.lfo_hlayout.addWidget(self.lfo.groupbox)
 
@@ -1084,7 +1084,7 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.adsr_lfo_on.add_to_grid_layout(self.adsr_lfo.layout, 21)
 
         self.lfo_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
 
         self.additive_osc = pydaw_custom_additive_oscillator(
             self.configure_plugin)

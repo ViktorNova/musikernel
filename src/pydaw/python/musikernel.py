@@ -13,7 +13,9 @@ GNU General Public License for more details.
 
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 
 from libpydaw import pydaw_util, pydaw_widgets, pydaw_device_dialog
 from libpydaw.pydaw_util import *
@@ -108,44 +110,44 @@ class transport_widget:
     def __init__(self):
         self.suppress_osc = True
         self.last_open_dir = pydaw_util.global_home
-        self.group_box = QtGui.QGroupBox()
+        self.group_box = QGroupBox()
         self.group_box.setObjectName("transport_panel")
-        self.vlayout = QtGui.QVBoxLayout()
+        self.vlayout = QVBoxLayout()
         self.group_box.setLayout(self.vlayout)
-        self.hlayout1 = QtGui.QHBoxLayout()
+        self.hlayout1 = QHBoxLayout()
         self.vlayout.addLayout(self.hlayout1)
-        self.play_button = QtGui.QRadioButton()
+        self.play_button = QRadioButton()
         self.play_button.setObjectName("play_button")
         self.play_button.clicked.connect(self.on_play)
         self.hlayout1.addWidget(self.play_button)
-        self.stop_button = QtGui.QRadioButton()
+        self.stop_button = QRadioButton()
         self.stop_button.setChecked(True)
         self.stop_button.setObjectName("stop_button")
         self.stop_button.clicked.connect(self.on_stop)
         self.hlayout1.addWidget(self.stop_button)
-        self.rec_button = QtGui.QRadioButton()
+        self.rec_button = QRadioButton()
         self.rec_button.setObjectName("rec_button")
         self.rec_button.clicked.connect(self.on_rec)
         self.hlayout1.addWidget(self.rec_button)
-        self.grid_layout1 = QtGui.QGridLayout()
+        self.grid_layout1 = QGridLayout()
         self.hlayout1.addLayout(self.grid_layout1)
 
-        f_time_label = QtGui.QLabel(_("Time"))
+        f_time_label = QLabel(_("Time"))
         f_time_label.setAlignment(QtCore.Qt.AlignCenter)
         self.grid_layout1.addWidget(f_time_label, 0, 27)
-        self.time_label = QtGui.QLabel(_("0:00"))
+        self.time_label = QLabel(_("0:00"))
         self.time_label.setMinimumWidth(90)
         self.time_label.setAlignment(QtCore.Qt.AlignCenter)
         self.grid_layout1.addWidget(self.time_label, 1, 27)
 
-        self.menu_button = QtGui.QPushButton(_("Menu"))
+        self.menu_button = QPushButton(_("Menu"))
         self.grid_layout1.addWidget(self.menu_button, 1, 50)
-        self.panic_button = QtGui.QPushButton(_("Panic"))
+        self.panic_button = QPushButton(_("Panic"))
         self.panic_button.pressed.connect(self.on_panic)
         self.grid_layout1.addWidget(self.panic_button, 0, 50)
 
-        self.grid_layout1.addWidget(QtGui.QLabel(_("Host")), 0, 55)
-        self.host_combobox = QtGui.QComboBox()
+        self.grid_layout1.addWidget(QLabel(_("Host")), 0, 55)
+        self.host_combobox = QComboBox()
         self.host_combobox.setMinimumWidth(120)
         self.host_combobox.addItems(["DAW-Next", "EDM-Next", "Wave-Next"])
         self.host_combobox.currentIndexChanged.connect(
@@ -246,10 +248,10 @@ class OscThread(QtCore.QThread):
         self.osc_server.serve_forever()
         self.terminate()
 
-class MkMainWindow(QtGui.QMainWindow):
+class MkMainWindow(QMainWindow):
     def __init__(self):
         self.suppress_resize_events = False
-        QtGui.QMainWindow.__init__(self)
+        QMainWindow.__init__(self)
         libmk.MAIN_WINDOW = self
         try:
             libmk.OSC = pythonosc.udp_client.UDPClient("localhost", 19271)
@@ -262,30 +264,30 @@ class MkMainWindow(QtGui.QMainWindow):
         self.setObjectName("plugin_ui")
         self.setMinimumSize(500, 500)
         self.last_ac_dir = pydaw_util.global_home
-        self.widget = QtGui.QWidget()
+        self.widget = QWidget()
         self.widget.setObjectName("plugin_ui")
         self.setCentralWidget(self.widget)
-        self.main_layout = QtGui.QVBoxLayout(self.widget)
-        self.main_layout.setMargin(0)
-        self.transport_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+        self.main_layout = QVBoxLayout(self.widget)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.transport_splitter = QSplitter(QtCore.Qt.Vertical)
         self.main_layout.addWidget(self.transport_splitter)
 
-        self.transport_widget = QtGui.QWidget()
-        self.transport_hlayout = QtGui.QHBoxLayout(self.transport_widget)
-        self.transport_hlayout.setMargin(2)
+        self.transport_widget = QWidget()
+        self.transport_hlayout = QHBoxLayout(self.transport_widget)
+        self.transport_hlayout.setContentsMargins(2, 2, 2, 2)
         self.transport_splitter.addWidget(self.transport_widget)
         self.transport_widget.setSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+            QSizePolicy.Minimum, QSizePolicy.Minimum)
 
         self.transport_hlayout.addWidget(
             libmk.TRANSPORT.group_box, alignment=QtCore.Qt.AlignLeft)
-        self.transport_stack = QtGui.QStackedWidget()
+        self.transport_stack = QStackedWidget()
         self.transport_hlayout.addWidget(
             self.transport_stack, alignment=QtCore.Qt.AlignLeft)
-        self.transport_hlayout.addItem(QtGui.QSpacerItem(
-            1, 1, QtGui.QSizePolicy.Expanding))
+        self.transport_hlayout.addItem(QSpacerItem(
+            1, 1, QSizePolicy.Expanding))
 
-        self.main_stack = QtGui.QStackedWidget()
+        self.main_stack = QStackedWidget()
         self.transport_splitter.addWidget(self.main_stack)
 
         import dawnext
@@ -311,29 +313,29 @@ class MkMainWindow(QtGui.QMainWindow):
         libmk.TRANSPORT.host_combobox.setCurrentIndex(
             pydaw_util.get_file_setting("host", int, 0))
 
-        self.menu_bar = QtGui.QMenu(self)
+        self.menu_bar = QMenu(self)
 
         libmk.TRANSPORT.menu_button.setMenu(self.menu_bar)
         self.menu_file = self.menu_bar.addMenu(_("File"))
 
         self.new_action = self.menu_file.addAction(_("New..."))
         self.new_action.triggered.connect(self.on_new)
-        self.new_action.setShortcut(QtGui.QKeySequence.New)
+        self.new_action.setShortcut(QKeySequence.New)
 
         self.open_action = self.menu_file.addAction(_("Open..."))
         self.open_action.triggered.connect(self.on_open)
-        self.open_action.setShortcut(QtGui.QKeySequence.Open)
+        self.open_action.setShortcut(QKeySequence.Open)
 
         self.save_action = self.menu_file.addAction(
             _("Save (projects are automatically saved, "
             "this creates a timestamped backup)"))
         self.save_action.triggered.connect(self.on_save)
-        self.save_action.setShortcut(QtGui.QKeySequence.Save)
+        self.save_action.setShortcut(QKeySequence.Save)
 
         self.save_as_action = self.menu_file.addAction(
             _("Save As...(this creates a named backup)"))
         self.save_as_action.triggered.connect(self.on_save_as)
-        self.save_as_action.setShortcut(QtGui.QKeySequence.SaveAs)
+        self.save_as_action.setShortcut(QKeySequence.SaveAs)
 
         self.save_copy_action = self.menu_file.addAction(
             _("Save Copy...("
@@ -366,17 +368,17 @@ class MkMainWindow(QtGui.QMainWindow):
 
         self.quit_action = self.menu_file.addAction(_("Quit"))
         self.quit_action.triggered.connect(self.close)
-        self.quit_action.setShortcut(QtGui.QKeySequence.Quit)
+        self.quit_action.setShortcut(QKeySequence.Quit)
 
         self.menu_edit = self.menu_bar.addMenu(_("Edit"))
 
         self.undo_action = self.menu_edit.addAction(_("Undo"))
         self.undo_action.triggered.connect(self.on_undo)
-        self.undo_action.setShortcut(QtGui.QKeySequence.Undo)
+        self.undo_action.setShortcut(QKeySequence.Undo)
 
         self.redo_action = self.menu_edit.addAction(_("Redo"))
         self.redo_action.triggered.connect(self.on_redo)
-        self.redo_action.setShortcut(QtGui.QKeySequence.Redo)
+        self.redo_action.setShortcut(QKeySequence.Redo)
 
         self.menu_appearance = self.menu_bar.addMenu(_("Appearance"))
 
@@ -385,14 +387,14 @@ class MkMainWindow(QtGui.QMainWindow):
         self.collapse_splitters_action.triggered.connect(
             self.on_collapse_splitters)
         self.collapse_splitters_action.setShortcut(
-            QtGui.QKeySequence("CTRL+Up"))
+            QKeySequence("CTRL+Up"))
 
         self.restore_splitters_action = self.menu_appearance.addAction(
             _("Restore Transport and Song Editor"))
         self.restore_splitters_action.triggered.connect(
             self.on_restore_splitters)
         self.restore_splitters_action.setShortcut(
-            QtGui.QKeySequence("CTRL+Down"))
+            QKeySequence("CTRL+Down"))
 
         self.menu_appearance.addSeparator()
 
@@ -424,16 +426,16 @@ class MkMainWindow(QtGui.QMainWindow):
         self.tooltips_action.setChecked(libmk.TOOLTIPS_ENABLED)
         self.tooltips_action.triggered.connect(self.set_tooltips_enabled)
 
-        self.panic_action = QtGui.QAction(self)
+        self.panic_action = QAction(self)
         self.addAction(self.panic_action)
-        self.panic_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+P"))
+        self.panic_action.setShortcut(QKeySequence.fromString("CTRL+P"))
         self.panic_action.triggered.connect(libmk.TRANSPORT.on_panic)
 
-        self.spacebar_action = QtGui.QAction(self)
+        self.spacebar_action = QAction(self)
         self.addAction(self.spacebar_action)
         self.spacebar_action.triggered.connect(self.on_spacebar)
         self.spacebar_action.setShortcut(
-            QtGui.QKeySequence(QtCore.Qt.Key_Space))
+            QKeySequence(QtCore.Qt.Key_Space))
 
         try:
             self.dispatcher = pythonosc.dispatcher.Dispatcher()
@@ -461,13 +463,14 @@ class MkMainWindow(QtGui.QMainWindow):
         else:
             self.subprocess_timer = None
 
+        self.setWindowState(QtCore.Qt.WindowMaximized)
         self.on_restore_splitters()
         self.show()
 
     def resizeEvent(self, a_event):
         if self.suppress_resize_events:
             return
-        QtGui.QMainWindow.resizeEvent(self, a_event)
+        QMainWindow.resizeEvent(self, a_event)
         # Fix the taskbar overlapping the bottom of the window
         if self.isMaximized() and pydaw_util.IS_CYGWIN:
             self.suppress_resize_events = True
@@ -508,22 +511,22 @@ class MkMainWindow(QtGui.QMainWindow):
                 f_time_label.setText(str(round(f_elapsed_time, 1)))
 
         f_start_time = time.time()
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Rendering to .wav, please wait"))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
-        f_time_label = QtGui.QLabel("")
+        f_time_label = QLabel("")
         f_time_label.setMinimumWidth(360)
         f_layout.addWidget(f_time_label, 1, 1)
         f_timer = QtCore.QTimer()
         f_timer.timeout.connect(timeout_handler)
 
-        f_ok = QtGui.QPushButton(_("OK"))
+        f_ok = QPushButton(_("OK"))
         f_ok.pressed.connect(ok_handler)
         f_ok.setEnabled(False)
         f_layout.addWidget(f_ok)
         f_layout.addWidget(f_ok, 2, 2)
-        #f_cancel = QtGui.QPushButton("Cancel")
+        #f_cancel = QPushButton("Cancel")
         #f_cancel.pressed.connect(cancel_handler)
         #f_layout.addWidget(f_cancel, 9, 2)
         f_timer.start(100)
@@ -560,7 +563,7 @@ class MkMainWindow(QtGui.QMainWindow):
                 f_exitCode = f_proc.returncode
                 if f_exitCode != 0:
                     f_window.close()
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self, _("Error"),
                         _("Offline render exited abnormally with exit "
                         "code {}").format(f_exitCode))
@@ -571,29 +574,29 @@ class MkMainWindow(QtGui.QMainWindow):
         f_proc = subprocess.Popen(
             a_cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         f_start_time = time.time()
-        f_window = QtGui.QDialog(
+        f_window = QDialog(
             MAIN_WINDOW,
             QtCore.Qt.WindowTitleHint | QtCore.Qt.FramelessWindowHint)
         f_window.setWindowTitle(_("Rendering to .wav, please wait"))
         f_window.setMinimumSize(420, 210)
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
-        f_time_label = QtGui.QLabel("")
+        f_time_label = QLabel("")
         f_time_label.setMinimumWidth(360)
         f_layout.addWidget(f_time_label, 1, 1)
         f_timer = QtCore.QTimer()
         f_timer.timeout.connect(timeout_handler)
 
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_ok_cancel_layout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
         f_layout.addLayout(f_ok_cancel_layout, 2, 1)
-        f_ok = QtGui.QPushButton(_("OK"))
+        f_ok = QPushButton(_("OK"))
         f_ok.setMinimumWidth(75)
         f_ok.pressed.connect(ok_handler)
         f_ok.setEnabled(False)
         f_ok_cancel_layout.addWidget(f_ok)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
+        f_cancel = QPushButton(_("Cancel"))
         f_cancel.setMinimumWidth(75)
         f_cancel.pressed.connect(cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel)
@@ -606,7 +609,7 @@ class MkMainWindow(QtGui.QMainWindow):
         """
         f_parent_dir = os.path.dirname(a_file)
         if os.listdir(f_parent_dir):
-            QtGui.QMessageBox.warning(self, _("Error"),
+            QMessageBox.warning(self, _("Error"),
             _("You must save the project file to an empty directory, use "
             "the 'Create Folder' button to create a directory."))
             return False
@@ -615,7 +618,7 @@ class MkMainWindow(QtGui.QMainWindow):
 
     def check_for_rw_perms(self, a_file):
         if not os.access(os.path.dirname(str(a_file)), os.W_OK):
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self, _("Error"),
                 _("You do not have read+write permissions to "
                 "{}".format(global_pydaw_home)))
@@ -631,17 +634,17 @@ class MkMainWindow(QtGui.QMainWindow):
                 if exitCode == 0:
                     pass
                 elif exitCode == 1000:
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self, _("Error"), _("Audio device not found"))
                 elif exitCode == 1001:
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self, _("Error"), _("Device config not found"))
                 elif exitCode == 1002:
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self, _("Error"),
                         _("Unknown error opening audio device"))
                 else:
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self, _("Error"),
                         _("The audio engine died with error code {}, "
                         "please try restarting MusiKernel").format(exitCode))
@@ -660,7 +663,7 @@ class MkMainWindow(QtGui.QMainWindow):
             return
         try:
             while True:
-                f_file = QtGui.QFileDialog.getSaveFileName(
+                f_file, f_filter = QFileDialog.getSaveFileName(
                     parent=self, caption=_('New Project'),
                     directory=os.path.join(
                         global_home,
@@ -686,7 +689,7 @@ class MkMainWindow(QtGui.QMainWindow):
         if libmk.IS_PLAYING:
             return
         try:
-            f_file = QtGui.QFileDialog.getOpenFileName(
+            f_file, f_filter = QFileDialog.getOpenFileName(
                 parent=self, caption=_('Open Project'),
                 directory=global_default_project_folder,
                 filter=global_pydaw_file_type_string)
@@ -706,12 +709,12 @@ class MkMainWindow(QtGui.QMainWindow):
             libmk.pydaw_print_generic_exception(ex)
 
     def on_project_history(self):
-        f_result = QtGui.QMessageBox.warning(
+        f_result = QMessageBox.warning(
             self, _("Warning"), _("This will close the application, "
             "restart the application after you're done with the "
             "project history editor"),
-            buttons=QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
-        if f_result == QtGui.QMessageBox.Ok:
+            buttons=QMessageBox.Ok | QMessageBox.Cancel)
+        if f_result == QMessageBox.Ok:
             libmk.PROJECT.show_project_history()
             self.ignore_close_event = False
             self.prepare_to_quit()
@@ -731,23 +734,23 @@ class MkMainWindow(QtGui.QMainWindow):
                 if libmk.PROJECT.create_backup(f_name):
                     f_window.close()
                 else:
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self, _("Error"), _("This name already exists, "
                         "please choose another name"))
 
-        f_window = QtGui.QDialog()
+        f_window = QDialog()
         f_window.setWindowTitle(_("Save As..."))
-        f_layout = QtGui.QVBoxLayout(f_window)
-        f_lineedit = QtGui.QLineEdit()
+        f_layout = QVBoxLayout(f_window)
+        f_lineedit = QLineEdit()
         f_lineedit.setMinimumWidth(240)
         f_lineedit.setMaxLength(48)
         f_layout.addWidget(f_lineedit)
-        f_ok_layout = QtGui.QHBoxLayout()
+        f_ok_layout = QHBoxLayout()
         f_layout.addLayout(f_ok_layout)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(ok_handler)
         f_ok_layout.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_ok_layout.addWidget(f_cancel_button)
         f_cancel_button.pressed.connect(f_window.close)
         f_window.exec_()
@@ -757,7 +760,7 @@ class MkMainWindow(QtGui.QMainWindow):
             return
         try:
             while True:
-                f_new_file = QtGui.QFileDialog.getSaveFileName(
+                f_new_file, f_filter = QFileDialog.getSaveFileName(
                     self, _("Save copy of project as..."),
                     directory=os.path.join(
                         global_default_project_folder,
@@ -823,11 +826,11 @@ class MkMainWindow(QtGui.QMainWindow):
             if libmk.IS_PLAYING:
                 return
             self.setEnabled(False)
-            f_reply = QtGui.QMessageBox.question(
+            f_reply = QMessageBox.question(
                 self, _('Message'), _("Are you sure you want to quit?"),
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.Cancel,
-                QtGui.QMessageBox.Cancel)
-            if f_reply == QtGui.QMessageBox.Cancel:
+                QMessageBox.Yes | QMessageBox.Cancel,
+                QMessageBox.Cancel)
+            if f_reply == QMessageBox.Cancel:
                 self.setEnabled(True)
                 return
             else:
@@ -851,7 +854,7 @@ class MkMainWindow(QtGui.QMainWindow):
 
     def on_open_theme(self):
         try:
-            f_file = QtGui.QFileDialog.getOpenFileName(
+            f_file, f_filter = QFileDialog.getOpenFileName(
                 self, _("Open a theme file"),
                 os.path.join(
                     pydaw_util.INSTALL_PREFIX, "lib",
@@ -863,41 +866,41 @@ class MkMainWindow(QtGui.QMainWindow):
                 f_dir = os.path.dirname(f_file)
                 f_style = pydaw_escape_stylesheet(f_style, f_dir)
                 pydaw_write_file_text(global_user_style_file, f_file)
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     MAIN_WINDOW, _("Theme Applied..."),
                     _("Please restart MusiKernel to update the UI"))
         except Exception as ex:
             libmk.pydaw_print_generic_exception(ex)
 
     def on_version(self):
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Version Info"))
         f_window.setFixedSize(420, 150)
-        f_layout = QtGui.QVBoxLayout()
+        f_layout = QVBoxLayout()
         f_window.setLayout(f_layout)
         f_minor_version = pydaw_read_file_text(
             os.path.join(
                 pydaw_util.INSTALL_PREFIX, "lib",
                 global_pydaw_version_string, "minor-version.txt"))
-        f_version = QtGui.QLabel(
+        f_version = QLabel(
             "{}-{}".format(global_pydaw_version_string, f_minor_version))
         f_version.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         f_layout.addWidget(f_version)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_layout.addWidget(f_ok_button)
         f_ok_button.pressed.connect(f_window.close)
         f_window.exec_()
 
     def on_troubleshoot(self):
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Troubleshooting"))
         f_window.setFixedSize(640, 460)
-        f_layout = QtGui.QVBoxLayout()
+        f_layout = QVBoxLayout()
         f_window.setLayout(f_layout)
-        f_label = QtGui.QTextEdit(libpydaw.strings.troubleshooting)
+        f_label = QTextEdit(libpydaw.strings.troubleshooting)
         f_label.setReadOnly(True)
         f_layout.addWidget(f_label)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_layout.addWidget(f_ok_button)
         f_ok_button.pressed.connect(f_window.close)
         f_window.exec_()
@@ -916,23 +919,25 @@ class MkMainWindow(QtGui.QMainWindow):
 
 
     def mp3_converter_dialog(self):
-        if pydaw_which("avconv") is None and \
-        pydaw_which("ffmpeg") is not None:
-            f_avconv = "ffmpeg"
+        if pydaw_which("avconv"):
+            f_enc = "avconv"
+        elif pydaw_which("ffmpeg"):
+            f_enc = "ffmpeg"
         else:
-            f_avconv = "avconv"
+            f_enc = "avconv"
+
         f_lame = "lame"
-        for f_app in (f_avconv, f_lame):
+        for f_app in (f_enc, f_lame):
             if pydaw_which(f_app) is None:
-                QtGui.QMessageBox.warning(self, _("Error"),
+                QMessageBox.warning(self, _("Error"),
                     libpydaw.strings.avconv_error.format(f_app))
                 return
-        self.audio_converter_dialog("lame", "avconv", "mp3")
+        self.audio_converter_dialog("lame", f_enc, "mp3")
 
     def ogg_converter_dialog(self):
         if pydaw_which("oggenc") is None or \
         pydaw_which("oggdec") is None:
-            QtGui.QMessageBox.warning(self, _("Error"),
+            QMessageBox.warning(self, _("Error"),
                 _("Error, vorbis-tools are not installed"))
             return
         self.audio_converter_dialog("oggenc", "oggdec", "ogg")
@@ -962,7 +967,7 @@ class MkMainWindow(QtGui.QMainWindow):
             f_input_file = str(f_name.text())
             f_output_file = str(f_output_name.text())
             if f_input_file == "" or f_output_file == "":
-                QtGui.QMessageBox.warning(f_window, _("Error"),
+                QMessageBox.warning(f_window, _("Error"),
                                           _("File names cannot be empty"))
                 return
             if f_batch_checkbox.isChecked():
@@ -974,7 +979,7 @@ class MkMainWindow(QtGui.QMainWindow):
                 f_list = [x for x in os.listdir(f_input_file)
                     if x.upper().endswith(f_ext)]
                 if not f_list:
-                    QtGui.QMessageBox.warning(f_window, _("Error"),
+                    QMessageBox.warning(f_window, _("Error"),
                           _("No {} files in {}".format(f_ext, f_input_file)))
                     return
                 f_proc_list = []
@@ -988,7 +993,7 @@ class MkMainWindow(QtGui.QMainWindow):
                     f_proc_list.append((f_proc, f_out))
                 for f_proc, f_out in f_proc_list:
                     f_status_label.setText(f_out)
-                    QtGui.QApplication.processEvents()
+                    QApplication.processEvents()
                     f_proc.communicate()
             else:
                 f_cmd = get_cmd(f_input_file, f_output_file)
@@ -996,7 +1001,7 @@ class MkMainWindow(QtGui.QMainWindow):
                 f_proc.communicate()
             if f_close_checkbox.isChecked():
                 f_window.close()
-            QtGui.QMessageBox.warning(self, _("Success"), _("Created file(s)"))
+            QMessageBox.warning(self, _("Success"), _("Created file(s)"))
 
         def cancel_handler():
             f_window.close()
@@ -1013,7 +1018,7 @@ class MkMainWindow(QtGui.QMainWindow):
                 if not os.path.isdir(self.last_ac_dir):
                     self.last_ac_dir = global_home
                 if f_batch_checkbox.isChecked():
-                    f_dir = QtGui.QFileDialog.getExistingDirectory(f_window,
+                    f_dir = QFileDialog.getExistingDirectory(f_window,
                         _("Open Folder"), self.last_ac_dir)
                     if f_dir is None:
                         return
@@ -1023,7 +1028,7 @@ class MkMainWindow(QtGui.QMainWindow):
                     f_name.setText(f_dir)
                     self.last_ac_dir = f_dir
                 else:
-                    f_file_name = QtGui.QFileDialog.getOpenFileName(
+                    f_file_name, f_filter = QFileDialog.getOpenFileName(
                         f_window, _("Select a file name to save to..."),
                         self.last_ac_dir,
                         filter=_("Audio Files {}").format(
@@ -1045,7 +1050,7 @@ class MkMainWindow(QtGui.QMainWindow):
                 if not os.path.isdir(self.last_ac_dir):
                     self.last_ac_dir = global_home
                 if f_batch_checkbox.isChecked():
-                    f_dir = QtGui.QFileDialog.getExistingDirectory(f_window,
+                    f_dir = QFileDialog.getExistingDirectory(f_window,
                         _("Open Folder"), self.last_ac_dir)
                     if f_dir is None:
                         return
@@ -1055,7 +1060,7 @@ class MkMainWindow(QtGui.QMainWindow):
                     f_output_name.setText(f_dir)
                     self.last_ac_dir = f_dir
                 else:
-                    f_file_name = QtGui.QFileDialog.getSaveFileName(
+                    f_file_name, f_filter = QFileDialog.getSaveFileName(
                         f_window, _("Select a file name to save to..."),
                         self.last_ac_dir)
                     if not f_file_name is None and str(f_file_name) != "":
@@ -1083,73 +1088,73 @@ class MkMainWindow(QtGui.QMainWindow):
             f_output_name.setText("")
 
         self.ac_ext = ".wav"
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
 
         f_window.setWindowTitle(_("{} Converter".format(a_label)))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_name = QtGui.QLineEdit()
+        f_name = QLineEdit()
         f_name.setReadOnly(True)
         f_name.setMinimumWidth(480)
-        f_layout.addWidget(QtGui.QLabel(_("Input:")), 0, 0)
+        f_layout.addWidget(QLabel(_("Input:")), 0, 0)
         f_layout.addWidget(f_name, 0, 1)
-        f_select_file = QtGui.QPushButton(_("Select"))
+        f_select_file = QPushButton(_("Select"))
         f_select_file.pressed.connect(file_name_select)
         f_layout.addWidget(f_select_file, 0, 2)
 
-        f_output_name = QtGui.QLineEdit()
+        f_output_name = QLineEdit()
         f_output_name.setReadOnly(True)
         f_output_name.setMinimumWidth(480)
-        f_layout.addWidget(QtGui.QLabel(_("Output:")), 1, 0)
+        f_layout.addWidget(QLabel(_("Output:")), 1, 0)
         f_layout.addWidget(f_output_name, 1, 1)
-        f_select_file_output = QtGui.QPushButton(_("Select"))
+        f_select_file_output = QPushButton(_("Select"))
         f_select_file_output.pressed.connect(file_name_select_output)
         f_layout.addWidget(f_select_file_output, 1, 2)
 
-        f_layout.addWidget(QtGui.QLabel(_("Convert to:")), 2, 1)
-        f_rb_group = QtGui.QButtonGroup()
-        f_wav_radiobutton = QtGui.QRadioButton("wav")
+        f_layout.addWidget(QLabel(_("Convert to:")), 2, 1)
+        f_rb_group = QButtonGroup()
+        f_wav_radiobutton = QRadioButton("wav")
         f_wav_radiobutton.setChecked(True)
         f_rb_group.addButton(f_wav_radiobutton)
-        f_wav_layout = QtGui.QHBoxLayout()
+        f_wav_layout = QHBoxLayout()
         f_wav_layout.addWidget(f_wav_radiobutton)
         f_layout.addLayout(f_wav_layout, 3, 1)
         f_wav_radiobutton.toggled.connect(format_changed)
 
-        f_mp3_radiobutton = QtGui.QRadioButton(a_label)
+        f_mp3_radiobutton = QRadioButton(a_label)
         f_rb_group.addButton(f_mp3_radiobutton)
-        f_mp3_layout = QtGui.QHBoxLayout()
+        f_mp3_layout = QHBoxLayout()
         f_mp3_layout.addWidget(f_mp3_radiobutton)
         f_mp3_radiobutton.toggled.connect(format_changed)
-        f_mp3_br_combobox = QtGui.QComboBox()
+        f_mp3_br_combobox = QComboBox()
         f_mp3_br_combobox.addItems(["320", "256", "192", "160", "128"])
-        f_mp3_layout.addWidget(QtGui.QLabel(_("Bitrate")))
+        f_mp3_layout.addWidget(QLabel(_("Bitrate")))
         f_mp3_layout.addWidget(f_mp3_br_combobox)
         f_layout.addLayout(f_mp3_layout, 4, 1)
 
-        f_batch_checkbox = QtGui.QCheckBox(_("Batch convert entire folder?"))
+        f_batch_checkbox = QCheckBox(_("Batch convert entire folder?"))
         f_batch_checkbox.stateChanged.connect(batch_changed)
         f_layout.addWidget(f_batch_checkbox, 6, 1)
 
-        f_close_checkbox = QtGui.QCheckBox("Close on finish?")
+        f_close_checkbox = QCheckBox("Close on finish?")
         f_close_checkbox.setChecked(True)
         f_layout.addWidget(f_close_checkbox, 9, 1)
 
-        f_ok_layout = QtGui.QHBoxLayout()
+        f_ok_layout = QHBoxLayout()
         f_ok_layout.addItem(
-            QtGui.QSpacerItem(
-            10, 10, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum))
-        f_ok = QtGui.QPushButton(_("OK"))
+            QSpacerItem(
+            10, 10, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        f_ok = QPushButton(_("OK"))
         f_ok.setMinimumWidth(75)
         f_ok.pressed.connect(ok_handler)
         f_ok_layout.addWidget(f_ok)
         f_layout.addLayout(f_ok_layout, 9, 2)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
+        f_cancel = QPushButton(_("Cancel"))
         f_cancel.setMinimumWidth(75)
         f_cancel.pressed.connect(cancel_handler)
         f_ok_layout.addWidget(f_cancel)
-        f_status_label = QtGui.QLabel("")
+        f_status_label = QLabel("")
         f_layout.addWidget(f_status_label, 15, 1)
         f_window.exec_()
 
@@ -1274,11 +1279,11 @@ def kill_pydaw_engine():
 
     if len(f_result) > 0:
         print(f_result)
-        f_answer = QtGui.QMessageBox.warning(
+        f_answer = QMessageBox.warning(
             MAIN_WINDOW, _("Warning"),
             libpydaw.strings.multiple_instances_warning,
-            buttons=QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
-        if f_answer == QtGui.QMessageBox.Cancel:
+            buttons=QMessageBox.Ok | QMessageBox.Cancel)
+        if f_answer == QMessageBox.Cancel:
             exit(1)
         else:
             for f_pid in set(f_result):
@@ -1403,10 +1408,10 @@ if pydaw_util.IS_CYGWIN:
     print("Waiting for XServer")
     time.sleep(1.0)
 
-libmk.APP = QtGui.QApplication(sys.argv)
+libmk.APP = QApplication(sys.argv)
 
 libmk.APP.setWindowIcon(
-    QtGui.QIcon(os.path.join(
+    QIcon(os.path.join(
         pydaw_util.INSTALL_PREFIX, "share", "pixmaps",
         "{}.png".format(global_pydaw_version_string))))
 
@@ -1417,14 +1422,13 @@ QtCore.QTextCodec.setCodecForLocale(QtCore.QTextCodec.codecForName("UTF-8"))
 global_check_device()
 
 MAIN_WINDOW = MkMainWindow()
-MAIN_WINDOW.setWindowState(QtCore.Qt.WindowMaximized)
 
 PYDAW_SUBPROCESS = None
 
 libmk.APP.lastWindowClosed.connect(libmk.APP.quit)
 
 if not os.access(global_pydaw_home, os.W_OK):
-    QtGui.QMessageBox.warning(
+    QMessageBox.warning(
         MAIN_WINDOW.widget, _("Error"),
         _("You do not have read+write permissions to {}, please correct "
         "this and restart MusiKernel".format(global_pydaw_home)))
@@ -1440,7 +1444,7 @@ if not default_project_file:
 
 if os.path.exists(default_project_file) and \
 not os.access(os.path.dirname(default_project_file), os.W_OK):
-    QtGui.QMessageBox.warning(
+    QMessageBox.warning(
         MAIN_WINDOW, _("Error"),
         _("You do not have read+write permissions to {}, please correct "
         "this and restart MusiKernel".format(
@@ -1448,26 +1452,28 @@ not os.access(os.path.dirname(default_project_file), os.W_OK):
     MAIN_WINDOW.prepare_to_quit()
 
 if os.path.exists(default_project_file):
-#    try:
+    try:
         global_open_project(default_project_file)
-#    except Exception as ex:
-#        QtGui.QMessageBox.warning(
-#            MAIN_WINDOW, _("Error"),
-#            _("Error opening project: {}\n{}\n"
-#            "Opening project recovery dialog.  If the problem "
-#            "persists or the project can't be recovered, you may "
-#            "need to delete your settings and/or default project "
-#            "in \n{}".format(
-#            default_project_file, ex, pydaw_util.global_pydaw_home)))
-#        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
-#        MAIN_WINDOW.prepare_to_quit()
+    except Exception as ex:
+        QMessageBox.warning(
+            MAIN_WINDOW, _("Error"),
+            _("Error opening project: {}\n{}\n"
+            "Opening project recovery dialog.  If the problem "
+            "persists or the project can't be recovered, you may "
+            "need to delete your settings and/or default project "
+            "in \n{}".format(
+            default_project_file, ex, pydaw_util.global_pydaw_home)))
+        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
+        MAIN_WINDOW.prepare_to_quit()
 else:
     global_new_project(default_project_file)
 
 RESPAWN = False
 
+QPixmapCache.setCacheLimit(1024 * 1024 * 1024)
+
 libmk.set_window_title()
-libmk.APP.setStyle(QtGui.QStyleFactory.create("Fusion"))
+libmk.APP.setStyle(QStyleFactory.create("Fusion"))
 libmk.APP.exec_()
 time.sleep(0.6)
 flush_events()

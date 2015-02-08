@@ -20,18 +20,22 @@ import shutil
 from . import pydaw_util
 from libmk.mk_project import pydaw_folder_plugins
 from libpydaw.translate import _
-from PyQt4 import QtGui, QtCore
+
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 import numpy
 
 
-KNOB_ARC_GRADIENT = QtGui.QLinearGradient(0.0, 0.0, 90.0, 0.0)
+KNOB_ARC_GRADIENT = QLinearGradient(0.0, 0.0, 90.0, 0.0)
 KNOB_ARC_GRADIENT.setColorAt(
-    0.0, QtGui.QColor.fromRgb(60, 60, 255, 255))
+    0.0, QColor.fromRgb(60, 60, 255, 255))
 KNOB_ARC_GRADIENT.setColorAt(
-    0.25, QtGui.QColor.fromRgb(255, 120, 0, 255))
+    0.25, QColor.fromRgb(255, 120, 0, 255))
 KNOB_ARC_GRADIENT.setColorAt(
-    0.75, QtGui.QColor.fromRgb(255, 0, 0, 255))
-KNOB_ARC_PEN = QtGui.QPen(
+    0.75, QColor.fromRgb(255, 0, 0, 255))
+KNOB_ARC_PEN = QPen(
     KNOB_ARC_GRADIENT, 5.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap,
     QtCore.Qt.RoundJoin)
 
@@ -146,7 +150,7 @@ PYDAW_KNOB_PIXMAP_CACHE = {}
 def get_scaled_pixmap_knob(a_size):
     global PYDAW_KNOB_PIXMAP, PYDAW_KNOB_PIXMAP_CACHE
     if PYDAW_KNOB_PIXMAP is None:
-        PYDAW_KNOB_PIXMAP = QtGui.QPixmap(
+        PYDAW_KNOB_PIXMAP = QPixmap(
             os.path.join(pydaw_util.global_stylesheet_dir, "pydaw-knob.png"))
 
     if not a_size in PYDAW_KNOB_PIXMAP_CACHE:
@@ -163,9 +167,9 @@ def set_global_tempo(a_tempo):
     global TEMPO
     TEMPO = a_tempo
 
-class pydaw_pixmap_knob(QtGui.QDial):
+class pydaw_pixmap_knob(QDial):
     def __init__(self, a_size, a_min_val, a_max_val):
-        QtGui.QDial.__init__(self)
+        QDial.__init__(self)
         self.setRange(a_min_val, a_max_val)
         self.val_step = float(a_max_val - a_min_val) * 0.005  # / 200.0
         self.val_step_small = self.val_step * 0.1
@@ -175,7 +179,7 @@ class pydaw_pixmap_knob(QtGui.QDial):
         self.setFixedSize(a_size, a_size)
 
     def paintEvent(self, a_event):
-        p = QtGui.QPainter(self)
+        p = QPainter(self)
         f_frac_val = (((float)(self.value() - self.minimum())) /
             ((float)(self.maximum() - self.minimum())))
         f_rotate_value = f_frac_val * 270.0
@@ -187,8 +191,8 @@ class pydaw_pixmap_knob(QtGui.QDial):
         p.setPen(KNOB_ARC_PEN)
         p.drawArc(f_rect, -136 * 16, (f_rotate_value + 1.0) * -16)
         p.setRenderHints(
-            QtGui.QPainter.HighQualityAntialiasing |
-            QtGui.QPainter.SmoothPixmapTransform)
+            QPainter.HighQualityAntialiasing |
+            QPainter.SmoothPixmapTransform)
         # xc and yc are the center of the widget's rect.
         xc = self.width() * 0.5
         yc = self.height() * 0.5
@@ -203,15 +207,15 @@ class pydaw_pixmap_knob(QtGui.QDial):
 
     def mousePressEvent(self, a_event):
         if a_event.button() == QtCore.Qt.RightButton:
-            QtGui.QDial.mousePressEvent(self, a_event)
+            QDial.mousePressEvent(self, a_event)
             return
-        self.mouse_pos = QtGui.QCursor.pos()
+        self.mouse_pos = QCursor.pos()
         f_pos = a_event.pos()
         self.orig_x = f_pos.x()
         self.orig_y = f_pos.y()
         self.orig_value = self.value()
         self.fine_only = (a_event.modifiers() == QtCore.Qt.ControlModifier)
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.BlankCursor)
+        QApplication.setOverrideCursor(QtCore.Qt.BlankCursor)
 
     def mouseMoveEvent(self, a_event):
         f_pos = a_event.pos()
@@ -232,8 +236,8 @@ class pydaw_pixmap_knob(QtGui.QDial):
             self.valueChanged.emit(f_val)
 
     def mouseReleaseEvent(self, a_event):
-        QtGui.QCursor.setPos(self.mouse_pos)
-        QtGui.QApplication.restoreOverrideCursor()
+        QCursor.setPos(self.mouse_pos)
+        QApplication.restoreOverrideCursor()
         self.sliderReleased.emit()
 
 
@@ -259,7 +263,7 @@ class pydaw_abstract_ui_control:
         if a_label is None:
             self.name_label = None
         else:
-            self.name_label = QtGui.QLabel(str(a_label))
+            self.name_label = QLabel(str(a_label))
             self.name_label.setAlignment(QtCore.Qt.AlignCenter)
             self.name_label.setMinimumWidth(15)
         self.port_num = int(a_port_num)
@@ -360,19 +364,19 @@ class pydaw_abstract_ui_control:
         def ok_handler(a_self=None, a_val=None):
             self.control.setValue(f_spinbox.value())
             f_dialog.close()
-        f_dialog = QtGui.QDialog(self.control)
+        f_dialog = QDialog(self.control)
         f_dialog.setWindowTitle(_("Set Value"))
-        f_layout = QtGui.QGridLayout(f_dialog)
-        f_layout.addWidget(QtGui.QLabel(_("Value:")), 3, 0)
-        f_spinbox = QtGui.QSpinBox()
+        f_layout = QGridLayout(f_dialog)
+        f_layout.addWidget(QLabel(_("Value:")), 3, 0)
+        f_spinbox = QSpinBox()
         f_spinbox.setMinimum(self.control.minimum())
         f_spinbox.setMaximum(self.control.maximum())
         f_spinbox.setValue(self.control.value())
         f_layout.addWidget(f_spinbox, 3, 1)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(f_dialog.close)
         f_layout.addWidget(f_cancel_button, 6, 0)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(ok_handler)
         f_layout.addWidget(f_ok_button, 6, 1)
         f_dialog.move(self.control.mapToGlobal(QtCore.QPoint(0.0, 0.0)))
@@ -398,27 +402,27 @@ class pydaw_abstract_ui_control:
             self.control.setValue(f_result)
             LAST_TEMPO_COMBOBOX_INDEX = f_beat_frac_combobox.currentIndex()
             f_dialog.close()
-        f_dialog = QtGui.QDialog(self.control)
+        f_dialog = QDialog(self.control)
         f_dialog.setWindowTitle(_("Tempo Sync"))
-        f_groupbox_layout = QtGui.QGridLayout(f_dialog)
-        f_spinbox = QtGui.QDoubleSpinBox()
+        f_groupbox_layout = QGridLayout(f_dialog)
+        f_spinbox = QDoubleSpinBox()
         f_spinbox.setDecimals(1)
         f_spinbox.setRange(60, 200)
         f_spinbox.setSingleStep(0.1)
         f_spinbox.setValue(TEMPO)
         f_beat_fracs = ["1/16", "1/12", "1/8", "2/12", "3/16",
                         "1/4", "2/4", "4/4"]
-        f_beat_frac_combobox = QtGui.QComboBox()
+        f_beat_frac_combobox = QComboBox()
         f_beat_frac_combobox.setMinimumWidth(75)
         f_beat_frac_combobox.addItems(f_beat_fracs)
         f_beat_frac_combobox.setCurrentIndex(LAST_TEMPO_COMBOBOX_INDEX)
-        f_sync_button = QtGui.QPushButton(_("Sync"))
+        f_sync_button = QPushButton(_("Sync"))
         f_sync_button.pressed.connect(sync_button_pressed)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(f_dialog.close)
-        f_groupbox_layout.addWidget(QtGui.QLabel(_("BPM")), 0, 0)
+        f_groupbox_layout.addWidget(QLabel(_("BPM")), 0, 0)
         f_groupbox_layout.addWidget(f_spinbox, 1, 0)
-        f_groupbox_layout.addWidget(QtGui.QLabel("Length"), 0, 1)
+        f_groupbox_layout.addWidget(QLabel("Length"), 0, 1)
         f_groupbox_layout.addWidget(f_beat_frac_combobox, 1, 1)
         f_groupbox_layout.addWidget(f_cancel_button, 2, 0)
         f_groupbox_layout.addWidget(f_sync_button, 2, 1)
@@ -432,17 +436,17 @@ class pydaw_abstract_ui_control:
                 f_value, self.control.minimum(), self.control.maximum())
             self.set_value(f_value)
             f_dialog.close()
-        f_dialog = QtGui.QDialog(self.control)
+        f_dialog = QDialog(self.control)
         f_dialog.setMinimumWidth(210)
         f_dialog.setWindowTitle(_("Set to Note"))
-        f_vlayout = QtGui.QVBoxLayout(f_dialog)
+        f_vlayout = QVBoxLayout(f_dialog)
         f_note_selector = pydaw_note_selector_widget(0, None, None)
         f_note_selector.set_value(self.get_value())
         f_vlayout.addWidget(f_note_selector.widget)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(ok_button_pressed)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_cancel_button = QPushButton(_("Cancel"))
+        f_ok_cancel_layout = QHBoxLayout()
         f_cancel_button.pressed.connect(f_dialog.close)
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_ok_cancel_layout.addWidget(f_ok_button)
@@ -461,12 +465,12 @@ class pydaw_abstract_ui_control:
             else:
                 self.set_value(f_value, True)
             f_dialog.close()
-        f_dialog = QtGui.QDialog(self.control)
+        f_dialog = QDialog(self.control)
         f_dialog.setMinimumWidth(210)
         f_dialog.setWindowTitle(_("Set to Ratio"))
-        f_layout = QtGui.QGridLayout(f_dialog)
-        f_layout.addWidget(QtGui.QLabel(_("Ratio:")), 0, 0)
-        f_ratio_spinbox = QtGui.QDoubleSpinBox()
+        f_layout = QGridLayout(f_dialog)
+        f_layout.addWidget(QLabel(_("Ratio:")), 0, 0)
+        f_ratio_spinbox = QDoubleSpinBox()
 
         f_min = pydaw_util.pydaw_pitch_to_ratio(self.control.minimum())
         f_max = pydaw_util.pydaw_pitch_to_ratio(self.control.maximum())
@@ -476,9 +480,9 @@ class pydaw_abstract_ui_control:
             pydaw_util.pydaw_pitch_to_ratio(self.get_value()))
         f_layout.addWidget(f_ratio_spinbox, 0, 1)
 
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(ok_button_pressed)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(f_dialog.close)
         f_layout.addWidget(f_ok_button, 5, 0)
         f_layout.addWidget(f_cancel_button, 5, 1)
@@ -490,20 +494,20 @@ class pydaw_abstract_ui_control:
             f_value = f_spinbox.value() * 12
             self.set_value(f_value, True)
             f_dialog.close()
-        f_dialog = QtGui.QDialog(self.control)
+        f_dialog = QDialog(self.control)
         f_dialog.setMinimumWidth(210)
         f_dialog.setWindowTitle(_("Set to Octave"))
-        f_layout = QtGui.QGridLayout(f_dialog)
-        f_layout.addWidget(QtGui.QLabel(_("Octave:")), 0, 0)
-        f_spinbox = QtGui.QSpinBox()
+        f_layout = QGridLayout(f_dialog)
+        f_layout.addWidget(QLabel(_("Octave:")), 0, 0)
+        f_spinbox = QSpinBox()
         f_min = self.control.minimum() // 12
         f_max = self.control.maximum() // 12
         f_spinbox.setRange(f_min, f_max)
         f_spinbox.setValue(self.get_value() // 12)
         f_layout.addWidget(f_spinbox, 0, 1)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(ok_button_pressed)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(f_dialog.close)
         f_layout.addWidget(f_ok_button, 5, 0)
         f_layout.addWidget(f_cancel_button, 5, 1)
@@ -561,27 +565,27 @@ class pydaw_abstract_ui_control:
         f_default_low, f_default_high = (get_real_value(x) for x in
             f_cc_map[f_cc].ports[self.port_num])
 
-        f_dialog = QtGui.QDialog()
+        f_dialog = QDialog()
         f_dialog.setWindowTitle(_("Set Range for CC"))
-        f_layout = QtGui.QVBoxLayout(f_dialog)
-        f_spinbox_layout = QtGui.QHBoxLayout()
+        f_layout = QVBoxLayout(f_dialog)
+        f_spinbox_layout = QHBoxLayout()
         f_layout.addLayout(f_spinbox_layout)
-        f_spinbox_layout.addWidget(QtGui.QLabel(_("Low")))
-        f_low_spinbox = QtGui.QSpinBox()
+        f_spinbox_layout.addWidget(QLabel(_("Low")))
+        f_low_spinbox = QSpinBox()
         f_low_spinbox.setRange(self.control.minimum(), self.control.maximum())
         f_low_spinbox.setValue(f_default_low)
         f_spinbox_layout.addWidget(f_low_spinbox)
-        f_spinbox_layout.addWidget(QtGui.QLabel(_("High")))
-        f_high_spinbox = QtGui.QSpinBox()
+        f_spinbox_layout.addWidget(QLabel(_("High")))
+        f_high_spinbox = QSpinBox()
         f_high_spinbox.setRange(self.control.minimum(), self.control.maximum())
         f_high_spinbox.setValue(f_default_high)
         f_spinbox_layout.addWidget(f_high_spinbox)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(ok_hander)
         f_ok_cancel_layout.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(f_dialog.close)
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_dialog.move(self.control.mapToGlobal(QtCore.QPoint(0.0, 0.0)))
@@ -589,16 +593,16 @@ class pydaw_abstract_ui_control:
 
 
     def contextMenuEvent(self, a_event):
-        f_menu = QtGui.QMenu(self.control)
+        f_menu = QMenu(self.control)
         if self.midi_learn_callback:
             f_ml_action = f_menu.addAction(_("MIDI Learn"))
             f_ml_action.triggered.connect(self.midi_learn)
-            f_cc_menu = QtGui.QMenu(_("CCs"))
+            f_cc_menu = QMenu(_("CCs"))
             f_menu.addMenu(f_cc_menu)
             f_cc_menu.triggered.connect(self.cc_menu_triggered)
             f_cc_map = self.get_cc_map()
             if f_cc_map:
-                f_range_menu = QtGui.QMenu(_("Set Range for CC"))
+                f_range_menu = QMenu(_("Set Range for CC"))
                 f_range_menu.triggered.connect(self.cc_range_dialog)
                 f_menu.addMenu(f_range_menu)
             for f_i in range(1, 128):
@@ -634,7 +638,7 @@ class pydaw_abstract_ui_control:
             f_set_octave_action = f_menu.addAction(_("Set to Octave..."))
             f_set_octave_action.triggered.connect(self.set_octave_dialog)
 
-        f_menu.exec_(QtGui.QCursor.pos())
+        f_menu.exec_(QCursor.pos())
 
 
 class pydaw_null_control:
@@ -699,7 +703,7 @@ class pydaw_knob_control(pydaw_abstract_ui_control):
         self.control.valueChanged.connect(self.control_value_changed)
         self.control.sliderReleased.connect(self.control_released)
         self.control.contextMenuEvent = self.contextMenuEvent
-        self.value_label = QtGui.QLabel("")
+        self.value_label = QLabel("")
         self.value_label.setAlignment(QtCore.Qt.AlignCenter)
         self.value_label.setMinimumWidth(15)
         self.set_value(a_default_val)
@@ -713,12 +717,12 @@ class pydaw_slider_control(pydaw_abstract_ui_control):
         pydaw_abstract_ui_control.__init__(
             self, a_label, a_port_num, a_rel_callback, a_val_callback,
             a_val_conversion, a_port_dict, a_preset_mgr, a_default_val)
-        self.control = QtGui.QSlider(a_orientation)
+        self.control = QSlider(a_orientation)
         self.control.contextMenuEvent = self.contextMenuEvent
         self.control.setRange(a_min_val, a_max_val)
         self.control.valueChanged.connect(self.control_value_changed)
         self.control.sliderReleased.connect(self.control_released)
-        self.value_label = QtGui.QLabel("")
+        self.value_label = QLabel("")
         self.value_label.setAlignment(QtCore.Qt.AlignCenter)
         self.value_label.setMinimumWidth(15)
         self.set_value(a_default_val)
@@ -733,7 +737,7 @@ class pydaw_spinbox_control(pydaw_abstract_ui_control):
             self, a_label, a_port_num, a_rel_callback,
             a_val_callback, a_val_conversion,
             a_port_dict, a_preset_mgr, a_default_val)
-        self.control = QtGui.QSpinBox()
+        self.control = QSpinBox()
         self.widget = self.control
         self.control.setRange(a_min_val, a_max_val)
         self.control.setKeyboardTracking(False)
@@ -752,7 +756,7 @@ class pydaw_doublespinbox_control(pydaw_abstract_ui_control):
             self, a_label, a_port_num, a_rel_callback,
             a_val_callback, a_val_conversion,
             a_port_dict, a_preset_mgr, a_default_val)
-        self.control = QtGui.QDoubleSpinBox()
+        self.control = QDoubleSpinBox()
         self.widget = self.control
         self.control.setRange(a_min_val, a_max_val)
         self.control.setKeyboardTracking(False)
@@ -769,7 +773,7 @@ class pydaw_checkbox_control(pydaw_abstract_ui_control):
             self, None, a_port_num, a_rel_callback, a_val_callback,
             a_port_dict=a_port_dict, a_preset_mgr=a_preset_mgr,
             a_default_value=a_default)
-        self.control = QtGui.QCheckBox(a_label)
+        self.control = QCheckBox(a_label)
         if a_default:
             self.control.setChecked(True)
         self.widget = self.control
@@ -810,9 +814,9 @@ class pydaw_combobox_control(pydaw_abstract_ui_control):
                  a_items_list=[], a_port_dict=None, a_default_index=None,
                  a_preset_mgr=None):
         self.suppress_changes = True
-        self.name_label = QtGui.QLabel(str(a_label))
+        self.name_label = QLabel(str(a_label))
         self.name_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.control = QtGui.QComboBox()
+        self.control = QComboBox()
         self.control.wheelEvent = self.wheel_event
         self.widget = self.control
         self.control.setMinimumWidth(a_size)
@@ -851,27 +855,27 @@ class pydaw_combobox_control(pydaw_abstract_ui_control):
         return self.control.currentIndex()
 
 
-class OrderedTable(QtGui.QGraphicsView):
+class OrderedTable(QGraphicsView):
     def __init__(self, a_item_labels, a_item_height, a_item_width):
-        QtGui.QGraphicsView.__init__(self)
+        QGraphicsView.__init__(self)
         self.item_height = a_item_height
         self.item_width = a_item_width
         self.total_height = self.item_height * len(a_item_labels)
         self.total_width = a_item_width
-        self.scene = QtGui.QGraphicsScene(self)
+        self.scene = QGraphicsScene(self)
         self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
         self.setScene(self.scene)
         self.setFixedSize(
             self.item_width + 20,
             pydaw_util.pydaw_clip_max(self.total_height + 10, 600))
-        self.item_gradient = QtGui.QLinearGradient(
+        self.item_gradient = QLinearGradient(
             0.0, 0.0, self.item_width * 0.8, self.item_height)
         self.item_gradient.setColorAt(
-            0.0, QtGui.QColor.fromRgb(210, 210, 220))
+            0.0, QColor.fromRgb(210, 210, 220))
         self.item_gradient.setColorAt(
-            0.7, QtGui.QColor.fromRgb(255, 255, 255))
+            0.7, QColor.fromRgb(255, 255, 255))
         self.item_gradient.setColorAt(
-            1.0, QtGui.QColor.fromRgb(200, 200, 210))
+            1.0, QColor.fromRgb(200, 200, 210))
         self.item_list = []
         for f_i, f_label in zip(range(len(a_item_labels)), a_item_labels):
             f_item = OrderedTableItem(
@@ -897,22 +901,22 @@ class OrderedTable(QtGui.QGraphicsView):
             f_item.index = f_i
 
 
-class OrderedTableItem(QtGui.QGraphicsRectItem):
+class OrderedTableItem(QGraphicsRectItem):
     def __init__(
     self, a_text, a_height, a_width, a_y, a_index, a_parent, a_brush):
-        QtGui.QGraphicsRectItem.__init__(self)
+        QGraphicsRectItem.__init__(self)
         self.text = str(a_text)
-        self.text_item = QtGui.QGraphicsTextItem(a_text, self)
+        self.text_item = QGraphicsTextItem(a_text, self)
         self.setRect(0, 0, a_width, a_height)
         self.setPos(0, a_y)
         self.default_brush = a_brush
         self.setBrush(a_brush)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
         self.index = self.orig_index = a_index
         self.parent = a_parent
 
     def mouseMoveEvent(self, a_event):
-        QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
+        QGraphicsRectItem.mouseMoveEvent(self, a_event)
         f_pos = a_event.scenePos()
         self.parent.reorder_items(self.index, f_pos.y())
 
@@ -922,18 +926,18 @@ def ordered_table_dialog(
     def ok_handler():
         f_dialog.retval = [a_list[x.orig_index] for x in f_table.item_list]
         f_dialog.close()
-    f_dialog = QtGui.QDialog(a_parent)
+    f_dialog = QDialog(a_parent)
     f_dialog.retval = None
     f_dialog.setWindowTitle("Order")
-    f_layout = QtGui.QVBoxLayout(f_dialog)
+    f_layout = QVBoxLayout(f_dialog)
     f_table = OrderedTable(a_labels, a_item_height, a_item_width)
     f_layout.addWidget(f_table)
-    f_ok_cancel_layout = QtGui.QHBoxLayout()
+    f_ok_cancel_layout = QHBoxLayout()
     f_layout.addLayout(f_ok_cancel_layout)
-    f_ok_button = QtGui.QPushButton("OK")
+    f_ok_button = QPushButton("OK")
     f_ok_cancel_layout.addWidget(f_ok_button)
     f_ok_button.pressed.connect(ok_handler)
-    f_cancel_button = QtGui.QPushButton("Cancel")
+    f_cancel_button = QPushButton("Cancel")
     f_ok_cancel_layout.addWidget(f_cancel_button)
     f_cancel_button.pressed.connect(f_dialog.close)
     f_dialog.exec_()
@@ -951,11 +955,11 @@ class pydaw_adsr_widget:
                  a_prefx_port=None, a_knob_type=KC_TIME_DECIMAL,
                  a_delay_port=None, a_hold_port=None):
         self.clipboard_dict = {}
-        self.groupbox = QtGui.QGroupBox(a_label)
+        self.groupbox = QGroupBox(a_label)
         self.groupbox.contextMenuEvent = self.context_menu_event
         self.groupbox.setObjectName("plugin_groupbox")
-        self.layout = QtGui.QGridLayout(self.groupbox)
-        self.layout.setMargin(3)
+        self.layout = QGridLayout(self.groupbox)
+        self.layout.setContentsMargins(3, 3, 3, 3)
 
         if a_delay_port is not None:
             self.delay_knob = pydaw_knob_control(
@@ -1009,12 +1013,12 @@ class pydaw_adsr_widget:
             self.prefx_checkbox.add_to_grid_layout(self.layout, 10)
 
     def context_menu_event(self, a_event):
-        f_menu = QtGui.QMenu(self.groupbox)
+        f_menu = QMenu(self.groupbox)
         f_copy_action = f_menu.addAction(_("Copy"))
         f_copy_action.triggered.connect(self.copy)
         f_paste_action = f_menu.addAction(_("Paste"))
         f_paste_action.triggered.connect(self.paste)
-        f_menu.exec_(QtGui.QCursor.pos())
+        f_menu.exec_(QCursor.pos())
 
     def copy(self):
         global ADSR_CLIPBOARD
@@ -1030,10 +1034,10 @@ class pydaw_filter_widget:
     def __init__(self, a_size, a_rel_callback, a_val_callback, a_port_dict,
                  a_cutoff_port, a_res_port, a_type_port=None,
                  a_label=_("Filter"), a_preset_mgr=None):
-        self.groupbox = QtGui.QGroupBox(str(a_label))
+        self.groupbox = QGroupBox(str(a_label))
         self.groupbox.setObjectName("plugin_groupbox")
-        self.layout = QtGui.QGridLayout(self.groupbox)
-        self.layout.setMargin(3)
+        self.layout = QGridLayout(self.groupbox)
+        self.layout.setContentsMargins(3, 3, 3, 3)
         self.cutoff_knob = pydaw_knob_control(
             a_size, _("Cutoff"), a_cutoff_port,
             a_rel_callback, a_val_callback,
@@ -1058,10 +1062,10 @@ class pydaw_perc_env_widget:
                  a_time1_port, a_pitch1_port, a_time2_port,
                  a_pitch2_port, a_on_port,
                  a_label=_("Perc Env"), a_preset_mgr=None):
-        self.groupbox = QtGui.QGroupBox(str(a_label))
+        self.groupbox = QGroupBox(str(a_label))
         self.groupbox.setObjectName("plugin_groupbox")
-        self.layout = QtGui.QGridLayout(self.groupbox)
-        self.layout.setMargin(3)
+        self.layout = QGridLayout(self.groupbox)
+        self.layout.setContentsMargins(3, 3, 3, 3)
 
         self.time1_knob = pydaw_knob_control(
             a_size, _("Time1"), a_time1_port,
@@ -1095,10 +1099,10 @@ class pydaw_ramp_env_widget:
     def __init__(self, a_size, a_rel_callback, a_val_callback, a_port_dict,
                  a_time_port, a_amt_port,
                  a_label=_("Ramp Env"), a_preset_mgr=None, a_curve_port=None):
-        self.groupbox = QtGui.QGroupBox(str(a_label))
+        self.groupbox = QGroupBox(str(a_label))
         self.groupbox.setObjectName("plugin_groupbox")
-        self.layout = QtGui.QGridLayout(self.groupbox)
-        self.layout.setMargin(3)
+        self.layout = QGridLayout(self.groupbox)
+        self.layout.setContentsMargins(3, 3, 3, 3)
 
         if a_amt_port is not None:
             self.amt_knob = pydaw_knob_control(
@@ -1121,10 +1125,10 @@ class pydaw_lfo_widget:
     def __init__(self, a_size, a_rel_callback, a_val_callback, a_port_dict,
                  a_freq_port, a_type_port, a_type_list,
                  a_label=_("LFO"), a_preset_mgr=None, a_phase_port=None):
-        self.groupbox = QtGui.QGroupBox(str(a_label))
+        self.groupbox = QGroupBox(str(a_label))
         self.groupbox.setObjectName("plugin_groupbox")
-        self.layout = QtGui.QGridLayout(self.groupbox)
-        self.layout.setMargin(3)
+        self.layout = QGridLayout(self.groupbox)
+        self.layout.setContentsMargins(3, 3, 3, 3)
         self.freq_knob = pydaw_knob_control(
             a_size, _("Freq"), a_freq_port, a_rel_callback, a_val_callback,
             10, 1600, 200, KC_HZ_DECIMAL, a_port_dict, a_preset_mgr)
@@ -1166,8 +1170,8 @@ class pydaw_osc_widget:
             139, _("Type"), a_type_port, a_rel_callback, a_val_callback,
             a_osc_types_list, a_port_dict, a_preset_mgr=a_preset_mgr,
             a_default_index=a_default_type)
-        self.grid_layout = QtGui.QGridLayout()
-        self.group_box = QtGui.QGroupBox(str(a_label))
+        self.grid_layout = QGridLayout()
+        self.group_box = QGroupBox(str(a_label))
         self.group_box.setObjectName("plugin_groupbox")
         self.group_box.setLayout(self.grid_layout)
         self.pitch_knob.add_to_grid_layout(self.grid_layout, 0)
@@ -1186,19 +1190,19 @@ class pydaw_note_selector_widget:
         self.port_num = a_port_num
         self.rel_callback = a_rel_callback
         self.val_callback = a_val_callback
-        self.note_combobox = QtGui.QComboBox()
+        self.note_combobox = QComboBox()
         self.note_combobox.wheelEvent = self.wheel_event
         self.note_combobox.setMinimumWidth(60)
         self.note_combobox.addItems(
             ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"])
         self.note_combobox.contextMenuEvent = self.context_menu_event
-        self.octave_spinbox = QtGui.QSpinBox()
+        self.octave_spinbox = QSpinBox()
         self.octave_spinbox.setRange(-2, 8)
         self.octave_spinbox.setValue(3)
         self.octave_spinbox.contextMenuEvent = self.context_menu_event
-        self.widget = QtGui.QWidget()
-        self.layout = QtGui.QHBoxLayout()
-        self.layout.setMargin(0)
+        self.widget = QWidget()
+        self.layout = QHBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.widget.setLayout(self.layout)
         self.layout.addWidget(self.note_combobox)
         self.layout.addWidget(self.octave_spinbox)
@@ -1220,12 +1224,12 @@ class pydaw_note_selector_widget:
             a_preset_mgr.add_control(self)
 
     def context_menu_event(self, a_event=None):
-        f_menu = QtGui.QMenu(self.widget)
+        f_menu = QMenu(self.widget)
         f_copy_action = f_menu.addAction(_("Copy"))
         f_copy_action.triggered.connect(self.copy_to_clipboard)
         f_paste_action = f_menu.addAction(_("Paste"))
         f_paste_action.triggered.connect(self.paste_from_clipboard)
-        f_menu.exec_(QtGui.QCursor.pos())
+        f_menu.exec_(QCursor.pos())
 
     def copy_to_clipboard(self):
         global NOTE_SELECTOR_CLIPBOARD
@@ -1279,25 +1283,25 @@ class pydaw_file_select_widget:
     """
     def __init__(self, a_load_callback):
         self.load_callback = a_load_callback
-        self.layout = QtGui.QHBoxLayout()
-        self.layout.setMargin(2)
-        self.clear_button = QtGui.QPushButton(_("Clear"))
+        self.layout = QHBoxLayout()
+        self.layout.setContentsMargins(2, 2, 2, 2)
+        self.clear_button = QPushButton(_("Clear"))
         self.clear_button.setMaximumWidth(60)
-        self.copy_to_clipboard = QtGui.QPushButton(_("Copy"))
+        self.copy_to_clipboard = QPushButton(_("Copy"))
         self.copy_to_clipboard.setToolTip(_("Copy file path to clipboard"))
         self.copy_to_clipboard.pressed.connect(self.copy_to_clipboard_pressed)
         self.copy_to_clipboard.setMaximumWidth(60)
-        self.paste_from_clipboard = QtGui.QPushButton(_("Paste"))
+        self.paste_from_clipboard = QPushButton(_("Paste"))
         self.paste_from_clipboard.setToolTip(
             _("Paste file path from clipboard"))
         self.paste_from_clipboard.pressed.connect(
             self.paste_from_clipboard_pressed)
         self.paste_from_clipboard.setMaximumWidth(60)
-        self.reload_button = QtGui.QPushButton(_("Reload"))
+        self.reload_button = QPushButton(_("Reload"))
         self.reload_button.setMaximumWidth(60)
-        self.file_path = QtGui.QLineEdit()
+        self.file_path = QLineEdit()
         self.file_path.setSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+            QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.file_path.setReadOnly(True)
         self.file_path.setMinimumWidth(210)
         self.last_directory = ("")
@@ -1320,14 +1324,14 @@ class pydaw_file_select_widget:
     def copy_to_clipboard_pressed(self):
         f_text = str(self.file_path.text())
         if f_text != "":
-            f_clipboard = QtGui.QApplication.clipboard()
+            f_clipboard = QApplication.clipboard()
             f_clipboard.setText(f_text)
 
     def paste_from_clipboard_pressed(self):
-        f_clipboard = QtGui.QApplication.clipboard()
+        f_clipboard = QApplication.clipboard()
         f_text = f_clipboard.text()
         if f_text is None:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.paste_from_clipboard, _("Error"),
                 _("No file path in the system clipboard."))
         else:
@@ -1339,7 +1343,7 @@ class pydaw_file_select_widget:
                 #Don't show more than 100 chars just in case somebody had an
                 #entire book copied to the clipboard
                 f_str = f_text[100:]
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     self.paste_from_clipboard, _("Error"),
                     _("{} does not exist.").format(f_str))
 
@@ -1347,67 +1351,67 @@ class pydaw_file_select_widget:
 
 class pydaw_abstract_file_browser_widget():
     def __init__(self):
-        self.hsplitter = QtGui.QSplitter(QtCore.Qt.Horizontal)
-        self.vsplitter = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.folders_tab_widget = QtGui.QTabWidget()
+        self.hsplitter = QSplitter(QtCore.Qt.Horizontal)
+        self.vsplitter = QSplitter(QtCore.Qt.Vertical)
+        self.folders_tab_widget = QTabWidget()
         self.hsplitter.addWidget(self.folders_tab_widget)
-        self.folders_widget = QtGui.QWidget()
+        self.folders_widget = QWidget()
         self.vsplitter.addWidget(self.folders_widget)
-        self.folders_widget_layout = QtGui.QVBoxLayout()
+        self.folders_widget_layout = QVBoxLayout()
         self.folders_widget.setLayout(self.folders_widget_layout)
         self.folders_tab_widget.setMaximumWidth(660)
         self.folders_tab_widget.addTab(self.vsplitter, _("Files"))
-        self.folder_path_lineedit = QtGui.QLineEdit()
+        self.folder_path_lineedit = QLineEdit()
         self.folder_path_lineedit.setReadOnly(True)
         self.folders_widget_layout.addWidget(self.folder_path_lineedit)
 
-        self.folder_filter_hlayout = QtGui.QHBoxLayout()
-        self.folder_filter_hlayout.addWidget(QtGui.QLabel(_("Filter:")))
-        self.folder_filter_lineedit = QtGui.QLineEdit()
+        self.folder_filter_hlayout = QHBoxLayout()
+        self.folder_filter_hlayout.addWidget(QLabel(_("Filter:")))
+        self.folder_filter_lineedit = QLineEdit()
         self.folder_filter_lineedit.textChanged.connect(self.on_filter_folders)
         self.folder_filter_hlayout.addWidget(self.folder_filter_lineedit)
-        self.folder_filter_clear_button = QtGui.QPushButton(_("Clear"))
+        self.folder_filter_clear_button = QPushButton(_("Clear"))
         self.folder_filter_clear_button.pressed.connect(
             self.on_folder_filter_clear)
         self.folder_filter_hlayout.addWidget(self.folder_filter_clear_button)
         self.folders_widget_layout.addLayout(self.folder_filter_hlayout)
 
-        self.list_folder = QtGui.QListWidget()
+        self.list_folder = QListWidget()
         self.list_folder.itemClicked.connect(self.folder_item_clicked)
         self.folders_widget_layout.addWidget(self.list_folder)
-        self.folder_buttons_hlayout = QtGui.QHBoxLayout()
+        self.folder_buttons_hlayout = QHBoxLayout()
         self.folders_widget_layout.addLayout(self.folder_buttons_hlayout)
-        self.up_button = QtGui.QPushButton(_("Up"))
+        self.up_button = QPushButton(_("Up"))
         self.up_button.pressed.connect(self.on_up_button)
         self.up_button.contextMenuEvent = self.up_contextMenuEvent
         self.folder_buttons_hlayout.addWidget(self.up_button)
-        self.back_button = QtGui.QPushButton(_("Back"))
+        self.back_button = QPushButton(_("Back"))
         self.folder_buttons_hlayout.addWidget(self.back_button)
         self.back_button.contextMenuEvent = self.back_contextMenuEvent
         self.back_button.pressed.connect(self.on_back)
-        self.bookmark_button = QtGui.QPushButton(_("Bookmark"))
+        self.bookmark_button = QPushButton(_("Bookmark"))
         self.bookmark_button.pressed.connect(self.bookmark_button_pressed)
         self.folder_buttons_hlayout.addWidget(self.bookmark_button)
-        self.paste_button = QtGui.QPushButton(_("Paste"))
+        self.paste_button = QPushButton(_("Paste"))
         self.paste_button.pressed.connect(self.paste_button_pressed)
         self.folder_buttons_hlayout.addWidget(self.paste_button)
 
-        self.bookmarks_tab = QtGui.QWidget()
-        self.bookmarks_tab_vlayout = QtGui.QVBoxLayout()
+        self.bookmarks_tab = QWidget()
+        self.bookmarks_tab_vlayout = QVBoxLayout()
         self.bookmarks_tab.setLayout(self.bookmarks_tab_vlayout)
-        self.list_bookmarks = QtGui.QTreeWidget()
+        self.list_bookmarks = QTreeWidget()
         self.list_bookmarks.setHeaderHidden(True)
         self.list_bookmarks.itemClicked.connect(self.bookmark_clicked)
         self.list_bookmarks.contextMenuEvent = self.bookmark_context_menu_event
         self.bookmarks_tab_vlayout.addWidget(self.list_bookmarks)
-        self.bookmark_button_hlayout = QtGui.QHBoxLayout()
-        self.bookmarks_reload_button = QtGui.QPushButton(_("Reload"))
+        self.bookmark_button_hlayout = QHBoxLayout()
+        self.bookmarks_reload_button = QPushButton(_("Reload"))
         self.bookmarks_tab_vlayout.addLayout(self.bookmark_button_hlayout)
         self.bookmark_button_hlayout.addWidget(self.bookmarks_reload_button)
         self.bookmarks_reload_button.pressed.connect(self.open_bookmarks)
-        self.bookmarks_menu_button = QtGui.QPushButton(_("Menu"))
+        self.bookmarks_menu_button = QPushButton(_("Menu"))
         self.bookmark_button_hlayout.addWidget(self.bookmarks_menu_button)
-        f_bookmark_menu = QtGui.QMenu(self.bookmarks_tab)
+        f_bookmark_menu = QMenu(self.bookmarks_tab)
         self.bookmarks_menu_button.setMenu(f_bookmark_menu)
         f_bookmark_open_action = f_bookmark_menu.addAction(_("Open..."))
         f_bookmark_open_action.triggered.connect(self.on_bookmark_open)
@@ -1415,28 +1419,28 @@ class pydaw_abstract_file_browser_widget():
         f_bookmark_save_as_action.triggered.connect(self.on_bookmark_save_as)
         self.folders_tab_widget.addTab(self.bookmarks_tab, _("Bookmarks"))
 
-        self.file_vlayout = QtGui.QVBoxLayout()
-        self.file_widget = QtGui.QWidget()
+        self.file_vlayout = QVBoxLayout()
+        self.file_widget = QWidget()
         self.file_widget.setLayout(self.file_vlayout)
         self.vsplitter.addWidget(self.file_widget)
-        self.filter_hlayout = QtGui.QHBoxLayout()
-        self.filter_hlayout.addWidget(QtGui.QLabel(_("Filter:")))
-        self.filter_lineedit = QtGui.QLineEdit()
+        self.filter_hlayout = QHBoxLayout()
+        self.filter_hlayout.addWidget(QLabel(_("Filter:")))
+        self.filter_lineedit = QLineEdit()
         self.filter_lineedit.textChanged.connect(self.on_filter_files)
         self.filter_hlayout.addWidget(self.filter_lineedit)
-        self.filter_clear_button = QtGui.QPushButton(_("Clear"))
+        self.filter_clear_button = QPushButton(_("Clear"))
         self.filter_clear_button.pressed.connect(self.on_filter_clear)
         self.filter_hlayout.addWidget(self.filter_clear_button)
         self.file_vlayout.addLayout(self.filter_hlayout)
-        self.list_file = QtGui.QListWidget()
-        self.list_file.setSelectionMode(QtGui.QListWidget.SingleSelection)
+        self.list_file = QListWidget()
+        self.list_file.setSelectionMode(QListWidget.SingleSelection)
         self.file_vlayout.addWidget(self.list_file)
-        self.file_hlayout = QtGui.QHBoxLayout()
-        self.preview_button = QtGui.QPushButton(_("Preview"))
+        self.file_hlayout = QHBoxLayout()
+        self.preview_button = QPushButton(_("Preview"))
         self.file_hlayout.addWidget(self.preview_button)
-        self.stop_preview_button = QtGui.QPushButton(_("Stop"))
+        self.stop_preview_button = QPushButton(_("Stop"))
         self.file_hlayout.addWidget(self.stop_preview_button)
-        self.refresh_button = QtGui.QPushButton(_("Refresh"))
+        self.refresh_button = QPushButton(_("Refresh"))
         self.file_hlayout.addWidget(self.refresh_button)
         self.refresh_button.pressed.connect(self.on_refresh)
         self.file_vlayout.addLayout(self.file_hlayout)
@@ -1458,11 +1462,11 @@ class pydaw_abstract_file_browser_widget():
             f_file = os.path.basename(f_path)
             self.select_file(f_file)
         else:
-            QtGui.QMessageBox.warning(self.vsplitter, _("Error"),
+            QMessageBox.warning(self.vsplitter, _("Error"),
             _("The folder did not exist:\n\n{}").format(f_dir))
 
     def on_bookmark_save_as(self):
-        f_file = QtGui.QFileDialog.getSaveFileName(
+        f_file, f_filter = QFileDialog.getSaveFileName(
             parent=self.bookmarks_tab, caption=_('Save bookmark file...'),
             directory=pydaw_util.global_home,
             filter=BM_FILE_DIALOG_STRING)
@@ -1473,7 +1477,7 @@ class pydaw_abstract_file_browser_widget():
             shutil.copy(pydaw_util.BOOKMARKS_FILE, f_file)
 
     def on_bookmark_open(self):
-        f_file = QtGui.QFileDialog.getOpenFileName(
+        f_file, f_filter = QFileDialog.getOpenFileName(
             parent=self.bookmarks_tab, caption=_('Open bookmark file...'),
             directory=pydaw_util.global_home,
             filter=BM_FILE_DIALOG_STRING)
@@ -1494,15 +1498,15 @@ class pydaw_abstract_file_browser_widget():
         self.set_folder(str(a_action.text()), a_full_path=True)
 
     def back_contextMenuEvent(self, a_event):
-        f_menu = QtGui.QMenu(self.back_button)
+        f_menu = QMenu(self.back_button)
         f_menu.triggered.connect(self.open_path_from_action)
         for f_path in reversed(self.history):
             f_menu.addAction(f_path)
-        f_menu.exec_(QtGui.QCursor.pos())
+        f_menu.exec_(QCursor.pos())
 
     def up_contextMenuEvent(self, a_event):
         if self.last_open_dir != "/":
-            f_menu = QtGui.QMenu(self.up_button)
+            f_menu = QMenu(self.up_button)
             f_menu.triggered.connect(self.open_path_from_action)
             f_arr = self.last_open_dir.split(os.path.sep)[1:]
             f_paths = []
@@ -1510,7 +1514,7 @@ class pydaw_abstract_file_browser_widget():
                 f_paths.append("/{}".format("/".join(f_arr[:f_i])))
             for f_path in reversed(f_paths):
                 f_menu.addAction(f_path)
-            f_menu.exec_(QtGui.QCursor.pos())
+            f_menu.exec_(QCursor.pos())
 
     def on_filter_folders(self):
         self.on_filter(self.folder_filter_lineedit, self.list_folder)
@@ -1538,11 +1542,11 @@ class pydaw_abstract_file_browser_widget():
         self.list_bookmarks.clear()
         f_dict = pydaw_util.global_get_file_bookmarks()
         for k in sorted(f_dict.keys(), key=lambda s: s.lower()):
-            f_parent = QtGui.QTreeWidgetItem()
+            f_parent = QTreeWidgetItem()
             f_parent.setText(0, k)
             self.list_bookmarks.addTopLevelItem(f_parent)
             for k2 in sorted(f_dict[k].keys(), key=lambda s: s.lower()):
-                f_child = QtGui.QTreeWidgetItem()
+                f_child = QTreeWidgetItem()
                 f_child.setText(0, k2)
                 f_parent.addChild(f_child)
             f_parent.setExpanded(True)
@@ -1551,11 +1555,11 @@ class pydaw_abstract_file_browser_widget():
         def on_ok(a_val=None):
             f_text = str(f_category.currentText()).strip()
             if not f_text:
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     f_window, _("Error"), _("Category cannot be empty"))
             f_val = str(f_lineedit.text()).strip()
             if not f_val:
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     f_window, _("Error"), _("Name cannot be empty"))
                 return
             pydaw_util.global_add_file_bookmark(
@@ -1566,42 +1570,42 @@ class pydaw_abstract_file_browser_widget():
         def on_cancel(a_val=None):
             f_window.close()
 
-        f_window = QtGui.QDialog(self.list_bookmarks)
+        f_window = QDialog(self.list_bookmarks)
         f_window.setMinimumWidth(300)
         f_window.setWindowTitle(_("Add Bookmark"))
-        f_layout = QtGui.QVBoxLayout()
+        f_layout = QVBoxLayout()
         f_window.setLayout(f_layout)
-        f_grid_layout = QtGui.QGridLayout()
+        f_grid_layout = QGridLayout()
         f_layout.addLayout(f_grid_layout)
         f_dict = pydaw_util.global_get_file_bookmarks()
         if not f_dict:
             f_dict = {'default':None}
-        f_grid_layout.addWidget(QtGui.QLabel(_("Category:")), 0, 0)
-        f_category = QtGui.QComboBox()
+        f_grid_layout.addWidget(QLabel(_("Category:")), 0, 0)
+        f_category = QComboBox()
         f_category.setEditable(True)
         f_category.addItems(sorted(f_dict.keys(), key=lambda s: s.lower()))
         f_grid_layout.addWidget(f_category, 0, 1)
-        f_lineedit = QtGui.QLineEdit()
+        f_lineedit = QLineEdit()
         f_tmp_arr = self.last_open_dir.rsplit("/", 1)
         if len(f_tmp_arr) >= 2:
             f_lineedit.setText(f_tmp_arr[-1])
-        f_grid_layout.addWidget(QtGui.QLabel(_("Name:")), 1, 0)
+        f_grid_layout.addWidget(QLabel(_("Name:")), 1, 0)
         f_grid_layout.addWidget(f_lineedit, 1, 1)
-        f_hlayout2 = QtGui.QHBoxLayout()
+        f_hlayout2 = QHBoxLayout()
         f_layout.addLayout(f_hlayout2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(on_ok)
         f_hlayout2.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(on_cancel)
         f_hlayout2.addWidget(f_cancel_button)
         f_window.exec_()
 
     def paste_button_pressed(self):
-        f_clipboard = QtGui.QApplication.clipboard()
+        f_clipboard = QApplication.clipboard()
         f_text = f_clipboard.text()
         if f_text is None:
-            QtGui.QMessageBox.warning(self.paste_from_clipboard, _("Error"),
+            QMessageBox.warning(self.paste_from_clipboard, _("Error"),
             _("No file path in the system clipboard."))
         else:
             f_text = str(f_text).strip()
@@ -1611,7 +1615,7 @@ class pydaw_abstract_file_browser_widget():
                 elif os.path.isdir(f_text):
                     self.set_folder(f_text, True)
                 else:
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self.hsplitter, _("Error"),
                         "'{}' exists, but did not test True for being "
                         "a file or a folder".format(f_text))
@@ -1619,12 +1623,12 @@ class pydaw_abstract_file_browser_widget():
                 #Don't show more than 100 chars just in case somebody had an
                 #entire book copied to the clipboard
                 f_str = f_text[100:]
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     self.hsplitter, _("Error"),
                     _("'{}' does not exist.").format(f_str))
 
     def bookmark_clicked(self, a_item):
-        #test = QtGui.QTreeWidgetItem()
+        #test = QTreeWidgetItem()
         #test.parent()
         f_parent = a_item.parent()
         if f_parent is not None:
@@ -1636,7 +1640,7 @@ class pydaw_abstract_file_browser_widget():
                     self.set_folder(f_dict[f_parent_str][f_folder_name], True)
                     self.folders_tab_widget.setCurrentIndex(0)
                 else:
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self.widget, _("Error"),
                         _("This bookmark no longer exists.  You may have "
                         "deleted it in another window."))
@@ -1659,10 +1663,10 @@ class pydaw_abstract_file_browser_widget():
             self.open_bookmarks()
 
     def bookmark_context_menu_event(self, a_event):
-        f_menu = QtGui.QMenu(self.list_bookmarks)
+        f_menu = QMenu(self.list_bookmarks)
         f_del_action = f_menu.addAction(_("Delete"))
         f_del_action.triggered.connect(self.delete_bookmark)
-        f_menu.exec_(QtGui.QCursor.pos())
+        f_menu.exec_(QCursor.pos())
 
     def folder_item_clicked(self, a_item):
         self.set_folder(a_item.text())
@@ -1692,17 +1696,17 @@ class pydaw_abstract_file_browser_widget():
             f_full_path = os.path.join(self.last_open_dir, f_file)
             if not f_file.startswith("."):
                 if os.path.isdir(f_full_path):
-                    f_item = QtGui.QListWidgetItem(f_file)
+                    f_item = QListWidgetItem(f_file)
                     f_item.setToolTip(f_file)
                     self.list_folder.addItem(f_item)
                 elif pydaw_util.is_audio_file(f_file) and \
                 os.path.isfile(f_full_path):
                     if not pydaw_util.pydaw_str_has_bad_chars(f_full_path):
-                        f_item = QtGui.QListWidgetItem(f_file)
+                        f_item = QListWidgetItem(f_file)
                         f_item.setToolTip(f_file)
                         self.list_file.addItem(f_item)
                     else:
-                        QtGui.QMessageBox.warning(_(
+                        QMessageBox.warning(_(
                         "Not adding '{}' because it contains bad chars, "
                         "you must rename this file path without:\n{}").format(
                         f_full_path, "\n".join(pydaw_util.pydaw_bad_chars)))
@@ -1731,9 +1735,9 @@ class pydaw_abstract_file_browser_widget():
 class pydaw_file_browser_widget(pydaw_abstract_file_browser_widget):
     def __init__(self):
         pydaw_abstract_file_browser_widget.__init__(self)
-        self.load_button = QtGui.QPushButton(_("Load"))
+        self.load_button = QPushButton(_("Load"))
         self.file_hlayout.addWidget(self.load_button)
-        self.list_file.setSelectionMode(QtGui.QListWidget.ExtendedSelection)
+        self.list_file.setSelectionMode(QListWidget.ExtendedSelection)
 
 PYSOUND_FOLDER = os.path.join(pydaw_util.global_pydaw_home, "presets")
 
@@ -1796,20 +1800,20 @@ class pydaw_preset_browser_widget:
         self.plugin_name = str(a_plugin_name)
         self.configure_dict = a_configure_dict
         self.reconfigure_callback = a_reconfigure_callback
-        self.widget = QtGui.QWidget()
+        self.widget = QWidget()
         self.widget.setObjectName("plugin_groupbox")
-        self.main_vlayout = QtGui.QVBoxLayout(self.widget)
-        self.hlayout1 = QtGui.QHBoxLayout()
-        self.menu_button = QtGui.QPushButton(_("Menu"))
+        self.main_vlayout = QVBoxLayout(self.widget)
+        self.hlayout1 = QHBoxLayout()
+        self.menu_button = QPushButton(_("Menu"))
         self.hlayout1.addWidget(self.menu_button)
-        self.menu = QtGui.QMenu(self.menu_button)
+        self.menu = QMenu(self.menu_button)
         self.menu_button.setMenu(self.menu)
         self.reload_action = self.menu.addAction(_("Reload"))
         self.reload_action.triggered.connect(self.on_reload)
         self.main_vlayout.addLayout(self.hlayout1)
-        self.hlayout2 = QtGui.QHBoxLayout()
+        self.hlayout2 = QHBoxLayout()
         self.main_vlayout.addLayout(self.hlayout2)
-        self.tag_list = QtGui.QListWidget()
+        self.tag_list = QListWidget()
         self.hlayout2.addWidget(self.tag_list)
 
     def on_reload(self):
@@ -1819,21 +1823,21 @@ PEAK_GRADIENT_CACHE = {}
 
 def peak_meter_gradient(a_height):
     if a_height not in PEAK_GRADIENT_CACHE:
-        f_gradient = QtGui.QLinearGradient(0.0, 0.0, 0.0, a_height)
-        f_gradient.setColorAt(0.0, QtGui.QColor.fromRgb(255, 0, 0))
-        f_gradient.setColorAt(0.0333, QtGui.QColor.fromRgb(255, 0, 0))
-        f_gradient.setColorAt(0.05, QtGui.QColor.fromRgb(150, 255, 0))
-        f_gradient.setColorAt(0.2, QtGui.QColor.fromRgb(90, 255, 0))
-        f_gradient.setColorAt(0.4, QtGui.QColor.fromRgb(0, 255, 0))
-        f_gradient.setColorAt(0.7, QtGui.QColor.fromRgb(0, 255, 0))
-        f_gradient.setColorAt(1.0, QtGui.QColor.fromRgb(0, 210, 180))
+        f_gradient = QLinearGradient(0.0, 0.0, 0.0, a_height)
+        f_gradient.setColorAt(0.0, QColor.fromRgb(255, 0, 0))
+        f_gradient.setColorAt(0.0333, QColor.fromRgb(255, 0, 0))
+        f_gradient.setColorAt(0.05, QColor.fromRgb(150, 255, 0))
+        f_gradient.setColorAt(0.2, QColor.fromRgb(90, 255, 0))
+        f_gradient.setColorAt(0.4, QColor.fromRgb(0, 255, 0))
+        f_gradient.setColorAt(0.7, QColor.fromRgb(0, 255, 0))
+        f_gradient.setColorAt(1.0, QColor.fromRgb(0, 210, 180))
         PEAK_GRADIENT_CACHE[a_height] = f_gradient
     return PEAK_GRADIENT_CACHE[a_height]
 
 class peak_meter:
     def __init__(self, a_width=14, a_text=False):
         self.text = a_text
-        self.widget = QtGui.QWidget()
+        self.widget = QWidget()
         self.widget.setFixedWidth(a_width)
         self.set_value([0.0, 0.0])
         self.widget.setStyleSheet("background-color: black;")
@@ -1841,7 +1845,7 @@ class peak_meter:
         self.high = 0.0
         self.set_tooltip()
         self.widget.mousePressEvent = self.reset_high
-        self.white_pen = QtGui.QPen(QtCore.Qt.white, 1.0)
+        self.white_pen = QPen(QtCore.Qt.white, 1.0)
 
     def set_value(self, a_vals):
         self.values = [float(x) for x in a_vals]
@@ -1860,7 +1864,7 @@ class peak_meter:
             _("Peak {}dB\nClick with mouse to reset").format(f_val))
 
     def paint_event(self, a_ev):
-        p = QtGui.QPainter(self.widget)
+        p = QPainter(self.widget)
         p.setBackground(QtCore.Qt.black)
         p.setPen(QtCore.Qt.NoPen)
         f_height = self.widget.height()
@@ -1915,20 +1919,20 @@ class pydaw_preset_manager_widget:
         self.user_factory_presets = os.path.join(self.bank_dir, "factory.mkp")
         self.bank_file = os.path.join(
             pydaw_util.PRESET_DIR, "{}-last-bank.txt".format(a_plugin_name))
-        self.group_box = QtGui.QWidget()
+        self.group_box = QWidget()
         self.group_box.setObjectName("plugin_groupbox")
-        self.layout = QtGui.QHBoxLayout(self.group_box)
-        self.layout.addWidget(QtGui.QLabel(_("Bank")))
-        self.bank_combobox = QtGui.QComboBox()
+        self.layout = QHBoxLayout(self.group_box)
+        self.layout.addWidget(QLabel(_("Bank")))
+        self.bank_combobox = QComboBox()
         self.bank_combobox.setMinimumWidth(210)
         self.layout.addWidget(self.bank_combobox)
-        self.layout.addWidget(QtGui.QLabel(_("Presets")))
-        self.layout.setMargin(3)
-        self.program_combobox = QtGui.QComboBox()
+        self.layout.addWidget(QLabel(_("Presets")))
+        self.layout.setContentsMargins(3, 3, 3, 3)
+        self.program_combobox = QComboBox()
         self.program_combobox.setEditable(True)
         self.program_combobox.setMinimumWidth(300)
         self.layout.addWidget(self.program_combobox)
-        self.save_button = QtGui.QPushButton("Save")
+        self.save_button = QPushButton("Save")
         self.save_button.setToolTip(
             _("Save the current settings to a preset.  "
             "Plugin settings are saved to the project automatically\n"
@@ -1936,9 +1940,9 @@ class pydaw_preset_manager_widget:
             "presets."))
         self.save_button.pressed.connect(self.save_presets)
         self.layout.addWidget(self.save_button)
-        self.more_button = QtGui.QPushButton(_("Menu"))
+        self.more_button = QPushButton(_("Menu"))
 
-        self.more_menu = QtGui.QMenu(self.more_button)
+        self.more_menu = QMenu(self.more_button)
 
         f_new_bank_action = self.more_menu.addAction(_("New Bank..."))
         f_new_bank_action.triggered.connect(self.on_new_bank)
@@ -2040,7 +2044,7 @@ class pydaw_preset_manager_widget:
 
     def on_paste(self):
         if not self.plugin_name in PLUGIN_SETTINGS_CLIPBOARD:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.group_box, _("Error"),
                 _("Nothing copied to clipboard for {}").format(
                 self.plugin_name))
@@ -2061,7 +2065,7 @@ class pydaw_preset_manager_widget:
             if not f_file.endswith(".mkp"):
                 f_file += ".mkp"
             if os.path.exists(f_file):
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     self.group_box, _("Error"),
                     _("This bank name already exists"))
                 return
@@ -2077,22 +2081,22 @@ class pydaw_preset_manager_widget:
                 self.program_combobox.findText(f_name))
 
 
-        f_dialog = QtGui.QDialog(self.group_box)
+        f_dialog = QDialog(self.group_box)
         f_dialog.setWindowTitle(_("Save Bank"))
-        f_groupbox_layout = QtGui.QGridLayout(f_dialog)
-        f_groupbox_layout.addWidget(QtGui.QLabel(_("Name")), 0, 0)
-        f_lineedit = QtGui.QLineEdit()
+        f_groupbox_layout = QGridLayout(f_dialog)
+        f_groupbox_layout.addWidget(QLabel(_("Name")), 0, 0)
+        f_lineedit = QLineEdit()
         f_groupbox_layout.addWidget(f_lineedit, 0, 1)
-        f_sync_button = QtGui.QPushButton(_("OK"))
+        f_sync_button = QPushButton(_("OK"))
         f_sync_button.pressed.connect(ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(f_dialog.close)
         f_groupbox_layout.addWidget(f_cancel_button, 2, 0)
         f_groupbox_layout.addWidget(f_sync_button, 2, 1)
         f_dialog.exec_()
 
     def on_open_bank(self):
-        f_file = QtGui.QFileDialog.getOpenFileName(
+        f_file, f_filter = QFileDialog.getOpenFileName(
             parent=self.group_box, caption=_('Open preset bank...'),
             directory=pydaw_util.global_home,
             filter=PRESET_FILE_DIALOG_STRING)
@@ -2127,7 +2131,7 @@ class pydaw_preset_manager_widget:
         f_line_arr = f_text.split("\n")
 
         if f_line_arr[0].strip() != self.plugin_name:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.group_box, _("Error"),
                 _("The selected preset bank is for {}, please select "
                 "one for {}").format(
@@ -2153,7 +2157,7 @@ class pydaw_preset_manager_widget:
         f_index = self.program_combobox.currentIndex()
         f_preset_name = str(self.program_combobox.currentText())
         if not f_index and not f_preset_name:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.group_box, _("Error"),
                 _("You must name the preset"))
             return
@@ -2215,11 +2219,11 @@ class pydaw_master_widget:
                  a_title=_("Master"), a_uni_voices_port=None,
                  a_uni_spread_port=None, a_preset_mgr=None, a_poly_port=None,
                  a_min_note_port=None, a_max_note_port=None):
-        self.group_box = QtGui.QGroupBox()
+        self.group_box = QGroupBox()
         self.group_box.setObjectName("plugin_groupbox")
         self.group_box.setTitle(str(a_title))
-        self.layout = QtGui.QGridLayout(self.group_box)
-        self.layout.setMargin(3)
+        self.layout = QGridLayout(self.group_box)
+        self.layout.setContentsMargins(3, 3, 3, 3)
         self.vol_knob = pydaw_knob_control(
             a_size, _("Vol"), a_vol_port, a_rel_callback, a_val_callback, -30,
             12, -6, KC_INTEGER, a_port_dict, a_preset_mgr)
@@ -2260,7 +2264,7 @@ class pydaw_master_widget:
                 a_max_note_port, a_rel_callback, a_val_callback, a_port_dict,
                 120, a_preset_mgr)
             self.layout.addWidget(
-                QtGui.QLabel(_("Range")), 0, 9,
+                QLabel(_("Range")), 0, 9,
                 alignment=QtCore.Qt.AlignHCenter)
             self.layout.addWidget(self.min_note.widget, 1, 9)
             self.layout.addWidget(self.max_note.widget, 2, 9)
@@ -2275,30 +2279,30 @@ EQ_OCTAVE_PX = (EQ_WIDTH / (100.0 / 12.0))
 EQ_LOW_PITCH = 4
 EQ_HIGH_PITCH = 123
 
-EQ_GRADIENT = QtGui.QLinearGradient(0, 0, EQ_POINT_DIAMETER, EQ_POINT_DIAMETER)
-EQ_GRADIENT.setColorAt(0, QtGui.QColor(255, 255, 255))
-EQ_GRADIENT.setColorAt(1, QtGui.QColor(240, 240, 240))
+EQ_GRADIENT = QLinearGradient(0, 0, EQ_POINT_DIAMETER, EQ_POINT_DIAMETER)
+EQ_GRADIENT.setColorAt(0, QColor(255, 255, 255))
+EQ_GRADIENT.setColorAt(1, QColor(240, 240, 240))
 
-EQ_FILL = QtGui.QLinearGradient(0.0, 0.0, 0.0, EQ_HEIGHT)
+EQ_FILL = QLinearGradient(0.0, 0.0, 0.0, EQ_HEIGHT)
 
-EQ_FILL.setColorAt(0.0, QtGui.QColor(255, 0, 0, 90)) #red
-EQ_FILL.setColorAt(0.14285, QtGui.QColor(255, 123, 0, 90)) #orange
-EQ_FILL.setColorAt(0.2857, QtGui.QColor(255, 255, 0, 90)) #yellow
-EQ_FILL.setColorAt(0.42855, QtGui.QColor(0, 255, 0, 90)) #green
-EQ_FILL.setColorAt(0.5714, QtGui.QColor(0, 123, 255, 90)) #blue
-EQ_FILL.setColorAt(0.71425, QtGui.QColor(0, 0, 255, 90)) #indigo
-EQ_FILL.setColorAt(0.8571, QtGui.QColor(255, 0, 255, 90)) #violet
+EQ_FILL.setColorAt(0.0, QColor(255, 0, 0, 90)) #red
+EQ_FILL.setColorAt(0.14285, QColor(255, 123, 0, 90)) #orange
+EQ_FILL.setColorAt(0.2857, QColor(255, 255, 0, 90)) #yellow
+EQ_FILL.setColorAt(0.42855, QColor(0, 255, 0, 90)) #green
+EQ_FILL.setColorAt(0.5714, QColor(0, 123, 255, 90)) #blue
+EQ_FILL.setColorAt(0.71425, QColor(0, 0, 255, 90)) #indigo
+EQ_FILL.setColorAt(0.8571, QColor(255, 0, 255, 90)) #violet
 
-EQ_BACKGROUND = QtGui.QLinearGradient(0.0, 0.0, 0.0, EQ_HEIGHT)
+EQ_BACKGROUND = QLinearGradient(0.0, 0.0, 0.0, EQ_HEIGHT)
 
-EQ_BACKGROUND.setColorAt(0.0, QtGui.QColor(40, 40, 40))
-EQ_BACKGROUND.setColorAt(0.1, QtGui.QColor(20, 20, 20))
-EQ_BACKGROUND.setColorAt(0.9, QtGui.QColor(30, 30, 30))
-EQ_BACKGROUND.setColorAt(1.0, QtGui.QColor(40, 40, 40))
+EQ_BACKGROUND.setColorAt(0.0, QColor(40, 40, 40))
+EQ_BACKGROUND.setColorAt(0.1, QColor(20, 20, 20))
+EQ_BACKGROUND.setColorAt(0.9, QColor(30, 30, 30))
+EQ_BACKGROUND.setColorAt(1.0, QColor(40, 40, 40))
 
-class eq_item(QtGui.QGraphicsEllipseItem):
+class eq_item(QGraphicsEllipseItem):
     def __init__(self, a_eq, a_num, a_val_callback):
-        QtGui.QGraphicsEllipseItem.__init__(
+        QGraphicsEllipseItem.__init__(
             self, 0, 0, EQ_POINT_DIAMETER, EQ_POINT_DIAMETER)
         self.val_callback = a_val_callback
         self.eq = a_eq
@@ -2307,10 +2311,10 @@ class eq_item(QtGui.QGraphicsEllipseItem):
         self.setBrush(EQ_GRADIENT)
         self.mapToScene(0.0, 0.0)
         self.path_item = None
-        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
 
     def mouseMoveEvent(self, a_event):
-        QtGui.QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
+        QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
         f_pos = self.pos()
         f_pos_x = pydaw_util.pydaw_clip_value(
             f_pos.x(), -EQ_POINT_RADIUS, EQ_WIDTH)
@@ -2328,7 +2332,7 @@ class eq_item(QtGui.QGraphicsEllipseItem):
         self.draw_path_item()
 
     def mouseReleaseEvent(self, a_event):
-        QtGui.QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
+        QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
         self.eq.freq_knob.control_value_changed(self.eq.freq_knob.get_value())
         self.eq.gain_knob.control_value_changed(self.eq.gain_knob.get_value())
 
@@ -2362,8 +2366,8 @@ class eq_item(QtGui.QGraphicsEllipseItem):
         if self.path_item is not None:
             self.scene().removeItem(self.path_item)
 
-        f_line_pen = QtGui.QPen(QtGui.QColor(255, 255, 255, 210), 2.0)
-        f_path = QtGui.QPainterPath()
+        f_line_pen = QPen(QColor(255, 255, 255, 210), 2.0)
+        f_path = QPainterPath()
 
         f_pos = self.pos()
         f_bw = (f_res * 0.01)
@@ -2378,27 +2382,27 @@ class eq_item(QtGui.QGraphicsEllipseItem):
 
         f_path.lineTo(f_end_x, EQ_HEIGHT * 0.5)
 
-        self.path_item = QtGui.QGraphicsPathItem(f_path)
+        self.path_item = QGraphicsPathItem(f_path)
         self.path_item.setPen(f_line_pen)
         self.path_item.setBrush(EQ_FILL)
         self.scene().addItem(self.path_item)
 
 
-class eq_viewer(QtGui.QGraphicsView):
+class eq_viewer(QGraphicsView):
     def __init__(self, a_val_callback):
-        QtGui.QGraphicsView.__init__(self)
+        QGraphicsView.__init__(self)
         self.val_callback = a_val_callback
         self.eq_points = []
-        self.scene = QtGui.QGraphicsScene(self)
+        self.scene = QGraphicsScene(self)
         self.scene.setBackgroundBrush(EQ_BACKGROUND)
         self.setScene(self.scene)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
+        self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
         self.last_x_scale = 1.0
         self.last_y_scale = 1.0
         self.eq_points = []
-        self.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.setRenderHint(QPainter.Antialiasing)
         self.setSceneRect(-EQ_POINT_RADIUS, -EQ_POINT_RADIUS,
                           EQ_WIDTH + EQ_POINT_RADIUS,
                           EQ_HEIGHT + EQ_POINT_DIAMETER)
@@ -2407,8 +2411,8 @@ class eq_viewer(QtGui.QGraphicsView):
         self.spectrum.set_spectrum(a_message)
 
     def draw_eq(self, a_eq_list=[]):
-        f_hline_pen = QtGui.QPen(QtGui.QColor(255, 255, 255, 90), 1.0)
-        f_vline_pen = QtGui.QPen(QtGui.QColor(255, 255, 255, 150), 2.0)
+        f_hline_pen = QPen(QColor(255, 255, 255, 90), 1.0)
+        f_vline_pen = QPen(QColor(255, 255, 255, 150), 2.0)
 
         f_label_pos = 0.0
 
@@ -2423,8 +2427,8 @@ class eq_viewer(QtGui.QGraphicsView):
         for i in range(4):
             self.scene.addLine(
                 0.0, f_y_pos, EQ_WIDTH, f_y_pos, f_hline_pen)
-            f_label = QtGui.QGraphicsSimpleTextItem(
-                "{}".format(f_db), scene=self.scene)
+            f_label = QGraphicsSimpleTextItem(str(f_db))
+            self.scene.addItem(f_label)
             f_label.setPos(EQ_WIDTH - 36.0, f_y_pos + 3.0)
             f_label.setBrush(QtCore.Qt.white)
             f_db -= 6.0
@@ -2433,7 +2437,7 @@ class eq_viewer(QtGui.QGraphicsView):
         self.scene.addLine(
             0.0, EQ_HEIGHT * 0.5, EQ_WIDTH,
             EQ_HEIGHT * 0.5,
-            QtGui.QPen(QtGui.QColor(255, 255, 255, 210), 2.0))
+            QPen(QColor(255, 255, 255, 210), 2.0))
 
         f_y_pos = EQ_HEIGHT
         f_db = -24.0
@@ -2441,8 +2445,8 @@ class eq_viewer(QtGui.QGraphicsView):
         for i in range(4):
             self.scene.addLine(
                 0.0, f_y_pos, EQ_WIDTH, f_y_pos, f_hline_pen)
-            f_label = QtGui.QGraphicsSimpleTextItem(
-                "{}".format(f_db), scene=self.scene)
+            f_label = QGraphicsSimpleTextItem(str(f_db))
+            self.scene.addItem(f_label)
             f_label.setPos(EQ_WIDTH - 36.0, f_y_pos - 24.0)
             f_label.setBrush(QtCore.Qt.white)
             f_db += 6.0
@@ -2458,8 +2462,8 @@ class eq_viewer(QtGui.QGraphicsView):
             if f_hz > 950:
                 f_hz = round(f_hz, -1)
                 f_hz = "{}khz".format(round(f_hz / 1000, 1))
-            f_label = QtGui.QGraphicsSimpleTextItem(
-                "{}".format(f_hz), scene=self.scene)
+            f_label = QGraphicsSimpleTextItem(str(f_hz))
+            self.scene.addItem(f_label)
             f_label.setPos(f_label_pos + 4.0, EQ_HEIGHT - 30.0)
             self.scene.addLine(
                 f_label_pos, 0.0, f_label_pos, EQ_HEIGHT, f_vline_pen)
@@ -2477,7 +2481,7 @@ class eq_viewer(QtGui.QGraphicsView):
 
 
     def resizeEvent(self, a_resize_event):
-        QtGui.QGraphicsView.resizeEvent(self, a_resize_event)
+        QGraphicsView.resizeEvent(self, a_resize_event)
         self.scale(1.0 / self.last_x_scale, 1.0 / self.last_y_scale)
         f_rect = self.rect()
         self.last_x_scale = f_rect.width() / (EQ_WIDTH +
@@ -2493,9 +2497,9 @@ class eq_widget:
                  a_gain_port, a_rel_callback,
                  a_val_callback, a_default_value, a_port_dict=None,
                  a_preset_mgr=None, a_size=48):
-        self.groupbox = QtGui.QGroupBox("EQ{}".format(a_number))
+        self.groupbox = QGroupBox("EQ{}".format(a_number))
         self.groupbox.setObjectName("plugin_groupbox")
-        self.layout = QtGui.QGridLayout(self.groupbox)
+        self.layout = QGridLayout(self.groupbox)
 
         self.freq_knob = pydaw_knob_control(
             a_size, "Freq", a_freq_port, a_rel_callback,
@@ -2577,13 +2581,13 @@ class eq6_widget:
                  a_size=48, a_vlayout=True):
         self.rel_callback = a_rel_callback
         self.val_callback = a_val_callback
-        self.widget = QtGui.QWidget()
+        self.widget = QWidget()
         self.widget.setObjectName("plugin_ui")
         self.eq_viewer = eq_viewer(a_val_callback)
 
-        self.vlayout = QtGui.QVBoxLayout()
-        self.combobox_hlayout = QtGui.QHBoxLayout()
-        self.grid_layout = QtGui.QGridLayout()
+        self.vlayout = QVBoxLayout()
+        self.combobox_hlayout = QHBoxLayout()
+        self.grid_layout = QGridLayout()
 
         self.vlayout.addLayout(self.combobox_hlayout)
         self.vlayout.addWidget(self.eq_viewer)
@@ -2593,15 +2597,15 @@ class eq6_widget:
             self.vlayout.addLayout(self.grid_layout)
         else:
             f_col_width = 2
-            self.hlayout = QtGui.QHBoxLayout(self.widget)
+            self.hlayout = QHBoxLayout(self.widget)
             self.hlayout.addLayout(self.vlayout)
             self.hlayout.addLayout(self.grid_layout)
 
         self.combobox_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
 
-        self.menu_button = QtGui.QPushButton(_("Menu"))
-        self.menu = QtGui.QMenu(self.menu_button)
+        self.menu_button = QPushButton(_("Menu"))
+        self.menu = QMenu(self.menu_button)
         self.menu_button.setMenu(self.menu)
         self.copy_action = self.menu.addAction(_("Copy"))
         self.copy_action.triggered.connect(self.on_copy)
@@ -2697,7 +2701,7 @@ class morph_eq(eq6_widget):
         eq6_widget.__init__(
             self, a_first_port, self.rel_callback_wrapper, a_val_callback,
             a_port_dict, a_preset_mgr, a_size, a_vlayout)
-        self.eq_num_spinbox = QtGui.QSpinBox()
+        self.eq_num_spinbox = QSpinBox()
         self.eq_num_spinbox.setRange(1, 2)
         self.eq_num_spinbox.valueChanged.connect(self.eq_num_changed)
         self.eq_values = {}
@@ -2715,10 +2719,10 @@ class morph_eq(eq6_widget):
 ROUTING_GRAPH_NODE_GRADIENT = None
 ROUTING_GRAPH_SELECTED_GRADIENT = None
 
-class routing_graph_node(QtGui.QGraphicsRectItem):
+class routing_graph_node(QGraphicsRectItem):
     def __init__(self, a_text, a_width, a_height):
-        QtGui.QGraphicsRectItem.__init__(self, 0, 0, a_width, a_height)
-        self.text = QtGui.QGraphicsSimpleTextItem(a_text, self)
+        QGraphicsRectItem.__init__(self, 0, 0, a_width, a_height)
+        self.text = QGraphicsSimpleTextItem(a_text, self)
         self.text.setPos(3.0, 3.0)
         self.setPen(QtCore.Qt.black)
         self.set_brush()
@@ -2728,10 +2732,10 @@ class routing_graph_node(QtGui.QGraphicsRectItem):
             else ROUTING_GRAPH_NODE_GRADIENT)
 
 
-class routing_graph_widget(QtGui.QGraphicsView):
+class routing_graph_widget(QGraphicsView):
     def __init__(self, a_toggle_callback=None):
-        QtGui.QGraphicsView.__init__(self)
-        self.scene = QtGui.QGraphicsScene(self)
+        QGraphicsView.__init__(self)
+        self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
         self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
         self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
@@ -2749,7 +2753,7 @@ class routing_graph_widget(QtGui.QGraphicsView):
         return (f_x, f_y)
 
     def backgroundMousePressEvent(self, a_event):
-        #QtGui.QGraphicsRectItem.mousePressEvent(self.background_item, a_event)
+        #QGraphicsRectItem.mousePressEvent(self.background_item, a_event)
         if self.toggle_callback:
             f_x, f_y = self.get_coords(a_event.scenePos())
             if f_x == f_y or f_y == 0:
@@ -2759,7 +2763,7 @@ class routing_graph_widget(QtGui.QGraphicsView):
                 1 if a_event.modifiers() == QtCore.Qt.ControlModifier else 0)
 
     def backgroundHoverEvent(self, a_event):
-        QtGui.QGraphicsRectItem.hoverMoveEvent(self.background_item, a_event)
+        QGraphicsRectItem.hoverMoveEvent(self.background_item, a_event)
         f_x, f_y = self.get_coords(a_event.scenePos())
         if f_x == f_y or f_y == 0:
             self.clear_selection()
@@ -2784,39 +2788,39 @@ class routing_graph_widget(QtGui.QGraphicsView):
         ROUTING_GRAPH_WIRE_INPUT = ((self.node_width * 0.5) -
             (self.wire_width * 0.5))
 
-        f_line_pen = QtGui.QPen(QtGui.QColor(105, 105, 105))
+        f_line_pen = QPen(QColor(105, 105, 105))
 
         global ROUTING_GRAPH_NODE_GRADIENT, ROUTING_GRAPH_SELECTED_GRADIENT
-        ROUTING_GRAPH_NODE_GRADIENT = QtGui.QLinearGradient(
+        ROUTING_GRAPH_NODE_GRADIENT = QLinearGradient(
             0.0, 0.0, 0.0, self.node_height)
-        ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.0, QtGui.QColor(255, 255, 0))
-        ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.1, QtGui.QColor(231, 231, 0))
-        ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.8, QtGui.QColor(180, 180, 0))
-        ROUTING_GRAPH_NODE_GRADIENT.setColorAt(1.0, QtGui.QColor(150, 150, 90))
-        ROUTING_GRAPH_SELECTED_GRADIENT = QtGui.QLinearGradient(
+        ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.0, QColor(255, 255, 0))
+        ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.1, QColor(231, 231, 0))
+        ROUTING_GRAPH_NODE_GRADIENT.setColorAt(0.8, QColor(180, 180, 0))
+        ROUTING_GRAPH_NODE_GRADIENT.setColorAt(1.0, QColor(150, 150, 90))
+        ROUTING_GRAPH_SELECTED_GRADIENT = QLinearGradient(
             0.0, 0.0, 0.0, self.node_height)
         ROUTING_GRAPH_SELECTED_GRADIENT.setColorAt(
-            0.0, QtGui.QColor(255, 160, 160))
+            0.0, QColor(255, 160, 160))
         ROUTING_GRAPH_SELECTED_GRADIENT.setColorAt(
-            0.1, QtGui.QColor(231, 160, 160))
+            0.1, QColor(231, 160, 160))
         ROUTING_GRAPH_SELECTED_GRADIENT.setColorAt(
-            0.8, QtGui.QColor(180, 160, 180))
+            0.8, QColor(180, 160, 180))
         ROUTING_GRAPH_SELECTED_GRADIENT.setColorAt(
-            1.0, QtGui.QColor(150, 140, 150))
+            1.0, QColor(150, 140, 150))
 
         self.node_dict = {}
-        f_wire_gradient = QtGui.QLinearGradient(
+        f_wire_gradient = QLinearGradient(
             0.0, 0.0, self.width(), self.height())
-        f_wire_gradient.setColorAt(0.0, QtGui.QColor(250, 250, 255))
-        f_wire_gradient.setColorAt(1.0, QtGui.QColor(210, 210, 222))
-        f_wire_pen = QtGui.QPen(f_wire_gradient, self.wire_width_div2)
-        f_sc_wire_pen = QtGui.QPen(QtCore.Qt.red, self.wire_width_div2)
+        f_wire_gradient.setColorAt(0.0, QColor(250, 250, 255))
+        f_wire_gradient.setColorAt(1.0, QColor(210, 210, 222))
+        f_wire_pen = QPen(f_wire_gradient, self.wire_width_div2)
+        f_sc_wire_pen = QPen(QtCore.Qt.red, self.wire_width_div2)
         self.setUpdatesEnabled(False)
         self.scene.clear()
-        self.background_item = QtGui.QGraphicsRectItem(
+        self.background_item = QGraphicsRectItem(
             0.0, 0.0, self.graph_width, self.graph_height)
         self.background_item.setBrush(QtCore.Qt.transparent)
-        self.background_item.setPen(QtGui.QPen(QtCore.Qt.black))
+        self.background_item.setPen(QPen(QtCore.Qt.black))
         self.scene.addItem(self.background_item)
         self.background_item.hoverMoveEvent = self.backgroundHoverEvent
         self.background_item.hoverLeaveEvent = self.backgroundHoverLeaveEvent
@@ -2888,14 +2892,14 @@ class routing_graph_widget(QtGui.QGraphicsView):
 
 class mixer_channel:
     def __init__(self, a_name):
-        self.widget = QtGui.QWidget()
-        self.vlayout = QtGui.QVBoxLayout(self.widget)
+        self.widget = QWidget()
+        self.vlayout = QVBoxLayout(self.widget)
         self.sends = {}
         self.outputs = {}
         self.output_labels = {}
-        self.name_label = QtGui.QLabel(a_name)
+        self.name_label = QLabel(a_name)
         self.vlayout.addWidget(self.name_label, -1, QtCore.Qt.AlignTop)
-        self.grid_layout = QtGui.QGridLayout()
+        self.grid_layout = QGridLayout()
         self.vlayout.addLayout(self.grid_layout, 1)
         self.peak_meter = peak_meter(20, True)
         self.grid_layout.addWidget(self.peak_meter.widget, 0, 0, 2, 1)
@@ -2923,11 +2927,11 @@ class mixer_channel:
             self.remove_plugin(a_index)
         self.sends[a_index] = a_plugin
         self.outputs[a_index] = a_output
-        f_label = QtGui.QLabel(str(a_output))
+        f_label = QLabel(str(a_output))
         self.output_labels[a_index] = f_label
         self.grid_layout.addWidget(f_label, 0, a_index + 1)
         a_plugin.widget.setSizePolicy(
-            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Expanding)
+            QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.grid_layout.addWidget(a_plugin.widget, 1, a_index + 1)
         a_plugin.widget.setHidden(False)
 
@@ -2945,13 +2949,13 @@ each track that you wish to be able to control""")
 
 class mixer_widget:
     def __init__(self, a_track_count):
-        self.widget = QtGui.QScrollArea()
+        self.widget = QScrollArea()
         self.widget.setWidgetResizable(True)
-        self.main_widget = QtGui.QWidget()
+        self.main_widget = QWidget()
         self.main_widget.setObjectName("plugin_ui")
         self.widget.setWidget(self.main_widget)
         self.tracks = {}
-        self.grid_layout = QtGui.QGridLayout(self.main_widget)
+        self.grid_layout = QGridLayout(self.main_widget)
         for f_i in range(a_track_count):
             f_channel = mixer_channel("track{}".format(f_i))
             self.tracks[f_i] = f_channel
@@ -2984,9 +2988,9 @@ class mixer_widget:
 
 class pydaw_abstract_custom_oscillator:
     def __init__(self):
-        self.widget = QtGui.QWidget()
+        self.widget = QWidget()
         self.widget.setObjectName("plugin_ui")
-        self.layout = QtGui.QVBoxLayout(self.widget)
+        self.layout = QVBoxLayout(self.widget)
 
     def open_settings(self, a_settings):
         pass
@@ -3002,21 +3006,21 @@ ADDITIVE_OSC_WIDTH = ADDITIVE_OSC_HARMONIC_COUNT * ADDITIVE_OSC_BAR_WIDTH
 ADDITIVE_WAVETABLE_SIZE = 1024
 #ADDITIVE_OSC_HEIGHT_div2 = ADDITIVE_OSC_HEIGHT * 0.5
 
-ADD_OSC_FILL = QtGui.QLinearGradient(0.0, 0.0, 0.0, ADDITIVE_OSC_HEIGHT)
+ADD_OSC_FILL = QLinearGradient(0.0, 0.0, 0.0, ADDITIVE_OSC_HEIGHT)
 
-ADD_OSC_FILL.setColorAt(0.0, QtGui.QColor(255, 0, 0, 90)) #red
-ADD_OSC_FILL.setColorAt(0.14285, QtGui.QColor(255, 123, 0, 90)) #orange
-ADD_OSC_FILL.setColorAt(0.2857, QtGui.QColor(255, 255, 0, 90)) #yellow
-ADD_OSC_FILL.setColorAt(0.42855, QtGui.QColor(0, 255, 0, 90)) #green
-ADD_OSC_FILL.setColorAt(0.5714, QtGui.QColor(0, 123, 255, 90)) #blue
-ADD_OSC_FILL.setColorAt(0.71425, QtGui.QColor(0, 0, 255, 90)) #indigo
-ADD_OSC_FILL.setColorAt(0.8571, QtGui.QColor(255, 0, 255, 90)) #violet
+ADD_OSC_FILL.setColorAt(0.0, QColor(255, 0, 0, 90)) #red
+ADD_OSC_FILL.setColorAt(0.14285, QColor(255, 123, 0, 90)) #orange
+ADD_OSC_FILL.setColorAt(0.2857, QColor(255, 255, 0, 90)) #yellow
+ADD_OSC_FILL.setColorAt(0.42855, QColor(0, 255, 0, 90)) #green
+ADD_OSC_FILL.setColorAt(0.5714, QColor(0, 123, 255, 90)) #blue
+ADD_OSC_FILL.setColorAt(0.71425, QColor(0, 0, 255, 90)) #indigo
+ADD_OSC_FILL.setColorAt(0.8571, QColor(255, 0, 255, 90)) #violet
 
-ADD_OSC_BACKGROUND = QtGui.QLinearGradient(0.0, 0.0, 10.0, ADDITIVE_OSC_HEIGHT)
-ADD_OSC_BACKGROUND.setColorAt(0.0, QtGui.QColor(40, 40, 40))
-ADD_OSC_BACKGROUND.setColorAt(0.2, QtGui.QColor(20, 20, 20))
-ADD_OSC_BACKGROUND.setColorAt(0.7, QtGui.QColor(30, 30, 30))
-ADD_OSC_BACKGROUND.setColorAt(1.0, QtGui.QColor(40, 40, 40))
+ADD_OSC_BACKGROUND = QLinearGradient(0.0, 0.0, 10.0, ADDITIVE_OSC_HEIGHT)
+ADD_OSC_BACKGROUND.setColorAt(0.0, QColor(40, 40, 40))
+ADD_OSC_BACKGROUND.setColorAt(0.2, QColor(20, 20, 20))
+ADD_OSC_BACKGROUND.setColorAt(0.7, QColor(30, 30, 30))
+ADD_OSC_BACKGROUND.setColorAt(1.0, QColor(40, 40, 40))
 
 ADD_OSC_SINE_CACHE = {}
 
@@ -3032,12 +3036,12 @@ def global_get_sine(a_size, a_phase):
         return numpy.copy(f_sin)
 
 
-class pydaw_additive_osc_amp_bar(QtGui.QGraphicsRectItem):
+class pydaw_additive_osc_amp_bar(QGraphicsRectItem):
     def __init__(self, a_x_pos):
-        QtGui.QGraphicsRectItem.__init__(self)
-        self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
+        QGraphicsRectItem.__init__(self)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
         self.setBrush(ADD_OSC_FILL)
-        self.setPen(QtGui.QPen(QtCore.Qt.white))
+        self.setPen(QPen(QtCore.Qt.white))
         self.x_pos = a_x_pos
         self.setPos(a_x_pos, ADDITIVE_OSC_HEIGHT - ADDITIVE_OSC_INC)
         self.setRect(0.0, 0.0, ADDITIVE_OSC_BAR_WIDTH, ADDITIVE_OSC_INC)
@@ -3065,24 +3069,24 @@ class pydaw_additive_osc_amp_bar(QtGui.QGraphicsRectItem):
             0.0, 0.0, ADDITIVE_OSC_BAR_WIDTH,
             ADDITIVE_OSC_HEIGHT - f_pos_y - 1.0)
 
-class pydaw_additive_wav_viewer(QtGui.QGraphicsView):
+class pydaw_additive_wav_viewer(QGraphicsView):
     def __init__(self):
-        QtGui.QGraphicsView.__init__(self)
+        QGraphicsView.__init__(self)
         self.setMaximumWidth(600)
         self.last_x_scale = 1.0
         self.last_y_scale = 1.0
-        self.scene = QtGui.QGraphicsScene(self)
+        self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
         self.scene.setBackgroundBrush(ADD_OSC_BACKGROUND)
         self.setSceneRect(
             0.0, 0.0, ADDITIVE_WAVETABLE_SIZE, ADDITIVE_OSC_HEIGHT)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.setRenderHint(QPainter.Antialiasing)
 
     def draw_array(self, a_np_array):
         self.setUpdatesEnabled(False)
-        f_path = QtGui.QPainterPath(QtCore.QPointF(
+        f_path = QPainterPath(QtCore.QPointF(
             0.0, ADDITIVE_OSC_HEIGHT * 0.5))
         f_x = 1.0
         f_half = ADDITIVE_OSC_HEIGHT * 0.5
@@ -3091,13 +3095,13 @@ class pydaw_additive_wav_viewer(QtGui.QGraphicsView):
             f_x += 1.0
         self.scene.clear()
         f_path_item = self.scene.addPath(
-            f_path, QtGui.QPen(QtCore.Qt.white, 1.0))
+            f_path, QPen(QtCore.Qt.white, 1.0))
         f_path_item.setBrush(ADD_OSC_FILL)
         self.setUpdatesEnabled(True)
         self.update()
 
     def resizeEvent(self, a_resize_event):
-        QtGui.QGraphicsView.resizeEvent(self, a_resize_event)
+        QGraphicsView.resizeEvent(self, a_resize_event)
         self.scale(1.0 / self.last_x_scale, 1.0 / self.last_y_scale)
         f_rect = self.rect()
         self.last_x_scale = f_rect.width() / ADDITIVE_WAVETABLE_SIZE
@@ -3105,9 +3109,9 @@ class pydaw_additive_wav_viewer(QtGui.QGraphicsView):
         self.scale(self.last_x_scale, self.last_y_scale)
 
 
-class pydaw_additive_osc_viewer(QtGui.QGraphicsView):
+class pydaw_additive_osc_viewer(QGraphicsView):
     def __init__(self, a_draw_callback, a_configure_callback, a_get_wav):
-        QtGui.QGraphicsView.__init__(self)
+        QGraphicsView.__init__(self)
         self.setMaximumWidth(600)
         self.configure_callback = a_configure_callback
         self.get_wav = a_get_wav
@@ -3120,7 +3124,7 @@ class pydaw_additive_osc_viewer(QtGui.QGraphicsView):
             ADDITIVE_OSC_WIDTH, ADDITIVE_OSC_HEIGHT)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.scene = QtGui.QGraphicsScene(self)
+        self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
         self.scene.mousePressEvent = self.scene_mousePressEvent
         self.scene.mouseReleaseEvent = self.scene_mouseReleaseEvent
@@ -3139,7 +3143,7 @@ class pydaw_additive_osc_viewer(QtGui.QGraphicsView):
         self.edit_mode = a_mode
 
     def resizeEvent(self, a_resize_event):
-        QtGui.QGraphicsView.resizeEvent(self, a_resize_event)
+        QGraphicsView.resizeEvent(self, a_resize_event)
         self.scale(1.0 / self.last_x_scale, 1.0 / self.last_y_scale)
         f_rect = self.rect()
         self.last_x_scale = f_rect.width() / ADDITIVE_OSC_WIDTH
@@ -3147,18 +3151,18 @@ class pydaw_additive_osc_viewer(QtGui.QGraphicsView):
         self.scale(self.last_x_scale, self.last_y_scale)
 
     def scene_mousePressEvent(self, a_event):
-        QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
+        QGraphicsScene.mousePressEvent(self.scene, a_event)
         self.is_drawing = True
         self.draw_harmonics(a_event.scenePos())
 
     def scene_mouseReleaseEvent(self, a_event):
-        QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
+        QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         self.is_drawing = False
         self.get_wav(True)
 
     def scene_mouseMoveEvent(self, a_event):
         if self.is_drawing:
-            QtGui.QGraphicsScene.mouseMoveEvent(self.scene, a_event)
+            QGraphicsScene.mouseMoveEvent(self.scene, a_event)
             self.draw_harmonics(a_event.scenePos())
 
     def clear_osc(self):
@@ -3196,49 +3200,49 @@ class pydaw_custom_additive_oscillator(pydaw_abstract_custom_oscillator):
     def __init__(self, a_configure_callback=None, a_osc_count=3):
         pydaw_abstract_custom_oscillator.__init__(self)
         self.configure_callback = a_configure_callback
-        self.hlayout = QtGui.QHBoxLayout()
+        self.hlayout = QHBoxLayout()
         self.layout.addLayout(self.hlayout)
         self.osc_num = 0
-        self.hlayout.addWidget(QtGui.QLabel(_("Oscillator#:")))
-        self.osc_num_combobox = QtGui.QComboBox()
+        self.hlayout.addWidget(QLabel(_("Oscillator#:")))
+        self.osc_num_combobox = QComboBox()
         self.osc_num_combobox.setMinimumWidth(66)
         self.hlayout.addWidget(self.osc_num_combobox)
         for f_i in range(1, a_osc_count + 1):
             self.osc_num_combobox.addItem(str(f_i))
         self.osc_num_combobox.currentIndexChanged.connect(
             self.osc_index_changed)
-        self.hlayout.addWidget(QtGui.QLabel(_("Edit Mode:")))
-        self.edit_mode_combobox = QtGui.QComboBox()
+        self.hlayout.addWidget(QLabel(_("Edit Mode:")))
+        self.edit_mode_combobox = QComboBox()
         self.edit_mode_combobox.setMinimumWidth(90)
         self.hlayout.addWidget(self.edit_mode_combobox)
         self.edit_mode_combobox.addItems([_("All"), _("Odd")])
         self.edit_mode_combobox.currentIndexChanged.connect(
             self.edit_mode_combobox_changed)
-        self.tools_button = QtGui.QPushButton(_("Tools"))
+        self.tools_button = QPushButton(_("Tools"))
         self.hlayout.addWidget(self.tools_button)
-        self.tools_menu = QtGui.QMenu(self.tools_button)
+        self.tools_menu = QMenu(self.tools_button)
         self.tools_button.setMenu(self.tools_menu)
 
         self.hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
         self.hlayout.addWidget(
-            QtGui.QLabel(_("Select (Additive [n]) as your osc type to use")))
+            QLabel(_("Select (Additive [n]) as your osc type to use")))
         self.wav_viewer = pydaw_additive_wav_viewer()
         self.draw_callback = self.wav_viewer.draw_array
         self.viewer = pydaw_additive_osc_viewer(
             self.wav_viewer.draw_array, self.configure_wrapper, self.get_wav)
         self.phase_viewer = pydaw_additive_osc_viewer(
             self.wav_viewer.draw_array, self.configure_wrapper, self.get_wav)
-        self.view_widget = QtGui.QWidget()
+        self.view_widget = QWidget()
         self.view_widget.setMaximumSize(900, 540)
-        self.vlayout2 = QtGui.QVBoxLayout()
-        self.hlayout2 = QtGui.QHBoxLayout(self.view_widget)
+        self.vlayout2 = QVBoxLayout()
+        self.hlayout2 = QHBoxLayout(self.view_widget)
         self.layout.addWidget(self.view_widget)
         self.hlayout2.addLayout(self.vlayout2)
-        #self.vlayout2.addWidget(QtGui.QLabel(_("Harmonics")))
+        #self.vlayout2.addWidget(QLabel(_("Harmonics")))
         self.viewer.setToolTip(_("Harmonics"))
         self.vlayout2.addWidget(self.viewer)
-        #self.vlayout2.addWidget(QtGui.QLabel(_("Phases")))
+        #self.vlayout2.addWidget(QLabel(_("Phases")))
         self.phase_viewer.setToolTip(_("Phases"))
         self.vlayout2.addWidget(self.phase_viewer)
         self.hlayout2.addWidget(self.wav_viewer)
@@ -3384,34 +3388,34 @@ AUDIO_ITEM_START_MARKER_MAX_VAL = 994.0
 AUDIO_ITEM_VAL_TO_PX = AUDIO_ITEM_SCENE_WIDTH / AUDIO_ITEM_MAX_MARKER_VAL
 AUDIO_ITEM_PX_TO_VAL = AUDIO_ITEM_MAX_MARKER_VAL / AUDIO_ITEM_SCENE_WIDTH
 
-START_END_GRADIENT = QtGui.QLinearGradient(0.0, 0.0, 66.0, 66.0)
-START_END_GRADIENT.setColorAt(0.0, QtGui.QColor.fromRgb(246, 30, 30))
-START_END_GRADIENT.setColorAt(1.0, QtGui.QColor.fromRgb(226, 42, 42))
-START_END_PEN = QtGui.QPen(QtGui.QColor.fromRgb(246, 30, 30), 12.0)
+START_END_GRADIENT = QLinearGradient(0.0, 0.0, 66.0, 66.0)
+START_END_GRADIENT.setColorAt(0.0, QColor.fromRgb(246, 30, 30))
+START_END_GRADIENT.setColorAt(1.0, QColor.fromRgb(226, 42, 42))
+START_END_PEN = QPen(QColor.fromRgb(246, 30, 30), 12.0)
 
-FADE_PEN = QtGui.QPen(QtGui.QColor.fromRgb(246, 30, 30), 6.0)
+FADE_PEN = QPen(QColor.fromRgb(246, 30, 30), 6.0)
 
-LOOP_GRADIENT = QtGui.QLinearGradient(0.0, 0.0, 66.0, 66.0)
-LOOP_GRADIENT.setColorAt(0.0, QtGui.QColor.fromRgb(246, 180, 30))
-LOOP_GRADIENT.setColorAt(1.0, QtGui.QColor.fromRgb(226, 180, 42))
-LOOP_PEN = QtGui.QPen(QtGui.QColor.fromRgb(246, 180, 30), 12.0)
+LOOP_GRADIENT = QLinearGradient(0.0, 0.0, 66.0, 66.0)
+LOOP_GRADIENT.setColorAt(0.0, QColor.fromRgb(246, 180, 30))
+LOOP_GRADIENT.setColorAt(1.0, QColor.fromRgb(226, 180, 42))
+LOOP_PEN = QPen(QColor.fromRgb(246, 180, 30), 12.0)
 
 MARKER_MIN_DIFF = 1.0
 
-class pydaw_audio_marker_widget(QtGui.QGraphicsRectItem):
+class pydaw_audio_marker_widget(QGraphicsRectItem):
     mode_start_end = 0
     mode_loop = 1
     def __init__(self, a_type, a_val, a_pen, a_brush, a_label, a_graph_object,
                  a_marker_mode, a_offset=0, a_callback=None):
         """ a_type:  0 == start, 1 == end, more types eventually... """
         self.audio_item_marker_height = 66.0
-        QtGui.QGraphicsRectItem.__init__(
+        QGraphicsRectItem.__init__(
             self, 0, 0, self.audio_item_marker_height,
             self.audio_item_marker_height)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
         self.callback = a_callback
         self.graph_object = a_graph_object
-        self.line = QtGui.QGraphicsLineItem(
+        self.line = QGraphicsLineItem(
             0.0, 0.0, 0.0, AUDIO_ITEM_SCENE_HEIGHT)
         self.line.setParentItem(self)
         self.line.setPen(a_pen)
@@ -3437,9 +3441,9 @@ class pydaw_audio_marker_widget(QtGui.QGraphicsRectItem):
             self.line.setPos(self.audio_item_marker_height, self.y_pos * -1.0)
         self.setPen(a_pen)
         self.setBrush(a_brush)
-        self.text_item = QtGui.QGraphicsTextItem(a_label)
+        self.text_item = QGraphicsTextItem(a_label)
         self.text_item.setParentItem(self)
-        self.text_item.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+        self.text_item.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
     def __str__(self):
         f_val = self.value * 0.001 * self.graph_object.length_in_seconds
@@ -3484,7 +3488,7 @@ class pydaw_audio_marker_widget(QtGui.QGraphicsRectItem):
 
     def mouseMoveEvent(self, a_event):
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
+        QGraphicsRectItem.mouseMoveEvent(self, a_event)
         self.pos_x = a_event.scenePos().x()
         self.pos_x = pydaw_util.pydaw_clip_value(
             self.pos_x, self.min_x, self.max_x)
@@ -3524,7 +3528,7 @@ class pydaw_audio_marker_widget(QtGui.QGraphicsRectItem):
 
     def mouseReleaseEvent(self, a_event):
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
+        QGraphicsRectItem.mouseReleaseEvent(self, a_event)
         if self.callback is not None:
             self.callback(self.value)
         if self.other.callback is not None:
@@ -3533,17 +3537,17 @@ class pydaw_audio_marker_widget(QtGui.QGraphicsRectItem):
             self.fade_marker.callback(self.fade_marker.value)
 
 
-class pydaw_audio_fade_marker_widget(QtGui.QGraphicsRectItem):
+class pydaw_audio_fade_marker_widget(QGraphicsRectItem):
     def __init__(self, a_type, a_val, a_pen, a_brush, a_label, a_graph_object,
                  a_offset=0, a_callback=None):
         """ a_type:  0 == start, 1 == end, more types eventually... """
         self.audio_item_marker_height = 66.0
-        QtGui.QGraphicsRectItem.__init__(
+        QGraphicsRectItem.__init__(
             self, 0, 0, self.audio_item_marker_height,
             self.audio_item_marker_height)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
         self.callback = a_callback
-        self.line = QtGui.QGraphicsLineItem(
+        self.line = QGraphicsLineItem(
             0.0, 0.0, 0.0, AUDIO_ITEM_SCENE_HEIGHT)
         self.line.setParentItem(self)
         self.line.setPen(a_pen)
@@ -3566,13 +3570,13 @@ class pydaw_audio_fade_marker_widget(QtGui.QGraphicsRectItem):
             self.line.setPos(self.audio_item_marker_height, self.y_pos * -1.0)
         self.setPen(a_pen)
         self.setBrush(a_brush)
-        self.text_item = QtGui.QGraphicsTextItem(a_label)
+        self.text_item = QGraphicsTextItem(a_label)
         self.text_item.setParentItem(self)
-        self.text_item.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+        self.text_item.setFlag(QGraphicsItem.ItemIgnoresTransformations)
         self.amp_lines = []
         self.graph_object = a_graph_object
         for f_i in range(self.graph_object.channels * 2):
-            f_line = QtGui.QGraphicsLineItem()
+            f_line = QGraphicsLineItem()
             self.amp_lines.append(f_line)
             f_line.setPen(FADE_PEN)
 
@@ -3639,7 +3643,7 @@ class pydaw_audio_fade_marker_widget(QtGui.QGraphicsRectItem):
 
     def mouseMoveEvent(self, a_event):
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
+        QGraphicsRectItem.mouseMoveEvent(self, a_event)
         self.pos_x = a_event.scenePos().x()
         self.pos_x = pydaw_util.pydaw_clip_value(
             self.pos_x, self.min_x, self.max_x)
@@ -3667,7 +3671,7 @@ class pydaw_audio_fade_marker_widget(QtGui.QGraphicsRectItem):
 
     def mouseReleaseEvent(self, a_event):
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
+        QGraphicsRectItem.mouseReleaseEvent(self, a_event)
         if self.callback is not None:
             self.callback(self.value)
         if self.start_end_marker is not None:
@@ -3680,23 +3684,23 @@ def global_set_audio_markers_clipboard(a_s, a_e, a_fi, a_fo,
     global AUDIO_MARKERS_CLIPBOARD
     AUDIO_MARKERS_CLIPBOARD = (a_s, a_e, a_fi, a_fo, a_ls, a_le)
 
-class pydaw_audio_item_viewer_widget(QtGui.QGraphicsView):
+class pydaw_audio_item_viewer_widget(QGraphicsView):
     def __init__(self, a_start_callback, a_end_callback,
                  a_fade_in_callback, a_fade_out_callback):
-        QtGui.QGraphicsView.__init__(self)
-        self.setViewportUpdateMode(QtGui.QGraphicsView.MinimalViewportUpdate)
+        QGraphicsView.__init__(self)
+        self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
         self.start_callback_x = a_start_callback
         self.end_callback_x = a_end_callback
         self.fade_in_callback_x = a_fade_in_callback
         self.fade_out_callback_x = a_fade_out_callback
-        self.scene = QtGui.QGraphicsScene(self)
+        self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
-        self.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.setRenderHint(QPainter.Antialiasing)
         self.scene.setBackgroundBrush(QtCore.Qt.darkGray)
         self.scene.mousePressEvent = self.scene_mousePressEvent
         self.scene.mouseMoveEvent = self.scene_mouseMoveEvent
         self.scene.mouseReleaseEvent = self.scene_mouseReleaseEvent
-        self.scene_context_menu = QtGui.QMenu(self)
+        self.scene_context_menu = QMenu(self)
         self.reset_markers_action = self.scene_context_menu.addAction(
             _("Reset Markers"))
         self.reset_markers_action.triggered.connect(self.reset_markers)
@@ -3713,23 +3717,23 @@ class pydaw_audio_item_viewer_widget(QtGui.QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+            QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.scroll_bar_height = self.horizontalScrollBar().height()
         self.last_x_scale = 1.0
         self.last_y_scale = 1.0
-        self.waveform_brush = QtGui.QLinearGradient(
+        self.waveform_brush = QLinearGradient(
             0.0, 0.0, AUDIO_ITEM_SCENE_HEIGHT,
             AUDIO_ITEM_SCENE_WIDTH)
-        self.waveform_brush.setColorAt(0.0, QtGui.QColor(140, 140, 240))
-        self.waveform_brush.setColorAt(0.5, QtGui.QColor(240, 190, 140))
-        self.waveform_brush.setColorAt(1.0, QtGui.QColor(140, 140, 240))
-        self.waveform_pen = QtGui.QPen(QtCore.Qt.NoPen)
+        self.waveform_brush.setColorAt(0.0, QColor(140, 140, 240))
+        self.waveform_brush.setColorAt(0.5, QColor(240, 190, 140))
+        self.waveform_brush.setColorAt(1.0, QColor(140, 140, 240))
+        self.waveform_pen = QPen(QtCore.Qt.NoPen)
         self.is_drag_selecting = False
         self.drag_start_pos = 0.0
         self.drag_start_markers = []
         self.drag_end_markers = []
         self.graph_object = None
-        self.label = QtGui.QLabel("")
+        self.label = QLabel("")
         self.label.setMinimumWidth(420)
         self.last_ts_bar = 0
         self.last_tempo_combobox_index = 0
@@ -3776,39 +3780,39 @@ class pydaw_audio_item_viewer_widget(QtGui.QGraphicsView):
                 f_beat_frac_combobox.currentIndex()
             f_dialog.close()
 
-        f_dialog = QtGui.QDialog(self)
+        f_dialog = QDialog(self)
         f_dialog.setWindowTitle(_("Tempo Sync"))
-        f_groupbox_layout = QtGui.QGridLayout(f_dialog)
-        f_spinbox = QtGui.QDoubleSpinBox()
+        f_groupbox_layout = QGridLayout(f_dialog)
+        f_spinbox = QDoubleSpinBox()
         f_spinbox.setDecimals(1)
         f_spinbox.setRange(60, 200)
         f_spinbox.setSingleStep(0.1)
         f_spinbox.setValue(TEMPO)
         f_beat_fracs = ["1/16", "1/12", "1/8", "2/12", "3/16",
                         "1/4", "2/4", "4/4", "None"]
-        f_beat_frac_combobox = QtGui.QComboBox()
+        f_beat_frac_combobox = QComboBox()
         f_beat_frac_combobox.setMinimumWidth(75)
         f_beat_frac_combobox.addItems(f_beat_fracs)
         f_beat_frac_combobox.setCurrentIndex(self.last_tempo_combobox_index)
-        f_bar_spinbox = QtGui.QSpinBox()
+        f_bar_spinbox = QSpinBox()
         f_bar_spinbox.setRange(0, 64)
         f_bar_spinbox.setValue(self.last_ts_bar)
-        f_sync_button = QtGui.QPushButton(_("Sync"))
+        f_sync_button = QPushButton(_("Sync"))
         f_sync_button.pressed.connect(sync_button_pressed)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(f_dialog.close)
-        f_groupbox_layout.addWidget(QtGui.QLabel(_("BPM")), 0, 0)
+        f_groupbox_layout.addWidget(QLabel(_("BPM")), 0, 0)
         f_groupbox_layout.addWidget(f_spinbox, 1, 0)
-        f_groupbox_layout.addWidget(QtGui.QLabel("Length"), 0, 1)
+        f_groupbox_layout.addWidget(QLabel("Length"), 0, 1)
         f_groupbox_layout.addWidget(f_beat_frac_combobox, 1, 1)
-        f_groupbox_layout.addWidget(QtGui.QLabel("Bars"), 0, 2)
+        f_groupbox_layout.addWidget(QLabel("Bars"), 0, 2)
         f_groupbox_layout.addWidget(f_bar_spinbox, 1, 2)
         f_groupbox_layout.addWidget(f_cancel_button, 2, 1)
         f_groupbox_layout.addWidget(f_sync_button, 2, 2)
         f_dialog.exec_()
 
     def scene_contextMenuEvent(self):
-        self.scene_context_menu.exec_(QtGui.QCursor.pos())
+        self.scene_context_menu.exec_(QCursor.pos())
 
     def reset_markers(self):
         for f_marker in self.drag_start_markers + self.drag_end_markers:
@@ -3845,7 +3849,7 @@ class pydaw_audio_item_viewer_widget(QtGui.QGraphicsView):
         if a_event.button() == QtCore.Qt.RightButton:
             self.scene_contextMenuEvent()
             return
-        QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
+        QGraphicsScene.mousePressEvent(self.scene, a_event)
         if not a_event.isAccepted():
             self.is_drag_selecting = True
             f_pos_x = a_event.scenePos().x()
@@ -3865,7 +3869,7 @@ class pydaw_audio_item_viewer_widget(QtGui.QGraphicsView):
     def scene_mouseReleaseEvent(self, a_event):
         if self.graph_object is None:
             return
-        QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
+        QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         if not a_event.isAccepted():
             self.is_drag_selecting = False
             for f_marker in self.drag_start_markers + self.drag_end_markers:
@@ -3874,7 +3878,7 @@ class pydaw_audio_item_viewer_widget(QtGui.QGraphicsView):
     def scene_mouseMoveEvent(self, a_event):
         if self.graph_object is None:
             return
-        QtGui.QGraphicsScene.mouseMoveEvent(self.scene, a_event)
+        QGraphicsScene.mouseMoveEvent(self.scene, a_event)
         if not a_event.isAccepted() and self.is_drag_selecting:
             f_val = self.pos_to_marker_val(a_event.scenePos().x())
 
@@ -3908,8 +3912,8 @@ class pydaw_audio_item_viewer_widget(QtGui.QGraphicsView):
         f_path_inc = AUDIO_ITEM_SCENE_HEIGHT / self.path_count
         f_path_y_pos = 0.0
         for f_path in self.path_list:
-            f_pixmap = QtGui.QPixmap(AUDIO_ITEM_SCENE_WIDTH, f_path_inc)
-            f_painter = QtGui.QPainter(f_pixmap)
+            f_pixmap = QPixmap(AUDIO_ITEM_SCENE_WIDTH, f_path_inc)
+            f_painter = QPainter(f_pixmap)
             f_painter.setPen(self.waveform_pen)
             f_painter.setBrush(self.waveform_brush)
             f_painter.fillRect(
@@ -3917,7 +3921,7 @@ class pydaw_audio_item_viewer_widget(QtGui.QGraphicsView):
                 QtCore.Qt.darkGray)
             f_painter.drawPath(f_path)
             f_painter.end()
-            f_path_item = QtGui.QGraphicsPixmapItem(f_pixmap)
+            f_path_item = QGraphicsPixmapItem(f_pixmap)
             self.scene.addItem(f_path_item)
             f_path_item.setPos(0.0, f_path_y_pos)
             f_path_y_pos += f_path_inc
@@ -3960,7 +3964,7 @@ class pydaw_audio_item_viewer_widget(QtGui.QGraphicsView):
         self.update_label()
 
     def resizeEvent(self, a_resize_event):
-        QtGui.QGraphicsView.resizeEvent(self, a_resize_event)
+        QGraphicsView.resizeEvent(self, a_resize_event)
         self.scale(1.0 / self.last_x_scale, 1.0 / self.last_y_scale)
         f_rect = self.rect()
         self.last_x_scale = f_rect.width() / AUDIO_ITEM_SCENE_WIDTH
@@ -4035,15 +4039,15 @@ class pydaw_sample_viewer_widget(pydaw_audio_item_viewer_widget):
         self.update_label()
 
 
-class pydaw_spectrum(QtGui.QGraphicsPathItem):
+class pydaw_spectrum(QGraphicsPathItem):
     def __init__(self, a_height, a_width):
         self.spectrum_height = float(a_height)
         self.spectrum_width = float(a_width)
-        QtGui.QGraphicsPathItem.__init__(self)
+        QGraphicsPathItem.__init__(self)
         self.setPen(QtCore.Qt.white)
 
     def set_spectrum(self, a_message):
-        self.painter_path = QtGui.QPainterPath(QtCore.QPointF(0.0, 20.0))
+        self.painter_path = QPainterPath(QtCore.QPointF(0.0, 20.0))
         self.values = a_message.split("|")
         self.painter_path.moveTo(0.0, self.spectrum_height)
         f_low = EQ_LOW_PITCH
@@ -4098,13 +4102,13 @@ class pydaw_modulex_settings:
 class pydaw_modulex_single:
     def __init__(self, a_title, a_port_k1, a_rel_callback, a_val_callback,
                  a_port_dict=None, a_preset_mgr=None, a_knob_size=51):
-        self.group_box = QtGui.QGroupBox()
+        self.group_box = QGroupBox()
         self.group_box.contextMenuEvent = self.contextMenuEvent
         self.group_box.setObjectName("plugin_groupbox")
         if a_title is not None:
             self.group_box.setTitle(str(a_title))
-        self.layout = QtGui.QGridLayout()
-        self.layout.setMargin(3)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(3, 3, 3, 3)
         #self.layout.setAlignment(QtCore.Qt.AlignCenter)
         self.group_box.setLayout(self.layout)
         self.knobs = []
@@ -4136,7 +4140,7 @@ class pydaw_modulex_single:
         self.combobox.control.wheelEvent = self.wheel_event
 
     def contextMenuEvent(self, a_event):
-        f_menu = QtGui.QMenu(self.group_box)
+        f_menu = QMenu(self.group_box)
         f_copy_action = f_menu.addAction(_("Copy"))
         f_copy_action.triggered.connect(self.copy_settings)
         f_cut_action = f_menu.addAction(_("Cut"))
@@ -4148,7 +4152,7 @@ class pydaw_modulex_single:
         f_menu.addAction(f_paste_and_copy_action)
         f_reset_action = f_menu.addAction(_("Reset"))
         f_reset_action.triggered.connect(self.reset_settings)
-        f_menu.exec_(QtGui.QCursor.pos())
+        f_menu.exec_(QCursor.pos())
 
     def copy_settings(self):
         global MODULEX_CLIPBOARD
@@ -4163,7 +4167,7 @@ class pydaw_modulex_single:
     def paste_settings(self, a_copy=False):
         global MODULEX_CLIPBOARD
         if MODULEX_CLIPBOARD is None:
-            QtGui.QMessageBox.warning(self.group_box, _("Error"),
+            QMessageBox.warning(self.group_box, _("Error"),
             _("Nothing copied to clipboard"))
         else:
             f_class = self.get_class()
@@ -4500,9 +4504,9 @@ class pydaw_modulex_single:
 class pydaw_per_audio_item_fx_widget:
     def __init__(self, a_rel_callback, a_val_callback):
         self.effects = []
-        self.widget = QtGui.QWidget()
+        self.widget = QWidget()
         self.widget.setObjectName("plugin_ui")
-        self.layout = QtGui.QVBoxLayout()
+        self.layout = QVBoxLayout()
         self.widget.setLayout(self.layout)
         f_port = 0
         for f_i in range(8):
@@ -4513,7 +4517,7 @@ class pydaw_per_audio_item_fx_widget:
             self.layout.addWidget(f_effect.group_box)
             f_port += 4
         self.widget.setGeometry(0, 0, 348, 1100)  #ensure minimum size
-        self.scroll_area = QtGui.QScrollArea()
+        self.scroll_area = QScrollArea()
         self.scroll_area.setGeometry(0, 0, 360, 1120)
         self.scroll_area.setWidget(self.widget)
 
@@ -4547,7 +4551,7 @@ class pydaw_abstract_plugin_ui:
         self.configure_callback = a_configure_callback
         self.midi_learn_callback = a_midi_learn_callback
         self.cc_map_callback = a_cc_map_callback
-        self.widget = QtGui.QScrollArea()
+        self.widget = QScrollArea()
         self.widget.setObjectName("plugin_ui")
         self.widget.setMinimumSize(500, 500)
         self.widget.setStyleSheet(str(a_stylesheet))
@@ -4555,13 +4559,13 @@ class pydaw_abstract_plugin_ui:
 
         self.widget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.widget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.scrollarea_widget = QtGui.QWidget()
+        self.scrollarea_widget = QWidget()
         self.scrollarea_widget.setObjectName("plugin_ui")
         self.widget.setWidgetResizable(True)
         self.widget.setWidget(self.scrollarea_widget)
 
-        self.layout = QtGui.QVBoxLayout()
-        self.layout.setMargin(2)
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(2, 2, 2, 2)
         self.scrollarea_widget.setLayout(self.layout)
         self.port_dict = {}
         self.effects = []
@@ -4601,7 +4605,7 @@ class pydaw_abstract_plugin_ui:
             self.cc_map[a_cc_num] = cc_mapping(a_cc_num)
         f_result = self.cc_map[a_cc_num].set_port(a_ctrl.port_num)
         if f_result:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.widget, _("Error"), _("CCs can only be assigned to 5 "
                 "controls at a time, CC {} is already assigned to "
                 "{}").format(a_cc_num,
@@ -4632,7 +4636,7 @@ class pydaw_abstract_plugin_ui:
         self.layout.update()
         self.layout.activate()
         f_size = self.scrollarea_widget.size()
-        f_desktop_size = QtGui.QApplication.desktop().screen().rect()
+        f_desktop_size = QApplication.desktop().screen().rect()
 
         f_x = f_size.width() + 21
         f_y = f_size.height()
@@ -4691,7 +4695,7 @@ class pydaw_abstract_plugin_ui:
         else:
             self.widget.hide()
             a_event.ignore()
-        #QtGui.QWidget.closeEvent(self.widget, a_event)
+        #QWidget.closeEvent(self.widget, a_event)
 
     def plugin_rel_callback(self, a_port, a_val):
         """ This can optionally be implemented, otherwise it's

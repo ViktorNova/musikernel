@@ -19,7 +19,10 @@ import time
 import random
 import shutil
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 from libpydaw import *
 from mkplugins import *
 
@@ -65,10 +68,10 @@ def global_update_region_time():
         f_total += pydaw_get_region_length(x) * 4.0 * f_seconds_per_beat
 
 def global_get_audio_file_from_clipboard():
-    f_clipboard = QtGui.QApplication.clipboard()
+    f_clipboard = QApplication.clipboard()
     f_path = f_clipboard.text()
     if not f_path:
-        QtGui.QMessageBox.warning(
+        QMessageBox.warning(
             MAIN_WINDOW, _("Error"), _("No text in the system clipboard"))
     else:
         f_path = str(f_path).strip()
@@ -77,7 +80,7 @@ def global_get_audio_file_from_clipboard():
             return f_path
         else:
             f_path = f_path[:100]
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 MAIN_WINDOW, _("Error"),
                 _("{} is not a valid file").format(f_path))
     return None
@@ -98,18 +101,12 @@ def set_tooltips_enabled(a_enabled):
 
 def pydaw_current_region_is_none():
     if CURRENT_REGION is None:
-        QtGui.QMessageBox.warning(
+        QMessageBox.warning(
             MAIN_WINDOW, _("Error"),
             _("You must create or select a region first by clicking "
             "in the song editor above."))
         return True
     return False
-
-def pydaw_scale_to_rect(a_to_scale, a_scale_to):
-    """ Returns a tuple that scales one QRectF to another """
-    f_x = (a_scale_to.width() / a_to_scale.width())
-    f_y = (a_scale_to.height() / a_to_scale.height())
-    return (f_x, f_y)
 
 
 CURRENT_SONG_INDEX = None
@@ -118,42 +115,42 @@ class song_editor:
     def __init__(self):
         self.song = pydaw_song()
         self.last_midi_dir = None
-        self.main_vlayout = QtGui.QVBoxLayout()
-        self.table_widget = QtGui.QTableWidget()
+        self.main_vlayout = QVBoxLayout()
+        self.table_widget = QTableWidget()
         self.table_widget.setColumnCount(300)
         self.table_widget.setRowCount(1)
         self.table_widget.setFixedHeight(87)
         self.table_widget.setHorizontalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
+            QAbstractItemView.ScrollPerPixel)
         self.table_widget.verticalHeader().setVisible(False)
         self.table_widget.setAutoScroll(True)
         self.table_widget.setAutoScrollMargin(1)
         self.table_widget.setRowHeight(0, 50)
-        self.table_widget.horizontalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
-        self.table_widget.verticalHeader().setResizeMode(
-            QtGui.QHeaderView.Fixed)
+        self.table_widget.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Fixed)
+        self.table_widget.verticalHeader().setSectionResizeMode(
+            QHeaderView.Fixed)
         self.table_widget.cellClicked.connect(self.cell_clicked)
         self.table_widget.setDragDropOverwriteMode(False)
         self.table_widget.setDragEnabled(True)
-        self.table_widget.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+        self.table_widget.setDragDropMode(QAbstractItemView.InternalMove)
         self.table_widget.dropEvent = self.table_drop_event
         self.table_widget.setEditTriggers(
-            QtGui.QAbstractItemView.NoEditTriggers)
+            QAbstractItemView.NoEditTriggers)
         self.main_vlayout.addWidget(self.table_widget)
 
         self.table_widget.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
-        self.rename_action = QtGui.QAction(
+        self.rename_action = QAction(
             _("Rename Region"), self.table_widget)
         self.rename_action.triggered.connect(self.on_rename_region)
         self.table_widget.addAction(self.rename_action)
-        self.delete_action = QtGui.QAction(
+        self.delete_action = QAction(
             _("Delete Region(s)"), self.table_widget)
         self.delete_action.triggered.connect(self.on_delete)
         # Too often, this was being triggered by accident,
         # making it a PITA as there
         # was no easy way to tell which widget had focus...
-        #self.delete_action.setShortcut(QtGui.QKeySequence.Delete)
+        #self.delete_action.setShortcut(QKeySequence.Delete)
         #self.delete_action.setShortcutContext(
         #    QtCore.Qt.WidgetWithChildrenShortcut)
         self.table_widget.addAction(self.delete_action)
@@ -162,7 +159,7 @@ class song_editor:
         """ Adds a properly formatted item.  This is not for
             creating empty items...
         """
-        f_qtw_item = QtGui.QTableWidgetItem(a_name)
+        f_qtw_item = QTableWidgetItem(a_name)
         f_qtw_item.setBackground(pydaw_region_gradient)
         f_qtw_item.setTextAlignment(QtCore.Qt.AlignCenter)
         f_qtw_item.setFlags(f_qtw_item.flags() | QtCore.Qt.ItemIsSelectable)
@@ -228,41 +225,41 @@ class song_editor:
                 f_window.close()
                 self.on_import_midi(y)
 
-            f_window = QtGui.QDialog(MAIN_WINDOW)
+            f_window = QDialog(MAIN_WINDOW)
             f_window.setWindowTitle(_("Add region to song..."))
             f_window.setMinimumWidth(240)
-            f_layout = QtGui.QGridLayout()
+            f_layout = QGridLayout()
             f_window.setLayout(f_layout)
-            f_new_radiobutton = QtGui.QRadioButton()
+            f_new_radiobutton = QRadioButton()
             f_new_radiobutton.setChecked(True)
             f_layout.addWidget(f_new_radiobutton, 0, 0)
-            f_layout.addWidget(QtGui.QLabel(_("New:")), 0, 1)
-            f_new_lineedit = QtGui.QLineEdit(
+            f_layout.addWidget(QLabel(_("New:")), 0, 1)
+            f_new_lineedit = QLineEdit(
                 PROJECT.get_next_default_region_name())
             f_new_lineedit.setMaxLength(24)
             f_new_lineedit.editingFinished.connect(on_name_changed)
             f_layout.addWidget(f_new_lineedit, 0, 2)
-            f_copy_radiobutton = QtGui.QRadioButton()
+            f_copy_radiobutton = QRadioButton()
             f_layout.addWidget(f_copy_radiobutton, 1, 0)
-            f_copy_combobox = QtGui.QComboBox()
+            f_copy_combobox = QComboBox()
             f_copy_combobox.addItems(PROJECT.get_region_list())
             f_copy_combobox.currentIndexChanged.connect(
                 on_current_index_changed)
-            f_layout.addWidget(QtGui.QLabel(_("Copy from:")), 1, 1)
+            f_layout.addWidget(QLabel(_("Copy from:")), 1, 1)
             f_layout.addWidget(f_copy_combobox, 1, 2)
-            f_import_midi = QtGui.QPushButton("Import MIDI File")
+            f_import_midi = QPushButton("Import MIDI File")
             f_import_midi.pressed.connect(on_import_midi)
             f_layout.addWidget(f_import_midi, 3, 2)
-            f_ok_cancel_layout = QtGui.QHBoxLayout()
+            f_ok_cancel_layout = QHBoxLayout()
             f_layout.addLayout(f_ok_cancel_layout, 5, 2)
-            f_ok_button = QtGui.QPushButton(_("OK"))
+            f_ok_button = QPushButton(_("OK"))
             f_ok_cancel_layout.addWidget(f_ok_button)
             f_ok_button.clicked.connect(song_ok_handler)
             f_ok_button.setDefault(True)
-            f_cancel_button = QtGui.QPushButton(_("Cancel"))
+            f_cancel_button = QPushButton(_("Cancel"))
             f_ok_cancel_layout.addWidget(f_cancel_button)
             f_cancel_button.clicked.connect(song_cancel_handler)
-            f_window.move(QtGui.QCursor.pos())
+            f_window.move(QCursor.pos())
             f_window.exec_()
         else:
             REGION_SETTINGS.open_region(str(f_cell.text()))
@@ -277,17 +274,17 @@ class song_editor:
 
         def ok_handler():
             if self.midi_file is None:
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     f_window, _("Error"), _("File name cannot be empty"))
                 return
             f_item_name_str = str(f_item_name.text())
             if f_item_name_str == "":
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     f_window, _("Error"), _("File name cannot be empty"))
                 return
             if not self.midi_file.populate_region_from_track_map(
             PROJECT, f_item_name_str, a_index):
-                QtGui.QMessageBox.warning(f_window, _("Error"),
+                QMessageBox.warning(f_window, _("Error"),
                 _("No available slots for inserting a region, delete "
                 "an existing region from the song editor first"))
             else:
@@ -303,7 +300,7 @@ class song_editor:
                 f_dir_name = global_default_project_folder
             else:
                 f_dir_name = self.last_midi_dir
-            f_file_name = QtGui.QFileDialog.getOpenFileName(
+            f_file_name, f_filter = QFileDialog.getOpenFileName(
                 parent=self.table_widget, caption=_('Open MIDI File'),
                 directory=f_dir_name, filter='MIDI File (*.mid)')
             if not f_file_name is None and not str(f_file_name) == "":
@@ -317,38 +314,38 @@ class song_editor:
         def item_name_changed(a_val=None):
             f_item_name.setText(pydaw_remove_bad_chars(f_item_name.text()))
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Import MIDI File..."))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_name = QtGui.QLineEdit()
+        f_name = QLineEdit()
         f_name.setReadOnly(True)
         f_name.setMinimumWidth(360)
-        f_layout.addWidget(QtGui.QLabel(_("File Name:")), 0, 0)
+        f_layout.addWidget(QLabel(_("File Name:")), 0, 0)
         f_layout.addWidget(f_name, 0, 1)
-        f_select_file = QtGui.QPushButton(_("Select"))
+        f_select_file = QPushButton(_("Select"))
         f_select_file.pressed.connect(file_name_select)
         f_layout.addWidget(f_select_file, 0, 2)
 
-        f_item_name = QtGui.QLineEdit()
+        f_item_name = QLineEdit()
         f_item_name.setMaxLength(24)
-        f_layout.addWidget(QtGui.QLabel(_("Item Name:")), 2, 0)
+        f_layout.addWidget(QLabel(_("Item Name:")), 2, 0)
         f_item_name.editingFinished.connect(item_name_changed)
         f_layout.addWidget(f_item_name, 2, 1)
 
-        f_info_label = QtGui.QLabel()
+        f_info_label = QLabel()
         f_layout.addWidget(f_info_label, 4, 1)
 
-        f_ok_layout = QtGui.QHBoxLayout()
+        f_ok_layout = QHBoxLayout()
         f_ok_layout.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding,
-            QtGui.QSizePolicy.Minimum))
-        f_ok = QtGui.QPushButton(_("OK"))
+            QSpacerItem(10, 10, QSizePolicy.Expanding,
+            QSizePolicy.Minimum))
+        f_ok = QPushButton(_("OK"))
         f_ok.pressed.connect(ok_handler)
         f_ok_layout.addWidget(f_ok)
         f_layout.addLayout(f_ok_layout, 9, 1)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
+        f_cancel = QPushButton(_("Cancel"))
         f_cancel.pressed.connect(cancel_handler)
         f_layout.addWidget(f_cancel, 9, 2)
         f_window.exec_()
@@ -367,7 +364,7 @@ class song_editor:
             f_item = self.table_widget.item(f_index.row(), f_index.column())
             if f_item is not None and str(f_item.text()) != "":
                 f_commit_list.append(str(f_index.column()))
-                f_empty = QtGui.QTableWidgetItem()
+                f_empty = QTableWidgetItem()
                 self.table_widget.setItem(
                     f_index.row(), f_index.column(), f_empty)
         if f_commit_list:
@@ -395,7 +392,7 @@ class song_editor:
         def ok_handler():
             f_new_name = str(f_new_lineedit.text())
             if f_new_name == "":
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     self.table_widget, _("Error"), _("Name cannot be blank"))
                 return
             PROJECT.rename_region(f_item_text, f_new_name)
@@ -412,25 +409,25 @@ class song_editor:
             f_new_lineedit.setText(
                 pydaw_remove_bad_chars(f_new_lineedit.text()))
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Rename region..."))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
-        f_new_lineedit = QtGui.QLineEdit()
+        f_new_lineedit = QLineEdit()
         f_new_lineedit.editingFinished.connect(on_name_changed)
         f_new_lineedit.setMaxLength(24)
-        f_layout.addWidget(QtGui.QLabel(_("New name:")), 0, 0)
+        f_layout.addWidget(QLabel(_("New name:")), 0, 0)
         f_layout.addWidget(f_new_lineedit, 0, 1)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_layout.addWidget(f_ok_button, 5, 0)
         f_ok_button.clicked.connect(ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_layout.addWidget(f_cancel_button, 5, 1)
         f_cancel_button.clicked.connect(cancel_handler)
         f_window.exec_()
 
     def table_drop_event(self, a_event):
-        QtGui.QTableWidget.dropEvent(self.table_widget, a_event)
+        QTableWidget.dropEvent(self.table_widget, a_event)
         a_event.acceptProposedAction()
         self.tablewidget_to_song()
         self.table_widget.clearSelection()
@@ -500,26 +497,26 @@ CURRENT_REGION_NAME = None
 class region_settings:
     def __init__(self):
         self.enabled = False
-        self.hlayout0 = QtGui.QHBoxLayout()
-        self.region_num_label = QtGui.QLabel()
+        self.hlayout0 = QHBoxLayout()
+        self.region_num_label = QLabel()
         self.region_num_label.setText(_("Region:"))
         self.hlayout0.addWidget(self.region_num_label)
-        self.region_name_lineedit = QtGui.QLineEdit()
+        self.region_name_lineedit = QLineEdit()
         self.region_name_lineedit.setEnabled(False)
         self.region_name_lineedit.setMaximumWidth(210)
         self.hlayout0.addWidget(self.region_name_lineedit)
 
-        self.edit_mode_combobox = QtGui.QComboBox()
+        self.edit_mode_combobox = QComboBox()
         self.edit_mode_combobox.setMinimumWidth(132)
         self.edit_mode_combobox.addItems([_("Items"), _("Automation")])
         self.edit_mode_combobox.currentIndexChanged.connect(
             self.edit_mode_changed)
-        self.hlayout0.addWidget(QtGui.QLabel(_("Edit Mode:")))
+        self.hlayout0.addWidget(QLabel(_("Edit Mode:")))
         self.hlayout0.addWidget(self.edit_mode_combobox)
 
-        self.menu_button = QtGui.QPushButton(_("Menu"))
+        self.menu_button = QPushButton(_("Menu"))
         self.hlayout0.addWidget(self.menu_button)
-        self.menu = QtGui.QMenu(self.menu_button)
+        self.menu = QMenu(self.menu_button)
         self.menu_button.setMenu(self.menu)
         self.shift_action = self.menu.addAction(_("Shift Song..."))
         self.shift_action.triggered.connect(self.on_shift)
@@ -535,28 +532,28 @@ class region_settings:
 #        self.toggle_hide_action.setCheckable(True)
 #        self.toggle_hide_action.triggered.connect(self.toggle_hide_inactive)
 #        self.toggle_hide_action.setShortcut(
-#            QtGui.QKeySequence.fromString("CTRL+H"))
+#            QKeySequence.fromString("CTRL+H"))
         self.menu.addSeparator()
         self.unsolo_action = self.menu.addAction(_("Un-Solo All"))
         self.unsolo_action.triggered.connect(self.unsolo_all)
-        self.unsolo_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+J"))
+        self.unsolo_action.setShortcut(QKeySequence.fromString("CTRL+J"))
         self.unmute_action = self.menu.addAction(_("Un-Mute All"))
         self.unmute_action.triggered.connect(self.unmute_all)
-        self.unmute_action.setShortcut(QtGui.QKeySequence.fromString("CTRL+M"))
+        self.unmute_action.setShortcut(QKeySequence.fromString("CTRL+M"))
 
         self.hlayout0.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding))
-        self.hlayout0.addWidget(QtGui.QLabel(_("Region Length:")))
-        self.length_default_radiobutton = QtGui.QRadioButton(_("default"))
+            QSpacerItem(10, 10, QSizePolicy.Expanding))
+        self.hlayout0.addWidget(QLabel(_("Region Length:")))
+        self.length_default_radiobutton = QRadioButton(_("default"))
         self.length_default_radiobutton.setChecked(True)
         self.length_default_radiobutton.toggled.connect(
             self.update_region_length)
         self.hlayout0.addWidget(self.length_default_radiobutton)
-        self.length_alternate_radiobutton = QtGui.QRadioButton()
+        self.length_alternate_radiobutton = QRadioButton()
         self.length_alternate_radiobutton.toggled.connect(
             self.update_region_length)
         self.hlayout0.addWidget(self.length_alternate_radiobutton)
-        self.length_alternate_spinbox = QtGui.QSpinBox()
+        self.length_alternate_spinbox = QSpinBox()
         self.length_alternate_spinbox.setKeyboardTracking(False)
         self.length_alternate_spinbox.setRange(1, MAX_REGION_LENGTH)
         self.length_alternate_spinbox.setValue(8)
@@ -568,9 +565,9 @@ class region_settings:
         global REGION_EDITOR_MODE
         REGION_EDITOR_MODE = a_value
         if a_value == 0:
-            REGION_EDITOR.setDragMode(QtGui.QGraphicsView.NoDrag)
+            REGION_EDITOR.setDragMode(QGraphicsView.NoDrag)
         elif a_value == 1:
-            REGION_EDITOR.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+            REGION_EDITOR.setDragMode(QGraphicsView.RubberBandDrag)
         REGION_EDITOR.open_region()
 
     def update_region_length(self, a_value=None):
@@ -644,20 +641,20 @@ class region_settings:
         def cancel_handler():
             f_window.close()
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Shift song..."))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
-        f_shift_amt = QtGui.QSpinBox()
+        f_shift_amt = QSpinBox()
         f_shift_amt.setRange(-10, 10)
-        f_layout.addWidget(QtGui.QLabel(_("Amount:")), 2, 1)
+        f_layout.addWidget(QLabel(_("Amount:")), 2, 1)
         f_layout.addWidget(f_shift_amt, 2, 2)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout, 5, 2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_cancel_layout.addWidget(f_ok_button)
         f_ok_button.clicked.connect(ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_cancel_button.clicked.connect(cancel_handler)
         f_window.exec_()
@@ -701,28 +698,28 @@ class region_settings:
             f_new_lineedit.setText(
                 pydaw_remove_bad_chars(f_new_lineedit.text()))
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Split Region..."))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
-        f_vlayout0 = QtGui.QVBoxLayout()
-        f_new_lineedit = QtGui.QLineEdit(
+        f_vlayout0 = QVBoxLayout()
+        f_new_lineedit = QLineEdit(
             PROJECT.get_next_default_region_name())
         f_new_lineedit.editingFinished.connect(on_name_changed)
         f_new_lineedit.setMaxLength(24)
-        f_layout.addWidget(QtGui.QLabel(_("New Name:")), 0, 1)
+        f_layout.addWidget(QLabel(_("New Name:")), 0, 1)
         f_layout.addWidget(f_new_lineedit, 0, 2)
         f_layout.addLayout(f_vlayout0, 1, 0)
-        f_split_at = QtGui.QSpinBox()
+        f_split_at = QSpinBox()
         f_split_at.setRange(1, pydaw_get_current_region_length() - 1)
-        f_layout.addWidget(QtGui.QLabel(_("Split After:")), 2, 1)
+        f_layout.addWidget(QLabel(_("Split After:")), 2, 1)
         f_layout.addWidget(f_split_at, 2, 2)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout, 5, 2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_cancel_layout.addWidget(f_ok_button)
         f_ok_button.clicked.connect(split_ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_cancel_button.clicked.connect(split_cancel_handler)
         f_window.exec_()
@@ -827,10 +824,10 @@ REGION_EDITOR_HEADER_HEIGHT = 24
 REGION_EDITOR_TOTAL_HEIGHT = 1000
 REGION_EDITOR_QUANTIZE_INDEX = 4
 
-SELECTED_ITEM_GRADIENT = QtGui.QLinearGradient(
+SELECTED_ITEM_GRADIENT = QLinearGradient(
     QtCore.QPointF(0, 0), QtCore.QPointF(0, 12))
-SELECTED_ITEM_GRADIENT.setColorAt(0, QtGui.QColor(180, 172, 100))
-SELECTED_ITEM_GRADIENT.setColorAt(1, QtGui.QColor(240, 240, 240))
+SELECTED_ITEM_GRADIENT.setColorAt(0, QColor(180, 172, 100))
+SELECTED_ITEM_GRADIENT.setColorAt(1, QColor(240, 240, 240))
 
 REGION_EDITOR_MODE = 0
 
@@ -875,41 +872,41 @@ REGION_EDITOR_MIN_NOTE_LENGTH = REGION_EDITOR_GRID_WIDTH / 128.0
 
 REGION_EDITOR_DELETE_MODE = False
 
-REGION_EDITOR_HEADER_GRADIENT = QtGui.QLinearGradient(
+REGION_EDITOR_HEADER_GRADIENT = QLinearGradient(
     0.0, 0.0, 0.0, REGION_EDITOR_HEADER_HEIGHT)
-REGION_EDITOR_HEADER_GRADIENT.setColorAt(0.0, QtGui.QColor.fromRgb(61, 61, 61))
-REGION_EDITOR_HEADER_GRADIENT.setColorAt(0.5, QtGui.QColor.fromRgb(50,50, 50))
-REGION_EDITOR_HEADER_GRADIENT.setColorAt(0.6, QtGui.QColor.fromRgb(43, 43, 43))
-REGION_EDITOR_HEADER_GRADIENT.setColorAt(1.0, QtGui.QColor.fromRgb(65, 65, 65))
+REGION_EDITOR_HEADER_GRADIENT.setColorAt(0.0, QColor.fromRgb(61, 61, 61))
+REGION_EDITOR_HEADER_GRADIENT.setColorAt(0.5, QColor.fromRgb(50,50, 50))
+REGION_EDITOR_HEADER_GRADIENT.setColorAt(0.6, QColor.fromRgb(43, 43, 43))
+REGION_EDITOR_HEADER_GRADIENT.setColorAt(1.0, QColor.fromRgb(65, 65, 65))
 
 def region_editor_set_delete_mode(a_enabled):
     global REGION_EDITOR_DELETE_MODE
     if a_enabled:
-        REGION_EDITOR.setDragMode(QtGui.QGraphicsView.NoDrag)
+        REGION_EDITOR.setDragMode(QGraphicsView.NoDrag)
         REGION_EDITOR_DELETE_MODE = True
-        QtGui.QApplication.setOverrideCursor(
-            QtGui.QCursor(QtCore.Qt.ForbiddenCursor))
+        QApplication.setOverrideCursor(
+            QCursor(QtCore.Qt.ForbiddenCursor))
     else:
-        REGION_EDITOR.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        REGION_EDITOR.setDragMode(QGraphicsView.RubberBandDrag)
         REGION_EDITOR_DELETE_MODE = False
         REGION_EDITOR.selected_item_strings = set([])
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
 
-class region_editor_item(QtGui.QGraphicsRectItem):
+class region_editor_item(QGraphicsRectItem):
     def __init__(self, a_track, a_bar, a_name, a_path):
         self.bar_width = (REGION_EDITOR_GRID_WIDTH /
             pydaw_get_current_region_length())
-        QtGui.QGraphicsRectItem.__init__(
+        QGraphicsRectItem.__init__(
             self, 0, 0, self.bar_width, REGION_EDITOR_TRACK_HEIGHT)
         if REGION_EDITOR_MODE == 0:
-            self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
-            self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
-            self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
+            self.setFlag(QGraphicsItem.ItemIsMovable)
+            self.setFlag(QGraphicsItem.ItemIsSelectable)
+            self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
         else:
             self.setEnabled(False)
             self.setOpacity(0.6)
-        self.path_item = QtGui.QGraphicsPathItem(a_path)
+        self.path_item = QGraphicsPathItem(a_path)
         self.path_item.setParentItem(self)
         self.path_item.setPos(0.0, 0.0)
         self.path_item.setZValue(2000.0)
@@ -918,9 +915,9 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.bar = int(a_bar)
         self.setAcceptHoverEvents(True)
         self.resize_rect = self.rect()
-        self.mouse_y_pos = QtGui.QCursor.pos().y()
-        self.label = QtGui.QGraphicsSimpleTextItem(self)
-        self.label.setPen(QtGui.QPen(QtCore.Qt.NoPen))
+        self.mouse_y_pos = QCursor.pos().y()
+        self.label = QGraphicsSimpleTextItem(self)
+        self.label.setPen(QPen(QtCore.Qt.NoPen))
         self.label.setText(a_name)
         self.name = str(a_name)
         self.label.setPos(2.0, 2.0)
@@ -928,7 +925,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         self.set_pos()
 
     def setSelected(self, a_bool):
-        QtGui.QGraphicsRectItem.setSelected(self, a_bool)
+        QGraphicsRectItem.setSelected(self, a_bool)
         self.set_brush()
 
     def set_pos(self):
@@ -954,16 +951,16 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         return "|".join(str(x) for x in (self.track_num, self.bar, self.name))
 
     def hoverEnterEvent(self, a_event):
-        QtGui.QGraphicsRectItem.hoverEnterEvent(self, a_event)
+        QGraphicsRectItem.hoverEnterEvent(self, a_event)
         REGION_EDITOR.click_enabled = False
 
     def hoverLeaveEvent(self, a_event):
-        QtGui.QGraphicsRectItem.hoverLeaveEvent(self, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+        QGraphicsRectItem.hoverLeaveEvent(self, a_event)
+        QApplication.restoreOverrideCursor()
 
     def mouseDoubleClickEvent(self, a_event):
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
+        QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
         global_open_items([self.name], a_reset_scrollbar=True)
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
 
@@ -971,7 +968,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
         if not self.isEnabled():
             return
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
+        QGraphicsRectItem.mousePressEvent(self, a_event)
         self.setSelected(True)
         if a_event.button() == QtCore.Qt.RightButton:
             return
@@ -993,7 +990,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
                 f_item.orig_bar = f_item.bar
 
     def mouseMoveEvent(self, a_event):
-        QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
+        QGraphicsRectItem.mouseMoveEvent(self, a_event)
         if self.isEnabled():
             f_pos = a_event.scenePos()
             f_coord = REGION_EDITOR.get_item_coord(f_pos)
@@ -1012,10 +1009,10 @@ class region_editor_item(QtGui.QGraphicsRectItem):
 
     def mouseReleaseEvent(self, a_event):
         if not self.isEnabled():
-            QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
+            QGraphicsRectItem.mouseReleaseEvent(self, a_event)
             return
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
+        QGraphicsRectItem.mouseReleaseEvent(self, a_event)
         if not self.isEnabled():
             return
         if REGION_EDITOR_DELETE_MODE:
@@ -1023,7 +1020,7 @@ class region_editor_item(QtGui.QGraphicsRectItem):
             return
         REGION_EDITOR.set_selected_strings()
         global_tablewidget_to_region()
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
 
 ALL_PEAK_METERS = {}
@@ -1032,17 +1029,17 @@ class tracks_widget:
     def __init__(self):
         self.tracks = {}
         self.plugin_uid_map = {}
-        self.tracks_widget = QtGui.QWidget()
+        self.tracks_widget = QWidget()
         self.tracks_widget.setObjectName("plugin_ui")
         self.tracks_widget.setContentsMargins(0, 0, 0, 0)
         self.tracks_widget.setFixedSize(
             QtCore.QSize(REGION_TRACK_WIDTH,
             (REGION_EDITOR_TRACK_HEIGHT * REGION_EDITOR_TRACK_COUNT) +
             REGION_EDITOR_HEADER_HEIGHT))
-        self.tracks_layout = QtGui.QVBoxLayout(self.tracks_widget)
+        self.tracks_layout = QVBoxLayout(self.tracks_widget)
         self.tracks_layout.addItem(
-            QtGui.QSpacerItem(0, REGION_EDITOR_HEADER_HEIGHT + 2.0,
-            vPolicy=QtGui.QSizePolicy.MinimumExpanding))
+            QSpacerItem(0, REGION_EDITOR_HEADER_HEIGHT + 2.0,
+            vPolicy=QSizePolicy.MinimumExpanding))
         self.tracks_layout.setContentsMargins(0, 0, 0, 0)
         for i in range(REGION_EDITOR_TRACK_COUNT):
             f_track = seq_track(i, TRACK_NAMES[i])
@@ -1098,21 +1095,21 @@ class tracks_widget:
 ATM_POINT_DIAMETER = 6.0
 ATM_POINT_RADIUS = ATM_POINT_DIAMETER * 0.5
 
-ATM_GRADIENT = QtGui.QLinearGradient(
+ATM_GRADIENT = QLinearGradient(
     0, 0, ATM_POINT_DIAMETER, ATM_POINT_DIAMETER)
-ATM_GRADIENT.setColorAt(0, QtGui.QColor(255, 255, 255))
-ATM_GRADIENT.setColorAt(0.5, QtGui.QColor(210, 210, 210))
+ATM_GRADIENT.setColorAt(0, QColor(255, 255, 255))
+ATM_GRADIENT.setColorAt(0.5, QColor(210, 210, 210))
 
 ATM_REGION = pydaw_atm_region()
 
-class atm_item(QtGui.QGraphicsEllipseItem):
+class atm_item(QGraphicsEllipseItem):
     def __init__(self, a_item, a_save_callback, a_min_y, a_max_y):
-        QtGui.QGraphicsEllipseItem.__init__(
+        QGraphicsEllipseItem.__init__(
             self, 0, 0, ATM_POINT_DIAMETER, ATM_POINT_DIAMETER)
         self.save_callback = a_save_callback
         self.item = a_item
-        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemIsSelectable)
         self.setZValue(1100.0)
         self.set_brush()
         self.min_y = a_min_y
@@ -1126,10 +1123,10 @@ class atm_item(QtGui.QGraphicsEllipseItem):
 
     def mousePressEvent(self, a_event):
         a_event.setAccepted(True)
-        QtGui.QGraphicsEllipseItem.mousePressEvent(self, a_event)
+        QGraphicsEllipseItem.mousePressEvent(self, a_event)
 
     def mouseMoveEvent(self, a_event):
-        QtGui.QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
+        QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
         f_pos = self.pos()
         f_x = pydaw_util.pydaw_clip_value(
             f_pos.x(), 0.0, REGION_EDITOR_MAX_START)
@@ -1139,7 +1136,7 @@ class atm_item(QtGui.QGraphicsEllipseItem):
 
     def mouseReleaseEvent(self, a_event):
         a_event.setAccepted(True)
-        QtGui.QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
+        QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
         f_pos = self.pos()
         f_point = self.item
         f_point.track, f_point.bar, f_point.beat, f_point.cc_val = \
@@ -1150,9 +1147,9 @@ class atm_item(QtGui.QGraphicsEllipseItem):
         return self.pos().x() < other.pos().x()
 
 
-class region_editor(QtGui.QGraphicsView):
+class region_editor(QGraphicsView):
     def __init__(self):
-        QtGui.QGraphicsView.__init__(self)
+        QGraphicsView.__init__(self)
 
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -1160,9 +1157,9 @@ class region_editor(QtGui.QGraphicsView):
         self.padding = 2
         self.update_note_height()
 
-        self.scene = QtGui.QGraphicsScene(self)
-        self.scene.setItemIndexMethod(QtGui.QGraphicsScene.NoIndex)
-        self.scene.setBackgroundBrush(QtGui.QColor(100, 100, 100))
+        self.scene = QGraphicsScene(self)
+        self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
+        self.scene.setBackgroundBrush(QColor(100, 100, 100))
         self.scene.mousePressEvent = self.sceneMousePressEvent
         self.scene.mouseMoveEvent = self.sceneMouseMoveEvent
         self.scene.mouseReleaseEvent = self.sceneMouseReleaseEvent
@@ -1173,7 +1170,7 @@ class region_editor(QtGui.QGraphicsView):
 
         self.has_selected = False
 
-        self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
         self.region_items = {}
         self.playback_cursor = None
 
@@ -1193,33 +1190,33 @@ class region_editor(QtGui.QGraphicsView):
         self.current_coord = None
         self.current_item = None
 
-        self.menu = QtGui.QMenu()
-        self.atm_menu = QtGui.QMenu()
+        self.menu = QMenu()
+        self.atm_menu = QMenu()
 
         self.edit_group_action = self.menu.addAction(
             _("Edit Selected Item(s)"))
         self.edit_group_action.triggered.connect(self.edit_group)
         self.edit_group_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+E"))
+            QKeySequence.fromString("CTRL+E"))
         self.addAction(self.edit_group_action)
 
         self.edit_unique_action = self.menu.addAction(_("Edit Unique Item(s)"))
         self.edit_unique_action.triggered.connect(self.edit_unique)
         self.edit_unique_action.setShortcut(
-            QtGui.QKeySequence.fromString("ALT+E"))
+            QKeySequence.fromString("ALT+E"))
         self.addAction(self.edit_unique_action)
 
         self.menu.addSeparator()
 
         self.copy_action = self.menu.addAction(_("Copy"))
         self.copy_action.triggered.connect(self.copy_selected)
-        self.copy_action.setShortcut(QtGui.QKeySequence.Copy)
+        self.copy_action.setShortcut(QKeySequence.Copy)
         self.addAction(self.copy_action)
         self.atm_menu.addAction(self.copy_action)
 
         self.cut_action = self.menu.addAction(_("Cut"))
         self.cut_action.triggered.connect(self.cut_selected)
-        self.cut_action.setShortcut(QtGui.QKeySequence.Cut)
+        self.cut_action.setShortcut(QKeySequence.Cut)
         self.addAction(self.cut_action)
         self.atm_menu.addAction(self.cut_action)
 
@@ -1238,30 +1235,30 @@ class region_editor(QtGui.QGraphicsView):
         self.paste_to_orig_action = self.menu.addAction(
             _("Paste to Original Pos"))
         self.paste_to_orig_action.triggered.connect(self.paste_at_original_pos)
-        self.paste_to_orig_action.setShortcut(QtGui.QKeySequence.Paste)
+        self.paste_to_orig_action.setShortcut(QKeySequence.Paste)
         self.addAction(self.paste_to_orig_action)
 
-        self.select_all_action = QtGui.QAction(_("Select All"), self)
+        self.select_all_action = QAction(_("Select All"), self)
         self.select_all_action.triggered.connect(self.select_all)
-        self.select_all_action.setShortcut(QtGui.QKeySequence.SelectAll)
+        self.select_all_action.setShortcut(QKeySequence.SelectAll)
         self.addAction(self.select_all_action)
 
         self.smooth_atm_action = self.atm_menu.addAction(
             _("Smooth Selected Points"))
         self.smooth_atm_action.triggered.connect(self.smooth_atm_points)
         self.smooth_atm_action.setShortcut(
-            QtGui.QKeySequence.fromString("ALT+S"))
+            QKeySequence.fromString("ALT+S"))
         self.addAction(self.smooth_atm_action)
 
         self.clear_selection_action = self.menu.addAction(_("Clear Selection"))
         self.clear_selection_action.triggered.connect(self.clearSelection)
         self.clear_selection_action.setShortcut(
-            QtGui.QKeySequence.fromString("Esc"))
+            QKeySequence.fromString("Esc"))
         self.addAction(self.clear_selection_action)
 
         self.delete_action = self.menu.addAction(_("Delete"))
         self.delete_action.triggered.connect(self.delete_selected)
-        self.delete_action.setShortcut(QtGui.QKeySequence.Delete)
+        self.delete_action.setShortcut(QKeySequence.Delete)
         self.addAction(self.delete_action)
         self.atm_menu.addAction(self.delete_action)
 
@@ -1270,7 +1267,7 @@ class region_editor(QtGui.QGraphicsView):
         self.unlink_selected_action = self.menu.addAction(
             _("Auto-Unlink Item(s)"))
         self.unlink_selected_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+U"))
+            QKeySequence.fromString("CTRL+U"))
         self.unlink_selected_action.triggered.connect(
             self.on_auto_unlink_selected)
         self.addAction(self.unlink_selected_action)
@@ -1278,7 +1275,7 @@ class region_editor(QtGui.QGraphicsView):
         self.unlink_unique_action = self.menu.addAction(
             _("Auto-Unlink Unique Item(s)"))
         self.unlink_unique_action.setShortcut(
-            QtGui.QKeySequence.fromString("ALT+U"))
+            QKeySequence.fromString("ALT+U"))
         self.unlink_unique_action.triggered.connect(self.on_auto_unlink_unique)
         self.addAction(self.unlink_unique_action)
 
@@ -1299,7 +1296,7 @@ class region_editor(QtGui.QGraphicsView):
         if libmk.IS_PLAYING:
             return
         if pydaw_widgets.CC_CLIPBOARD is None:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self, _("Error"),
                 _("Nothing copied to the clipboard.\n"
                 "Right-click->'Copy' on any knob on any plugin."))
@@ -1339,47 +1336,47 @@ class region_editor(QtGui.QGraphicsView):
         def cancel_handler():
             f_window.close()
 
-        f_window = QtGui.QDialog(self)
+        f_window = QDialog(self)
         f_window.setWindowTitle(_("Add automation point"))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_layout.addWidget(QtGui.QLabel(_("Track")), 0, 0)
-        f_track_cbox = QtGui.QComboBox()
+        f_layout.addWidget(QLabel(_("Track")), 0, 0)
+        f_track_cbox = QComboBox()
         f_track_cbox.addItems(TRACK_NAMES)
         f_layout.addWidget(f_track_cbox, 0, 1)
 
-        f_layout.addWidget(QtGui.QLabel(_("Position (bars)")), 2, 0)
-        f_bar_spinbox = QtGui.QSpinBox()
+        f_layout.addWidget(QLabel(_("Position (bars)")), 2, 0)
+        f_bar_spinbox = QSpinBox()
         f_bar_spinbox.setRange(1, pydaw_get_current_region_length())
         f_layout.addWidget(f_bar_spinbox, 2, 1)
 
-        f_layout.addWidget(QtGui.QLabel(_("Position (beats)")), 5, 0)
-        f_pos_spinbox = QtGui.QDoubleSpinBox()
+        f_layout.addWidget(QLabel(_("Position (beats)")), 5, 0)
+        f_pos_spinbox = QDoubleSpinBox()
         f_pos_spinbox.setRange(1.0, 4.99)
         f_pos_spinbox.setDecimals(2)
         f_pos_spinbox.setSingleStep(0.25)
         f_layout.addWidget(f_pos_spinbox, 5, 1)
 
-        f_begin_end_layout = QtGui.QHBoxLayout()
+        f_begin_end_layout = QHBoxLayout()
         f_layout.addLayout(f_begin_end_layout, 6, 1)
-        f_start_button = QtGui.QPushButton("<<")
+        f_start_button = QPushButton("<<")
         f_start_button.pressed.connect(goto_start)
         f_begin_end_layout.addWidget(f_start_button)
         f_begin_end_layout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        f_end_button = QtGui.QPushButton(">>")
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
+        f_end_button = QPushButton(">>")
         f_end_button.pressed.connect(goto_end)
         f_begin_end_layout.addWidget(f_end_button)
 
-        f_layout.addWidget(QtGui.QLabel(_("Value")), 10, 0)
-        f_value_spinbox = QtGui.QDoubleSpinBox()
+        f_layout.addWidget(QLabel(_("Value")), 10, 0)
+        f_value_spinbox = QDoubleSpinBox()
         f_value_spinbox.setRange(0.0, 127.0)
         f_value_spinbox.setDecimals(4)
         if a_value is not None:
             f_value_spinbox.setValue(a_value)
         f_layout.addWidget(f_value_spinbox, 10, 1)
-        f_value_paste = QtGui.QPushButton(_("Paste"))
+        f_value_paste = QPushButton(_("Paste"))
         f_layout.addWidget(f_value_paste, 10, 2)
         f_value_paste.pressed.connect(value_paste)
 
@@ -1389,13 +1386,13 @@ class region_editor(QtGui.QGraphicsView):
             f_bar_spinbox.setValue(f_bar + 1)
             f_pos_spinbox.setValue(f_beat + 1.0)
 
-        f_ok = QtGui.QPushButton(_("Add"))
+        f_ok = QPushButton(_("Add"))
         f_ok.pressed.connect(ok_handler)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_ok_cancel_layout.addWidget(f_ok)
 
         f_layout.addLayout(f_ok_cancel_layout, 40, 1)
-        f_cancel = QtGui.QPushButton(_("Close"))
+        f_cancel = QPushButton(_("Close"))
         f_cancel.pressed.connect(cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel)
         f_window.show()
@@ -1432,9 +1429,9 @@ class region_editor(QtGui.QGraphicsView):
 
     def show_context_menu(self):
         if REGION_EDITOR_MODE == 0:
-            self.menu.exec_(QtGui.QCursor.pos())
+            self.menu.exec_(QCursor.pos())
         elif REGION_EDITOR_MODE == 1:
-            self.atm_menu.exec_(QtGui.QCursor.pos())
+            self.atm_menu.exec_(QCursor.pos())
 
     def update_note_height(self):
         self.tracks_height = \
@@ -1497,7 +1494,7 @@ class region_editor(QtGui.QGraphicsView):
             f_item_count.value() == 1:
                 f_cell_text = str(f_new_lineedit.text())
                 if PROJECT.item_exists(f_cell_text):
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self, _("Error"),
                         _("An item named '{}' already exists.").format(
                         f_cell_text))
@@ -1540,7 +1537,7 @@ class region_editor(QtGui.QGraphicsView):
                 f_cell_text = str(f_new_lineedit.text())
                 f_copy_from_text = str(f_copy_combobox.currentText())
                 if PROJECT.item_exists(f_cell_text):
-                    QtGui.QMessageBox.warning(
+                    QMessageBox.warning(
                         self, _("Error"),
                         _("An item named '{}' already exists.").format(
                         f_cell_text))
@@ -1612,27 +1609,27 @@ class region_editor(QtGui.QGraphicsView):
             if a_check:
                 f_take_radiobutton.setChecked(True)
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Add item reference to region..."))
-        f_layout = QtGui.QGridLayout()
-        f_vlayout0 = QtGui.QVBoxLayout()
-        f_vlayout1 = QtGui.QVBoxLayout()
+        f_layout = QGridLayout()
+        f_vlayout0 = QVBoxLayout()
+        f_vlayout1 = QVBoxLayout()
         f_window.setLayout(f_layout)
-        f_new_radiobutton = QtGui.QRadioButton()
+        f_new_radiobutton = QRadioButton()
         f_new_radiobutton.setChecked(True)
         f_layout.addWidget(f_new_radiobutton, 0, 0)
-        f_layout.addWidget(QtGui.QLabel(_("New:")), 0, 1)
-        f_new_lineedit = QtGui.QLineEdit(
+        f_layout.addWidget(QLabel(_("New:")), 0, 1)
+        f_new_lineedit = QLineEdit(
             PROJECT.get_next_default_item_name())
         f_new_lineedit.editingFinished.connect(on_name_changed)
         f_new_lineedit.setMaxLength(24)
         f_layout.addWidget(f_new_lineedit, 0, 2)
         f_layout.addLayout(f_vlayout0, 1, 0)
-        f_copy_from_radiobutton = QtGui.QRadioButton()
+        f_copy_from_radiobutton = QRadioButton()
         f_vlayout0.addWidget(f_copy_from_radiobutton)
-        f_copy_radiobutton = QtGui.QRadioButton()
+        f_copy_radiobutton = QRadioButton()
         f_vlayout0.addWidget(f_copy_radiobutton)
-        f_copy_combobox = QtGui.QComboBox()
+        f_copy_combobox = QComboBox()
         f_copy_combobox.addItems(PROJECT.get_item_list())
         if not self.last_item_copied is None:
             f_copy_combobox.setCurrentIndex(
@@ -1640,34 +1637,34 @@ class region_editor(QtGui.QGraphicsView):
         f_copy_combobox.currentIndexChanged.connect(
             copy_combobox_index_changed)
         f_layout.addLayout(f_vlayout1, 1, 1)
-        f_vlayout1.addWidget(QtGui.QLabel(_("Copy from:")))
-        f_vlayout1.addWidget(QtGui.QLabel(_("Existing:")))
+        f_vlayout1.addWidget(QLabel(_("Copy from:")))
+        f_vlayout1.addWidget(QLabel(_("Existing:")))
         f_layout.addWidget(f_copy_combobox, 1, 2)
-        f_layout.addWidget(QtGui.QLabel(_("Item Count:")), 2, 1)
-        f_item_count = QtGui.QSpinBox()
+        f_layout.addWidget(QLabel(_("Item Count:")), 2, 1)
+        f_item_count = QSpinBox()
         f_item_count.setRange(1, pydaw_get_current_region_length() - y)
         f_item_count.setToolTip(_("Only used for 'New'"))
 
-        f_begin_end_layout = QtGui.QHBoxLayout()
+        f_begin_end_layout = QHBoxLayout()
         f_begin_end_layout.addWidget(f_item_count)
         f_layout.addLayout(f_begin_end_layout, 2, 2)
-        f_start_button = QtGui.QPushButton("<<")
+        f_start_button = QPushButton("<<")
         f_start_button.pressed.connect(goto_start)
         f_begin_end_layout.addWidget(f_start_button)
-        f_end_button = QtGui.QPushButton(">>")
+        f_end_button = QPushButton(">>")
         f_end_button.pressed.connect(goto_end)
         f_begin_end_layout.addWidget(f_end_button)
 
-        f_repeat_checkbox = QtGui.QCheckBox(_("Repeat to end?"))
+        f_repeat_checkbox = QCheckBox(_("Repeat to end?"))
         f_layout.addWidget(f_repeat_checkbox, 3, 2)
 
         if REGION_CLIPBOARD:
-            f_paste_clipboard_button = QtGui.QPushButton(_("Paste Clipboard"))
+            f_paste_clipboard_button = QPushButton(_("Paste Clipboard"))
             f_layout.addWidget(f_paste_clipboard_button, 4, 2)
             f_paste_clipboard_button.pressed.connect(paste_button_pressed)
 
         if len(REGION_CLIPBOARD) == 1:
-            f_paste_to_end_button = QtGui.QPushButton(_("Paste to End"))
+            f_paste_to_end_button = QPushButton(_("Paste to End"))
             f_layout.addWidget(f_paste_to_end_button, 7, 2)
             f_paste_to_end_button.pressed.connect(paste_to_end_button_pressed)
 
@@ -1675,31 +1672,31 @@ class region_editor(QtGui.QGraphicsView):
         f_take_dict = f_item_dict.get_takes()
 
         if f_take_dict:
-            f_take_radiobutton = QtGui.QRadioButton()
+            f_take_radiobutton = QRadioButton()
             f_layout.addWidget(f_take_radiobutton, 12, 0)
-            f_layout.addWidget(QtGui.QLabel(_("Take:")), 12, 1)
-            f_take_name_combobox = QtGui.QComboBox()
+            f_layout.addWidget(QLabel(_("Take:")), 12, 1)
+            f_take_name_combobox = QComboBox()
             f_layout.addWidget(f_take_name_combobox, 12, 2)
-            f_take_start_combobox = QtGui.QComboBox()
+            f_take_start_combobox = QComboBox()
             f_take_start_combobox.setMinimumWidth(60)
             f_layout.addWidget(f_take_start_combobox, 12, 3)
-            f_take_end_combobox = QtGui.QComboBox()
+            f_take_end_combobox = QComboBox()
             f_take_end_combobox.setMinimumWidth(60)
             f_layout.addWidget(f_take_end_combobox, 12, 4)
             f_take_name_combobox.addItems(sorted(f_take_dict))
             take_changed(a_check=False)
             f_take_name_combobox.currentIndexChanged.connect(take_changed)
 
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout, 24, 2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_cancel_layout.addWidget(f_ok_button)
         f_ok_button.clicked.connect(note_ok_handler)
         f_ok_button.setDefault(True)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_cancel_button.clicked.connect(note_cancel_handler)
-        f_window.move(QtGui.QCursor.pos())
+        f_window.move(QCursor.pos())
         f_window.exec_()
 
     def set_tooltips(self, a_on):
@@ -1785,19 +1782,19 @@ class region_editor(QtGui.QGraphicsView):
             str(x.item) for x in self.get_selected_points()}
 
     def keyPressEvent(self, a_event):
-        QtGui.QGraphicsView.keyPressEvent(self, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+        QGraphicsView.keyPressEvent(self, a_event)
+        QApplication.restoreOverrideCursor()
 
     def focusOutEvent(self, a_event):
-        QtGui.QGraphicsView.focusOutEvent(self, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+        QGraphicsView.focusOutEvent(self, a_event)
+        QApplication.restoreOverrideCursor()
 
     def sceneMouseReleaseEvent(self, a_event):
         if REGION_EDITOR_DELETE_MODE:
             region_editor_set_delete_mode(False)
             global_tablewidget_to_region()
         else:
-            QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
+            QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         if self.atm_delete:
             for f_point in self.get_selected_points(self.atm_select_track):
                 ATM_REGION.remove_point(f_point.item)
@@ -1808,7 +1805,7 @@ class region_editor(QtGui.QGraphicsView):
         self.atm_delete = False
 
     def sceneMouseMoveEvent(self, a_event):
-        QtGui.QGraphicsScene.mouseMoveEvent(self.scene, a_event)
+        QGraphicsScene.mouseMoveEvent(self.scene, a_event)
         if REGION_EDITOR_MODE == 1:
             if self.atm_select_pos_x is not None:
                 f_pos_x = a_event.scenePos().x()
@@ -1852,7 +1849,7 @@ class region_editor(QtGui.QGraphicsView):
                 if not self.current_item:
                     self.show_cell_dialog()
         elif REGION_EDITOR_MODE == 1:
-            REGION_EDITOR.setDragMode(QtGui.QGraphicsView.NoDrag)
+            REGION_EDITOR.setDragMode(QGraphicsView.NoDrag)
             self.atm_select_pos_x = None
             self.atm_select_track = None
             if a_event.modifiers() == QtCore.Qt.ControlModifier or \
@@ -1878,14 +1875,14 @@ class region_editor(QtGui.QGraphicsView):
                     self.automation_save_callback()
 
         a_event.setAccepted(True)
-        QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+        QGraphicsScene.mousePressEvent(self.scene, a_event)
+        QApplication.restoreOverrideCursor()
 
     def automation_save_callback(self):
         PROJECT.save_atm_region(ATM_REGION, CURRENT_REGION.uid)
 
     def mouseMoveEvent(self, a_event):
-        QtGui.QGraphicsView.mouseMoveEvent(self, a_event)
+        QGraphicsView.mouseMoveEvent(self, a_event)
         if REGION_EDITOR_DELETE_MODE:
             for f_item in self.items(a_event.pos()):
                 if isinstance(f_item, region_editor_item):
@@ -1893,10 +1890,10 @@ class region_editor(QtGui.QGraphicsView):
                     self.region_items[f_item.track_num].pop(f_item.bar)
 
     def hover_restore_cursor_event(self, a_event=None):
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
     def draw_header(self):
-        self.header = QtGui.QGraphicsRectItem(
+        self.header = QGraphicsRectItem(
             0, 0, self.viewer_width, REGION_EDITOR_HEADER_HEIGHT)
         self.header.hoverEnterEvent = self.hover_restore_cursor_event
         self.header.setBrush(REGION_EDITOR_HEADER_GRADIENT)
@@ -1905,18 +1902,18 @@ class region_editor(QtGui.QGraphicsView):
         self.header.setZValue(1003.0)
         self.playback_cursor = self.scene.addLine(
             0.0, 0.0, 0.0,
-            REGION_EDITOR_TOTAL_HEIGHT, QtGui.QPen(QtCore.Qt.red, 2.0))
+            REGION_EDITOR_TOTAL_HEIGHT, QPen(QtCore.Qt.red, 2.0))
         self.playback_cursor.setPos(0.0, 0.0)
         self.playback_cursor.setZValue(2000.0)
 
     def draw_grid(self):
-        f_brush = QtGui.QLinearGradient(
+        f_brush = QLinearGradient(
             0.0, 0.0, 0.0, REGION_EDITOR_TRACK_HEIGHT)
-        f_brush.setColorAt(0.0, QtGui.QColor(96, 96, 96, 60))
-        f_brush.setColorAt(0.5, QtGui.QColor(21, 21, 21, 75))
+        f_brush.setColorAt(0.0, QColor(96, 96, 96, 60))
+        f_brush.setColorAt(0.5, QColor(21, 21, 21, 75))
 
         for i in range(REGION_EDITOR_TRACK_COUNT):
-            f_note_bar = QtGui.QGraphicsRectItem(
+            f_note_bar = QGraphicsRectItem(
                 0, 0, self.viewer_width, REGION_EDITOR_TRACK_HEIGHT)
             f_note_bar.setZValue(60.0)
             self.scene.addItem(f_note_bar)
@@ -1924,9 +1921,9 @@ class region_editor(QtGui.QGraphicsView):
             f_note_bar_y = (i *
                 REGION_EDITOR_TRACK_HEIGHT) + REGION_EDITOR_HEADER_HEIGHT
             f_note_bar.setPos(self.padding, f_note_bar_y)
-        f_bar_pen = QtGui.QPen()
+        f_bar_pen = QPen()
         f_bar_pen.setWidth(2)
-        f_beat_pen = QtGui.QPen(QtGui.QColor.fromRgb(21, 21, 21))
+        f_beat_pen = QPen(QColor.fromRgb(21, 21, 21))
         f_beat_pen.setWidth(1)
         f_bar_y = self.tracks_height + REGION_EDITOR_HEADER_HEIGHT
         for i in range(0, int(self.item_length)):
@@ -1939,15 +1936,15 @@ class region_editor(QtGui.QGraphicsView):
                 f_beat = self.scene.addLine(f_beat_x, 0, f_beat_x, f_bar_y)
                 f_beat.setPen(f_beat_pen)
             if i < self.item_length:
-                f_number = QtGui.QGraphicsSimpleTextItem(
+                f_number = QGraphicsSimpleTextItem(
                     str(i + 1), self.header)
                 f_number.setFlag(
-                    QtGui.QGraphicsItem.ItemIgnoresTransformations)
+                    QGraphicsItem.ItemIgnoresTransformations)
                 f_number.setPos((self.beat_width * i), 5)
                 f_number.setBrush(QtCore.Qt.white)
 
     def resizeEvent(self, a_event):
-        QtGui.QGraphicsView.resizeEvent(self, a_event)
+        QGraphicsView.resizeEvent(self, a_event)
         self.clear_drawn_items()
         self.open_region()
 
@@ -2083,7 +2080,7 @@ class region_editor(QtGui.QGraphicsView):
 
         f_item_set = {x.name for x in self.get_selected_items()}
         if len(f_item_set) == 0:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 MAIN_WINDOW, _("Error"), _("No items selected"))
             return
 
@@ -2103,28 +2100,28 @@ class region_editor(QtGui.QGraphicsView):
         def transpose_cancel_handler():
             f_window.close()
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Transpose"))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_semitone = QtGui.QSpinBox()
+        f_semitone = QSpinBox()
         f_semitone.setRange(-12, 12)
-        f_layout.addWidget(QtGui.QLabel(_("Semitones")), 0, 0)
+        f_layout.addWidget(QLabel(_("Semitones")), 0, 0)
         f_layout.addWidget(f_semitone, 0, 1)
-        f_octave = QtGui.QSpinBox()
+        f_octave = QSpinBox()
         f_octave.setRange(-5, 5)
-        f_layout.addWidget(QtGui.QLabel(_("Octaves")), 1, 0)
+        f_layout.addWidget(QLabel(_("Octaves")), 1, 0)
         f_layout.addWidget(f_octave, 1, 1)
-        f_duplicate_notes = QtGui.QCheckBox(_("Duplicate notes?"))
+        f_duplicate_notes = QCheckBox(_("Duplicate notes?"))
         f_duplicate_notes.setToolTip(
             _("Checking this box causes the transposed "
             "notes to be added rather than moving the existing notes."))
         f_layout.addWidget(f_duplicate_notes, 2, 1)
-        f_ok = QtGui.QPushButton(_("OK"))
+        f_ok = QPushButton(_("OK"))
         f_ok.pressed.connect(transpose_ok_handler)
         f_layout.addWidget(f_ok, 6, 0)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
+        f_cancel = QPushButton(_("Cancel"))
         f_cancel.pressed.connect(transpose_cancel_handler)
         f_layout.addWidget(f_cancel, 6, 1)
         f_window.exec_()
@@ -2145,7 +2142,7 @@ class region_editor(QtGui.QGraphicsView):
             if x not in f_result2:
                 f_result2.append(x)
         if not a_unique and len(f_result2) != len(f_result):
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self, _("Error"),
                 _("You cannot open multiple instances of the same "
                 "item as a group.\n"
@@ -2157,7 +2154,7 @@ class region_editor(QtGui.QGraphicsView):
             global_open_items(f_result2, a_reset_scrollbar=True)
             MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
         else:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self, _("Error"), _("No items selected"))
 
 
@@ -2174,7 +2171,7 @@ class region_editor(QtGui.QGraphicsView):
         def ok_handler():
             f_new_name = str(f_new_lineedit.text())
             if f_new_name == "":
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     self.group_box, _("Error"), _("Name cannot be blank"))
                 return
             global REGION_CLIPBOARD, OPEN_ITEM_NAMES, \
@@ -2200,19 +2197,19 @@ class region_editor(QtGui.QGraphicsView):
             f_new_lineedit.setText(
                 pydaw_remove_bad_chars(f_new_lineedit.text()))
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Rename selected items..."))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
-        f_new_lineedit = QtGui.QLineEdit()
+        f_new_lineedit = QLineEdit()
         f_new_lineedit.editingFinished.connect(on_name_changed)
         f_new_lineedit.setMaxLength(24)
-        f_layout.addWidget(QtGui.QLabel(_("New name:")), 0, 0)
+        f_layout.addWidget(QLabel(_("New name:")), 0, 0)
         f_layout.addWidget(f_new_lineedit, 0, 1)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_layout.addWidget(f_ok_button, 5, 0)
         f_ok_button.clicked.connect(ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_layout.addWidget(f_cancel_button, 5, 1)
         f_cancel_button.clicked.connect(cancel_handler)
         f_window.exec_()
@@ -2235,13 +2232,13 @@ class region_editor(QtGui.QGraphicsView):
         def note_ok_handler():
             f_cell_text = str(f_new_lineedit.text())
             if f_cell_text == f_current_item_text:
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     self.group_box, _("Error"),
                     _("You must choose a different name than the "
                     "original item"))
                 return
             if PROJECT.item_exists(f_cell_text):
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     self.group_box, _("Error"),
                     _("An item with this name already exists."))
                 return
@@ -2266,19 +2263,19 @@ class region_editor(QtGui.QGraphicsView):
             f_new_lineedit.setText(
                 pydaw_remove_bad_chars(f_new_lineedit.text()))
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Copy and unlink item..."))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
-        f_new_lineedit = QtGui.QLineEdit(f_current_item_text)
+        f_new_lineedit = QLineEdit(f_current_item_text)
         f_new_lineedit.editingFinished.connect(on_name_changed)
         f_new_lineedit.setMaxLength(24)
-        f_layout.addWidget(QtGui.QLabel(_("New name:")), 0, 0)
+        f_layout.addWidget(QLabel(_("New name:")), 0, 0)
         f_layout.addWidget(f_new_lineedit, 0, 1)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_layout.addWidget(f_ok_button, 5, 0)
         f_ok_button.clicked.connect(note_ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_layout.addWidget(f_cancel_button, 5, 1)
         f_cancel_button.clicked.connect(note_cancel_handler)
         f_window.exec_()
@@ -2342,7 +2339,7 @@ class region_editor(QtGui.QGraphicsView):
             return
         if REGION_EDITOR_MODE == 0:
             if len(REGION_CLIPBOARD) != 1:
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     MAIN_WINDOW, _("Error"), _("Paste to region end only "
                     "works when you have exactly one item copied to the "
                     "clipboard.\n"
@@ -2391,7 +2388,7 @@ class region_editor(QtGui.QGraphicsView):
             f_track_port_num, f_track_index = TRACK_PANEL.has_automation(
                 self.current_coord[0])
             if f_track_port_num is None:
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     self, _("Error"),
                     _("No automation selected for this track"))
                 return
@@ -2469,7 +2466,7 @@ class region_editor(QtGui.QGraphicsView):
                 ATM_CLIPBOARD_ROW_OFFSET = f_row_offset
 
     def warn_no_region_selected(self):
-        QtGui.QMessageBox.warning(
+        QMessageBox.warning(
             MAIN_WINDOW, _("Error"),
             _("You must create or select a region first by clicking "
             "in the song editor above."))
@@ -2610,26 +2607,26 @@ AUDIO_ITEM_HEIGHT = 75.0
 AUDIO_ITEM_HANDLE_HEIGHT = 12.0
 AUDIO_ITEM_HANDLE_SIZE = 6.25
 
-AUDIO_ITEM_HANDLE_BRUSH = QtGui.QLinearGradient(
+AUDIO_ITEM_HANDLE_BRUSH = QLinearGradient(
     0.0, 0.0, AUDIO_ITEM_HANDLE_SIZE, AUDIO_ITEM_HANDLE_HEIGHT)
 AUDIO_ITEM_HANDLE_BRUSH.setColorAt(
-    0.0, QtGui.QColor.fromRgb(255, 255, 255, 120))
+    0.0, QColor.fromRgb(255, 255, 255, 120))
 AUDIO_ITEM_HANDLE_BRUSH.setColorAt(
-    0.0, QtGui.QColor.fromRgb(255, 255, 255, 90))
+    0.0, QColor.fromRgb(255, 255, 255, 90))
 
-AUDIO_ITEM_HANDLE_SELECTED_BRUSH = QtGui.QLinearGradient(
+AUDIO_ITEM_HANDLE_SELECTED_BRUSH = QLinearGradient(
     0.0, 0.0, AUDIO_ITEM_HANDLE_SIZE, AUDIO_ITEM_HANDLE_HEIGHT)
 AUDIO_ITEM_HANDLE_SELECTED_BRUSH.setColorAt(
-    0.0, QtGui.QColor.fromRgb(24, 24, 24, 120))
+    0.0, QColor.fromRgb(24, 24, 24, 120))
 AUDIO_ITEM_HANDLE_SELECTED_BRUSH.setColorAt(
-    0.0, QtGui.QColor.fromRgb(24, 24, 24, 90))
+    0.0, QColor.fromRgb(24, 24, 24, 90))
 
 
-AUDIO_ITEM_HANDLE_PEN = QtGui.QPen(QtCore.Qt.white)
-AUDIO_ITEM_LINE_PEN = QtGui.QPen(QtCore.Qt.white, 2.0)
-AUDIO_ITEM_HANDLE_SELECTED_PEN = QtGui.QPen(QtGui.QColor.fromRgb(24, 24, 24))
-AUDIO_ITEM_LINE_SELECTED_PEN = QtGui.QPen(
-    QtGui.QColor.fromRgb(24, 24, 24), 2.0)
+AUDIO_ITEM_HANDLE_PEN = QPen(QtCore.Qt.white)
+AUDIO_ITEM_LINE_PEN = QPen(QtCore.Qt.white, 2.0)
+AUDIO_ITEM_HANDLE_SELECTED_PEN = QPen(QColor.fromRgb(24, 24, 24))
+AUDIO_ITEM_LINE_SELECTED_PEN = QPen(
+    QColor.fromRgb(24, 24, 24), 2.0)
 
 AUDIO_ITEM_MAX_LANE = 23
 AUDIO_ITEM_LANE_COUNT = 24
@@ -2645,37 +2642,37 @@ def normalize_dialog():
     def on_cancel():
         f_window.close()
 
-    f_window = QtGui.QDialog(MAIN_WINDOW)
+    f_window = QDialog(MAIN_WINDOW)
     f_window.f_result = None
     f_window.setWindowTitle(_("Normalize"))
     f_window.setFixedSize(150, 90)
-    f_layout = QtGui.QVBoxLayout()
+    f_layout = QVBoxLayout()
     f_window.setLayout(f_layout)
-    f_hlayout = QtGui.QHBoxLayout()
+    f_hlayout = QHBoxLayout()
     f_layout.addLayout(f_hlayout)
-    f_hlayout.addWidget(QtGui.QLabel("dB"))
-    f_db_spinbox = QtGui.QDoubleSpinBox()
+    f_hlayout.addWidget(QLabel("dB"))
+    f_db_spinbox = QDoubleSpinBox()
     f_db_spinbox.setDecimals(1)
     f_hlayout.addWidget(f_db_spinbox)
     f_db_spinbox.setRange(-18, 0)
-    f_ok_button = QtGui.QPushButton(_("OK"))
-    f_ok_cancel_layout = QtGui.QHBoxLayout()
+    f_ok_button = QPushButton(_("OK"))
+    f_ok_cancel_layout = QHBoxLayout()
     f_layout.addLayout(f_ok_cancel_layout)
     f_ok_cancel_layout.addWidget(f_ok_button)
     f_ok_button.pressed.connect(on_ok)
-    f_cancel_button = QtGui.QPushButton(_("Cancel"))
+    f_cancel_button = QPushButton(_("Cancel"))
     f_ok_cancel_layout.addWidget(f_cancel_button)
     f_cancel_button.pressed.connect(on_cancel)
     f_window.exec_()
     return f_window.f_result
 
-class audio_viewer_item(QtGui.QGraphicsRectItem):
+class audio_viewer_item(QGraphicsRectItem):
     def __init__(self, a_track_num, a_audio_item, a_graph):
-        QtGui.QGraphicsRectItem.__init__(self)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
-        self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
-        self.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape)
+        QGraphicsRectItem.__init__(self)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
+        self.setFlag(QGraphicsItem.ItemIsSelectable)
+        self.setFlag(QGraphicsItem.ItemClipsChildrenToShape)
 
         self.sample_length = a_graph.length_in_seconds
         self.graph_object = a_graph
@@ -2689,7 +2686,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         f_y_pos = 0.0
         self.path_items = []
         for f_painter_path in self.painter_paths:
-            f_path_item = QtGui.QGraphicsPathItem(f_painter_path)
+            f_path_item = QGraphicsPathItem(f_painter_path)
             f_path_item.setBrush(
                 mk_project.pydaw_audio_item_scene_gradient)
             f_path_item.setParentItem(self)
@@ -2702,12 +2699,12 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             f_file_name)
         f_name_arr = f_file_name.rsplit("/", 1)
         f_name = f_name_arr[-1]
-        self.label = QtGui.QGraphicsSimpleTextItem(f_name, parent=self)
+        self.label = QGraphicsSimpleTextItem(f_name, parent=self)
         self.label.setPos(10, (AUDIO_ITEM_HEIGHT * 0.5) -
             (self.label.boundingRect().height() * 0.5))
-        self.label.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+        self.label.setFlag(QGraphicsItem.ItemIgnoresTransformations)
 
-        self.start_handle = QtGui.QGraphicsRectItem(parent=self)
+        self.start_handle = QGraphicsRectItem(parent=self)
         self.start_handle.setAcceptHoverEvents(True)
         self.start_handle.hoverEnterEvent = self.generic_hoverEnterEvent
         self.start_handle.hoverLeaveEvent = self.generic_hoverLeaveEvent
@@ -2715,14 +2712,14 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             QtCore.QRectF(0.0, 0.0, AUDIO_ITEM_HANDLE_SIZE,
                           AUDIO_ITEM_HANDLE_HEIGHT))
         self.start_handle.mousePressEvent = self.start_handle_mouseClickEvent
-        self.start_handle_line = QtGui.QGraphicsLineItem(
+        self.start_handle_line = QGraphicsLineItem(
             0.0, AUDIO_ITEM_HANDLE_HEIGHT, 0.0,
             (AUDIO_ITEM_HEIGHT * -1.0) + AUDIO_ITEM_HANDLE_HEIGHT,
             self.start_handle)
 
         self.start_handle_line.setPen(AUDIO_ITEM_LINE_PEN)
 
-        self.length_handle = QtGui.QGraphicsRectItem(parent=self)
+        self.length_handle = QGraphicsRectItem(parent=self)
         self.length_handle.setAcceptHoverEvents(True)
         self.length_handle.hoverEnterEvent = self.generic_hoverEnterEvent
         self.length_handle.hoverLeaveEvent = self.generic_hoverLeaveEvent
@@ -2730,13 +2727,13 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             QtCore.QRectF(0.0, 0.0, AUDIO_ITEM_HANDLE_SIZE,
                           AUDIO_ITEM_HANDLE_HEIGHT))
         self.length_handle.mousePressEvent = self.length_handle_mouseClickEvent
-        self.length_handle_line = QtGui.QGraphicsLineItem(
+        self.length_handle_line = QGraphicsLineItem(
             AUDIO_ITEM_HANDLE_SIZE, AUDIO_ITEM_HANDLE_HEIGHT,
             AUDIO_ITEM_HANDLE_SIZE,
             (AUDIO_ITEM_HEIGHT * -1.0) + AUDIO_ITEM_HANDLE_HEIGHT,
             self.length_handle)
 
-        self.fade_in_handle = QtGui.QGraphicsRectItem(parent=self)
+        self.fade_in_handle = QGraphicsRectItem(parent=self)
         self.fade_in_handle.setAcceptHoverEvents(True)
         self.fade_in_handle.hoverEnterEvent = self.generic_hoverEnterEvent
         self.fade_in_handle.hoverLeaveEvent = self.generic_hoverLeaveEvent
@@ -2745,10 +2742,10 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                           AUDIO_ITEM_HANDLE_HEIGHT))
         self.fade_in_handle.mousePressEvent = \
             self.fade_in_handle_mouseClickEvent
-        self.fade_in_handle_line = QtGui.QGraphicsLineItem(
+        self.fade_in_handle_line = QGraphicsLineItem(
             0.0, 0.0, 0.0, 0.0, self)
 
-        self.fade_out_handle = QtGui.QGraphicsRectItem(parent=self)
+        self.fade_out_handle = QGraphicsRectItem(parent=self)
         self.fade_out_handle.setAcceptHoverEvents(True)
         self.fade_out_handle.hoverEnterEvent = self.generic_hoverEnterEvent
         self.fade_out_handle.hoverLeaveEvent = self.generic_hoverLeaveEvent
@@ -2757,10 +2754,10 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                           AUDIO_ITEM_HANDLE_HEIGHT))
         self.fade_out_handle.mousePressEvent = \
             self.fade_out_handle_mouseClickEvent
-        self.fade_out_handle_line = QtGui.QGraphicsLineItem(
+        self.fade_out_handle_line = QGraphicsLineItem(
             0.0, 0.0, 0.0, 0.0, self)
 
-        self.stretch_handle = QtGui.QGraphicsRectItem(parent=self)
+        self.stretch_handle = QGraphicsRectItem(parent=self)
         self.stretch_handle.setAcceptHoverEvents(True)
         self.stretch_handle.hoverEnterEvent = self.generic_hoverEnterEvent
         self.stretch_handle.hoverLeaveEvent = self.generic_hoverLeaveEvent
@@ -2769,7 +2766,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                           AUDIO_ITEM_HANDLE_HEIGHT))
         self.stretch_handle.mousePressEvent = \
             self.stretch_handle_mouseClickEvent
-        self.stretch_handle_line = QtGui.QGraphicsLineItem(
+        self.stretch_handle_line = QGraphicsLineItem(
             AUDIO_ITEM_HANDLE_SIZE,
             (AUDIO_ITEM_HANDLE_HEIGHT * 0.5) - (AUDIO_ITEM_HEIGHT * 0.5),
             AUDIO_ITEM_HANDLE_SIZE,
@@ -2777,7 +2774,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             self.stretch_handle)
         self.stretch_handle.hide()
 
-        self.split_line = QtGui.QGraphicsLineItem(
+        self.split_line = QGraphicsLineItem(
             0.0, 0.0, 0.0, AUDIO_ITEM_HEIGHT, self)
         self.split_line.mapFromParent(0.0, 0.0)
         self.split_line.hide()
@@ -2804,11 +2801,11 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         self.draw()
 
     def generic_hoverEnterEvent(self, a_event):
-        QtGui.QApplication.setOverrideCursor(
-            QtGui.QCursor(QtCore.Qt.SizeHorCursor))
+        QApplication.setOverrideCursor(
+            QCursor(QtCore.Qt.SizeHorCursor))
 
     def generic_hoverLeaveEvent(self, a_event):
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
     def draw(self):
         f_temp_seconds = self.sample_length
@@ -2887,15 +2884,17 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                         self.sample_start_offset_px +
                         self.length_seconds_orig_px,
                         self.y_inc + (f_y_offset * -1.0) + (f_y_inc * f_i))
-                    f_path_item.rotate(-180.0)
+                    f_path_item.setRotation(-180.0)
                 else:
                     f_path_item.setPos(
                         self.sample_start_offset_px,
                         f_y_offset + (f_y_inc * f_i))
-                f_x_scale, f_y_scale = pydaw_scale_to_rect(
+                f_x_scale, f_y_scale = pydaw_util.scale_to_rect(
                     mk_project.pydaw_audio_item_scene_rect, self.rect_orig)
                 f_y_scale *= self.vol_linear
-                f_path_item.scale(f_x_scale, f_y_scale)
+                f_scale_transform = QTransform()
+                f_scale_transform.scale(f_x_scale, f_y_scale)
+                f_path_item.setTransform(f_scale_transform)
                 f_i += f_i_inc
                 f_y_inc += self.y_inc
         self.waveforms_scaled = True
@@ -3017,12 +3016,12 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             return
         self.check_selected_status()
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mousePressEvent(self.length_handle, a_event)
+        QGraphicsRectItem.mousePressEvent(self.length_handle, a_event)
         for f_item in AUDIO_SEQ.audio_items:
             if f_item.isSelected():
                 f_item.min_start = f_item.pos().x() * -1.0
                 f_item.is_start_resizing = True
-                f_item.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape,
+                f_item.setFlag(QGraphicsItem.ItemClipsChildrenToShape,
                                False)
 
     def length_handle_mouseClickEvent(self, a_event):
@@ -3030,11 +3029,11 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             return
         self.check_selected_status()
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mousePressEvent(self.length_handle, a_event)
+        QGraphicsRectItem.mousePressEvent(self.length_handle, a_event)
         for f_item in AUDIO_SEQ.audio_items:
             if f_item.isSelected():
                 f_item.is_resizing = True
-                f_item.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape,
+                f_item.setFlag(QGraphicsItem.ItemClipsChildrenToShape,
                                False)
 
     def fade_in_handle_mouseClickEvent(self, a_event):
@@ -3042,7 +3041,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             return
         self.check_selected_status()
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mousePressEvent(self.fade_in_handle, a_event)
+        QGraphicsRectItem.mousePressEvent(self.fade_in_handle, a_event)
         for f_item in AUDIO_SEQ.audio_items:
             if f_item.isSelected():
                 f_item.is_fading_in = True
@@ -3052,7 +3051,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             return
         self.check_selected_status()
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mousePressEvent(self.fade_out_handle, a_event)
+        QGraphicsRectItem.mousePressEvent(self.fade_out_handle, a_event)
         for f_item in AUDIO_SEQ.audio_items:
             if f_item.isSelected():
                 f_item.is_fading_out = True
@@ -3062,7 +3061,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             return
         self.check_selected_status()
         a_event.setAccepted(True)
-        QtGui.QGraphicsRectItem.mousePressEvent(self.stretch_handle, a_event)
+        QGraphicsRectItem.mousePressEvent(self.stretch_handle, a_event)
         f_max_region_pos = AUDIO_PX_PER_BAR * pydaw_get_current_region_length()
         for f_item in AUDIO_SEQ.audio_items:
             if f_item.isSelected() and \
@@ -3070,7 +3069,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 f_item.is_stretching = True
                 f_item.max_stretch = f_max_region_pos - f_item.pos().x()
                 f_item.setFlag(
-                    QtGui.QGraphicsItem.ItemClipsChildrenToShape, False)
+                    QGraphicsItem.ItemClipsChildrenToShape, False)
                 #for f_path in f_item.path_items:
                 #    f_path.hide()
 
@@ -3086,7 +3085,9 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         global CURRENT_AUDIO_ITEM_INDEX
         f_CURRENT_AUDIO_ITEM_INDEX = CURRENT_AUDIO_ITEM_INDEX
         CURRENT_AUDIO_ITEM_INDEX = self.track_num
-        f_menu = QtGui.QMenu(MAIN_WINDOW)
+        f_menu = QMenu(MAIN_WINDOW)
+
+        AUDIO_SEQ.context_menu_enabled = False
 
         f_file_menu = f_menu.addMenu(_("File"))
         f_save_a_copy_action = f_file_menu.addAction(_("Save a Copy..."))
@@ -3212,7 +3213,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             _("Copy Volume Envelope as MIDI Notes"))
         f_copy_as_notes_action.triggered.connect(self.copy_as_notes)
 
-        f_menu.exec_(QtGui.QCursor.pos())
+        f_menu.exec_(QCursor.pos())
         CURRENT_AUDIO_ITEM_INDEX = f_CURRENT_AUDIO_ITEM_INDEX
 
     def time_pitch_dialog(self):
@@ -3340,9 +3341,9 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         def get_vol(a_val):
             return round(a_val * 0.1, 1)
 
-        f_dialog = QtGui.QDialog(MAIN_WINDOW)
+        f_dialog = QDialog(MAIN_WINDOW)
         f_dialog.setWindowTitle(_("Set Volume for all Instance of File"))
-        f_layout = QtGui.QGridLayout(f_dialog)
+        f_layout = QGridLayout(f_dialog)
         f_layout.setAlignment(QtCore.Qt.AlignCenter)
         f_track_cboxes = []
         f_sc_checkboxes = []
@@ -3357,7 +3358,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
              self.audio_item.s2_sc)]
         for f_i in range(3):
             f_out, f_vol, f_sc = f_current_vals[f_i]
-            f_tracks_combobox = QtGui.QComboBox()
+            f_tracks_combobox = QComboBox()
             f_track_cboxes.append(f_tracks_combobox)
             if f_i == 0:
                 f_tracks_combobox.addItems(TRACK_NAMES)
@@ -3367,28 +3368,28 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                 f_tracks_combobox.setCurrentIndex(f_out + 1)
             f_tracks_combobox.setMinimumWidth(105)
             f_layout.addWidget(f_tracks_combobox, 0, f_i)
-            f_sc_checkbox = QtGui.QCheckBox(_("Sidechain"))
+            f_sc_checkbox = QCheckBox(_("Sidechain"))
             f_sc_checkboxes.append(f_sc_checkbox)
             if f_sc:
                 f_sc_checkbox.setChecked(True)
             f_layout.addWidget(f_sc_checkbox, 1, f_i)
-            f_vol_slider = QtGui.QSlider(QtCore.Qt.Vertical)
+            f_vol_slider = QSlider(QtCore.Qt.Vertical)
             f_track_vols.append(f_vol_slider)
             f_vol_slider.setRange(-240, 240)
             f_vol_slider.setMinimumHeight(360)
             f_vol_slider.valueChanged.connect(vol_changed)
             f_layout.addWidget(f_vol_slider, 2, f_i, QtCore.Qt.AlignCenter)
-            f_vol_label = QtGui.QLabel("0.0dB")
+            f_vol_label = QLabel("0.0dB")
             f_vol_labels.append(f_vol_label)
             f_layout.addWidget(f_vol_label, 3, f_i)
             f_vol_slider.setValue(f_vol * 10.0)
 
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout, 10, 2)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(ok_handler)
         f_ok_cancel_layout.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_dialog.exec_()
@@ -3417,33 +3418,33 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         def get_vol():
             return round(f_vol_slider.value() * 0.1, 1)
 
-        f_dialog = QtGui.QDialog(MAIN_WINDOW)
+        f_dialog = QDialog(MAIN_WINDOW)
         f_dialog.setWindowTitle(_("Set Volume for all Instance of File"))
-        f_layout = QtGui.QGridLayout(f_dialog)
+        f_layout = QGridLayout(f_dialog)
         f_layout.setAlignment(QtCore.Qt.AlignCenter)
-        f_vol_slider = QtGui.QSlider(QtCore.Qt.Vertical)
+        f_vol_slider = QSlider(QtCore.Qt.Vertical)
         f_vol_slider.setRange(-240, 240)
         f_vol_slider.setMinimumHeight(360)
         f_vol_slider.valueChanged.connect(vol_changed)
         f_layout.addWidget(f_vol_slider, 0, 1, QtCore.Qt.AlignCenter)
-        f_vol_label = QtGui.QLabel("0dB")
+        f_vol_label = QLabel("0dB")
         f_layout.addWidget(f_vol_label, 1, 1)
         f_vol_slider.setValue(self.audio_item.vol)
-        f_reverse_combobox = QtGui.QComboBox()
+        f_reverse_combobox = QComboBox()
         f_reverse_combobox.addItems(
             [_("Either"), _("Not-Reversed"), _("Reversed")])
         f_reverse_combobox.setMinimumWidth(105)
-        f_layout.addWidget(QtGui.QLabel(_("Reversed Items?")), 2, 0)
+        f_layout.addWidget(QLabel(_("Reversed Items?")), 2, 0)
         f_layout.addWidget(f_reverse_combobox, 2, 1)
-        f_same_vol_checkbox = QtGui.QCheckBox(
+        f_same_vol_checkbox = QCheckBox(
             _("Only items with same volume?"))
         f_layout.addWidget(f_same_vol_checkbox, 3, 1)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout, 10, 1)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_ok_button.pressed.connect(ok_handler)
         f_ok_cancel_layout.addWidget(f_ok_button)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_cancel_button.pressed.connect(cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_dialog.exec_()
@@ -3524,16 +3525,16 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
         def on_cancel():
             f_window.close()
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.f_result = None
         f_window.setWindowTitle(_("Volume"))
         f_window.setFixedSize(150, 90)
-        f_layout = QtGui.QVBoxLayout()
+        f_layout = QVBoxLayout()
         f_window.setLayout(f_layout)
-        f_hlayout = QtGui.QHBoxLayout()
+        f_hlayout = QHBoxLayout()
         f_layout.addLayout(f_hlayout)
-        f_hlayout.addWidget(QtGui.QLabel("dB"))
-        f_db_spinbox = QtGui.QDoubleSpinBox()
+        f_hlayout.addWidget(QLabel("dB"))
+        f_db_spinbox = QDoubleSpinBox()
         f_hlayout.addWidget(f_db_spinbox)
         f_db_spinbox.setDecimals(1)
         f_db_spinbox.setRange(-24, 24)
@@ -3542,12 +3543,12 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             f_db_spinbox.setValue(f_vols.pop())
         else:
             f_db_spinbox.setValue(0)
-        f_ok_button = QtGui.QPushButton(_("OK"))
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_button = QPushButton(_("OK"))
+        f_ok_cancel_layout = QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout)
         f_ok_cancel_layout.addWidget(f_ok_button)
         f_ok_button.pressed.connect(on_ok)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_cancel_button.pressed.connect(on_cancel)
         f_window.exec_()
@@ -3572,12 +3573,12 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
     def copy_file_path_to_clipboard(self):
         f_path = self.get_file_path()
-        f_clipboard = QtGui.QApplication.clipboard()
+        f_clipboard = QApplication.clipboard()
         f_clipboard.setText(f_path)
 
     def save_a_copy(self):
         global LAST_AUDIO_ITEM_DIR
-        f_file = QtGui.QFileDialog.getSaveFileName(
+        f_file, f_filter = QFileDialog.getSaveFileName(
             parent=AUDIO_SEQ,
             caption=_('Save audio item as .wav'),
             directory=LAST_AUDIO_ITEM_DIR)
@@ -3629,7 +3630,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
 
             f_index = AUDIO_ITEMS.get_next_index()
             if f_index == -1:
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     self, _("Error"),
                     _("No more available audio item slots, max per region "
                     "is {}").format(MAX_AUDIO_ITEM_COUNT))
@@ -3683,7 +3684,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             if a_event.modifiers() == QtCore.Qt.ControlModifier:
                 f_per_item_fx_dict = PROJECT.get_audio_per_item_fx_region(
                     CURRENT_REGION.uid)
-            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
+            QGraphicsRectItem.mousePressEvent(self, a_event)
             self.event_pos_orig = a_event.pos().x()
             for f_item in AUDIO_SEQ.get_selected():
                 f_item_pos = f_item.pos().x()
@@ -3709,9 +3710,9 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             a_event.setAccepted(True)
             self.setSelected(True)
             self.event_pos_orig = a_event.pos().x()
-            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
+            QGraphicsRectItem.mousePressEvent(self, a_event)
             self.orig_y = a_event.pos().y()
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.BlankCursor)
+            QApplication.setOverrideCursor(QtCore.Qt.BlankCursor)
             for f_item in AUDIO_SEQ.get_selected():
                 f_item.orig_value = f_item.audio_item.vol
                 f_item.add_vol_line()
@@ -3783,9 +3784,9 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             self.rect().width(), AUDIO_ITEM_HEIGHT)
 
     def add_vol_line(self):
-        self.vol_line = QtGui.QGraphicsLineItem(
+        self.vol_line = QGraphicsLineItem(
             0.0, 0.0, self.rect().width(), 0.0, self)
-        self.vol_line.setPen(QtGui.QPen(QtCore.Qt.red, 2.0))
+        self.vol_line.setPen(QPen(QtCore.Qt.red, 2.0))
         self.set_vol_line()
 
     def set_vol_line(self):
@@ -3899,7 +3900,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             AUDIO_SEQ.setUpdatesEnabled(True)
             AUDIO_SEQ.update()
         else:
-            QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
+            QGraphicsRectItem.mouseMoveEvent(self, a_event)
             if AUDIO_QUANTIZE:
                 f_max_x = (pydaw_get_current_region_length() *
                     AUDIO_PX_PER_BAR) - AUDIO_QUANTIZE_PX
@@ -3916,14 +3917,14 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                     f_item.setPos(f_pos_x, f_pos_y)
                     if not f_item.is_moving:
                         f_item.setGraphicsEffect(
-                            QtGui.QGraphicsOpacityEffect())
+                            QGraphicsOpacityEffect())
                         f_item.is_moving = True
 
     def mouseReleaseEvent(self, a_event):
         if libmk.IS_PLAYING or self.event_pos_orig is None:
             return
-        QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+        QGraphicsRectItem.mouseReleaseEvent(self, a_event)
+        QApplication.restoreOverrideCursor()
         f_audio_items =  AUDIO_ITEMS
         #Set to True when testing, set to False for better UI performance...
         f_reset_selection = True
@@ -4008,7 +4009,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
                     f_item_old = f_item.clone()
                     f_index = f_audio_items.get_next_index()
                     if f_index == -1:
-                        QtGui.QMessageBox.warning(self, _("Error"),
+                        QMessageBox.warning(self, _("Error"),
                         _("No more available audio item slots, max per "
                         "region is {}").format(MAX_AUDIO_ITEM_COUNT))
                         break
@@ -4039,7 +4040,7 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             f_audio_item.is_fading_out = False
             f_audio_item.is_stretching = False
             f_audio_item.setGraphicsEffect(None)
-            f_audio_item.setFlag(QtGui.QGraphicsItem.ItemClipsChildrenToShape)
+            f_audio_item.setFlag(QGraphicsItem.ItemClipsChildrenToShape)
         if f_did_change:
             f_audio_items.deduplicate_items()
             if f_was_copying:
@@ -4065,28 +4066,28 @@ class audio_viewer_item(QtGui.QGraphicsRectItem):
             PROJECT.commit(_("Update audio items"))
         global_open_audio_items(f_reset_selection)
 
-AUDIO_ITEMS_HEADER_GRADIENT = QtGui.QLinearGradient(
+AUDIO_ITEMS_HEADER_GRADIENT = QLinearGradient(
     0.0, 0.0, 0.0, AUDIO_RULER_HEIGHT)
-AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(0.0, QtGui.QColor.fromRgb(61, 61, 61))
-AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(0.5, QtGui.QColor.fromRgb(50,50, 50))
-AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(0.6, QtGui.QColor.fromRgb(43, 43, 43))
-AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(1.0, QtGui.QColor.fromRgb(65, 65, 65))
+AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(0.0, QColor.fromRgb(61, 61, 61))
+AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(0.5, QColor.fromRgb(50,50, 50))
+AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(0.6, QColor.fromRgb(43, 43, 43))
+AUDIO_ITEMS_HEADER_GRADIENT.setColorAt(1.0, QColor.fromRgb(65, 65, 65))
 
 DEFAULT_AUDIO_TRACK = 0
 
-class audio_items_viewer(QtGui.QGraphicsView):
+class audio_items_viewer(QGraphicsView):
     def __init__(self):
-        QtGui.QGraphicsView.__init__(self)
+        QGraphicsView.__init__(self)
         self.reset_line_lists()
         self.h_zoom = 1.0
         self.v_zoom = 1.0
-        self.scene = QtGui.QGraphicsScene(self)
-        self.scene.setItemIndexMethod(QtGui.QGraphicsScene.NoIndex)
+        self.scene = QGraphicsScene(self)
+        self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
         self.scene.dropEvent = self.sceneDropEvent
         self.scene.dragEnterEvent = self.sceneDragEnterEvent
         self.scene.dragMoveEvent = self.sceneDragMoveEvent
         self.scene.contextMenuEvent = self.sceneContextMenuEvent
-        self.scene.setBackgroundBrush(QtGui.QColor(90, 90, 90))
+        self.scene.setBackgroundBrush(QColor(90, 90, 90))
         self.scene.selectionChanged.connect(self.scene_selection_changed)
         self.setAcceptDrops(True)
         self.setScene(self.scene)
@@ -4096,12 +4097,13 @@ class audio_items_viewer(QtGui.QGraphicsView):
         self.playback_px = 0.0
         self.draw_headers(0)
         self.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-        self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
         self.is_playing = False
         self.reselect_on_stop = []
         self.playback_cursor = None
         #Somewhat slow on my AMD 5450 using the FOSS driver
-        #self.setRenderHint(QtGui.QPainter.Antialiasing)
+        #self.setRenderHint(QPainter.Antialiasing)
+        self.context_menu_enabled = True
 
     def reset_line_lists(self):
         self.text_list = []
@@ -4116,11 +4118,11 @@ class audio_items_viewer(QtGui.QGraphicsView):
         if a_event.key() == QtCore.Qt.Key_Delete:
             self.delete_selected()
         else:
-            QtGui.QGraphicsView.keyPressEvent(self, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+            QGraphicsView.keyPressEvent(self, a_event)
+        QApplication.restoreOverrideCursor()
 
     def scrollContentsBy(self, x, y):
-        QtGui.QGraphicsView.scrollContentsBy(self, x, y)
+        QGraphicsView.scrollContentsBy(self, x, y)
         self.set_ruler_y_pos()
 
     def set_ruler_y_pos(self):
@@ -4154,7 +4156,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
     def crossfade_selected(self):
         f_list = self.get_selected()
         if len(f_list) < 2:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 MAIN_WINDOW, _("Error"),
                 _("You must have at least 2 items selected to crossfade"))
             return
@@ -4213,17 +4215,20 @@ class audio_items_viewer(QtGui.QGraphicsView):
             f_item.set_tooltips(a_on)
 
     def resizeEvent(self, a_event):
-        QtGui.QGraphicsView.resizeEvent(self, a_event)
+        QGraphicsView.resizeEvent(self, a_event)
         pydaw_set_audio_seq_zoom(self.h_zoom, self.v_zoom)
         global_open_audio_items(a_reload=False)
 
     def sceneContextMenuEvent(self, a_event):
         if self.check_running():
             return
-        QtGui.QGraphicsScene.contextMenuEvent(self.scene, a_event)
+        if not self.context_menu_enabled:
+            self.context_menu_enabled = True
+            return
+        QGraphicsScene.contextMenuEvent(self.scene, a_event)
         self.context_menu_pos = a_event.scenePos()
-        f_menu = QtGui.QMenu(MAIN_WINDOW)
-        f_paste_action = QtGui.QAction(
+        f_menu = QMenu(MAIN_WINDOW)
+        f_paste_action = QAction(
             _("Paste file path from clipboard"), self)
         f_paste_action.triggered.connect(self.on_scene_paste_paths)
         f_menu.addAction(f_paste_action)
@@ -4306,7 +4311,7 @@ class audio_items_viewer(QtGui.QGraphicsView):
             if not f_file_name_str is None and not f_file_name_str == "":
                 f_index = f_items.get_next_index()
                 if f_index == -1:
-                    QtGui.QMessageBox.warning(self, _("Error"),
+                    QMessageBox.warning(self, _("Error"),
                     _("No more available audio item slots, "
                     "max per region is {}").format(MAX_AUDIO_ITEM_COUNT))
                     break
@@ -4456,26 +4461,26 @@ class audio_items_viewer(QtGui.QGraphicsView):
     def draw_headers(self, a_cursor_pos=None):
         f_region_length = pydaw_get_current_region_length()
         f_size = AUDIO_PX_PER_BAR * f_region_length
-        self.ruler = QtGui.QGraphicsRectItem(0, 0, f_size, AUDIO_RULER_HEIGHT)
+        self.ruler = QGraphicsRectItem(0, 0, f_size, AUDIO_RULER_HEIGHT)
         self.ruler.setZValue(1500.0)
         self.ruler.setBrush(AUDIO_ITEMS_HEADER_GRADIENT)
         self.ruler.mousePressEvent = self.ruler_click_event
         self.scene.addItem(self.ruler)
-        f_v_pen = QtGui.QPen(QtCore.Qt.black)
-        f_beat_pen = QtGui.QPen(QtGui.QColor(210, 210, 210))
-        f_16th_pen = QtGui.QPen(QtGui.QColor(120, 120, 120))
-        f_reg_pen = QtGui.QPen(QtCore.Qt.white)
+        f_v_pen = QPen(QtCore.Qt.black)
+        f_beat_pen = QPen(QColor(210, 210, 210))
+        f_16th_pen = QPen(QColor(120, 120, 120))
+        f_reg_pen = QPen(QtCore.Qt.white)
         f_total_height = (AUDIO_ITEM_LANE_COUNT *
             (AUDIO_ITEM_HEIGHT)) + AUDIO_RULER_HEIGHT
         self.scene.setSceneRect(0.0, 0.0, f_size, f_total_height)
         self.playback_cursor = self.scene.addLine(
-            0.0, 0.0, 0.0, f_total_height, QtGui.QPen(QtCore.Qt.red, 2.0))
+            0.0, 0.0, 0.0, f_total_height, QPen(QtCore.Qt.red, 2.0))
         self.playback_cursor.setZValue(1000.0)
         i3 = 0.0
         for i in range(f_region_length):
-            f_number = QtGui.QGraphicsSimpleTextItem(
+            f_number = QGraphicsSimpleTextItem(
                 "{}".format(i + 1), self.ruler)
-            f_number.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+            f_number.setFlag(QGraphicsItem.ItemIgnoresTransformations)
             f_number.setBrush(QtCore.Qt.white)
             f_number.setZValue(1000.0)
             self.text_list.append(f_number)
@@ -4534,25 +4539,25 @@ class audio_items_viewer(QtGui.QGraphicsView):
 
 class time_pitch_dialog_widget:
     def __init__(self, a_audio_item):
-        self.widget = QtGui.QDialog()
+        self.widget = QDialog()
         self.widget.setWindowTitle(_("Time/Pitch..."))
         self.widget.setMaximumWidth(480)
-        self.main_vlayout = QtGui.QVBoxLayout(self.widget)
+        self.main_vlayout = QVBoxLayout(self.widget)
 
-        self.layout = QtGui.QGridLayout()
+        self.layout = QGridLayout()
         self.main_vlayout.addLayout(self.layout)
 
-        self.vlayout2 = QtGui.QVBoxLayout()
+        self.vlayout2 = QVBoxLayout()
         self.layout.addLayout(self.vlayout2, 1, 1)
-        self.start_hlayout = QtGui.QHBoxLayout()
+        self.start_hlayout = QHBoxLayout()
         self.vlayout2.addLayout(self.start_hlayout)
 
-        self.timestretch_hlayout = QtGui.QHBoxLayout()
-        self.time_pitch_gridlayout = QtGui.QGridLayout()
+        self.timestretch_hlayout = QHBoxLayout()
+        self.time_pitch_gridlayout = QGridLayout()
         self.vlayout2.addLayout(self.timestretch_hlayout)
         self.vlayout2.addLayout(self.time_pitch_gridlayout)
-        self.timestretch_hlayout.addWidget(QtGui.QLabel(_("Mode:")))
-        self.timestretch_mode = QtGui.QComboBox()
+        self.timestretch_hlayout.addWidget(QLabel(_("Mode:")))
+        self.timestretch_mode = QComboBox()
 
         self.timestretch_mode.setMinimumWidth(240)
         self.timestretch_hlayout.addWidget(self.timestretch_mode)
@@ -4560,48 +4565,48 @@ class time_pitch_dialog_widget:
         self.timestretch_mode.setCurrentIndex(a_audio_item.time_stretch_mode)
         self.timestretch_mode.currentIndexChanged.connect(
             self.timestretch_mode_changed)
-        self.time_pitch_gridlayout.addWidget(QtGui.QLabel(_("Pitch:")), 0, 0)
-        self.pitch_shift = QtGui.QDoubleSpinBox()
+        self.time_pitch_gridlayout.addWidget(QLabel(_("Pitch:")), 0, 0)
+        self.pitch_shift = QDoubleSpinBox()
         self.pitch_shift.setRange(-36, 36)
         self.pitch_shift.setValue(a_audio_item.pitch_shift)
         self.pitch_shift.setDecimals(6)
         self.time_pitch_gridlayout.addWidget(self.pitch_shift, 0, 1)
 
-        self.pitch_shift_end_checkbox = QtGui.QCheckBox(_("End:"))
+        self.pitch_shift_end_checkbox = QCheckBox(_("End:"))
         self.pitch_shift_end_checkbox.setChecked(
             a_audio_item.pitch_shift != a_audio_item.pitch_shift_end)
         self.pitch_shift_end_checkbox.toggled.connect(
             self.pitch_end_mode_changed)
         self.time_pitch_gridlayout.addWidget(
             self.pitch_shift_end_checkbox, 0, 2)
-        self.pitch_shift_end = QtGui.QDoubleSpinBox()
+        self.pitch_shift_end = QDoubleSpinBox()
         self.pitch_shift_end.setRange(-36, 36)
         self.pitch_shift_end.setValue(a_audio_item.pitch_shift_end)
         self.pitch_shift_end.setDecimals(6)
         self.time_pitch_gridlayout.addWidget(self.pitch_shift_end, 0, 3)
 
-        self.time_pitch_gridlayout.addWidget(QtGui.QLabel(_("Time:")), 1, 0)
-        self.timestretch_amt = QtGui.QDoubleSpinBox()
+        self.time_pitch_gridlayout.addWidget(QLabel(_("Time:")), 1, 0)
+        self.timestretch_amt = QDoubleSpinBox()
         self.timestretch_amt.setRange(0.1, 200.0)
         self.timestretch_amt.setDecimals(6)
         self.timestretch_amt.setSingleStep(0.1)
         self.timestretch_amt.setValue(a_audio_item.timestretch_amt)
         self.time_pitch_gridlayout.addWidget(self.timestretch_amt, 1, 1)
 
-        self.crispness_layout = QtGui.QHBoxLayout()
+        self.crispness_layout = QHBoxLayout()
         self.vlayout2.addLayout(self.crispness_layout)
-        self.crispness_layout.addWidget(QtGui.QLabel(_("Crispness")))
-        self.crispness_combobox = QtGui.QComboBox()
+        self.crispness_layout.addWidget(QLabel(_("Crispness")))
+        self.crispness_combobox = QComboBox()
         self.crispness_combobox.addItems(CRISPNESS_SETTINGS)
         self.crispness_combobox.setCurrentIndex(a_audio_item.crispness)
         self.crispness_layout.addWidget(self.crispness_combobox)
 
-        self.timestretch_amt_end_checkbox = QtGui.QCheckBox(_("End:"))
+        self.timestretch_amt_end_checkbox = QCheckBox(_("End:"))
         self.timestretch_amt_end_checkbox.toggled.connect(
             self.timestretch_end_mode_changed)
         self.time_pitch_gridlayout.addWidget(
             self.timestretch_amt_end_checkbox, 1, 2)
-        self.timestretch_amt_end = QtGui.QDoubleSpinBox()
+        self.timestretch_amt_end = QDoubleSpinBox()
         self.timestretch_amt_end.setRange(0.2, 4.0)
         self.timestretch_amt_end.setDecimals(6)
         self.timestretch_amt_end.setSingleStep(0.1)
@@ -4619,11 +4624,11 @@ class time_pitch_dialog_widget:
         self.crispness_combobox.currentIndexChanged.connect(
             self.timestretch_changed)
 
-        self.ok_layout = QtGui.QHBoxLayout()
-        self.ok = QtGui.QPushButton(_("OK"))
+        self.ok_layout = QHBoxLayout()
+        self.ok = QPushButton(_("OK"))
         self.ok.pressed.connect(self.ok_handler)
         self.ok_layout.addWidget(self.ok)
-        self.cancel = QtGui.QPushButton(_("Cancel"))
+        self.cancel = QPushButton(_("Cancel"))
         self.cancel.pressed.connect(self.widget.close)
         self.ok_layout.addWidget(self.cancel)
         self.vlayout2.addLayout(self.ok_layout)
@@ -4718,7 +4723,7 @@ class time_pitch_dialog_widget:
 
     def ok_handler(self):
         if libmk.IS_PLAYING:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.widget, _("Error"),
                 _("Cannot edit audio items during playback"))
             return
@@ -4786,7 +4791,7 @@ class time_pitch_dialog_widget:
                 f_item.draw()
                 f_selected_count += 1
         if f_selected_count == 0:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.widget, _("Error"), _("No items selected"))
         else:
             if f_was_stretching:
@@ -4809,39 +4814,39 @@ class time_pitch_dialog_widget:
 
 class fade_vol_dialog_widget:
     def __init__(self, a_audio_item):
-        self.widget = QtGui.QDialog()
+        self.widget = QDialog()
         self.widget.setWindowTitle(_("Fade Volume..."))
         self.widget.setMaximumWidth(480)
-        self.main_vlayout = QtGui.QVBoxLayout(self.widget)
+        self.main_vlayout = QVBoxLayout(self.widget)
 
-        self.layout = QtGui.QGridLayout()
+        self.layout = QGridLayout()
         self.main_vlayout.addLayout(self.layout)
 
-        self.fadein_vol_layout = QtGui.QHBoxLayout()
-        self.fadein_vol_checkbox = QtGui.QCheckBox(_("Fade-In:"))
+        self.fadein_vol_layout = QHBoxLayout()
+        self.fadein_vol_checkbox = QCheckBox(_("Fade-In:"))
         self.fadein_vol_layout.addWidget(self.fadein_vol_checkbox)
-        self.fadein_vol_spinbox = QtGui.QSpinBox()
+        self.fadein_vol_spinbox = QSpinBox()
         self.fadein_vol_spinbox.setRange(-50, -6)
         self.fadein_vol_spinbox.setValue(a_audio_item.fadein_vol)
         self.fadein_vol_spinbox.valueChanged.connect(self.fadein_vol_changed)
         self.fadein_vol_layout.addWidget(self.fadein_vol_spinbox)
         self.fadein_vol_layout.addItem(
-            QtGui.QSpacerItem(5, 5, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(5, 5, QSizePolicy.Expanding))
         self.main_vlayout.addLayout(self.fadein_vol_layout)
 
-        self.fadeout_vol_checkbox = QtGui.QCheckBox(_("Fade-Out:"))
+        self.fadeout_vol_checkbox = QCheckBox(_("Fade-Out:"))
         self.fadein_vol_layout.addWidget(self.fadeout_vol_checkbox)
-        self.fadeout_vol_spinbox = QtGui.QSpinBox()
+        self.fadeout_vol_spinbox = QSpinBox()
         self.fadeout_vol_spinbox.setRange(-50, -6)
         self.fadeout_vol_spinbox.setValue(a_audio_item.fadeout_vol)
         self.fadeout_vol_spinbox.valueChanged.connect(self.fadeout_vol_changed)
         self.fadein_vol_layout.addWidget(self.fadeout_vol_spinbox)
 
-        self.ok_layout = QtGui.QHBoxLayout()
-        self.ok = QtGui.QPushButton(_("OK"))
+        self.ok_layout = QHBoxLayout()
+        self.ok = QPushButton(_("OK"))
         self.ok.pressed.connect(self.ok_handler)
         self.ok_layout.addWidget(self.ok)
-        self.cancel = QtGui.QPushButton(_("Cancel"))
+        self.cancel = QPushButton(_("Cancel"))
         self.cancel.pressed.connect(self.widget.close)
         self.ok_layout.addWidget(self.cancel)
         self.main_vlayout.addLayout(self.ok_layout)
@@ -4856,7 +4861,7 @@ class fade_vol_dialog_widget:
 
     def ok_handler(self):
         if libmk.IS_PLAYING:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.widget, _("Error"),
                 _("Cannot edit audio items during playback"))
             return
@@ -4881,7 +4886,7 @@ class fade_vol_dialog_widget:
                 f_item.draw()
                 f_selected_count += 1
         if f_selected_count == 0:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.widget, _("Error"), _("No items selected"))
         else:
             PROJECT.save_audio_region(CURRENT_REGION.uid, AUDIO_ITEMS)
@@ -4921,57 +4926,57 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         self.modulex = pydaw_widgets.pydaw_per_audio_item_fx_widget(
             global_paif_rel_callback, global_paif_val_callback)
 
-        self.modulex_widget = QtGui.QWidget()
+        self.modulex_widget = QWidget()
         self.modulex_widget.setObjectName("plugin_ui")
-        self.modulex_vlayout = QtGui.QVBoxLayout(self.modulex_widget)
+        self.modulex_vlayout = QVBoxLayout(self.modulex_widget)
         self.folders_tab_widget.addTab(self.modulex_widget, _("Per-Item FX"))
         self.modulex.widget.setDisabled(True)
         self.modulex_vlayout.addWidget(self.modulex.scroll_area)
 
-        self.widget = QtGui.QWidget()
+        self.widget = QWidget()
         self.hsplitter.addWidget(self.widget)
-        self.vlayout = QtGui.QVBoxLayout()
+        self.vlayout = QVBoxLayout()
         self.widget.setLayout(self.vlayout)
-        self.controls_grid_layout = QtGui.QGridLayout()
+        self.controls_grid_layout = QGridLayout()
         self.controls_grid_layout.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding), 0, 30)
+            QSpacerItem(10, 10, QSizePolicy.Expanding), 0, 30)
         self.vlayout.addLayout(self.controls_grid_layout)
         self.vlayout.addWidget(AUDIO_SEQ)
-        self.snap_combobox = QtGui.QComboBox()
+        self.snap_combobox = QComboBox()
         self.snap_combobox.setFixedWidth(105)
         self.snap_combobox.addItems(
             [_("None"), _("Bar"), _("Beat"), "1/8th", "1/12th", "1/16th"])
-        self.controls_grid_layout.addWidget(QtGui.QLabel(_("Snap:")), 0, 9)
+        self.controls_grid_layout.addWidget(QLabel(_("Snap:")), 0, 9)
         self.controls_grid_layout.addWidget(self.snap_combobox, 0, 10)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
         self.snap_combobox.setCurrentIndex(2)
 
-        self.menu_button = QtGui.QPushButton(_("Menu"))
+        self.menu_button = QPushButton(_("Menu"))
         self.controls_grid_layout.addWidget(self.menu_button, 0, 3)
-        self.action_menu = QtGui.QMenu(self.widget)
+        self.action_menu = QMenu(self.widget)
         self.menu_button.setMenu(self.action_menu)
         self.copy_action = self.action_menu.addAction(_("Copy"))
         self.copy_action.triggered.connect(self.on_copy)
-        self.copy_action.setShortcut(QtGui.QKeySequence.Copy)
+        self.copy_action.setShortcut(QKeySequence.Copy)
         self.cut_action = self.action_menu.addAction(_("Cut"))
         self.cut_action.triggered.connect(self.on_cut)
-        self.cut_action.setShortcut(QtGui.QKeySequence.Cut)
+        self.cut_action.setShortcut(QKeySequence.Cut)
         self.paste_action = self.action_menu.addAction(_("Paste"))
         self.paste_action.triggered.connect(self.on_paste)
-        self.paste_action.setShortcut(QtGui.QKeySequence.Paste)
+        self.paste_action.setShortcut(QKeySequence.Paste)
         self.select_all_action = self.action_menu.addAction(_("Select All"))
         self.select_all_action.triggered.connect(self.on_select_all)
-        self.select_all_action.setShortcut(QtGui.QKeySequence.SelectAll)
+        self.select_all_action.setShortcut(QKeySequence.SelectAll)
         self.clear_selection_action = self.action_menu.addAction(
             _("Clear Selection"))
         self.clear_selection_action.triggered.connect(
             AUDIO_SEQ.scene.clearSelection)
         self.clear_selection_action.setShortcut(
-            QtGui.QKeySequence.fromString("Esc"))
+            QKeySequence.fromString("Esc"))
         self.action_menu.addSeparator()
         self.delete_selected_action = self.action_menu.addAction(_("Delete"))
         self.delete_selected_action.triggered.connect(self.on_delete_selected)
-        self.delete_selected_action.setShortcut(QtGui.QKeySequence.Delete)
+        self.delete_selected_action.setShortcut(QKeySequence.Delete)
         self.action_menu.addSeparator()
         self.clone_action = self.action_menu.addAction(
             _("Clone from Region..."))
@@ -4980,41 +4985,41 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
             _("Glue Selected"))
         self.glue_selected_action.triggered.connect(self.on_glue_selected)
         self.glue_selected_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+G"))
+            QKeySequence.fromString("CTRL+G"))
         self.crossfade_action = self.action_menu.addAction(
             _("Crossfade Selected"))
         self.crossfade_action.triggered.connect(AUDIO_SEQ.crossfade_selected)
         self.crossfade_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+F"))
+            QKeySequence.fromString("CTRL+F"))
 
-        self.default_combobox = QtGui.QComboBox()
+        self.default_combobox = QComboBox()
         self.default_combobox.setMinimumWidth(150)
         self.default_combobox.addItems(TRACK_NAMES)
         self.default_combobox.currentIndexChanged.connect(
             self.default_track_changed)
         self.controls_grid_layout.addWidget(
-            QtGui.QLabel(_(("Default:"))), 0, 20)
+            QLabel(_(("Default:"))), 0, 20)
         self.controls_grid_layout.addWidget(self.default_combobox, 0, 21)
         AUDIO_TRACK_COMBOBOXES.append(self.default_combobox)
 
-        self.v_zoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.v_zoom_slider = QSlider(QtCore.Qt.Horizontal)
         self.v_zoom_slider.setObjectName("zoom_slider")
         self.v_zoom_slider.setRange(10, 100)
         self.v_zoom_slider.setValue(10)
         self.v_zoom_slider.setSingleStep(1)
         self.v_zoom_slider.setMaximumWidth(210)
         self.v_zoom_slider.valueChanged.connect(self.set_v_zoom)
-        self.controls_grid_layout.addWidget(QtGui.QLabel(_("V-Zoom:")), 0, 45)
+        self.controls_grid_layout.addWidget(QLabel(_("V-Zoom:")), 0, 45)
         self.controls_grid_layout.addWidget(self.v_zoom_slider, 0, 46)
 
-        self.h_zoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.h_zoom_slider = QSlider(QtCore.Qt.Horizontal)
         self.h_zoom_slider.setObjectName("zoom_slider")
         self.h_zoom_slider.setRange(10, 200)
         self.h_zoom_slider.setValue(10)
         self.h_zoom_slider.setSingleStep(1)
         self.h_zoom_slider.setMaximumWidth(210)
         self.h_zoom_slider.valueChanged.connect(self.set_zoom)
-        self.controls_grid_layout.addWidget(QtGui.QLabel(_("H-Zoom:")), 0, 49)
+        self.controls_grid_layout.addWidget(QLabel(_("H-Zoom:")), 0, 49)
         self.controls_grid_layout.addWidget(self.h_zoom_slider, 0, 50)
 
 
@@ -5042,7 +5047,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
             self.modulex.widget.setToolTip("")
 
     def file_mouse_press_event(self, a_event):
-        QtGui.QListWidget.mousePressEvent(self.list_file, a_event)
+        QListWidget.mousePressEvent(self.list_file, a_event)
         global AUDIO_ITEMS_TO_DROP
         AUDIO_ITEMS_TO_DROP = []
         for f_item in self.list_file.selectedItems():
@@ -5122,7 +5127,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
                     (str(f_item.audio_item),
                      f_per_item_fx_dict.get_row(f_item.track_num, True)))
         if not f_count:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.widget, _("Error"), _("Nothing selected."))
         return f_count
 
@@ -5134,7 +5139,7 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         if CURRENT_REGION is None or libmk.IS_PLAYING:
             return
         if not self.audio_items_clipboard:
-            QtGui.QMessageBox.warning(self.widget, _("Error"),
+            QMessageBox.warning(self.widget, _("Error"),
                                       _("Nothing copied to the clipboard."))
         AUDIO_SEQ.reselect_on_stop = []
         f_per_item_fx_dict = PROJECT.get_audio_per_item_fx_region(
@@ -5179,22 +5184,22 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
         def cancel_handler():
             f_window.close()
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Clone audio from region..."))
         f_window.setMinimumWidth(270)
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
-        f_layout.addWidget(QtGui.QLabel(_("Clone from:")), 0, 0)
-        f_region_combobox = QtGui.QComboBox()
+        f_layout.addWidget(QLabel(_("Clone from:")), 0, 0)
+        f_region_combobox = QComboBox()
         f_regions_dict = PROJECT.get_regions_dict()
         f_regions_list = list(f_regions_dict.uid_lookup.keys())
         f_regions_list.sort()
         f_region_combobox.addItems(f_regions_list)
         f_layout.addWidget(f_region_combobox, 0, 1)
-        f_ok_button = QtGui.QPushButton(_("OK"))
+        f_ok_button = QPushButton(_("OK"))
         f_layout.addWidget(f_ok_button, 5, 0)
         f_ok_button.clicked.connect(ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Cancel"))
+        f_cancel_button = QPushButton(_("Cancel"))
         f_layout.addWidget(f_cancel_button, 5, 1)
         f_cancel_button.clicked.connect(cancel_handler)
         f_window.exec_()
@@ -5251,7 +5256,7 @@ def global_open_audio_items(a_update_viewer=True, a_reload=True):
                             f_error_msg = _(
                                 "Error loading '{}', file does not "
                                 "exist.").format(f_path)
-                        QtGui.QMessageBox.warning(
+                        QMessageBox.warning(
                             MAIN_WINDOW, _("Error"), f_error_msg)
         for f_item in AUDIO_SEQ.audio_items:
             if str(f_item.audio_item) in f_selected_list:
@@ -5289,10 +5294,10 @@ PIANO_ROLL_HEADER_HEIGHT = 45
 PIANO_ROLL_TOTAL_HEIGHT = 1000
 PIANO_ROLL_QUANTIZE_INDEX = 4
 
-SELECTED_NOTE_GRADIENT = QtGui.QLinearGradient(
+SELECTED_NOTE_GRADIENT = QLinearGradient(
     QtCore.QPointF(0, 0), QtCore.QPointF(0, 12))
-SELECTED_NOTE_GRADIENT.setColorAt(0, QtGui.QColor(180, 172, 100))
-SELECTED_NOTE_GRADIENT.setColorAt(1, QtGui.QColor(240, 240, 240))
+SELECTED_NOTE_GRADIENT.setColorAt(0, QColor(180, 172, 100))
+SELECTED_NOTE_GRADIENT.setColorAt(1, QColor(240, 240, 240))
 
 SELECTED_PIANO_NOTE = None   #Used for mouse click hackery
 
@@ -5352,40 +5357,40 @@ PIANO_ROLL_DELETED_NOTES = []
 
 LAST_NOTE_RESIZE = 0.25
 
-PIANO_ROLL_HEADER_GRADIENT = QtGui.QLinearGradient(
+PIANO_ROLL_HEADER_GRADIENT = QLinearGradient(
     0.0, 0.0, 0.0, PIANO_ROLL_HEADER_HEIGHT)
-PIANO_ROLL_HEADER_GRADIENT.setColorAt(0.0, QtGui.QColor.fromRgb(61, 61, 61))
-PIANO_ROLL_HEADER_GRADIENT.setColorAt(0.5, QtGui.QColor.fromRgb(50,50, 50))
-PIANO_ROLL_HEADER_GRADIENT.setColorAt(0.6, QtGui.QColor.fromRgb(43, 43, 43))
-PIANO_ROLL_HEADER_GRADIENT.setColorAt(1.0, QtGui.QColor.fromRgb(65, 65, 65))
+PIANO_ROLL_HEADER_GRADIENT.setColorAt(0.0, QColor.fromRgb(61, 61, 61))
+PIANO_ROLL_HEADER_GRADIENT.setColorAt(0.5, QColor.fromRgb(50,50, 50))
+PIANO_ROLL_HEADER_GRADIENT.setColorAt(0.6, QColor.fromRgb(43, 43, 43))
+PIANO_ROLL_HEADER_GRADIENT.setColorAt(1.0, QColor.fromRgb(65, 65, 65))
 
 def piano_roll_set_delete_mode(a_enabled):
     global PIANO_ROLL_DELETE_MODE, PIANO_ROLL_DELETED_NOTES
     if a_enabled:
-        PIANO_ROLL_EDITOR.setDragMode(QtGui.QGraphicsView.NoDrag)
+        PIANO_ROLL_EDITOR.setDragMode(QGraphicsView.NoDrag)
         PIANO_ROLL_DELETED_NOTES = []
         PIANO_ROLL_DELETE_MODE = True
-        QtGui.QApplication.setOverrideCursor(
-            QtGui.QCursor(QtCore.Qt.ForbiddenCursor))
+        QApplication.setOverrideCursor(
+            QCursor(QtCore.Qt.ForbiddenCursor))
     else:
-        PIANO_ROLL_EDITOR.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        PIANO_ROLL_EDITOR.setDragMode(QGraphicsView.RubberBandDrag)
         PIANO_ROLL_DELETE_MODE = False
         for f_item in PIANO_ROLL_DELETED_NOTES:
             f_item.delete()
         PIANO_ROLL_EDITOR.selected_note_strings = []
         global_save_and_reload_items()
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
 
-class piano_roll_note_item(QtGui.QGraphicsRectItem):
+class piano_roll_note_item(QGraphicsRectItem):
     def __init__(self, a_length, a_note_height, a_note, a_note_item,
                  a_item_index, a_enabled=True):
-        QtGui.QGraphicsRectItem.__init__(self, 0, 0, a_length, a_note_height)
+        QGraphicsRectItem.__init__(self, 0, 0, a_length, a_note_height)
         self.item_index = a_item_index
         if a_enabled:
-            self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
-            self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
-            self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
+            self.setFlag(QGraphicsItem.ItemIsMovable)
+            self.setFlag(QGraphicsItem.ItemIsSelectable)
+            self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
             self.setZValue(1002.0)
         else:
             self.setZValue(1001.0)
@@ -5407,11 +5412,11 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
             self.is_resizing = False
         self.showing_resize_cursor = False
         self.resize_rect = self.rect()
-        self.mouse_y_pos = QtGui.QCursor.pos().y()
-        self.note_text = QtGui.QGraphicsSimpleTextItem(self)
-        self.note_text.setPen(QtGui.QPen(QtCore.Qt.black))
+        self.mouse_y_pos = QCursor.pos().y()
+        self.note_text = QGraphicsSimpleTextItem(self)
+        self.note_text.setPen(QPen(QtCore.Qt.black))
         self.update_note_text()
-        self.vel_line = QtGui.QGraphicsLineItem(self)
+        self.vel_line = QGraphicsLineItem(self)
         self.set_vel_line()
         self.set_brush()
 
@@ -5435,11 +5440,11 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
             f_vals.append(int(f_val))
         f_vals_m1 = pydaw_rgb_minus(f_vals, 90)
         f_vals_m2 = pydaw_rgb_minus(f_vals, 120)
-        f_gradient = QtGui.QLinearGradient(0.0, 0.0, 0.0, self.note_height)
-        f_gradient.setColorAt(0.0, QtGui.QColor(*f_vals_m1))
-        f_gradient.setColorAt(0.4, QtGui.QColor(*f_vals))
-        f_gradient.setColorAt(0.6, QtGui.QColor(*f_vals))
-        f_gradient.setColorAt(1.0, QtGui.QColor(*f_vals_m2))
+        f_gradient = QLinearGradient(0.0, 0.0, 0.0, self.note_height)
+        f_gradient.setColorAt(0.0, QColor(*f_vals_m1))
+        f_gradient.setColorAt(0.4, QColor(*f_vals))
+        f_gradient.setColorAt(0.6, QColor(*f_vals))
+        f_gradient.setColorAt(1.0, QColor(*f_vals_m2))
         self.setBrush(f_gradient)
 
     def update_note_text(self, a_note_num=None):
@@ -5460,7 +5465,7 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
             return a_pos.x() > (f_width * 0.72)
 
     def hoverMoveEvent(self, a_event):
-        #QtGui.QGraphicsRectItem.hoverMoveEvent(self, a_event)
+        #QGraphicsRectItem.hoverMoveEvent(self, a_event)
         if not self.is_resizing:
             PIANO_ROLL_EDITOR.click_enabled = False
             self.show_resize_cursor(a_event)
@@ -5477,29 +5482,29 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
     def show_resize_cursor(self, a_event):
         f_is_at_end = self.mouse_is_at_end(a_event.pos())
         if f_is_at_end and not self.showing_resize_cursor:
-            QtGui.QApplication.setOverrideCursor(
-                QtGui.QCursor(QtCore.Qt.SizeHorCursor))
+            QApplication.setOverrideCursor(
+                QCursor(QtCore.Qt.SizeHorCursor))
             self.showing_resize_cursor = True
         elif not f_is_at_end and self.showing_resize_cursor:
-            QtGui.QApplication.restoreOverrideCursor()
+            QApplication.restoreOverrideCursor()
             self.showing_resize_cursor = False
 
     def get_selected_string(self):
         return "{}|{}".format(self.item_index, self.note_item)
 
     def hoverEnterEvent(self, a_event):
-        QtGui.QGraphicsRectItem.hoverEnterEvent(self, a_event)
+        QGraphicsRectItem.hoverEnterEvent(self, a_event)
         PIANO_ROLL_EDITOR.click_enabled = False
 
     def hoverLeaveEvent(self, a_event):
-        QtGui.QGraphicsRectItem.hoverLeaveEvent(self, a_event)
+        QGraphicsRectItem.hoverLeaveEvent(self, a_event)
         PIANO_ROLL_EDITOR.click_enabled = True
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
         self.showing_resize_cursor = False
 
     def mouseDoubleClickEvent(self, a_event):
-        QtGui.QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+        QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
+        QApplication.restoreOverrideCursor()
 
     def mousePressEvent(self, a_event):
         if a_event.modifiers() == QtCore.Qt.ShiftModifier:
@@ -5519,12 +5524,12 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
             self.vc_end = f_list[-1]
         else:
             a_event.setAccepted(True)
-            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
+            QGraphicsRectItem.mousePressEvent(self, a_event)
             self.setBrush(SELECTED_NOTE_GRADIENT)
             self.o_pos = self.pos()
             if self.mouse_is_at_end(a_event.pos()):
                 self.is_resizing = True
-                self.mouse_y_pos = QtGui.QCursor.pos().y()
+                self.mouse_y_pos = QCursor.pos().y()
                 self.resize_last_mouse_pos = a_event.pos().x()
                 for f_item in PIANO_ROLL_EDITOR.get_selected_items():
                     f_item.resize_start_pos = f_item.note_item.start + (
@@ -5539,9 +5544,9 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
         if self.is_velocity_curving or self.is_velocity_dragging:
             a_event.setAccepted(True)
             self.setSelected(True)
-            QtGui.QGraphicsRectItem.mousePressEvent(self, a_event)
+            QGraphicsRectItem.mousePressEvent(self, a_event)
             self.orig_y = a_event.pos().y()
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.BlankCursor)
+            QApplication.setOverrideCursor(QtCore.Qt.BlankCursor)
             for f_item in PIANO_ROLL_EDITOR.get_selected_items():
                 f_item.orig_value = f_item.note_item.velocity
                 f_item.set_brush()
@@ -5556,7 +5561,7 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
             f_diff_y = self.orig_y - f_y
             f_val = (f_diff_y * 0.5)
         else:
-            QtGui.QGraphicsRectItem.mouseMoveEvent(self, a_event)
+            QGraphicsRectItem.mouseMoveEvent(self, a_event)
 
         if self.is_resizing:
             f_pos_x = a_event.pos().x()
@@ -5575,7 +5580,7 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
                 f_item.resize_rect.setWidth(f_adjusted_width)
                 f_item.setRect(f_item.resize_rect)
                 f_item.setPos(f_item.resize_pos.x(), f_item.resize_pos.y())
-                QtGui.QCursor.setPos(QtGui.QCursor.pos().x(), self.mouse_y_pos)
+                QCursor.setPos(QCursor.pos().x(), self.mouse_y_pos)
             elif self.is_velocity_dragging:
                 f_new_vel = pydaw_util.pydaw_clip_value(
                     f_val + f_item.orig_value, 1, 127)
@@ -5640,7 +5645,7 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
             return
         a_event.setAccepted(True)
         f_recip = 1.0 / PIANO_ROLL_GRID_WIDTH
-        QtGui.QGraphicsRectItem.mouseReleaseEvent(self, a_event)
+        QGraphicsRectItem.mouseReleaseEvent(self, a_event)
         global SELECTED_PIANO_NOTE
         if self.is_copying:
             f_new_selection = []
@@ -5710,27 +5715,27 @@ class piano_roll_note_item(QtGui.QGraphicsRectItem):
             f_item.is_velocity_curving = False
         global_save_and_reload_items()
         self.showing_resize_cursor = False
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
         PIANO_ROLL_EDITOR.click_enabled = True
 
-class piano_key_item(QtGui.QGraphicsRectItem):
+class piano_key_item(QGraphicsRectItem):
     def __init__(self, a_piano_width, a_note_height, a_parent):
-        QtGui.QGraphicsRectItem.__init__(
+        QGraphicsRectItem.__init__(
             self, 0, 0, a_piano_width, a_note_height, a_parent)
         self.setAcceptHoverEvents(True)
-        self.hover_brush = QtGui.QColor(200, 200, 200)
+        self.hover_brush = QColor(200, 200, 200)
 
     def hoverEnterEvent(self, a_event):
-        QtGui.QGraphicsRectItem.hoverEnterEvent(self, a_event)
+        QGraphicsRectItem.hoverEnterEvent(self, a_event)
         self.o_brush = self.brush()
         self.setBrush(self.hover_brush)
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
     def hoverLeaveEvent(self, a_event):
-        QtGui.QGraphicsRectItem.hoverLeaveEvent(self, a_event)
+        QGraphicsRectItem.hoverLeaveEvent(self, a_event)
         self.setBrush(self.o_brush)
 
-class piano_roll_editor(QtGui.QGraphicsView):
+class piano_roll_editor(QGraphicsView):
     def __init__(self):
         self.item_length = 4.0
         self.viewer_width = 1000
@@ -5744,10 +5749,10 @@ class piano_roll_editor(QtGui.QGraphicsView):
 
         self.update_note_height()
 
-        QtGui.QGraphicsView.__init__(self)
-        self.scene = QtGui.QGraphicsScene(self)
-        self.scene.setItemIndexMethod(QtGui.QGraphicsScene.NoIndex)
-        self.scene.setBackgroundBrush(QtGui.QColor(100, 100, 100))
+        QGraphicsView.__init__(self)
+        self.scene = QGraphicsScene(self)
+        self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
+        self.scene.setBackgroundBrush(QColor(100, 100, 100))
         self.scene.mousePressEvent = self.sceneMousePressEvent
         self.scene.mouseReleaseEvent = self.sceneMouseReleaseEvent
         self.setAlignment(QtCore.Qt.AlignLeft)
@@ -5759,7 +5764,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
 
         self.has_selected = False
 
-        self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
         self.note_items = []
 
         self.right_click = False
@@ -5803,12 +5808,12 @@ class piano_roll_editor(QtGui.QGraphicsView):
         if self.piano_keys is not None and f_note in self.piano_keys:
             if f_state == 0:
                 if self.piano_keys[f_note].is_black:
-                    self.piano_keys[f_note].setBrush(QtGui.QColor(0, 0, 0))
+                    self.piano_keys[f_note].setBrush(QColor(0, 0, 0))
                 else:
                     self.piano_keys[f_note].setBrush(
-                        QtGui.QColor(255, 255, 255))
+                        QColor(255, 255, 255))
             elif f_state == 1:
-                self.piano_keys[f_note].setBrush(QtGui.QColor(237, 150, 150))
+                self.piano_keys[f_note].setBrush(QColor(237, 150, 150))
             else:
                 assert(False)
 
@@ -5816,7 +5821,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
         self.grid_div = int(a_div)
 
     def scrollContentsBy(self, x, y):
-        QtGui.QGraphicsView.scrollContentsBy(self, x, y)
+        QGraphicsView.scrollContentsBy(self, x, y)
         self.set_header_and_keys()
 
     def set_header_and_keys(self):
@@ -5844,8 +5849,8 @@ class piano_roll_editor(QtGui.QGraphicsView):
             for x in self.note_items if x.isSelected()]
 
     def keyPressEvent(self, a_event):
-        QtGui.QGraphicsView.keyPressEvent(self, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+        QGraphicsView.keyPressEvent(self, a_event)
+        QApplication.restoreOverrideCursor()
 
     def half_selected(self):
         if not ITEM_EDITOR.enabled:
@@ -5858,7 +5863,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
 
         f_selected = [x for x in self.note_items if x.isSelected()]
         if not f_selected:
-            QtGui.QMessageBox.warning(self, _("Error"), _("Nothing selected"))
+            QMessageBox.warning(self, _("Error"), _("Nothing selected"))
             return
 
         for f_note in f_selected:
@@ -5893,7 +5898,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
 
         f_selected = [x for x in self.note_items if x.isSelected()]
         if not f_selected:
-            QtGui.QMessageBox.warning(self, _("Error"), _("Nothing selected"))
+            QMessageBox.warning(self, _("Error"), _("Nothing selected"))
             return
 
         f_dict = {}
@@ -5955,7 +5960,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
             ITEM_EDITOR.show_not_enabled_warning()
             return
         if not self.clipboard:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self, _("Error"), _("Nothing copied to the clipboard"))
             return
         f_item_count = len(ITEM_EDITOR.items)
@@ -5996,14 +6001,14 @@ class piano_roll_editor(QtGui.QGraphicsView):
         global_save_and_reload_items()
 
     def focusOutEvent(self, a_event):
-        QtGui.QGraphicsView.focusOutEvent(self, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+        QGraphicsView.focusOutEvent(self, a_event)
+        QApplication.restoreOverrideCursor()
 
     def sceneMouseReleaseEvent(self, a_event):
         if PIANO_ROLL_DELETE_MODE:
             piano_roll_set_delete_mode(False)
         else:
-            QtGui.QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
+            QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         self.click_enabled = True
 
     def sceneMousePressEvent(self, a_event):
@@ -6054,27 +6059,27 @@ class piano_roll_editor(QtGui.QGraphicsView):
                 f_drawn_note.resize_pos = f_drawn_note.pos()
                 f_drawn_note.resize_rect = f_drawn_note.rect()
                 f_drawn_note.is_resizing = True
-                f_cursor_pos = QtGui.QCursor.pos()
+                f_cursor_pos = QCursor.pos()
                 f_drawn_note.mouse_y_pos = f_cursor_pos.y()
                 f_drawn_note.resize_last_mouse_pos = \
                     f_pos_x - f_drawn_note.pos().x()
 
         a_event.setAccepted(True)
-        QtGui.QGraphicsScene.mousePressEvent(self.scene, a_event)
-        QtGui.QApplication.restoreOverrideCursor()
+        QGraphicsScene.mousePressEvent(self.scene, a_event)
+        QApplication.restoreOverrideCursor()
 
     def mouseMoveEvent(self, a_event):
-        QtGui.QGraphicsView.mouseMoveEvent(self, a_event)
+        QGraphicsView.mouseMoveEvent(self, a_event)
         if PIANO_ROLL_DELETE_MODE:
             for f_item in self.items(a_event.pos()):
                 if isinstance(f_item, piano_roll_note_item):
                     f_item.delete_later()
 
     def hover_restore_cursor_event(self, a_event=None):
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
     def draw_header(self):
-        self.header = QtGui.QGraphicsRectItem(
+        self.header = QGraphicsRectItem(
             0, 0, self.viewer_width, PIANO_ROLL_HEADER_HEIGHT)
         self.header.hoverEnterEvent = self.hover_restore_cursor_event
         self.header.setBrush(PIANO_ROLL_HEADER_GRADIENT)
@@ -6087,19 +6092,19 @@ class piano_roll_editor(QtGui.QGraphicsView):
     def draw_piano(self):
         self.piano_keys = {}
         f_black_notes = [2, 4, 6, 9, 11]
-        f_piano_label = QtGui.QFont()
+        f_piano_label = QFont()
         f_piano_label.setPointSize(8)
-        self.piano = QtGui.QGraphicsRectItem(
+        self.piano = QGraphicsRectItem(
             0, 0, self.piano_width, self.piano_height)
         self.scene.addItem(self.piano)
         self.piano.mapToScene(0.0, PIANO_ROLL_HEADER_HEIGHT)
         f_key = piano_key_item(self.piano_width, self.note_height, self.piano)
-        f_label = QtGui.QGraphicsSimpleTextItem("C8", f_key)
+        f_label = QGraphicsSimpleTextItem("C8", f_key)
         f_label.setPen(QtCore.Qt.black)
-        f_label.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+        f_label.setFlag(QGraphicsItem.ItemIgnoresTransformations)
         f_label.setPos(4, 0)
         f_label.setFont(f_piano_label)
-        f_key.setBrush(QtGui.QColor(255, 255, 255))
+        f_key.setBrush(QColor(255, 255, 255))
         f_note_index = 0
         f_note_num = 0
 
@@ -6118,25 +6123,25 @@ class piano_roll_editor(QtGui.QGraphicsView):
                     round(pydaw_pitch_to_hz(f_note_num)), f_note_num))
                 f_note_num += 1
                 if j == 12:
-                    f_label = QtGui.QGraphicsSimpleTextItem("C{}".format(
+                    f_label = QGraphicsSimpleTextItem("C{}".format(
                         self.end_octave - i), f_key)
                     f_label.setFlag(
-                        QtGui.QGraphicsItem.ItemIgnoresTransformations)
+                        QGraphicsItem.ItemIgnoresTransformations)
                     f_label.setPos(4, 0)
                     f_label.setFont(f_piano_label)
                     f_label.setPen(QtCore.Qt.black)
                 if j in f_black_notes:
-                    f_key.setBrush(QtGui.QColor(0, 0, 0))
+                    f_key.setBrush(QColor(0, 0, 0))
                     f_key.is_black = True
                 else:
-                    f_key.setBrush(QtGui.QColor(255, 255, 255))
+                    f_key.setBrush(QColor(255, 255, 255))
                     f_key.is_black = False
         self.piano.setZValue(1000.0)
 
     def draw_grid(self):
-        f_black_key_brush = QtGui.QBrush(QtGui.QColor(30, 30, 30, 90))
-        f_white_key_brush = QtGui.QBrush(QtGui.QColor(210, 210, 210, 90))
-        f_base_brush = QtGui.QBrush(QtGui.QColor(255, 255, 255, 120))
+        f_black_key_brush = QBrush(QColor(30, 30, 30, 90))
+        f_white_key_brush = QBrush(QColor(210, 210, 210, 90))
+        f_base_brush = QBrush(QColor(255, 255, 255, 120))
         try:
             f_index = PIANO_ROLL_EDITOR_WIDGET.scale_combobox.currentIndex()
         except NameError:
@@ -6227,7 +6232,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
             f_octave_brushes = \
                 f_octave_brushes[f_index:] + f_octave_brushes[:f_index]
         self.first_open = False
-        f_note_bar = QtGui.QGraphicsRectItem(0, 0, self.viewer_width,
+        f_note_bar = QGraphicsRectItem(0, 0, self.viewer_width,
                                              self.note_height)
         f_note_bar.hoverMoveEvent = self.hover_restore_cursor_event
         f_note_bar.setBrush(f_base_brush)
@@ -6237,7 +6242,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
         for i in range(self.end_octave - self.start_octave,
                        self.start_octave - self.start_octave, -1):
             for j in range(self.notes_in_octave, 0, -1):
-                f_note_bar = QtGui.QGraphicsRectItem(
+                f_note_bar = QGraphicsRectItem(
                     0, 0, self.viewer_width, self.note_height)
                 f_note_bar.setZValue(60.0)
                 self.scene.addItem(f_note_bar)
@@ -6249,10 +6254,10 @@ class piano_roll_editor(QtGui.QGraphicsView):
                     (i - 1)) + PIANO_ROLL_HEADER_HEIGHT
                 f_note_bar.setPos(
                     self.piano_width + self.padding, f_note_bar_y)
-        f_beat_pen = QtGui.QPen()
+        f_beat_pen = QPen()
         f_beat_pen.setWidth(2)
-        f_bar_pen = QtGui.QPen(QtGui.QColor(240, 30, 30), 12.0)
-        f_line_pen = QtGui.QPen(QtGui.QColor(0, 0, 0))
+        f_bar_pen = QPen(QColor(240, 30, 30), 12.0)
+        f_line_pen = QPen(QColor(0, 0, 0))
         f_beat_y = \
             self.piano_height + PIANO_ROLL_HEADER_HEIGHT + self.note_height
         for i in range(0, int(self.item_length) + 1):
@@ -6264,10 +6269,10 @@ class piano_roll_editor(QtGui.QGraphicsView):
             else:
                 f_beat.setPen(f_beat_pen)
             if i < self.item_length:
-                f_number = QtGui.QGraphicsSimpleTextItem(
+                f_number = QGraphicsSimpleTextItem(
                     str(f_beat_number + 1), self.header)
                 f_number.setFlag(
-                    QtGui.QGraphicsItem.ItemIgnoresTransformations)
+                    QGraphicsItem.ItemIgnoresTransformations)
                 f_number.setPos((self.beat_width * i), 24)
                 f_number.setBrush(QtCore.Qt.white)
                 for j in range(0, self.grid_div):
@@ -6279,7 +6284,7 @@ class piano_roll_editor(QtGui.QGraphicsView):
                         f_line.setPen(f_line_pen)
 
     def resizeEvent(self, a_event):
-        QtGui.QGraphicsView.resizeEvent(self, a_event)
+        QGraphicsView.resizeEvent(self, a_event)
         ITEM_EDITOR.tab_changed()
 
     def clear_drawn_items(self):
@@ -6323,8 +6328,8 @@ class piano_roll_editor(QtGui.QGraphicsView):
             self.scrollContentsBy(0, 0)
             for f_name, f_i in zip(
             ITEM_EDITOR.item_names, range(len(ITEM_EDITOR.item_names))):
-                f_text = QtGui.QGraphicsSimpleTextItem(f_name, self.header)
-                f_text.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+                f_text = QGraphicsSimpleTextItem(f_name, self.header)
+                f_text.setFlag(QGraphicsItem.ItemIgnoresTransformations)
                 f_text.setBrush(QtCore.Qt.yellow)
                 f_text.setPos((f_i * PIANO_ROLL_GRID_WIDTH), 2.0)
         self.setUpdatesEnabled(True)
@@ -6401,19 +6406,19 @@ class piano_roll_editor_widget:
             f_note.setSelected(True)
 
     def __init__(self):
-        self.widget = QtGui.QWidget()
-        self.vlayout = QtGui.QVBoxLayout()
+        self.widget = QWidget()
+        self.vlayout = QVBoxLayout()
         self.widget.setLayout(self.vlayout)
 
-        self.controls_grid_layout = QtGui.QGridLayout()
-        self.scale_key_combobox = QtGui.QComboBox()
+        self.controls_grid_layout = QGridLayout()
+        self.scale_key_combobox = QComboBox()
         self.scale_key_combobox.setMinimumWidth(60)
         self.scale_key_combobox.addItems(PIANO_ROLL_NOTE_LABELS)
         self.scale_key_combobox.currentIndexChanged.connect(
             self.reload_handler)
-        self.controls_grid_layout.addWidget(QtGui.QLabel("Key:"), 0, 3)
+        self.controls_grid_layout.addWidget(QLabel("Key:"), 0, 3)
         self.controls_grid_layout.addWidget(self.scale_key_combobox, 0, 4)
-        self.scale_combobox = QtGui.QComboBox()
+        self.scale_combobox = QComboBox()
         self.scale_combobox.setMinimumWidth(172)
         self.scale_combobox.addItems(
             ["Major", "Melodic Minor", "Harmonic Minor",
@@ -6421,15 +6426,15 @@ class piano_roll_editor_widget:
              "Dorian", "Phrygian", "Lydian", "Mixolydian", "Locrian",
              "Phrygian Dominant", "Double Harmonic"])
         self.scale_combobox.currentIndexChanged.connect(self.reload_handler)
-        self.controls_grid_layout.addWidget(QtGui.QLabel(_("Scale:")), 0, 5)
+        self.controls_grid_layout.addWidget(QLabel(_("Scale:")), 0, 5)
         self.controls_grid_layout.addWidget(self.scale_combobox, 0, 6)
 
         self.controls_grid_layout.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding), 0, 30)
+            QSpacerItem(10, 10, QSizePolicy.Expanding), 0, 30)
 
-        self.edit_menu_button = QtGui.QPushButton(_("Menu"))
+        self.edit_menu_button = QPushButton(_("Menu"))
         self.edit_menu_button.setFixedWidth(60)
-        self.edit_menu = QtGui.QMenu(self.widget)
+        self.edit_menu = QMenu(self.widget)
         self.edit_menu_button.setMenu(self.edit_menu)
         self.controls_grid_layout.addWidget(self.edit_menu_button, 0, 30)
 
@@ -6438,34 +6443,34 @@ class piano_roll_editor_widget:
         self.copy_action = self.edit_actions_menu.addAction(_("Copy"))
         self.copy_action.triggered.connect(
             PIANO_ROLL_EDITOR.copy_selected)
-        self.copy_action.setShortcut(QtGui.QKeySequence.Copy)
+        self.copy_action.setShortcut(QKeySequence.Copy)
 
         self.cut_action = self.edit_actions_menu.addAction(_("Cut"))
         self.cut_action.triggered.connect(self.on_cut)
-        self.cut_action.setShortcut(QtGui.QKeySequence.Cut)
+        self.cut_action.setShortcut(QKeySequence.Cut)
 
         self.paste_action = self.edit_actions_menu.addAction(_("Paste"))
         self.paste_action.triggered.connect(PIANO_ROLL_EDITOR.paste)
-        self.paste_action.setShortcut(QtGui.QKeySequence.Paste)
+        self.paste_action.setShortcut(QKeySequence.Paste)
 
         self.select_all_action = self.edit_actions_menu.addAction(
             _("Select All"))
         self.select_all_action.triggered.connect(self.select_all)
-        self.select_all_action.setShortcut(QtGui.QKeySequence.SelectAll)
+        self.select_all_action.setShortcut(QKeySequence.SelectAll)
 
         self.clear_selection_action = self.edit_actions_menu.addAction(
             _("Clear Selection"))
         self.clear_selection_action.triggered.connect(
             PIANO_ROLL_EDITOR.scene.clearSelection)
         self.clear_selection_action.setShortcut(
-            QtGui.QKeySequence.fromString("Esc"))
+            QKeySequence.fromString("Esc"))
 
         self.edit_actions_menu.addSeparator()
 
         self.delete_selected_action = self.edit_actions_menu.addAction(
             _("Delete"))
         self.delete_selected_action.triggered.connect(self.on_delete_selected)
-        self.delete_selected_action.setShortcut(QtGui.QKeySequence.Delete)
+        self.delete_selected_action.setShortcut(QKeySequence.Delete)
 
         self.quantize_action = self.edit_menu.addAction(_("Quantize..."))
         self.quantize_action.triggered.connect(self.quantize_dialog)
@@ -6481,25 +6486,25 @@ class piano_roll_editor_widget:
             _("Up Semitone"))
         self.up_semitone_action.triggered.connect(self.transpose_up_semitone)
         self.up_semitone_action.setShortcut(
-            QtGui.QKeySequence.fromString("SHIFT+UP"))
+            QKeySequence.fromString("SHIFT+UP"))
 
         self.down_semitone_action = self.transpose_menu.addAction(
             _("Down Semitone"))
         self.down_semitone_action.triggered.connect(
             self.transpose_down_semitone)
         self.down_semitone_action.setShortcut(
-            QtGui.QKeySequence.fromString("SHIFT+DOWN"))
+            QKeySequence.fromString("SHIFT+DOWN"))
 
         self.up_octave_action = self.transpose_menu.addAction(_("Up Octave"))
         self.up_octave_action.triggered.connect(self.transpose_up_octave)
         self.up_octave_action.setShortcut(
-            QtGui.QKeySequence.fromString("ALT+UP"))
+            QKeySequence.fromString("ALT+UP"))
 
         self.down_octave_action = self.transpose_menu.addAction(
             _("Down Octave"))
         self.down_octave_action.triggered.connect(self.transpose_down_octave)
         self.down_octave_action.setShortcut(
-            QtGui.QKeySequence.fromString("ALT+DOWN"))
+            QKeySequence.fromString("ALT+DOWN"))
 
         self.velocity_menu = self.edit_menu.addMenu(_("Velocity"))
 
@@ -6511,7 +6516,7 @@ class piano_roll_editor_widget:
         self.vel_random_index = 0
         self.velocity_random_menu = self.velocity_menu.addMenu(_("Randomness"))
         self.random_types = [_("None"), _("Tight"), _("Loose")]
-        self.vel_rand_action_group = QtGui.QActionGroup(
+        self.vel_rand_action_group = QActionGroup(
             self.velocity_random_menu)
         self.velocity_random_menu.triggered.connect(self.vel_rand_triggered)
 
@@ -6527,7 +6532,7 @@ class piano_roll_editor_widget:
         self.vel_emphasis_index = 0
         self.velocity_emphasis_menu = self.velocity_menu.addMenu(_("Emphasis"))
         self.emphasis_types = [_("None"), _("On-beat"), _("Off-beat")]
-        self.vel_emphasis_action_group = QtGui.QActionGroup(
+        self.vel_emphasis_action_group = QActionGroup(
             self.velocity_random_menu)
         self.velocity_emphasis_menu.triggered.connect(
             self.vel_emphasis_triggered)
@@ -6548,14 +6553,14 @@ class piano_roll_editor_widget:
         self.glue_selected_action.triggered.connect(
             PIANO_ROLL_EDITOR.glue_selected)
         self.glue_selected_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+G"))
+            QKeySequence.fromString("CTRL+G"))
 
         self.half_selected_action = self.edit_menu.addAction(
             _("Split Selected in Half"))
         self.half_selected_action.triggered.connect(
             PIANO_ROLL_EDITOR.half_selected)
         self.half_selected_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+H"))
+            QKeySequence.fromString("CTRL+H"))
 
 
         self.edit_menu.addSeparator()
@@ -6565,24 +6570,24 @@ class piano_roll_editor_widget:
         self.draw_last_action.triggered.connect(self.draw_last)
         self.draw_last_action.setCheckable(True)
         self.draw_last_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+F"))
+            QKeySequence.fromString("CTRL+F"))
 
         self.open_last_action = self.edit_menu.addAction(
             _("Open Last Item(s)"))
         self.open_last_action.triggered.connect(self.open_last)
         self.open_last_action.setShortcut(
-            QtGui.QKeySequence.fromString("ALT+F"))
+            QKeySequence.fromString("ALT+F"))
 
         self.controls_grid_layout.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding), 0, 31)
+            QSpacerItem(10, 10, QSizePolicy.Expanding), 0, 31)
 
         self.vlayout.addLayout(self.controls_grid_layout)
         self.vlayout.addWidget(PIANO_ROLL_EDITOR)
-        self.snap_combobox = QtGui.QComboBox()
+        self.snap_combobox = QComboBox()
         self.snap_combobox.setMinimumWidth(90)
         self.snap_combobox.addItems(
             [_("None"), "1/4", "1/8", "1/12", "1/16", "1/32", "1/64", "1/128"])
-        self.controls_grid_layout.addWidget(QtGui.QLabel(_("Snap:")), 0, 0)
+        self.controls_grid_layout.addWidget(QLabel(_("Snap:")), 0, 0)
         self.controls_grid_layout.addWidget(self.snap_combobox, 0, 1)
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
 
@@ -6657,32 +6662,32 @@ AUTOMATION_WIDTH = 690.0
 
 AUTOMATION_MIN_HEIGHT = AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS
 
-global_automation_gradient = QtGui.QLinearGradient(
+global_automation_gradient = QLinearGradient(
     0, 0, AUTOMATION_POINT_DIAMETER, AUTOMATION_POINT_DIAMETER)
-global_automation_gradient.setColorAt(0, QtGui.QColor(240, 10, 10))
-global_automation_gradient.setColorAt(1, QtGui.QColor(250, 90, 90))
+global_automation_gradient.setColorAt(0, QColor(240, 10, 10))
+global_automation_gradient.setColorAt(1, QColor(250, 90, 90))
 
-global_automation_selected_gradient = QtGui.QLinearGradient(
+global_automation_selected_gradient = QLinearGradient(
     0, 0, AUTOMATION_POINT_DIAMETER, AUTOMATION_POINT_DIAMETER)
-global_automation_selected_gradient.setColorAt(0, QtGui.QColor(255, 255, 255))
-global_automation_selected_gradient.setColorAt(1, QtGui.QColor(240, 240, 240))
+global_automation_selected_gradient.setColorAt(0, QColor(255, 255, 255))
+global_automation_selected_gradient.setColorAt(1, QColor(240, 240, 240))
 
-class automation_item(QtGui.QGraphicsEllipseItem):
+class automation_item(QGraphicsEllipseItem):
     def __init__(self, a_time, a_value, a_cc, a_view, a_is_cc, a_item_index):
-        QtGui.QGraphicsEllipseItem.__init__(
+        QGraphicsEllipseItem.__init__(
             self, 0, 0, AUTOMATION_POINT_DIAMETER,
             AUTOMATION_POINT_DIAMETER)
         self.item_index = a_item_index
-        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable)
-        self.setFlag(QtGui.QGraphicsItem.ItemSendsGeometryChanges)
-        self.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
-        self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable)
+        self.setFlag(QGraphicsItem.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
+        self.setFlag(QGraphicsItem.ItemIgnoresTransformations)
+        self.setFlag(QGraphicsItem.ItemIsSelectable)
         self.setPos(a_time - AUTOMATION_POINT_RADIUS,
                     a_value - AUTOMATION_POINT_RADIUS)
         self.setBrush(global_automation_gradient)
-        f_pen = QtGui.QPen()
+        f_pen = QPen()
         f_pen.setWidth(2)
-        f_pen.setColor(QtGui.QColor(170, 0, 0))
+        f_pen.setColor(QColor(170, 0, 0))
         self.setPen(f_pen)
         self.cc_item = a_cc
         self.parent_view = a_view
@@ -6695,7 +6700,7 @@ class automation_item(QtGui.QGraphicsEllipseItem):
             self.setBrush(global_automation_gradient)
 
     def mouseMoveEvent(self, a_event):
-        QtGui.QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
+        QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
         for f_point in self.parent_view.automation_points:
             if f_point.isSelected():
                 if f_point.pos().x() < AUTOMATION_MIN_HEIGHT:
@@ -6712,7 +6717,7 @@ class automation_item(QtGui.QGraphicsEllipseItem):
                         f_point.pos().x(), self.parent_view.total_height)
 
     def mouseReleaseEvent(self, a_event):
-        QtGui.QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
+        QGraphicsEllipseItem.mouseReleaseEvent(self, a_event)
         self.parent_view.selected_str = []
         for f_point in self.parent_view.automation_points:
             if f_point.isSelected():
@@ -6760,9 +6765,9 @@ class automation_item(QtGui.QGraphicsEllipseItem):
 
 AUTOMATION_EDITORS = []
 
-class automation_viewer(QtGui.QGraphicsView):
+class automation_viewer(QGraphicsView):
     def __init__(self, a_is_cc=True):
-        QtGui.QGraphicsView.__init__(self)
+        QGraphicsView.__init__(self)
         self.is_cc = a_is_cc
         self.set_scale()
         self.item_length = 4.0
@@ -6780,18 +6785,18 @@ class automation_viewer(QtGui.QGraphicsView):
         self.lines = []
 
         self.setMinimumHeight(370)
-        self.scene = QtGui.QGraphicsScene(self)
-        self.scene.setItemIndexMethod(QtGui.QGraphicsScene.NoIndex)
-        self.scene.setBackgroundBrush(QtGui.QColor(100, 100, 100))
+        self.scene = QGraphicsScene(self)
+        self.scene.setItemIndexMethod(QGraphicsScene.NoIndex)
+        self.scene.setBackgroundBrush(QColor(100, 100, 100))
         self.scene.mouseDoubleClickEvent = self.sceneMouseDoubleClickEvent
         self.setAlignment(QtCore.Qt.AlignLeft)
         self.setScene(self.scene)
         self.draw_axis()
         self.draw_grid()
-        self.setDragMode(QtGui.QGraphicsView.RubberBandDrag)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setResizeAnchor(QtGui.QGraphicsView.AnchorViewCenter)
+        self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
         self.cc_num = 1
         self.last_scale = 1.0
         self.last_x_scale = 1.0
@@ -6926,38 +6931,38 @@ class automation_viewer(QtGui.QGraphicsView):
                 self.viewer_height) * 2.0)
             f_cc_val = pydaw_clip_value(f_cc_val, -1.0, 1.0)
             ITEM_EDITOR.add_pb(pydaw_pitchbend(f_cc_start, f_cc_val))
-        QtGui.QGraphicsScene.mouseDoubleClickEvent(self.scene, a_event)
+        QGraphicsScene.mouseDoubleClickEvent(self.scene, a_event)
         self.selected_str = []
         global_save_and_reload_items()
 
     def draw_axis(self):
-        self.x_axis = QtGui.QGraphicsRectItem(
+        self.x_axis = QGraphicsRectItem(
             0, 0, self.viewer_width, self.axis_size)
         self.x_axis.setPos(self.axis_size, 0)
         self.scene.addItem(self.x_axis)
-        self.y_axis = QtGui.QGraphicsRectItem(
+        self.y_axis = QGraphicsRectItem(
             0, 0, self.axis_size, self.viewer_height)
         self.y_axis.setPos(0, self.axis_size)
         self.scene.addItem(self.y_axis)
 
     def draw_grid(self):
-        f_beat_pen = QtGui.QPen()
+        f_beat_pen = QPen()
         f_beat_pen.setWidth(2)
-        f_bar_pen = QtGui.QPen()
+        f_bar_pen = QPen()
         f_bar_pen.setWidth(2)
-        f_bar_pen.setColor(QtGui.QColor(224, 60, 60))
-        f_line_pen = QtGui.QPen()
-        f_line_pen.setColor(QtGui.QColor(0, 0, 0, 40))
+        f_bar_pen.setColor(QColor(224, 60, 60))
+        f_line_pen = QPen()
+        f_line_pen.setColor(QColor(0, 0, 0, 40))
         if self.is_cc:
             f_labels = [0, '127', 0, '64', 0, '0']
         else:
             f_labels = [0, '1.0', 0, '0', 0, '-1.0']
         for i in range(1, 6):
-            f_line = QtGui.QGraphicsLineItem(
+            f_line = QGraphicsLineItem(
                 0, 0, self.viewer_width, 0, self.y_axis)
             f_line.setPos(self.axis_size, self.viewer_height * (i - 1) / 4)
             if i % 2:
-                f_label = QtGui.QGraphicsSimpleTextItem(
+                f_label = QGraphicsSimpleTextItem(
                     f_labels[i], self.y_axis)
                 f_label.setPos(1, self.viewer_height * (i - 1) / 4)
                 f_label.setBrush(QtCore.Qt.white)
@@ -6965,27 +6970,27 @@ class automation_viewer(QtGui.QGraphicsView):
                 f_line.setPen(f_beat_pen)
 
         for i in range(0, int(self.item_length) + 1):
-            f_beat = QtGui.QGraphicsLineItem(
+            f_beat = QGraphicsLineItem(
                 0, 0, 0,
                 self.viewer_height + self.axis_size-f_beat_pen.width(),
                 self.x_axis)
             f_beat.setPos(self.beat_width * i, 0.5 * f_beat_pen.width())
-            f_beat.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+            f_beat.setFlag(QGraphicsItem.ItemIgnoresTransformations)
             f_beat_number = i % 4
             if f_beat_number == 0 and not i == 0:
                 f_beat.setPen(f_bar_pen)
-                f_beat.setFlag(QtGui.QGraphicsItem.ItemIgnoresTransformations)
+                f_beat.setFlag(QGraphicsItem.ItemIgnoresTransformations)
             else:
                 f_beat.setPen(f_beat_pen)
             if i < self.item_length:
-                f_number = QtGui.QGraphicsSimpleTextItem(
+                f_number = QGraphicsSimpleTextItem(
                     str(f_beat_number + 1), self.x_axis)
                 f_number.setFlag(
-                    QtGui.QGraphicsItem.ItemIgnoresTransformations)
+                    QGraphicsItem.ItemIgnoresTransformations)
                 f_number.setPos(self.beat_width * i + 5, 2)
                 f_number.setBrush(QtCore.Qt.white)
                 for j in range(0, 16):
-                    f_line = QtGui.QGraphicsLineItem(
+                    f_line = QGraphicsLineItem(
                         0, 0, 0, self.viewer_height, self.x_axis)
                     if float(j) == 8:
                         f_line.setLine(0, 0, 0, self.viewer_height)
@@ -7007,7 +7012,7 @@ class automation_viewer(QtGui.QGraphicsView):
         self.selection_enabled = True
 
     def resizeEvent(self, a_event):
-        QtGui.QGraphicsView.resizeEvent(self, a_event)
+        QGraphicsView.resizeEvent(self, a_event)
         ITEM_EDITOR.tab_changed()
 
     def set_scale(self):
@@ -7041,7 +7046,7 @@ class automation_viewer(QtGui.QGraphicsView):
             self.setUpdatesEnabled(True)
             return
         f_item_index = 0
-        f_pen = QtGui.QPen(pydaw_note_gradient, 2.0)
+        f_pen = QPen(pydaw_note_gradient, 2.0)
         f_note_height = (self.viewer_height / 127.0)
         for f_item in ITEM_EDITOR.items:
             if self.is_cc:
@@ -7059,7 +7064,7 @@ class automation_viewer(QtGui.QGraphicsView):
                     self.item_width * 0.25)
                 f_note_y = AUTOMATION_RULER_WIDTH + ((127.0 -
                     (f_note.note_num)) * f_note_height)
-                f_note_item = QtGui.QGraphicsLineItem(
+                f_note_item = QGraphicsLineItem(
                     f_note_start, f_note_y, f_note_end, f_note_y)
                 f_note_item.setPen(f_pen)
                 self.scene.addItem(f_note_item)
@@ -7098,57 +7103,57 @@ LAST_IPB_VALUE = 18  #For the 'add point' dialog to remember settings
 class automation_viewer_widget:
     def __init__(self, a_viewer, a_is_cc=True):
         self.is_cc = a_is_cc
-        self.widget = QtGui.QGroupBox()
-        self.vlayout = QtGui.QVBoxLayout()
+        self.widget = QGroupBox()
+        self.vlayout = QVBoxLayout()
         self.widget.setLayout(self.vlayout)
         self.automation_viewer = a_viewer
         self.vlayout.addWidget(self.automation_viewer)
-        self.hlayout = QtGui.QHBoxLayout()
+        self.hlayout = QHBoxLayout()
 
         if a_is_cc:
-            self.control_combobox = QtGui.QComboBox()
+            self.control_combobox = QComboBox()
             self.control_combobox.addItems([str(x) for x in range(1, 128)])
             self.control_combobox.setMinimumWidth(90)
-            self.hlayout.addWidget(QtGui.QLabel(_("CC")))
+            self.hlayout.addWidget(QLabel(_("CC")))
             self.hlayout.addWidget(self.control_combobox)
             self.control_combobox.currentIndexChanged.connect(
                 self.control_changed)
-            self.ccs_in_use_combobox = QtGui.QComboBox()
+            self.ccs_in_use_combobox = QComboBox()
             self.ccs_in_use_combobox.setMinimumWidth(90)
             self.suppress_ccs_in_use = False
             self.ccs_in_use_combobox.currentIndexChanged.connect(
                 self.ccs_in_use_combobox_changed)
-            self.hlayout.addWidget(QtGui.QLabel(_("In Use:")))
+            self.hlayout.addWidget(QLabel(_("In Use:")))
             self.hlayout.addWidget(self.ccs_in_use_combobox)
 
         self.vlayout.addLayout(self.hlayout)
-        self.smooth_button = QtGui.QPushButton(_("Smooth"))
+        self.smooth_button = QPushButton(_("Smooth"))
         self.smooth_button.setToolTip(
             _("By default, the control points are steppy, "
             "this button draws extra points between the exisiting points."))
         self.smooth_button.pressed.connect(self.smooth_pressed)
         self.hlayout.addWidget(self.smooth_button)
-        self.hlayout.addItem(QtGui.QSpacerItem(10, 10))
-        self.edit_button = QtGui.QPushButton(_("Menu"))
+        self.hlayout.addItem(QSpacerItem(10, 10))
+        self.edit_button = QPushButton(_("Menu"))
         self.hlayout.addWidget(self.edit_button)
-        self.edit_menu = QtGui.QMenu(self.widget)
+        self.edit_menu = QMenu(self.widget)
         self.copy_action = self.edit_menu.addAction(_("Copy"))
         self.copy_action.triggered.connect(
             self.automation_viewer.copy_selected)
-        self.copy_action.setShortcut(QtGui.QKeySequence.Copy)
+        self.copy_action.setShortcut(QKeySequence.Copy)
         self.cut_action = self.edit_menu.addAction(_("Cut"))
         self.cut_action.triggered.connect(self.automation_viewer.cut)
-        self.cut_action.setShortcut(QtGui.QKeySequence.Cut)
+        self.cut_action.setShortcut(QKeySequence.Cut)
         self.paste_action = self.edit_menu.addAction(_("Paste"))
         self.paste_action.triggered.connect(self.automation_viewer.paste)
-        self.paste_action.setShortcut(QtGui.QKeySequence.Paste)
+        self.paste_action.setShortcut(QKeySequence.Paste)
         self.select_all_action = self.edit_menu.addAction(_("Select All"))
         self.select_all_action.triggered.connect(self.select_all)
-        self.select_all_action.setShortcut(QtGui.QKeySequence.SelectAll)
+        self.select_all_action.setShortcut(QKeySequence.SelectAll)
         self.delete_action = self.edit_menu.addAction(_("Delete"))
         self.delete_action.triggered.connect(
             self.automation_viewer.delete_selected)
-        self.delete_action.setShortcut(QtGui.QKeySequence.Delete)
+        self.delete_action.setShortcut(QKeySequence.Delete)
 
         self.edit_menu.addSeparator()
         self.add_point_action = self.edit_menu.addAction(_("Add Point..."))
@@ -7164,7 +7169,7 @@ class automation_viewer_widget:
         self.clear_action.triggered.connect(self.clear)
         self.edit_button.setMenu(self.edit_menu)
         self.hlayout.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(10, 10, QSizePolicy.Expanding))
 
     def control_changed(self, a_val=None):
         self.set_cc_num()
@@ -7207,7 +7212,7 @@ class automation_viewer_widget:
 
     def paste_cc_point(self):
         if pydaw_widgets.CC_CLIPBOARD is None:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.widget, _("Error"),
                 _("Nothing copied to the clipboard.\n"
                 "Right-click->'Copy' on any knob on any plugin."))
@@ -7244,49 +7249,49 @@ class automation_viewer_widget:
         def cancel_handler():
             f_window.close()
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Add automation point"))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_layout.addWidget(QtGui.QLabel(_("Position (bars)")), 2, 0)
-        f_bar_spinbox = QtGui.QSpinBox()
+        f_layout.addWidget(QLabel(_("Position (bars)")), 2, 0)
+        f_bar_spinbox = QSpinBox()
         f_bar_spinbox.setRange(1, len(OPEN_ITEM_UIDS))
         f_layout.addWidget(f_bar_spinbox, 2, 1)
 
-        f_layout.addWidget(QtGui.QLabel(_("Position (beats)")), 5, 0)
-        f_pos_spinbox = QtGui.QDoubleSpinBox()
+        f_layout.addWidget(QLabel(_("Position (beats)")), 5, 0)
+        f_pos_spinbox = QDoubleSpinBox()
         f_pos_spinbox.setRange(1.0, 4.99)
         f_pos_spinbox.setDecimals(2)
         f_pos_spinbox.setSingleStep(0.25)
         f_layout.addWidget(f_pos_spinbox, 5, 1)
 
-        f_begin_end_layout = QtGui.QHBoxLayout()
+        f_begin_end_layout = QHBoxLayout()
         f_layout.addLayout(f_begin_end_layout, 6, 1)
-        f_start_button = QtGui.QPushButton("<<")
+        f_start_button = QPushButton("<<")
         f_start_button.pressed.connect(goto_start)
         f_begin_end_layout.addWidget(f_start_button)
         f_begin_end_layout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        f_end_button = QtGui.QPushButton(">>")
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
+        f_end_button = QPushButton(">>")
         f_end_button.pressed.connect(goto_end)
         f_begin_end_layout.addWidget(f_end_button)
 
-        f_layout.addWidget(QtGui.QLabel(_("Value")), 10, 0)
-        f_value_spinbox = QtGui.QDoubleSpinBox()
+        f_layout.addWidget(QLabel(_("Value")), 10, 0)
+        f_value_spinbox = QDoubleSpinBox()
         f_value_spinbox.setRange(0.0, 127.0)
         f_value_spinbox.setDecimals(4)
         if a_value is not None:
             f_value_spinbox.setValue(a_value)
         f_layout.addWidget(f_value_spinbox, 10, 1)
 
-        f_ok = QtGui.QPushButton(_("Add"))
+        f_ok = QPushButton(_("Add"))
         f_ok.pressed.connect(ok_handler)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_ok_cancel_layout.addWidget(f_ok)
 
         f_layout.addLayout(f_ok_cancel_layout, 40, 1)
-        f_cancel = QtGui.QPushButton(_("Close"))
+        f_cancel = QPushButton(_("Close"))
         f_cancel.pressed.connect(cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel)
         f_window.exec_()
@@ -7329,36 +7334,36 @@ class automation_viewer_widget:
             f_bar_spinbox.setValue(f_bar_spinbox.maximum())
             f_pos_spinbox.setValue(f_pos_spinbox.maximum())
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Add automation point"))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_layout.addWidget(QtGui.QLabel(_("Position (bars)")), 2, 0)
-        f_bar_spinbox = QtGui.QSpinBox()
+        f_layout.addWidget(QLabel(_("Position (bars)")), 2, 0)
+        f_bar_spinbox = QSpinBox()
         f_bar_spinbox.setRange(1, len(OPEN_ITEM_UIDS))
         f_layout.addWidget(f_bar_spinbox, 2, 1)
 
-        f_layout.addWidget(QtGui.QLabel(_("Position (beats)")), 5, 0)
-        f_pos_spinbox = QtGui.QDoubleSpinBox()
+        f_layout.addWidget(QLabel(_("Position (beats)")), 5, 0)
+        f_pos_spinbox = QDoubleSpinBox()
         f_pos_spinbox.setRange(1.0, 4.99)
         f_pos_spinbox.setDecimals(2)
         f_pos_spinbox.setSingleStep(0.25)
         f_layout.addWidget(f_pos_spinbox, 5, 1)
 
-        f_begin_end_layout = QtGui.QHBoxLayout()
+        f_begin_end_layout = QHBoxLayout()
         f_layout.addLayout(f_begin_end_layout, 6, 1)
-        f_start_button = QtGui.QPushButton("<<")
+        f_start_button = QPushButton("<<")
         f_start_button.pressed.connect(goto_start)
         f_begin_end_layout.addWidget(f_start_button)
         f_begin_end_layout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
-        f_end_button = QtGui.QPushButton(">>")
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
+        f_end_button = QPushButton(">>")
         f_end_button.pressed.connect(goto_end)
         f_begin_end_layout.addWidget(f_end_button)
 
-        f_layout.addWidget(QtGui.QLabel(_("Instrument Pitchbend")), 10, 0)
-        f_ipb_spinbox = QtGui.QSpinBox()
+        f_layout.addWidget(QLabel(_("Instrument Pitchbend")), 10, 0)
+        f_ipb_spinbox = QSpinBox()
         f_ipb_spinbox.setToolTip(
             _("Set this to the same setting that your instrument plugin uses"))
         f_ipb_spinbox.setRange(2, 36)
@@ -7366,22 +7371,22 @@ class automation_viewer_widget:
         f_layout.addWidget(f_ipb_spinbox, 10, 1)
         f_ipb_spinbox.valueChanged.connect(ipb_changed)
 
-        f_layout.addWidget(QtGui.QLabel(_("Effective Pitchbend")), 20, 0)
-        f_epb_spinbox = QtGui.QSpinBox()
+        f_layout.addWidget(QLabel(_("Effective Pitchbend")), 20, 0)
+        f_epb_spinbox = QSpinBox()
         f_epb_spinbox.setToolTip("")
         f_epb_spinbox.setRange(-18, 18)
         f_layout.addWidget(f_epb_spinbox, 20, 1)
 
-        f_layout.addWidget(QtGui.QLabel(
+        f_layout.addWidget(QLabel(
             libpydaw.strings.pitchbend_dialog), 30, 1)
 
-        f_ok = QtGui.QPushButton(_("Add"))
+        f_ok = QPushButton(_("Add"))
         f_ok.pressed.connect(ok_handler)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_ok_cancel_layout.addWidget(f_ok)
 
         f_layout.addLayout(f_ok_cancel_layout, 40, 1)
-        f_cancel = QtGui.QPushButton(_("Close"))
+        f_cancel = QPushButton(_("Close"))
         f_cancel.pressed.connect(cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel)
         f_window.exec_()
@@ -7498,31 +7503,31 @@ class item_list_editor:
         self.item_names = []
         self.events_follow_default = True
 
-        self.widget = QtGui.QWidget()
-        self.master_vlayout = QtGui.QVBoxLayout()
+        self.widget = QWidget()
+        self.master_vlayout = QVBoxLayout()
         self.widget.setLayout(self.master_vlayout)
 
-        self.tab_widget = QtGui.QTabWidget()
-        self.piano_roll_tab = QtGui.QGroupBox()
+        self.tab_widget = QTabWidget()
+        self.piano_roll_tab = QGroupBox()
         self.tab_widget.addTab(self.piano_roll_tab, _("Piano Roll"))
-        self.notes_tab = QtGui.QGroupBox()
-        self.cc_tab = QtGui.QGroupBox()
+        self.notes_tab = QGroupBox()
+        self.cc_tab = QGroupBox()
         self.tab_widget.addTab(self.cc_tab, _("CC"))
 
-        self.pitchbend_tab = QtGui.QGroupBox()
+        self.pitchbend_tab = QGroupBox()
         self.tab_widget.addTab(self.pitchbend_tab, _("Pitchbend"))
 
-        self.editing_hboxlayout = QtGui.QHBoxLayout()
+        self.editing_hboxlayout = QHBoxLayout()
         self.master_vlayout.addWidget(self.tab_widget)
 
-        self.notes_groupbox = QtGui.QGroupBox(_("Notes"))
-        self.notes_vlayout = QtGui.QVBoxLayout(self.notes_groupbox)
+        self.notes_groupbox = QGroupBox(_("Notes"))
+        self.notes_vlayout = QVBoxLayout(self.notes_groupbox)
 
-        self.cc_vlayout = QtGui.QVBoxLayout()
+        self.cc_vlayout = QVBoxLayout()
         self.cc_tab.setLayout(self.cc_vlayout)
 
-        self.editing_hboxlayout.addWidget(QtGui.QLabel(_("Viewing Item:")))
-        self.item_name_combobox = QtGui.QComboBox()
+        self.editing_hboxlayout.addWidget(QLabel(_("Viewing Item:")))
+        self.item_name_combobox = QComboBox()
         self.item_name_combobox.setMinimumWidth(150)
         self.item_name_combobox.setEditable(False)
         self.item_name_combobox.currentIndexChanged.connect(
@@ -7530,88 +7535,88 @@ class item_list_editor:
         self.item_index_enabled = True
         self.editing_hboxlayout.addWidget(self.item_name_combobox)
         self.editing_hboxlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
 
-        self.notes_table_widget = QtGui.QTableWidget()
+        self.notes_table_widget = QTableWidget()
         self.notes_table_widget.setVerticalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
+            QAbstractItemView.ScrollPerPixel)
         self.notes_table_widget.setColumnCount(5)
         self.notes_table_widget.setRowCount(256)
         self.notes_table_widget.setSortingEnabled(True)
         self.notes_table_widget.sortItems(0)
         self.notes_table_widget.setEditTriggers(
-            QtGui.QAbstractItemView.NoEditTriggers)
+            QAbstractItemView.NoEditTriggers)
         self.notes_table_widget.setSelectionBehavior(
-            QtGui.QAbstractItemView.SelectRows)
+            QAbstractItemView.SelectRows)
         self.notes_vlayout.addWidget(self.notes_table_widget)
         self.notes_table_widget.resizeColumnsToContents()
 
-        self.notes_hlayout = QtGui.QHBoxLayout()
-        self.list_tab_vlayout = QtGui.QVBoxLayout()
+        self.notes_hlayout = QHBoxLayout()
+        self.list_tab_vlayout = QVBoxLayout()
         self.notes_tab.setLayout(self.list_tab_vlayout)
         self.list_tab_vlayout.addLayout(self.editing_hboxlayout)
         self.list_tab_vlayout.addLayout(self.notes_hlayout)
         self.notes_hlayout.addWidget(self.notes_groupbox)
 
-        self.piano_roll_hlayout = QtGui.QHBoxLayout(self.piano_roll_tab)
-        self.piano_roll_hlayout.setMargin(2)
+        self.piano_roll_hlayout = QHBoxLayout(self.piano_roll_tab)
+        self.piano_roll_hlayout.setContentsMargins(2, 2, 2, 2)
         self.piano_roll_hlayout.addWidget(PIANO_ROLL_EDITOR_WIDGET.widget)
 
-        self.ccs_groupbox = QtGui.QGroupBox(_("CCs"))
-        self.ccs_vlayout = QtGui.QVBoxLayout(self.ccs_groupbox)
+        self.ccs_groupbox = QGroupBox(_("CCs"))
+        self.ccs_vlayout = QVBoxLayout(self.ccs_groupbox)
 
-        self.ccs_table_widget = QtGui.QTableWidget()
+        self.ccs_table_widget = QTableWidget()
         self.ccs_table_widget.setVerticalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
+            QAbstractItemView.ScrollPerPixel)
         self.ccs_table_widget.setColumnCount(3)
         self.ccs_table_widget.setRowCount(256)
         self.ccs_table_widget.setSortingEnabled(True)
         self.ccs_table_widget.sortItems(0)
         self.ccs_table_widget.setEditTriggers(
-            QtGui.QAbstractItemView.NoEditTriggers)
+            QAbstractItemView.NoEditTriggers)
         self.ccs_table_widget.setSelectionBehavior(
-            QtGui.QAbstractItemView.SelectRows)
+            QAbstractItemView.SelectRows)
         self.ccs_table_widget.resizeColumnsToContents()
         self.ccs_vlayout.addWidget(self.ccs_table_widget)
         self.notes_hlayout.addWidget(self.ccs_groupbox)
 
         self.cc_vlayout.addWidget(CC_EDITOR_WIDGET.widget)
 
-        self.pb_hlayout = QtGui.QHBoxLayout()
+        self.pb_hlayout = QHBoxLayout()
         self.pitchbend_tab.setLayout(self.pb_hlayout)
-        self.pb_groupbox = QtGui.QGroupBox(_("Pitchbend"))
+        self.pb_groupbox = QGroupBox(_("Pitchbend"))
         self.pb_groupbox.setFixedWidth(240)
-        self.pb_vlayout = QtGui.QVBoxLayout(self.pb_groupbox)
+        self.pb_vlayout = QVBoxLayout(self.pb_groupbox)
 
-        self.pitchbend_table_widget = QtGui.QTableWidget()
+        self.pitchbend_table_widget = QTableWidget()
         self.pitchbend_table_widget.setVerticalScrollMode(
-            QtGui.QAbstractItemView.ScrollPerPixel)
+            QAbstractItemView.ScrollPerPixel)
         self.pitchbend_table_widget.setColumnCount(2)
         self.pitchbend_table_widget.setRowCount(256)
         self.pitchbend_table_widget.setSortingEnabled(True)
         self.pitchbend_table_widget.sortItems(0)
         self.pitchbend_table_widget.setEditTriggers(
-            QtGui.QAbstractItemView.NoEditTriggers)
+            QAbstractItemView.NoEditTriggers)
         self.pitchbend_table_widget.setSelectionBehavior(
-            QtGui.QAbstractItemView.SelectRows)
+            QAbstractItemView.SelectRows)
         self.pitchbend_table_widget.resizeColumnsToContents()
         self.pb_vlayout.addWidget(self.pitchbend_table_widget)
         self.notes_hlayout.addWidget(self.pb_groupbox)
-        self.pb_auto_vlayout = QtGui.QVBoxLayout()
+        self.pb_auto_vlayout = QVBoxLayout()
         self.pb_hlayout.addLayout(self.pb_auto_vlayout)
         self.pb_viewer_widget = automation_viewer_widget(PB_EDITOR, False)
         self.pb_auto_vlayout.addWidget(self.pb_viewer_widget.widget)
 
         self.tab_widget.addTab(self.notes_tab, _("List Viewers"))
 
-        self.zoom_widget = QtGui.QWidget()
+        self.zoom_widget = QWidget()
         self.zoom_widget.setContentsMargins(0, 0, 0, 0)
-        self.zoom_hlayout = QtGui.QHBoxLayout(self.zoom_widget)
-        self.zoom_hlayout.setMargin(0)
+        self.zoom_hlayout = QHBoxLayout(self.zoom_widget)
+        self.zoom_hlayout.setContentsMargins(0, 0, 0, 0)
         self.zoom_hlayout.setSpacing(0)
 
-        self.zoom_hlayout.addWidget(QtGui.QLabel("V"))
-        self.vzoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.zoom_hlayout.addWidget(QLabel("V"))
+        self.vzoom_slider = QSlider(QtCore.Qt.Horizontal)
         self.zoom_hlayout.addWidget(self.vzoom_slider)
         self.vzoom_slider.setObjectName("zoom_slider")
         self.vzoom_slider.setRange(9, 24)
@@ -7619,8 +7624,8 @@ class item_list_editor:
         self.vzoom_slider.valueChanged.connect(self.set_midi_vzoom)
         self.vzoom_slider.sliderReleased.connect(self.save_vzoom)
 
-        self.zoom_hlayout.addWidget(QtGui.QLabel("H"))
-        self.zoom_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.zoom_hlayout.addWidget(QLabel("H"))
+        self.zoom_slider = QSlider(QtCore.Qt.Horizontal)
         self.zoom_hlayout.addWidget(self.zoom_slider)
         self.zoom_slider.setObjectName("zoom_slider")
         self.zoom_slider.setRange(10, 100)
@@ -7679,30 +7684,30 @@ class item_list_editor:
         def quantize_cancel_handler():
             f_window.close()
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Quantize"))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_layout.addWidget(QtGui.QLabel(_("Quantize")), 0, 0)
-        f_quantize_combobox = QtGui.QComboBox()
+        f_layout.addWidget(QLabel(_("Quantize")), 0, 0)
+        f_quantize_combobox = QComboBox()
         f_quantize_combobox.addItems(bar_fracs)
         f_layout.addWidget(f_quantize_combobox, 0, 1)
-        f_events_follow_notes = QtGui.QCheckBox(
+        f_events_follow_notes = QCheckBox(
             _("CCs and pitchbend follow notes?"))
         f_events_follow_notes.setChecked(self.events_follow_default)
         f_layout.addWidget(f_events_follow_notes, 1, 1)
-        f_ok = QtGui.QPushButton(_("OK"))
+        f_ok = QPushButton(_("OK"))
         f_ok.pressed.connect(quantize_ok_handler)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_ok_cancel_layout.addWidget(f_ok)
 
-        f_selected_only = QtGui.QCheckBox(_("Selected Notes Only?"))
+        f_selected_only = QCheckBox(_("Selected Notes Only?"))
         f_selected_only.setChecked(a_selected_only)
         f_layout.addWidget(f_selected_only, 2, 1)
 
         f_layout.addLayout(f_ok_cancel_layout, 3, 1)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
+        f_cancel = QPushButton(_("Cancel"))
         f_cancel.pressed.connect(quantize_cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel)
         f_window.exec_()
@@ -7716,7 +7721,7 @@ class item_list_editor:
             if f_draw_line.isChecked() and \
             not f_add_values.isChecked() and \
             f_end_amount.value() < 1:
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     f_window, _("Error"),
                     _("Cannot have end value less than 1 if not using "
                     "'Add Values'"))
@@ -7744,41 +7749,41 @@ class item_list_editor:
         def end_value_changed(a_val=None):
             f_draw_line.setChecked(True)
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Velocity Mod"))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_layout.addWidget(QtGui.QLabel(_("Amount")), 0, 0)
-        f_amount = QtGui.QSpinBox()
+        f_layout.addWidget(QLabel(_("Amount")), 0, 0)
+        f_amount = QSpinBox()
         f_amount.setRange(-127, 127)
         f_amount.setValue(100)
         f_layout.addWidget(f_amount, 0, 1)
-        f_draw_line = QtGui.QCheckBox(_("Draw line?"))
+        f_draw_line = QCheckBox(_("Draw line?"))
         f_layout.addWidget(f_draw_line, 1, 1)
 
-        f_layout.addWidget(QtGui.QLabel(_("End Amount")), 2, 0)
-        f_end_amount = QtGui.QSpinBox()
+        f_layout.addWidget(QLabel(_("End Amount")), 2, 0)
+        f_end_amount = QSpinBox()
         f_end_amount.setRange(-127, 127)
         f_end_amount.valueChanged.connect(end_value_changed)
         f_layout.addWidget(f_end_amount, 2, 1)
 
-        f_add_values = QtGui.QCheckBox(_("Add Values?"))
+        f_add_values = QCheckBox(_("Add Values?"))
         f_add_values.setToolTip(
             _("Check this to add Amount to the existing value, or leave\n"
             "unchecked to set the value to Amount."))
         f_layout.addWidget(f_add_values, 5, 1)
 
-        f_selected_only = QtGui.QCheckBox(_("Selected Notes Only?"))
+        f_selected_only = QCheckBox(_("Selected Notes Only?"))
         f_selected_only.setChecked(a_selected_only)
         f_layout.addWidget(f_selected_only, 6, 1)
 
-        f_ok = QtGui.QPushButton(_("OK"))
+        f_ok = QPushButton(_("OK"))
         f_ok.pressed.connect(ok_handler)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_ok_cancel_layout.addWidget(f_ok)
         f_layout.addLayout(f_ok_cancel_layout, 10, 1)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
+        f_cancel = QPushButton(_("Cancel"))
         f_cancel.pressed.connect(cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel)
         f_window.exec_()
@@ -7810,33 +7815,33 @@ class item_list_editor:
         def transpose_cancel_handler():
             f_window.close()
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Transpose"))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_semitone = QtGui.QSpinBox()
+        f_semitone = QSpinBox()
         f_semitone.setRange(-12, 12)
-        f_layout.addWidget(QtGui.QLabel(_("Semitones")), 0, 0)
+        f_layout.addWidget(QLabel(_("Semitones")), 0, 0)
         f_layout.addWidget(f_semitone, 0, 1)
-        f_octave = QtGui.QSpinBox()
+        f_octave = QSpinBox()
         f_octave.setRange(-5, 5)
-        f_layout.addWidget(QtGui.QLabel(_("Octaves")), 1, 0)
+        f_layout.addWidget(QLabel(_("Octaves")), 1, 0)
         f_layout.addWidget(f_octave, 1, 1)
-        f_duplicate_notes = QtGui.QCheckBox(_("Duplicate notes?"))
+        f_duplicate_notes = QCheckBox(_("Duplicate notes?"))
         f_duplicate_notes.setToolTip(
             _("Checking this box causes the transposed notes "
             "to be added rather than moving the existing notes."))
         f_layout.addWidget(f_duplicate_notes, 2, 1)
-        f_selected_only = QtGui.QCheckBox(_("Selected Notes Only?"))
+        f_selected_only = QCheckBox(_("Selected Notes Only?"))
         f_selected_only.setChecked(a_selected_only)
         f_layout.addWidget(f_selected_only, 4, 1)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_layout.addLayout(f_ok_cancel_layout, 6, 1)
-        f_ok = QtGui.QPushButton(_("OK"))
+        f_ok = QPushButton(_("OK"))
         f_ok.pressed.connect(transpose_ok_handler)
         f_ok_cancel_layout.addWidget(f_ok)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
+        f_cancel = QPushButton(_("Cancel"))
         f_cancel.pressed.connect(transpose_cancel_handler)
         f_ok_cancel_layout.addWidget(f_cancel)
         f_window.exec_()
@@ -7852,7 +7857,7 @@ class item_list_editor:
         #^^^^huh?
 
     def show_not_enabled_warning(self):
-        QtGui.QMessageBox.warning(
+        QMessageBox.warning(
             MAIN_WINDOW, _("Error"),
            _("You must open an item first by double-clicking on one in "
            "the region editor on the 'Song/Region' tab."))
@@ -7917,34 +7922,34 @@ class item_list_editor:
         for note, f_i in zip(self.item.notes, range(len(self.item.notes))):
             f_note_str = note_num_to_string(note.note_num)
             self.notes_table_widget.setItem(
-                f_i, 0, QtGui.QTableWidgetItem(str(note.start)))
+                f_i, 0, QTableWidgetItem(str(note.start)))
             self.notes_table_widget.setItem(
-                f_i, 1, QtGui.QTableWidgetItem(str(note.length)))
+                f_i, 1, QTableWidgetItem(str(note.length)))
             self.notes_table_widget.setItem(
-                f_i, 2, QtGui.QTableWidgetItem(f_note_str))
+                f_i, 2, QTableWidgetItem(f_note_str))
             self.notes_table_widget.setItem(
-                f_i, 3, QtGui.QTableWidgetItem(str(note.note_num)))
+                f_i, 3, QTableWidgetItem(str(note.note_num)))
             self.notes_table_widget.setItem(
-                f_i, 4, QtGui.QTableWidgetItem(str(note.velocity)))
+                f_i, 4, QTableWidgetItem(str(note.velocity)))
         self.notes_table_widget.setSortingEnabled(True)
         self.ccs_table_widget.setSortingEnabled(False)
 
         for cc, f_i in zip(self.item.ccs, range(len(self.item.ccs))):
             self.ccs_table_widget.setItem(
-                f_i, 0, QtGui.QTableWidgetItem(str(cc.start)))
+                f_i, 0, QTableWidgetItem(str(cc.start)))
             self.ccs_table_widget.setItem(
-                f_i, 1, QtGui.QTableWidgetItem(str(cc.cc_num)))
+                f_i, 1, QTableWidgetItem(str(cc.cc_num)))
             self.ccs_table_widget.setItem(
-                f_i, 2, QtGui.QTableWidgetItem(str(cc.cc_val)))
+                f_i, 2, QTableWidgetItem(str(cc.cc_val)))
         self.ccs_table_widget.setSortingEnabled(True)
         self.pitchbend_table_widget.setSortingEnabled(False)
 
         for pb, f_i in zip(
         self.item.pitchbends, range(len(self.item.pitchbends))):
             self.pitchbend_table_widget.setItem(
-                f_i, 0, QtGui.QTableWidgetItem(str(pb.start)))
+                f_i, 0, QTableWidgetItem(str(pb.start)))
             self.pitchbend_table_widget.setItem(
-                f_i, 1, QtGui.QTableWidgetItem(str(pb.pb_val)))
+                f_i, 1, QTableWidgetItem(str(pb.pb_val)))
         self.pitchbend_table_widget.setSortingEnabled(True)
         self.notes_table_widget.resizeColumnsToContents()
         self.ccs_table_widget.resizeColumnsToContents()
@@ -7957,12 +7962,12 @@ class midi_device:
         self.name = str(a_name)
         self.index = int(a_index)
         self.save_callback = a_save_callback
-        self.record_checkbox = QtGui.QCheckBox()
+        self.record_checkbox = QCheckBox()
         self.record_checkbox.toggled.connect(self.device_changed)
         f_index = int(a_index) + 1
         a_layout.addWidget(self.record_checkbox, f_index, 0)
-        a_layout.addWidget(QtGui.QLabel(a_name), f_index, 1)
-        self.track_combobox = QtGui.QComboBox()
+        a_layout.addWidget(QLabel(a_name), f_index, 1)
+        self.track_combobox = QComboBox()
         self.track_combobox.setMinimumWidth(180)
         self.track_combobox.addItems(TRACK_NAMES)
         AUDIO_TRACK_COMBOBOXES.append(self.track_combobox)
@@ -7991,12 +7996,12 @@ class midi_device:
 
 class midi_devices_dialog:
     def __init__(self):
-        self.layout = QtGui.QGridLayout()
+        self.layout = QGridLayout()
         if not pydaw_util.MIDI_IN_DEVICES:
             return
-        self.layout.addWidget(QtGui.QLabel(_("On")), 0, 0)
-        self.layout.addWidget(QtGui.QLabel(_("MIDI Device")), 0, 1)
-        self.layout.addWidget(QtGui.QLabel(_("Output")), 0, 2)
+        self.layout.addWidget(QLabel(_("On")), 0, 0)
+        self.layout.addWidget(QLabel(_("MIDI Device")), 0, 1)
+        self.layout.addWidget(QLabel(_("Output")), 0, 2)
         self.devices = []
         self.devices_dict = {}
         for f_name, f_i in zip(
@@ -8054,13 +8059,13 @@ class seq_track:
         self.automation_uid = None
         self.automation_plugin = None
         self.track_number = a_track_num
-        self.group_box = QtGui.QWidget()
+        self.group_box = QWidget()
         self.group_box.setFixedHeight(REGION_EDITOR_TRACK_HEIGHT)
         self.group_box.contextMenuEvent = self.context_menu_event
         self.group_box.setObjectName("track_panel")
-        self.main_hlayout = QtGui.QHBoxLayout()
+        self.main_hlayout = QHBoxLayout()
         self.main_hlayout.setContentsMargins(2, 2, 2, 2)
-        self.main_vlayout = QtGui.QVBoxLayout()
+        self.main_vlayout = QVBoxLayout()
         self.main_hlayout.addLayout(self.main_vlayout)
         self.peak_meter = pydaw_widgets.peak_meter()
         if a_track_num in ALL_PEAK_METERS:
@@ -8069,7 +8074,7 @@ class seq_track:
             ALL_PEAK_METERS[a_track_num] = [self.peak_meter]
         self.main_hlayout.addWidget(self.peak_meter.widget)
         self.group_box.setLayout(self.main_hlayout)
-        self.track_name_lineedit = QtGui.QLineEdit()
+        self.track_name_lineedit = QLineEdit()
         if a_track_num == 0:
             self.track_name_lineedit.setText("Master")
             self.track_name_lineedit.setDisabled(True)
@@ -8079,21 +8084,21 @@ class seq_track:
             self.track_name_lineedit.editingFinished.connect(
                 self.on_name_changed)
         self.main_vlayout.addWidget(self.track_name_lineedit)
-        self.hlayout3 = QtGui.QHBoxLayout()
+        self.hlayout3 = QHBoxLayout()
         self.main_vlayout.addLayout(self.hlayout3)
 
-        self.menu_button = QtGui.QPushButton()
+        self.menu_button = QPushButton()
         self.menu_button.setFixedWidth(42)
-        self.button_menu = QtGui.QMenu()
+        self.button_menu = QMenu()
         self.menu_button.setMenu(self.button_menu)
         self.hlayout3.addWidget(self.menu_button)
         self.button_menu.aboutToShow.connect(self.menu_button_pressed)
         self.menu_created = False
-        self.solo_checkbox = QtGui.QCheckBox()
-        self.mute_checkbox = QtGui.QCheckBox()
+        self.solo_checkbox = QCheckBox()
+        self.mute_checkbox = QCheckBox()
         if self.track_number == 0:
             self.hlayout3.addItem(
-                QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+                QSpacerItem(1, 1, QSizePolicy.Expanding))
         else:
             self.solo_checkbox.stateChanged.connect(self.on_solo)
             self.solo_checkbox.setObjectName("solo_checkbox")
@@ -8121,18 +8126,18 @@ class seq_track:
         if self.action_widget:
             self.button_menu.removeAction(self.action_widget)
         self.menu_created = True
-        self.menu_widget = QtGui.QWidget()
-        self.menu_hlayout = QtGui.QHBoxLayout(self.menu_widget)
-        self.menu_gridlayout = QtGui.QGridLayout()
+        self.menu_widget = QWidget()
+        self.menu_hlayout = QHBoxLayout(self.menu_widget)
+        self.menu_gridlayout = QGridLayout()
         self.menu_hlayout.addLayout(self.menu_gridlayout)
-        self.plugins_button = QtGui.QPushButton(_("Plugins"))
-        self.plugins_menu = QtGui.QMenu(self.menu_widget)
+        self.plugins_button = QPushButton(_("Plugins"))
+        self.plugins_menu = QMenu(self.menu_widget)
         self.plugins_button.setMenu(self.plugins_menu)
         self.plugins_order_action = self.plugins_menu.addAction(_("Order..."))
         self.plugins_order_action.triggered.connect(self.set_plugin_order)
         self.menu_gridlayout.addWidget(self.plugins_button, 0, 0)
-        self.menu_gridlayout.addWidget(QtGui.QLabel(_("A")), 0, 2)
-        self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 3)
+        self.menu_gridlayout.addWidget(QLabel(_("A")), 0, 2)
+        self.menu_gridlayout.addWidget(QLabel(_("P")), 0, 3)
         for f_i in range(10):
             f_plugin = plugin_settings_main(
                 PROJECT.IPC.pydaw_set_plugin,
@@ -8143,13 +8148,13 @@ class seq_track:
         self.sends = []
         if self.track_number != 0:
             self.menu_gridlayout.addWidget(
-                QtGui.QLabel(_("Sends")), 0, 20)
+                QLabel(_("Sends")), 0, 20)
             self.menu_gridlayout.addWidget(
-                QtGui.QLabel(_("Mixer Plugin")), 0, 21)
+                QLabel(_("Mixer Plugin")), 0, 21)
             self.menu_gridlayout.addWidget(
-                QtGui.QLabel(_("Sidechain")), 0, 27)
-            self.menu_gridlayout.addWidget(QtGui.QLabel(_("A")), 0, 23)
-            self.menu_gridlayout.addWidget(QtGui.QLabel(_("P")), 0, 24)
+                QLabel(_("Sidechain")), 0, 27)
+            self.menu_gridlayout.addWidget(QLabel(_("A")), 0, 23)
+            self.menu_gridlayout.addWidget(QLabel(_("P")), 0, 24)
             for f_i in range(4):
                 f_send = track_send(
                     f_i, self.track_number, self.menu_gridlayout,
@@ -8162,22 +8167,22 @@ class seq_track:
                     self.save_callback, self.name_callback,
                     self.automation_callback, a_offset=21, a_send=f_send)
                 self.plugins.append(f_plugin)
-        self.action_widget = QtGui.QWidgetAction(self.button_menu)
+        self.action_widget = QWidgetAction(self.button_menu)
         self.action_widget.setDefaultWidget(self.menu_widget)
         self.button_menu.addAction(self.action_widget)
 
-        self.control_combobox = QtGui.QComboBox()
+        self.control_combobox = QComboBox()
         self.control_combobox.setMinimumWidth(240)
-        self.menu_gridlayout.addWidget(QtGui.QLabel(_("Automation:")), 9, 20)
+        self.menu_gridlayout.addWidget(QLabel(_("Automation:")), 9, 20)
         self.menu_gridlayout.addWidget(self.control_combobox, 9, 21)
         self.control_combobox.currentIndexChanged.connect(
             self.control_changed)
-        self.ccs_in_use_combobox = QtGui.QComboBox()
+        self.ccs_in_use_combobox = QComboBox()
         self.ccs_in_use_combobox.setMinimumWidth(300)
         self.suppress_ccs_in_use = False
         self.ccs_in_use_combobox.currentIndexChanged.connect(
             self.ccs_in_use_combobox_changed)
-        self.menu_gridlayout.addWidget(QtGui.QLabel(_("In Use:")), 10, 20)
+        self.menu_gridlayout.addWidget(QLabel(_("In Use:")), 10, 20)
         self.menu_gridlayout.addWidget(self.ccs_in_use_combobox, 10, 21)
 
     def set_plugin_order(self):
@@ -8350,56 +8355,56 @@ class transport_widget(libmk.AbstractTransport):
         self.last_bar = 0
         self.last_open_dir = global_home
         self.transport = pydaw_transport()
-        self.group_box = QtGui.QGroupBox()
+        self.group_box = QGroupBox()
         self.group_box.setObjectName("transport_panel")
-        self.vlayout = QtGui.QVBoxLayout()
+        self.vlayout = QVBoxLayout()
         self.group_box.setLayout(self.vlayout)
-        self.hlayout1 = QtGui.QHBoxLayout()
+        self.hlayout1 = QHBoxLayout()
         self.vlayout.addLayout(self.hlayout1)
-        self.playback_menu_button = QtGui.QPushButton("")
+        self.playback_menu_button = QPushButton("")
         self.playback_menu_button.setMaximumWidth(21)
         self.playback_menu_button.setSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+            QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.hlayout1.addWidget(self.playback_menu_button)
-        self.grid_layout1 = QtGui.QGridLayout()
+        self.grid_layout1 = QGridLayout()
         self.hlayout1.addLayout(self.grid_layout1)
-        self.grid_layout1.addWidget(QtGui.QLabel(_("BPM")), 0, 0)
-        self.tempo_spinbox = QtGui.QSpinBox()
+        self.grid_layout1.addWidget(QLabel(_("BPM")), 0, 0)
+        self.tempo_spinbox = QSpinBox()
         self.tempo_spinbox.setKeyboardTracking(False)
         self.tempo_spinbox.setObjectName("large_spinbox")
         self.tempo_spinbox.setRange(50, 200)
         self.tempo_spinbox.valueChanged.connect(self.on_tempo_changed)
         self.grid_layout1.addWidget(self.tempo_spinbox, 1, 0)
-        self.grid_layout1.addWidget(QtGui.QLabel(_("Region")), 0, 10)
-        self.region_spinbox = QtGui.QSpinBox()
+        self.grid_layout1.addWidget(QLabel(_("Region")), 0, 10)
+        self.region_spinbox = QSpinBox()
         self.region_spinbox.setObjectName("large_spinbox")
         self.region_spinbox.setRange(1, 300)
         self.region_spinbox.valueChanged.connect(self.on_region_changed)
         self.grid_layout1.addWidget(self.region_spinbox, 1, 10)
-        self.grid_layout1.addWidget(QtGui.QLabel(_("Bar")), 0, 20)
-        self.bar_spinbox = QtGui.QSpinBox()
+        self.grid_layout1.addWidget(QLabel(_("Bar")), 0, 20)
+        self.bar_spinbox = QSpinBox()
         self.bar_spinbox.setObjectName("large_spinbox")
         self.bar_spinbox.setRange(1, 8)
         self.bar_spinbox.valueChanged.connect(self.on_bar_changed)
         self.grid_layout1.addWidget(self.bar_spinbox, 1, 20)
 
-        self.playback_menu = QtGui.QMenu(self.playback_menu_button)
+        self.playback_menu = QMenu(self.playback_menu_button)
         self.playback_menu_button.setMenu(self.playback_menu)
-        self.playback_widget_action = QtGui.QWidgetAction(self.playback_menu)
-        self.playback_widget = QtGui.QWidget()
+        self.playback_widget_action = QWidgetAction(self.playback_menu)
+        self.playback_widget = QWidget()
         self.playback_widget_action.setDefaultWidget(self.playback_widget)
-        self.playback_vlayout = QtGui.QVBoxLayout(self.playback_widget)
+        self.playback_vlayout = QVBoxLayout(self.playback_widget)
         self.playback_menu.addAction(self.playback_widget_action)
 
-        self.grid_layout1.addWidget(QtGui.QLabel(_("Loop Mode:")), 0, 45)
-        self.loop_mode_combobox = QtGui.QComboBox()
+        self.grid_layout1.addWidget(QLabel(_("Loop Mode:")), 0, 45)
+        self.loop_mode_combobox = QComboBox()
         self.loop_mode_combobox.addItems([_("Off"), _("Region")])
         self.loop_mode_combobox.setMinimumWidth(90)
         self.loop_mode_combobox.currentIndexChanged.connect(
             self.on_loop_mode_changed)
         self.grid_layout1.addWidget(self.loop_mode_combobox, 1, 45)
 
-        self.overdub_checkbox = QtGui.QCheckBox(_("Overdub"))
+        self.overdub_checkbox = QCheckBox(_("Overdub"))
         self.overdub_checkbox.clicked.connect(self.on_overdub_changed)
         self.playback_vlayout.addWidget(self.overdub_checkbox)
 
@@ -8534,7 +8539,7 @@ class transport_widget(libmk.AbstractTransport):
         def ok_handler():
             f_file_name = str(f_file.text())
             if f_file_name is None or f_file_name == "":
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     f_window, _("Error"),
                     _("You must select a name for the item"))
                 return
@@ -8550,21 +8555,21 @@ class transport_widget(libmk.AbstractTransport):
         def text_edit_handler(a_val=None):
             f_file.setText(pydaw_remove_bad_chars(f_file.text()))
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setMinimumWidth(330)
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
-        f_layout.addWidget(QtGui.QLabel(_("Save recorded MIDI items")), 0, 2)
-        f_layout.addWidget(QtGui.QLabel(_("Item Name:")), 3, 1)
-        f_file = QtGui.QLineEdit()
+        f_layout.addWidget(QLabel(_("Save recorded MIDI items")), 0, 2)
+        f_layout.addWidget(QLabel(_("Item Name:")), 3, 1)
+        f_file = QLineEdit()
         f_file.setMaxLength(24)
         f_file.textEdited.connect(text_edit_handler)
         f_layout.addWidget(f_file, 3, 2)
-        f_ok_button = QtGui.QPushButton(_("Save"))
+        f_ok_button = QPushButton(_("Save"))
         f_ok_button.clicked.connect(ok_handler)
-        f_cancel_button = QtGui.QPushButton(_("Discard"))
+        f_cancel_button = QPushButton(_("Discard"))
         f_cancel_button.clicked.connect(f_window.close)
-        f_ok_cancel_layout = QtGui.QHBoxLayout()
+        f_ok_cancel_layout = QHBoxLayout()
         f_ok_cancel_layout.addWidget(f_ok_button)
         f_ok_cancel_layout.addWidget(f_cancel_button)
         f_layout.addLayout(f_ok_cancel_layout, 8, 2)
@@ -8574,12 +8579,12 @@ class transport_widget(libmk.AbstractTransport):
         self.active_devices = [x for x in MIDI_DEVICES_DIALOG.devices
             if x.record_checkbox.isChecked()]
         if not self.active_devices:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.group_box, _("Error"), _("No track record-armed"))
             return False
         if self.overdub_checkbox.isChecked() and \
         self.loop_mode_combobox.currentIndex() > 0:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 self.group_box, _("Error"),
                 _("Cannot use overdub mode with loop mode to record"))
             return False
@@ -8675,9 +8680,9 @@ class transport_widget(libmk.AbstractTransport):
             self.group_box.setToolTip("")
 
 
-class pydaw_main_window(QtGui.QScrollArea):
+class pydaw_main_window(QScrollArea):
     def __init__(self):
-        QtGui.QScrollArea.__init__(self)
+        QScrollArea.__init__(self)
         self.first_offline_render = True
         self.last_offline_dir = global_home
         self.copy_to_clipboard_checked = True
@@ -8685,33 +8690,33 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.last_bar = 0
 
         self.setObjectName("plugin_ui")
-        self.widget = QtGui.QWidget()
+        self.widget = QWidget()
         self.widget.setObjectName("plugin_ui")
         self.setWidget(self.widget)
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
 
-        self.main_layout = QtGui.QVBoxLayout()
-        self.main_layout.setMargin(2)
+        self.main_layout = QVBoxLayout()
+        self.main_layout.setContentsMargins(2, 2, 2, 2)
         self.widget.setLayout(self.main_layout)
 
-        self.loop_mode_action = QtGui.QAction(self)
+        self.loop_mode_action = QAction(self)
         self.addAction(self.loop_mode_action)
         self.loop_mode_action.setShortcut(
-            QtGui.QKeySequence.fromString("CTRL+L"))
+            QKeySequence.fromString("CTRL+L"))
         self.loop_mode_action.triggered.connect(TRANSPORT.toggle_loop_mode)
 
         #The tabs
-        self.main_tabwidget = QtGui.QTabWidget()
+        self.main_tabwidget = QTabWidget()
         self.main_layout.addWidget(self.main_tabwidget)
 
-        self.regions_tab_widget = QtGui.QTabWidget()
-        self.song_region_tab = QtGui.QWidget()
-        self.song_region_vlayout = QtGui.QVBoxLayout()
-        self.song_region_vlayout.setMargin(3)
+        self.regions_tab_widget = QTabWidget()
+        self.song_region_tab = QWidget()
+        self.song_region_vlayout = QVBoxLayout()
+        self.song_region_vlayout.setContentsMargins(3, 3, 3, 3)
         self.song_region_tab.setLayout(self.song_region_vlayout)
-        self.song_region_splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+        self.song_region_splitter = QSplitter(QtCore.Qt.Vertical)
         self.song_region_splitter.addWidget(self.song_region_tab)
         self.main_tabwidget.addTab(self.song_region_splitter, _("Song/Region"))
 
@@ -8719,11 +8724,11 @@ class pydaw_main_window(QtGui.QScrollArea):
         self.song_region_vlayout.addLayout(REGION_SETTINGS.hlayout0)
 
         self.song_region_splitter.addWidget(self.regions_tab_widget)
-        self.midi_scroll_area = QtGui.QScrollArea()
+        self.midi_scroll_area = QScrollArea()
         self.midi_scroll_area.setWidgetResizable(True)
-        self.midi_scroll_widget = QtGui.QWidget()
+        self.midi_scroll_widget = QWidget()
         self.midi_scroll_widget.setContentsMargins(0, 0, 0, 0)
-        self.midi_hlayout = QtGui.QHBoxLayout(self.midi_scroll_widget)
+        self.midi_hlayout = QHBoxLayout(self.midi_scroll_widget)
         self.midi_hlayout.setContentsMargins(0, 0, 0, 0)
         self.midi_scroll_area.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarAlwaysOn)
@@ -8742,13 +8747,13 @@ class pydaw_main_window(QtGui.QScrollArea):
 
         self.main_tabwidget.addTab(ITEM_EDITOR.widget, _("MIDI Items"))
 
-        self.automation_tab = QtGui.QWidget()
+        self.automation_tab = QWidget()
         self.automation_tab.setObjectName("plugin_ui")
 
         self.main_tabwidget.addTab(ROUTING_GRAPH_WIDGET, _("Routing"))
         self.main_tabwidget.addTab(MIXER_WIDGET.widget, _("Mixer"))
 
-        self.notes_tab = QtGui.QTextEdit(self)
+        self.notes_tab = QTextEdit(self)
         self.notes_tab.setAcceptRichText(False)
         self.notes_tab.leaveEvent = self.on_edit_notes
         self.main_tabwidget.addTab(self.notes_tab, _("Project Notes"))
@@ -8757,19 +8762,19 @@ class pydaw_main_window(QtGui.QScrollArea):
     def on_offline_render(self):
         def ok_handler():
             if str(f_name.text()) == "":
-                QtGui.QMessageBox.warning(
+                QMessageBox.warning(
                     f_window, _("Error"), _("Name cannot be empty"))
                 return
             if (f_end_region.value() < f_start_region.value()) or \
             ((f_end_region.value() == f_start_region.value()) and \
             (f_start_bar.value() >= f_end_bar.value())):
-                QtGui.QMessageBox.warning(f_window, _("Error"),
+                QMessageBox.warning(f_window, _("Error"),
                 _("End point is before start point."))
                 return
 
             if f_copy_to_clipboard_checkbox.isChecked():
                 self.copy_to_clipboard_checked = True
-                f_clipboard = QtGui.QApplication.clipboard()
+                f_clipboard = QApplication.clipboard()
                 f_clipboard.setText(f_name.text())
             else:
                 self.copy_to_clipboard_checked = False
@@ -8800,7 +8805,7 @@ class pydaw_main_window(QtGui.QScrollArea):
                     ("run", "edmnext", "'{}'".format(f_dir),
                      "'{}'".format(f_out_file), f_sr, f_sb,
                      f_er, f_eb, f_samp_rate, f_buff_size, f_thread_count)]
-                f_clipboard = QtGui.QApplication.clipboard()
+                f_clipboard = QApplication.clipboard()
                 f_clipboard.setText(" ".join(f_run_cmd))
                 subprocess.Popen(f_cmd, shell=True)
             else:
@@ -8819,9 +8824,10 @@ class pydaw_main_window(QtGui.QScrollArea):
             try:
                 if not os.path.isdir(self.last_offline_dir):
                     self.last_offline_dir = global_home
-                f_file_name = str(QtGui.QFileDialog.getSaveFileName(
+                f_file_name, f_filter = QFileDialog.getSaveFileName(
                     f_window, _("Select a file name to save to..."),
-                    self.last_offline_dir))
+                    self.last_offline_dir)
+                f_file_name = str(f_file_name)
                 if not f_file_name is None and f_file_name != "":
                     if not f_file_name.endswith(".wav"):
                         f_file_name += ".wav"
@@ -8858,56 +8864,56 @@ class pydaw_main_window(QtGui.QScrollArea):
             f_max = pydaw_get_region_length(f_end_region.value() - 1)
             f_end_bar.setMaximum(f_max)
 
-        f_window = QtGui.QDialog(MAIN_WINDOW)
+        f_window = QDialog(MAIN_WINDOW)
         f_window.setWindowTitle(_("Offline Render"))
-        f_layout = QtGui.QGridLayout()
+        f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
-        f_name = QtGui.QLineEdit()
+        f_name = QLineEdit()
         f_name.setReadOnly(True)
         f_name.setMinimumWidth(360)
-        f_layout.addWidget(QtGui.QLabel(_("File Name:")), 0, 0)
+        f_layout.addWidget(QLabel(_("File Name:")), 0, 0)
         f_layout.addWidget(f_name, 0, 1)
-        f_select_file = QtGui.QPushButton(_("Select"))
+        f_select_file = QPushButton(_("Select"))
         f_select_file.pressed.connect(file_name_select)
         f_layout.addWidget(f_select_file, 0, 2)
 
-        f_layout.addWidget(QtGui.QLabel(_("Start:")), 1, 0)
-        f_start_hlayout = QtGui.QHBoxLayout()
+        f_layout.addWidget(QLabel(_("Start:")), 1, 0)
+        f_start_hlayout = QHBoxLayout()
         f_layout.addLayout(f_start_hlayout, 1, 1)
-        f_start_hlayout.addWidget(QtGui.QLabel(_("Region:")))
-        f_start_region = QtGui.QSpinBox()
+        f_start_hlayout.addWidget(QLabel(_("Region:")))
+        f_start_region = QSpinBox()
         f_start_region.setRange(1, 299)
         f_start_region.setValue(self.start_reg)
         f_start_hlayout.addWidget(f_start_region)
-        f_start_hlayout.addWidget(QtGui.QLabel(_("Bar:")))
-        f_start_bar = QtGui.QSpinBox()
+        f_start_hlayout.addWidget(QLabel(_("Bar:")))
+        f_start_bar = QSpinBox()
         f_start_bar.setRange(1, 8)
         f_start_bar.setValue(self.start_bar)
         f_start_hlayout.addWidget(f_start_bar)
         f_start_region.valueChanged.connect(start_region_changed)
         start_region_changed()
 
-        f_layout.addWidget(QtGui.QLabel(_("End:")), 2, 0)
-        f_end_hlayout = QtGui.QHBoxLayout()
+        f_layout.addWidget(QLabel(_("End:")), 2, 0)
+        f_end_hlayout = QHBoxLayout()
         f_layout.addLayout(f_end_hlayout, 2, 1)
-        f_end_hlayout.addWidget(QtGui.QLabel(_("Region:")))
-        f_end_region = QtGui.QSpinBox()
+        f_end_hlayout.addWidget(QLabel(_("Region:")))
+        f_end_region = QSpinBox()
         f_end_region.setRange(1, 299)
         f_end_region.setValue(self.end_reg)
         f_end_hlayout.addWidget(f_end_region)
-        f_end_hlayout.addWidget(QtGui.QLabel(_("Bar:")))
-        f_end_bar = QtGui.QSpinBox()
+        f_end_hlayout.addWidget(QLabel(_("Bar:")))
+        f_end_bar = QSpinBox()
         f_end_bar.setRange(1, 8)
         f_end_bar.setValue(self.end_bar)
         f_end_hlayout.addWidget(f_end_bar)
         f_end_region.valueChanged.connect(end_region_changed)
         end_region_changed()
 
-        f_sample_rate_hlayout = QtGui.QHBoxLayout()
+        f_sample_rate_hlayout = QHBoxLayout()
         f_layout.addLayout(f_sample_rate_hlayout, 3, 1)
-        f_sample_rate_hlayout.addWidget(QtGui.QLabel(_("Sample Rate")))
-        f_sample_rate = QtGui.QComboBox()
+        f_sample_rate_hlayout.addWidget(QLabel(_("Sample Rate")))
+        f_sample_rate = QComboBox()
         f_sample_rate.setMinimumWidth(105)
         f_sample_rate.addItems(["44100", "48000", "88200", "96000", "192000"])
 
@@ -8920,32 +8926,32 @@ class pydaw_main_window(QtGui.QScrollArea):
 
         f_sample_rate_hlayout.addWidget(f_sample_rate)
         f_sample_rate_hlayout.addItem(
-            QtGui.QSpacerItem(1, 1, QtGui.QSizePolicy.Expanding))
+            QSpacerItem(1, 1, QSizePolicy.Expanding))
 
-        f_layout.addWidget(QtGui.QLabel(
+        f_layout.addWidget(QLabel(
             _("File is exported to 32 bit .wav at the selected sample rate. "
             "\nYou can convert the format using "
             "Menu->Tools->MP3/Ogg Converter")),
             6, 1)
-        f_copy_to_clipboard_checkbox = QtGui.QCheckBox(
+        f_copy_to_clipboard_checkbox = QCheckBox(
         _("Copy export path to clipboard? (useful for right-click pasting "
         "back into the audio sequencer)"))
         f_copy_to_clipboard_checkbox.setChecked(self.copy_to_clipboard_checked)
         f_layout.addWidget(f_copy_to_clipboard_checkbox, 7, 1)
-        f_ok_layout = QtGui.QHBoxLayout()
+        f_ok_layout = QHBoxLayout()
 
-        f_debug_checkbox = QtGui.QCheckBox("Debug with GDB?")
+        f_debug_checkbox = QCheckBox("Debug with GDB?")
         f_ok_layout.addWidget(f_debug_checkbox)
 
         f_ok_layout.addItem(
-            QtGui.QSpacerItem(10, 10, QtGui.QSizePolicy.Expanding,
-            QtGui.QSizePolicy.Minimum))
-        f_ok = QtGui.QPushButton(_("OK"))
+            QSpacerItem(10, 10, QSizePolicy.Expanding,
+            QSizePolicy.Minimum))
+        f_ok = QPushButton(_("OK"))
         f_ok.setMinimumWidth(75)
         f_ok.pressed.connect(ok_handler)
         f_ok_layout.addWidget(f_ok)
         f_layout.addLayout(f_ok_layout, 9, 1)
-        f_cancel = QtGui.QPushButton(_("Cancel"))
+        f_cancel = QPushButton(_("Cancel"))
         f_cancel.setMinimumWidth(75)
         f_cancel.pressed.connect(cancel_handler)
         f_ok_layout.addWidget(f_cancel)
@@ -8957,7 +8963,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         if PROJECT.undo():
             global_ui_refresh_callback()
         else:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 MAIN_WINDOW, "Error", "No more undo history left")
 
     def on_redo(self):
@@ -8966,7 +8972,7 @@ class pydaw_main_window(QtGui.QScrollArea):
         if PROJECT.redo():
             global_ui_refresh_callback()
         else:
-            QtGui.QMessageBox.warning(
+            QMessageBox.warning(
                 MAIN_WINDOW, "Error", "Already at the latest commit")
 
     def tab_changed(self):
@@ -8982,7 +8988,7 @@ class pydaw_main_window(QtGui.QScrollArea):
             global_open_mixer()
 
     def on_edit_notes(self, a_event=None):
-        QtGui.QTextEdit.leaveEvent(self.notes_tab, a_event)
+        QTextEdit.leaveEvent(self.notes_tab, a_event)
         PROJECT.write_notes(self.notes_tab.toPlainText())
 
     def set_tooltips(self, a_on):
@@ -8999,7 +9005,7 @@ class pydaw_main_window(QtGui.QScrollArea):
             global_open_audio_items(a_reload=False)
 
     def midi_scrollContentsBy(self, x, y):
-        QtGui.QScrollArea.scrollContentsBy(self.midi_scroll_area, x, y)
+        QScrollArea.scrollContentsBy(self.midi_scroll_area, x, y)
         REGION_EDITOR.set_header_pos()
 
     def configure_callback(self, path, arr):
@@ -9195,7 +9201,7 @@ def routing_graph_toggle_callback(a_src, a_dest, a_sidechain):
     f_graph = PROJECT.get_routing_graph()
     f_result = f_graph.toggle(a_src, a_dest, a_sidechain)
     if f_result:
-        QtGui.QMessageBox.warning(MAIN_WINDOW, _("Error"), f_result)
+        QMessageBox.warning(MAIN_WINDOW, _("Error"), f_result)
     else:
         PROJECT.save_routing_graph(f_graph)
         ROUTING_GRAPH_WIDGET.draw_graph(f_graph, TRACK_NAMES)

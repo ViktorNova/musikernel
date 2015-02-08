@@ -13,7 +13,7 @@ CACHE_LINE_SIZE = 64  # $(shell getconf LEVEL1_DCACHE_LINESIZE)
 
 BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
 -floop-optimize -fsingle-precision-constant -funroll-loops -Wall \
--Isrc -Iportaudio/include -fstrength-reduce -fstrict-aliasing \
+-Isrc -fstrength-reduce -fstrict-aliasing \
 -finline-functions -fno-stack-protector \
 -DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
 
@@ -25,20 +25,6 @@ then printf "/usr/lib64" ; \
 fi)
 
 BUILD_CFLAGS   = $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
-
-PORTAUDIO_FLAG ?= $(shell if [ -e $(PYDAW_LIB_DIR)/libportaudio.a ]; \
-then printf "$(PYDAW_LIB_DIR)/libportaudio.a" ; \
-elif [ -e $(PYDAW_LIB64_DIR)/libportaudio.a ]; \
-then printf "$(PYDAW_LIB64_DIR)/libportaudio.a" ; \
-else printf " -lportaudio" ; \
-fi)
-
-PORTMIDI_FLAG ?= $(shell if [ -e $(PYDAW_LIB_DIR)/libportmidi.a ]; \
-then printf "$(PYDAW_LIB_DIR)/libportmidi.a $(PYDAW_LIB_DIR)/libporttime.a" ; \
-elif [ -e $(PYDAW_LIB64_DIR)/libportmidi.a ]; \
-then printf "$(PYDAW_LIB64_DIR)/libportmidi.a $(PYDAW_LIB64_DIR)/libporttime.a" ; \
-else printf " -lportmidi" ; \
-fi)
 
 LIBLO_FLAG ?= $(shell if [ -e $(PYDAW_LIB_DIR)/liblo.a ]; \
 then printf "$(PYDAW_LIB_DIR)/liblo.a" ; \
@@ -63,10 +49,10 @@ fi)
 
 ALSA_FLAG ?= $(shell pkg-config --libs alsa)
 
-LINK_CFLAGS  = $(RT_LIB_FLAG) -lpthread $(LIBLO_FLAG) $(PORTMIDI_FLAG) \
-portaudio/lib/.libs/libportaudio*.a -fno-stack-protector \
-$(LDFLAGS) $(shell pkg-config --libs sndfile fftw3f) $(ALSA_FLAG) \
-$(MATH_LIB_FLAG)
+LINK_CFLAGS  = $(RT_LIB_FLAG) -lpthread $(LIBLO_FLAG) -lportmidi \
+-lportaudio -fno-stack-protector $(LDFLAGS) \
+$(shell pkg-config --libs sndfile fftw3f) \
+$(ALSA_FLAG) $(MATH_LIB_FLAG)
 
 C_OBJS   = src/main.o
 

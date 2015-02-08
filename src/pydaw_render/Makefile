@@ -17,8 +17,8 @@ PLAT_FLAGS     ?= -mstackrealign -msse -msse2 -msse3 -mfpmath=sse \
 
 BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
 -floop-optimize -fsingle-precision-constant -funroll-loops -Wall \
--Isrc -Iportaudio/include -fstrength-reduce -fstrict-aliasing \
--finline-functions -Wstrict-aliasing -fno-stack-protector \
+-Isrc -fstrength-reduce -fstrict-aliasing -finline-functions \
+-Wstrict-aliasing -fno-stack-protector \
 -DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
 
 

@@ -14,7 +14,10 @@ GNU General Public License for more details.
 
 import os
 from libpydaw import pydaw_util
-from PyQt4 import QtGui
+
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 from libpydaw.translate import _
 
 import pythonosc
@@ -38,6 +41,8 @@ def prepare_to_quit():
     MAIN_WINDOW = TRANSPORT = IPC = OSC = PROJECT = None
 
 def set_window_title():
+    if not MAIN_WINDOW:
+        return
     MAIN_WINDOW.setWindowTitle('MusiKernel - {}'.format(
         os.path.join(
             PROJECT.project_folder, '{}.{}'.format(
@@ -45,7 +50,7 @@ def set_window_title():
                 pydaw_util.global_pydaw_version_string))))
 
 def pydaw_print_generic_exception(a_ex):
-    QtGui.QMessageBox.warning(
+    QMessageBox.warning(
         MAIN_WINDOW, _("Warning"),
         _("The following error happened:\n{}").format(a_ex))
 
