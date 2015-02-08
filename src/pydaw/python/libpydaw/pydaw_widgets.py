@@ -3896,6 +3896,7 @@ class pydaw_audio_item_viewer_widget(QGraphicsView):
                 f_marker.set_pos()
 
     def draw_item(self, a_graph_object, a_start, a_end, a_fade_in, a_fade_out):
+        self.pixmaps = []
         self.graph_object = a_graph_object
         self.length_str = ["Length: {}".format(
             pydaw_util.pydaw_seconds_to_time_str(
@@ -3911,16 +3912,19 @@ class pydaw_audio_item_viewer_widget(QGraphicsView):
         self.clear_drawn_items()
         f_path_inc = AUDIO_ITEM_SCENE_HEIGHT / self.path_count
         f_path_y_pos = 0.0
-        for f_path in self.path_list:
-            f_pixmap = QPixmap(AUDIO_ITEM_SCENE_WIDTH, f_path_inc)
-            f_painter = QPainter(f_pixmap)
-            f_painter.setPen(self.waveform_pen)
-            f_painter.setBrush(self.waveform_brush)
-            f_painter.fillRect(
-                0, 0, AUDIO_ITEM_SCENE_WIDTH, f_path_inc,
-                QtCore.Qt.darkGray)
-            f_painter.drawPath(f_path)
-            f_painter.end()
+        if not self.pixmaps:
+            for f_path in self.path_list:
+                f_pixmap = QPixmap(AUDIO_ITEM_SCENE_WIDTH, f_path_inc)
+                f_painter = QPainter(f_pixmap)
+                f_painter.setPen(self.waveform_pen)
+                f_painter.setBrush(self.waveform_brush)
+                f_painter.fillRect(
+                    0, 0, AUDIO_ITEM_SCENE_WIDTH, f_path_inc,
+                    QtCore.Qt.darkGray)
+                f_painter.drawPath(f_path)
+                f_painter.end()
+                self.pixmaps.append(f_pixmap)
+        for f_pixmap in self.pixmaps:
             f_path_item = QGraphicsPixmapItem(f_pixmap)
             self.scene.addItem(f_path_item)
             f_path_item.setPos(0.0, f_path_y_pos)

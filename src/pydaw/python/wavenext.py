@@ -1105,6 +1105,7 @@ class pydaw_wave_editor_widget:
                 _("No file path in the clipboard"))
 
     def open_file(self, a_file):
+        libmk.APP.setOverrideCursor(QtCore.Qt.WaitCursor)
         f_file = str(a_file)
         if not os.path.exists(f_file):
             QMessageBox.warning(
@@ -1127,6 +1128,7 @@ class pydaw_wave_editor_widget:
         self.history_button.setMenu(f_menu)
         PROJECT.wn_osc.pydaw_ab_open(a_file)
         self.marker_callback()
+        libmk.APP.restoreOverrideCursor()
 
     def get_audio_item(self, a_uid=0):
         f_start = self.sample_graph.start_marker.value
