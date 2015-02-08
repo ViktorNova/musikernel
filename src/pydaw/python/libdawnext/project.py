@@ -1348,6 +1348,7 @@ class pydaw_item:
         f_end = a_ref.length_beats + f_start
 
         f_spb = 60.0 / a_tempo
+        f_min_len = f_spb / 16.0
         for k, v in self.items.items():
             f_item_start = v.start_beat
             if f_item_start > f_end:
@@ -1376,6 +1377,11 @@ class pydaw_item:
                 f_offset = (f_seconds / f_graph.length_in_seconds) * 1000.0
                 v.sample_end -= f_offset
                 print("GT")
+            f_new_length_seconds = ((v.sample_end - v.sample_start) *
+                0.001) * f_graph.length_in_seconds
+            if f_new_length_seconds < f_min_len:
+                print("Popping item of length {}".format(f_new_length_seconds))
+                f_to_delete.append(k)
             for f_tuple in locals().items():
                 print(f_tuple)
         for k in f_to_delete:
