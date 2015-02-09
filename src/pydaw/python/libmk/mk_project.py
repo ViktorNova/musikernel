@@ -501,8 +501,8 @@ class MkProject(libmk.AbstractProject):
                         if not len(f_frame):
                             f_break = True
                             continue
-                        f_high = pydaw_clip_min(numpy.amax(f_frame), 0.0)
-                        f_low = pydaw_clip_max(numpy.amin(f_frame), 0.0)
+                        f_high = pydaw_clip_min(numpy.amax(f_frame), 0.01)
+                        f_low = pydaw_clip_max(numpy.amin(f_frame), -0.01)
 
                         f_high = round(float(f_high), 2)
                         f_result.append("|".join(
@@ -994,6 +994,13 @@ class pydaw_sample_graph:
         for f_list in self.low_peaks:
             f_list.reverse()
 
+        self.low_peaks = [numpy.array(x) for x in self.low_peaks]
+        self.high_peaks = [numpy.array(x) for x in self.high_peaks]
+
+        for f_high_peaks, f_low_peaks in zip(self.high_peaks, self.low_peaks):
+            numpy.clip(f_high_peaks, 0.01, 0.99, f_high_peaks)
+            numpy.clip(f_low_peaks, -0.99, -0.01, f_low_peaks)
+
     def is_valid(self):
         if (self._file is None):
             print("\n\npydaw_sample_graph.is_valid() "
@@ -1046,81 +1053,49 @@ class pydaw_sample_graph:
                 a_width = AUDIO_ITEM_SCENE_WIDTH
             if not a_height:
                 a_height = AUDIO_ITEM_SCENE_HEIGHT
-            if self.length_in_seconds > 0.5:
-                if a_for_scene:
-                    f_width_inc = a_width / self.count
-                    f_section = a_height / float(self.channels)
-                else:
-                    f_width_inc = 98.0 / self.count
-                    f_section = 100.0 / float(self.channels)
-                f_section_div2 = f_section * 0.5
 
-                f_paths = []
-
-                for f_i in range(self.channels):
-                    f_result = QPainterPath()
-                    f_width_pos = 1.0
-                    f_result.moveTo(f_width_pos, f_section_div2)
-                    if a_audio_item and a_audio_item.reversed:
-                        f_high_peaks = list(
-                            reversed(self.high_peaks[f_i][
-                                f_slice_low:f_slice_high]))
-                        f_low_peaks = list(reversed(self.low_peaks[f_i]))
-                        f_low_peaks = f_low_peaks[f_slice_low:f_slice_high]
-                    else:
-                        f_high_peaks = self.high_peaks[f_i][
-                            f_slice_low:f_slice_high]
-                        f_low_peaks = list(reversed(self.low_peaks[f_i]))
-                        f_low_peaks = f_low_peaks[f_slice_low:f_slice_high]
-                        f_low_peaks.reverse()
-                    for f_peak in f_high_peaks:
-                        if a_audio_item:
-                            f_peak *= f_vol
-                        f_peak_clipped = pydaw_clip_value(f_peak, 0.01, 0.99)
-                        f_result.lineTo(f_width_pos, f_section_div2 -
-                            (f_peak_clipped * f_section_div2))
-                        f_width_pos += f_width_inc
-                    for f_peak in f_low_peaks:
-                        if a_audio_item:
-                            f_peak *= f_vol
-                        f_peak_clipped = pydaw_clip_value(f_peak, -0.99, -0.01)
-                        f_result.lineTo(f_width_pos, (f_peak_clipped * -1.0 *
-                            f_section_div2) + f_section_div2)
-                        f_width_pos -= f_width_inc
-                    f_result.closeSubpath()
-                    f_paths.append(f_result)
-                if a_width or a_height:
-                    return f_paths
-                self.sample_graph_cache = f_paths
-            else:
+            if a_for_scene:
                 f_width_inc = a_width / self.count
                 f_section = a_height / float(self.channels)
-                f_section_div2 = f_section * 0.5
-                f_paths = []
+            else:
+                f_width_inc = 98.0 / self.count
+                f_section = 100.0 / float(self.channels)
+            f_section_div2 = f_section * 0.5
 
-                for f_i in range(self.channels):
-                    f_result = QPainterPath()
-                    f_width_pos = 1.0
-                    f_result.moveTo(f_width_pos, f_section_div2)
-                    if a_audio_item and a_audio_item.reversed:
-                        f_high_peaks = list(
-                            reversed(self.high_peaks[f_i][
-                                f_slice_low:f_slice_high]))
-                    else:
-                        f_high_peaks = self.high_peaks[f_i][
-                            f_slice_low:f_slice_high]
-                    for f_i2 in range(len(f_high_peaks)):
-                        f_peak = f_high_peaks[f_i2]
-                        if a_audio_item:
-                            f_peak *= f_vol
-                        f_result.lineTo(
-                            f_width_pos, f_section_div2 -
-                            (f_peak * f_section_div2))
-                        f_width_pos += f_width_inc
-                    f_paths.append(f_result)
-                if a_width or a_height:
-                    return f_paths
-                self.sample_graph_cache = f_paths
+            f_paths = []
+
+            for f_i in range(self.channels):
+                f_result = QPainterPath()
+                f_width_pos = 1.0
+                f_result.moveTo(f_width_pos, f_section_div2)
+                if a_audio_item and a_audio_item.reversed:
+                    f_high_peaks = self.high_peaks[f_i][
+                            f_slice_high:f_slice_low:-1]
+                    f_low_peaks = self.low_peaks[f_i][::-1]
+                    f_low_peaks = f_low_peaks[f_slice_low:f_slice_high]
+                else:
+                    f_high_peaks = self.high_peaks[f_i][
+                        f_slice_low:f_slice_high]
+                    f_low_peaks = self.low_peaks[f_i][::-1]
+                    f_low_peaks = f_low_peaks[f_slice_high:f_slice_low:-1]
+
+                if a_audio_item:
+                    f_high_peaks = f_high_peaks * f_vol
+                    f_low_peaks = f_low_peaks * f_vol
+
+                for f_peak in f_high_peaks:
+                    f_result.lineTo(f_width_pos, f_section_div2 -
+                        (f_peak * f_section_div2))
+                    f_width_pos += f_width_inc
+                for f_peak in f_low_peaks:
+                    f_result.lineTo(f_width_pos, (f_peak * -1.0 *
+                        f_section_div2) + f_section_div2)
+                    f_width_pos -= f_width_inc
+                f_result.closeSubpath()
+                f_paths.append(f_result)
+            if a_width or a_height:
+                return f_paths
+            self.sample_graph_cache = f_paths
         return self.sample_graph_cache
 
     def check_mtime(self):
