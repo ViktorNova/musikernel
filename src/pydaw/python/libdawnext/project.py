@@ -1305,6 +1305,8 @@ class pydaw_item:
         f_x = 0
         f_count = int(f_width // PIXMAP_TILE_WIDTH) + 1
         f_result = []
+        f_pen = QPen(QtCore.Qt.NoPen)
+        f_pen.setCosmetic(True)
 
         for f_i in range(f_count):
             f_pixmap = QPixmap(min(f_width, PIXMAP_TILE_WIDTH), a_height)
@@ -1312,9 +1314,10 @@ class pydaw_item:
             f_width -= PIXMAP_TILE_WIDTH
             f_pixmap.fill(QtCore.Qt.transparent)
             f_painter = QPainter(f_pixmap)
-            f_painter.setBackground(QtCore.Qt.transparent)
-            f_painter.setPen(QtCore.Qt.darkGray)
-            f_painter.setBrush(QtCore.Qt.lightGray)
+            f_painter.setRenderHint(QPainter.HighQualityAntialiasing)
+            #f_painter.setBackground(QtCore.Qt.transparent)
+            f_painter.setPen(f_pen)
+            f_painter.setBrush(QtCore.Qt.darkGray)
             f_painter.drawPath(f_audio_path)
             f_painter.setPen(QtCore.Qt.white)
             f_painter.setBrush(QtCore.Qt.white)

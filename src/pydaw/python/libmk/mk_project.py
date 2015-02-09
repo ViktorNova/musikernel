@@ -25,6 +25,7 @@ import json
 import wavefile
 import datetime
 import os
+import numpy
 
 pydaw_folder_audio = os.path.join("audio", "files")
 pydaw_folder_audio_rec = os.path.join("audio", "rec")
@@ -482,13 +483,14 @@ class MkProject(libmk.AbstractProject):
             #f_peak_count = int(f_length * 32.0)
             if f_length < 3.0:
                 f_peak_size = 16 #int(f_reader.samplerate * 0.0005)
-                f_chunk_size = 3000 * 16
+                f_chunk_size = int(f_reader.frames / 16) + 1 #3000 * 16
             elif f_length < 20.0:
                 f_peak_size = int(f_reader.samplerate * 0.005)
-                f_chunk_size = 200
+                f_chunk_size = int(f_reader.samplerate * 4) / f_peak_size
             else:
                 f_peak_size = int(f_reader.samplerate * 0.025)
-                f_chunk_size = 100
+                f_chunk_size = int(f_reader.samplerate * 8) / f_peak_size
+            f_chunk_size = int(f_chunk_size)
             f_count = 0
             for f_chunk in f_reader.read_iter(size=f_peak_size * f_chunk_size):
                 for f_i2 in range(f_chunk_size):
@@ -499,18 +501,15 @@ class MkProject(libmk.AbstractProject):
                         if not len(f_frame):
                             f_break = True
                             continue
-                        f_high = -1.0
-                        f_low = 1.0
-                        for f_i2 in range(0, f_frame.shape[0], 10):
-                            f_val = f_frame[f_i2]
-                            if f_val > f_high:
-                                f_high = f_val
-                            elif f_val < f_low:
-                                f_low = f_val
-                        f_high = round(float(f_high), 3)
-                        f_result.append("p|{}|h|{}".format(f_i, f_high))
-                        f_low = round(float(f_low), 3)
-                        f_result.append("p|{}|l|{}".format(f_i, f_low))
+                        f_high = pydaw_clip_min(numpy.amax(f_frame), 0.0)
+                        f_low = pydaw_clip_max(numpy.amin(f_frame), 0.0)
+
+                        f_high = round(float(f_high), 2)
+                        f_result.append("|".join(
+                            [str(x) for x in ("p", f_i, "h", f_high)]))
+                        f_low = round(float(f_low), 2)
+                        f_result.append("|".join(
+                            [str(x) for x in ("p", f_i, "l", f_low)]))
                     f_count += 1
                     if f_break:
                         break
@@ -873,18 +872,20 @@ class pydaw_midi_routings:
 
 
 #From old sample_graph..py
-pydaw_audio_item_scene_height = 1200.0
-pydaw_audio_item_scene_width = 6000.0
+AUDIO_ITEM_SCENE_HEIGHT = 900.0
+AUDIO_ITEM_SCENE_WIDTH = 3600.0
 pydaw_audio_item_scene_rect = QtCore.QRectF(
-    0.0, 0.0, pydaw_audio_item_scene_width, pydaw_audio_item_scene_height)
+    0.0, 0.0, AUDIO_ITEM_SCENE_WIDTH, AUDIO_ITEM_SCENE_HEIGHT)
 
-pydaw_audio_item_scene_gradient = QLinearGradient(0, 0, 0, 1200)
+pydaw_audio_item_scene_gradient = QLinearGradient(
+    0, 0, 0, AUDIO_ITEM_SCENE_HEIGHT)
 pydaw_audio_item_scene_gradient.setColorAt(
     0.0, QColor.fromRgb(60, 60, 60, 120))
 pydaw_audio_item_scene_gradient.setColorAt(
     1.0, QColor.fromRgb(30, 30, 30, 120))
 
-pydaw_audio_item_editor_gradient = QLinearGradient(0, 0, 0, 1200)
+pydaw_audio_item_editor_gradient = QLinearGradient(
+    0, 0, 0, AUDIO_ITEM_SCENE_HEIGHT)
 pydaw_audio_item_editor_gradient.setColorAt(
     0.0, QColor.fromRgb(190, 192, 123, 120))
 pydaw_audio_item_editor_gradient.setColorAt(
@@ -1042,9 +1043,9 @@ class pydaw_sample_graph:
             f_slice_high = None
         if a_width or a_height or self.sample_graph_cache is None:
             if not a_width:
-                a_width = pydaw_audio_item_scene_width
+                a_width = AUDIO_ITEM_SCENE_WIDTH
             if not a_height:
-                a_height = pydaw_audio_item_scene_height
+                a_height = AUDIO_ITEM_SCENE_HEIGHT
             if self.length_in_seconds > 0.5:
                 if a_for_scene:
                     f_width_inc = a_width / self.count

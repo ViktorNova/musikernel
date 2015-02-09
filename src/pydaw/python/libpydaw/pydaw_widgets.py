@@ -18,7 +18,8 @@ import math
 import shutil
 
 from . import pydaw_util
-from libmk.mk_project import pydaw_folder_plugins
+from libmk.mk_project import (
+    pydaw_folder_plugins, AUDIO_ITEM_SCENE_HEIGHT, AUDIO_ITEM_SCENE_WIDTH)
 from libpydaw.translate import _
 
 from PyQt5 import QtCore
@@ -3379,8 +3380,7 @@ class pydaw_custom_additive_oscillator(pydaw_abstract_custom_oscillator):
             self.phase_viewer.bars[f_i].set_value(ADDITIVE_OSC_MIN_AMP)
         self.get_wav(True)
 
-AUDIO_ITEM_SCENE_HEIGHT = 1200.0
-AUDIO_ITEM_SCENE_WIDTH = 6000.0
+
 AUDIO_ITEM_SCENE_WIDTH_RECIP = 1.0 / AUDIO_ITEM_SCENE_WIDTH
 AUDIO_ITEM_MAX_MARKER_VAL = 1000.0
 AUDIO_ITEM_END_MARKER_MIN_VAL = 6.0
