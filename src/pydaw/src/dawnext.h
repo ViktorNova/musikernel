@@ -1146,7 +1146,8 @@ void v_dn_process_midi(t_dawnext * self, t_dn_item_ref * a_item_ref,
             }
 
             if((f_adjusted_start >= f_track_current_period_beats) &&
-                (f_adjusted_start < f_track_next_period_beats))
+                (f_adjusted_start < f_track_next_period_beats) &&
+                (f_adjusted_start < a_item_ref->end))
             {
                 if(f_event->type == PYDAW_EVENT_NOTEON)
                 {
@@ -1588,7 +1589,8 @@ void v_dn_audio_items_run(t_dawnext * self, t_dn_item_ref * a_item_ref,
 
         if(f_playback_mode != PYDAW_PLAYBACK_MODE_OFF &&
            f_audio_start >= a_ts->ml_current_beat &&
-           f_audio_start < a_ts->ml_next_beat)
+           f_audio_start < a_ts->ml_next_beat &&
+           f_audio_start < a_item_ref->end)
         {
             if(f_audio_item->is_reversed)
             {
