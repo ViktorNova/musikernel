@@ -6347,10 +6347,11 @@ class automation_item(QGraphicsEllipseItem):
         self.parent_view.selected_str = []
         for f_point in self.parent_view.automation_points:
             if f_point.isSelected():
-                f_cc_start = (((f_point.pos().x() - AUTOMATION_MIN_HEIGHT) /
-                    self.parent_view.item_width))
-                if f_cc_start < 0.0:
-                    f_cc_start = 0.0
+                f_pos_x = f_point.pos().x()
+                f_cc_start = (f_pos_x -
+                    AUTOMATION_MIN_HEIGHT) / self.parent_view.beat_width
+                f_cc_start = pydaw_clip_min(f_cc_start, 0.0)
+                f_cc_start = round(f_cc_start, 6)
                 if self.is_cc:
                     CURRENT_ITEM.ccs.remove(f_point.cc_item)
                     f_cc_val = (127.0 - (((f_point.pos().y() -
@@ -6359,8 +6360,7 @@ class automation_item(QGraphicsEllipseItem):
 
                     f_point.cc_item.start = f_cc_start
                     f_point.cc_item.set_val(f_cc_val)
-                    CURRENT_ITEM.ccs.append(
-                        f_point.cc_item)
+                    CURRENT_ITEM.ccs.append(f_point.cc_item)
                     CURRENT_ITEM.ccs.sort()
                 else:
                     #try:
@@ -6628,10 +6628,6 @@ class automation_viewer(QGraphicsView):
 
     def set_scale(self):
         f_rect = self.rect()
-        f_width = float(f_rect.width()) - self.verticalScrollBar().width() - \
-            30.0 - AUTOMATION_RULER_WIDTH
-        self.region_scale = f_width / 690.0
-        self.item_width = self.automation_width * self.region_scale
         self.viewer_height = float(f_rect.height()) - \
             self.horizontalScrollBar().height() - \
             30.0 - AUTOMATION_RULER_WIDTH
