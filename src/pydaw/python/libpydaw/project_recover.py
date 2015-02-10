@@ -122,7 +122,7 @@ def project_recover_dialog(a_file):
         QMessageBox.warning(
             f_window, _("Error"), _("No backups exist for this "
             "project, recovery is not possible."))
-        return
+        exit(1)
     f_backup_dir = os.path.join(f_project_dir, "backups")
     f_central_widget = QWidget()
     f_layout = QVBoxLayout(f_central_widget)
