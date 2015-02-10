@@ -1088,8 +1088,10 @@ class SequencerItem(QGraphicsRectItem):
                 f_pos_x = f_item.quantize_scene(f_pos_x)
                 f_item.setPos(f_pos_x, f_pos_y)
                 if not f_item.is_moving:
-                    f_item.setGraphicsEffect(QGraphicsOpacityEffect())
                     f_item.is_moving = True
+                    # Triggers a bug in Qt5 where the pixmaps in a long
+                    # tiled item disappear
+                    #f_item.setGraphicsEffect(QGraphicsOpacityEffect())
 
     def mouseReleaseEvent(self, a_event):
         if libmk.IS_PLAYING or self.event_pos_orig is None:
