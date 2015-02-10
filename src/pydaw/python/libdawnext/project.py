@@ -1261,6 +1261,7 @@ class pydaw_item:
     def painter_path(self, a_px_per_beat, a_height, a_tempo):
         f_seconds_per_beat = 60.0 / a_tempo
         f_audio_path = QPainterPath()
+        f_audio_path.addRect(0, 0, 1, 1)
         for f_item in sorted(
         self.items.values(), key=lambda x: x.start_beat):
             f_graph = libmk.PROJECT.get_sample_graph_by_uid(
@@ -1278,6 +1279,7 @@ class pydaw_item:
                 f_y_pos += f_y_inc
 
         f_notes_path = QPainterPath()
+        f_notes_path.addRect(0, 0, 1, 1)
         if self.notes:
             f_note_set = sorted(
                 set(x.note_num for x in self.notes), reverse=True)
