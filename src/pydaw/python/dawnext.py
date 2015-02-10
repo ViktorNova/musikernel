@@ -1211,6 +1211,8 @@ class ItemSequencer(QGraphicsView):
         self.setCacheMode(QGraphicsView.CacheBackground)
         self.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
         self.setOptimizationFlag(QGraphicsView.DontSavePainterState)
+        self.setOptimizationFlag(QGraphicsView.DontAdjustForAntialiasing)
+        #self.setRenderHint(QPainter.HighQualityAntialiasing)
 
         # The below code is broken on Qt5.3.<=2, so not using it for
         # now, but this will obviously be quite desirable some day
@@ -1268,8 +1270,6 @@ class ItemSequencer(QGraphicsView):
         self.playback_cursor = None
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        #Somewhat slow on my AMD 5450 using the FOSS driver
-        #self.setRenderHint(QPainter.Antialiasing)
 
         self.menu = QMenu(self)
         self.atm_menu = QMenu(self)
