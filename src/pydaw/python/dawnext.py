@@ -1222,8 +1222,6 @@ class ItemSequencer(QGraphicsView):
 #        self.opengl_widget.setFormat(self.surface_format)
 #        self.setViewport(self.opengl_widget)
 
-        self.setRenderHint(QPainter.Antialiasing)
-
         self.ignore_selection_change = False
         self.playback_pos = 0.0
         self.playback_pos_orig = 0.0
