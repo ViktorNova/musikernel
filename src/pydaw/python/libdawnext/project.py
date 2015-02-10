@@ -1302,7 +1302,6 @@ class pydaw_item:
 
         f_width = max(f_audio_width, f_notes_width)
 
-        f_x = 0
         f_count = int(f_width // PIXMAP_TILE_WIDTH) + 1
         f_result = []
         f_pen = QPen(QtCore.Qt.NoPen)
@@ -1310,22 +1309,20 @@ class pydaw_item:
 
         for f_i in range(f_count):
             f_pixmap = QPixmap(min(f_width, PIXMAP_TILE_WIDTH), a_height)
-            f_result.append(f_pixmap)
             f_width -= PIXMAP_TILE_WIDTH
             f_pixmap.fill(QtCore.Qt.transparent)
             f_painter = QPainter(f_pixmap)
             f_painter.setRenderHint(QPainter.HighQualityAntialiasing)
-            #f_painter.setBackground(QtCore.Qt.transparent)
             f_painter.setPen(f_pen)
             f_painter.setBrush(QtCore.Qt.darkGray)
             f_painter.drawPath(f_audio_path)
             f_painter.setPen(QtCore.Qt.white)
             f_painter.setBrush(QtCore.Qt.white)
             f_painter.drawPath(f_notes_path)
-            #f_x -= PIXMAP_TILE_WIDTH
+            f_painter.end()
+            f_result.append(f_pixmap)
             for f_path in (f_notes_path, f_audio_path):
                 f_path.translate(-PIXMAP_TILE_WIDTH, 0)
-                #f_path.translate(f_x, 0)
         return f_result
 
     def get_length(self, a_tempo):
