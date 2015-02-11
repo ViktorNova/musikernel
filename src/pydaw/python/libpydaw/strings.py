@@ -160,12 +160,18 @@ these features in the BIOS.</p>
 solution, as different generations of Intel and AMD processors use different
 CPU frequency drivers and offer different power saving features and different
 BIOS.</p>
-<br />
+
 <h3>My microphone doesn't work</h3>
 
 <p>On some interfaces (such as the Apogee One), you may need to open the
 terminal, type the command "alsamixer", and select your interface and
 set the input.</p>
+
+<h3>The UI is sluggish in a large project</h3>
+
+<p>If using an Nvidia or AMD graphics card, you should probably try
+installing the proprietary driver for you card.  In Ubuntu, with an
+AMD card, for example: sudo apt-get install fglrx.</p>
 """
 )
 
