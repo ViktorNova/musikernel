@@ -2666,6 +2666,8 @@ def normalize_dialog():
     f_window.exec_()
     return f_window.f_result
 
+PAINTER_PATH_CACHE = {}
+
 class audio_viewer_item(QGraphicsRectItem):
     def __init__(self, a_track_num, a_audio_item, a_graph):
         QGraphicsRectItem.__init__(self)
@@ -2679,9 +2681,14 @@ class audio_viewer_item(QGraphicsRectItem):
         self.audio_item = a_audio_item
         self.orig_string = str(a_audio_item)
         self.track_num = a_track_num
-        f_graph = libmk.PROJECT.get_sample_graph_by_uid(
-            self.audio_item.uid)
-        self.painter_paths = f_graph.create_sample_graph(True)
+
+        f_uid = self.audio_item.uid
+        if f_uid in PAINTER_PATH_CACHE:
+            self.painter_paths = PAINTER_PATH_CACHE[f_uid]
+        else:
+            self.painter_paths = a_graph.create_sample_graph(True)
+            PAINTER_PATH_CACHE[f_uid] = self.painter_paths
+
         self.y_inc = AUDIO_ITEM_HEIGHT / len(self.painter_paths)
         f_y_pos = 0.0
         self.path_items = []
