@@ -302,14 +302,30 @@ void v_mk_set_tempo(t_mk_seq_event_list*, float);
 t_musikernel * musikernel = NULL;
 int ZERO = 0;
 
+#ifdef MK_DLL
+
+typedef void (*v_ui_send_callback)(char * a_path, char * a_msg);
+
+v_ui_send_callback UI_SEND_CALLBACK = NULL;
+
+void v_set_ui_callback(v_ui_send_callback a_callback)
+{
+    UI_SEND_CALLBACK = a_callback;
+}
+
 void v_ui_send(char * a_path, char * a_msg)
 {
-#ifndef MK_DLL
-    lo_send(musikernel->uiTarget, a_path, "s", a_msg);
-#else
-    printf("Yaaarrrr fucking do something\n");
-#endif
+    UI_SEND_CALLBACK(a_path, a_msg);
 }
+
+#else
+
+void v_ui_send(char * a_path, char * a_msg)
+{
+    lo_send(musikernel->uiTarget, a_path, "s", a_msg);
+}
+
+#endif
 
 void g_sample_period_init(t_sample_period *self)
 {
