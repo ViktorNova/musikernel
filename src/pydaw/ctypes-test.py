@@ -6,7 +6,7 @@ mk = ctypes.CDLL("./musikernel1.so")
 mk.main.restype = ctypes.c_int
 mk.main.argstype = [ctypes.c_int, ctypes.POINTER(ctypes.c_char_p)]
 
-func_sig = ctypes.CFUNCTYPE(ctypes.c_char_p, ctypes.c_char_p)
+func_sig = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p)
 
 def engine_callback(a_path, a_msg):
     print("It works!!!")
@@ -15,7 +15,7 @@ def engine_callback(a_path, a_msg):
 
 func_ptr = func_sig(engine_callback)
 
-mk.v_set_ui_callback.argstype = [func_sig]
+#mk.v_set_ui_callback.argstype = [func_sig]
 mk.v_set_ui_callback.restype = None
 
 mk.v_set_ui_callback(func_ptr)
