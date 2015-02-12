@@ -69,7 +69,6 @@ GNU General Public License for more details.
 #include "pydaw_audio_tracks.h"
 #include "pydaw_audio_inputs.h"
 #include "pydaw_audio_util.h"
-#include <lo/lo.h>
 #include "musikernel.h"
 
 
@@ -683,8 +682,7 @@ void v_en_osc_send(t_osc_send_data * a_buffers)
 
         if(!musikernel->is_offline_rendering)
         {
-            lo_send(musikernel->uiTarget,
-                "musikernel/edmnext", "s", a_buffers->f_tmp1);
+            v_ui_send("musikernel/edmnext", a_buffers->f_tmp1);
         }
     }
 }

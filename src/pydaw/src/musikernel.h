@@ -298,6 +298,11 @@ void v_mk_set_tempo(t_mk_seq_event_list*, float);
 t_musikernel * musikernel = NULL;
 int ZERO = 0;
 
+void v_ui_send(char * a_path, char * a_msg)
+{
+    lo_send(musikernel->uiTarget, a_path, "s", a_msg);
+}
+
 void g_sample_period_init(t_sample_period *self)
 {
     self->buffers[0] = NULL;

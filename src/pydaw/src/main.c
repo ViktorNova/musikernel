@@ -39,8 +39,6 @@ GNU General Public License for more details.
 #include <time.h>
 #include <errno.h>
 
-#include <lo/lo.h>
-
 //  If you define this, you must also link to cpufreq appropriately with
 //    LDFLAGS+="-lcpufreq"  //or whatever flag
 //  #define PYDAW_CPUFREQ
@@ -899,6 +897,32 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     return 0;
 }
 
+int v_configure(char * path, char * key, char * value)
+{
+    if(!strcmp(path, "/musikernel/edmnext"))
+    {
+        v_en_configure(key, value);
+        return 0;
+    }
+    else if(!strcmp(path, "/musikernel/wavenext"))
+    {
+        v_wn_configure(key, value);
+        return 0;
+    }
+    else if(!strcmp(path, "/musikernel/dawnext"))
+    {
+        v_dn_configure(key, value);
+        return 0;
+    }
+    else if(!strcmp(path, "/musikernel/master"))
+    {
+        v_mk_configure(key, value);
+        return 0;
+    }
+
+    return 1;
+}
+
 void osc_error(int num, const char *msg, const char *path)
 {
     printf("liblo server error %d in path %s: %s\n", num, path, msg);
@@ -930,29 +954,14 @@ int osc_message_handler(const char *path, const char *types, lo_arg **argv,
 
     assert(!strcmp(types, "ss"));
 
-    if(!strcmp(path, "/musikernel/edmnext"))
+
+    if(v_configure(path, key, value))
     {
-        v_en_configure(key, value);
-        return 0;
-    }
-    else if(!strcmp(path, "/musikernel/wavenext"))
-    {
-        v_wn_configure(key, value);
-        return 0;
-    }
-    else if(!strcmp(path, "/musikernel/dawnext"))
-    {
-        v_dn_configure(key, value);
-        return 0;
-    }
-    else if(!strcmp(path, "/musikernel/master"))
-    {
-        v_mk_configure(key, value);
-        return 0;
+        return osc_debug_handler(path, types, argv, argc, data, user_data);
     }
     else
     {
-        return osc_debug_handler(path, types, argv, argc, data, user_data);
+        return 0;
     }
 }
 
