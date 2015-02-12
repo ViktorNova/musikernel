@@ -17,42 +17,15 @@ BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
 -finline-functions -fno-stack-protector \
 -DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
 
-PYDAW_LIB_DIR   ?= /usr/lib
-PYDAW_LIB64_DIR ?= $(shell if [ -e "/usr/lib/x86_64-linux-gnu" ]; \
-then printf "/usr/lib/x86_64-linux-gnu" ; \
-elif [ -e "/usr/lib64" ]; \
-then printf "/usr/lib64" ; \
-fi)
 
 BUILD_CFLAGS   = $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
-
-LIBLO_FLAG ?= $(shell if [ -e $(PYDAW_LIB_DIR)/liblo.a ]; \
-then printf "$(PYDAW_LIB_DIR)/liblo.a" ; \
-elif [ -e $(PYDAW_LIB64_DIR)/liblo.a ]; \
-then printf "$(PYDAW_LIB64_DIR)/liblo.a" ; \
-else printf " -llo" ; \
-fi)
-
-MATH_LIB_FLAG ?= $(shell if [ -e $(PYDAW_LIB_DIR)/libm.a ]; \
-then printf "$(PYDAW_LIB_DIR)/libm.a" ; \
-elif [ -e $(PYDAW_LIB64_DIR)/libm.a ]; \
-then printf "$(PYDAW_LIB64_DIR)/libm.a" ; \
-else printf " -lm" ; \
-fi)
-
-RT_LIB_FLAG ?= $(shell if [ -e $(PYDAW_LIB_DIR)/librt.a ]; \
-then printf "$(PYDAW_LIB_DIR)/librt.a" ; \
-elif [ -e $(PYDAW_LIB64_DIR)/librt.a ]; \
-then printf "$(PYDAW_LIB64_DIR)/librt.a" ; \
-else printf " -lrt" ; \
-fi)
-
+MATH_LIB_FLAG ?= -lm
+RT_LIB_FLAG ?= -lrt
 ALSA_FLAG ?= $(shell pkg-config --libs alsa)
 
-LINK_CFLAGS  = $(RT_LIB_FLAG) -lpthread $(LIBLO_FLAG) -lportmidi \
--lportaudio -fno-stack-protector $(LDFLAGS) \
-$(shell pkg-config --libs sndfile fftw3f) \
-$(ALSA_FLAG) $(MATH_LIB_FLAG)
+LINK_CFLAGS  = $(RT_LIB_FLAG) -lpthread \
+$(LIBLO_FLAG) -lportmidi -lportaudio $(LDFLAGS) \
+$(shell pkg-config --libs sndfile fftw3f liblo) $(ALSA_FLAG) $(MATH_LIB_FLAG)
 
 C_OBJS   = src/main.o
 
@@ -63,15 +36,19 @@ all:
 	make eng
 
 dbg:
-	rm src/*.o $(PYDAW_VERSION)-engine  $(PYDAW_VERSION)-engine-dbg ; echo
+	rm -f src/*.o $(PYDAW_VERSION)-engine  $(PYDAW_VERSION)-engine-dbg ; echo
 	make CFLAGS+=" -O0 -g -gdwarf-3 " $(PYDAW_VERSION)-engine
 	mv $(PYDAW_VERSION)-engine $(PYDAW_VERSION)-engine-dbg
 
 eng:
-	rm src/*.o $(PYDAW_VERSION)-engine ; echo
+	rm -f src/*.o $(PYDAW_VERSION)-engine ; echo
 	rm -f $(PYDAW_VERSION)-engine src/*.o
 	make CFLAGS+=" -O2 " $(PYDAW_VERSION)-engine
 
+lib:
+	rm -f src/*.o $(PYDAW_VERSION)-engine ; echo
+	make CFLAGS+=" -O2 -fPIC " LDFLAGS+=" -shared "
+	mv $(PYDAW_VERSION)-engine $(PYDAW_VERSION).so
 # --------------------------------------------------------------
 
 $(PYDAW_VERSION)-engine: $(C_OBJS)
