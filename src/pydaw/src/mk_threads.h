@@ -158,7 +158,9 @@ void v_pydaw_destructor()
 
     usleep(300000);
 
+#ifndef MK_DLL
     lo_address_free(musikernel->uiTarget);
+#endif
 
     //abort the application rather than hang indefinitely
     for(f_i = 1; f_i < musikernel->worker_thread_count; ++f_i)

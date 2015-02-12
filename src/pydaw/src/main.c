@@ -73,7 +73,6 @@ static float **pluginOutputBuffers;
 
 
 t_midi_device_list MIDI_DEVICES;
-lo_server_thread serverThread;
 
 #ifdef __linux__
 static sigset_t _signals;
@@ -82,12 +81,16 @@ static sigset_t _signals;
 int PYDAW_NO_HARDWARE = 0;
 PmError f_midi_err;
 
+#ifndef MK_DLL
+lo_server_thread serverThread;
+
 void osc_error(int num, const char *m, const char *path);
 
 int osc_message_handler(const char *path, const char *types, lo_arg **argv, int
 		      argc, void *data, void *user_data) ;
 int osc_debug_handler(const char *path, const char *types, lo_arg **argv, int
 		      argc, void *data, void *user_data) ;
+#endif
 
 inline void v_pydaw_run_main_loop(int sample_count,
         float **output, float *a_input_buffers);
@@ -372,12 +375,14 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     pthread_attr_setstacksize(&f_ui_threadAttr, 1000000); //8388608);
     pthread_attr_setdetachstate(&f_ui_threadAttr, PTHREAD_CREATE_DETACHED);
 
+#ifndef MK_DLL
     pthread_t f_ui_monitor_thread;
     ui_thread_args * f_ui_thread_args =
             (ui_thread_args*)malloc(sizeof(ui_thread_args));
     f_ui_thread_args->pid = atoi(argv[3]);
     pthread_create(&f_ui_monitor_thread, &f_ui_threadAttr,
             ui_process_monitor_thread, (void*)f_ui_thread_args);
+#endif
 
     int f_huge_pages = atoi(argv[4]);
     assert(f_huge_pages == 0 || f_huge_pages == 1);
@@ -507,12 +512,16 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
     MIDI_DEVICES.count = 0;
 
+#ifndef MK_DLL
+
     /* Create OSC thread */
 
     serverThread = lo_server_thread_new("19271", osc_error);
     lo_server_thread_add_method(serverThread, NULL, NULL, osc_message_handler,
             NULL);
     lo_server_thread_start(serverThread);
+
+#endif
 
     char * f_key_char = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
     char * f_value_char = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
@@ -923,6 +932,8 @@ int v_configure(char * path, char * key, char * value)
     return 1;
 }
 
+#ifndef MK_DLL
+
 void osc_error(int num, const char *msg, const char *path)
 {
     printf("liblo server error %d in path %s: %s\n", num, path, msg);
@@ -964,4 +975,6 @@ int osc_message_handler(const char *path, const char *types, lo_arg **argv,
         return 0;
     }
 }
+
+#endif
 

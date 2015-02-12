@@ -15,8 +15,11 @@ GNU General Public License for more details.
 #define	MK_COMPILER_H
 
 #include <stdlib.h>
-#include <lo/lo.h>
 #include <sndfile.h>
+
+#ifndef MK_DLL
+#include <lo/lo.h>
+#endif
 
 #if !defined(CACHE_LINE_SIZE)
 

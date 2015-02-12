@@ -240,8 +240,12 @@ typedef struct
     pthread_t audio_recording_thread;
     int audio_recording_quit_notifier __attribute__((aligned(16)));
     int playback_mode;  //0 == Stop, 1 == Play, 2 == Rec
+
+#ifndef MK_DLL
     lo_server_thread serverThread;
     lo_address uiTarget;
+#endif
+
     char * osc_cursor_message;
     int osc_queue_index;
     char osc_queue_keys[PYDAW_OSC_SEND_QUEUE_SIZE][12];
@@ -300,7 +304,11 @@ int ZERO = 0;
 
 void v_ui_send(char * a_path, char * a_msg)
 {
+#ifndef MK_DLL
     lo_send(musikernel->uiTarget, a_path, "s", a_msg);
+#else
+    printf("Yaaarrrr fucking do something\n");
+#endif
 }
 
 void g_sample_period_init(t_sample_period *self)
@@ -585,9 +593,11 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     musikernel->osc_queue_index = 0;
     musikernel->osc_cursor_message = (char*)malloc(sizeof(char) * 1024);
 
+#ifndef MK_DLL
     musikernel->serverThread = lo_server_thread_new(NULL, pydaw_osc_error);
     musikernel->uiTarget = lo_address_new_from_url(
         "osc.udp://localhost:30321/");
+#endif
 
     for(f_i = 0; f_i < MAX_PLUGIN_POOL_COUNT; ++f_i)
     {
@@ -654,12 +664,14 @@ void v_pydaw_set_host(int a_mode)
     }
 }
 
+#ifndef MK_DLL
 void v_pydaw_activate_osc_thread(lo_method_handler osc_message_handler)
 {
     lo_server_thread_add_method(musikernel->serverThread, NULL, NULL,
             osc_message_handler, NULL);
     lo_server_thread_start(musikernel->serverThread);
 }
+#endif
 
 /* Create a clock_t with clock() when beginning some work,
  * and use this function to print the completion time*/

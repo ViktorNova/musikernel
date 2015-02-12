@@ -47,7 +47,7 @@ eng:
 
 lib:
 	rm -f src/*.o $(PYDAW_VERSION)-engine ; echo
-	make CFLAGS+=" -O2 -fPIC " LDFLAGS+=" -shared "
+	make CFLAGS+=" -O2 -fPIC -DMK_DLL " LDFLAGS+=" -shared "
 	mv $(PYDAW_VERSION)-engine $(PYDAW_VERSION).so
 # --------------------------------------------------------------
 
