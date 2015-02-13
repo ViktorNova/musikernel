@@ -134,7 +134,22 @@ class pydaw_device_dialog:
         self.buffer_sizes = ["32", "64", "128", "256", "512", "1024", "2048"]
 
     def open_devices(self):
-        f_portaudio_so_path = "libportaudio.so"
+        if pydaw_util.IS_LINUX:
+            f_portaudio_so_path = "libportaudio.so"
+            f_pm_dll = "libportmidi.so"
+        elif pydaw_util.IS_CYGWIN:
+            f_portaudio_so_path = "libportaudio-2.dll"
+            f_pm_dll = "libportmidi-0.dll"
+        elif pydaw_util.IS_WINDOWS:
+            f_pm_dll = os.path.join(
+                pydaw_util.ENGINE_LIB, "libportmidi-0.dll")
+            f_portaudio_so_path = os.path.join(
+                pydaw_util.ENGINE_LIB, "libportaudio-2.dll")
+        else:
+            print("Unsupported platform {}, don't know where to look "
+                "for shared libraries.")
+            raise NotImplementedError
+
         ctypes.cdll.LoadLibrary(f_portaudio_so_path)
         self.pyaudio = ctypes.CDLL(f_portaudio_so_path)
         self.pyaudio.Pa_GetDeviceInfo.restype = ctypes.POINTER(
@@ -147,9 +162,6 @@ class pydaw_device_dialog:
             ctypes.POINTER(portaudio.PaStreamParameters),
             ctypes.POINTER(portaudio.PaStreamParameters), ctypes.c_double]
         self.pyaudio.Pa_Initialize()
-
-        f_pm_dll = "libportmidi-0.dll" if "cygwin" in sys.platform \
-            else "libportmidi.so"
 
         ctypes.cdll.LoadLibrary(f_pm_dll)
         self.pypm = ctypes.CDLL(f_pm_dll)
@@ -275,58 +287,59 @@ class pydaw_device_dialog:
         f_worker_threads_combobox.addItems(
             [_("Auto")] + [str(x) for x in range(1, 9)])
         f_worker_threads_combobox.setToolTip(THREADS_TOOLTIP)
-        f_window_layout.addWidget(f_worker_threads_combobox, 3, 1)
-        f_window_layout.addWidget(QLabel(_("Audio Engine")), 4, 0)
-        f_audio_engine_combobox = QComboBox()
-        f_audio_engine_combobox.addItems(
-            [_("Normal"), _("Elevated"), _("Elevated(sandbox)"),
-             _("Debug"), _("GDB"), _("Valgrind"),
-             _("GUI Only"), _("No Audio"), _("Module")])
-        f_audio_engine_combobox.setToolTip(f_device_tooltip)
-        f_window_layout.addWidget(f_audio_engine_combobox, 4, 1)
-        f_thread_affinity_checkbox = QCheckBox(
-            _("Lock worker threads to own core?"))
-        f_thread_affinity_checkbox.setToolTip(
-            _("This may give better performance with fewer "
-            "Xruns at low latency, "
-            "but may perform badly\non certain configurations.  "
-            "The audio engine setting must "
-            "be set to 'Elevated' or "
-            "'Elevated(Sandbox)', otherwise this setting has no effect."))
-        f_window_layout.addWidget(f_thread_affinity_checkbox, 5, 1)
+        if pydaw_util.IS_LINUX:
+            f_window_layout.addWidget(f_worker_threads_combobox, 3, 1)
+            f_window_layout.addWidget(QLabel(_("Audio Engine")), 4, 0)
+            f_audio_engine_combobox = QComboBox()
+            f_audio_engine_combobox.addItems(
+                [_("Normal"), _("Elevated"), _("Elevated(sandbox)"),
+                 _("Debug"), _("GDB"), _("Valgrind"),
+                 _("GUI Only"), _("No Audio"), _("Module")])
+            f_audio_engine_combobox.setToolTip(f_device_tooltip)
+            f_window_layout.addWidget(f_audio_engine_combobox, 4, 1)
+            f_thread_affinity_checkbox = QCheckBox(
+                _("Lock worker threads to own core?"))
+            f_thread_affinity_checkbox.setToolTip(
+                _("This may give better performance with fewer "
+                "Xruns at low latency, "
+                "but may perform badly\non certain configurations.  "
+                "The audio engine setting must "
+                "be set to 'Elevated' or "
+                "'Elevated(Sandbox)', otherwise this setting has no effect."))
+            f_window_layout.addWidget(f_thread_affinity_checkbox, 5, 1)
 
-        f_governor_checkbox = QCheckBox(
-            _("Force CPU governor to performance mode "
-                "when MusiKernel is running?"))
-        f_governor_checkbox.setToolTip(
-            _("This forces the CPU to use more aggressive "
-            "clockspeeds when MusiKernel is "
-            "running, and reverts back to 'On Demand'\n"
-            "when MusiKernel is closed.  Use this for best "
-            "performance if possible.\n\n"
-            "The audio engine setting must be set to "
-            "'Elevated' or 'Elevated(Sandbox)', "
-            "otherwise this setting has "
-            "no effect.\n"
-            "Also, support for cpufreq must be compiled in, "
-            "which requires different dependencies in each distro, "
-            "currently\n"
-            "it's only default for Ubuntu.  However, you can make this "
-            "setting in other distros using their default tools\nfor "
-            "changing the CPU governor, such as the 'cpupower' command."
-            "\n\n"
-            "IMPORTANT:  Enabling this usually crashes the "
-            "audio engine when run "
-            "from within Virtualbox or on "
-            "systems with\n"
-            "certain security configurations.  Disable this if the "
-            "engine crashes on startup."))
-        f_window_layout.addWidget(f_governor_checkbox, 6, 1)
-        f_hugepages_checkbox = QCheckBox(
-            _("Use HugePages? (You must configure HugePages on your "
-            "system first)"))
-        f_hugepages_checkbox.setToolTip(_(HUGEPAGES_TOOLTIP))
-        f_window_layout.addWidget(f_hugepages_checkbox, 7, 1)
+            f_governor_checkbox = QCheckBox(
+                _("Force CPU governor to performance mode "
+                    "when MusiKernel is running?"))
+            f_governor_checkbox.setToolTip(
+                _("This forces the CPU to use more aggressive "
+                "clockspeeds when MusiKernel is "
+                "running, and reverts back to 'On Demand'\n"
+                "when MusiKernel is closed.  Use this for best "
+                "performance if possible.\n\n"
+                "The audio engine setting must be set to "
+                "'Elevated' or 'Elevated(Sandbox)', "
+                "otherwise this setting has "
+                "no effect.\n"
+                "Also, support for cpufreq must be compiled in, "
+                "which requires different dependencies in each distro, "
+                "currently\n"
+                "it's only default for Ubuntu.  However, you can make this "
+                "setting in other distros using their default tools\nfor "
+                "changing the CPU governor, such as the 'cpupower' command."
+                "\n\n"
+                "IMPORTANT:  Enabling this usually crashes the "
+                "audio engine when run "
+                "from within Virtualbox or on "
+                "systems with\n"
+                "certain security configurations.  Disable this if the "
+                "engine crashes on startup."))
+            f_window_layout.addWidget(f_governor_checkbox, 6, 1)
+            f_hugepages_checkbox = QCheckBox(
+                _("Use HugePages? (You must configure HugePages on your "
+                "system first)"))
+            f_hugepages_checkbox.setToolTip(_(HUGEPAGES_TOOLTIP))
+            f_window_layout.addWidget(f_hugepages_checkbox, 7, 1)
 
         f_ok_cancel_layout = QHBoxLayout()
         f_main_layout.addLayout(f_ok_cancel_layout)
@@ -450,11 +463,13 @@ class pydaw_device_dialog:
                 f_file.write("name|{}\n".format(self.device_name))
                 f_file.write("bufferSize|{}\n".format(f_buffer_size))
                 f_file.write("sampleRate|{}\n".format(f_samplerate))
-                f_file.write("audioEngine|{}\n".format(f_audio_engine))
-                f_file.write("threads|{}\n".format(f_worker_threads))
-                f_file.write("threadAffinity|{}\n".format(f_thread_affinity))
-                f_file.write("hugePages|{}\n".format(f_hugepages))
-                f_file.write("performance|{}\n".format(f_performance))
+                if pydaw_util.IS_LINUX:
+                    f_file.write("audioEngine|{}\n".format(f_audio_engine))
+                    f_file.write("threads|{}\n".format(f_worker_threads))
+                    f_file.write("threadAffinity|{}\n".format(
+                        f_thread_affinity))
+                    f_file.write("hugePages|{}\n".format(f_hugepages))
+                    f_file.write("performance|{}\n".format(f_performance))
                 f_file.write("audioInputs|{}\n".format(f_audio_inputs))
                 for f_midi_in_device in f_midi_in_devices:
                     f_file.write("midiInDevice|{}\n".format(f_midi_in_device))
@@ -517,25 +532,27 @@ class pydaw_device_dialog:
                 f_samplerate_combobox.findText(
                     pydaw_util.global_device_val_dict["sampleRate"]))
 
-        if "threads" in pydaw_util.global_device_val_dict:
-            f_worker_threads_combobox.setCurrentIndex(
-                int(pydaw_util.global_device_val_dict["threads"]))
+        if pydaw_util.IS_LINUX:
+            if "threads" in pydaw_util.global_device_val_dict:
+                f_worker_threads_combobox.setCurrentIndex(
+                    int(pydaw_util.global_device_val_dict["threads"]))
 
-        if "threadAffinity" in pydaw_util.global_device_val_dict:
-            if int(pydaw_util.global_device_val_dict["threadAffinity"]) == 1:
-                f_thread_affinity_checkbox.setChecked(True)
+            if "threadAffinity" in pydaw_util.global_device_val_dict:
+                if int(pydaw_util.global_device_val_dict[
+                "threadAffinity"]) == 1:
+                    f_thread_affinity_checkbox.setChecked(True)
 
-        if "performance" in pydaw_util.global_device_val_dict:
-            if int(pydaw_util.global_device_val_dict["performance"]) == 1:
-                f_governor_checkbox.setChecked(True)
+            if "performance" in pydaw_util.global_device_val_dict:
+                if int(pydaw_util.global_device_val_dict["performance"]) == 1:
+                    f_governor_checkbox.setChecked(True)
 
-        if "hugePages" in pydaw_util.global_device_val_dict and \
-        int(pydaw_util.global_device_val_dict["hugePages"]) == 1:
-            f_hugepages_checkbox.setChecked(True)
+            if "hugePages" in pydaw_util.global_device_val_dict and \
+            int(pydaw_util.global_device_val_dict["hugePages"]) == 1:
+                f_hugepages_checkbox.setChecked(True)
 
-        if "audioEngine" in pydaw_util.global_device_val_dict:
-            f_audio_engine_combobox.setCurrentIndex(
-                int(pydaw_util.global_device_val_dict["audioEngine"]))
+            if "audioEngine" in pydaw_util.global_device_val_dict:
+                f_audio_engine_combobox.setCurrentIndex(
+                    int(pydaw_util.global_device_val_dict["audioEngine"]))
 
         if a_msg is not None:
             QMessageBox.warning(f_window, _("Error"), a_msg)

@@ -133,6 +133,8 @@ def pydaw_which(a_file):
     return None
 
 IS_CYGWIN = "cygwin" in sys.platform
+IS_WINDOWS = "win32" in sys.platform
+IS_LINUX = "linux" in sys.platform
 
 def get_unix_timestamp(a_dt):
     if IS_CYGWIN:
@@ -605,7 +607,7 @@ def pydaw_delete_device_config():
         os.remove(global_pydaw_device_config)
 
 def pydaw_read_device_config():
-    global BIN_PATH, global_device_val_dict, MIDI_IN_DEVICES
+    global BIN_PATH, global_device_val_dict, MIDI_IN_DEVICES, IS_ENGINE_LIB
     global global_pydaw_is_sandboxed, global_pydaw_with_audio, USE_HUGEPAGES
 
     global_device_val_dict = {}
@@ -633,18 +635,24 @@ def pydaw_read_device_config():
                 USE_HUGEPAGES = 1
 
             f_selinux = False
-            try:
-                if pydaw_which("getenforce") and subprocess.check_output(
-                "getenforce").strip().lower() == b"enforcing":
+            if IS_LINUX:
+                try:
+                    if pydaw_which("getenforce") and subprocess.check_output(
+                    "getenforce").strip().lower() == b"enforcing":
+                        f_selinux = True
+                except Exception as ex:
+                    print("Exception while checking getenforce, "
+                        "assuming SELinux is enabled\n{}".format(ex))
                     f_selinux = True
-            except Exception as ex:
-                print("Exception while checking getenforce, "
-                    "assuming SELinux is enabled\n{}".format(ex))
-                f_selinux = True
 
-            if f_selinux:
-                print("SELinux detected, not using any setuid "
-                    "binaries to prevent lockups.")
+                if f_selinux:
+                    print("SELinux detected, not using any setuid "
+                        "binaries to prevent lockups.")
+
+            if not IS_LINUX:
+                BIN_PATH = None
+                global_device_val_dict["audioEngine"] = 8
+                IS_ENGINE_LIB = True
 
             if BIN_PATH is not None:
                 if int(global_device_val_dict["audioEngine"]) == 0:
@@ -668,7 +676,6 @@ def pydaw_read_device_config():
                     global_pydaw_with_audio = False
                     BIN_PATH = None
                 elif int(global_device_val_dict["audioEngine"]) == 8:
-                    global IS_ENGINE_LIB
                     IS_ENGINE_LIB = True
             global SAMPLE_RATE, NYQUIST_FREQ
             SAMPLE_RATE = int(global_device_val_dict["sampleRate"])
