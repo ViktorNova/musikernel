@@ -32,6 +32,7 @@ C_OBJS   = src/main.o
 # --------------------------------------------------------------
 
 all:
+	make lib
 	make dbg
 	make eng
 
@@ -47,8 +48,10 @@ eng:
 
 lib:
 	rm -f src/*.o $(PYDAW_VERSION)-engine ; echo
-	make CFLAGS+=" -O2 -fPIC -DMK_DLL " LDFLAGS+=" -shared "
+	make CFLAGS+=" -O0 -g -gdwarf-3 -fPIC -DMK_DLL " \
+		LDFLAGS+=" -shared " $(PYDAW_VERSION)-engine
 	mv $(PYDAW_VERSION)-engine $(PYDAW_VERSION).so
+
 # --------------------------------------------------------------
 
 $(PYDAW_VERSION)-engine: $(C_OBJS)
@@ -74,6 +77,8 @@ install:
 	install -s -m 755 $(PYDAW_VERSION)-engine \
 	$(DESTDIR)$(PREFIX)/bin/$(PYDAW_VERSION)-engine-no-root
 	cp -r python $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw
+	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/python/mkengine
+	install -m 644 $(PYDAW_VERSION).so $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/python/mkengine
 	cp -r themes $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
 	cp -r presets $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
 	cp -r share $(DESTDIR)$(PREFIX)

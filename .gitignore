@@ -1,3 +1,4 @@
+src/pydaw/musikernel*.so
 *.exe
 callgrind.out.*
 cachegrind.out.*

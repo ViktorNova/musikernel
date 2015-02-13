@@ -17,7 +17,11 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from libpydaw import liblo, pydaw_util, pydaw_widgets, pydaw_device_dialog
+from libpydaw import pydaw_util, pydaw_widgets, pydaw_device_dialog
+
+if not pydaw_util.IS_ENGINE_LIB:
+    from libpydaw import liblo
+
 from libpydaw.pydaw_util import *
 from libpydaw.translate import _
 import libmk
@@ -231,20 +235,26 @@ class transport_widget:
             self.panic_button.setToolTip("")
             self.group_box.setToolTip("")
 
+ENGINE_CALLBACK_DICT = {}
+
+def engine_lib_callback(a_path, a_msg):
+    ENGINE_CALLBACK_DICT[
+        a_path.decode("utf-8")](a_path, [a_msg.decode("utf-8")])
 
 class MkMainWindow(QMainWindow):
     def __init__(self):
         self.suppress_resize_events = False
         QMainWindow.__init__(self)
         libmk.MAIN_WINDOW = self
-        try:
-            libmk.OSC = liblo.Address(19271)
-        except liblo.AddressError as err:
-            print((str(err)))
-            sys.exit()
-        except:
-            print("Unable to start OSC with {}".format(19271))
-            libmk.OSC = None
+        if not pydaw_util.IS_ENGINE_LIB:
+            try:
+                libmk.OSC = liblo.Address(19271)
+            except liblo.AddressError as err:
+                print((str(err)))
+                sys.exit()
+            except:
+                print("Unable to start OSC with {}".format(19271))
+                libmk.OSC = None
         libmk.IPC = MkIpc()
         libmk.TRANSPORT = transport_widget()
         self.setObjectName("mainwindow")
@@ -424,35 +434,45 @@ class MkMainWindow(QMainWindow):
         self.spacebar_action.setShortcut(
             QKeySequence(QtCore.Qt.Key_Space))
 
-        try:
-            self.osc_server = liblo.Server(30321)
-        except liblo.ServerError as err:
-            print("Error creating OSC server: {}".format(err))
-            self.osc_server = None
-        if self.osc_server is not None:
-            print(self.osc_server.get_url())
-            self.osc_server.add_method(
-                "musikernel/edmnext", 's',
-                edmnext.MAIN_WINDOW.configure_callback)
-            self.osc_server.add_method(
-                "musikernel/wavenext", 's',
-                wavenext.MAIN_WINDOW.configure_callback)
-            self.osc_server.add_method(
-                "musikernel/dawnext", 's',
-                dawnext.MAIN_WINDOW.configure_callback)
-            self.osc_server.add_method(None, None, self.osc_fallback)
-            self.osc_timer = QtCore.QTimer(self)
-            self.osc_timer.setSingleShot(False)
-            self.osc_timer.timeout.connect(self.osc_time_callback)
-            self.osc_timer.start(0)
+        self.subprocess_timer = None
+        self.osc_server = None
 
-        if pydaw_util.global_pydaw_with_audio:
-            self.subprocess_timer = QtCore.QTimer(self)
-            self.subprocess_timer.timeout.connect(self.subprocess_monitor)
-            self.subprocess_timer.setSingleShot(False)
-            self.subprocess_timer.start(1000)
+        if pydaw_util.IS_ENGINE_LIB:
+            ENGINE_CALLBACK_DICT["musikernel/edmnext"] = \
+                edmnext.MAIN_WINDOW.configure_callback
+            ENGINE_CALLBACK_DICT["musikernel/wavenext"] = \
+                wavenext.MAIN_WINDOW.configure_callback,
+            ENGINE_CALLBACK_DICT["musikernel/dawnext"] = \
+                dawnext.MAIN_WINDOW.configure_callback
+            pydaw_util.load_engine_lib(engine_lib_callback)
         else:
-            self.subprocess_timer = None
+            try:
+                self.osc_server = liblo.Server(30321)
+            except liblo.ServerError as err:
+                print("Error creating OSC server: {}".format(err))
+                self.osc_server = None
+            if self.osc_server is not None:
+                print(self.osc_server.get_url())
+                self.osc_server.add_method(
+                    "musikernel/edmnext", 's',
+                    edmnext.MAIN_WINDOW.configure_callback)
+                self.osc_server.add_method(
+                    "musikernel/wavenext", 's',
+                    wavenext.MAIN_WINDOW.configure_callback)
+                self.osc_server.add_method(
+                    "musikernel/dawnext", 's',
+                    dawnext.MAIN_WINDOW.configure_callback)
+                self.osc_server.add_method(None, None, self.osc_fallback)
+                self.osc_timer = QtCore.QTimer(self)
+                self.osc_timer.setSingleShot(False)
+                self.osc_timer.timeout.connect(self.osc_time_callback)
+                self.osc_timer.start(0)
+
+            if pydaw_util.global_pydaw_with_audio:
+                self.subprocess_timer = QtCore.QTimer(self)
+                self.subprocess_timer.timeout.connect(self.subprocess_monitor)
+                self.subprocess_timer.setSingleShot(False)
+                self.subprocess_timer.start(1000)
 
         self.setWindowState(QtCore.Qt.WindowMaximized)
         self.on_restore_splitters()
@@ -1298,6 +1318,11 @@ def open_pydaw_engine(a_project_path):
 
     kill_pydaw_engine() #ensure no running instances of the engine
     f_project_dir = os.path.dirname(a_project_path)
+
+    if pydaw_util.IS_ENGINE_LIB:
+        pydaw_util.start_engine_lib(f_project_dir)
+        return
+
     f_pid = os.getpid()
     print(_("Starting audio engine with {}").format(a_project_path))
     global PYDAW_SUBPROCESS

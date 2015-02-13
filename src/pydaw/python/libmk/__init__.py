@@ -14,7 +14,9 @@ GNU General Public License for more details.
 
 import os
 from libpydaw import pydaw_util
-from libpydaw import liblo
+
+if not pydaw_util.IS_ENGINE_LIB:
+    from libpydaw import liblo
 
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -68,7 +70,9 @@ class AbstractIPC:
             self.configure_path = a_configure_path
 
     def send_configure(self, key, value):
-        if self.with_osc:
+        if pydaw_util.IS_ENGINE_LIB:
+            pydaw_util.engine_lib_configure(self.configure_path, key, value)
+        elif self.with_osc:
             liblo.send(OSC, self.configure_path, key, value)
         else:
             print("Running standalone UI without OSC.  "

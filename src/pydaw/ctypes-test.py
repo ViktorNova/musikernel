@@ -1,29 +1,47 @@
 #!/usr/bin/python3
 
 import ctypes
+import threading
+import time
 
-mk = ctypes.CDLL("./musikernel1.so")
-mk.main.restype = ctypes.c_int
-mk.main.argstype = [ctypes.c_int, ctypes.POINTER(ctypes.c_char_p)]
-
-func_sig = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p)
+ENGINE_LIB = None
 
 def engine_callback(a_path, a_msg):
     print("It works!!!")
     print(a_path.decode("utf-8"))
     print(a_msg.decode("utf-8"))
 
-func_ptr = func_sig(engine_callback)
+def load_engine_lib(a_engine_callback):
+    global ENGINE_LIB
+    ENGINE_LIB = ctypes.CDLL("./musikernel1.so")
+    ENGINE_LIB.main.restype = ctypes.c_int
+    ENGINE_LIB.main.argstype = [ctypes.c_int, ctypes.POINTER(ctypes.c_char_p)]
+    ENGINE_LIB.v_configure.argstype = [
+        ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+    ENGINE_LIB.v_configure.restype = ctypes.c_int
+    func_sig = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p)
+    func_ptr = func_sig(a_engine_callback)
+    ENGINE_LIB.v_set_ui_callback.restype = None
+    ENGINE_LIB.v_set_ui_callback(func_ptr)
 
-#mk.v_set_ui_callback.argstype = [func_sig]
-mk.v_set_ui_callback.restype = None
+def start_engine_lib(a_prefix, a_project_dir, a_hugepages):
+    myargv = ctypes.c_char_p * 5
+    argv = myargv(
+        b"/usr/bin/musikernel1-engine", a_prefix.encode("ascii"),
+        a_project_dir.encode("ascii"), b"0", a_hugepages.encode("ascii"))
+    thread = threading.Thread(
+        target=ENGINE_LIB.main, args=(5, ctypes.byref(argv)))
+    thread.start()
 
-mk.v_set_ui_callback(func_ptr)
+def engine_lib_configure(a_path, a_key, a_val):
+    ENGINE_LIB.v_configure(
+        a_path.encode("ascii"), a_key.encode("ascii"), a_val.encode("ascii"))
 
-myargv = ctypes.c_char_p * 5
-argv = myargv(
-    b"/usr/bin/musikernel1-engine", b"/usr",
-    b"/home/userbuntu/musikernel1/default-project", b"7957", b"1")
+load_engine_lib(engine_callback)
+start_engine_lib("/usr", "/home/userbuntu/musikernel1/default-project", "1")
 
-mk.main(5, ctypes.byref(argv))
+time.sleep(5)
 
+engine_lib_configure("/musikernel/master", "exit", "")
+
+time.sleep(5)

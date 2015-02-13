@@ -15,6 +15,8 @@ GNU General Public License for more details.
 import random
 import os
 import sys
+import ctypes
+import threading
 import re
 import subprocess
 import time
@@ -51,6 +53,42 @@ if "src/pydaw/python/" in __file__:
 else:
     INSTALL_PREFIX = os.path.abspath(os.path.join(
         os.path.dirname(__file__), *([".."] * 5)))
+
+ENGINE_LIB_DIR = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), "..", "mkengine"))
+
+IS_ENGINE_LIB = False
+
+ENGINE_LIB = None
+ENGINE_LIB_CALLBACK = None
+
+def load_engine_lib(a_engine_callback):
+    global ENGINE_LIB, ENGINE_LIB_CALLBACK
+    ENGINE_LIB = ctypes.CDLL(os.path.join(
+        ENGINE_LIB_DIR, "{}.so".format(global_pydaw_version_string)))
+    ENGINE_LIB.main.restype = ctypes.c_int
+    ENGINE_LIB.main.argstype = [ctypes.c_int, ctypes.POINTER(ctypes.c_char_p)]
+    ENGINE_LIB.v_configure.argstype = [
+        ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+    ENGINE_LIB.v_configure.restype = ctypes.c_int
+    func_sig = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p)
+    ENGINE_LIB_CALLBACK = func_sig(a_engine_callback)
+    ENGINE_LIB.v_set_ui_callback.restype = None
+    ENGINE_LIB.v_set_ui_callback(ENGINE_LIB_CALLBACK)
+
+def start_engine_lib(a_project_dir):
+    myargv = ctypes.c_char_p * 5
+    argv = myargv(
+        b"/usr/bin/musikernel1-engine", INSTALL_PREFIX.encode("ascii"),
+        a_project_dir.encode("ascii"), b"0",
+        str(USE_HUGEPAGES).encode("ascii"))
+    thread = threading.Thread(
+        target=ENGINE_LIB.main, args=(5, ctypes.byref(argv)))
+    thread.start()
+
+def engine_lib_configure(a_path, a_key, a_val):
+    ENGINE_LIB.v_configure(
+        a_path.encode("ascii"), a_key.encode("ascii"), a_val.encode("ascii"))
 
 
 def pydaw_set_bin_path():
@@ -619,6 +657,9 @@ def pydaw_read_device_config():
                 elif int(global_device_val_dict["audioEngine"]) == 6:
                     global_pydaw_with_audio = False
                     BIN_PATH = None
+                elif int(global_device_val_dict["audioEngine"]) == 8:
+                    global IS_ENGINE_LIB
+                    IS_ENGINE_LIB = True
             global SAMPLE_RATE, NYQUIST_FREQ
             SAMPLE_RATE = int(global_device_val_dict["sampleRate"])
             NYQUIST_FREQ = SAMPLE_RATE / 2

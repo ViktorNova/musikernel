@@ -61,6 +61,8 @@ Valgrind:  Open in Valgrind, with no audio or external MIDI.
 GUI Only:  Run the UI only with no audio engine
 
 No Audio:  No audio or MIDI, mostly useful for attaching an external debugger.
+
+Module:  Load the engine as a shared library in the UI's process
 """)
 
 THREADS_TOOLTIP = _(
@@ -279,7 +281,7 @@ class pydaw_device_dialog:
         f_audio_engine_combobox.addItems(
             [_("Normal"), _("Elevated"), _("Elevated(sandbox)"),
              _("Debug"), _("GDB"), _("Valgrind"),
-             _("GUI Only"), _("No Audio")])
+             _("GUI Only"), _("No Audio"), _("Module")])
         f_audio_engine_combobox.setToolTip(f_device_tooltip)
         f_window_layout.addWidget(f_audio_engine_combobox, 4, 1)
         f_thread_affinity_checkbox = QCheckBox(
