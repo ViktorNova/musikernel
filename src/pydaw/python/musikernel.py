@@ -235,13 +235,16 @@ class transport_widget:
             self.panic_button.setToolTip("")
             self.group_box.setToolTip("")
 
-ENGINE_CALLBACK_DICT = {}
 
 def engine_lib_callback(a_path, a_msg):
-    ENGINE_CALLBACK_DICT[
-        a_path.decode("utf-8")](a_path, [a_msg.decode("utf-8")])
+    MAIN_WINDOW.engine_lib_callback(a_path, a_msg)
+
 
 class MkMainWindow(QMainWindow):
+    edmnext_callback = QtCore.pyqtSignal(str, list)
+    dawnext_callback = QtCore.pyqtSignal(str, list)
+    wavenext_callback = QtCore.pyqtSignal(str, list)
+
     def __init__(self):
         self.suppress_resize_events = False
         QMainWindow.__init__(self)
@@ -438,12 +441,18 @@ class MkMainWindow(QMainWindow):
         self.osc_server = None
 
         if pydaw_util.IS_ENGINE_LIB:
-            ENGINE_CALLBACK_DICT["musikernel/edmnext"] = \
-                edmnext.MAIN_WINDOW.configure_callback
-            ENGINE_CALLBACK_DICT["musikernel/wavenext"] = \
-                wavenext.MAIN_WINDOW.configure_callback,
-            ENGINE_CALLBACK_DICT["musikernel/dawnext"] = \
-                dawnext.MAIN_WINDOW.configure_callback
+            self.edmnext_callback.connect(
+                edmnext.MAIN_WINDOW.configure_callback)
+            self.dawnext_callback.connect(
+                dawnext.MAIN_WINDOW.configure_callback)
+            self.wavenext_callback.connect(
+                wavenext.MAIN_WINDOW.configure_callback)
+
+            self.engine_callback_dict = {
+                "musikernel/edmnext": self.edmnext_callback,
+                "musikernel/wavenext": self.wavenext_callback,
+                "musikernel/dawnext": self.dawnext_callback
+                }
             pydaw_util.load_engine_lib(engine_lib_callback)
         else:
             try:
@@ -477,6 +486,11 @@ class MkMainWindow(QMainWindow):
         self.setWindowState(QtCore.Qt.WindowMaximized)
         self.on_restore_splitters()
         self.show()
+
+    def engine_lib_callback(self, a_path, a_msg):
+        f_path = a_path.decode("utf-8")
+        f_msg = [a_msg.decode("utf-8")]
+        self.engine_callback_dict[f_path].emit(f_path, f_msg)
 
     def resizeEvent(self, a_event):
         if self.suppress_resize_events:

@@ -24,6 +24,8 @@ from math import log, pow
 from multiprocessing import cpu_count
 import numpy
 
+from PyQt5 import QtCore
+
 pydaw_terminating_char = "\\"
 
 global_pydaw_version_string = "musikernel1"
@@ -60,6 +62,7 @@ ENGINE_LIB_DIR = os.path.abspath(os.path.join(
 IS_ENGINE_LIB = False
 
 ENGINE_LIB = None
+ENGINE_LIB_THREAD = None
 ENGINE_LIB_CALLBACK = None
 
 def load_engine_lib(a_engine_callback):
@@ -76,15 +79,22 @@ def load_engine_lib(a_engine_callback):
     ENGINE_LIB.v_set_ui_callback.restype = None
     ENGINE_LIB.v_set_ui_callback(ENGINE_LIB_CALLBACK)
 
+class EngineLibThread(QtCore.QThread):
+    def run(self):
+        myargv = ctypes.c_char_p * 5
+        argv = myargv(
+            b"/usr/bin/musikernel1-engine", INSTALL_PREFIX.encode("ascii"),
+            PROJECT_DIR.encode("ascii"), b"0",
+            str(USE_HUGEPAGES).encode("ascii"))
+        ENGINE_LIB.main(5, ctypes.byref(argv))
+
+PROJECT_DIR = None
+
 def start_engine_lib(a_project_dir):
-    myargv = ctypes.c_char_p * 5
-    argv = myargv(
-        b"/usr/bin/musikernel1-engine", INSTALL_PREFIX.encode("ascii"),
-        a_project_dir.encode("ascii"), b"0",
-        str(USE_HUGEPAGES).encode("ascii"))
-    thread = threading.Thread(
-        target=ENGINE_LIB.main, args=(5, ctypes.byref(argv)))
-    thread.start()
+    global PROJECT_DIR, ENGINE_LIB_THREAD
+    PROJECT_DIR = a_project_dir
+    ENGINE_LIB_THREAD = EngineLibThread()
+    ENGINE_LIB_THREAD.start()
 
 def engine_lib_configure(a_path, a_key, a_val):
     ENGINE_LIB.v_configure(
