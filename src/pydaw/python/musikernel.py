@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import *
 
 from libpydaw import pydaw_util, pydaw_widgets, pydaw_device_dialog
 
-if not pydaw_util.IS_ENGINE_LIB:
+if pydaw_util.IS_LINUX and not pydaw_util.IS_ENGINE_LIB:
     from libpydaw import liblo
 
 from libpydaw.pydaw_util import *
@@ -249,7 +249,7 @@ class MkMainWindow(QMainWindow):
         self.suppress_resize_events = False
         QMainWindow.__init__(self)
         libmk.MAIN_WINDOW = self
-        if not pydaw_util.IS_ENGINE_LIB:
+        if pydaw_util.IS_LINUX and not pydaw_util.IS_ENGINE_LIB:
             try:
                 libmk.OSC = liblo.Address(19271)
             except liblo.AddressError as err:
