@@ -144,7 +144,7 @@ class pydaw_device_dialog:
             f_pm_dll = os.path.join(
                 pydaw_util.MKENGINE_DIR, "libportmidi-0.dll")
             f_portaudio_so_path = os.path.join(
-                pydaw_util.MKENGINE_DIR, "portaudio_x64.dll")
+                pydaw_util.MKENGINE_DIR, "libportaudio-2.dll")
         else:
             print("Unsupported platform {}, don't know where to look "
                 "for shared libraries.")

@@ -83,8 +83,9 @@ install:
 	install -s -m 755 $(PYDAW_VERSION)-engine \
 	$(DESTDIR)$(PREFIX)/bin/$(PYDAW_VERSION)-engine-no-root
 	cp -r python $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw
-	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/python/mkengine
-	install -m 644 $(PYDAW_VERSION).so $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/python/mkengine
+	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/mkengine
+	install -m 644 $(PYDAW_VERSION).so \
+		$(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/mkengine
 	cp -r themes $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
 	cp -r presets $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
 	cp -r share $(DESTDIR)$(PREFIX)

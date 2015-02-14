@@ -16,7 +16,6 @@ import random
 import os
 import sys
 import ctypes
-import threading
 import re
 import subprocess
 import time
@@ -32,7 +31,7 @@ IS_WINDOWS = "win32" in sys.platform
 IS_LINUX = "linux" in sys.platform
 
 PYTHON_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-MKENGINE_DIR = os.path.join(PYTHON_DIR, "mkengine")
+MKENGINE_DIR = os.path.abspath(os.path.join(PYTHON_DIR, "..", "mkengine"))
 
 if IS_WINDOWS:
     os.environ["PATH"] = ";".join((MKENGINE_DIR, os.environ["PATH"]))
