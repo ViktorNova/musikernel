@@ -70,9 +70,6 @@ else:
     INSTALL_PREFIX = os.path.abspath(os.path.join(
         os.path.dirname(__file__), *([".."] * 5)))
 
-ENGINE_LIB_DIR = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), "..", "mkengine"))
-
 IS_ENGINE_LIB = False
 
 ENGINE_LIB = None
@@ -82,7 +79,7 @@ ENGINE_LIB_CALLBACK = None
 def load_engine_lib(a_engine_callback):
     global ENGINE_LIB, ENGINE_LIB_CALLBACK
     ENGINE_LIB = ctypes.CDLL(os.path.join(
-        ENGINE_LIB_DIR, "{}.so".format(global_pydaw_version_string)))
+        MKENGINE_DIR, "{}.so".format(global_pydaw_version_string)))
     ENGINE_LIB.main.restype = ctypes.c_int
     ENGINE_LIB.main.argstype = [ctypes.c_int, ctypes.POINTER(ctypes.c_char_p)]
     ENGINE_LIB.v_configure.argstype = [
