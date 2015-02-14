@@ -142,9 +142,9 @@ class pydaw_device_dialog:
             f_pm_dll = "libportmidi-0.dll"
         elif pydaw_util.IS_WINDOWS:
             f_pm_dll = os.path.join(
-                pydaw_util.ENGINE_LIB, "libportmidi-0.dll")
+                pydaw_util.MKENGINE_DIR, "libportmidi-0.dll")
             f_portaudio_so_path = os.path.join(
-                pydaw_util.ENGINE_LIB, "libportaudio-2.dll")
+                pydaw_util.MKENGINE_DIR, "portaudio_x64.dll")
         else:
             print("Unsupported platform {}, don't know where to look "
                 "for shared libraries.")
@@ -282,12 +282,13 @@ class pydaw_device_dialog:
         f_window_layout.addWidget(f_buffer_size_combobox, 2, 1)
         f_latency_label = QLabel("")
         f_window_layout.addWidget(f_latency_label, 2, 2)
-        f_window_layout.addWidget(QLabel(_("Worker Threads:")), 3, 0)
-        f_worker_threads_combobox = QComboBox()
-        f_worker_threads_combobox.addItems(
-            [_("Auto")] + [str(x) for x in range(1, 9)])
-        f_worker_threads_combobox.setToolTip(THREADS_TOOLTIP)
+
         if pydaw_util.IS_LINUX:
+            f_window_layout.addWidget(QLabel(_("Worker Threads:")), 3, 0)
+            f_worker_threads_combobox = QComboBox()
+            f_worker_threads_combobox.addItems(
+                [_("Auto")] + [str(x) for x in range(1, 9)])
+            f_worker_threads_combobox.setToolTip(THREADS_TOOLTIP)
             f_window_layout.addWidget(f_worker_threads_combobox, 3, 1)
             f_window_layout.addWidget(QLabel(_("Audio Engine")), 4, 0)
             f_audio_engine_combobox = QComboBox()
@@ -428,7 +429,7 @@ class pydaw_device_dialog:
         def on_ok(a_self=None):
             f_buffer_size = int(str(f_buffer_size_combobox.currentText()))
             f_samplerate = int(str(f_samplerate_combobox.currentText()))
-            f_worker_threads = f_worker_threads_combobox.currentIndex()
+
             f_midi_in_devices = sorted(str(k)
                 for k, v in self.midi_in_checkboxes.items() if v.isChecked())
             if len(f_midi_in_devices) >= 8:
@@ -437,11 +438,15 @@ class pydaw_device_dialog:
                     _("Using more than 8 MIDI devices is not supported, "
                     "please de-select some devices"))
                 return
-            f_audio_engine = f_audio_engine_combobox.currentIndex()
-            f_thread_affinity = 1 if f_thread_affinity_checkbox.isChecked() \
-                else 0
-            f_performance = 1 if f_governor_checkbox.isChecked() else 0
-            f_hugepages = 1 if f_hugepages_checkbox.isChecked() else 0
+            if pydaw_util.IS_WINDOWS:
+                f_audio_engine = 8
+            else:
+                f_worker_threads = f_worker_threads_combobox.currentIndex()
+                f_audio_engine = f_audio_engine_combobox.currentIndex()
+                f_thread_affinity = 1 if \
+                    f_thread_affinity_checkbox.isChecked() else 0
+                f_performance = 1 if f_governor_checkbox.isChecked() else 0
+                f_hugepages = 1 if f_hugepages_checkbox.isChecked() else 0
             f_audio_inputs = f_audio_in_spinbox.value()
             try:
                 #This doesn't work if the device is open already,

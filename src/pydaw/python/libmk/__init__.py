@@ -15,7 +15,7 @@ GNU General Public License for more details.
 import os
 from libpydaw import pydaw_util
 
-if not pydaw_util.IS_ENGINE_LIB:
+if pydaw_util.IS_LINUX and not pydaw_util.IS_ENGINE_LIB:
     from libpydaw import liblo
 
 from PyQt5.QtGui import *
