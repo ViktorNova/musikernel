@@ -92,16 +92,12 @@ int osc_debug_handler(const char *path, const char *types, lo_arg **argv, int
 		      argc, void *data, void *user_data) ;
 #endif
 
-#ifdef	__cplusplus
-extern "C" {
+
+#ifdef WIN32
+int __declspec(dllexport) main(int argc, char **argv);
+int __declspec(dllexport) v_configure(char * path, char * key, char * value);
 #endif
 
-int main(int argc, char **argv);
-int v_configure(char * path, char * key, char * value);
-
-#ifdef __cplusplus
-}
-#endif
 
 inline void v_pydaw_run_main_loop(int sample_count,
         float **output, float *a_input_buffers);
