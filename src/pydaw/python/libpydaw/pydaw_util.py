@@ -75,9 +75,10 @@ IS_ENGINE_LIB = False
 ENGINE_LIB = None
 ENGINE_LIB_THREAD = None
 ENGINE_LIB_CALLBACK = None
+ENGINE_LIB_CALLBACK_SIG = None
 
 def load_engine_lib(a_engine_callback):
-    global ENGINE_LIB, ENGINE_LIB_CALLBACK
+    global ENGINE_LIB, ENGINE_LIB_CALLBACK, ENGINE_LIB_CALLBACK_SIG
     ENGINE_LIB = ctypes.CDLL(os.path.join(
         MKENGINE_DIR, "{}.so".format(global_pydaw_version_string)))
     ENGINE_LIB.main.restype = ctypes.c_int
@@ -85,8 +86,13 @@ def load_engine_lib(a_engine_callback):
     ENGINE_LIB.v_configure.argstype = [
         ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
     ENGINE_LIB.v_configure.restype = ctypes.c_int
-    func_sig = ctypes.CFUNCTYPE(None, ctypes.c_char_p, ctypes.c_char_p)
-    ENGINE_LIB_CALLBACK = func_sig(a_engine_callback)
+    if IS_WINDOWS:
+        ENGINE_LIB_CALLBACK_SIG = ctypes.WINFUNCTYPE(
+            None, ctypes.c_char_p, ctypes.c_char_p)
+    else:
+        ENGINE_LIB_CALLBACK_SIG = ctypes.CFUNCTYPE(
+            None, ctypes.c_char_p, ctypes.c_char_p)
+    ENGINE_LIB_CALLBACK = ENGINE_LIB_CALLBACK_SIG(a_engine_callback)
     ENGINE_LIB.v_set_ui_callback.restype = None
     ENGINE_LIB.v_set_ui_callback(ENGINE_LIB_CALLBACK)
 

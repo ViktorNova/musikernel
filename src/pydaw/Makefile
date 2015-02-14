@@ -23,7 +23,8 @@ MATH_LIB_FLAG ?= -lm
 RT_LIB_FLAG ?= -lrt
 ALSA_FLAG ?= $(shell pkg-config --libs alsa)
 
-PLAT_LINK_CFLAGS ?= $(RT_LIB_FLAG) $(ALSA_FLAG) $(LIBLO_FLAG)
+PLAT_LINK_CFLAGS ?= $(RT_LIB_FLAG) $(ALSA_FLAG) \
+$(shell pkg-config --libs liblo)
 
 LINK_CFLAGS  = -lpthread -lportmidi -lportaudio $(LDFLAGS) \
 $(shell pkg-config --libs sndfile fftw3f) $(MATH_LIB_FLAG) \
