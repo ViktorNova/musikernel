@@ -54,6 +54,9 @@ lib:
 		LDFLAGS+=" -shared " $(PYDAW_VERSION)-engine
 	mv $(PYDAW_VERSION)-engine $(PYDAW_VERSION).so
 
+mingw64:
+	make PLAT_LINK_CFLAGS= CFLAGS+=" -m64 " lib
+
 # --------------------------------------------------------------
 
 $(PYDAW_VERSION)-engine: $(C_OBJS)
