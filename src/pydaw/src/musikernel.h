@@ -304,17 +304,15 @@ int ZERO = 0;
 
 #ifdef MK_DLL
 
-#ifdef WIN32
-
-typedef void __declspec(dllexport) (*v_ui_send_callback)(
-    char * a_path, char * a_msg);
-void __declspec(dllexport) v_set_ui_callback(v_ui_send_callback a_callback);
-
-#else
-
 typedef void (*v_ui_send_callback)(char * a_path, char * a_msg);
 
+#if defined(_WIN32) || defined(__MINGW32__)
+
+__declspec(dllexport) void v_set_ui_callback(v_ui_send_callback a_callback);
+
 #endif
+
+typedef void (*v_ui_send_callback)(char * a_path, char * a_msg);
 
 v_ui_send_callback UI_SEND_CALLBACK = NULL;
 

@@ -127,7 +127,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/libpydaw/project_recover.py
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.py
 
-/usr/lib/{0}/pydaw/python/mkengine/{0}.so
+/usr/lib/{0}/pydaw/mkengine/{0}.so
 /usr/lib/{0}/pydaw/python/edmnext.py
 /usr/lib/{0}/presets/MODULEX.mkp
 /usr/lib/{0}/presets/RAYV.mkp
