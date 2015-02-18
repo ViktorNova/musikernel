@@ -500,7 +500,6 @@ class MkMainWindow(QMainWindow):
 
         self.setWindowState(QtCore.Qt.WindowMaximized)
         self.on_restore_splitters()
-        self.show()
 
     def engine_lib_callback(self, a_path, a_msg):
         f_path = a_path.decode("utf-8")
@@ -1529,6 +1528,9 @@ SPLASH_SCREEN = None
 
 libmk.set_window_title()
 libmk.APP.setStyle(QStyleFactory.create("Fusion"))
+
+MAIN_WINDOW.show()
+
 libmk.APP.exec_()
 time.sleep(0.6)
 flush_events()
