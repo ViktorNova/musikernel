@@ -896,7 +896,8 @@ class pydaw_sequencer:
 
     def delete_marker(self, a_marker):
         f_tuple = (a_marker.beat, a_marker.type)
-        assert(f_tuple != (0, 2))  # don't delete the first tempo marker
+        if f_tuple == (0, 2):
+            return # don't delete the first tempo marker
         if f_tuple in self.markers:
             self.markers.pop(f_tuple)
 

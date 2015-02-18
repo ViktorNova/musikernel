@@ -1824,7 +1824,7 @@ class ItemSequencer(QGraphicsView):
 
         def cancel_handler():
             f_marker = CURRENT_REGION.has_marker(self.ruler_event_pos, 2)
-            if f_marker:
+            if f_marker and self.ruler_event_pos:
                 CURRENT_REGION.delete_marker(f_marker)
                 PROJECT.save_region(CURRENT_REGION)
                 REGION_SETTINGS.open_region()
@@ -1867,7 +1867,10 @@ class ItemSequencer(QGraphicsView):
         f_ok = QPushButton(_("Save"))
         f_ok.pressed.connect(ok_handler)
         f_layout.addWidget(f_ok, 6, 0)
-        f_cancel = QPushButton(_("Delete"))
+        if self.ruler_event_pos:
+            f_cancel = QPushButton(_("Delete"))
+        else:
+            f_cancel = QPushButton(_("Cancel"))
         f_cancel.pressed.connect(cancel_handler)
         f_layout.addWidget(f_cancel, 6, 1)
         f_window.exec_()
@@ -1894,19 +1897,27 @@ class ItemSequencer(QGraphicsView):
         f_layout = QGridLayout()
         f_window.setLayout(f_layout)
 
+        f_marker = CURRENT_REGION.has_marker(self.ruler_event_pos, 3)
+
         f_text = QLineEdit()
         f_text.setMaxLength(21)
+
+        if f_marker:
+            f_text.setText(f_marker.text)
+
         f_layout.addWidget(QLabel(_("Text")), 0, 0)
         f_layout.addWidget(f_text, 0, 1)
+        f_ok_cancel_layout = QHBoxLayout()
+        f_layout.addLayout(f_ok_cancel_layout, 6, 1)
         f_ok = QPushButton(_("Save"))
         f_ok.pressed.connect(ok_handler)
-        f_layout.addWidget(f_ok, 6, 0)
+        f_ok_cancel_layout.addWidget(f_ok)
         if CURRENT_REGION.has_marker(self.ruler_event_pos, 3):
             f_cancel = QPushButton(_("Delete"))
         else:
             f_cancel = QPushButton(_("Cancel"))
         f_cancel.pressed.connect(cancel_handler)
-        f_layout.addWidget(f_cancel, 6, 1)
+        f_ok_cancel_layout.addWidget(f_cancel)
         f_window.exec_()
 
     def ruler_loop_start(self):

@@ -1502,6 +1502,8 @@ not os.access(os.path.dirname(default_project_file), os.W_OK):
         os.path.dirname(default_project_file))))
     MAIN_WINDOW.prepare_to_quit()
 
+SPLASH_SCREEN.status_update("Opening\n" + default_project_file[-50:])
+
 if os.path.exists(default_project_file):
     try:
         global_open_project(default_project_file)
@@ -1523,11 +1525,11 @@ RESPAWN = False
 
 QPixmapCache.setCacheLimit(1024 * 1024 * 1024)
 
-SPLASH_SCREEN.close()
-SPLASH_SCREEN = None
-
 libmk.set_window_title()
 libmk.APP.setStyle(QStyleFactory.create("Fusion"))
+
+SPLASH_SCREEN.close()
+SPLASH_SCREEN = None
 
 MAIN_WINDOW.show()
 
