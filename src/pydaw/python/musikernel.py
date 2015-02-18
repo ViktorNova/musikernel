@@ -235,6 +235,18 @@ class transport_widget:
             self.panic_button.setToolTip("")
             self.group_box.setToolTip("")
 
+class SplashScreen(QSplashScreen):
+    def __init__(self):
+        self.pixmap = QPixmap(
+            os.path.join(pydaw_util.PYTHON_DIR, "splash.png"))
+        QSplashScreen.__init__(self, self.pixmap)
+        self.show()
+        libmk.APP.processEvents()
+
+    def status_update(self, a_text):
+        self.showMessage(a_text, QtCore.Qt.AlignBottom, QtCore.Qt.white)
+        libmk.APP.processEvents()
+
 
 def engine_lib_callback(a_path, a_msg):
     MAIN_WINDOW.engine_lib_callback(a_path, a_msg)
@@ -290,8 +302,11 @@ class MkMainWindow(QMainWindow):
         self.main_stack = QStackedWidget()
         self.transport_splitter.addWidget(self.main_stack)
 
+        SPLASH_SCREEN.status_update(_("Loading DAW-Next"))
         import dawnext
+        SPLASH_SCREEN.status_update(_("Loading EDM-Next"))
         import edmnext
+        SPLASH_SCREEN.status_update(_("Loading Wave-Next"))
         import wavenext
 
         self.wave_editor_module = wavenext
@@ -819,6 +834,8 @@ class MkMainWindow(QMainWindow):
 
     def prepare_to_quit(self):
         try:
+            if SPLASH_SCREEN:
+                SPLASH_SCREEN.close()
             close_pydaw_engine()
             libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
             if self.osc_server is not None:
@@ -1443,6 +1460,8 @@ if pydaw_util.IS_CYGWIN:
 
 libmk.APP = QApplication(sys.argv)
 
+SPLASH_SCREEN = SplashScreen()
+
 libmk.APP.setWindowIcon(
     QIcon(os.path.join(
         pydaw_util.INSTALL_PREFIX, "share", "pixmaps",
@@ -1504,6 +1523,9 @@ else:
 RESPAWN = False
 
 QPixmapCache.setCacheLimit(1024 * 1024 * 1024)
+
+SPLASH_SCREEN.close()
+SPLASH_SCREEN = None
 
 libmk.set_window_title()
 libmk.APP.setStyle(QStyleFactory.create("Fusion"))

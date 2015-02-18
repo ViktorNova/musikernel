@@ -175,6 +175,7 @@ rm -rf $RPM_BUILD_ROOT
 #/usr/share/locale/pt_PT/LC_MESSAGES/{0}.mo
 #/usr/share/locale/de/LC_MESSAGES/{0}.mo
 #/usr/share/locale/fr/LC_MESSAGES/{0}.mo
+/usr/lib/{0}/pydaw/python/splash.png
 /usr/lib/{0}/pydaw/python/wavefile/__init__.py
 /usr/lib/{0}/pydaw/python/wavefile/libsndfile.py
 /usr/lib/{0}/pydaw/python/wavefile/wavefile.py
