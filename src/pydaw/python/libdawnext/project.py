@@ -1159,6 +1159,7 @@ class pydaw_atm_region:
                 continue
             f_beat_diff = f_beat_next - f_beat
             if f_beat_diff < f_inc:
+                f_result.append(f_point)
                 continue
             f_val_diff = f_val_next - f_val
             f_inc_count = int(round(f_beat_diff / f_inc))
