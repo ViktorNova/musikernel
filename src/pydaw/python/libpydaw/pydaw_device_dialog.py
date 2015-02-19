@@ -173,14 +173,22 @@ class pydaw_device_dialog:
         self.pyaudio.Pa_Terminate()
         self.pypm.Pm_Terminate()
 
-    def check_device(self):
+    def check_device(self, a_splash_screen=None):
         if not pydaw_util.global_device_val_dict:
+            if a_splash_screen:
+                a_splash_screen.hide()
             self.show_device_dialog(
                 _("No device configuration found"), a_exit_on_cancel=True)
+            if a_splash_screen:
+                a_splash_screen.show()
             return
         elif not "name" in pydaw_util.global_device_val_dict:
+            if a_splash_screen:
+                a_splash_screen.hide()
             self.show_device_dialog(
                 _("Invalid device configuration"), a_exit_on_cancel=True)
+            if a_splash_screen:
+                a_splash_screen.show()
             return
 
         f_device_str = pydaw_util.global_device_val_dict["name"]

@@ -1263,7 +1263,7 @@ def flush_events():
 def global_check_device():
     f_device_dialog = pydaw_device_dialog.pydaw_device_dialog(
         a_is_running=True)
-    f_device_dialog.check_device()
+    f_device_dialog.check_device(a_splash_screen=SPLASH_SCREEN)
 
     if not pydaw_util.global_device_val_dict:
         print("It appears that the user did not select "
