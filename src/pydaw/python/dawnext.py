@@ -1746,6 +1746,10 @@ class ItemSequencer(QGraphicsView):
 
     def start_playback(self):
         self.playback_pos_orig = self.playback_pos
+        if REGION_EDITOR_MODE == 0:
+            self.set_selected_strings()
+        elif REGION_EDITOR_MODE == 1:
+            self.set_selected_point_strings()
 
     def set_playback_clipboard(self):
         self.reselect_on_stop = []
