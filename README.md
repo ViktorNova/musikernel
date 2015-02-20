@@ -10,17 +10,17 @@ MusiKernel is DAWs, plugins, and a new approach to developing an audio software 
 
 #Ubuntu/Debian distros:
 
-cd [musikernel src dir]/src
-
-./ubuntu_deps.sh
+cd [musikernel dir]/src
+ 
+./ubuntu_deps.sh   # as root
 
 make deps
 
-make deb
+make deb  # as root
 
 cd ../ubuntu
 
-sudo dpkg -i musikernel[your_version].deb
+dpkg -i musikernel[your_version].deb  # as root
 
 #Fedora based distros:
 
