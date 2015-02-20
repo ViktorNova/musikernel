@@ -1,6 +1,13 @@
-sudo apt-get update
+#!/bin/bash
 
-sudo apt-get install -y libasound2-dev \
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as root, use sudo or su" 1>&2
+   exit 1
+fi
+
+apt-get update
+
+apt-get install -y libasound2-dev \
 libportmidi-dev portaudio19-dev liblo-dev g++ libsndfile1-dev 
 libtool gdb debhelper dh-make build-essential automake autoconf \
 python3-pyqt5 python3 squashfs-tools genisoimage \
