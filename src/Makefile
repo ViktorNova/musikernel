@@ -28,7 +28,7 @@ rpm:
 	../rpm.py
 
 deb:
-	( sudo ./deb.py --default-version || \
+	( ./deb.py --default-version || \
 	(echo "You may need to run 'make deps' and/or ./ubuntu_deps.sh first"  \
 	&& false ))
 
