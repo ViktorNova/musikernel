@@ -2233,7 +2233,6 @@ class ItemSequencer(QGraphicsView):
         if libmk.IS_PLAYING:
             return
         f_did_something = False
-        f_items_dict = PROJECT.get_items_dict()
         f_selected = [x.audio_item for x in self.get_selected()]
         for f_i in range(project.TRACK_COUNT_ALL):
             f_track_items = [x for x in f_selected if x.track_num == f_i]
@@ -2241,10 +2240,10 @@ class ItemSequencer(QGraphicsView):
                 f_did_something = True
                 f_track_items.sort()
                 f_new_ref = f_track_items[0].clone()
+                f_items_dict = PROJECT.get_items_dict()
                 f_old_name = f_items_dict.get_name_by_uid(f_new_ref.item_uid)
                 f_new_name = PROJECT.get_next_default_item_name(
                     f_old_name, f_items_dict)
-                PROJECT.save_items_dict(f_items_dict)
                 f_new_uid = PROJECT.create_empty_item(f_new_name)
                 f_new_item = PROJECT.get_item_by_uid(f_new_uid)
                 f_tempo = CURRENT_REGION.get_tempo_at_pos(f_new_ref.start_beat)
