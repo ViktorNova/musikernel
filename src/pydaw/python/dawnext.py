@@ -2244,6 +2244,7 @@ class ItemSequencer(QGraphicsView):
                 f_old_name = f_items_dict.get_name_by_uid(f_new_ref.item_uid)
                 f_new_name = PROJECT.get_next_default_item_name(
                     f_old_name, f_items_dict)
+                PROJECT.save_items_dict(f_items_dict)
                 f_new_uid = PROJECT.create_empty_item(f_new_name)
                 f_new_item = PROJECT.get_item_by_uid(f_new_uid)
                 f_tempo = CURRENT_REGION.get_tempo_at_pos(f_new_ref.start_beat)
@@ -2261,6 +2262,7 @@ class ItemSequencer(QGraphicsView):
                         CURRENT_REGION.remove_item_ref(f_ref)
                     else:
                         f_first = False
+                pydaw_util.print_sorted_dict(locals())
                 PROJECT.save_item(f_new_name, f_new_item)
         if f_did_something:
             PROJECT.save_region(CURRENT_REGION)

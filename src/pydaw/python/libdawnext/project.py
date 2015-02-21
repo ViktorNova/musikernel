@@ -376,8 +376,10 @@ class DawNextProject(libmk.AbstractProject):
 
     def get_item_by_uid(self, a_item_uid):
         a_item_uid = int(a_item_uid)
-        return pydaw_item.from_str(
+        f_result = pydaw_item.from_str(
             self.get_item_string(a_item_uid), a_item_uid)
+        assert(f_result.uid == a_item_uid)
+        return f_result
 
     def get_item_by_name(self, a_item_name):
         f_items_dict = self.get_items_dict()
@@ -672,6 +674,7 @@ class DawNextProject(libmk.AbstractProject):
         if not self.suppress_updates:
             f_items_dict = self.get_items_dict()
             f_uid = f_items_dict.get_uid_by_name(a_name)
+            assert(f_uid == a_item.uid)
             self.save_item_by_uid(f_uid, a_item)
 
     def get_item_path(self, a_uid, a_px_per_beat, a_height, a_tempo):
@@ -1403,35 +1406,27 @@ class pydaw_item:
             a_ref.start_offset)
         f_end_offset = a_ref.start_offset + a_ref.length_beats
 
-        print(locals())
-
         f_notes = [x.clone() for x in a_item2.notes
             if x.start >= f_start_offset and x.start < f_end_offset]
-        print(f_notes)
 
         for f_note in f_notes:
             f_note.start += f_offset
-            print(f_note.__dict__)
             self.add_note(f_note, False)
         self.notes.sort()
 
         f_ccs = [x.clone() for x in a_item2.ccs
             if x.start >= f_start_offset and x.start < f_end_offset]
-        print(f_ccs)
 
         for f_cc in f_ccs:
             f_cc.start += f_offset
-            print(f_cc.__dict__)
             self.add_cc(f_cc)
         self.ccs.sort()
 
         f_pbs = [x.clone() for x in a_item2.pitchbends
             if x.start >= f_start_offset and x.start < f_end_offset]
-        print(f_pbs)
 
         for f_pb in f_pbs:
             f_pb.start += f_offset
-            print(f_pb.__dict__)
             self.add_pb(f_pb)
         self.pitchbends.sort()
 
