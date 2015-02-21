@@ -6257,12 +6257,14 @@ class piano_roll_editor_widget:
     def open_last(self):
         if LAST_ITEM_NAME:
             global_open_items(LAST_ITEM_NAME)
+            PIANO_ROLL_EDITOR.draw_item()
 
     def draw_last(self):
         global DRAW_LAST_ITEMS
         DRAW_LAST_ITEMS = not DRAW_LAST_ITEMS
         self.draw_last_action.setChecked(DRAW_LAST_ITEMS)
-        global_open_items()
+        PIANO_ROLL_EDITOR.draw_item()
+        #global_open_items()
 
     def vel_rand_triggered(self, a_action):
         self.vel_random_index = a_action.my_index
