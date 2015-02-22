@@ -2461,7 +2461,7 @@ class ItemSequencer(QGraphicsView):
             REGION_CLIPBOARD = [x.audio_item.clone() for x in
                 self.get_selected_items()]
             REGION_CLIPBOARD.sort()
-            f_start = REGION_CLIPBOARD[0].start_beat
+            f_start = int(REGION_CLIPBOARD[0].start_beat)
             for f_item in REGION_CLIPBOARD:
                 f_item.start_beat -= f_start
         elif REGION_EDITOR_MODE == 1:
@@ -2477,10 +2477,11 @@ class ItemSequencer(QGraphicsView):
         if libmk.IS_PLAYING or not self.current_coord:
             return
         f_track, f_beat, f_val = self.current_coord
+        f_beat = int(f_beat)
         if REGION_EDITOR_MODE == 0:
             for f_item in REGION_CLIPBOARD:
                 f_new_item = f_item.clone()
-                f_new_item.start_beat += int(f_beat)
+                f_new_item.start_beat += f_beat
                 CURRENT_REGION.add_item_ref_by_uid(f_new_item)
             PROJECT.save_region(CURRENT_REGION)
             REGION_SETTINGS.open_region()
