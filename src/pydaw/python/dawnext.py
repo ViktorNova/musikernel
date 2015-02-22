@@ -274,7 +274,6 @@ class region_settings:
 REGION_EDITOR_SNAP = True
 REGION_EDITOR_GRID_WIDTH = 1000.0
 REGION_TRACK_WIDTH = 180  #Width of the tracks in px
-REGION_EDITOR_MAX_START = 999.0 + REGION_TRACK_WIDTH
 REGION_EDITOR_TRACK_HEIGHT = 64
 
 REGION_EDITOR_TRACK_COUNT = 32
@@ -433,8 +432,7 @@ class atm_item(QGraphicsEllipseItem):
     def mouseMoveEvent(self, a_event):
         QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
         f_pos = self.pos()
-        f_x = pydaw_util.pydaw_clip_value(
-            f_pos.x(), 0.0, REGION_EDITOR_MAX_START)
+        f_x = pydaw_util.pydaw_clip_min(f_pos.x(), 0.0)
         f_y = pydaw_util.pydaw_clip_value(
             f_pos.y(), self.min_y, self.max_y)
         self.setPos(f_x, f_y)
@@ -1497,11 +1495,9 @@ class ItemSequencer(QGraphicsView):
         f_pos_y = a_pos.y()
         if a_clip or (
         f_pos_x > 0 and
-        f_pos_x < REGION_EDITOR_MAX_START and
         f_pos_y > REGION_EDITOR_HEADER_HEIGHT and
         f_pos_y < REGION_EDITOR_TOTAL_HEIGHT):
-            f_pos_x = pydaw_util.pydaw_clip_value(
-                f_pos_x, 0.0, REGION_EDITOR_MAX_START)
+            f_pos_x = pydaw_util.pydaw_clip_min(f_pos_x, 0.0)
             f_pos_y = pydaw_util.pydaw_clip_value(
                 f_pos_y, REGION_EDITOR_HEADER_HEIGHT,
                 REGION_EDITOR_TOTAL_HEIGHT)
@@ -2460,29 +2456,34 @@ class ItemSequencer(QGraphicsView):
             global REGION_CLIPBOARD
             REGION_CLIPBOARD = [x.audio_item.clone() for x in
                 self.get_selected_items()]
-            REGION_CLIPBOARD.sort()
-            f_start = int(REGION_CLIPBOARD[0].start_beat)
-            for f_item in REGION_CLIPBOARD:
-                f_item.start_beat -= f_start
+            if REGION_CLIPBOARD:
+                REGION_CLIPBOARD.sort()
+                f_start = int(REGION_CLIPBOARD[0].start_beat)
+                for f_item in REGION_CLIPBOARD:
+                    f_item.start_beat -= f_start
         elif REGION_EDITOR_MODE == 1:
             global ATM_CLIPBOARD
             ATM_CLIPBOARD = [x.item.clone() for x in
                 self.get_selected_points(self.current_coord[0])]
-            ATM_CLIPBOARD.sort()
-            f_start = int(ATM_CLIPBOARD[0].beat)
-            for f_item in ATM_CLIPBOARD:
-                f_item.beat -= f_start
+            if ATM_CLIPBOARD:
+                ATM_CLIPBOARD.sort()
+                f_start = int(ATM_CLIPBOARD[0].beat)
+                for f_item in ATM_CLIPBOARD:
+                    f_item.beat -= f_start
 
     def paste_clipboard(self):
         if libmk.IS_PLAYING or not self.current_coord:
             return
+        self.scene.clearSelection()
         f_track, f_beat, f_val = self.current_coord
         f_beat = int(f_beat)
         if REGION_EDITOR_MODE == 0:
+            self.selected_item_strings = set()
             for f_item in REGION_CLIPBOARD:
                 f_new_item = f_item.clone()
                 f_new_item.start_beat += f_beat
                 CURRENT_REGION.add_item_ref_by_uid(f_new_item)
+                self.selected_item_strings.add(str(f_new_item))
             PROJECT.save_region(CURRENT_REGION)
             REGION_SETTINGS.open_region()
         elif REGION_EDITOR_MODE == 1:
@@ -2494,7 +2495,6 @@ class ItemSequencer(QGraphicsView):
                     _("No automation selected for this track"))
                 return
             f_track_params = TRACK_PANEL.get_atm_params(f_track)
-            #self.scene.clearSelection()
             f_end = ATM_CLIPBOARD[-1].beat + f_beat
             f_point = ATM_CLIPBOARD[0]
             ATM_REGION.clear_range(
