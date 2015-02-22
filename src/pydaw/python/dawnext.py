@@ -1672,6 +1672,12 @@ class ItemSequencer(QGraphicsView):
             self.add_items(f_x, f_y, AUDIO_ITEMS_TO_DROP)
             libmk.APP.restoreOverrideCursor()
 
+    def quantize(self, a_beat):
+        if SEQ_QUANTIZE:
+            return int(a_beat * SEQ_QUANTIZE_AMT) / SEQ_QUANTIZE_AMT
+        else:
+            return a_beat
+
     def add_items(self, f_x, f_y, a_item_list):
         if self.check_running():
             return
@@ -1682,9 +1688,7 @@ class ItemSequencer(QGraphicsView):
         f_seconds_per_beat = (60.0 /
             CURRENT_REGION.get_tempo_at_pos(f_beat_frac))
 
-        if SEQ_QUANTIZE:
-            f_beat_frac = int(f_beat_frac *
-                SEQ_QUANTIZE_AMT) / SEQ_QUANTIZE_AMT
+        f_beat_frac = self.quantize(f_beat_frac)
 
         f_lane_num = int((f_y - REGION_EDITOR_HEADER_HEIGHT) /
             REGION_EDITOR_TRACK_HEIGHT)
@@ -2518,6 +2522,7 @@ class ItemSequencer(QGraphicsView):
                 "Right-click->'Copy' on any knob on any plugin."))
             return
         f_track, f_beat, f_val = self.current_coord
+        f_beat = self.quantize(f_beat)
         f_val = pydaw_widgets.CC_CLIPBOARD
         f_port, f_index = TRACK_PANEL.has_automation(self.current_coord[0])
         if f_port is not None:
