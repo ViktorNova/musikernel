@@ -95,7 +95,8 @@ int osc_debug_handler(const char *path, const char *types, lo_arg **argv, int
 
 #if defined(_WIN32) || defined(__MINGW32__)
 __declspec(dllexport) int main(int argc, char **argv);
-__declspec(dllexport) int v_configure(char * path, char * key, char * value);
+__declspec(dllexport) int v_configure(
+    const char * path, const char * key, const char * value)
 #endif
 
 
@@ -913,7 +914,7 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     return 0;
 }
 
-int v_configure(char * path, char * key, char * value)
+int v_configure(const char * path, const char * key, const char * value)
 {
     if(!strcmp(path, "/musikernel/edmnext"))
     {
