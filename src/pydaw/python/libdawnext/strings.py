@@ -46,7 +46,7 @@ An automation point moves a control on a plugin.  The automation points are
 steppy, you must smooth the points to get a continuous line by selecting
 points using CTRL+drag and pressing ALT+s.
 
-Shift+click+drag to delete items or automation points with the mouse
+Shift+click+drag to cut/delete automation points
 
 See the right-click context menu for additional actions and keyboard shortcuts.
 

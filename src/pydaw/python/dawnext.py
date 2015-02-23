@@ -1271,7 +1271,7 @@ class ItemSequencer(QGraphicsView):
         self.addAction(self.copy_action)
         self.atm_menu.addAction(self.copy_action)
 
-        self.cut_action = self.atm_menu.addAction(_("Cut"))
+        self.cut_action = self.menu.addAction(_("Cut"))
         self.cut_action.triggered.connect(self.cut_selected)
         self.cut_action.setShortcut(QKeySequence.Cut)
         self.addAction(self.cut_action)
@@ -1296,7 +1296,6 @@ class ItemSequencer(QGraphicsView):
         self.delete_action.triggered.connect(self.delete_selected)
         self.delete_action.setShortcut(QKeySequence.Delete)
         self.addAction(self.delete_action)
-        self.atm_menu.addAction(self.delete_action)
 
         self.menu.addSeparator()
 
@@ -1473,16 +1472,7 @@ class ItemSequencer(QGraphicsView):
                 QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         elif REGION_EDITOR_MODE == 1:
             if self.atm_delete:
-                print("self.atm_delete")
-                f_selected = list(
-                    self.get_selected_points(self.atm_select_track))
-                self.scene.clearSelection()
-                self.selected_point_strings = set()
-                for f_point in f_selected:
-                    self.automation_points.remove(f_point)
-                    ATM_REGION.remove_point(f_point.item)
-                self.automation_save_callback()
-                self.open_region()
+                self.delete_selected_atm(self.atm_select_track)
             QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         else:
             QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
@@ -1510,6 +1500,17 @@ class ItemSequencer(QGraphicsView):
             return f_track, round(f_beat, 6), round(f_val, 6)
         else:
             return None
+
+    def delete_selected_atm(self, a_track):
+        self.copy_selected()
+        f_selected = list(self.get_selected_points(a_track))
+        self.scene.clearSelection()
+        self.selected_point_strings = set()
+        for f_point in f_selected:
+            self.automation_points.remove(f_point)
+            ATM_REGION.remove_point(f_point.item)
+        self.automation_save_callback()
+        self.open_region()
 
     def get_selected_items(self):
         return [x for x in self.audio_items if x.isSelected()]
@@ -1616,11 +1617,12 @@ class ItemSequencer(QGraphicsView):
     def delete_selected(self):
         if self.check_running():
             return
-        for f_item in self.get_selected():
-            CURRENT_REGION.remove_item_ref(f_item.audio_item)
-        PROJECT.save_region(CURRENT_REGION)
-        PROJECT.commit(_("Delete item(s)"))
-        REGION_SETTINGS.open_region()
+        if REGION_EDITOR_MODE == 0:
+            for f_item in self.get_selected():
+                CURRENT_REGION.remove_item_ref(f_item.audio_item)
+            PROJECT.save_region(CURRENT_REGION)
+            PROJECT.commit(_("Delete item(s)"))
+            REGION_SETTINGS.open_region()
 
     def set_tooltips(self, a_on):
         if a_on:
