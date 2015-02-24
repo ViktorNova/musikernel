@@ -1362,11 +1362,14 @@ class ItemSequencer(QGraphicsView):
         if libmk.IS_PLAYING:
             return
         f_pos = self.mapToScene(a_event.pos())
+        self.current_coord = self.get_item_coord(f_pos)
 
         if self.check_ruler(f_pos):
+            f_beat = int(f_pos.x() / SEQUENCER_PX_PER_BEAT)
+            self.set_playback_pos(f_beat)
+            TRANSPORT.set_time(f_beat)
             return
 
-        self.current_coord = self.get_item_coord(f_pos)
         if a_event.button() == QtCore.Qt.RightButton:
             if self.current_coord:
                 if REGION_EDITOR_MODE == 0:
