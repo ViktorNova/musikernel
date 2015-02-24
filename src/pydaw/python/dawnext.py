@@ -1365,9 +1365,10 @@ class ItemSequencer(QGraphicsView):
         self.current_coord = self.get_item_coord(f_pos)
 
         if self.check_ruler(f_pos):
-            f_beat = int(f_pos.x() / SEQUENCER_PX_PER_BEAT)
-            self.set_playback_pos(f_beat)
-            TRANSPORT.set_time(f_beat)
+            if a_event.button() == QtCore.Qt.LeftButton:
+                f_beat = int(f_pos.x() / SEQUENCER_PX_PER_BEAT)
+                self.set_playback_pos(f_beat)
+                TRANSPORT.set_time(f_beat)
             return
 
         if a_event.button() == QtCore.Qt.RightButton:
