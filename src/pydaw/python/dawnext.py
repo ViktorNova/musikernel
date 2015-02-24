@@ -1352,10 +1352,19 @@ class ItemSequencer(QGraphicsView):
                 return f_item
         return None
 
+    def check_ruler(self, a_pos):
+        for f_item in self.scene.items(a_pos):
+            if f_item == self.ruler:
+                return True
+        return False
+
     def mousePressEvent(self, a_event):
         if libmk.IS_PLAYING:
             return
         f_pos = self.mapToScene(a_event.pos())
+
+        if self.check_ruler(f_pos):
+            return
 
         self.current_coord = self.get_item_coord(f_pos)
         if a_event.button() == QtCore.Qt.RightButton:
