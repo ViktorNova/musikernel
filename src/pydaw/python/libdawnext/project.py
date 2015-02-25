@@ -67,11 +67,9 @@ class DawNextProject(libmk.AbstractProject):
     def __init__(self, a_with_audio):
         self.last_item_number = 1
         self.last_region_number = 1
-        self.history_files = []
-        self.history_commits = []
+        self.clear_history()
         self.painter_path_cache = {}
         self.pixmap_cache_unscaled = {}
-        self.history_undo_cursor = 0
         self.IPC = DawNextOsc(a_with_audio)
         self.suppress_updates = False
 
@@ -86,16 +84,22 @@ class DawNextProject(libmk.AbstractProject):
             #TODO:  debug/verbose mode this output...
             print(str(f_history_file))
 
-    def commit(self, a_message):
+    def commit(self, a_message, a_discard=False):
         """ Commit the project history """
         if self.history_undo_cursor > 0:
             self.history_commits = self.history_commits[
                 :self.history_undo_cursor]
             self.history_undo_cursor = 0
-        if len(self.history_files) > 0:
-            self.history_commits.append(pydaw_history.pydaw_history_commit(
-                self.history_files, a_message))
-            self.history_files = []
+        if self.history_files and not a_discard:
+            f_commit = pydaw_history.pydaw_history_commit(
+                self.history_files, a_message)
+            self.history_commits.append(f_commit)
+        self.history_files = []
+
+    def clear_history(self):
+        self.history_undo_cursor = 0
+        self.history_files = []
+        self.history_commits = []
 
     def undo(self):
         if self.history_undo_cursor >= len(self.history_commits):
@@ -231,9 +235,10 @@ class DawNextProject(libmk.AbstractProject):
         else:
             return pydaw_midi_routings()
 
-    def save_midi_routing(self, a_routing):
+    def save_midi_routing(self, a_routing, a_notify=True):
         self.save_file("", pydaw_file_midi_routing, str(a_routing))
-        self.commit("Update MIDI routing")
+        if a_notify:
+            self.commit("Update MIDI routing")
 
     def get_items_dict(self):
         try:
@@ -621,11 +626,12 @@ class DawNextProject(libmk.AbstractProject):
         self.save_audio_inputs(f_audio_inputs)
         self.save_routing_graph(f_graph, a_notify=False)
         self.save_region(f_region, a_notify=False)
-        self.save_midi_routing(f_midi_routings)
+        self.save_midi_routing(f_midi_routings, a_notify=False)
 
         self.IPC.pydaw_open_song(self.project_folder, False)
         libmk.IPC.resume_engine()
-        self.commit("Re-order tracks")
+        self.commit("Re-order tracks", a_discard=True)
+        self.clear_history()
 
     def get_tracks_string(self):
         try:

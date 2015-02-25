@@ -259,13 +259,9 @@ class region_settings:
             30, 200, MAIN_WINDOW)
         if f_result:
             f_result = {f_result[x]:x + 1 for x in range(len(f_result))}
-            print(f_result)
             f_result[0] = 0 # master track
-            print(f_result)
             PROJECT.reorder_tracks(f_result)
             TRACK_PANEL.open_tracks()
-            for k, f_track in TRACK_PANEL.tracks.items():
-                f_track.refresh()
             self.open_region()
             MIDI_DEVICES_DIALOG.set_routings()
             TRANSPORT.open_project()
