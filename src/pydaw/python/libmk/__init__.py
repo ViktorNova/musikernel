@@ -34,6 +34,7 @@ IPC = None
 OSC = None
 PROJECT = None
 PLUGIN_UI_DICT = None
+CURRENT_HOST = 0
 TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
 
 def prepare_to_quit():

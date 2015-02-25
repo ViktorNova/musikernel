@@ -133,6 +133,7 @@ class mk_plugin_ui_dict:
             a_stylesheet: Qt-CSS string
         """
         self.ui_dict = {}
+        self.host_sets = {}
         self.midi_learn_control = None
         self.ctrl_update_callback = a_ipc.pydaw_update_plugin_control
         self.project = a_project
@@ -148,8 +149,19 @@ class mk_plugin_ui_dict:
     def __getitem__(self, a_plugin_uid):
         return self.ui_dict[a_plugin_uid]
 
-    def open_plugin_ui(self, a_plugin_uid, a_plugin_type, a_title,
-                              a_show=True):
+    def set_host(self, a_new_host):
+        f_old_host = libmk.CURRENT_HOST
+        self.host_sets[f_old_host] = [
+            x.widget for x in self.ui_dict.values()
+            if not x.widget.isHidden()]
+        for x in self.host_sets[f_old_host]:
+            x.close()
+        if a_new_host in self.host_sets:
+            for x in self.host_sets[a_new_host]:
+                x.show()
+
+    def open_plugin_ui(
+            self, a_plugin_uid, a_plugin_type, a_title, a_show=True):
         if not a_plugin_uid in self.ui_dict:
             f_plugin = PLUGIN_UI_TYPES[a_plugin_type](
                 self.ctrl_update_callback, self.project, self.plugin_pool_dir,
