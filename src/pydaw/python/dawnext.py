@@ -382,10 +382,9 @@ class tracks_widget:
         f_tracks = PROJECT.get_tracks()
         TRACK_NAMES = f_tracks.get_names()
         global_update_track_comboboxes()
-        for f_track_num, f_name in zip(sorted(self.tracks), TRACK_NAMES):
-            self.tracks[f_track_num].track_name_lineedit.setText(f_name)
         for key, f_track in f_tracks.tracks.items():
             self.tracks[key].open_track(f_track)
+            self.tracks[key].refresh()
         self.update_plugin_track_map()
 
     def get_tracks(self):
