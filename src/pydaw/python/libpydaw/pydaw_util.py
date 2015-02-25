@@ -281,14 +281,10 @@ if IS_WINDOWS:
     pydaw_paulstretch_util = os.path.join(
         INSTALL_PREFIX, "python", "libpydaw", "pydaw_paulstretch.py")
 else:
-    pydaw_rubberband_util = os.path.join(
-        INSTALL_PREFIX, "lib", global_pydaw_version_string,
-        "rubberband", "bin", "rubberband")
-
+    pydaw_rubberband_util = pydaw_which("rubberband")
     pydaw_sbsms_util = os.path.join(
         INSTALL_PREFIX, "lib", global_pydaw_version_string,
         "sbsms", "bin", "sbsms")
-
     pydaw_paulstretch_util = os.path.join(
         INSTALL_PREFIX, "lib", global_pydaw_version_string,
         "pydaw", "python", "libpydaw", "pydaw_paulstretch.py")

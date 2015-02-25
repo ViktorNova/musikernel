@@ -95,7 +95,7 @@ f_debian_control = \
 "Version: {}\n"
 "Depends: libasound2-dev, liblo-dev, libsndfile1-dev, "
 "libportmidi-dev, portaudio19-dev, python3-pyqt5, python3, "
-"python3-numpy, libsamplerate0-dev, libfftw3-dev, libcpufreq-dev, "
+"python3-numpy, rubberband-cli, libfftw3-dev, libcpufreq-dev, "
 "libav-tools, lame, vorbis-tools\n"
 "Provides: {}\n"
 "Conflicts:\n"

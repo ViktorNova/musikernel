@@ -35,7 +35,6 @@ src/pydaw/portaudio/config.status
 src/pydaw/portaudio/lib-stamp
 src/pydaw/portaudio/libtool
 src/pydaw/portaudio/portaudio-2.0.pc
-src/rubberband/bin
 ubuntu/pydaw_os/pydaw*.ova
 src/pydaw/musikernel*-engine*
 src/pydaw/dir_debug

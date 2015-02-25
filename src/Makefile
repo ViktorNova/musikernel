@@ -3,7 +3,6 @@
 PREFIX ?= /usr
 DESTDIR ?=
 SBSMS_PREFIX = $(PREFIX)/lib/$(PYDAW_VERSION)/sbsms
-RUBBERBAND_PREFIX = $(PREFIX)/lib/$(PYDAW_VERSION)/rubberband
 PYDAW_VERSION = $(shell cat major-version.txt)
 MK_DIR = $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
 
@@ -39,14 +38,12 @@ deps:
 	cd pydaw/pyliblo-0.9.2 && python3 setup.py build && cp build/lib*/liblo* ../python/libpydaw
 	cd sbsms && ( ./configure || ./configure --enable-sse=no ) && make
 	cd sbsms/cli && make
-	cd rubberband && ./configure --prefix=$(RUBBERBAND_PREFIX) && make
 
 deps_clean:
 	make -C pydaw/midicomp clean
 	cd pydaw/pyliblo-0.9.2 && python3 setup.py clean
 	make -C sbsms clean
 	make -C sbsms/cli clean
-	make -C rubberband clean
 		
 # --------------------------------------------------------------
 
@@ -54,11 +51,8 @@ install:
 	install -d $(MK_DIR)
 	install -d $(MK_DIR)/sbsms
 	install -d $(MK_DIR)/sbsms/bin
-	install -d $(MK_DIR)/rubberband
-	install -d $(MK_DIR)/rubberband/bin
 	make -C pydaw PREFIX=$(PREFIX) DESTDIR=$(DESTDIR) install
 	install sbsms/cli/sbsms $(MK_DIR)/sbsms/bin
-	install rubberband/bin/rubberband $(MK_DIR)/rubberband/bin
 	make -C pydaw_render DESTDIR=$(DESTDIR) PREFIX=$(PREFIX) install
 
 # --------------------------------------------------------------

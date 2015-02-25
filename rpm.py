@@ -122,7 +122,6 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755, root, root) /usr/bin/{0}-engine-no-root
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/libpydaw/pydaw_paulstretch.py
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/musikernel.py
-%attr(755, root, root) /usr/lib/{0}/rubberband/bin/rubberband
 %attr(755, root, root) /usr/lib/{0}/sbsms/bin/sbsms
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/libpydaw/project_recover.py
 %attr(755, root, root) /usr/lib/{0}/pydaw/python/libpydaw/pydaw_device_dialog.py
