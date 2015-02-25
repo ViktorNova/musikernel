@@ -8528,11 +8528,11 @@ def global_ui_refresh_callback(a_restore_all=False):
     """ Use this to re-open all existing items/regions/song in
         their editors when the files have been changed externally
     """
+    global_open_items(CURRENT_ITEM_NAME)
     TRACK_PANEL.open_tracks()
     REGION_SETTINGS.open_region()
     MAIN_WINDOW.tab_changed()
-    PROJECT.IPC.pydaw_open_song(
-        PROJECT.project_folder, a_restore_all)
+    PROJECT.IPC.pydaw_open_song(PROJECT.project_folder, a_restore_all)
 
 #Opens or creates a new project
 def global_open_project(a_project_file):

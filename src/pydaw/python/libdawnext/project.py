@@ -103,6 +103,7 @@ class DawNextProject(libmk.AbstractProject):
         self.history_undo_cursor += 1
         self.history_commits[-1 * self.history_undo_cursor].undo(
             self.project_folder)
+        self.clear_caches()
         return True
 
     def redo(self):
@@ -111,6 +112,7 @@ class DawNextProject(libmk.AbstractProject):
         self.history_commits[-1 * self.history_undo_cursor].redo(
             self.project_folder)
         self.history_undo_cursor -= 1
+        self.clear_caches()
         return True
 
     def get_files_dict(self, a_folder, a_ext=None):
@@ -676,6 +678,10 @@ class DawNextProject(libmk.AbstractProject):
             f_uid = f_items_dict.get_uid_by_name(a_name)
             assert(f_uid == a_item.uid)
             self.save_item_by_uid(f_uid, a_item)
+
+    def clear_caches(self):
+        self.pixmap_cache_unscaled = {}
+        self.painter_path_cache = {}
 
     def get_item_path(self, a_uid, a_px_per_beat, a_height, a_tempo):
         a_uid = int(a_uid)
