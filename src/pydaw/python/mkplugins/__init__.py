@@ -152,13 +152,13 @@ class mk_plugin_ui_dict:
     def set_host(self, a_new_host):
         f_old_host = libmk.CURRENT_HOST
         self.host_sets[f_old_host] = [
-            x.widget for x in self.ui_dict.values()
-            if not x.widget.isHidden()]
+            x for x in self.ui_dict.values() if not x.widget.isHidden()]
         for x in self.host_sets[f_old_host]:
-            x.close()
+            x.widget.close()
         if a_new_host in self.host_sets:
             for x in self.host_sets[a_new_host]:
-                x.show()
+                x.widget.setHidden(False)
+                x.raise_widget()
 
     def open_plugin_ui(
             self, a_plugin_uid, a_plugin_type, a_title, a_show=True):
