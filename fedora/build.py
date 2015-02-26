@@ -99,7 +99,7 @@ python3-numpy
 fftw-devel
 portaudio-devel
 portmidi-devel
-libsamplerate-devel
+rubberband
 python3-devel
 vorbis-tools
 
