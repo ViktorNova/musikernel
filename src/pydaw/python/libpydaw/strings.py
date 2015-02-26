@@ -102,9 +102,7 @@ to manipulate the selected notes (or all notes if none are selected)
 Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
 
 
-audio_items_viewer = _("""Drag .wav files from the file browser onto here.
-"You can edit item properties with the 'Edit' tab to the left,
-or by clicking and dragging the item handles.
+audio_items_viewer = _("""Drag audio files from the file browser onto here.
 
 Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
 
