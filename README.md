@@ -1,6 +1,8 @@
-#Notice
+#Notice to packagers
 
-Starting with 15.02.2 , MusiKernel is ported to PyQt5 and is no longer compatible with PyQt4.  If you are using an older Linux distro that does not package PyQt5, you should stick to 15.02.1 or (ideally) switch to a more up-to-date distro like Fedora 21, Ubuntu 14.04 or Debian 8.  This was necessary to simplify the forthcoming Windows and Mac ports.
+Several dependencies have recently changed, please update accordingly.
+
+Starting with 15.02.2 , MusiKernel is ported to PyQt5 and is no longer compatible with PyQt4.  Distros that currently package PyQt5 include Fedora 21, Ubuntu 14.04+ or Debian 8.
 
 #What is MusiKernel ?
 
