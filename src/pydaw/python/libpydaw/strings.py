@@ -115,9 +115,7 @@ CTRL+ALT+Click and drag to adjust the volume of selected items
 CTRL+SHIFT+Click and drag to create a volume line from the selected items
 You can multi-select individual items by SHIFT+ALT+clicking on them.
 
-You can glue together multiple items by selecting items and pressing CTRL+G,
-the glued item will retain all of the fades, stretches and per-item fx of
-the original items.""")
+See the menu button above for additional actions""")
 
 multiple_instances_warning = _(
 """Detected that there are instances of the MusiKernel
