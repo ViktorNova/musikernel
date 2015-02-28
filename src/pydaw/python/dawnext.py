@@ -6851,7 +6851,7 @@ class automation_viewer_widget:
 
         f_layout.addWidget(QLabel(_("Position (beats)")), 5, 0)
         f_pos_spinbox = QDoubleSpinBox()
-        f_pos_spinbox.setRange(1.0, CURRENT_ITEM_LEN + 1.0)
+        f_pos_spinbox.setRange(1.0, CURRENT_ITEM_LEN + 0.99)
         f_pos_spinbox.setDecimals(2)
         f_pos_spinbox.setSingleStep(0.25)
         f_layout.addWidget(f_pos_spinbox, 5, 1)
