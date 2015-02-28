@@ -1840,6 +1840,7 @@ class peak_meter:
         self.text = a_text
         self.widget = QWidget()
         self.widget.setFixedWidth(a_width)
+        self.values = None
         self.set_value([0.0, 0.0])
         self.widget.setStyleSheet("background-color: black;")
         self.widget.paintEvent = self.paint_event
@@ -1849,8 +1850,10 @@ class peak_meter:
         self.white_pen = QPen(QtCore.Qt.white, 1.0)
 
     def set_value(self, a_vals):
-        self.values = [float(x) for x in a_vals]
-        self.widget.update()
+        f_vals = [float(x) for x in a_vals]
+        if f_vals != self.values:
+            self.values = f_vals
+            self.widget.update()
 
     def reset_high(self, a_val=None):
         self.high = 0.0
