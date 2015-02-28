@@ -1746,7 +1746,7 @@ class ItemSequencer(QGraphicsView):
             return
         f_pos = (self.playback_pos * SEQUENCER_PX_PER_BEAT)
         self.playback_cursor.setPos(f_pos, 0.0)
-        if REGION_SETTINGS.follow_checkbox.isChecked():
+        if libmk.IS_PLAYING and REGION_SETTINGS.follow_checkbox.isChecked():
             f_port_rect = self.viewport().rect()
             f_rect = self.mapToScene(f_port_rect).boundingRect()
             if not (f_pos > f_rect.left() and f_pos < f_rect.right()):
