@@ -1,22 +1,20 @@
-Compiling for ARM:
-(these instructions are not suitable for creating general purpose ARM packages,
-but you can use them to compile PyDAW for a specific development board like
-the ODROID, or the ARM Chromebook)
+# Compiling for ARM:
 
-# Install all required dependencies
+# Install all required dependencies for Debian or Ubuntu
 ./ubuntu_deps.sh
 
-# or
+# or for Fedora
 
 ./fedora_deps.sh
 
-make native
+# Uses -march=native , may work badly on some boards
+# make native
+
+PLAT_FLAGS="" make
 make install
 
-# or
+# or, MusiKernel is fully relocatable, you can do a root-less install 
+# to any folder you'd like, and you can even move the folder later.
 
 make PREFIX=$(your prefix) DESTDIR=$(where you want to install it) install
-
-# ^PyDAW is fully relocatable, you can do a root-less install to any folder
-# you'd like, and you can even move the folder later.
 
