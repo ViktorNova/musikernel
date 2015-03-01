@@ -15,7 +15,6 @@ GNU General Public License for more details.
 
 import os
 import subprocess
-import time
 import random
 import shutil
 import traceback
