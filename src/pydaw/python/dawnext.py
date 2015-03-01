@@ -604,8 +604,8 @@ class SequencerItem(QGraphicsRectItem):
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
 
     def generic_hoverEnterEvent(self, a_event):
-        QApplication.setOverrideCursor(
-            QCursor(QtCore.Qt.SizeHorCursor))
+        if not libmk.IS_PLAYING:
+            QApplication.setOverrideCursor(QCursor(QtCore.Qt.SizeHorCursor))
 
     def generic_hoverLeaveEvent(self, a_event):
         QApplication.restoreOverrideCursor()
