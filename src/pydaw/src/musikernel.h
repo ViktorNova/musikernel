@@ -830,7 +830,7 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     f_i = 0;
     while(f_i < MAX_PLUGIN_TOTAL_COUNT)
     {
-        f_result->plugins[f_i] = 0;
+        f_result->plugins[f_i] = NULL;
         ++f_i;
     }
 

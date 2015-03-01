@@ -844,7 +844,7 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
                 (a_ts->ml_current_beat - f_item_ref[0]->start));
         }
 
-        for(f_i = 0; f_i < MAX_PLUGIN_COUNT; ++f_i)
+        for(f_i = 0; f_i < MAX_PLUGIN_TOTAL_COUNT; ++f_i)
         {
             if(f_track->plugins[f_i])
             {
