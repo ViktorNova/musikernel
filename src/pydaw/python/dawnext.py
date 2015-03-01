@@ -5945,7 +5945,7 @@ class piano_roll_editor(QGraphicsView):
         self.has_selected = False #Reset the selected-ness state...
         self.viewer_width = PIANO_ROLL_GRID_WIDTH
         self.setSceneRect(
-            0.0, 0.0, self.viewer_width,
+            0.0, 0.0, self.viewer_width + 200.0,
             self.piano_height + PIANO_ROLL_HEADER_HEIGHT + 24.0)
         global PIANO_ROLL_GRID_MAX_START_TIME
         PIANO_ROLL_GRID_MAX_START_TIME = (PIANO_ROLL_GRID_WIDTH -
@@ -6421,7 +6421,7 @@ class automation_viewer(QGraphicsView):
         self.scene.selectionChanged.connect(self.selection_changed)
 
     def set_width(self):
-        self.automation_width = MIDI_SCALE * self.width()
+        self.automation_width = MIDI_SCALE * (self.width() - 60.0)
 
     def selection_changed(self, a_event=None):
         if self.selection_enabled:
@@ -6640,6 +6640,7 @@ class automation_viewer(QGraphicsView):
         self.draw_item()
 
     def draw_item(self):
+        self.set_width()
         self.setUpdatesEnabled(False)
         self.set_scale()
         self.beat_width = self.automation_width / CURRENT_ITEM_LEN
