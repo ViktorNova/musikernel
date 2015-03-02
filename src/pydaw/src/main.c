@@ -719,10 +719,10 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
     MASTER_VOL = f_db_to_linear(f_master_vol * 0.1);
     printf("MASTER_VOL = %f\n", MASTER_VOL);
 
-#ifdef __linux__
     free(f_key_char);
     free(f_value_char);
 
+#ifdef __linux__
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
     signal(SIGHUP, signalHandler);
