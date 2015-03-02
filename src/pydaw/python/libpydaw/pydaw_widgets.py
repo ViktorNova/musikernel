@@ -1842,7 +1842,6 @@ class peak_meter:
         self.widget.setFixedWidth(a_width)
         self.values = None
         self.set_value([0.0, 0.0])
-        self.widget.setStyleSheet("background-color: black;")
         self.widget.paintEvent = self.paint_event
         self.high = 0.0
         self.set_tooltip()
@@ -1869,7 +1868,7 @@ class peak_meter:
 
     def paint_event(self, a_ev):
         p = QPainter(self.widget)
-        p.setBackground(QtCore.Qt.black)
+        p.fillRect(self.widget.rect(), QtCore.Qt.black)
         p.setPen(QtCore.Qt.NoPen)
         f_height = self.widget.height()
         p.setBrush(peak_meter_gradient(f_height))
