@@ -1293,6 +1293,7 @@ void v_dn_process_external_midi(t_dawnext * self,
     int f_midi_learn = musikernel->midi_learn;
     float f_tempo = self->ts[0].tempo;
 
+    midiPoll(a_track->midi_device);
     midiDeviceRead(a_track->midi_device, f_sample_rate, sample_count);
 
     int f_extern_midi_count = *a_track->extern_midi_count;

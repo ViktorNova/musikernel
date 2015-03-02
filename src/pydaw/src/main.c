@@ -143,23 +143,6 @@ void v_pydaw_set_cpu_governor()
 
 #endif
 
-#ifdef __linux__
-static void midiTimerCallback(int sig, siginfo_t *si, void *uc)
-{
-    int f_i;
-    t_midi_device * f_device;
-
-    for(f_i = 0; f_i < MIDI_DEVICES.count; ++f_i)
-    {
-        f_device = &MIDI_DEVICES.devices[f_i];
-        if(f_device->loaded)
-        {
-            midiPoll(f_device);
-        }
-    }
-}
-#endif
-
 inline void v_pydaw_run(float ** buffers, float * a_input, int sample_count)
 {
     pthread_spin_lock(&musikernel->main_lock);
@@ -410,15 +393,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         ++j;
     }
 
-#ifdef __linux__
-    timer_t timerid;
-    struct sigevent sev;
-    struct itimerspec its;
-    long long freq_nanosecs;
-    sigset_t mask;
-    struct sigaction sa;
-#endif
-
     int f_usleep = 0;
 
     if(argc > 5)
@@ -499,7 +473,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
     /*Initialize Portmidi*/
     f_midi_err = Pm_Initialize();
-    int f_with_midi = 0;
 
     char f_midi_device_name[1024];
     sprintf(f_midi_device_name, "None");
@@ -647,7 +620,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
                     }
 
                     ++MIDI_DEVICES.count;
-                    f_with_midi = 1;
                 }
                 else if(!strcmp(f_key_char, "audioInputs"))
                 {
@@ -800,54 +772,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
         }
     }
 
-    if(f_with_midi)
-    {
-#ifdef __linux__
-        /* Establish handler for timer signal */
-
-       sa.sa_flags = SA_SIGINFO;
-       sa.sa_sigaction = midiTimerCallback;
-       sigemptyset(&sa.sa_mask);
-       if (sigaction(SIG, &sa, NULL) == -1)
-       {
-           //errExit("sigaction");
-       }
-
-       /* Block timer signal temporarily */
-
-       sigemptyset(&mask);
-       sigaddset(&mask, SIG);
-       if (sigprocmask(SIG_SETMASK, &mask, NULL) == -1)
-       {
-           //errExit("sigprocmask");
-       }
-
-       /* Create the timer */
-
-       sev.sigev_notify = SIGEV_SIGNAL;
-       sev.sigev_signo = SIG;
-       sev.sigev_value.sival_ptr = &timerid;
-       if (timer_create(CLOCKID, &sev, &timerid) == -1)
-       {
-           //errExit("timer_create");
-       }
-
-       /* Start the timer */
-
-       freq_nanosecs = 5000000;
-       its.it_value.tv_sec = 0;  //freq_nanosecs / 1000000000;
-       its.it_value.tv_nsec = freq_nanosecs;  // % 1000000000;
-       its.it_interval.tv_sec = its.it_value.tv_sec;
-       its.it_interval.tv_nsec = its.it_value.tv_nsec;
-
-       if (timer_settime(timerid, 0, &its, NULL) == -1)
-       {
-           //errExit("timer_settime");
-       }
-#endif
-    } //if(f_with_midi)
-
-
     while(!exiting)
     {
         if(PYDAW_NO_HARDWARE)
@@ -869,12 +793,6 @@ __attribute__((optimize("-O0"))) int main(int argc, char **argv)
 
     }
 
-    if(f_with_midi)
-    {
-#ifdef __linux__
-        timer_delete(timerid);
-#endif
-    }
 
     f_i = 0;
     while(f_i < MIDI_DEVICES.count)
