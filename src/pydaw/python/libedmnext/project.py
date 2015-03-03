@@ -2007,70 +2007,12 @@ class pydaw_transport:
         return pydaw_transport(f_arr[0])
 
 
-class pydaw_midicomp_event:
-    def __init__(self, a_arr):
-        self.tick = int(a_arr[0])
-        self.type = a_arr[1]
-        self.ch = int(a_arr[2].split("ch=")[1]) - 1
-        self.pitch = int(a_arr[3].split("n=")[1])
-        if self.pitch >= 24:
-            self.pitch -= 24
-        self.vel = int(a_arr[4].split("v=")[1])
-        self.length = -1
-
-    def __lt__(self, other):
-        return self.tick < other.tick
-
 class pydaw_midi_file_to_items:
     """ Convert the MIDI file at a_file to a dict of pydaw_item's with keys
         in the format (track#, channel#, bar#)"""
     def __init__(self, a_file):
-        f_midi_comp = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "..", "libpydaw", "midicomp")
-        f_midi_text_arr = subprocess.check_output(
-            [f_midi_comp, str(a_file)]).decode("utf-8").split("\n")
-        #First fix the lengths of events that have note-off events
-        f_note_on_dict = {}
-        f_item_list = []
-        f_resolution = 96
-        for f_line in f_midi_text_arr:
-            f_line_arr = f_line.split()
-            if len(f_line_arr) <= 1:
-                continue
-            if f_line_arr[0] == "MFile":
-                f_resolution = int(f_line_arr[3])
-            elif f_line_arr[1] == "On":
-                f_event = pydaw_midicomp_event(f_line_arr)
-                if f_event.vel == 0:
-                    f_tuple = (f_event.ch, f_event.pitch)
-                    if f_tuple in f_note_on_dict:
-                        f_note_on_dict[f_tuple].length = \
-                            float(f_event.tick -
-                            f_note_on_dict[f_tuple].tick) / float(f_resolution)
-                        f_note_on_dict.pop(f_tuple)
-                else:
-                    f_note_on_dict[(f_event.ch, f_event.pitch)] = f_event
-                    f_item_list.append(f_event)
-            elif f_line_arr[1] == "Off":
-                f_event = pydaw_midicomp_event(f_line_arr)
-                f_tuple = (f_event.ch, f_event.pitch)
-                if f_tuple in f_note_on_dict:
-                    f_note_on_dict[f_tuple].length = \
-                        float(f_event.tick -
-                        f_note_on_dict[f_tuple].tick) / float(f_resolution)
-                    print("{} {}".format(f_note_on_dict[f_tuple].tick,
-                          f_note_on_dict[f_tuple].length))
-                    f_note_on_dict.pop(f_tuple)
-                else:
-                    print("Error, note-off event does not correspond to a "
-                          "note-on event, ignoring event:\n{}".format(
-                        f_event))
-            else:
-                print("Ignoring event: {}".format(f_line))
-
+        f_resolution, f_item_list = pydaw_util.load_midi_file(a_file)
         self.result_dict = {}
-        f_item_list.sort()
 
         for f_event in f_item_list:
             if f_event.length > 0.0:
