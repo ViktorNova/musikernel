@@ -715,7 +715,7 @@ class MkMainWindow(QMainWindow):
                         global_home,
                         "default.{}".format(global_pydaw_version_string)),
                     filter=global_pydaw_file_type_string)
-                if not f_file is None and not str(f_file) == "":
+                if f_file and str(f_file):
                     f_file = str(f_file)
                     if not self.check_for_empty_directory(f_file) or \
                     not self.check_for_rw_perms(f_file):
@@ -742,7 +742,7 @@ class MkMainWindow(QMainWindow):
             if f_file is None:
                 return
             f_file_str = str(f_file)
-            if f_file_str == "":
+            if not f_file_str:
                 return
             if not self.check_for_rw_perms(f_file):
                 return
@@ -813,7 +813,7 @@ class MkMainWindow(QMainWindow):
                         "{}.{}".format(
                         libmk.PROJECT.project_file,
                         global_pydaw_version_string)))
-                if not f_new_file is None and not str(f_new_file) == "":
+                if f_new_file and str(f_new_file):
                     f_new_file = str(f_new_file)
                     if not self.check_for_empty_directory(f_new_file) or \
                     not self.check_for_rw_perms(f_new_file):
@@ -908,7 +908,7 @@ class MkMainWindow(QMainWindow):
                     pydaw_util.INSTALL_PREFIX, "lib",
                     global_pydaw_version_string,"themes"),
                 "MusiKernel Style(*.pytheme)")
-            if f_file is not None and str(f_file) != "":
+            if f_file and str(f_file):
                 f_file = str(f_file)
                 f_style = pydaw_read_file_text(f_file)
                 f_dir = os.path.dirname(f_file)
@@ -1056,7 +1056,7 @@ class MkMainWindow(QMainWindow):
             f_window.close()
 
         def set_output_file_name():
-            if str(f_output_name.text()) == "":
+            if not str(f_output_name.text()):
                 f_file = str(f_name.text())
                 if f_file:
                     f_file_name = f_file.rsplit('.')[0] + self.ac_ext
@@ -1072,7 +1072,7 @@ class MkMainWindow(QMainWindow):
                     if f_dir is None:
                         return
                     f_dir = str(f_dir)
-                    if f_dir == "":
+                    if not f_dir:
                         return
                     f_name.setText(f_dir)
                     self.last_ac_dir = f_dir
@@ -1082,7 +1082,7 @@ class MkMainWindow(QMainWindow):
                         self.last_ac_dir,
                         filter=_("Audio Files {}").format(
                         '(*.wav *.{})'.format(a_label)))
-                    if not f_file_name is None and str(f_file_name) != "":
+                    if f_file_name and str(f_file_name):
                         f_name.setText(str(f_file_name))
                         self.last_ac_dir = os.path.dirname(f_file_name)
                         if f_file_name.lower().endswith(".{}".format(a_label)):
@@ -1104,7 +1104,7 @@ class MkMainWindow(QMainWindow):
                     if f_dir is None:
                         return
                     f_dir = str(f_dir)
-                    if f_dir == "":
+                    if not f_dir:
                         return
                     f_output_name.setText(f_dir)
                     self.last_ac_dir = f_dir
@@ -1128,7 +1128,7 @@ class MkMainWindow(QMainWindow):
                 self.ac_ext = ".{}".format(a_label)
             if not f_batch_checkbox.isChecked():
                 f_str = str(f_output_name.text()).strip()
-                if f_str != "" and not f_str.endswith(self.ac_ext):
+                if f_str and not f_str.endswith(self.ac_ext):
                     f_arr = f_str.rsplit(".")
                     f_output_name.setText(f_arr[0] + self.ac_ext)
 
