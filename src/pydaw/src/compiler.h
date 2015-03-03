@@ -37,6 +37,18 @@ GNU General Public License for more details.
 #define likely(x)   __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
 
+// LLVM defines __GNUC__ , but doesn't implement it's built-ins
+// GCC offers no defines that only mean it's compiled with GCC
+
+#ifdef __clang__
+    #define assume_aligned(x, y) (x)
+    #define NO_OPTIMIZATION
+#else
+    #define assume_aligned(x, y) __builtin_assume_aligned((x), (y))
+    #define NO_OPTIMIZATION __attribute__((optimize("-O0")))
+#endif
+
+
 #define prefetch __builtin_prefetch
 #define PREFETCH_STRIDE 64
 

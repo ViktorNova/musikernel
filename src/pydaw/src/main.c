@@ -297,7 +297,7 @@ typedef struct
     int pid;
 }ui_thread_args;
 
-__attribute__((optimize("-O0"))) void * ui_process_monitor_thread(
+NO_OPTIMIZATION void * ui_process_monitor_thread(
     void * a_thread_args)
 {
     char f_proc_path[256];
@@ -339,7 +339,7 @@ __attribute__((optimize("-O0"))) void * ui_process_monitor_thread(
  * Optional args:
  * --sleep
  */
-__attribute__((optimize("-O0"))) int main(int argc, char **argv)
+NO_OPTIMIZATION int main(int argc, char **argv)
 {
     if(argc < 5)
     {

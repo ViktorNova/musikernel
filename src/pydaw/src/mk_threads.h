@@ -214,7 +214,7 @@ void cpuID(unsigned int i, unsigned int regs[4])
     // ECX is set to zero for CPUID function 4
 }
 
-__attribute__((optimize("-O0"))) char * uint_to_char(unsigned int a_input)
+NO_OPTIMIZATION char * uint_to_char(unsigned int a_input)
 {
     char* bytes = (char*)malloc(sizeof(char) * 5);
 
@@ -227,7 +227,7 @@ __attribute__((optimize("-O0"))) char * uint_to_char(unsigned int a_input)
     return bytes;
 }
 
-__attribute__((optimize("-O0"))) int i_cpu_has_hyperthreading()
+NO_OPTIMIZATION int i_cpu_has_hyperthreading()
 {
     unsigned int regs[4];
 
@@ -297,7 +297,7 @@ void v_pre_fault_thread_stack(int stacksize)
 #endif
 }
 
-__attribute__((optimize("-O0"))) void v_self_set_thread_affinity()
+NO_OPTIMIZATION void v_self_set_thread_affinity()
 {
     v_pre_fault_thread_stack(1024 * 512);
 

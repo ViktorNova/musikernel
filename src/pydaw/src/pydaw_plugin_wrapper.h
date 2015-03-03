@@ -76,7 +76,7 @@ void * PLUGIN_DESC_FUNCS[] = {
     mk_lim_PYFX_descriptor //15
 };
 
-__attribute__((optimize("-O0"))) void g_pydaw_plugin_init(
+NO_OPTIMIZATION void g_pydaw_plugin_init(
         t_pydaw_plugin * f_result,
         int a_sample_rate, int a_index,
         fp_get_wavpool_item_from_host a_host_wavpool_func,

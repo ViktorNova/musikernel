@@ -1886,7 +1886,7 @@ t_wav_pool_item * g_pydaw_wavpool_item_get(int a_uid)
 /* Disable the optimizer for this function because it causes a
  * SEGFAULT on ARM (which could not be reproduced on x86)
  * This is not a performance-critical function. */
-__attribute__((optimize("-O0"))) void v_pydaw_set_plugin_index(
+NO_OPTIMIZATION void v_pydaw_set_plugin_index(
         t_pytrack * f_track, int a_index, int a_plugin_index, int a_plugin_uid,
         int a_power, int a_lock)
 {
