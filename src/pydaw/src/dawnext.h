@@ -41,8 +41,6 @@ GNU General Public License for more details.
 
 #define DN_TRACK_COUNT 32
 
-#define DN_MAX_REGION_SIZE 64
-
 
 #include <string.h>
 #include <pthread.h>
