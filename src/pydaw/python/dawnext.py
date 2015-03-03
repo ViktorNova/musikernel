@@ -598,9 +598,8 @@ class SequencerItem(QGraphicsRectItem):
     def mouseDoubleClickEvent(self, a_event):
         a_event.setAccepted(True)
         QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
-        global CURRENT_ITEM_REF
-        CURRENT_ITEM_REF = self.audio_item
-        global_open_items(self.name, a_reset_scrollbar=True)
+        global_open_items(
+            self.name, a_reset_scrollbar=True, a_new_ref=self.audio_item)
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
 
     def generic_hoverEnterEvent(self, a_event):
@@ -5962,8 +5961,10 @@ class piano_roll_editor(QGraphicsView):
                 self.selected_note_strings:
                     f_note_item.setSelected(True)
             if DRAW_LAST_ITEMS and LAST_ITEM:
+                f_offset = LAST_ITEM_REF.start_offset - ITEM_REF_POS[0]
                 for f_note in LAST_ITEM.notes:
-                    f_note_item = self.draw_note(f_note, False)
+                    f_note_item = self.draw_note(
+                        f_note, False, a_offset=f_offset)
             self.scrollContentsBy(0, 0)
 #            f_text = QGraphicsSimpleTextItem(f_name, self.header)
 #            f_text.setFlag(QGraphicsItem.ItemIgnoresTransformations)
@@ -5972,10 +5973,10 @@ class piano_roll_editor(QGraphicsView):
         self.setUpdatesEnabled(True)
         self.update()
 
-    def draw_note(self, a_note, a_enabled=True):
+    def draw_note(self, a_note, a_enabled=True, a_offset=0.0):
         """ a_note is an instance of the pydaw_note class"""
         f_start = (self.piano_width + self.padding +
-            self.beat_width * a_note.start)
+            self.beat_width * (a_note.start - a_offset))
         f_length = self.beat_width * a_note.length
         f_note = PIANO_ROLL_HEADER_HEIGHT + self.note_height * \
             (PIANO_ROLL_NOTE_COUNT - a_note.note_num)
@@ -6232,7 +6233,7 @@ class piano_roll_editor_widget:
 
     def open_last(self):
         if LAST_ITEM_NAME:
-            global_open_items(LAST_ITEM_NAME)
+            global_open_items(LAST_ITEM_NAME, a_new_ref=LAST_ITEM_REF)
             PIANO_ROLL_EDITOR.draw_item()
 
     def draw_last(self):
@@ -6983,12 +6984,16 @@ def global_set_midi_zoom(a_val):
     pydaw_set_piano_roll_quantize()
 
 
-def global_open_items(a_items=None, a_reset_scrollbar=False):
+def global_open_items(a_items=None, a_reset_scrollbar=False, a_new_ref=None):
     """ a_items is a str which is the name of the item.
         Leave blank to open the existing list
     """
-    global CURRENT_ITEM, CURRENT_ITEM_NAME, LAST_ITEM, LAST_ITEM_NAME, \
-        CURRENT_ITEM_LEN, ITEM_REF_POS
+    global CURRENT_ITEM, CURRENT_ITEM_NAME, CURRENT_ITEM_LEN, ITEM_REF_POS, \
+        LAST_ITEM, LAST_ITEM_NAME, LAST_ITEM_REF, CURRENT_ITEM_REF
+
+    if a_new_ref:
+        LAST_ITEM_REF = CURRENT_ITEM_REF
+        CURRENT_ITEM_REF = a_new_ref
 
     if CURRENT_ITEM_REF:
         f_ref_end = \
@@ -7049,6 +7054,7 @@ LAST_ITEM_NAME = None
 CURRENT_ITEM = None
 CURRENT_ITEM_REF = None
 LAST_ITEM = None
+LAST_ITEM_REF = None
 CURRENT_ITEM_LEN = 4
 
 class item_list_editor:
