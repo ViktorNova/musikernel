@@ -1014,9 +1014,9 @@ class MkMainWindow(QMainWindow):
         def ok_handler():
             f_input_file = str(f_name.text())
             f_output_file = str(f_output_name.text())
-            if f_input_file == "" or f_output_file == "":
-                QMessageBox.warning(f_window, _("Error"),
-                                          _("File names cannot be empty"))
+            if not f_input_file or not f_output_file:
+                QMessageBox.warning(
+                    f_window, _("Error"), _("File names cannot be empty"))
                 return
             if f_batch_checkbox.isChecked():
                 if f_wav_radiobutton.isChecked():
@@ -1027,8 +1027,9 @@ class MkMainWindow(QMainWindow):
                 f_list = [x for x in os.listdir(f_input_file)
                     if x.upper().endswith(f_ext)]
                 if not f_list:
-                    QMessageBox.warning(f_window, _("Error"),
-                          _("No {} files in {}".format(f_ext, f_input_file)))
+                    QMessageBox.warning(
+                        f_window, _("Error"),
+                        _("No {} files in {}".format(f_ext, f_input_file)))
                     return
                 f_proc_list = []
                 for f_file in f_list:
@@ -1111,7 +1112,7 @@ class MkMainWindow(QMainWindow):
                     f_file_name, f_filter = QFileDialog.getSaveFileName(
                         f_window, _("Select a file name to save to..."),
                         self.last_ac_dir)
-                    if not f_file_name is None and str(f_file_name) != "":
+                    if f_file_name and str(f_file_name):
                         f_file_name = str(f_file_name)
                         if not f_file_name.endswith(self.ac_ext):
                             f_file_name += self.ac_ext
