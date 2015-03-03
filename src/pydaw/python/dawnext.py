@@ -5631,6 +5631,7 @@ class piano_roll_editor(QGraphicsView):
 
         f_list = [x for x in self.note_items if x.isSelected()]
         if not f_list:
+            QMessageBox.warning(self, _("Error"), _("No notes selected"))
             return
         self.selected_note_strings = []
         for f_item in f_list:
@@ -7231,6 +7232,7 @@ class item_list_editor:
                 PIANO_ROLL_EDITOR.selected_note_strings = []
 
             global_open_items()
+            PIANO_ROLL_EDITOR.draw_item()
             PROJECT.commit(_("Quantize item(s)"))
             f_window.close()
 
@@ -7283,6 +7285,7 @@ class item_list_editor:
                 PIANO_ROLL_EDITOR.selected_note_strings = []
 
             global_open_items()
+            PIANO_ROLL_EDITOR.draw_item()
             PROJECT.commit(_("Transpose item(s)"))
             f_window.close()
 
