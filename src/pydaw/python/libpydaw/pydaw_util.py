@@ -414,12 +414,12 @@ class pydaw_midicomp_event:
     def __lt__(self, other):
         return self.tick < other.tick
 
+MIDI_COMP = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "midicomp")
 
 def load_midi_file(a_file):
-    f_midi_comp = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "midicomp")
     f_midi_text_arr = subprocess.check_output(
-        [f_midi_comp, str(a_file)]).decode("utf-8").split("\n")
+        [MIDI_COMP, str(a_file)]).decode("utf-8").split("\n")
     #First fix the lengths of events that have note-off events
     f_note_on_dict = {}
     f_item_list = []
