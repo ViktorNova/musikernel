@@ -1003,15 +1003,15 @@ class pydaw_sequencer:
             if str(f_item) == f_to_remove:
                 self.items.remove(f_item)
 
-    def split(self, a_points, a_track=None):
+    def split(self, a_points, a_tracks=None):
         if a_points[0] != 0.0:
             a_points.insert(0, 0.0)
         assert(sorted(a_points) == a_points)
         f_result = []
-        if a_plugin is None:
+        if not a_tracks:
             f_items = self.items[:]
         else:
-            f_items = [x for x in self.items if x.track_num == a_track]
+            f_items = [x for x in self.items if x.track_num in a_tracks]
             if a_port is not None:
                 f_items = [x for x in f_items if x.port == a_port]
         for f_p1, f_p2 in zip(a_points, a_points[1:]):
@@ -1129,15 +1129,15 @@ class pydaw_atm_region:
         self.plugins = {}
         self.points = []
 
-    def split(self, a_points, a_plugin=None, a_port=None):
+    def split(self, a_points, a_plugins=None, a_port=None):
         if a_points[0] != 0.0:
             a_points.insert(0, 0.0)
         assert(sorted(a_points) == a_points)
         f_result = []
-        if a_plugin is None:
+        if not a_plugins:
             f_points = self.points[:]
         else:
-            f_points = [x for x in self.points if x.index == a_plugin]
+            f_points = [x for x in self.points if x.index in a_plugins]
             if a_port is not None:
                 f_points = [x for x in f_points if x.port == a_port]
         for f_p1, f_p2 in zip(a_points, a_points[1:]):
