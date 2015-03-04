@@ -1003,6 +1003,33 @@ class pydaw_sequencer:
             if str(f_item) == f_to_remove:
                 self.items.remove(f_item)
 
+    def split(self, a_points, a_track=None):
+        if a_points[0] != 0.0:
+            a_points.insert(0, 0.0)
+        assert(sorted(a_points) == a_points)
+        f_result = []
+        if a_plugin is None:
+            f_items = self.items[:]
+        else:
+            f_items = [x for x in self.items if x.track_num == a_track]
+            if a_port is not None:
+                f_items = [x for x in f_items if x.port == a_port]
+        for f_p1, f_p2 in zip(a_points, a_points[1:]):
+            f_list = [x for x in f_items
+                if x.start_beat >= f_p1 and x.start_beat < f_p2]
+            f_result.append(f_list)
+            for f_item in f_list:
+                if f_item.length_beats + f_item.start_beat > f_p2:
+                    f_new_item = f_item.clone()
+                    f_items.append(f_new_item)
+                    f_diff = f_p2 - f_item.start_beat
+                    f_new_item.length_beats = f_item.length_beats - f_diff
+                    f_new_item.start_offset += f_diff
+                    f_item.length_beats = f_diff
+        f_list = [x for x in f_items if x > a_points[-1]]
+        f_result.append(f_list)
+        return f_result
+
     def insert_space(self, a_start, a_length):
         for f_item in (x for x in self.items if x.start_beat >= a_start):
             f_item.start_beat += a_length
@@ -1100,19 +1127,25 @@ class pydaw_sequencer:
 class pydaw_atm_region:
     def __init__(self):
         self.plugins = {}
+        self.points = []
 
-    def split(self, a_index):
-        f_region0 = pydaw_atm_region()
-        f_region1 = pydaw_atm_region()
-        for f_plugin in self.plugins:
-            for f_list in self.plugins[f_plugin].values():
-                for f_item in f_list:
-                    if f_item.bar >= a_index:
-                        f_item.bar -= a_index
-                        f_region1.add_point(f_item)
-                    else:
-                        f_region0.add_point(f_item)
-        return f_region0, f_region1
+    def split(self, a_points, a_plugin=None, a_port=None):
+        if a_points[0] != 0.0:
+            a_points.insert(0, 0.0)
+        assert(sorted(a_points) == a_points)
+        f_result = []
+        if a_plugin is None:
+            f_points = self.points[:]
+        else:
+            f_points = [x for x in self.points if x.index == a_plugin]
+            if a_port is not None:
+                f_points = [x for x in f_points if x.port == a_port]
+        for f_p1, f_p2 in zip(a_points, a_points[1:]):
+            f_list = [x for x in f_points if x >= f_p1 and x < f_p2]
+            f_result.append(f_list)
+        f_list = [x for x in f_points if x > a_points[-1]]
+        f_result.append(f_list)
+        return f_result
 
     def add_port_list(self, a_point):
         if not a_point.index in self.plugins:
@@ -1123,10 +1156,12 @@ class pydaw_atm_region:
     def add_point(self, a_point):
         self.add_port_list(a_point)
         self.plugins[a_point.index][a_point.port_num].append(a_point)
+        self.points.append(a_point)
 
     def remove_point(self, a_point):
         #self.add_port_list(a_point)
         self.plugins[a_point.index][a_point.port_num].remove(a_point)
+        self.points.pop(a_point)
 
     def get_ports(self, a_index):
         a_index = int(a_index)
