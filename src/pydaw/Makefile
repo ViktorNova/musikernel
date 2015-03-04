@@ -11,12 +11,13 @@ PLAT_FLAGS     ?= -mstackrealign -msse -msse2 -msse3 -mfpmath=sse \
 
 CACHE_LINE_SIZE = 64  # $(shell getconf LEVEL1_DCACHE_LINESIZE)
 
-BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
--floop-optimize -fsingle-precision-constant -funroll-loops -Wall \
--Isrc -fstrength-reduce -fstrict-aliasing \
--finline-functions -fno-stack-protector \
--DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
+#Flags that LLVM/Clang complain about
+OPTIMIZE_FLAGS ?= -fprefetch-loop-arrays -floop-optimize \
+-fsingle-precision-constant -fstrength-reduce -finline-functions
 
+BASE_FLAGS     = $(OPTIMIZE_FLAGS) -ffast-math -funroll-loops -Wall \
+-fstrict-aliasing -Wstrict-aliasing -fno-stack-protector \
+-DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
 
 BUILD_CFLAGS   = $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
 MATH_LIB_FLAG ?= -lm

@@ -8,17 +8,16 @@ PYDAW_FILE = $(PYDAW_VERSION)_render
 PYDAW_DBG = $(PYDAW_FILE)-dbg
 CACHE_LINE_SIZE = 64  # $(shell getconf LEVEL1_DCACHE_LINESIZE)
 
-#BASE_FLAGS     = -Wall -mstackrealign -fsingle-precision-constant -mtune=generic -msse 
-#-msse2 -msse3 -mfpmath=sse -fstrength-reduce -fstrict-aliasing -fprefetch-loop-arrays -finline-functions
-
 #Default flags are mostly x86 specific
 PLAT_FLAGS     ?= -mstackrealign -msse -msse2 -msse3 -mfpmath=sse \
 -mtune=generic
 
-BASE_FLAGS     = -ffast-math -fprefetch-loop-arrays \
--floop-optimize -fsingle-precision-constant -funroll-loops -Wall \
--Isrc -fstrength-reduce -fstrict-aliasing -finline-functions \
--Wstrict-aliasing -fno-stack-protector \
+#Flags that LLVM/Clang complain about
+OPTIMIZE_FLAGS ?= -fprefetch-loop-arrays -floop-optimize \
+-fsingle-precision-constant -fstrength-reduce -finline-functions
+
+BASE_FLAGS     = $(OPTIMIZE_FLAGS) -ffast-math -funroll-loops -Wall \
+-fstrict-aliasing -Wstrict-aliasing -fno-stack-protector \
 -DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
 
 
