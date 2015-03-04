@@ -1269,10 +1269,12 @@ class ItemSequencer(QGraphicsView):
         self.cut_action.setShortcut(QKeySequence.Cut)
         self.addAction(self.cut_action)
 
-        self.paste_action = self.menu.addAction(_("Paste"))
+        self.paste_action = self.atm_menu.addAction(_("Paste"))
         self.paste_action.triggered.connect(self.paste_clipboard)
-        self.addAction(self.paste_action)
-        self.atm_menu.addAction(self.paste_action)
+
+        self.paste_orig_action = self.menu.addAction(
+            _("Paste to Original Track"))
+        self.paste_orig_action.triggered.connect(self.paste_clipboard)
 
         self.paste_ctrl_action = self.atm_menu.addAction(
             _("Paste Plugin Control"))
