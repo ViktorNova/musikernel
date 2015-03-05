@@ -426,9 +426,11 @@ class atm_item(QGraphicsEllipseItem):
     def mouseMoveEvent(self, a_event):
         QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
         f_pos = self.pos()
-        f_x = pydaw_util.pydaw_clip_min(f_pos.x(), 0.0)
-        f_y = pydaw_util.pydaw_clip_value(
-            f_pos.y(), self.min_y, self.max_y)
+        f_x = f_pos.x()
+        if SEQ_QUANTIZE:
+            f_x = round(f_x / SEQUENCER_QUANTIZE_PX) * SEQUENCER_QUANTIZE_PX
+        f_x = pydaw_util.pydaw_clip_min(f_x, 0.0)
+        f_y = pydaw_util.pydaw_clip_value(f_pos.y(), self.min_y, self.max_y)
         self.setPos(f_x, f_y)
 
     def mouseReleaseEvent(self, a_event):
