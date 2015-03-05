@@ -1162,7 +1162,7 @@ class pydaw_atm_region:
     def remove_point(self, a_point):
         #self.add_port_list(a_point)
         self.plugins[a_point.index][a_point.port_num].remove(a_point)
-        self.points.pop(a_point)
+        self.points.remove(a_point)
 
     def get_ports(self, a_index):
         a_index = int(a_index)
