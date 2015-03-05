@@ -1003,7 +1003,7 @@ class pydaw_sequencer:
             if str(f_item) == f_to_remove:
                 self.items.remove(f_item)
 
-    def split(self, a_points, a_tracks=None):
+    def split(self, a_points, a_tracks=None, a_modify=True):
         if a_points[0] != 0.0:
             a_points.insert(0, 0.0)
         assert(sorted(a_points) == a_points)
@@ -1025,7 +1025,8 @@ class pydaw_sequencer:
                     f_diff = f_p2 - f_item.start_beat
                     f_new_item.length_beats = f_item.length_beats - f_diff
                     f_new_item.start_offset += f_diff
-                    f_item.length_beats = f_diff
+                    if a_modify:
+                        f_item.length_beats = f_diff
         f_list = [x for x in f_items if x > a_points[-1]]
         f_result.append(f_list)
         return f_result
