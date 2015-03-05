@@ -796,23 +796,22 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     if(!PYDAW_NO_HARDWARE)
     {
         err = Pa_CloseStream(stream);
-        Pa_Terminate();
-
-        f_i = 0;
-        while(f_i < MIDI_DEVICES.count)
-        {
-            if(MIDI_DEVICES.devices[f_i].loaded)
-            {
-                midiDeviceClose(&MIDI_DEVICES.devices[f_i]);
-            }
-            ++f_i;
-        }
-
-        Pm_Terminate();
     }
 
-    v_pydaw_destructor();
+    Pa_Terminate();
 
+    f_i = 0;
+    while(f_i < MIDI_DEVICES.count)
+    {
+        if(MIDI_DEVICES.devices[f_i].loaded)
+        {
+            midiDeviceClose(&MIDI_DEVICES.devices[f_i]);
+        }
+        ++f_i;
+    }
+
+    Pm_Terminate();
+    v_pydaw_destructor();
 
 #ifdef PYDAW_CPUFREQ
     if(f_performance)
