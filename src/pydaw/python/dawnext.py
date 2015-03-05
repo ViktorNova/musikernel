@@ -2184,7 +2184,7 @@ class ItemSequencer(QGraphicsView):
         f_port, f_index = TRACK_PANEL.has_automation(f_track)
         f_points = [x.item for x in self.get_selected_points()]
         ATM_REGION.smooth_points(f_index, f_port, f_plugin, f_points)
-        self.selected_point_strings = set()
+        self.selected_point_strings = set(str(x) for x in f_points)
         self.automation_save_callback()
         self.open_region()
 
