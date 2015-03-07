@@ -1293,6 +1293,7 @@ class ItemSequencer(QGraphicsView):
         self.delete_action.triggered.connect(self.delete_selected)
         self.delete_action.setShortcut(QKeySequence.Delete)
         self.addAction(self.delete_action)
+        self.atm_menu.addAction(self.delete_action)
 
         self.menu.addSeparator()
 
@@ -1633,6 +1634,11 @@ class ItemSequencer(QGraphicsView):
             PROJECT.save_region(CURRENT_REGION)
             PROJECT.commit(_("Delete item(s)"))
             REGION_SETTINGS.open_region()
+        elif REGION_EDITOR_MODE == 1:
+            for f_point in self.get_selected_points():
+                ATM_REGION.remove_point(f_point.item)
+            self.automation_save_callback()
+            self.open_region()
 
     def set_tooltips(self, a_on):
         if a_on:
