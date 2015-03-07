@@ -157,6 +157,14 @@ solution, as different generations of Intel and AMD processors use different
 CPU frequency drivers and offer different power saving features and different
 BIOS.</p>
 
+<p>Others causes could be using a Jack audio device, ALSA is the preferred
+back-end for MusiKernel (and does not require a special real-time
+Linux kernel to achieve decent latency)</p>
+
+<p>If you only experience Xruns immediately after starting MusiKernel, you
+may want to try adding "vm.swappiness=0" to /etc/sysctl.conf and
+rebooting</p>
+
 <h3>My microphone doesn't work</h3>
 
 <p>On some interfaces (such as the Apogee One), you may need to open the
