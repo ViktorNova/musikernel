@@ -161,13 +161,20 @@ BIOS.</p>
 
 <p>On some interfaces (such as the Apogee One), you may need to open the
 terminal, type the command "alsamixer", and select your interface and
-set the input.</p>
+set the input.  You may also need to set the number of inputs on the
+"Audio In" tab of the Menu->File->HardwareSettings... dialog</p>
 
 <h3>The UI is sluggish in a large project</h3>
 
 <p>If using an Nvidia or AMD graphics card, you should probably try
 installing the proprietary driver for you card.  In Ubuntu, with an
 AMD card, for example: sudo apt-get install fglrx.</p>
+
+<h3>The playback cursor doesn't move after pressing the play button</h3>
+
+<p>This is <i>usually</i> caused by selecting an incorrect audio device,
+such as the "default" audio device.  Ensure that you have selected the
+correct device from Menu->File->HardwareSettings...</p>
 """
 )
 
