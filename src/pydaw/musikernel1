@@ -7,7 +7,6 @@ pydaw_version = "musikernel1"
 print("sys.argv == {}".format(sys.argv))
 
 if len(sys.argv) > 1:
-
     import signal
 
     def sig_handle(a_1=None, a_2=None):
@@ -23,21 +22,14 @@ if len(sys.argv) > 1:
 
     f_path = "{}/{}-engine".format(os.path.dirname(__file__), pydaw_version)
     print(f_path)
-    if "cygwin" in sys.platform:
-        f_proc = subprocess.Popen(["/bin/python3.2m", f_path] + sys.argv[1:])
-    else:
-        f_proc = subprocess.Popen([f_path] + sys.argv[1:])
+    f_proc = subprocess.Popen([f_path] + sys.argv[1:])
     f_proc.wait()
     print("helper script:  f_proc returned with {}".format(f_proc.returncode))
     sys.exit(f_proc.returncode)
 else:
     f_prefix_dir = os.path.dirname(__file__)
-    f_path = "{}/../lib/{}/pydaw/python/musikernel.py".format(
-        f_prefix_dir, pydaw_version)
+    f_path = "{}/../lib/{}/pydaw/python".format(f_prefix_dir, pydaw_version)
     f_path = os.path.abspath(f_path)
     print(f_path)
-    if "cygwin" in sys.platform:
-        subprocess.Popen(["/bin/python3.2m.exe", f_path])
-    else:
-        subprocess.Popen([f_path])
-
+    sys.path.insert(0, f_path)
+    import musikernel
