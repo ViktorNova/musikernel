@@ -328,9 +328,6 @@ NO_OPTIMIZATION void * ui_process_monitor_thread(
     return (void*)0;
 }
 
-#ifndef RTLD_LOCAL
-#define RTLD_LOCAL  (0)
-#endif
 
 /* argv positional args:
  * [1] Install prefix (ie: /usr)
