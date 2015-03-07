@@ -239,7 +239,7 @@ class SplashScreen(QSplashScreen):
     def __init__(self):
         self.pixmap = QPixmap(
             os.path.join(pydaw_util.PYTHON_DIR, "splash.png"))
-        QSplashScreen.__init__(self, self.pixmap)
+        QSplashScreen.__init__(self, MAIN_WINDOW, self.pixmap)
         self.show()
         libmk.APP.processEvents()
 
@@ -258,8 +258,10 @@ class MkMainWindow(QMainWindow):
     wavenext_callback = QtCore.pyqtSignal(str, list)
 
     def __init__(self):
-        self.suppress_resize_events = False
         QMainWindow.__init__(self)
+
+    def setup(self):
+        self.suppress_resize_events = False
         libmk.MAIN_WINDOW = self
         if pydaw_util.IS_LINUX and not pydaw_util.IS_ENGINE_LIB:
             try:
@@ -1463,24 +1465,23 @@ if pydaw_util.IS_CYGWIN:
     time.sleep(1.0)
 
 libmk.APP = QApplication(sys.argv)
-
+MAIN_WINDOW = MkMainWindow()
 SPLASH_SCREEN = SplashScreen()
+PYDAW_SUBPROCESS = None
+default_project_file = pydaw_util.get_file_setting("last-project", str, None)
+RESPAWN = False
 
 libmk.APP.setWindowIcon(
     QIcon(os.path.join(
         pydaw_util.INSTALL_PREFIX, "share", "pixmaps",
         "{}.png".format(global_pydaw_version_string))))
 
+QPixmapCache.setCacheLimit(1024 * 1024 * 1024)
+libmk.APP.setStyle(QStyleFactory.create("Fusion"))
 libmk.APP.setStyleSheet(global_stylesheet)
-
 QtCore.QTextCodec.setCodecForLocale(QtCore.QTextCodec.codecForName("UTF-8"))
-
 global_check_device()
-
-MAIN_WINDOW = MkMainWindow()
-
-PYDAW_SUBPROCESS = None
-
+MAIN_WINDOW.setup()
 libmk.APP.lastWindowClosed.connect(libmk.APP.quit)
 
 if not os.access(global_pydaw_home, os.W_OK):
@@ -1489,8 +1490,6 @@ if not os.access(global_pydaw_home, os.W_OK):
         _("You do not have read+write permissions to {}, please correct "
         "this and restart MusiKernel".format(global_pydaw_home)))
     MAIN_WINDOW.prepare_to_quit()
-
-default_project_file = pydaw_util.get_file_setting("last-project", str, None)
 
 if not default_project_file:
     default_project_file = os.path.join(
@@ -1533,16 +1532,9 @@ if os.path.exists(default_project_file):
 else:
     global_new_project(default_project_file)
 
-RESPAWN = False
-
-QPixmapCache.setCacheLimit(1024 * 1024 * 1024)
-
 libmk.set_window_title()
-libmk.APP.setStyle(QStyleFactory.create("Fusion"))
-
 SPLASH_SCREEN.close()
 SPLASH_SCREEN = None
-
 MAIN_WINDOW.show()
 
 libmk.APP.exec_()
