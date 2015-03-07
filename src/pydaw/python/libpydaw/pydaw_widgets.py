@@ -566,7 +566,7 @@ class pydaw_abstract_ui_control:
         f_default_low, f_default_high = (get_real_value(x) for x in
             f_cc_map[f_cc].ports[self.port_num])
 
-        f_dialog = QDialog()
+        f_dialog = QDialog(self.control)
         f_dialog.setWindowTitle(_("Set Range for CC"))
         f_layout = QVBoxLayout(f_dialog)
         f_spinbox_layout = QHBoxLayout()
