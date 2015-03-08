@@ -137,6 +137,9 @@ class pydaw_device_dialog:
         if pydaw_util.IS_LINUX:
             f_portaudio_so_path = "libportaudio.so"
             f_pm_dll = "libportmidi.so"
+        elif pydaw_util.IS_MAC_OSX:
+            f_portaudio_so_path = "libportaudio.dylib"
+            f_pm_dll = "libportmidi.dylib"
         elif pydaw_util.IS_CYGWIN:
             f_portaudio_so_path = "libportaudio-2.dll"
             f_pm_dll = "libportmidi-0.dll"
