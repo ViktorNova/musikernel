@@ -49,8 +49,10 @@ void v_pydaw_open_tracks()
 
 void v_open_project(const char* a_project_folder, int a_first_load)
 {
+#ifdef __linux__
     struct timespec f_start, f_finish;
     clock_gettime(CLOCK_REALTIME, &f_start);
+#endif
 
     sprintf(musikernel->project_folder, "%s", a_project_folder);
     sprintf(musikernel->plugins_folder, "%s/projects/plugins/",
@@ -75,9 +77,10 @@ void v_open_project(const char* a_project_folder, int a_first_load)
     v_wn_open_project();
     v_dn_open_project(a_first_load);
 
+#ifdef __linux__
     clock_gettime(CLOCK_REALTIME, &f_finish);
-
     v_pydaw_print_benchmark("v_open_project", f_start, f_finish);
+#endif
 }
 
 void v_pydaw_activate(int a_thread_count,

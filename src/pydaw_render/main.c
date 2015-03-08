@@ -242,9 +242,12 @@ int dawnext_main(int argc, char** argv)
     return 0;
 }
 
+#ifdef __linux__
+
 void v_interleave_benchmark(int f_buffer_size)
 {
     register int f_i;
+
     struct timespec f_start, f_finish;
 
     printf("\nRunning benchmark of interleaved vs. non-interleaved buffers\n");
@@ -303,3 +306,5 @@ void v_interleave_benchmark(int f_buffer_size)
 
     v_pydaw_print_benchmark("Non-interleaved: ", f_start, f_finish);
 }
+
+#endif

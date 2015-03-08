@@ -3070,9 +3070,11 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
 
     printf("\nSuccessfully opened SNDFILE\n\n");
 
+#ifdef __linux__
     struct timespec f_start, f_finish;
     clock_gettime(CLOCK_REALTIME, &f_start);
-
+#endif
+    
     int f_current_bar = 999;  //For printing the current region/bar
 
     while(((self->current_region) < a_end_region) ||
@@ -3125,6 +3127,8 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
         }
     }
 
+#ifdef __linux__
+
     clock_gettime(CLOCK_REALTIME, &f_finish);
     float f_elapsed = (float)v_pydaw_print_benchmark(
         "v_en_offline_render", f_start, f_finish);
@@ -3140,6 +3144,8 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
     {
         printf("Ratio:  infinity : 1");
     }
+
+#endif
 
     v_en_set_playback_mode(self, PYDAW_PLAYBACK_MODE_OFF, a_start_region,
             a_start_bar, 0);

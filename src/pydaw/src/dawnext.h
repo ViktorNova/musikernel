@@ -2647,8 +2647,10 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
 
     printf("\nSuccessfully opened SNDFILE\n\n");
 
+#ifdef __linux__
     struct timespec f_start, f_finish;
     clock_gettime(CLOCK_REALTIME, &f_start);
+#endif
 
     while(self->ts[0].ml_current_beat < a_end_beat)
     {
@@ -2681,6 +2683,8 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
         }
     }
 
+#ifdef __linux__
+
     clock_gettime(CLOCK_REALTIME, &f_finish);
     float f_elapsed = (float)v_pydaw_print_benchmark(
         "v_dn_offline_render", f_start, f_finish);
@@ -2696,6 +2700,8 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
     {
         printf("Ratio:  infinity : 1");
     }
+
+#endif
 
     v_dn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_OFF, a_start_beat, 0);
     v_dn_set_loop_mode(self, f_old_loop_mode);

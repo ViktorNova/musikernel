@@ -698,6 +698,7 @@ void v_pydaw_activate_osc_thread(lo_method_handler osc_message_handler)
 }
 #endif
 
+#ifdef __linux__
 /* Create a clock_t with clock() when beginning some work,
  * and use this function to print the completion time*/
 inline double v_pydaw_print_benchmark(char * a_message,
@@ -711,6 +712,7 @@ inline double v_pydaw_print_benchmark(char * a_message,
 
     return elapsed;
 }
+#endif
 
 inline void v_pydaw_zero_buffer(float ** a_buffers, int a_count)
 {
