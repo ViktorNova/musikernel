@@ -23,7 +23,7 @@ GNU General Public License for more details.
 
 #define pthread_spinlock_t OSSpinLock
 #define pthread_spin_lock OSSpinLockLock
-#define pthread_spin_unlock OSSpinLockUnock
+#define pthread_spin_unlock OSSpinLockUnlock
 
 #endif
 
