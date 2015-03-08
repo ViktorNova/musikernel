@@ -17,6 +17,16 @@ GNU General Public License for more details.
 #include <stdlib.h>
 #include <sndfile.h>
 
+#ifdef __APPLE__
+
+#include <libkern/OSAtomic.h>
+
+#define pthread_spinlock_t OSSpinLock
+#define pthread_spin_lock OSSpinLockLock
+#define pthread_spin_unlock OSSpinLockUnock
+
+#endif
+
 #ifndef MK_DLL
 #include <lo/lo.h>
 #endif
