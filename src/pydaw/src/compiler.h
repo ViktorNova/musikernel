@@ -25,7 +25,7 @@ GNU General Public License for more details.
 #define pthread_spin_lock OSSpinLockLock
 #define pthread_spin_unlock OSSpinLockUnlock
 
-void pthread_spin_init(OSSpinLock * a_lock)
+void pthread_spin_init(OSSpinLock * a_lock, void * a_opts)
 {
     *a_lock = 0;
 }
