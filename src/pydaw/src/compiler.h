@@ -25,6 +25,11 @@ GNU General Public License for more details.
 #define pthread_spin_lock OSSpinLockLock
 #define pthread_spin_unlock OSSpinLockUnlock
 
+void pthread_spin_init(OSSpinLock * a_lock)
+{
+    *a_lock = 0;
+}
+
 #endif
 
 #ifndef MK_DLL
