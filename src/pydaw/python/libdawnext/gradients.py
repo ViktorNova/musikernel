@@ -16,7 +16,7 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from libedmnext.project import TRACK_COUNT_ALL
+from libdawnext.project import TRACK_COUNT_ALL
 
 pydaw_track_gradients = []
 
