@@ -22,6 +22,8 @@ elif "linux" in sys.platform:
     dllName = 'libsndfile.so'
 elif "cygwin" in sys.platform:
     dllName = 'libsndfile-1.dll'
+elif "darwin" in sys.platform:
+    dllName = 'libsndfile.dylib'
 else :
     dllName = 'libsndfile'
 
