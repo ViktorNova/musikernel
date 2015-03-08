@@ -8,7 +8,7 @@ Starting with 15.02.2 , MusiKernel is ported to PyQt5 and is no longer compatibl
 
 Linux:  Latest Fedora and Ubuntu LTS have first tier support, known to work in Debian8, Arch and probably most other distros.
 
-Mac OSX:  It's possible to build and run in OSX Yosemite (minus midicomp and sbsms), but due to the many issues with Yosemite (probably mostly because of LLVM/Clang), you probably will experience frequent crashes.  You might have better luck with Mavericks or earlier, but that has not been tested.
+Mac OSX:  It's possible to build and run in OSX Yosemite (minus midicomp and sbsms), but due to the many issues with Yosemite (probably mostly because of LLVM/Clang), you probably will experience frequent crashes.  You might have better luck with Mavericks or earlier, but that has not been tested.  Homebrew can satisfy MusiKernel's dependencies, and it is recommended that you use GCC instead of Clang.
 
 Windows (Cygwin):  Everything works, and has decent performance and stability, but unfortunately the only available back-end is MME, so you probably won't be able to get less than 4096 samples of latency.  Getting Cygwin's X Server to start is flaky.
 
