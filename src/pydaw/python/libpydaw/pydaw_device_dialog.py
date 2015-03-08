@@ -294,13 +294,7 @@ class pydaw_device_dialog:
         f_latency_label = QLabel("")
         f_window_layout.addWidget(f_latency_label, 2, 2)
 
-        if pydaw_util.IS_LINUX:
-            f_window_layout.addWidget(QLabel(_("Worker Threads:")), 3, 0)
-            f_worker_threads_combobox = QComboBox()
-            f_worker_threads_combobox.addItems(
-                [_("Auto")] + [str(x) for x in range(1, 9)])
-            f_worker_threads_combobox.setToolTip(THREADS_TOOLTIP)
-            f_window_layout.addWidget(f_worker_threads_combobox, 3, 1)
+        if any((pydaw_util.IS_LINUX, pydaw_util.IS_MAC_OSX)):
             f_window_layout.addWidget(QLabel(_("Audio Engine")), 4, 0)
             f_audio_engine_combobox = QComboBox()
             f_audio_engine_combobox.addItems(
@@ -309,6 +303,14 @@ class pydaw_device_dialog:
                  _("GUI Only"), _("No Audio"), _("Module")])
             f_audio_engine_combobox.setToolTip(f_device_tooltip)
             f_window_layout.addWidget(f_audio_engine_combobox, 4, 1)
+
+        if pydaw_util.IS_LINUX:
+            f_window_layout.addWidget(QLabel(_("Worker Threads:")), 3, 0)
+            f_worker_threads_combobox = QComboBox()
+            f_worker_threads_combobox.addItems(
+                [_("Auto")] + [str(x) for x in range(1, 9)])
+            f_worker_threads_combobox.setToolTip(THREADS_TOOLTIP)
+            f_window_layout.addWidget(f_worker_threads_combobox, 3, 1)
             f_thread_affinity_checkbox = QCheckBox(
                 _("Lock worker threads to own core?"))
             f_thread_affinity_checkbox.setToolTip(
@@ -451,7 +453,9 @@ class pydaw_device_dialog:
                 return
             if pydaw_util.IS_WINDOWS:
                 f_audio_engine = 8
-            else:
+            elif pydaw_util.IS_MAC_OSX:
+                f_audio_engine = f_audio_engine_combobox.currentIndex()
+            elif pydaw_util.IS_LINUX:
                 f_worker_threads = f_worker_threads_combobox.currentIndex()
                 f_audio_engine = f_audio_engine_combobox.currentIndex()
                 f_thread_affinity = 1 if \
@@ -459,6 +463,7 @@ class pydaw_device_dialog:
                 f_performance = 1 if f_governor_checkbox.isChecked() else 0
                 f_hugepages = 1 if f_hugepages_checkbox.isChecked() else 0
             f_audio_inputs = f_audio_in_spinbox.value()
+
             try:
                 #This doesn't work if the device is open already,
                 #so skip the test, and if it fails the
