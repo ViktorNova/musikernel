@@ -31,6 +31,8 @@ IS_WINDOWS = "win32" in sys.platform
 IS_LINUX = "linux" in sys.platform
 IS_MAC_OSX = "darwin" in sys.platform
 
+IS_A_TTY = sys.stdin.isatty()
+
 PYTHON_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MKENGINE_DIR = os.path.abspath(os.path.join(PYTHON_DIR, "..", "mkengine"))
 

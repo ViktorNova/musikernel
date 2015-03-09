@@ -80,8 +80,8 @@ class EdmNextProject(libmk.AbstractProject):
             f_history_file = pydaw_history.pydaw_history_file(
                 a_folder, a_file, a_text, f_old, f_existed)
             self.history_files.append(f_history_file)
-            #TODO:  debug/verbose mode this output...
-            print(str(f_history_file))
+            if not pydaw_util.IS_A_TTY:
+                print(str(f_history_file))
 
     def commit(self, a_message):
         """ Commit the project history """
