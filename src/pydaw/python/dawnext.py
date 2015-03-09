@@ -8229,7 +8229,6 @@ class pydaw_main_window(QScrollArea):
         self.main_tabwidget = QTabWidget()
         AUDIO_SEQ_WIDGET.hsplitter.insertWidget(0, self.main_tabwidget)
         self.main_layout.addWidget(AUDIO_SEQ_WIDGET.hsplitter)
-        AUDIO_SEQ_WIDGET.hsplitter.setSizes([9999, 100])
 
         self.song_region_tab = QWidget()
         self.song_region_vlayout = QVBoxLayout()
@@ -8271,6 +8270,25 @@ class pydaw_main_window(QScrollArea):
         self.notes_tab.leaveEvent = self.on_edit_notes
         self.main_tabwidget.addTab(self.notes_tab, _("Project Notes"))
         self.main_tabwidget.currentChanged.connect(self.tab_changed)
+
+        self.collapse_splitters_action = QAction(self)
+        self.addAction(self.collapse_splitters_action)
+        self.collapse_splitters_action.triggered.connect(
+            self.collapse_file_browser)
+        self.collapse_splitters_action.setShortcut(
+            QKeySequence("CTRL+Right"))
+        self.last_file_browser_size = 100
+        self.collapse_file_browser(a_restore=True)
+
+
+    def collapse_file_browser(self, a_restore=False):
+        f_size = AUDIO_SEQ_WIDGET.hsplitter.sizes()[1]
+        if a_restore or not f_size:
+            AUDIO_SEQ_WIDGET.hsplitter.setSizes(
+                [9999, self.last_file_browser_size])
+        else:
+            self.last_file_browser_size = f_size
+            AUDIO_SEQ_WIDGET.hsplitter.setSizes([9999, 0])
 
     def on_offline_render(self):
         def ok_handler():
