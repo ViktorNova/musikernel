@@ -400,18 +400,11 @@ class MkMainWindow(QMainWindow):
         self.menu_appearance = self.menu_bar.addMenu(_("Appearance"))
 
         self.collapse_splitters_action = self.menu_appearance.addAction(
-            _("Collapse Transport and Song Editor"))
+            _("Toggle Collapse Transport"))
         self.collapse_splitters_action.triggered.connect(
             self.on_collapse_splitters)
         self.collapse_splitters_action.setShortcut(
             QKeySequence("CTRL+Up"))
-
-        self.restore_splitters_action = self.menu_appearance.addAction(
-            _("Restore Transport and Song Editor"))
-        self.restore_splitters_action.triggered.connect(
-            self.on_restore_splitters)
-        self.restore_splitters_action.setShortcut(
-            QKeySequence("CTRL+Down"))
 
         self.menu_appearance.addSeparator()
 
@@ -501,7 +494,7 @@ class MkMainWindow(QMainWindow):
                 self.subprocess_timer.start(1000)
 
         self.setWindowState(QtCore.Qt.WindowMaximized)
-        self.on_restore_splitters()
+        self.on_collapse_splitters(a_restore=True)
 
     def engine_lib_callback(self, a_path, a_msg):
         f_path = a_path.decode("utf-8")
@@ -959,14 +952,11 @@ class MkMainWindow(QMainWindow):
     def on_spacebar(self):
         libmk.TRANSPORT.on_spacebar()
 
-    def on_collapse_splitters(self):
-        #self.song_region_splitter.setSizes([0, 9999])
-        self.transport_splitter.setSizes([0, 9999])
-
-    def on_restore_splitters(self):
-        #self.song_region_splitter.setSizes([100, 9999])
-        self.transport_splitter.setSizes([100, 9999])
-
+    def on_collapse_splitters(self, a_restore=False):
+        if a_restore or not self.transport_splitter.sizes()[0]:
+            self.transport_splitter.setSizes([100, 9999])
+        else:
+            self.transport_splitter.setSizes([0, 9999])
 
     def mp3_converter_dialog(self):
         if pydaw_which("avconv"):
