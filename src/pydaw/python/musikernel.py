@@ -641,15 +641,14 @@ class MkMainWindow(QMainWindow):
         f_timer.start(100)
         f_window.exec_()
 
-    def check_for_empty_directory(self, a_file):
+    def check_for_empty_directory(self, a_dir):
         """ Return true if directory is empty, show error message and
             return False if not
         """
-        f_parent_dir = os.path.dirname(a_file)
-        if os.listdir(f_parent_dir):
+        if os.listdir(a_dir):
             QMessageBox.warning(self, _("Error"),
             _("You must save the project file to an empty directory, use "
-            "the 'Create Folder' button to create a directory."))
+            "the 'Create Folder' button to create a new, empty directory."))
             return False
         else:
             return True
@@ -703,21 +702,18 @@ class MkMainWindow(QMainWindow):
         if libmk.IS_PLAYING:
             return
         try:
+            f_last_dir = global_home
             while True:
-                f_file, f_filter = QFileDialog.getSaveFileName(
-                    parent=self, caption=_('New Project'),
-                    directory=os.path.join(
-                        global_home,
-                        "default.{}".format(global_pydaw_version_string)),
-                    filter=global_pydaw_file_type_string)
+                f_file = QFileDialog.getExistingDirectory(
+                    self, _('New Project'), f_last_dir,
+                    QFileDialog.ShowDirsOnly)
                 if f_file and str(f_file):
                     f_file = str(f_file)
+                    f_last_dir = f_file
                     if not self.check_for_empty_directory(f_file) or \
                     not self.check_for_rw_perms(f_file):
                         continue
-                    if not f_file.endswith("." + global_pydaw_version_string):
-                        f_file += "." + global_pydaw_version_string
-                    #global_new_project(f_file)
+                    f_file += "/default." + global_pydaw_version_string
                     pydaw_util.set_file_setting("last-project", f_file)
                     global RESPAWN
                     RESPAWN = True
@@ -800,22 +796,19 @@ class MkMainWindow(QMainWindow):
         if libmk.IS_PLAYING:
             return
         try:
+            f_last_dir = global_home
             while True:
-                f_new_file, f_filter = QFileDialog.getSaveFileName(
-                    self, _("Save copy of project as..."),
-                    directory=os.path.join(
-                        global_default_project_folder,
-                        "{}.{}".format(
-                        libmk.PROJECT.project_file,
-                        global_pydaw_version_string)))
+                f_new_file = QFileDialog.getExistingDirectory(
+                    self, _("Save copy of project as..."), f_last_dir,
+                    QFileDialog.ShowDirsOnly)
                 if f_new_file and str(f_new_file):
                     f_new_file = str(f_new_file)
+                    f_last_dir = f_new_file
                     if not self.check_for_empty_directory(f_new_file) or \
                     not self.check_for_rw_perms(f_new_file):
                         continue
-                    if not f_new_file.endswith(
-                    ".{}".format(global_pydaw_version_string)):
-                        f_new_file += ".{}".format(global_pydaw_version_string)
+                    f_new_file += "/default.{}".format(
+                        global_pydaw_version_string)
                     libmk.PLUGIN_UI_DICT.save_all_plugin_state()
                     libmk.PROJECT.save_project_as(f_new_file)
                     libmk.set_window_title()
