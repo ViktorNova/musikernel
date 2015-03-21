@@ -16,8 +16,8 @@ PLAT_FLAGS     ?= -mstackrealign -msse -msse2 -msse3 -mfpmath=sse \
 OPTIMIZE_FLAGS ?= -fprefetch-loop-arrays -floop-optimize \
 -fsingle-precision-constant -fstrength-reduce -finline-functions
 
-BASE_FLAGS     = $(OPTIMIZE_FLAGS) -ffast-math -funroll-loops -Wall \
--fstrict-aliasing -Wstrict-aliasing -fno-stack-protector \
+BASE_FLAGS     = -std=gnu89 $(OPTIMIZE_FLAGS) -ffast-math -funroll-loops \
+ -Wall -fstrict-aliasing -Wstrict-aliasing -fno-stack-protector \
 -DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
 
 

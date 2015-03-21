@@ -19,7 +19,7 @@ BASE_FLAGS     = $(OPTIMIZE_FLAGS) -ffast-math -funroll-loops -Wall \
 -fstrict-aliasing -Wstrict-aliasing -fno-stack-protector \
 -DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
 
-BUILD_CFLAGS   = $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
+BUILD_CFLAGS   = -std=gnu89 $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
 MATH_LIB_FLAG ?= -lm
 RT_LIB_FLAG ?= -lrt
 ALSA_FLAG ?= $(shell pkg-config --libs alsa)
