@@ -15,14 +15,10 @@ GNU General Public License for more details.
 #define	MK_THREADS_H
 
 #ifdef SCHED_DEADLINE
-
-//#define RT_SCHED SCHED_DEADLINE
-#define RT_SCHED SCHED_FIFO
-
+    //#define RT_SCHED SCHED_DEADLINE
+    #define RT_SCHED SCHED_FIFO
 #else
-
-#define RT_SCHED SCHED_FIFO
-
+    #define RT_SCHED SCHED_FIFO
 #endif
 
 #include "edmnext.h"

@@ -19,34 +19,30 @@ GNU General Public License for more details.
 
 #ifdef __APPLE__
 
-#include <libkern/OSAtomic.h>
+    #include <libkern/OSAtomic.h>
 
-#define pthread_spinlock_t OSSpinLock
-#define pthread_spin_lock OSSpinLockLock
-#define pthread_spin_unlock OSSpinLockUnlock
+    #define pthread_spinlock_t OSSpinLock
+    #define pthread_spin_lock OSSpinLockLock
+    #define pthread_spin_unlock OSSpinLockUnlock
 
-void pthread_spin_init(OSSpinLock * a_lock, void * a_opts)
-{
-    *a_lock = 0;
-}
+    void pthread_spin_init(OSSpinLock * a_lock, void * a_opts)
+    {
+        *a_lock = 0;
+    }
 
 #endif
 
 #ifndef MK_DLL
-#include <lo/lo.h>
+    #include <lo/lo.h>
 #endif
 
 #if !defined(CACHE_LINE_SIZE)
-
-#define CACHE_LINE_SIZE 64
-#warning "CACHE_LINE_SIZE not defined by compiler defaulting to 64"
-
+    #define CACHE_LINE_SIZE 64
+    #warning "CACHE_LINE_SIZE not defined by compiler defaulting to 64"
 #elif (CACHE_LINE_SIZE < 64) || (CACHE_LINE_SIZE > 128)
-
-#undef CACHE_LINE_SIZE
-#define CACHE_LINE_SIZE 64
-#warning "CACHE_LINE_SIZE < 64 or > 128, using 64 as the cache line size"
-
+    #undef CACHE_LINE_SIZE
+    #define CACHE_LINE_SIZE 64
+    #warning "CACHE_LINE_SIZE < 64 or > 128, using 64 as the cache line size"
 #endif
 
 #define likely(x)   __builtin_expect((x),1)
