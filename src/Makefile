@@ -12,6 +12,9 @@ all:
 	make deps
 	make pydaw_src
 
+clang:
+	OPTIMIZE_FLAGS= CC=clang make
+
 native:
 	make PLAT_FLAGS=" -march=native " CFLAGS+=" -O2 "
 
