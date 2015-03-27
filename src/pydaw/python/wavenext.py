@@ -1105,13 +1105,13 @@ class pydaw_wave_editor_widget:
                 _("No file path in the clipboard"))
 
     def open_file(self, a_file):
-        libmk.APP.setOverrideCursor(QtCore.Qt.WaitCursor)
         f_file = str(a_file)
         if not os.path.exists(f_file):
             QMessageBox.warning(
                 self.widget, _("Error"),
                 _("{} does not exist".format(f_file)))
             return
+        libmk.APP.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.clear_sample_graph()
         self.current_file = f_file
         self.file_lineedit.setText(f_file)
@@ -1215,7 +1215,6 @@ class pydaw_wave_editor_widget:
                 self.sample_graph.fade_out_marker.value)
 
     def set_sample_graph(self, a_file_name):
-        libmk.PROJECT.delete_sample_graph_by_name(a_file_name)
         self.graph_object = libmk.PROJECT.get_sample_graph_by_name(
             a_file_name, a_cp=False)
         self.sample_graph.draw_item(
