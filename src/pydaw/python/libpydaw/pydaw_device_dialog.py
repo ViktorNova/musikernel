@@ -234,13 +234,21 @@ class pydaw_device_dialog:
                         f_file.write("\\")
                         f_file.close()
                         return
+                if a_splash_screen:
+                    a_splash_screen.hide()
                 self.show_device_dialog(
                     _("Device not found: {}").format(f_device_str),
                     a_exit_on_cancel=True)
+                if a_splash_screen:
+                    a_splash_screen.show()
             else:
+                if a_splash_screen:
+                    a_splash_screen.hide()
                 self.show_device_dialog(
                     _("Device not found: {}").format(f_device_str),
                     a_exit_on_cancel=True)
+                if a_splash_screen:
+                    a_splash_screen.show()
 
 
     def show_device_dialog(self, a_msg=None, a_exit_on_cancel=False):
