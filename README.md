@@ -1,5 +1,7 @@
 Follow MusiKernel on Twitter @musikernel
 
+See screenshots at:  http://www.kvraudio.com/product/musikernel-by-musikernel
+
 #How to build:
 
 #Ubuntu/Debian distros:
