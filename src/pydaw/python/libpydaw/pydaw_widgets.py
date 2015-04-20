@@ -180,6 +180,11 @@ class pydaw_pixmap_knob(QDial):
         self.pixmap = get_scaled_pixmap_knob(self.pixmap_size)
         self.setFixedSize(a_size, a_size)
 
+    def keyPressEvent(self, a_event):
+        QDial.keyPressEvent(self, a_event)
+        if a_event.key() == QtCore.Qt.Key_Space:
+            libmk.TRANSPORT.on_spacebar()
+
     def paintEvent(self, a_event):
         p = QPainter(self)
         f_frac_val = (((float)(self.value() - self.minimum())) /
@@ -4564,6 +4569,7 @@ class pydaw_abstract_plugin_ui:
         self.widget.setMinimumSize(500, 500)
         self.widget.setStyleSheet(str(a_stylesheet))
         self.widget.closeEvent = self.widget_close_event
+        self.widget.keyPressEvent = self.widget_keyPressEvent
 
         self.widget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.widget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
@@ -4582,6 +4588,11 @@ class pydaw_abstract_plugin_ui:
         self.save_file_on_exit = True
         self.is_quitting = False
         self._plugin_name = None
+
+    def widget_keyPressEvent(self, a_event):
+        QScrollArea.keyPressEvent(self.widget, a_event)
+        if a_event.key() == QtCore.Qt.Key_Space:
+            libmk.TRANSPORT.on_spacebar()
 
     def set_midi_learn(self, a_port_map):
         self.port_map = a_port_map
