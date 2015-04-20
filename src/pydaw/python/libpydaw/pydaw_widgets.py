@@ -18,6 +18,7 @@ import math
 import shutil
 
 from . import pydaw_util
+import libmk
 from libmk.mk_project import (
     pydaw_folder_plugins, AUDIO_ITEM_SCENE_HEIGHT, AUDIO_ITEM_SCENE_WIDTH)
 from libpydaw.translate import _
@@ -4557,7 +4558,8 @@ class pydaw_abstract_plugin_ui:
         self.configure_callback = a_configure_callback
         self.midi_learn_callback = a_midi_learn_callback
         self.cc_map_callback = a_cc_map_callback
-        self.widget = QScrollArea()
+        self.widget = QScrollArea(libmk.MAIN_WINDOW)
+        self.widget.setWindowFlags(QtCore.Qt.Window)
         self.widget.setObjectName("plugin_ui")
         self.widget.setMinimumSize(500, 500)
         self.widget.setStyleSheet(str(a_stylesheet))
