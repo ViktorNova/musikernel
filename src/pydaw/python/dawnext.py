@@ -103,6 +103,10 @@ class region_settings:
         self.edit_mode_combobox.currentIndexChanged.connect(
             self.edit_mode_changed)
 
+        self.atm_smoothing_combobox = QComboBox()
+        self.atm_smoothing_combobox.setMinimumWidth(132)
+        self.atm_smoothing_combobox.addItems([_("Linear"), _("Curved")])
+
         self.menu_button = QPushButton(_("Menu"))
         self.hlayout0.addWidget(self.menu_button)
         self.menu = QMenu(self.menu_button)
@@ -117,6 +121,9 @@ class region_settings:
 
         self.menu_layout.addWidget(QLabel(_("Edit Mode:")), 0, 0)
         self.menu_layout.addWidget(self.edit_mode_combobox, 0, 1)
+
+        self.menu_layout.addWidget(QLabel(_("Automation Smoothing:")), 1, 0)
+        self.menu_layout.addWidget(self.atm_smoothing_combobox, 1, 1)
 
         self.reorder_tracks_action = self.menu.addAction(
             _("Reorder Tracks..."))
@@ -142,8 +149,8 @@ class region_settings:
             [_("None"), _("Beat"), "1/8", "1/12", "1/16"])
         self.snap_combobox.currentIndexChanged.connect(self.set_snap)
 
-        self.menu_layout.addWidget(QLabel(_("Snap:")), 1, 0)
-        self.menu_layout.addWidget(self.snap_combobox, 1, 1)
+        self.menu_layout.addWidget(QLabel(_("Snap:")), 5, 0)
+        self.menu_layout.addWidget(self.snap_combobox, 5, 1)
 
         self.follow_checkbox = QCheckBox(_("Follow"))
         self.hlayout0.addWidget(self.follow_checkbox)
@@ -2189,7 +2196,10 @@ class ItemSequencer(QGraphicsView):
             return
         f_port, f_index = TRACK_PANEL.has_automation(f_track)
         f_points = [x.item for x in self.get_selected_points()]
-        ATM_REGION.smooth_points(f_index, f_port, f_plugin, f_points)
+        f_is_linear = \
+            not REGION_SETTINGS.atm_smoothing_combobox.currentIndex()
+        ATM_REGION.smooth_points(
+            f_index, f_port, f_plugin, f_points, f_is_linear)
         self.selected_point_strings = set(str(x) for x in f_points)
         self.automation_save_callback()
         self.open_region()

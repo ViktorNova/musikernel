@@ -19,6 +19,7 @@ import ctypes
 import re
 import subprocess
 import time
+import math
 from math import log, pow
 from multiprocessing import cpu_count
 import numpy
@@ -513,6 +514,11 @@ def seconds_to_beats(a_tempo, a_seconds):
 
 def linear_interpolate(a_point1, a_point2, a_frac):
     return ((a_point2 - a_point1) * a_frac) + a_point1
+
+def cosine_interpolate(y1, y2, mu):
+   mu2 = (1.0 - math.cos(mu * math.pi)) / 2
+   return(y1 * (1.0 - mu2) + y2 * mu2)
+
 
 def cubic_interpolate(a_arr, a_pos):
     f_int_pos = pydaw_clip_value(int(a_pos), 0, a_arr.shape[0] - 1)

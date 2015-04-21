@@ -1190,7 +1190,8 @@ class pydaw_atm_region:
                 x.beat < a_start_beat or x.beat > a_end_beat]
             self.plugins[a_index][a_port_num] = f_result
 
-    def smooth_points(self, a_index, a_port_num, a_plugin_index, a_points):
+    def smooth_points(
+            self, a_index, a_port_num, a_plugin_index, a_points, a_linear):
         """ The new points are appended to a_points so that they can be
             re-selected in the sequencer
         """
@@ -1214,15 +1215,18 @@ class pydaw_atm_region:
             if f_beat_diff < f_inc:
                 f_result.append(f_point)
                 continue
-            f_val_diff = f_val_next - f_val
             f_inc_count = int(round(f_beat_diff / f_inc))
-            f_val_inc = f_val_diff / f_inc_count
             for f_i in range(f_inc_count - 1):
+                if a_linear:
+                    f_int_val = pydaw_util.linear_interpolate(
+                        f_val, f_val_next, (f_i / f_inc_count))
+                else:
+                    f_int_val = pydaw_util.cosine_interpolate(
+                        f_val, f_val_next, (f_i / f_inc_count))
                 f_point = pydaw_atm_point(
-                    f_beat, a_port_num, f_val, a_index, a_plugin_index)
+                    f_beat, a_port_num, f_int_val, a_index, a_plugin_index)
                 f_result.append(f_point)
                 a_points.append(f_point)
-                f_val += f_val_inc
                 f_beat += f_inc
             f_result.append(a_points[-1])
 
