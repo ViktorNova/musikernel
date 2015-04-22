@@ -520,6 +520,23 @@ def cosine_interpolate(y1, y2, mu):
    return(y1 * (1.0 - mu2) + y2 * mu2)
 
 
+class OnePoleLP:
+    def __init__(self, a_val, a_fc=0.05):
+        self.a0 = 1.0
+        self.b1 = 0.0
+        self.z1 = a_val
+        self.set_fc(a_fc)
+
+    def set_fc(self, a_fc):
+        self.b1 = math.exp(-2.0 * math.pi * a_fc);
+        self.a0 = 1.0 - self.b1;
+
+    def process(self, a_in):
+        self.z1 = a_in * self.a0 + self.z1 * self.b1
+        print((a_in, self.z1))
+        return self.z1
+
+
 def cubic_interpolate(a_arr, a_pos):
     f_int_pos = pydaw_clip_value(int(a_pos), 0, a_arr.shape[0] - 1)
     f_mu = a_pos - float(f_int_pos)
