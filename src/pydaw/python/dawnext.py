@@ -1369,6 +1369,9 @@ class ItemSequencer(QGraphicsView):
         f_pos = self.mapToScene(a_event.pos())
         self.current_coord = self.get_item_coord(f_pos)
 
+        if f_pos.x() > self.max_x:
+            return
+
         if self.check_ruler(f_pos):
             if a_event.button() == QtCore.Qt.LeftButton:
                 f_beat = int(f_pos.x() / SEQUENCER_PX_PER_BEAT)
@@ -2041,6 +2044,7 @@ class ItemSequencer(QGraphicsView):
         self.loop_start = self.loop_end = None
         f_region_length = pydaw_get_current_region_length()
         f_size = SEQUENCER_PX_PER_BEAT * f_region_length
+        self.max_x = f_size
         self.setSceneRect(
             -3.0, 0.0, f_size + self.width() + 3.0, REGION_EDITOR_TOTAL_HEIGHT)
         self.ruler = QGraphicsRectItem(
