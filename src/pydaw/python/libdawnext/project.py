@@ -1202,6 +1202,7 @@ class pydaw_atm_region:
         self.clear_range(a_index, a_port_num, f_start.beat, f_end.beat)
         f_inc = 0.0625 # 64th note
         f_result = self.plugins[a_index][a_port_num]
+        f_smoother = pydaw_util.OnePoleLP(f_start.cc_val)
         for f_point, f_next in zip(a_points, a_points[1:]):
             f_beat = f_point.beat + f_inc
             f_val = f_point.cc_val
@@ -1223,6 +1224,7 @@ class pydaw_atm_region:
                 else:
                     f_int_val = pydaw_util.cosine_interpolate(
                         f_val, f_val_next, (f_i / f_inc_count))
+                f_int_val = f_smoother.process(f_int_val)
                 f_point = pydaw_atm_point(
                     f_beat, a_port_num, f_int_val, a_index, a_plugin_index)
                 f_result.append(f_point)

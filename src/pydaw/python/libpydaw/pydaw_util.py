@@ -521,7 +521,7 @@ def cosine_interpolate(y1, y2, mu):
 
 
 class OnePoleLP:
-    def __init__(self, a_val, a_fc=0.05):
+    def __init__(self, a_val, a_fc=0.1):
         self.a0 = 1.0
         self.b1 = 0.0
         self.z1 = a_val
@@ -533,7 +533,6 @@ class OnePoleLP:
 
     def process(self, a_in):
         self.z1 = a_in * self.a0 + self.z1 * self.b1
-        print((a_in, self.z1))
         return self.z1
 
 
