@@ -100,10 +100,11 @@ f_debian_control = \
 "Provides: {}\n"
 "Conflicts:\n"
 "Replaces:\n"
-"Description: A digital audio workstation with a full suite of "
-"instrument and effects plugins.\n"
-" MusiKernel is a full featured audio and MIDI sequencer with a suite of "
-"high quality instrument and effects plugins.\n"
+"Description: MusiKernel is digital audio workstations (DAWs), "
+"instrument and effect plugins.\n"
+" MusiKernel is a powerful all-in-one suite of music production tools, "
+"and a complete open source framework for developing any type of "
+"audio application.\n"
 "").format(f_short_name, f_size, f_arch, f_version, f_short_name)
 
 f_debian_dir = "{}/../ubuntu/debian/DEBIAN".format(f_base_dir)
