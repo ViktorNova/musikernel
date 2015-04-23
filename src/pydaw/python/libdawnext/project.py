@@ -1187,7 +1187,7 @@ class pydaw_atm_region:
         f_list = self.get_points(a_index, a_port_num)
         if f_list:
             f_result = [x for x in f_list if
-                x.beat < a_start_beat or x.beat > a_end_beat]
+                x.beat < a_start_beat or x.beat >= a_end_beat]
             self.plugins[a_index][a_port_num] = f_result
 
     def smooth_points(
@@ -1197,6 +1197,7 @@ class pydaw_atm_region:
         """
         if len(a_points) <= 1:
             return
+        a_points.sort()
         f_start = a_points[0]
         f_end = a_points[-1]
         self.clear_range(a_index, a_port_num, f_start.beat, f_end.beat)
@@ -1208,16 +1209,15 @@ class pydaw_atm_region:
             f_val = f_point.cc_val
             f_beat_next = f_next.beat
             f_val_next = f_next.cc_val
+            f_result.append(f_point)
             if round(f_val, 3) == round(f_val_next, 3):
-                f_result.append(f_point)
-                f_result.append(f_next)
                 continue
             f_beat_diff = f_beat_next - f_beat
             if f_beat_diff < f_inc:
                 f_result.append(f_point)
                 continue
             f_inc_count = int(round(f_beat_diff / f_inc))
-            for f_i in range(f_inc_count - 1):
+            for f_i in range(1, f_inc_count + 1):
                 if a_linear:
                     f_int_val = pydaw_util.linear_interpolate(
                         f_val, f_val_next, (f_i / f_inc_count))
@@ -1225,12 +1225,12 @@ class pydaw_atm_region:
                     f_int_val = pydaw_util.cosine_interpolate(
                         f_val, f_val_next, (f_i / f_inc_count))
                 f_int_val = f_smoother.process(f_int_val)
-                f_point = pydaw_atm_point(
+                f_point2 = pydaw_atm_point(
                     f_beat, a_port_num, f_int_val, a_index, a_plugin_index)
-                f_result.append(f_point)
-                a_points.append(f_point)
+                f_result.append(f_point2)
+                a_points.append(f_point2)
                 f_beat += f_inc
-            f_result.append(a_points[-1])
+        f_result.append(f_end)
 
     def __str__(self):
         f_result = []

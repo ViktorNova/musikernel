@@ -429,13 +429,20 @@ class atm_item(QGraphicsEllipseItem):
     def mousePressEvent(self, a_event):
         a_event.setAccepted(True)
         QGraphicsEllipseItem.mousePressEvent(self, a_event)
+        self.quantize()
 
     def mouseMoveEvent(self, a_event):
         QGraphicsEllipseItem.mouseMoveEvent(self, a_event)
+        self.quantize()
+
+    def quantize(self):
         f_pos = self.pos()
         f_x = f_pos.x()
         if SEQ_QUANTIZE:
             f_x = round(f_x / SEQUENCER_QUANTIZE_PX) * SEQUENCER_QUANTIZE_PX
+        else:
+            f_x = round(
+                f_x / SEQUENCER_QUANTIZE_64TH) * SEQUENCER_QUANTIZE_64TH
         f_x = pydaw_util.pydaw_clip_min(f_x, 0.0)
         f_y = pydaw_util.pydaw_clip_value(f_pos.y(), self.min_y, self.max_y)
         self.setPos(f_x, f_y)
@@ -2580,6 +2587,7 @@ def pydaw_set_audio_seq_zoom(a_horizontal, a_vertical):
 
 SEQUENCER_SNAP_VAL = 3
 SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT
+SEQUENCER_QUANTIZE_64TH = SEQUENCER_PX_PER_BEAT / 16.0
 SEQ_QUANTIZE = True
 SEQ_QUANTIZE_AMT = 1.0
 SEQ_LINES_ENABLED = False
@@ -2588,7 +2596,8 @@ SEQ_SNAP_RANGE = 8
 
 def pydaw_set_seq_snap(a_val=None):
     global SEQUENCER_QUANTIZE_PX, SEQ_QUANTIZE, SEQ_QUANTIZE_AMT, \
-        SEQ_LINES_ENABLED, SEQ_SNAP_RANGE, SEQUENCER_SNAP_VAL
+        SEQ_LINES_ENABLED, SEQ_SNAP_RANGE, SEQUENCER_SNAP_VAL, \
+        SEQUENCER_QUANTIZE_64TH
     if a_val is None:
         a_val = SEQUENCER_SNAP_VAL
     else:
@@ -2602,6 +2611,7 @@ def pydaw_set_seq_snap(a_val=None):
         SEQ_QUANTIZE = False
         SEQ_LINES_ENABLED = False
     SEQUENCER_QUANTIZE_PX = SEQUENCER_PX_PER_BEAT / f_divisor
+    SEQUENCER_QUANTIZE_64TH = SEQUENCER_PX_PER_BEAT / 16.0
     SEQ_QUANTIZE_AMT = f_divisor
 
 def pydaw_set_audio_snap(a_val):
