@@ -448,6 +448,16 @@ class pydaw_device_dialog:
             f_audio_in_spinbox.setMaximum(f_in_count)
 
         def on_ok(a_self=None):
+            if self.device_name == "default":
+                f_warn_result = QMessageBox.question(
+                    f_window, _("Warning"),
+                    _("You have selected the 'default' audio device, "
+                    "which may not be a valid device.  It is recommended "
+                    "that you explicitly pick the audio device you "
+                    "intend to use.  Use the 'default' device anyway?"),
+                    QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+                if f_warn_result == QMessageBox.Cancel:
+                    return
             f_buffer_size = int(str(f_buffer_size_combobox.currentText()))
             f_samplerate = int(str(f_samplerate_combobox.currentText()))
 
