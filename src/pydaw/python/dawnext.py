@@ -2223,7 +2223,6 @@ class ItemSequencer(QGraphicsView):
             self.atm_selected, self.atm_selected_vals):
                 f_point.item.cc_val = f_val
             self.automation_save_callback()
-            print("GGGAAAAAAAAAHHHHHHHH!!!!!!!!!!1")
         self.open_region()
 
     def smooth_atm_points(self):
