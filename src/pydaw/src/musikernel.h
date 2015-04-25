@@ -683,15 +683,19 @@ void v_pydaw_set_host(int a_mode)
     pthread_spin_lock(&musikernel->main_lock);
 
     musikernel->current_host = &musikernel->hosts[a_mode];
-    for(f_i = 0; f_i < musikernel->midi_devices->count; ++f_i)
-    {
-        f_device = &musikernel->midi_devices->devices[f_i];
-        if(f_device->loaded)
-        {
-            midiPoll(f_device);
-            f_device->midiEventReadIndex = f_device->midiEventWriteIndex;
-        }
 
+    if(musikernel->midi_devices)
+    {
+        for(f_i = 0; f_i < musikernel->midi_devices->count; ++f_i)
+        {
+            f_device = &musikernel->midi_devices->devices[f_i];
+            if(f_device->loaded)
+            {
+                midiPoll(f_device);
+                f_device->midiEventReadIndex = f_device->midiEventWriteIndex;
+            }
+
+        }
     }
 
     pthread_spin_unlock(&musikernel->main_lock);
