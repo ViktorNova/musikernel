@@ -960,31 +960,24 @@ def add_mul_dialog(a_parent, a_update_callback, a_save_callback):
     """
     def ok_handler():
         f_dialog.close()
-        return True
-
-    def cancel_handler():
-        f_dialog.close()
-        return False
-
-    def get_callback_args():
-        return (f_add_slider.value(), get_mul_val())
+        f_dialog.retval = True
 
     def update():
-        a_update_callback(*get_callback_args())
+        a_update_callback(f_add_slider.value(), get_mul_val())
 
     def save(a_val=None):
-        a_save_callback(*get_callback_args())
+        a_save_callback()
 
     def add_changed(a_val):
         f_add_label.setText(str(a_val))
         update()
 
     def get_mul_val():
-        f_val = float(f_mulslider.value())
+        f_val = float(f_mul_slider.value())
         if f_val < 0.0:
             f_result = 1.0 + (f_val * 0.01)
         else:
-            f_result = 1.0 + (f_val * 0.2)
+            f_result = 1.0 + (f_val * 0.1)
         return round(f_result, 2)
 
     def mul_changed(a_val):
@@ -993,7 +986,7 @@ def add_mul_dialog(a_parent, a_update_callback, a_save_callback):
 
     f_dialog = QDialog(a_parent)
     f_dialog.setMinimumWidth(450)
-    f_dialog.retval = None
+    f_dialog.retval = False
     f_dialog.setWindowTitle(_("Transform Events"))
     f_layout = QGridLayout(f_dialog)
 
@@ -1009,12 +1002,12 @@ def add_mul_dialog(a_parent, a_update_callback, a_save_callback):
     f_layout.addWidget(f_add_label, 0, 2)
 
     f_layout.addWidget(QLabel(_("Multiply")), 10, 0)
-    f_mulslider = QSlider(QtCore.Qt.Horizontal)
-    f_mulslider.setRange(-100, 100)
-    f_mulslider.setValue(0)
-    f_mulslider.valueChanged.connect(mul_changed)
-    f_mulslider.sliderReleased.connect(save)
-    f_layout.addWidget(f_mulslider, 10, 1)
+    f_mul_slider = QSlider(QtCore.Qt.Horizontal)
+    f_mul_slider.setRange(-100, 100)
+    f_mul_slider.setValue(0)
+    f_mul_slider.valueChanged.connect(mul_changed)
+    f_mul_slider.sliderReleased.connect(save)
+    f_layout.addWidget(f_mul_slider, 10, 1)
     f_mul_label = QLabel("1.0")
     f_mul_label.setFixedWidth(100)
     f_layout.addWidget(f_mul_label, 10, 2)
@@ -1028,6 +1021,7 @@ def add_mul_dialog(a_parent, a_update_callback, a_save_callback):
     f_ok_cancel_layout.addWidget(f_cancel_button)
     f_cancel_button.pressed.connect(f_dialog.close)
     f_dialog.exec_()
+    return f_dialog.retval
 
 
 ADSR_CLIPBOARD = {}

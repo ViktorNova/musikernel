@@ -1303,6 +1303,10 @@ class ItemSequencer(QGraphicsView):
             QKeySequence.fromString("ALT+S"))
         self.addAction(self.smooth_atm_action)
 
+        self.transform_atm_action = self.atm_menu.addAction(
+            _("Transform..."))
+        self.transform_atm_action.triggered.connect(self.transform_atm)
+
         self.delete_action = self.menu.addAction(_("Delete"))
         self.delete_action.triggered.connect(self.delete_selected)
         self.delete_action.setShortcut(QKeySequence.Delete)
@@ -2197,6 +2201,30 @@ class ItemSequencer(QGraphicsView):
 
     def automation_save_callback(self):
         PROJECT.save_atm_region(ATM_REGION)
+
+    def transform_atm_callback(self, a_add, a_mul):
+        for f_point, f_val in zip(self.atm_selected, self.atm_selected_vals):
+            f_val = (f_val * a_mul) + a_add
+            f_val = pydaw_util.pydaw_clip_value(f_val, 0.0, 127.0, True)
+            f_point.item.cc_val = f_val
+            f_point.setPos(self.get_pos_from_point(f_point.item))
+
+    def transform_atm(self):
+        self.atm_selected = list(self.get_selected_points())
+        if not self.atm_selected:
+            QMessageBox.warning(
+                self, _("Error"), _("No automation points selected"))
+            return
+        self.atm_selected_vals = [x.item.cc_val for x in self.atm_selected]
+        f_result = pydaw_widgets.add_mul_dialog(
+            self, self.transform_atm_callback, self.automation_save_callback)
+        if not f_result:
+            for f_point, f_val in zip(
+            self.atm_selected, self.atm_selected_vals):
+                f_point.item.cc_val = f_val
+            self.automation_save_callback()
+            print("GGGAAAAAAAAAHHHHHHHH!!!!!!!!!!1")
+        self.open_region()
 
     def smooth_atm_points(self):
         if not self.current_coord:
