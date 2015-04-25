@@ -935,21 +935,99 @@ def ordered_table_dialog(
         f_dialog.close()
     f_dialog = QDialog(a_parent)
     f_dialog.retval = None
-    f_dialog.setWindowTitle("Order")
+    f_dialog.setWindowTitle(_("Order"))
     f_layout = QVBoxLayout(f_dialog)
     f_table = OrderedTable(a_labels, a_item_height, a_item_width)
     f_layout.addWidget(f_table)
     f_ok_cancel_layout = QHBoxLayout()
     f_layout.addLayout(f_ok_cancel_layout)
-    f_ok_button = QPushButton("OK")
+    f_ok_button = QPushButton(_("OK"))
+    f_ok_cancel_layout.addWidget(f_ok_button)
+    f_ok_button.pressed.connect(ok_handler)
+    f_cancel_button = QPushButton(_("Cancel"))
+    f_ok_cancel_layout.addWidget(f_cancel_button)
+    f_cancel_button.pressed.connect(f_dialog.close)
+    f_dialog.exec_()
+    f_table.scene.clear()
+    return f_dialog.retval
+
+
+def add_mul_dialog(a_parent, a_update_callback, a_save_callback):
+    """ Generic dialog for doing event transforms.  The actual transforms
+        are performed by the caller using the event callbacks.  The
+        caller should create a list of event objects and their original
+        values.
+    """
+    def ok_handler():
+        f_dialog.close()
+        return True
+
+    def cancel_handler():
+        f_dialog.close()
+        return False
+
+    def get_callback_args():
+        return (f_add_slider.value(), get_mul_val())
+
+    def update():
+        a_update_callback(*get_callback_args())
+
+    def save(a_val=None):
+        a_save_callback(*get_callback_args())
+
+    def add_changed(a_val):
+        f_add_label.setText(str(a_val))
+        update()
+
+    def get_mul_val():
+        f_val = float(f_mulslider.value())
+        if f_val < 0.0:
+            f_result = 1.0 + (f_val * 0.01)
+        else:
+            f_result = 1.0 + (f_val * 0.2)
+        return round(f_result, 2)
+
+    def mul_changed(a_val):
+        f_mul_label.setText(str(get_mul_val()))
+        update()
+
+    f_dialog = QDialog(a_parent)
+    f_dialog.setMinimumWidth(450)
+    f_dialog.retval = None
+    f_dialog.setWindowTitle(_("Transform Events"))
+    f_layout = QGridLayout(f_dialog)
+
+    f_layout.addWidget(QLabel(_("Add")), 0, 0)
+    f_add_slider = QSlider(QtCore.Qt.Horizontal)
+    f_add_slider.setRange(-127, 127)
+    f_add_slider.setValue(0)
+    f_add_slider.valueChanged.connect(add_changed)
+    f_add_slider.sliderReleased.connect(save)
+    f_layout.addWidget(f_add_slider, 0, 1)
+    f_add_label = QLabel("0")
+    f_add_label.setFixedWidth(100)
+    f_layout.addWidget(f_add_label, 0, 2)
+
+    f_layout.addWidget(QLabel(_("Multiply")), 10, 0)
+    f_mulslider = QSlider(QtCore.Qt.Horizontal)
+    f_mulslider.setRange(-100, 100)
+    f_mulslider.setValue(0)
+    f_mulslider.valueChanged.connect(mul_changed)
+    f_mulslider.sliderReleased.connect(save)
+    f_layout.addWidget(f_mulslider, 10, 1)
+    f_mul_label = QLabel("1.0")
+    f_mul_label.setFixedWidth(100)
+    f_layout.addWidget(f_mul_label, 10, 2)
+
+    f_ok_cancel_layout = QHBoxLayout()
+    f_layout.addLayout(f_ok_cancel_layout, 30, 1)
+    f_ok_button = QPushButton(_("OK"))
     f_ok_cancel_layout.addWidget(f_ok_button)
     f_ok_button.pressed.connect(ok_handler)
     f_cancel_button = QPushButton("Cancel")
     f_ok_cancel_layout.addWidget(f_cancel_button)
     f_cancel_button.pressed.connect(f_dialog.close)
     f_dialog.exec_()
-    f_table.scene.clear()
-    return f_dialog.retval
 
 
 ADSR_CLIPBOARD = {}
