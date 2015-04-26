@@ -223,6 +223,10 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/{0}/pydaw/python/libpydaw/strings.pyc
 /usr/lib/{0}/pydaw/python/libpydaw/strings.pyo
 
+/usr/lib/{0}/pydaw/python/libpydaw/scales.py
+/usr/lib/{0}/pydaw/python/libpydaw/scales.pyc
+/usr/lib/{0}/pydaw/python/libpydaw/scales.pyo
+
 /usr/lib/{0}/pydaw/python/libedmnext/strings.py
 /usr/lib/{0}/pydaw/python/libedmnext/strings.pyc
 /usr/lib/{0}/pydaw/python/libedmnext/strings.pyo
