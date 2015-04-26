@@ -1024,6 +1024,103 @@ def add_mul_dialog(a_parent, a_update_callback, a_save_callback):
     return f_dialog.retval
 
 
+def lfo_dialog(a_parent, a_update_callback, a_save_callback):
+    """ Generic dialog for doing event transforms that are LFO-like.
+        The actual transforms are performed by the caller using the
+        event callbacks.  The caller should create a list of event
+        objects and their original values.
+    """
+    def ok_handler():
+        f_dialog.close()
+        f_dialog.retval = True
+
+    def update(*args):
+        f_vals = [x.control.value() for x in f_controls]
+        f_vals += [x.control.value() if y.isChecked() else z.control.value()
+            for x, y, z in f_optional_controls]
+        a_update_callback(*f_vals)
+
+    def save(*args):
+        a_save_callback()
+
+    f_dialog = QDialog(a_parent)
+    f_dialog.setMinimumWidth(450)
+    f_dialog.retval = False
+    f_dialog.setWindowTitle(_("LFO Generator"))
+    f_vlayout = QVBoxLayout(f_dialog)
+    f_layout = QGridLayout()
+    f_vlayout.addLayout(f_layout)
+
+    f_knob_size = 64
+
+    f_phase_knob = pydaw_knob_control(
+        f_knob_size, _("Phase"), 0, save, update,
+        0, 100, 0, KC_TIME_DECIMAL)
+    f_phase_knob.add_to_grid_layout(f_layout, 0)
+
+    f_start_freq_knob = pydaw_knob_control(
+        f_knob_size, _("Start Freq"), 0, save, update,
+        10, 2000, 100, KC_TIME_DECIMAL)
+    f_start_freq_knob.add_to_grid_layout(f_layout, 5)
+
+    f_end_freq_knob = pydaw_knob_control(
+        f_knob_size, _("End Freq"), 0, save, update,
+        10, 2000, 100, KC_TIME_DECIMAL)
+    f_end_freq_knob.add_to_grid_layout(f_layout, 10)
+
+    f_end_freq_cbox = QCheckBox()
+    f_layout.addWidget(f_end_freq_cbox, 5, 10)
+
+    f_start_center_knob = pydaw_knob_control(
+        f_knob_size, _("Start Center"), 0, save, update,
+        0, 127, 64, KC_INTEGER)
+    f_start_center_knob.add_to_grid_layout(f_layout, 15)
+
+    f_end_center_knob = pydaw_knob_control(
+        f_knob_size, _("End Center"), 0, save, update,
+        0, 127, 64, KC_INTEGER)
+    f_end_center_knob.add_to_grid_layout(f_layout, 16)
+
+    f_end_center_cbox = QCheckBox()
+    f_layout.addWidget(f_end_center_cbox, 5, 16)
+
+    f_start_fade_knob = pydaw_knob_control(
+        f_knob_size, _("Start Fade"), 0, save, update,
+        0, 100, 0, KC_INTEGER)
+    f_start_fade_knob.add_to_grid_layout(f_layout, 20)
+
+    f_end_fade_knob = pydaw_knob_control(
+        f_knob_size, _("End Fade"), 0, save, update,
+        0, 100, 100, KC_INTEGER)
+    f_end_fade_knob.add_to_grid_layout(f_layout, 25)
+
+    f_end_fade_cbox = QCheckBox()
+    f_layout.addWidget(f_end_fade_cbox, 5, 25)
+
+    f_controls = (
+        f_phase_knob, f_start_freq_knob, f_start_center_knob,
+        f_start_fade_knob,
+        )
+
+    f_optional_controls = (
+        (f_end_freq_knob, f_end_freq_cbox, f_start_freq_knob),
+        (f_end_center_knob, f_end_center_cbox, f_start_center_knob),
+        (f_end_fade_knob, f_end_fade_cbox, f_start_fade_knob)
+        )
+
+    f_ok_cancel_layout = QHBoxLayout()
+    f_ok_cancel_layout.addItem(QSpacerItem(1, 1, QSizePolicy.Expanding))
+    f_vlayout.addLayout(f_ok_cancel_layout)
+    f_ok_button = QPushButton(_("OK"))
+    f_ok_cancel_layout.addWidget(f_ok_button)
+    f_ok_button.pressed.connect(ok_handler)
+    f_cancel_button = QPushButton("Cancel")
+    f_ok_cancel_layout.addWidget(f_cancel_button)
+    f_cancel_button.pressed.connect(f_dialog.close)
+    f_dialog.exec_()
+    return f_dialog.retval
+
+
 ADSR_CLIPBOARD = {}
 
 class pydaw_adsr_widget:
