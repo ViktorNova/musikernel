@@ -26,6 +26,8 @@ from PyQt5.QtWidgets import *
 from libpydaw import *
 from mkplugins import *
 
+from libpydaw import scales
+
 from libpydaw.pydaw_util import *
 from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
@@ -5855,84 +5857,11 @@ class piano_roll_editor(QGraphicsView):
             f_index = PIANO_ROLL_EDITOR_WIDGET.scale_combobox.currentIndex()
         except NameError:
             f_index = 0
-        if self.first_open or f_index == 0: #Major
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush]
-        elif f_index == 1: #Melodic Minor
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush]
-        elif f_index == 2: #Harmonic Minor
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_black_key_brush, f_white_key_brush]
-        elif f_index == 3: #Natural Minor
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 4: #Pentatonic Major
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_black_key_brush]
-        elif f_index == 5: #Pentatonic Minor
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 6: #Dorian
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 7: #Phrygian
-            f_octave_brushes = [
-                f_base_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 8: #Lydian
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush]
-        elif f_index == 9: #Mixolydian
-            f_octave_brushes = [
-                f_base_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 10: #Locrian
-            f_octave_brushes = [
-                f_base_brush, f_white_key_brush, f_black_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_white_key_brush, f_black_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 11: #Phrygian Dominant
-            f_octave_brushes = [
-                f_base_brush, f_white_key_brush, f_black_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_black_key_brush]
-        elif f_index == 12: #Double Harmonic
-            f_octave_brushes = [
-                f_base_brush, f_white_key_brush, f_black_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_white_key_brush, f_white_key_brush,
-                f_black_key_brush, f_black_key_brush, f_white_key_brush]
+        if self.first_open:
+            f_index = 0
+
+        f_octave_brushes = scales.scale_to_value_list(
+            f_index, [f_base_brush, f_white_key_brush, f_black_key_brush])
 
         f_current_key = 0
         if not self.first_open:
@@ -6094,11 +6023,7 @@ class piano_roll_editor_widget:
         self.controls_grid_layout.addWidget(self.scale_key_combobox, 0, 4)
         self.scale_combobox = QComboBox()
         self.scale_combobox.setMinimumWidth(172)
-        self.scale_combobox.addItems(
-            ["Major", "Melodic Minor", "Harmonic Minor",
-             "Natural Minor", "Pentatonic Major", "Pentatonic Minor",
-             "Dorian", "Phrygian", "Lydian", "Mixolydian", "Locrian",
-             "Phrygian Dominant", "Double Harmonic"])
+        self.scale_combobox.addItems(scales.SCALE_NAMES)
         self.scale_combobox.currentIndexChanged.connect(self.reload_handler)
         self.controls_grid_layout.addWidget(QLabel(_("Scale:")), 0, 5)
         self.controls_grid_layout.addWidget(self.scale_combobox, 0, 6)
