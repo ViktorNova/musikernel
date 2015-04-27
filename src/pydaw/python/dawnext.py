@@ -2250,13 +2250,16 @@ class ItemSequencer(QGraphicsView):
             (x * two_pi) / 64.0 for x in (a_start_freq, a_end_freq))
 
         for f_point in self.atm_selected:
-            f_val = math.sin(a_phase)
+            f_pos_beats = f_point.item.beat - f_start_beat
+            f_pos = f_pos_beats / f_length_beats
+            f_center = pydaw_util.linear_interpolate(
+                a_start_center, a_end_center, f_pos)
+
+            f_val = (math.sin(a_phase) * 32.0) + f_center
             f_val = pydaw_util.pydaw_clip_value(f_val, 0.0, 127.0, True)
             f_point.item.cc_val = f_val
             f_point.setPos(self.get_pos_from_point(f_point.item))
 
-            f_pos_beats = f_point.item.beat - f_start_beat
-            f_pos = f_pos_beats / f_length_beats
             a_phase += pydaw_util.linear_interpolate(
                 f_start_radians_p64, f_end_radians_p64, f_pos)
             if a_phase >= two_pi:
@@ -2290,6 +2293,7 @@ class ItemSequencer(QGraphicsView):
         for f_i in range(int((f_end_beat - f_start_beat) / f_step)):
             f_point = project.pydaw_atm_point(
                 f_pos, f_port, 64.0, f_index, f_plugin)
+            ATM_REGION.add_point(f_point)
             f_item = self.draw_point(f_point)
             self.atm_selected.append(f_item)
             f_pos += f_step
