@@ -1060,12 +1060,12 @@ def lfo_dialog(a_parent, a_update_callback, a_save_callback):
 
     f_start_freq_knob = pydaw_knob_control(
         f_knob_size, _("Start Freq"), 0, save, update,
-        10, 2000, 100, KC_TIME_DECIMAL)
+        10, 1000, 100, KC_TIME_DECIMAL)
     f_start_freq_knob.add_to_grid_layout(f_layout, 5)
 
     f_end_freq_knob = pydaw_knob_control(
         f_knob_size, _("End Freq"), 0, save, update,
-        10, 2000, 100, KC_TIME_DECIMAL)
+        10, 1000, 100, KC_TIME_DECIMAL)
     f_end_freq_knob.add_to_grid_layout(f_layout, 10)
 
     f_end_freq_cbox = QCheckBox()
@@ -1107,19 +1107,15 @@ def lfo_dialog(a_parent, a_update_callback, a_save_callback):
         0, 100, 100, KC_INTEGER)
     f_end_fade_knob.add_to_grid_layout(f_layout, 25)
 
-    f_end_fade_cbox = QCheckBox()
-    f_layout.addWidget(f_end_fade_cbox, 5, 25)
-
     f_controls = (
         f_phase_knob, f_start_freq_knob, f_start_amp_knob,
-        f_start_center_knob, f_start_fade_knob,
+        f_start_center_knob, f_start_fade_knob, f_end_fade_knob,
         )
 
     f_optional_controls = (
         (f_end_freq_knob, f_end_freq_cbox, f_start_freq_knob),
         (f_end_amp_knob, f_end_amp_cbox, f_start_amp_knob),
         (f_end_center_knob, f_end_center_cbox, f_start_center_knob),
-        (f_end_fade_knob, f_end_fade_cbox, f_start_fade_knob)
         )
 
     f_ok_cancel_layout = QHBoxLayout()
@@ -1131,6 +1127,8 @@ def lfo_dialog(a_parent, a_update_callback, a_save_callback):
     f_cancel_button = QPushButton("Cancel")
     f_ok_cancel_layout.addWidget(f_cancel_button)
     f_cancel_button.pressed.connect(f_dialog.close)
+    update()
+    save()
     f_dialog.exec_()
     return f_dialog.retval
 

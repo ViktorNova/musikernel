@@ -2237,9 +2237,8 @@ class ItemSequencer(QGraphicsView):
         self.open_region()
 
     def lfo_atm_callback(
-            self, a_phase, a_start_freq, a_start_amp,
-            a_start_center, a_start_fade, a_end_freq,
-            a_end_amp, a_end_center, a_end_fade):
+            self, a_phase, a_start_freq, a_start_amp, a_start_center,
+            a_start_fade, a_end_fade, a_end_freq, a_end_amp, a_end_center):
         a_phase, a_start_freq, a_start_fade, a_end_freq, a_end_fade = (
             x * 0.01 for x in
             (a_phase, a_start_freq, a_start_fade, a_end_freq, a_end_fade))
