@@ -1186,9 +1186,12 @@ class pydaw_atm_region:
             self, a_index, a_port_num, a_start_beat, a_end_beat):
         f_list = self.get_points(a_index, a_port_num)
         if f_list:
-            f_result = [x for x in f_list if
+            f_new = [x for x in f_list if
                 x.beat < a_start_beat or x.beat >= a_end_beat]
-            self.plugins[a_index][a_port_num] = f_result
+            f_result = [x for x in f_list if
+                x.beat >= a_start_beat or x.beat < a_end_beat]
+            self.plugins[a_index][a_port_num] = f_new
+            return f_result
 
     def smooth_points(
             self, a_index, a_port_num, a_plugin_index, a_points, a_linear):

@@ -2237,8 +2237,9 @@ class ItemSequencer(QGraphicsView):
         self.open_region()
 
     def lfo_atm_callback(
-            self, a_phase, a_start_freq, a_start_center, a_start_fade,
-            a_end_freq, a_end_center, a_end_fade):
+            self, a_phase, a_start_freq, a_start_amp,
+            a_start_center, a_start_fade, a_end_freq,
+            a_end_amp, a_end_center, a_end_fade):
         a_phase, a_start_freq, a_start_fade, a_end_freq, a_end_fade = (
             x * 0.01 for x in
             (a_phase, a_start_freq, a_start_fade, a_end_freq, a_end_fade))
@@ -2248,14 +2249,23 @@ class ItemSequencer(QGraphicsView):
         two_pi = 2.0 * math.pi
         f_start_radians_p64, f_end_radians_p64 = (
             (x * two_pi) / 64.0 for x in (a_start_freq, a_end_freq))
+        f_length_beats_recip = 1.0 / f_length_beats
 
         for f_point in self.atm_selected:
             f_pos_beats = f_point.item.beat - f_start_beat
-            f_pos = f_pos_beats / f_length_beats
+            f_pos = f_pos_beats * f_length_beats_recip
             f_center = pydaw_util.linear_interpolate(
                 a_start_center, a_end_center, f_pos)
+            f_amp = pydaw_util.linear_interpolate(
+                a_start_amp, a_end_amp, f_pos)
 
-            f_val = (math.sin(a_phase) * 32.0) + f_center
+            if f_pos < a_start_fade:
+                f_amp *= f_pos / a_start_fade
+            elif f_pos > a_end_fade:
+                f_amp *= 1.0 - (
+                    (f_pos - a_end_fade) / (1.0 - a_end_fade))
+
+            f_val = (math.sin(a_phase) * f_amp) + f_center
             f_val = pydaw_util.pydaw_clip_value(f_val, 0.0, 127.0, True)
             f_point.item.cc_val = f_val
             f_point.setPos(self.get_pos_from_point(f_point.item))
@@ -2285,7 +2295,8 @@ class ItemSequencer(QGraphicsView):
             return
         # Was originally f_port, f_index, not sure if that's the same f_index
         f_port, f_ignored = TRACK_PANEL.has_automation(f_track)
-        ATM_REGION.clear_range(f_index, f_port, f_start_beat, f_end_beat)
+        f_old = ATM_REGION.clear_range(
+            f_index, f_port, f_start_beat, f_end_beat)
         f_pos = f_start_beat
         self.scene.clearSelection()
         self.atm_selected = []
@@ -2301,9 +2312,11 @@ class ItemSequencer(QGraphicsView):
         f_result = pydaw_widgets.lfo_dialog(
             self, self.lfo_atm_callback, self.automation_save_callback)
         if not f_result:
-            for f_point, f_val in zip(
-            self.atm_selected, self.atm_selected_vals):
-                f_point.item.cc_val = f_val
+            for f_point in self.atm_selected:
+                ATM_REGION.remove_point(f_point.item)
+            if f_old:
+                for f_point in f_old:
+                    ATM_REGION.add_point(f_point)
             self.automation_save_callback()
         self.open_region()
 
