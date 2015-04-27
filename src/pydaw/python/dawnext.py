@@ -28,6 +28,8 @@ from mkplugins import *
 
 from libpydaw import scales
 
+import math
+
 from libpydaw.pydaw_util import *
 from libpydaw.pydaw_widgets import *
 from libpydaw.translate import _
@@ -1309,6 +1311,12 @@ class ItemSequencer(QGraphicsView):
             _("Transform..."))
         self.transform_atm_action.triggered.connect(self.transform_atm)
 
+        self.transform_atm_action = self.atm_menu.addAction(
+            _("LFO Tool..."))
+        self.transform_atm_action.triggered.connect(self.lfo_atm)
+
+        self.atm_menu.addSeparator()
+
         self.delete_action = self.menu.addAction(_("Delete"))
         self.delete_action.triggered.connect(self.delete_selected)
         self.delete_action.setShortcut(QKeySequence.Delete)
@@ -2191,6 +2199,7 @@ class ItemSequencer(QGraphicsView):
         self.automation_points.append(f_item)
         if str(a_point) in self.selected_point_strings:
             f_item.setSelected(True)
+        return f_item
 
     def get_pos_from_point(self, a_point):
         f_track_height = REGION_EDITOR_TRACK_HEIGHT - ATM_POINT_DIAMETER
@@ -2220,6 +2229,73 @@ class ItemSequencer(QGraphicsView):
         self.atm_selected_vals = [x.item.cc_val for x in self.atm_selected]
         f_result = pydaw_widgets.add_mul_dialog(
             self, self.transform_atm_callback, self.automation_save_callback)
+        if not f_result:
+            for f_point, f_val in zip(
+            self.atm_selected, self.atm_selected_vals):
+                f_point.item.cc_val = f_val
+            self.automation_save_callback()
+        self.open_region()
+
+    def lfo_atm_callback(
+            self, a_phase, a_start_freq, a_start_center, a_start_fade,
+            a_end_freq, a_end_center, a_end_fade):
+        a_phase, a_start_freq, a_start_fade, a_end_freq, a_end_fade = (
+            x * 0.01 for x in
+            (a_phase, a_start_freq, a_start_fade, a_end_freq, a_end_fade))
+        a_phase *= math.pi
+        f_start_beat, f_end_beat = self.get_loop_pos()
+        f_length_beats = f_end_beat - f_start_beat
+        two_pi = 2.0 * math.pi
+        f_start_radians_p64, f_end_radians_p64 = (
+            (x * two_pi) / 64.0 for x in (a_start_freq, a_end_freq))
+
+        for f_point in self.atm_selected:
+            f_val = math.sin(a_phase)
+            f_val = pydaw_util.pydaw_clip_value(f_val, 0.0, 127.0, True)
+            f_point.item.cc_val = f_val
+            f_point.setPos(self.get_pos_from_point(f_point.item))
+
+            f_pos_beats = f_point.item.beat - f_start_beat
+            f_pos = f_pos_beats / f_length_beats
+            a_phase += pydaw_util.linear_interpolate(
+                f_start_radians_p64, f_end_radians_p64, f_pos)
+            if a_phase >= two_pi:
+                a_phase -= two_pi
+
+    def lfo_atm(self):
+        if not self.current_coord:
+            return
+        f_range = self.get_loop_pos()
+        if not f_range:
+            QMessageBox.warning(
+                self, _("Error"),
+                _("You must set the region markers first by "
+                "right-clicking on the scene ruler"))
+            return
+        f_start_beat, f_end_beat = f_range
+        f_step = 1.0 / 64.0
+        f_track, f_beat, f_val = self.current_coord
+        f_index, f_plugin = TRACK_PANEL.get_atm_params(f_track)
+        if f_index is None:
+            QMessageBox.warning(
+                self, _("Error"), _("Track has no automation selected"))
+            return
+        # Was originally f_port, f_index, not sure if that's the same f_index
+        f_port, f_ignored = TRACK_PANEL.has_automation(f_track)
+        ATM_REGION.clear_range(f_index, f_port, f_start_beat, f_end_beat)
+        f_pos = f_start_beat
+        self.scene.clearSelection()
+        self.atm_selected = []
+
+        for f_i in range(int((f_end_beat - f_start_beat) / f_step)):
+            f_point = project.pydaw_atm_point(
+                f_pos, f_port, 64.0, f_index, f_plugin)
+            f_item = self.draw_point(f_point)
+            self.atm_selected.append(f_item)
+            f_pos += f_step
+
+        f_result = pydaw_widgets.lfo_dialog(
+            self, self.lfo_atm_callback, self.automation_save_callback)
         if not f_result:
             for f_point, f_val in zip(
             self.atm_selected, self.atm_selected_vals):
@@ -6050,8 +6126,7 @@ class piano_roll_editor_widget:
         self.edit_actions_menu = self.edit_menu.addMenu(_("Edit"))
 
         self.copy_action = self.edit_actions_menu.addAction(_("Copy"))
-        self.copy_action.triggered.connect(
-            PIANO_ROLL_EDITOR.copy_selected)
+        self.copy_action.triggered.connect(PIANO_ROLL_EDITOR.copy_selected)
         self.copy_action.setShortcut(QKeySequence.Copy)
 
         self.cut_action = self.edit_actions_menu.addAction(_("Cut"))
