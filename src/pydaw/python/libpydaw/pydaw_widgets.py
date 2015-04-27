@@ -1043,6 +1043,10 @@ def lfo_dialog(a_parent, a_update_callback, a_save_callback):
     def save(*args):
         a_save_callback()
 
+    def update_and_save(a_val=None):
+        update()
+        save()
+
     f_dialog = QDialog(a_parent)
     f_dialog.setMinimumWidth(450)
     f_dialog.retval = False
@@ -1055,20 +1059,21 @@ def lfo_dialog(a_parent, a_update_callback, a_save_callback):
 
     f_phase_knob = pydaw_knob_control(
         f_knob_size, _("Phase"), 0, save, update,
-        0, 100, 0, KC_TIME_DECIMAL)
+        0, 100, 0, KC_DECIMAL)
     f_phase_knob.add_to_grid_layout(f_layout, 0)
 
     f_start_freq_knob = pydaw_knob_control(
         f_knob_size, _("Start Freq"), 0, save, update,
-        10, 1000, 100, KC_TIME_DECIMAL)
+        10, 400, 100, KC_DECIMAL)
     f_start_freq_knob.add_to_grid_layout(f_layout, 5)
 
     f_end_freq_knob = pydaw_knob_control(
         f_knob_size, _("End Freq"), 0, save, update,
-        10, 1000, 100, KC_TIME_DECIMAL)
+        10, 400, 100, KC_DECIMAL)
     f_end_freq_knob.add_to_grid_layout(f_layout, 10)
 
     f_end_freq_cbox = QCheckBox()
+    f_end_freq_cbox.stateChanged.connect(update_and_save)
     f_layout.addWidget(f_end_freq_cbox, 5, 10)
 
     f_start_amp_knob = pydaw_knob_control(
@@ -1082,6 +1087,7 @@ def lfo_dialog(a_parent, a_update_callback, a_save_callback):
     f_end_amp_knob.add_to_grid_layout(f_layout, 12)
 
     f_end_amp_cbox = QCheckBox()
+    f_end_amp_cbox.stateChanged.connect(update_and_save)
     f_layout.addWidget(f_end_amp_cbox, 5, 12)
 
     f_start_center_knob = pydaw_knob_control(
@@ -1095,6 +1101,7 @@ def lfo_dialog(a_parent, a_update_callback, a_save_callback):
     f_end_center_knob.add_to_grid_layout(f_layout, 16)
 
     f_end_center_cbox = QCheckBox()
+    f_end_center_cbox.stateChanged.connect(update_and_save)
     f_layout.addWidget(f_end_center_cbox, 5, 16)
 
     f_start_fade_knob = pydaw_knob_control(
