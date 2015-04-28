@@ -2292,10 +2292,13 @@ class ItemSequencer(QGraphicsView):
             QMessageBox.warning(
                 self, _("Error"), _("Track has no automation selected"))
             return
-        # Was originally f_port, f_index, not sure if that's the same f_index
-        f_port, f_ignored = TRACK_PANEL.has_automation(f_track)
+
+        f_port, f_atm_uid = TRACK_PANEL.has_automation(f_track)
         f_old = ATM_REGION.clear_range(
             f_index, f_port, f_start_beat, f_end_beat)
+        if f_old:
+            self.automation_save_callback()
+            self.open_region()
         f_pos = f_start_beat
         self.scene.clearSelection()
         self.atm_selected = []
