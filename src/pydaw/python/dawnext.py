@@ -430,6 +430,12 @@ class atm_item(QGraphicsEllipseItem):
         self.max_y = a_max_y
         self.is_deleted = False
 
+    def itemChange(self, a_change, a_value):
+        if a_change == QGraphicsItem.ItemSelectedHasChanged:
+                self.set_brush()
+                #self.has_selected = True
+        return QGraphicsItem.itemChange(self, a_change, a_value)
+
     def set_brush(self):
         if self.isSelected():
             self.setBrush(QtCore.Qt.black)
@@ -617,6 +623,12 @@ class SequencerItem(QGraphicsRectItem):
         if libmk.TOOLTIPS_ENABLED:
             self.set_tooltips(True)
         self.draw()
+
+    def itemChange(self, a_change, a_value):
+        if a_change == QGraphicsItem.ItemSelectedHasChanged:
+                self.set_brush()
+                #self.has_selected = True
+        return QGraphicsItem.itemChange(self, a_change, a_value)
 
     def get_selected_string(self):
         return str(self.audio_item)
@@ -1262,7 +1274,7 @@ class ItemSequencer(QGraphicsView):
         self.scene.dragMoveEvent = self.sceneDragMoveEvent
         self.scene.contextMenuEvent = self.sceneContextMenuEvent
         self.scene.setBackgroundBrush(QColor(90, 90, 90))
-        self.scene.selectionChanged.connect(self.highlight_selected)
+        #self.scene.selectionChanged.connect(self.highlight_selected)
         self.scene.mouseMoveEvent = self.sceneMouseMoveEvent
         self.scene.mouseReleaseEvent = self.sceneMouseReleaseEvent
         #self.scene.selectionChanged.connect(self.set_selected_strings)
