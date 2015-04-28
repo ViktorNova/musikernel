@@ -952,7 +952,7 @@ def ordered_table_dialog(
     return f_dialog.retval
 
 
-def add_mul_dialog(a_parent, a_update_callback, a_save_callback):
+def add_mul_dialog(a_update_callback, a_save_callback):
     """ Generic dialog for doing event transforms.  The actual transforms
         are performed by the caller using the event callbacks.  The
         caller should create a list of event objects and their original
@@ -984,7 +984,8 @@ def add_mul_dialog(a_parent, a_update_callback, a_save_callback):
         f_mul_label.setText(str(get_mul_val()))
         update()
 
-    f_dialog = QDialog(a_parent)
+    f_dialog = QDialog()
+    f_dialog.setWindowModality(QtCore.Qt.NonModal)
     f_dialog.setMinimumWidth(450)
     f_dialog.retval = False
     f_dialog.setWindowTitle(_("Transform Events"))
@@ -1020,11 +1021,12 @@ def add_mul_dialog(a_parent, a_update_callback, a_save_callback):
     f_cancel_button = QPushButton("Cancel")
     f_ok_cancel_layout.addWidget(f_cancel_button)
     f_cancel_button.pressed.connect(f_dialog.close)
+    f_dialog.move(0, 0)
     f_dialog.exec_()
     return f_dialog.retval
 
 
-def lfo_dialog(a_parent, a_update_callback, a_save_callback):
+def lfo_dialog(a_update_callback, a_save_callback):
     """ Generic dialog for doing event transforms that are LFO-like.
         The actual transforms are performed by the caller using the
         event callbacks.  The caller should create a list of event
@@ -1047,7 +1049,8 @@ def lfo_dialog(a_parent, a_update_callback, a_save_callback):
         update()
         save()
 
-    f_dialog = QDialog(a_parent)
+    f_dialog = QDialog()
+    f_dialog.setWindowModality(QtCore.Qt.NonModal)
     f_dialog.setMinimumWidth(450)
     f_dialog.retval = False
     f_dialog.setWindowTitle(_("LFO Generator"))
@@ -1055,7 +1058,7 @@ def lfo_dialog(a_parent, a_update_callback, a_save_callback):
     f_layout = QGridLayout()
     f_vlayout.addLayout(f_layout)
 
-    f_knob_size = 64
+    f_knob_size = 48
 
     f_phase_knob = pydaw_knob_control(
         f_knob_size, _("Phase"), 0, save, update,
@@ -1152,6 +1155,7 @@ def lfo_dialog(a_parent, a_update_callback, a_save_callback):
     f_cancel_button.pressed.connect(f_dialog.close)
     update()
     save()
+    f_dialog.move(0, 0)
     f_dialog.exec_()
     return f_dialog.retval
 
