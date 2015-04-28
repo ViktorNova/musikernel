@@ -432,8 +432,7 @@ class atm_item(QGraphicsEllipseItem):
 
     def itemChange(self, a_change, a_value):
         if a_change == QGraphicsItem.ItemSelectedHasChanged:
-                self.set_brush()
-                #self.has_selected = True
+            self.set_brush()
         return QGraphicsItem.itemChange(self, a_change, a_value)
 
     def set_brush(self):
@@ -626,8 +625,7 @@ class SequencerItem(QGraphicsRectItem):
 
     def itemChange(self, a_change, a_value):
         if a_change == QGraphicsItem.ItemSelectedHasChanged:
-                self.set_brush()
-                #self.has_selected = True
+            self.set_brush()
         return QGraphicsItem.itemChange(self, a_change, a_value)
 
     def get_selected_string(self):
