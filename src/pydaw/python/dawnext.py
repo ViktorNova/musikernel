@@ -74,7 +74,7 @@ def set_tooltips_enabled(a_enabled):
     f_list = [
         AUDIO_SEQ_WIDGET, PIANO_ROLL_EDITOR, MAIN_WINDOW,
         AUDIO_SEQ, TRANSPORT, MIXER_WIDGET,
-        SEQUENCER] + list(AUTOMATION_EDITORS)
+        SEQUENCER, TRACK_PANEL] + list(AUTOMATION_EDITORS)
     for f_widget in f_list:
         f_widget.set_tooltips(a_enabled)
 
@@ -346,6 +346,12 @@ class tracks_widget:
         self.automation_dict = {
             x:(None, None) for x in range(REGION_EDITOR_TRACK_COUNT)}
         self.set_track_height()
+
+    def set_tooltips(self, a_on):
+        if a_on:
+            self.tracks_widget.setToolTip(libpydaw.strings.track_panel)
+        else:
+            self.tracks_widget.setToolTip("")
 
     def set_track_height(self):
         self.tracks_widget.setUpdatesEnabled(False)

@@ -186,3 +186,18 @@ correct device from Menu->File->HardwareSettings...</p>
 """
 )
 
+track_panel = _(
+""" This is the track panel.  Each track has a name textbox, solo & mute
+buttons, and a dropdown menu.
+
+The dropdown menu contains the track plugins (instrument and effects),
+the track sends and their mixer plugins, and controls for selecting
+parameters for automation.  For a global view of track sends, see the
+routing tab.
+
+A track can be any or all of audio, MIDI, send or bus, at the same time.
+Instrument plugins can be placed before or after effect plugins, and
+will pass-through any audio from items or sends.
+"""
+)
+
