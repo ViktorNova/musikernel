@@ -169,7 +169,10 @@ rebooting</p>
 
 <p>On some interfaces (such as the Apogee One), you may need to open the
 terminal, type the command "alsamixer", and select your interface and
-set the input.  You may also need to set the number of inputs on the
+set the input source to something like '48v ext. mic.', and/or adjust the
+microphone volume.</p>
+
+<p>You may also need to set the number of inputs on the
 "Audio In" tab of the Menu->File->HardwareSettings... dialog</p>
 
 <h3>The UI is sluggish in a large project</h3>
