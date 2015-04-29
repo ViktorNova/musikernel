@@ -2230,11 +2230,14 @@ class ItemSequencer(QGraphicsView):
         PROJECT.save_atm_region(ATM_REGION)
 
     def transform_atm_callback(self, a_add, a_mul):
+        self.setUpdatesEnabled(False)
         for f_point, f_val in zip(self.atm_selected, self.atm_selected_vals):
             f_val = (f_val * a_mul) + a_add
             f_val = pydaw_util.pydaw_clip_value(f_val, 0.0, 127.0, True)
             f_point.item.cc_val = f_val
             f_point.setPos(self.get_pos_from_point(f_point.item))
+        self.setUpdatesEnabled(True)
+        self.update()
 
     def transform_atm(self):
         self.atm_selected = list(self.get_selected_points())
@@ -2243,8 +2246,10 @@ class ItemSequencer(QGraphicsView):
                 self, _("Error"), _("No automation points selected"))
             return
         self.atm_selected_vals = [x.item.cc_val for x in self.atm_selected]
+
         f_result = pydaw_widgets.add_mul_dialog(
             self.transform_atm_callback, self.automation_save_callback)
+
         if not f_result:
             for f_point, f_val in zip(
             self.atm_selected, self.atm_selected_vals):
@@ -2265,6 +2270,8 @@ class ItemSequencer(QGraphicsView):
         f_start_radians_p64, f_end_radians_p64 = (
             (x * two_pi) / 64.0 for x in (a_start_freq, a_end_freq))
         f_length_beats_recip = 1.0 / f_length_beats
+
+        self.setUpdatesEnabled(False)
 
         for f_point in self.atm_selected:
             f_pos_beats = f_point.item.beat - f_start_beat
@@ -2289,6 +2296,9 @@ class ItemSequencer(QGraphicsView):
                 f_start_radians_p64, f_end_radians_p64, f_pos)
             if a_phase >= two_pi:
                 a_phase -= two_pi
+
+        self.setUpdatesEnabled(True)
+        self.update()
 
     def lfo_atm(self):
         if not self.current_coord:
@@ -2329,6 +2339,7 @@ class ItemSequencer(QGraphicsView):
 
         f_result = pydaw_widgets.lfo_dialog(
             self.lfo_atm_callback, self.automation_save_callback)
+
         if not f_result:
             for f_point in self.atm_selected:
                 ATM_REGION.remove_point(f_point.item)
