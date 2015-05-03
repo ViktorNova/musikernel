@@ -1327,9 +1327,9 @@ class ItemSequencer(QGraphicsView):
             _("Transform..."))
         self.transform_atm_action.triggered.connect(self.transform_atm)
 
-        self.transform_atm_action = self.atm_menu.addAction(
+        self.lfo_atm_action = self.atm_menu.addAction(
             _("LFO Tool..."))
-        self.transform_atm_action.triggered.connect(self.lfo_atm)
+        self.lfo_atm_action.triggered.connect(self.lfo_atm)
 
         self.atm_menu.addSeparator()
 
@@ -2240,11 +2240,16 @@ class ItemSequencer(QGraphicsView):
         self.update()
 
     def transform_atm(self):
-        self.atm_selected = list(self.get_selected_points())
+        self.atm_selected = sorted(self.get_selected_points())
         if not self.atm_selected:
             QMessageBox.warning(
                 self, _("Error"), _("No automation points selected"))
             return
+        f_start_beat = self.atm_selected[0].item.beat
+        self.set_playback_pos(f_start_beat)
+        f_scrollbar = self.horizontalScrollBar()
+        f_scrollbar.setValue(SEQUENCER_PX_PER_BEAT * f_start_beat)
+
         self.atm_selected_vals = [x.item.cc_val for x in self.atm_selected]
 
         f_result = pydaw_widgets.add_mul_dialog(
@@ -2265,6 +2270,7 @@ class ItemSequencer(QGraphicsView):
             (a_phase, a_start_freq, a_start_fade, a_end_freq, a_end_fade))
         a_phase *= math.pi
         f_start_beat, f_end_beat = self.get_loop_pos()
+
         f_length_beats = f_end_beat - f_start_beat
         two_pi = 2.0 * math.pi
         f_start_radians_p64, f_end_radians_p64 = (
@@ -2311,6 +2317,14 @@ class ItemSequencer(QGraphicsView):
                 "right-clicking on the scene ruler"))
             return
         f_start_beat, f_end_beat = f_range
+        if f_end_beat - f_start_beat > 64:
+            QMessageBox.warning(
+                self, _("Error"),
+                _("LFO patterns are limited to 64 beats in length"))
+            return
+        f_scrollbar = self.horizontalScrollBar()
+        f_scrollbar.setValue(SEQUENCER_PX_PER_BEAT * f_start_beat)
+        self.set_playback_pos(f_start_beat)
         f_step = 1.0 / 64.0
         f_track, f_beat, f_val = self.current_coord
         f_index, f_plugin = TRACK_PANEL.get_atm_params(f_track)
@@ -8177,7 +8191,7 @@ class transport_widget(libmk.AbstractTransport):
             self.show_save_items_dialog()
 
         SEQUENCER.stop_playback()
-        REGION_SETTINGS.open_region()
+        #REGION_SETTINGS.open_region()
         self.set_time(SEQUENCER.get_beat_value())
 
     def show_save_items_dialog(self):

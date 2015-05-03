@@ -986,7 +986,7 @@ def add_mul_dialog(a_update_callback, a_save_callback):
 
     f_dialog = QDialog()
     f_dialog.setWindowModality(QtCore.Qt.NonModal)
-    f_dialog.setMinimumWidth(450)
+    f_dialog.setMinimumWidth(720)
     f_dialog.retval = False
     f_dialog.setWindowTitle(_("Transform Events"))
     f_layout = QGridLayout(f_dialog)
@@ -1002,24 +1002,26 @@ def add_mul_dialog(a_update_callback, a_save_callback):
     f_add_label.setFixedWidth(100)
     f_layout.addWidget(f_add_label, 0, 2)
 
-    f_layout.addWidget(QLabel(_("Multiply")), 10, 0)
+    f_layout.addWidget(QLabel(_("Multiply")), 1, 0)
     f_mul_slider = QSlider(QtCore.Qt.Horizontal)
     f_mul_slider.setRange(-100, 100)
     f_mul_slider.setValue(0)
     f_mul_slider.valueChanged.connect(mul_changed)
     f_mul_slider.sliderReleased.connect(save)
-    f_layout.addWidget(f_mul_slider, 10, 1)
+    f_layout.addWidget(f_mul_slider, 1, 1)
     f_mul_label = QLabel("1.0")
     f_mul_label.setFixedWidth(100)
-    f_layout.addWidget(f_mul_label, 10, 2)
+    f_layout.addWidget(f_mul_label, 1, 2)
 
-    f_ok_cancel_layout = QHBoxLayout()
-    f_layout.addLayout(f_ok_cancel_layout, 30, 1)
+    f_playback_widget = pydaw_playback_widget()
+    f_layout.addWidget(f_playback_widget.play_button, 0, 30, 2, 1)
+    f_layout.addWidget(f_playback_widget.stop_button, 0, 31, 2, 1)
+
     f_ok_button = QPushButton(_("OK"))
-    f_ok_cancel_layout.addWidget(f_ok_button)
+    f_layout.addWidget(f_ok_button, 2, 30)
     f_ok_button.pressed.connect(ok_handler)
-    f_cancel_button = QPushButton("Cancel")
-    f_ok_cancel_layout.addWidget(f_cancel_button)
+    f_cancel_button = QPushButton(_("Cancel"))
+    f_layout.addWidget(f_cancel_button, 2, 31)
     f_cancel_button.pressed.connect(f_dialog.close)
     f_dialog.move(0, 0)
     f_dialog.exec_()
@@ -1133,6 +1135,10 @@ def lfo_dialog(a_update_callback, a_save_callback):
         1, 100, 100, KC_INTEGER)
     f_end_fade_knob.add_to_grid_layout(f_layout, 25)
 
+    f_playback_widget = pydaw_playback_widget()
+    f_layout.addWidget(f_playback_widget.play_button, 1, 30)
+    f_layout.addWidget(f_playback_widget.stop_button, 1, 31)
+
     f_controls = (
         f_phase_knob, f_start_freq_knob, f_start_amp_knob,
         f_start_center_knob, f_start_fade_knob, f_end_fade_knob,
@@ -1144,20 +1150,27 @@ def lfo_dialog(a_update_callback, a_save_callback):
         (f_end_center_knob, f_end_center_cbox, f_start_center_knob),
         )
 
-    f_ok_cancel_layout = QHBoxLayout()
-    f_ok_cancel_layout.addItem(QSpacerItem(1, 1, QSizePolicy.Expanding))
-    f_vlayout.addLayout(f_ok_cancel_layout)
     f_ok_button = QPushButton(_("OK"))
-    f_ok_cancel_layout.addWidget(f_ok_button)
+    f_layout.addWidget(f_ok_button, 5, 30)
     f_ok_button.pressed.connect(ok_handler)
     f_cancel_button = QPushButton("Cancel")
-    f_ok_cancel_layout.addWidget(f_cancel_button)
+    f_layout.addWidget(f_cancel_button, 5, 31)
     f_cancel_button.pressed.connect(f_dialog.close)
     update()
     save()
     f_dialog.move(0, 0)
     f_dialog.exec_()
     return f_dialog.retval
+
+class pydaw_playback_widget:
+    def __init__(self):
+        self.play_button = QRadioButton()
+        self.play_button.setObjectName("play_button")
+        self.play_button.clicked.connect(libmk.TRANSPORT.on_play)
+        self.stop_button = QRadioButton()
+        self.stop_button.setChecked(True)
+        self.stop_button.setObjectName("stop_button")
+        self.stop_button.clicked.connect(libmk.TRANSPORT.on_stop)
 
 
 ADSR_CLIPBOARD = {}
