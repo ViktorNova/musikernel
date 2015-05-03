@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include <fftw3.h>
 
 #include "lmalloc.h"
+#include "fftw_lock.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -52,7 +53,7 @@ t_spa_spectrum_analyzer * g_spa_spectrum_analyzer_get(
     int a_sample_count, int a_plugin_uid)
 {
     t_spa_spectrum_analyzer * f_result =
-            (t_spa_spectrum_analyzer*)malloc(sizeof(t_spa_spectrum_analyzer));
+        (t_spa_spectrum_analyzer*)malloc(sizeof(t_spa_spectrum_analyzer));
     register int f_i = 0;
 
     lmalloc((void**)&f_result->buffer, sizeof(float) * a_sample_count);
@@ -75,8 +76,8 @@ t_spa_spectrum_analyzer * g_spa_spectrum_analyzer_get(
     f_result->str_buf = (char*)malloc(sizeof(char) * 15 * a_sample_count);
     f_result->str_buf[0] = '\0';
 
-    f_result->plan = fftwf_plan_dft_r2c_1d(f_result->samples_count,
-        f_result->samples, f_result->output, 0);
+    f_result->plan = g_fftwf_plan_dft_r2c_1d(
+        f_result->samples_count, f_result->samples, f_result->output, 0);
 
     return f_result;
 }
