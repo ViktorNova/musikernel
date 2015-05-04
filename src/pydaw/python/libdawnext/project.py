@@ -1281,7 +1281,7 @@ class pydaw_atm_point:
         self.cc_val = pydaw_clip_value(float(a_val), 0.0, 127.0, True)
 
     def __lt__(self, other):
-        return self.beat <= other.beat
+        return self.beat < other.beat
 
 #    def __eq__(self, other):
 #        return (
