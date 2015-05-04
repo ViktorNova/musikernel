@@ -1197,8 +1197,13 @@ class pydaw_atm_region:
             f_result.sort()
             return f_result
 
-    def clear_range(
-            self, a_index, a_port_num, a_start_beat, a_end_beat):
+    def clear_range_by_plugins(self, a_start, a_end, a_plugins):
+        f_result = [x for x in self.points
+            if x.beat >= a_start and x.beat < a_end and x.index in a_plugins]
+        for f_point in f_result:
+            self.remove_point(f_point)
+
+    def clear_range(self, a_index, a_port_num, a_start_beat, a_end_beat):
         f_list = self.get_points(a_index, a_port_num)
         if f_list:
             f_new = [x for x in f_list if
