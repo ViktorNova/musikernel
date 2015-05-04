@@ -2039,17 +2039,25 @@ class ItemSequencer(QGraphicsView):
         f_region_end = CURRENT_REGION.loop_marker.beat
         f_region_length = f_region_end - f_region_start
         f_list = [x.audio_item.clone() for x in self.get_region_items()]
+        f_atm_list = ATM_REGION.copy_range_all(f_region_start, f_region_end)
         for f_item in f_list:
             f_item.start_beat -= f_region_start
-        self.region_clipboard = (f_region_length, f_list)
+        for f_point in f_atm_list:
+            f_point.beat -= f_region_start
+        self.region_clipboard = (f_region_length, f_list, f_atm_list)
 
     def insert_region(self):
-        f_region_length, f_list = self.region_clipboard
+        f_region_length, f_list, f_atm_list = self.region_clipboard
         f_list = [x.clone() for x in f_list]
+        f_atm_list = [x.clone() for x in f_atm_list]
         CURRENT_REGION.insert_space(self.ruler_event_pos, f_region_length)
         for f_item in f_list:
             f_item.start_beat += self.ruler_event_pos
             CURRENT_REGION.add_item_ref_by_uid(f_item)
+        for f_point in f_atm_list:
+            f_point.beat += self.ruler_event_pos
+            ATM_REGION.add_point(f_point)
+        self.automation_save_callback()
         PROJECT.save_region(CURRENT_REGION)
         REGION_SETTINGS.open_region()
 

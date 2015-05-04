@@ -1148,6 +1148,10 @@ class pydaw_atm_region:
         f_result.append(f_list)
         return f_result
 
+    def copy_range_all(self, a_start, a_end):
+        return [x.clone() for x in self.points
+            if x.beat >= a_start and x.beat < a_end]
+
     def add_port_list(self, a_point):
         if not a_point.index in self.plugins:
             self.plugins[a_point.index] = {}
