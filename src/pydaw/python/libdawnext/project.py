@@ -656,6 +656,13 @@ class DawNextProject(libmk.AbstractProject):
         else:
             return None
 
+    def get_track_plugin_uids(self, a_track_num):
+        f_plugins = self.get_track_plugins(a_track_num)
+        if f_plugins:
+            return set(x.plugin_uid for x in f_plugins)
+        else:
+            return f_plugins
+
     def create_empty_item(self, a_item_name="item"):
         f_items_dict = self.get_items_dict()
         f_item_name = self.get_next_default_item_name(
@@ -1151,6 +1158,10 @@ class pydaw_atm_region:
     def copy_range_all(self, a_start, a_end):
         return [x.clone() for x in self.points
             if x.beat >= a_start and x.beat < a_end]
+
+    def copy_range_by_plugins(self, a_start, a_end, a_plugins):
+        return [x.clone() for x in self.points
+            if x.beat >= a_start and x.beat < a_end and x.index in a_plugins]
 
     def add_port_list(self, a_point):
         if not a_point.index in self.plugins:
