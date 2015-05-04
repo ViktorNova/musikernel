@@ -1294,6 +1294,24 @@ class ItemSequencer(QGraphicsView):
         self.menu = QMenu(self)
         self.atm_menu = QMenu(self)
 
+        self.track_atm_menu = self.atm_menu.addMenu(
+            _("All Plugins for Track"))
+        self.track_atm_clipboard = []
+
+        self.copy_track_region_action = self.track_atm_menu.addAction(
+            _("Copy Region"))
+        self.copy_track_region_action.triggered.connect(
+            self.copy_track_region)
+        self.paste_track_region_action = self.track_atm_menu.addAction(
+            _("Paste Region"))
+        self.paste_track_region_action.triggered.connect(
+            self.paste_track_region)
+        self.track_atm_menu.addSeparator()
+        self.clear_track_region_action = self.track_atm_menu.addAction(
+            _("Clear Region"))
+        self.clear_track_region_action.triggered.connect(
+            self.clear_track_region)
+
         self.copy_action = self.menu.addAction(_("Copy"))
         self.copy_action.triggered.connect(self.copy_selected)
         self.copy_action.setShortcut(QKeySequence.Copy)
@@ -1323,12 +1341,10 @@ class ItemSequencer(QGraphicsView):
             QKeySequence.fromString("ALT+S"))
         self.addAction(self.smooth_atm_action)
 
-        self.transform_atm_action = self.atm_menu.addAction(
-            _("Transform..."))
+        self.transform_atm_action = self.atm_menu.addAction(_("Transform..."))
         self.transform_atm_action.triggered.connect(self.transform_atm)
 
-        self.lfo_atm_action = self.atm_menu.addAction(
-            _("LFO Tool..."))
+        self.lfo_atm_action = self.atm_menu.addAction(_("LFO Tool..."))
         self.lfo_atm_action.triggered.connect(self.lfo_atm)
 
         self.atm_menu.addSeparator()
@@ -1375,6 +1391,47 @@ class ItemSequencer(QGraphicsView):
             QKeySequence.fromString("CTRL+G"))
         self.addAction(self.glue_action)
         self.context_menu_enabled = True
+
+    def copy_track_region(self):
+        if not self.current_coord:
+            return
+        f_range = self.get_loop_pos()
+        if not f_range:
+            return
+        f_start, f_end = f_range
+        f_track = self.current_coord[0]
+        f_plugins = PROJECT.get_track_plugin_uids(f_track)
+        if not f_plugins:
+            return
+        self.track_atm_clipboard = ATM_REGION.copy_range_by_plugins(
+            f_start, f_end, f_plugins)
+        self.automation_save_callback()
+        self.open_region()
+
+    def paste_track_region(self):
+        if not self.current_coord or not self.track_atm_clipboard:
+            return
+        f_beat = self.quantize(self.current_coord[1])
+        for f_point in (x.clone() for x in self.track_atm_clipboard):
+            f_point.beat += f_beat
+            ATM_REGION.add_point(f_point)
+        self.automation_save_callback()
+        self.open_region()
+
+    def clear_track_region(self):
+        if not self.current_coord:
+            return
+        f_range = self.get_loop_pos()
+        if not f_range:
+            return
+        f_start, f_end = f_range
+        f_track, f_beat = self.current_coord[:2]
+        f_plugins = PROJECT.get_track_plugin_uids(f_track)
+        if not f_plugins:
+            return
+        ATM_REGION.clear_range_by_plugins(f_start, f_end, f_plugins)
+        self.automation_save_callback()
+        self.open_region()
 
     def show_context_menu(self):
         if libmk.IS_PLAYING:
@@ -2081,6 +2138,10 @@ class ItemSequencer(QGraphicsView):
 
     def get_loop_pos(self):
         if self.loop_start is None:
+            QMessageBox.warning(
+                self, _("Error"),
+                _("You must set the region markers first by "
+                "right-clicking on the scene ruler"))
             return None
         else:
             return self.loop_start, self.loop_end
@@ -2319,10 +2380,6 @@ class ItemSequencer(QGraphicsView):
             return
         f_range = self.get_loop_pos()
         if not f_range:
-            QMessageBox.warning(
-                self, _("Error"),
-                _("You must set the region markers first by "
-                "right-clicking on the scene ruler"))
             return
         f_start_beat, f_end_beat = f_range
         if f_end_beat - f_start_beat > 64:
