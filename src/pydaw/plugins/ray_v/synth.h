@@ -141,6 +141,7 @@ typedef struct {
 
     float sv_pitch_bend_value;
     float sv_last_note;  //For glide
+    float master_vol_lin;
 
     t_plugin_event_queue midi_queue;
     t_plugin_event_queue atm_queue;

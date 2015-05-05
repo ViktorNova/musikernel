@@ -111,8 +111,6 @@ static void v_rayv_connect_port(PYFX_Handle instance, int port,
 
     plugin = (t_rayv *) instance;
 
-    /*Add the ports from step 9 to the connectPortLMS event handler*/
-
     switch (port)
     {
         case RAYV_ATTACK:
@@ -543,7 +541,7 @@ static void v_run_rayv(
         ++f_i;
     }
 
-    float f_master_vol = f_db_to_linear_fast(*plugin_data->master_vol);
+    plugin_data->master_vol_lin = f_db_to_linear_fast(*plugin_data->master_vol);
 
     int f_i2;
     t_plugin_event_queue_item * f_midi_item;
@@ -598,9 +596,6 @@ static void v_run_rayv(
                 plugin_data->voices->voices[f_i2].n_state = note_state_off;
             }
         }
-
-        plugin_data->output0[f_i] *= f_master_vol;
-        plugin_data->output1[f_i] *= f_master_vol;
 
         ++plugin_data->sampleNo;
     }
@@ -727,7 +722,8 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
             f_clp_clip(&a_voice->clipper1, (a_voice->filter_output)));
 
     a_voice->current_sample = (a_voice->current_sample) *
-            (a_voice->amp) * (a_voice->lfo_amp_output);
+        (a_voice->amp) * (a_voice->lfo_amp_output) *
+        plugin_data->master_vol_lin;
 
     if(!a_voice->adsr_prefx)
     {
