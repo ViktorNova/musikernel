@@ -1159,7 +1159,7 @@ void v_en_process_midi(t_edmnext * self, int f_i, int sample_count,
     {
 
     }
-    else
+    else if(a_playback_mode > 0)
     {
         while(1)
         {
@@ -3074,7 +3074,7 @@ void v_en_offline_render(t_edmnext * self, int a_start_region,
     struct timespec f_start, f_finish;
     clock_gettime(CLOCK_REALTIME, &f_start);
 #endif
-    
+
     int f_current_bar = 999;  //For printing the current region/bar
 
     while(((self->current_region) < a_end_region) ||

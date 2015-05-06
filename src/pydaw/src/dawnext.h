@@ -1118,7 +1118,7 @@ void v_dn_process_midi(t_dawnext * self, t_dn_item_ref * a_item_ref,
     {
 
     }
-    else
+    else if(a_playback_mode > 0)
     {
         while(1)
         {
