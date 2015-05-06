@@ -1,0 +1,15 @@
+Source: musikernel1
+Section: sound
+Priority: optional
+Maintainer: MusiKernel Team <musikernel@gmail.com>
+Build-Depends: debhelper (>= 8.0.0),  libasound2-dev, liblo-dev, libsndfile1-dev, libportmidi-dev, portaudio19-dev, python3-pyqt5, python3-dev, python3-numpy, rubberband-cli, libfftw3-dev, libcpufreq-dev
+Standards-Version: 3.9.4
+Homepage: https://github.com/j3ffhubb/musikernel
+#Vcs-Git: git://git.debian.org/collab-maint/musikernel1.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/musikernel1.git;a=summary
+
+Package: musikernel1
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libasound2-dev, liblo-dev, libsndfile1-dev, libportmidi-dev, portaudio19-dev, python3-pyqt5, python3, python3-numpy, rubberband-cli, libfftw3-dev, libcpufreq-dev, libav-tools, lame, vorbis-tools
+Description: MusiKernel is hosts/DAWs, instrument and effect plugins.
+ MusiKernel is a powerful all-in-one suite of music production tools, and a complete open source framework for developing any type of audio application.

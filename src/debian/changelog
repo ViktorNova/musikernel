@@ -1,0 +1,5 @@
+musikernel1 (15.05.1-1) trusty; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- userbuntu <musikernel@gmail.com>  Tue, 05 May 2015 19:30:21 -0400
