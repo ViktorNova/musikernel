@@ -2136,12 +2136,13 @@ class ItemSequencer(QGraphicsView):
         for f_item in self.get_region_items():
             f_item.setSelected(True)
 
-    def get_loop_pos(self):
+    def get_loop_pos(self, a_warn=True):
         if self.loop_start is None:
-            QMessageBox.warning(
-                self, _("Error"),
-                _("You must set the region markers first by "
-                "right-clicking on the scene ruler"))
+            if a_warn:
+                QMessageBox.warning(
+                    self, _("Error"),
+                    _("You must set the region markers first by "
+                    "right-clicking on the scene ruler"))
             return None
         else:
             return self.loop_start, self.loop_end
@@ -8331,7 +8332,7 @@ class transport_widget(libmk.AbstractTransport):
         self.playback_menu_button.setEnabled(False)
         global MREC_EVENTS
         MREC_EVENTS = []
-        f_loop_pos = SEQUENCER.get_loop_pos()
+        f_loop_pos = SEQUENCER.get_loop_pos(a_warn=False)
         if self.loop_mode_combobox.currentIndex() == 0 or not f_loop_pos:
             self.rec_start = SEQUENCER.get_beat_value()
             self.rec_end = None
@@ -8529,7 +8530,7 @@ class pydaw_main_window(QScrollArea):
             except Exception as ex:
                 libmk.pydaw_print_generic_exception(ex)
 
-        f_marker_pos = SEQUENCER.get_loop_pos()
+        f_marker_pos = SEQUENCER.get_loop_pos(a_warn=False)
 
         if not f_marker_pos:
             QMessageBox.warning(
