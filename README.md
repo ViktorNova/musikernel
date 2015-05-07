@@ -1,48 +1,48 @@
-Follow MusiKernel on Twitter @musikernel
-
 See screenshots at:  http://www.kvraudio.com/product/musikernel-by-musikernel
 
-#How to build:
+Follow @musikernel on Twitter for the latest news and release announcements
 
-#Ubuntu/Debian distros:
+##Ubuntu Users:
 
-cd [musikernel dir]/src
- 
+Follow the instructions in the "Adding this PPA to your system" section here:  https://launchpad.net/~musikernel/+archive/ubuntu/musikernel1 , then:
+
+`sudo apt-get update && sudo apt-get install musikernel1`
+
+##How to build:
+
+###Ubuntu/Debian distros:
+
+```
+cd [musikernel dir]/src 
 ./ubuntu_deps.sh   # as root
-
 make deps
-
 make deb  # as root
-
 cd ../ubuntu
-
 dpkg -i musikernel[your_version].deb  # as root
+```
 
-#Fedora based distros:
+###Fedora based distros:
 
+```
 cd [musikernel src dir]/src
-
 ./fedora_deps.sh
-
 make rpm
-
 cd ~/rpmbuild/RPMS/[your arch]
-
 sudo yum localinstall musikernel[version number].rpm
+```
 
-#All others:
+###All others:
 
- # [figure out the dependencies based on the Fedora or Ubuntu dependencies]
-
+```
+# figure out the dependencies based on the Fedora or Ubuntu dependencies
 cd [musikernel src dir]/src
-
 make
-
- # You can specify DESTDIR or PREFIX if packaging, the result is fully relocatable
-
+# You can specify DESTDIR or PREFIX if packaging,
+# the result is fully relocatable
 make install
+```
 
-#What is MusiKernel ?
+##What is MusiKernel ?
 
 MusiKernel is DAWs/hosts, instrument & effect plugins, and a new approach to developing an audio software ecosystem.  By promoting centralized development and quality control with maximal code re-use, MusiKernel aims to avoid many of the compatibility problems that have plagued traditional host/plugin architectures.
 
