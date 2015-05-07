@@ -8236,6 +8236,8 @@ class transport_widget(libmk.AbstractTransport):
             f_widget.setEnabled(a_enabled)
 
     def on_play(self):
+        if MAIN_WINDOW.main_tabwidget.currentIndex() == 1:
+            SEQUENCER.open_region()
         REGION_SETTINGS.on_play()
         AUDIO_SEQ_WIDGET.on_play()
         SEQUENCER.start_playback()
