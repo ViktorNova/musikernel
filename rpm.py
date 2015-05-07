@@ -86,7 +86,10 @@ License:        GPLv3
 URL:            http://github.com/j3ffhubb/musikernel/
 Source0:        {2}
 
-Requires:      python3-qt5 alsa-lib-devel liblo-devel rubberband \
+BuildRequires:  alsa-lib-devel liblo-devel libsndfile-devel fftw-devel \
+portmidi-devel portaudio-devel python3-devel
+
+Requires:       python3-qt5 alsa-lib-devel liblo-devel rubberband \
 libsndfile-devel python3-numpy fftw-devel portmidi-devel \
 portaudio-devel python3-devel vorbis-tools
 
