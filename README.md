@@ -2,6 +2,14 @@ See screenshots at:  http://www.kvraudio.com/product/musikernel-by-musikernel
 
 Follow @musikernel on Twitter for the latest news and release announcements
 
+##Fedora Users:
+
+```
+# From https://copr.fedoraproject.org/coprs/musikernel/musikernel/
+dnf copr enable musikernel/musikernel
+sudo dnf install musikernel1
+```
+
 ##Ubuntu Users:
 
 Follow the instructions in the "Adding this PPA to your system" section here:  https://launchpad.net/~musikernel/+archive/ubuntu/musikernel1 , then:
