@@ -8,6 +8,7 @@ Follow @musikernel on Twitter for the latest news and release announcements
 # From https://copr.fedoraproject.org/coprs/musikernel/musikernel/
 dnf copr enable musikernel/musikernel
 sudo dnf install musikernel1
+#answer 'y' to any questions about using a COPR repo and importing keys
 ```
 
 ##Ubuntu Users:
