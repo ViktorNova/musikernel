@@ -102,6 +102,7 @@ MusiKernel is digital audio workstations (DAWs), instrument and effect plugins
 %setup -q
 
 %build
+%{{py_byte_compile}}
 make {3}
 
 %install
