@@ -21,7 +21,7 @@ RPM packages can be downloaded directly from [here](https://copr-be.cloud.fedora
 
 Follow the instructions in the "Adding this PPA to your system" section [here](https://launchpad.net/~musikernel/+archive/ubuntu/musikernel1), then:
 
-`sudo apt-get update && sudo apt-get install -y musikernel1`
+`sudo apt-get update && sudo apt-get install musikernel1`
 
 You can download the .deb package(s) directly by clicking [here](https://launchpad.net/~musikernel/+archive/ubuntu/musikernel1/+packages), clicking "View package details", clicking the arrow next to the package, then clicking on the package name link.
 
