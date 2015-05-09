@@ -1395,6 +1395,12 @@ def open_pydaw_engine(a_project_path):
     print(f_cmd)
     PYDAW_SUBPROCESS = subprocess.Popen([f_cmd], shell=True)
 
+def reopen_pydaw_engine():
+    open_pydaw_engine(PROJECT_FILE)
+
+libmk.close_pydaw_engine = close_pydaw_engine
+libmk.reopen_pydaw_engine = reopen_pydaw_engine
+
 def global_close_all():
     libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
     close_pydaw_engine()

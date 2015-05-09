@@ -106,7 +106,9 @@ inline void v_pydaw_run_main_loop(int sample_count,
 void signalHandler(int sig)
 {
     printf("signal %d caught, trying to clean up and exit\n", sig);
+    pthread_mutex_lock(&musikernel->exit_mutex);
     exiting = 1;
+    pthread_mutex_unlock(&musikernel->exit_mutex);
 }
 
 
@@ -313,7 +315,9 @@ NO_OPTIMIZATION void * ui_process_monitor_thread(
         if (stat(f_proc_path, &sts) == -1 && errno == ENOENT)
         {
             printf("UI process doesn't exist, exiting.\n");
+            pthread_mutex_lock(&musikernel->exit_mutex);
             exiting = 1;
+            pthread_mutex_unlock(&musikernel->exit_mutex);
             f_exited = 1;
             break;
         }
@@ -769,8 +773,17 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         }
     }
 
-    while(!exiting)
+    while(1)
     {
+        pthread_mutex_lock(&musikernel->exit_mutex);
+        if(exiting)
+        {
+            pthread_mutex_unlock(&musikernel->exit_mutex);
+            break;
+        }
+        pthread_mutex_unlock(&musikernel->exit_mutex);
+
+
         if(PYDAW_NO_HARDWARE)
         {
             portaudioCallback(

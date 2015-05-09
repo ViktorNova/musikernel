@@ -263,6 +263,7 @@ typedef struct
     char * samplegraph_folder;
     char * wav_pool_file;
     char * plugins_folder;
+    pthread_mutex_t exit_mutex;
 }t_musikernel;
 
 typedef struct
@@ -596,6 +597,7 @@ void g_musikernel_get(float a_sr, t_midi_device_list * a_midi_devices)
     musikernel->playback_mode = 0;
 
     pthread_mutex_init(&musikernel->audio_inputs_mutex, NULL);
+    pthread_mutex_init(&musikernel->exit_mutex, NULL);
 
     int f_i;
 
@@ -949,6 +951,8 @@ void v_stop_record_audio()
     char f_file_name_old[2048];
     char f_file_name_new[2048];
 
+    pthread_mutex_lock(&musikernel->exit_mutex);
+    printf("Stopping recording, shutdown is inhibited.\n");
     pthread_mutex_lock(&musikernel->audio_inputs_mutex);
 
     for(f_i = 0; f_i < PYDAW_AUDIO_INPUT_TRACK_COUNT; ++f_i)
@@ -986,6 +990,8 @@ void v_stop_record_audio()
     }
 
     pthread_mutex_unlock(&musikernel->audio_inputs_mutex);
+    pthread_mutex_unlock(&musikernel->exit_mutex);
+    printf("Finished stopping recording, shutdown is no longer inhibited.\n");
 }
 
 void * v_pydaw_audio_recording_thread(void* a_arg)
@@ -1750,7 +1756,9 @@ void v_mk_configure(const char* a_key, const char* a_value)
     }
     else if(!strcmp(a_key, MK_CONFIGURE_KEY_EXIT))
     {
+        pthread_mutex_lock(&musikernel->exit_mutex);
         exiting = 1;
+        pthread_mutex_unlock(&musikernel->exit_mutex);
     }
     else if(!strcmp(a_key, MK_CONFIGURE_KEY_LOAD_CC_MAP))
     {
