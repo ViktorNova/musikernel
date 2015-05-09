@@ -1,25 +1,33 @@
-See screenshots at:  http://www.kvraudio.com/product/musikernel-by-musikernel
+**Twitter:** Follow @musikernel for the latest news and release announcements
 
-Follow @musikernel on Twitter for the latest news and release announcements
+**Screenshots:**  http://www.kvraudio.com/product/musikernel-by-musikernel
 
-##Fedora Users:
+**Windows Users:**
 
-From https://copr.fedoraproject.org/coprs/musikernel/musikernel/
+LiveOS image available [here](https://drive.google.com/folderview?id=0BycGQs-5oRdffkthTmo2Q0lQLWNCblFkZkhodTJ0VlJlaXRMMzl4SXJ5ajI4YUR2WTFReUE&usp=sharing), you can follow the instructions to create a bootable USB drive for running MusiKernel without installing anything to your PC.
+
+**Fedora Users:**
+
+From [here](https://copr.fedoraproject.org/coprs/musikernel/musikernel/)
 
 ```
 sudo dnf copr enable -y musikernel/musikernel
 sudo dnf install -y musikernel1
 ```
 
-##Ubuntu Users:
+RPM packages can be downloaded directly from [here](https://copr-be.cloud.fedoraproject.org/results/musikernel/musikernel/)
 
-Follow the instructions in the "Adding this PPA to your system" section here:  https://launchpad.net/~musikernel/+archive/ubuntu/musikernel1 , then:
+**Ubuntu Users:**
 
-`sudo apt-get update && sudo apt-get install musikernel1`
+Follow the instructions in the "Adding this PPA to your system" section [here](https://launchpad.net/~musikernel/+archive/ubuntu/musikernel1), then:
 
-##How to build:
+`sudo apt-get update && sudo apt-get install -y musikernel1`
 
-###Ubuntu/Debian distros:
+You can download the .deb package(s) directly by clicking [here](https://launchpad.net/~musikernel/+archive/ubuntu/musikernel1/+packages), clicking the arrow next to the package, then clicking on the package name link.
+
+###How to build:
+
+**Ubuntu/Debian distros:**
 
 ```
 cd [musikernel dir]/src 
@@ -30,7 +38,7 @@ cd ../ubuntu
 dpkg -i musikernel[your_version].deb  # as root
 ```
 
-###Fedora based distros:
+**Fedora based distros:**
 
 ```
 cd [musikernel src dir]/src
@@ -40,7 +48,7 @@ cd ~/rpmbuild/RPMS/[your arch]
 sudo yum localinstall musikernel[version number].rpm
 ```
 
-###All others:
+**All others:**
 
 ```
 # figure out the dependencies based on the Fedora or Ubuntu dependencies
@@ -51,7 +59,7 @@ make
 make install
 ```
 
-##What is MusiKernel ?
+###What is MusiKernel ?
 
 MusiKernel is DAWs/hosts, instrument & effect plugins, and a new approach to developing an audio software ecosystem.  By promoting centralized development and quality control with maximal code re-use, MusiKernel aims to avoid many of the compatibility problems that have plagued traditional host/plugin architectures.
 
