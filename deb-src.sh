@@ -22,5 +22,6 @@ tar cfJ "$ORIG_FILE" $FULL_VERSION
 cd $FULL_VERSION
 debuild -S -sa -k412C4B95
 cd ..
-dput ppa:musikernel/musikernel1-staging $CHANGES_FILE
+dput ppa:musikernel/musikernel $CHANGES_FILE
+rm -rf "${MAJOR_VERSION}"{-,_}"${MINOR_VERSION}"*
 
