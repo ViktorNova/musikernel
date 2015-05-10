@@ -1,14 +1,14 @@
 - **Twitter:** Follow @musikernel for the latest news and release announcements
 - [**Screenshots**](http://www.kvraudio.com/product/musikernel-by-musikernel)
-- [How to install](#)
-			- [Windows](#)
-			- [Fedora](#)
-			- [Ubuntu](#)
-- [How to Build](#)
-			- [Ubuntu/Debian](#)
-			- [Fedora](#)
-			- [All Others](#)
-- [What is MusiKernel?](#)
+- [How to install](#how-to-install)
+			- [Windows](#windows)
+			- [Fedora](#fedora)
+			- [Ubuntu](#ubuntu)
+- [How to Build](#how-to-build)
+			- [Debian and Ubuntu](#debian-and-ubuntu)
+			- [Fedora](#fedora)
+			- [All Others](#all-others)
+- [What is MusiKernel?](#what-is-musikernel)
 
 ###How to Install
 
@@ -37,7 +37,7 @@ You can download the .deb package(s) directly by clicking [here](https://launchp
 
 ###How to Build
 
-######Ubuntu/Debian
+######Debian and Ubuntu
 
 ```
 cd [musikernel dir]/src 
