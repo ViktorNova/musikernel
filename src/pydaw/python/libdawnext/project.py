@@ -296,7 +296,7 @@ class DawNextProject(libmk.AbstractProject):
         """
         f_uid = int(a_uid)
         f_changed_any = False
-        assert(False)  # this needs to be reworked
+        assert False, "this needs to be reworked"
         f_pysong = self.get_song()
         for f_region_uid in f_pysong.regions.values():
             f_audio_region = self.get_audio_region(f_region_uid)
@@ -321,8 +321,7 @@ class DawNextProject(libmk.AbstractProject):
             a_item:  pydaw_audio_item
         """
         f_changed_any = False
-        # this needs to be reworked
-        assert(False)
+        assert False, "this needs to be reworked"
         f_pysong = self.get_song()
         for f_region_uid in f_pysong.regions.values():
             f_audio_region = self.get_audio_region(f_region_uid)
@@ -348,7 +347,7 @@ class DawNextProject(libmk.AbstractProject):
         """ a_uid:  wav_pool uid
             a_paif:  a list that corresponds to a paif row
         """
-        assert(False)  #this one needs a rework
+        assert False, "this needs to be reworked"
         f_uid = int(a_uid)
         f_changed_any = False
         f_pysong = self.get_song()
@@ -385,7 +384,7 @@ class DawNextProject(libmk.AbstractProject):
         a_item_uid = int(a_item_uid)
         f_result = pydaw_item.from_str(
             self.get_item_string(a_item_uid), a_item_uid)
-        assert(f_result.uid == a_item_uid)
+        assert f_result.uid == a_item_uid, "UIDs do not match"
         return f_result
 
     def get_item_by_name(self, a_item_name):
@@ -525,7 +524,7 @@ class DawNextProject(libmk.AbstractProject):
             if f_length > 0.0:
                 f_note.set_length(f_length)
             else:
-                assert(False)  # Need a different algorithm for this
+                assert False, "Need a different algorithm for this"
                 print("Using tick length for:")
                 f_sample_count = f_tick - f_note.start_sample
                 f_seconds = float(f_sample_count) / float(a_sr)
@@ -689,7 +688,7 @@ class DawNextProject(libmk.AbstractProject):
         if not self.suppress_updates:
             f_items_dict = self.get_items_dict()
             f_uid = f_items_dict.get_uid_by_name(a_name)
-            assert(f_uid == a_item.uid)
+            assert f_uid == a_item.uid, "UIDs do not match"
             self.save_item_by_uid(f_uid, a_item)
 
     def clear_caches(self):
@@ -841,7 +840,7 @@ class pydaw_sequencer_item:
         return pydaw_sequencer_item(*f_self)
 
     def __str__(self):
-        assert(self.item_uid >= 0)
+        assert self.item_uid >= 0, "Negative UID"
         return "|".join(str(x) for x in
             (self.track_num, round(self.start_beat, 6),
             round(self.length_beats, 6), self.item_uid,
@@ -926,7 +925,7 @@ class pydaw_sequencer:
     def has_marker(self, a_beat, a_type):
         f_tuple = tuple(int(x) for x in (a_beat, a_type))
         f_result = [v for k, v in self.markers.items() if k == f_tuple]
-        assert(len(f_result) <= 1)
+        assert len(f_result) <= 1, "Should only be 1 or 0 results"
         return f_result[0] if f_result else None
 
     def get_markers(self):
@@ -1013,7 +1012,7 @@ class pydaw_sequencer:
     def split(self, a_points, a_tracks=None, a_modify=True):
         if a_points[0] != 0.0:
             a_points.insert(0, 0.0)
-        assert(sorted(a_points) == a_points)
+        assert sorted(a_points) == a_points
         f_result = []
         if not a_tracks:
             f_items = self.items[:]
@@ -1121,7 +1120,7 @@ class pydaw_sequencer:
                         f_result.set_marker(
                             pydaw_sequencer_marker(*f_item_arr[2:]))
                     else:
-                        assert(False)
+                        assert False, "Invalid type {}".format(f_type)
                     continue
                 if f_item_arr[0] == "M":
                     continue
@@ -1950,7 +1949,7 @@ class pydaw_item:
                     pass
                 else:
                     print("Error: {}".format(f_event_arr))
-                    assert(False)
+                    assert False, "Invalid type '{}'".format(f_event_arr[0])
         return f_result
 
     def __str__(self):

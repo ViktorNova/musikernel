@@ -2193,7 +2193,7 @@ class ItemSequencer(QGraphicsView):
                     f_marker.beat * SEQUENCER_PX_PER_BEAT,
                     REGION_EDITOR_HEADER_ROW_HEIGHT * 2)
             else:
-                assert(False)
+                assert False, "Invalid marker type"
 
         f_total_height = (REGION_EDITOR_TRACK_COUNT *
             (REGION_EDITOR_TRACK_HEIGHT)) + REGION_EDITOR_HEADER_HEIGHT
@@ -5734,7 +5734,7 @@ class piano_roll_editor(QGraphicsView):
             elif f_state == 1:
                 self.piano_keys[f_note].setBrush(QColor(237, 150, 150))
             else:
-                assert(False)
+                assert False, "Invalid state"
 
     def set_grid_div(self, a_div):
         self.grid_div = int(a_div)
@@ -6196,7 +6196,7 @@ class piano_roll_editor(QGraphicsView):
         elif self.vel_rand == 2:
             return random.randint(75 - f_emph, 100 - f_emph)
         else:
-            assert(False)
+            assert False, "Invalid velocity randomization value"
 
     def get_beat_emphasis(self, a_beat, a_amt=25.0):
         if self.vel_emphasis == 0:
