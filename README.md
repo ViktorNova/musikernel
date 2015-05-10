@@ -25,7 +25,7 @@ sudo dnf copr enable -y musikernel/musikernel
 sudo dnf install -y musikernel1
 ```
 
-RPM packages can be downloaded directly from [here](https://copr-be.cloud.fedoraproject.org/results/musikernel/musikernel/)
+RPM packages can be downloaded directly from [here](https://github.com/j3ffhubb/musikernel/releases)
 
 ######Ubuntu
 
@@ -33,7 +33,7 @@ Follow the instructions in the "Adding this PPA to your system" section [here](h
 
 `sudo apt-get update && sudo apt-get install musikernel1`
 
-You can download the .deb package(s) directly by clicking [here](https://launchpad.net/~musikernel/+archive/ubuntu/musikernel1/+packages), clicking "View package details", clicking the arrow next to the package, then clicking on the package name link.
+Ubuntu packages can be downloaded directly from [here](https://github.com/j3ffhubb/musikernel/releases)
 
 ###How to Build
 
