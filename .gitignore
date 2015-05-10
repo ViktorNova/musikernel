@@ -1,3 +1,4 @@
+packages/
 src/pydaw/musikernel*.so
 *.exe
 callgrind.out.*
