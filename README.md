@@ -1,16 +1,22 @@
 - **Twitter:** Follow @musikernel for the latest news and release announcements
 - [**Screenshots**](http://www.kvraudio.com/product/musikernel-by-musikernel)
 - [How to install](#)
-- [How to build](#)
+			- [Windows](#)
+			- [Fedora](#)
+			- [Ubuntu](#)
+- [How to Build](#)
+			- [Ubuntu/Debian](#)
+			- [Fedora](#)
+			- [All Others](#)
 - [What is MusiKernel?](#)
 
-###How to install
+###How to Install
 
-######Windows Users
+######Windows
 
 LiveOS image available [here](https://drive.google.com/folderview?id=0BycGQs-5oRdffkthTmo2Q0lQLWNCblFkZkhodTJ0VlJlaXRMMzl4SXJ5ajI4YUR2WTFReUE&usp=sharing), you can follow the instructions to create a bootable USB drive for running MusiKernel without installing anything to your PC.
 
-######Fedora Users
+######Fedora
 
 From [here](https://copr.fedoraproject.org/coprs/musikernel/musikernel/)
 
@@ -21,7 +27,7 @@ sudo dnf install -y musikernel1
 
 RPM packages can be downloaded directly from [here](https://copr-be.cloud.fedoraproject.org/results/musikernel/musikernel/)
 
-######Ubuntu Users
+######Ubuntu
 
 Follow the instructions in the "Adding this PPA to your system" section [here](https://launchpad.net/~musikernel/+archive/ubuntu/musikernel1), then:
 
@@ -29,9 +35,9 @@ Follow the instructions in the "Adding this PPA to your system" section [here](h
 
 You can download the .deb package(s) directly by clicking [here](https://launchpad.net/~musikernel/+archive/ubuntu/musikernel1/+packages), clicking "View package details", clicking the arrow next to the package, then clicking on the package name link.
 
-###How to build
+###How to Build
 
-######Ubuntu/Debian distros
+######Ubuntu/Debian
 
 ```
 cd [musikernel dir]/src 
@@ -42,7 +48,7 @@ cd ../ubuntu
 dpkg -i musikernel[your_version].deb  # as root
 ```
 
-######Fedora based distros
+######Fedora
 
 ```
 cd [musikernel src dir]/src
@@ -52,7 +58,7 @@ cd ~/rpmbuild/RPMS/[your arch]
 sudo yum localinstall musikernel[version number].rpm
 ```
 
-######All others
+######All Others
 
 ```
 # figure out the dependencies based on the Fedora or Ubuntu dependencies
