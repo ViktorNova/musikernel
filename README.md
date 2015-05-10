@@ -6,7 +6,7 @@
 			- [Ubuntu](#ubuntu)
 - [How to Build](#how-to-build)
 			- [Debian and Ubuntu](#debian-and-ubuntu)
-			- [Fedora](#fedora)
+			- [Fedora](#fedora-1)
 			- [All Others](#all-others)
 - [What is MusiKernel?](#what-is-musikernel)
 
