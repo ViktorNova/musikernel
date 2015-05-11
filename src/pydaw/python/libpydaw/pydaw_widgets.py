@@ -145,22 +145,25 @@ class cc_mapping:
         return "|".join(f_result)
 
 
+class PixmapKnobCache:
+    def __init__(self, a_path):
+        self.cache = {}
+        self.path = a_path
+        self.knob_pixmap = None
 
-PYDAW_KNOB_PIXMAP = None
-PYDAW_KNOB_PIXMAP_CACHE = {}
+    def get_scaled_pixmap_knob(self, a_size):
+        # hack to get around creating a QApplication first
+        if not self.knob_pixmap:
+            self.knob_pixmap = QPixmap(self.path)
+        if not a_size in self.cache:
+            self.cache[a_size] = self.knob_pixmap.scaled(
+                a_size, a_size,
+                QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        return self.cache[a_size]
 
-def get_scaled_pixmap_knob(a_size):
-    global PYDAW_KNOB_PIXMAP, PYDAW_KNOB_PIXMAP_CACHE
-    if PYDAW_KNOB_PIXMAP is None:
-        PYDAW_KNOB_PIXMAP = QPixmap(
-            os.path.join(pydaw_util.global_stylesheet_dir, "pydaw-knob.png"))
+DEFAULT_KNOB_PIXMAP_CACHE = PixmapKnobCache(
+    os.path.join(pydaw_util.global_stylesheet_dir, "pydaw-knob.png"))
 
-    if not a_size in PYDAW_KNOB_PIXMAP_CACHE:
-        PYDAW_KNOB_PIXMAP_CACHE[
-            a_size] = PYDAW_KNOB_PIXMAP.scaled(a_size, a_size,
-            QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-
-    return PYDAW_KNOB_PIXMAP_CACHE[a_size]
 
 CC_CLIPBOARD = None
 TEMPO = 128.0
@@ -170,14 +173,18 @@ def set_global_tempo(a_tempo):
     TEMPO = a_tempo
 
 class pydaw_pixmap_knob(QDial):
-    def __init__(self, a_size, a_min_val, a_max_val):
+    def __init__(
+            self, a_size, a_min_val, a_max_val,
+            a_pixmap_cache=DEFAULT_KNOB_PIXMAP_CACHE):
         QDial.__init__(self)
+        self.pixmap_cache = a_pixmap_cache
         self.setRange(a_min_val, a_max_val)
         self.val_step = float(a_max_val - a_min_val) * 0.005  # / 200.0
         self.val_step_small = self.val_step * 0.1
         self.setGeometry(0, 0, a_size, a_size)
         self.pixmap_size = a_size - 10
-        self.pixmap = get_scaled_pixmap_knob(self.pixmap_size)
+        self.pixmap = self.pixmap_cache.get_scaled_pixmap_knob(
+            self.pixmap_size)
         self.setFixedSize(a_size, a_size)
 
     def keyPressEvent(self, a_event):
