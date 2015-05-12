@@ -194,13 +194,19 @@ class region_settings:
     def set_vzoom(self, a_val=None):
         global REGION_EDITOR_TRACK_HEIGHT
         f_val = self.vzoom_slider.value()
+        f_old = REGION_EDITOR_TRACK_HEIGHT
         REGION_EDITOR_TRACK_HEIGHT = f_val * 64
 
         TRACK_PANEL.set_track_height()
         self.open_region()
 
+        f_scrollbar = MAIN_WINDOW.midi_scroll_area.verticalScrollBar()
+        f_scrollbar.setValue(
+            (REGION_EDITOR_TRACK_HEIGHT / f_old) * f_scrollbar.value())
+
     def set_hzoom(self, a_val=None):
         global SEQUENCER_PX_PER_BEAT, DRAW_SEQUENCER_GRAPHS
+        f_old = SEQUENCER_PX_PER_BEAT
         f_val = self.hzoom_slider.value()
         if f_val < 3:
             DRAW_SEQUENCER_GRAPHS = False
@@ -213,6 +219,9 @@ class region_settings:
             SEQUENCER_PX_PER_BEAT = {3:24, 4:48, 5:128}[f_val]
         pydaw_set_seq_snap()
         self.open_region()
+
+        self.scrollbar.setValue(
+            (SEQUENCER_PX_PER_BEAT / f_old) * self.scrollbar.value())
 
     def set_snap(self, a_val=None):
         pydaw_set_seq_snap(a_val)
