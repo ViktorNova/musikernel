@@ -965,12 +965,12 @@ class SequencerItem(QGraphicsRectItem):
             self.event_pos_orig = a_event.pos().x()
             for f_item in SEQUENCER.get_selected():
                 f_item_pos = f_item.pos().x()
+                f_item.setZValue(2400.0)
                 f_item.quantize_offset = \
                     f_item_pos - f_item.quantize_all(f_item_pos)
                 if a_event.modifiers() == QtCore.Qt.ControlModifier:
                     f_item.is_copying = True
                     f_item.width_orig = f_item.rect().width()
-                    f_item.setZValue(2400.0)
                     SEQUENCER.draw_item(f_item.name, f_item.audio_item)
                 if self.is_start_resizing:
                     f_item.width_orig = 0.0
