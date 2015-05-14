@@ -1205,6 +1205,16 @@ class pydaw_atm_region:
         for f_point in f_result:
             self.remove_point(f_point)
 
+    def clear_plugins(self, a_plugin_uids):
+        f_result = [x for x in self.points if x.index in a_plugins]
+        for f_point in f_result:
+            self.remove_point(f_point)
+
+    def clear_port(self, a_index, a_port_num):
+        f_result = self.get_points(a_index, a_port_num)
+        for f_point in f_result:
+            self.remove_point(f_point)
+
     def clear_range(self, a_index, a_port_num, a_start_beat, a_end_beat):
         f_list = self.get_points(a_index, a_port_num)
         if f_list:
