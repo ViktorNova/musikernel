@@ -825,6 +825,7 @@ class MkMainWindow(QMainWindow):
 
     def prepare_to_quit(self):
         try:
+            self.setUpdatesEnabled(False)
             if SPLASH_SCREEN:
                 SPLASH_SCREEN.close()
             close_pydaw_engine()
