@@ -1206,7 +1206,7 @@ class pydaw_atm_region:
             self.remove_point(f_point)
 
     def clear_plugins(self, a_plugin_uids):
-        f_result = [x for x in self.points if x.index in a_plugins]
+        f_result = [x for x in self.points if x.index in a_plugin_uids]
         for f_point in f_result:
             self.remove_point(f_point)
 

@@ -1305,24 +1305,6 @@ class ItemSequencer(QGraphicsView):
         self.menu = QMenu(self)
         self.atm_menu = QMenu(self)
 
-        self.track_atm_menu = self.atm_menu.addMenu(
-            _("All Plugins for Track"))
-        self.track_atm_clipboard = []
-
-        self.copy_track_region_action = self.track_atm_menu.addAction(
-            _("Copy Region"))
-        self.copy_track_region_action.triggered.connect(
-            self.copy_track_region)
-        self.paste_track_region_action = self.track_atm_menu.addAction(
-            _("Paste Region"))
-        self.paste_track_region_action.triggered.connect(
-            self.paste_track_region)
-        self.track_atm_menu.addSeparator()
-        self.clear_track_region_action = self.track_atm_menu.addAction(
-            _("Clear Region"))
-        self.clear_track_region_action.triggered.connect(
-            self.clear_track_region)
-
         self.copy_action = self.menu.addAction(_("Copy"))
         self.copy_action.triggered.connect(self.copy_selected)
         self.copy_action.setShortcut(QKeySequence.Copy)
@@ -1351,6 +1333,40 @@ class ItemSequencer(QGraphicsView):
         self.smooth_atm_action.setShortcut(
             QKeySequence.fromString("ALT+S"))
         self.addAction(self.smooth_atm_action)
+
+        self.track_atm_menu = self.atm_menu.addMenu(
+            _("All Plugins for Track"))
+        self.track_atm_clipboard = []
+
+        self.copy_track_region_action = self.track_atm_menu.addAction(
+            _("Copy Region"))
+        self.copy_track_region_action.triggered.connect(
+            self.copy_track_region)
+        self.paste_track_region_action = self.track_atm_menu.addAction(
+            _("Paste Region"))
+        self.paste_track_region_action.triggered.connect(
+            self.paste_track_region)
+        self.track_atm_menu.addSeparator()
+        self.clear_track_region_action = self.track_atm_menu.addAction(
+            _("Clear Region"))
+        self.clear_track_region_action.triggered.connect(
+            self.clear_track_region)
+
+        self.atm_clear_menu = self.atm_menu.addMenu(_("Clear All"))
+
+        #self.clear_port_action = self.atm_clear_menu.addAction(
+        #    _("Current Control"))
+        #self.clear_port_action.triggered.connect(self.clear_port)
+
+        self.atm_clear_menu.addSeparator()
+        self.clear_plugin_action = self.atm_clear_menu.addAction(
+            _("Current Plugin"))
+        self.clear_plugin_action.triggered.connect(self.clear_plugin)
+
+        self.atm_clear_menu.addSeparator()
+        self.clear_track_action = self.atm_clear_menu.addAction(
+            _("Track"))
+        self.clear_track_action.triggered.connect(self.clear_track)
 
         self.transform_atm_action = self.atm_menu.addAction(_("Transform..."))
         self.transform_atm_action.triggered.connect(self.transform_atm)
@@ -1402,6 +1418,47 @@ class ItemSequencer(QGraphicsView):
             QKeySequence.fromString("CTRL+G"))
         self.addAction(self.glue_action)
         self.context_menu_enabled = True
+
+    def clear_port(self):
+        if not self.current_coord:
+            return
+        f_track = self.current_coord[0]
+        f_track_port_num, f_track_index = TRACK_PANEL.has_automation(f_track)
+        if f_track_port_num is None:
+            QMessageBox.warning(
+                self, _("Error"),
+                _("No automation selected for this track"))
+            return
+        f_index, f_plugin = TRACK_PANEL.get_atm_params(f_track)
+        ATM_REGION.clear_port(f_index, f_track_port_num)
+        self.automation_save_callback()
+        self.open_region()
+
+    def clear_plugin(self):
+        if not self.current_coord:
+            return
+        f_track = self.current_coord[0]
+        f_track_port_num, f_track_index = TRACK_PANEL.has_automation(f_track)
+        if f_track_port_num is None:
+            QMessageBox.warning(
+                self, _("Error"),
+                _("No automation selected for this track"))
+            return
+        f_index, f_plugin = TRACK_PANEL.get_atm_params(f_track)
+        ATM_REGION.clear_plugins([f_index])
+        self.automation_save_callback()
+        self.open_region()
+
+    def clear_track(self):
+        if not self.current_coord:
+            return
+        f_track = self.current_coord[0]
+        f_plugins = PROJECT.get_track_plugin_uids(f_track)
+        if not f_plugins:
+            return
+        ATM_REGION.clear_plugins(f_plugins)
+        self.automation_save_callback()
+        self.open_region()
 
     def copy_track_region(self):
         if not self.current_coord:
