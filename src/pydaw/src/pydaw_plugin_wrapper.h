@@ -57,7 +57,11 @@ typedef struct
     char padding[CACHE_LINE_SIZE - ((8 * sizeof(int)) + (sizeof(void*) * 4))];
 }t_pydaw_plugin;
 
-void * PLUGIN_DESC_FUNCS[] = {
+#ifdef	__cplusplus
+}
+#endif
+
+PYFX_Descriptor_Function PLUGIN_DESC_FUNCS[] = {
     NULL, //0
     euphoria_PYFX_descriptor, //1
     rayv_PYFX_descriptor, //2
@@ -90,13 +94,13 @@ NO_OPTIMIZATION void g_pydaw_plugin_init(
 
     hpalloc((void**)&f_result->atm_buffer, sizeof(t_pydaw_seq_event) * 512);
 
-    f_result->descfn = (PYFX_Descriptor_Function)PLUGIN_DESC_FUNCS[a_index];
+    f_result->descfn = PLUGIN_DESC_FUNCS[a_index];
 
-    f_result->descriptor = f_result->descfn(0);
+    f_result->descriptor = (PYFX_Descriptor*)f_result->descfn();
 
     assert(f_result->descriptor);
 
-    f_result->PYFX_handle = f_result->descriptor->instantiate(
+    f_result->PYFX_handle = (PYFX_Handle)f_result->descriptor->instantiate(
             f_result->descriptor, a_sample_rate,
             a_host_wavpool_func, a_plugin_uid, a_queue_func);
 
@@ -124,10 +128,6 @@ void v_free_pydaw_plugin(t_pydaw_plugin * a_plugin)
     }
 }
 */
-
-#ifdef	__cplusplus
-}
-#endif
 
 #endif	/* PYDAW_PLUGIN_H */
 
