@@ -1688,6 +1688,11 @@ class pydaw_abstract_file_browser_widget():
         self.audio_items_clipboard = []
         self.hsplitter.setSizes([300, 9999])
 
+    def set_multiselect(self, a_bool):
+        self.list_file.setSelectionMode(
+            QAbstractItemView.ExtendedSelection if a_bool
+            else QAbstractItemView.SingleSelection)
+
     def open_file_in_browser(self, a_path):
         f_path = str(a_path)
         f_dir = os.path.dirname(f_path)

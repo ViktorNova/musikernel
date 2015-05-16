@@ -1876,7 +1876,8 @@ class ItemSequencer(QGraphicsView):
 
         f_lane_num = int((f_y - REGION_EDITOR_HEADER_HEIGHT) /
             REGION_EDITOR_TRACK_HEIGHT)
-        f_lane_num = pydaw_clip_value(f_lane_num, 0, project.TRACK_COUNT_ALL)
+        f_lane_num = pydaw_clip_value(
+            f_lane_num, 0, project.TRACK_COUNT_ALL - 1)
         TRACK_PANEL.tracks[f_lane_num].check_output()
 
         f_restart = False
@@ -1906,10 +1907,13 @@ class ItemSequencer(QGraphicsView):
                     f_lane_num, f_beat_frac, f_length, f_item_uid)
                 CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
                 f_item = pydaw_audio_item(
-                    f_uid, a_start_bar=0, a_start_beat=0.0,
-                    a_lane_num=0)
+                    f_uid, a_start_bar=0, a_start_beat=0.0, a_lane_num=0)
                 f_items.add_item(f_index, f_item)
                 PROJECT.save_item_by_uid(f_item_uid, f_items)
+
+                f_lane_num += 1
+                if f_lane_num >= project.TRACK_COUNT_ALL:
+                    break
 
         PROJECT.save_region(CURRENT_REGION, a_notify=not f_restart)
         PROJECT.commit("Added audio items")
@@ -8714,6 +8718,8 @@ class pydaw_main_window(QScrollArea):
                 PROJECT.get_routing_graph(), TRACK_NAMES)
         elif f_index == 3:
             global_open_mixer()
+
+        AUDIO_SEQ_WIDGET.set_multiselect(not f_index)
 
     def on_edit_notes(self, a_event=None):
         QTextEdit.leaveEvent(self.notes_tab, a_event)
