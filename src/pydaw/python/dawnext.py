@@ -1878,14 +1878,14 @@ class ItemSequencer(QGraphicsView):
             REGION_EDITOR_TRACK_HEIGHT)
         f_lane_num = pydaw_clip_value(
             f_lane_num, 0, project.TRACK_COUNT_ALL - 1)
-        TRACK_PANEL.tracks[f_lane_num].check_output()
 
         f_restart = False
 
         for f_file_name in a_item_list:
             f_file_name_str = str(f_file_name)
             f_item_name = os.path.basename(f_file_name_str)
-            if not f_file_name_str is None and not f_file_name_str == "":
+            if f_file_name_str:
+                TRACK_PANEL.tracks[f_lane_num].check_output()
                 f_item_uid = PROJECT.create_empty_item(f_item_name)
                 f_items = PROJECT.get_item_by_uid(f_item_uid)
                 f_index = f_items.get_next_index()
