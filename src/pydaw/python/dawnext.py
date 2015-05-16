@@ -4497,6 +4497,9 @@ class audio_items_viewer(QGraphicsView):
         return False
 
     def sceneDropEvent(self, a_event):
+        if not ITEM_EDITOR.enabled:
+            ITEM_EDITOR.show_not_enabled_warning()
+            return
         if AUDIO_ITEMS_TO_DROP:
             f_x = a_event.scenePos().x()
             f_y = a_event.scenePos().y()
