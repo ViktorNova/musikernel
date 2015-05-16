@@ -1879,6 +1879,8 @@ class ItemSequencer(QGraphicsView):
         f_lane_num = pydaw_clip_value(f_lane_num, 0, project.TRACK_COUNT_ALL)
         TRACK_PANEL.tracks[f_lane_num].check_output()
 
+        f_restart = False
+
         for f_file_name in a_item_list:
             f_file_name_str = str(f_file_name)
             f_item_name = os.path.basename(f_file_name_str)
@@ -1895,6 +1897,10 @@ class ItemSequencer(QGraphicsView):
 
                 f_uid = libmk.PROJECT.get_wav_uid_by_name(f_file_name_str)
                 f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_uid)
+                f_delta = datetime.timedelta(
+                    seconds=f_graph.length_in_seconds)
+                if not f_restart and libmk.add_entropy(f_delta):
+                    f_restart = True
                 f_length = f_graph.length_in_seconds / f_seconds_per_beat
                 f_item_ref = project.pydaw_sequencer_item(
                     f_lane_num, f_beat_frac, f_length, f_item_uid)
@@ -1905,10 +1911,13 @@ class ItemSequencer(QGraphicsView):
                 f_items.add_item(f_index, f_item)
                 PROJECT.save_item_by_uid(f_item_uid, f_items)
 
-        PROJECT.save_region(CURRENT_REGION)
+        PROJECT.save_region(CURRENT_REGION, a_notify=not f_restart)
         PROJECT.commit("Added audio items")
         REGION_SETTINGS.open_region()
         self.last_open_dir = os.path.dirname(f_file_name_str)
+
+        if f_restart:
+            libmk.restart_engine()
 
     def get_beat_value(self):
         return self.playback_pos
