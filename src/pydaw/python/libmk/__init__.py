@@ -12,6 +12,7 @@ GNU General Public License for more details.
 
 """
 
+import datetime
 import os
 from libpydaw import pydaw_util
 
@@ -36,6 +37,29 @@ PROJECT = None
 PLUGIN_UI_DICT = None
 CURRENT_HOST = 0
 TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
+MEMORY_ENTROPY = datetime.timedelta(minutes=0)
+MEMORY_ENTROPY_LIMIT = datetime.timedelta(minutes=30)
+
+def add_entropy(a_timedelta):
+    """ Use this to restart the engine and clean up the wav pool memory
+
+        This returns a bool, to avoid restarting the engine at an
+        inopportune time.  It is the responsibility of the caller to
+        also call
+    """
+    global MEMORY_ENTROPY
+    MEMORY_ENTROPY += a_timedelta
+    if MEMORY_ENTROPY > MEMORY_ENTROPY_LIMIT:
+        print("Recording entropy exceeded, restarting engine "
+            "to clean and defragment memory")
+        MEMORY_ENTROPY = datetime.timedelta(minutes=0)
+        return True
+    else:
+        return False
+
+def restart_engine():
+    close_pydaw_engine()
+    reopen_pydaw_engine()
 
 def prepare_to_quit():
     global MAIN_WINDOW, TRANSPORT, IPC, OSC, PROJECT

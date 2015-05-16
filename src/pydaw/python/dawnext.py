@@ -8228,9 +8228,7 @@ MREC_EVENTS = []
 
 class transport_widget(libmk.AbstractTransport):
     def __init__(self):
-        self.recording_entropy = datetime.timedelta(minutes=0)
         self.recording_timestamp = None
-        self.recording_limit = datetime.timedelta(minutes=30)
         self.suppress_osc = True
         self.last_open_dir = global_home
         self.group_box = QGroupBox()
@@ -8324,10 +8322,7 @@ class transport_widget(libmk.AbstractTransport):
                 f_stop_time = datetime.datetime.now()
                 f_delta = (f_stop_time -
                     self.recording_timestamp) * f_audio_count
-                self.recording_entropy += f_delta
-                if self.recording_entropy > self.recording_limit:
-                    f_restart_engine = True
-                    self.recording_entropy = datetime.timedelta(minutes=0)
+                f_restart_engine = libmk.add_entropy(f_delta)
             if self.rec_end is None:
                 self.rec_end = round(SEQUENCER.get_beat_value() + 0.5)
             self.show_save_items_dialog(a_restart=f_restart_engine)
@@ -8355,10 +8350,7 @@ class transport_widget(libmk.AbstractTransport):
                 f_inputs, f_sample_count, f_file_name)
             REGION_SETTINGS.open_region()
             if a_restart:
-                print("Recording entropy exceeded, restarting engine "
-                        "to clean and defragment memory")
-                libmk.close_pydaw_engine()
-                libmk.reopen_pydaw_engine()
+                libmk.restart_engine()
             f_window.close()
 
         def text_edit_handler(a_val=None):
