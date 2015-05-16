@@ -624,8 +624,6 @@ class SequencerItem(QGraphicsRectItem):
         self.is_stretching = False
         self.set_brush()
         self.waveforms_scaled = False
-        self.is_amp_curving = False
-        self.is_amp_dragging = False
         self.event_pos_orig = None
         self.width_orig = None
         self.quantize_offset = 0.0
@@ -1052,11 +1050,7 @@ class SequencerItem(QGraphicsRectItem):
     def mouseMoveEvent(self, a_event):
         if libmk.IS_PLAYING or self.event_pos_orig is None:
             return
-        if self.is_amp_curving or self.is_amp_dragging:
-            f_pos = a_event.pos()
-            f_y = f_pos.y()
-            f_diff_y = self.orig_y - f_y
-            f_val = (f_diff_y * 0.05)
+
         f_event_pos = a_event.pos().x()
         f_event_diff = f_event_pos - self.event_pos_orig
 
@@ -3288,7 +3282,6 @@ class audio_viewer_item(QGraphicsRectItem):
             self.stretch_handle.setToolTip("")
 
     def clip_at_region_end(self):
-        f_current_region_length = pydaw_get_current_region_length()
         f_max_x = CURRENT_ITEM_LEN * AUDIO_PX_PER_BEAT
         f_pos_x = self.pos().x()
         f_end = f_pos_x + self.rect().width()
@@ -4609,7 +4602,7 @@ class audio_items_viewer(QGraphicsView):
                 f_end_x, 0.0, f_end_x, AUDIO_RULER_HEIGHT, self.ruler)
             f_end_line.setPen(END_PEN)
         f_v_pen = QPen(QtCore.Qt.black)
-        f_beat_pen = QPen(QColor(210, 210, 210))
+        #f_beat_pen = QPen(QColor(210, 210, 210))
         f_16th_pen = QPen(QColor(120, 120, 120))
         f_reg_pen = QPen(QtCore.Qt.white)
         f_total_height = (AUDIO_ITEM_LANE_COUNT *
