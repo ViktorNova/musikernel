@@ -82,8 +82,10 @@ ENGINE_LIB_CALLBACK_SIG = None
 
 def load_engine_lib(a_engine_callback):
     global ENGINE_LIB, ENGINE_LIB_CALLBACK, ENGINE_LIB_CALLBACK_SIG
-    ENGINE_LIB = ctypes.CDLL(os.path.join(
-        MKENGINE_DIR, "{}.so".format(global_pydaw_version_string)))
+    f_dll = os.path.join(
+        MKENGINE_DIR, "{}.so".format(global_pydaw_version_string))
+    print("Using {}".format(f_dll))
+    ENGINE_LIB = ctypes.CDLL(f_dll)
     ENGINE_LIB.main.restype = ctypes.c_int
     ENGINE_LIB.main.argstype = [ctypes.c_int, ctypes.POINTER(ctypes.c_char_p)]
     ENGINE_LIB.v_configure.argstype = [
