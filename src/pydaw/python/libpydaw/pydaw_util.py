@@ -80,10 +80,19 @@ ENGINE_LIB_THREAD = None
 ENGINE_LIB_CALLBACK = None
 ENGINE_LIB_CALLBACK_SIG = None
 
+if IS_CYGWIN:
+    DLL_EXT = ".dll"
+elif IS_WINDOWS:
+    DLL_EXT = ".dll"
+elif IS_LINUX:
+    DLL_EXT = ".so"
+elif IS_MAC_OSX:
+    DLL_EXT = ".dylib"
+
 def load_engine_lib(a_engine_callback):
     global ENGINE_LIB, ENGINE_LIB_CALLBACK, ENGINE_LIB_CALLBACK_SIG
-    f_dll = os.path.join(
-        MKENGINE_DIR, "{}.so".format(global_pydaw_version_string))
+    f_dll_name = "{}{}".format(global_pydaw_version_string, DLL_EXT)
+    f_dll = os.path.join(MKENGINE_DIR, f_dll_name)
     print("Using {}".format(f_dll))
     ENGINE_LIB = ctypes.CDLL(f_dll)
     ENGINE_LIB.main.restype = ctypes.c_int
