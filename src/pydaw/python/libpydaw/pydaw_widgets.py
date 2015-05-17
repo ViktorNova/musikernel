@@ -146,20 +146,34 @@ class cc_mapping:
 
 
 class PixmapKnobCache:
-    def __init__(self, a_path):
+    def __init__(self, a_path, a_background=None):
         self.cache = {}
+        self.background_cache = {}
         self.path = a_path
+        self.background_path = a_background
         self.knob_pixmap = None
+        self.background_pixmap = None
+        print(locals())
 
-    def get_scaled_pixmap_knob(self, a_size):
+    def get_scaled_pixmap_knob(self, a_size, a_background=False):
+        if a_background and not self.background_path:
+            return None
         # hack to get around creating a QApplication first
-        if not self.knob_pixmap:
+        if not a_background and not self.knob_pixmap:
             self.knob_pixmap = QPixmap(self.path)
-        if not a_size in self.cache:
-            self.cache[a_size] = self.knob_pixmap.scaled(
+        elif a_background and not self.background_pixmap:
+            self.background_pixmap = QPixmap(self.background_path)
+        if a_background:
+            f_cache = self.background_cache
+            f_pixmap = self.background_pixmap
+        else:
+            f_cache = self.cache
+            f_pixmap = self.knob_pixmap
+        if not a_size in f_cache:
+            f_cache[a_size] = f_pixmap.scaled(
                 a_size, a_size,
                 QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-        return self.cache[a_size]
+        return f_cache[a_size]
 
 DEFAULT_KNOB_PIXMAP_CACHE = PixmapKnobCache(
     os.path.join(pydaw_util.global_stylesheet_dir, "pydaw-knob.png"))
@@ -185,6 +199,8 @@ class pydaw_pixmap_knob(QDial):
         self.pixmap_size = a_size - 10
         self.pixmap = self.pixmap_cache.get_scaled_pixmap_knob(
             self.pixmap_size)
+        self.background_pixmap = self.pixmap_cache.get_scaled_pixmap_knob(
+            self.pixmap_size, True)
         self.setFixedSize(a_size, a_size)
 
     def keyPressEvent(self, a_event):
@@ -194,6 +210,8 @@ class pydaw_pixmap_knob(QDial):
 
     def paintEvent(self, a_event):
         p = QPainter(self)
+        if self.background_pixmap:
+            p.drawPixmap(0, 0, self.background_pixmap)
         f_frac_val = (((float)(self.value() - self.minimum())) /
             ((float)(self.maximum() - self.minimum())))
         f_rotate_value = f_frac_val * 270.0
