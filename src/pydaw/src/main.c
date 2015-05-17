@@ -74,7 +74,7 @@ static float **pluginOutputBuffers;
 
 t_midi_device_list MIDI_DEVICES;
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(MK_DLL)
 static sigset_t _signals;
 #endif
 
@@ -413,7 +413,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         }
     }
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(MK_DLL)
     if(setpriority(PRIO_PROCESS, 0, -20))
     {
         printf("Unable to renice process (this was to be expected if "
@@ -448,6 +448,12 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     sigaddset(&_signals, SIGUSR1);
     sigaddset(&_signals, SIGUSR2);
     pthread_sigmask(SIG_BLOCK, &_signals, 0);
+
+    signal(SIGINT, signalHandler);
+    signal(SIGTERM, signalHandler);
+    signal(SIGHUP, signalHandler);
+    signal(SIGQUIT, signalHandler);
+    pthread_sigmask(SIG_UNBLOCK, &_signals, 0);
 #endif
 
 
@@ -745,14 +751,6 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     free(f_key_char);
     free(f_value_char);
 
-#ifdef __linux__
-    signal(SIGINT, signalHandler);
-    signal(SIGTERM, signalHandler);
-    signal(SIGHUP, signalHandler);
-    signal(SIGQUIT, signalHandler);
-    pthread_sigmask(SIG_UNBLOCK, &_signals, 0);
-#endif
-
     v_pydaw_activate(f_thread_count, f_thread_affinity, argv[2],
         sample_rate, &MIDI_DEVICES, 1);
 
@@ -852,11 +850,13 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     }
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(MK_DLL)
+
     sigemptyset (&_signals);
     sigaddset(&_signals, SIGHUP);
     pthread_sigmask(SIG_BLOCK, &_signals, 0);
     kill(0, SIGHUP);
+
 #endif
 
     printf("MusiKernel main() returning\n\n\n");
