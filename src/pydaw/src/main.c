@@ -486,7 +486,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     sprintf(f_device_file_path, "%s/%s/config/device.txt",
         f_home, MUSIKERNEL_VERSION);
 
-    char f_device_name[1024];
+    char f_device_name[256];
     f_device_name[0] = '\0';
 
     int f_frame_count = DEFAULT_FRAMES_PER_BUFFER;
@@ -508,6 +508,16 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     char * f_key_char = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
     char * f_value_char = (char*)malloc(sizeof(char) * PYDAW_TINY_STRING);
 
+    int f_api_count = Pa_GetHostApiCount();
+    int f_host_api_index = -1;
+
+    char f_host_apis[f_api_count][256];
+
+    for(f_i = 0; f_i < f_api_count; ++f_i)
+    {
+        snprintf(f_host_apis[f_i], 256, "%s", Pa_GetHostApiInfo(f_i)->name);
+    }
+
     while(1)
     {
         if(i_pydaw_file_exists(f_device_file_path))
@@ -516,6 +526,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
             t_2d_char_array * f_current_string = g_get_2d_array_from_file(
                     f_device_file_path, PYDAW_LARGE_STRING);
             f_device_name[0] = '\0';
+            f_host_api_index = -1;
 
             while(1)
             {
@@ -534,9 +545,21 @@ NO_OPTIMIZATION int main(int argc, char **argv)
                 v_iterate_2d_char_array_to_next_line(f_current_string);
                 strcpy(f_value_char, f_current_string->current_str);
 
-                if(!strcmp(f_key_char, "name"))
+                if(!strcmp(f_key_char, "hostApi"))
                 {
-                    sprintf(f_device_name, "%s", f_value_char);
+                    for(f_i = 0; f_i < f_api_count; ++f_i)
+                    {
+                        if(!strcmp(f_value_char, f_host_apis[f_i]))
+                        {
+                            f_host_api_index = f_i;
+                            break;
+                        }
+                    }
+                    printf("host api: %s\n", f_value_char);
+                }
+                else if(!strcmp(f_key_char, "name"))
+                {
+                    snprintf(f_device_name, 256, "%s", f_value_char);
                     printf("device name: %s\n", f_device_name);
                 }
                 else if(!strcmp(f_key_char, "bufferSize"))
@@ -655,19 +678,18 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         outputParameters.sampleFormat = PA_SAMPLE_TYPE;
         outputParameters.hostApiSpecificStreamInfo = NULL;
 
-        f_i = 0;
         int f_found_index = 0;
-        while(f_i < Pa_GetDeviceCount())
+        for(f_i = 0; f_i < Pa_GetDeviceCount(); ++f_i)
         {
             const PaDeviceInfo * f_padevice = Pa_GetDeviceInfo(f_i);
-            if(!strcmp(f_padevice->name, f_device_name))
+            if(!strcmp(f_padevice->name, f_device_name) &&
+               f_host_api_index == f_padevice->hostApi)
             {
                 outputParameters.device = f_i;
                 inputParameters.device = f_i;
                 f_found_index = 1;
                 break;
             }
-            ++f_i;
         }
 
         if(!f_found_index)
