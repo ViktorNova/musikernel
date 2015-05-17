@@ -511,10 +511,12 @@ class pydaw_device_dialog:
             elif pydaw_util.IS_LINUX:
                 f_worker_threads = f_worker_threads_combobox.currentIndex()
                 f_audio_engine = f_audio_engine_combobox.currentIndex()
-                f_thread_affinity = 1 if \
-                    f_thread_affinity_checkbox.isChecked() else 0
+                f_thread_affinity = \
+                    1 if f_thread_affinity_checkbox.isChecked() else 0
                 f_performance = 1 if f_governor_checkbox.isChecked() else 0
                 f_hugepages = 1 if f_hugepages_checkbox.isChecked() else 0
+            elif pydaw_util.IS_CYGWIN:
+                f_audio_engine = 0
             f_audio_inputs = f_audio_in_spinbox.value()
 
             try:
