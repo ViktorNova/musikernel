@@ -52,8 +52,9 @@ eng:
 
 lib:
 	rm -f src/*.o $(PYDAW_VERSION)-engine ; echo
-	make CFLAGS+=" -O0 -g -gdwarf-3 -fPIC -DMK_DLL " \
+	make CFLAGS+=" -O2 -fPIC -DMK_DLL " \
 		LDFLAGS+=" -shared " $(PYDAW_VERSION)-engine
+	mv $(PYDAW_VERSION)-engine.exe $(PYDAW_VERSION).dll || \
 	mv $(PYDAW_VERSION)-engine $(PYDAW_VERSION).so
 
 mingw64:
@@ -85,6 +86,8 @@ install:
 	$(DESTDIR)$(PREFIX)/bin/$(PYDAW_VERSION)-engine-no-root
 	cp -r python $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/mkengine
+	install -m 644 $(PYDAW_VERSION).dll \
+		$(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/mkengine || \
 	install -m 644 $(PYDAW_VERSION).so \
 		$(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/mkengine
 	cp -r themes $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
