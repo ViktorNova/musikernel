@@ -292,25 +292,25 @@ class pydaw_device_dialog:
         f_tab_widget.addTab(f_midi_in_tab, _("MIDI In"))
         f_midi_in_layout = QVBoxLayout(f_midi_in_tab)
 
-        f_window_layout.addWidget(QLabel(_("Host API:")), 2, 0)
+        f_window_layout.addWidget(QLabel(_("Host API")), 2, 0)
         f_subsystem_combobox = QComboBox()
         f_subsystem_combobox.setToolTip(HOST_API_TOOLTIP)
         f_subsystem_combobox.setMinimumWidth(390)
         f_window_layout.addWidget(f_subsystem_combobox, 2, 1)
 
-        f_window_layout.addWidget(QLabel(_("Audio Device:")), 5, 0)
+        f_window_layout.addWidget(QLabel(_("Audio Device")), 5, 0)
         f_device_name_combobox = QComboBox()
         f_device_name_combobox.setToolTip(DEVICE_TOOLTIP)
         f_device_name_combobox.setMinimumWidth(390)
         f_window_layout.addWidget(f_device_name_combobox, 5, 1)
-        f_window_layout.addWidget(QLabel(_("Sample Rate:")), 10, 0)
+        f_window_layout.addWidget(QLabel(_("Sample Rate")), 10, 0)
         f_samplerate_combobox = QComboBox()
         f_samplerate_combobox.addItems(self.sample_rates)
         f_window_layout.addWidget(f_samplerate_combobox, 10, 1)
         f_buffer_size_combobox = QComboBox()
         f_buffer_size_combobox.addItems(self.buffer_sizes)
         f_buffer_size_combobox.setCurrentIndex(4)
-        f_window_layout.addWidget(QLabel(_("Buffer Size:")), 20, 0)
+        f_window_layout.addWidget(QLabel(_("Buffer Size")), 20, 0)
         f_window_layout.addWidget(f_buffer_size_combobox, 20, 1)
         f_latency_label = QLabel("")
         f_window_layout.addWidget(f_latency_label, 20, 2)
@@ -326,7 +326,7 @@ class pydaw_device_dialog:
             f_window_layout.addWidget(f_audio_engine_combobox, 40, 1)
 
         if pydaw_util.IS_LINUX:
-            f_window_layout.addWidget(QLabel(_("Worker Threads:")), 30, 0)
+            f_window_layout.addWidget(QLabel(_("Worker Threads")), 30, 0)
             f_worker_threads_combobox = QComboBox()
             f_worker_threads_combobox.addItems(
                 [_("Auto")] + [str(x) for x in range(1, 9)])
