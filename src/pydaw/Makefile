@@ -59,6 +59,7 @@ lib:
 
 mingw64:
 	make PLAT_LINK_CFLAGS=" -static-libgcc " CFLAGS+=" -m64 " lib
+	mv $(PYDAW_VERSION).so $(PYDAW_VERSION).dll
 
 # --------------------------------------------------------------
 
