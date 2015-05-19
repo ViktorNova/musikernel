@@ -10,9 +10,17 @@ pacman -S libraries
 git clone https://github.com/Alexpux/MINGW-packages
 
 cd {dependencies, one at time}
-makepkg -Cfs
+makepkg-mingw -Cfs
 ...
 
 # Pacman and makepkg both break all the fucking time for no reason,
 # however, they're still better than Visual Studio
+
+# NOT YET TESTED:
+
+MKROOT=/musikernel1
+
+for package in packages:
+  pacman -Ur ${MKROOT}  ${package}*.pkg.tar.xz
+
 
