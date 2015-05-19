@@ -13,10 +13,12 @@ pacman -Su
 # random pacman run failing
 
 pacman -S base-devel
-pacman -S mingw-w64
+pacman -S mingw-w64  # is this really needed?
+pacman -S mingw-w64-x86_64-toolchain
+pacman -S mingw-w64-i686-toolchain
 pacman -S libraries
 pacman -S git
-pacman -S python   #this is python3
+pacman -S python   # this is python3
 git clone https://github.com/Alexpux/MINGW-packages.git
 
 # Dependencies:
