@@ -57,7 +57,12 @@ GNU General Public License for more details.
 #include "../include/pydaw_plugin.h"
 #include "../libmodsynth/lib/lmalloc.h"
 #include "mk_threads.h"
-#include "midi_device.h"
+
+#ifndef NO_MIDI
+    #include "midi_device.h"
+    t_midi_device_list MIDI_DEVICES;
+    PmError f_midi_err;
+#endif
 
 #define CLOCKID CLOCK_REALTIME
 #define SIG SIGRTMIN
@@ -72,14 +77,13 @@ GNU General Public License for more details.
 static float **pluginOutputBuffers;
 
 
-t_midi_device_list MIDI_DEVICES;
+
 
 #if defined(__linux__) && !defined(MK_DLL)
 static sigset_t _signals;
 #endif
 
 int PYDAW_NO_HARDWARE = 0;
-PmError f_midi_err;
 
 #ifndef MK_DLL
 lo_server_thread serverThread;
@@ -478,8 +482,11 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     //if( err != paNoError ) goto error;
     /* default input device */
 
+#ifndef NO_MIDI
     /*Initialize Portmidi*/
     f_midi_err = Pm_Initialize();
+    MIDI_DEVICES.count = 0;
+#endif
 
     char f_midi_device_name[1024];
     sprintf(f_midi_device_name, "None");
@@ -497,8 +504,6 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 
     int f_frame_count = DEFAULT_FRAMES_PER_BUFFER;
     int f_audio_input_count = 0;
-
-    MIDI_DEVICES.count = 0;
 
 #ifndef MK_DLL
 
@@ -618,6 +623,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
                 }
                 else if(!strcmp(f_key_char, "midiInDevice"))
                 {
+#ifndef NO_MIDI
                     sprintf(f_midi_device_name, "%s", f_value_char);
                     printf("midiInDevice: %s\n", f_value_char);
                     int f_device_result = midiDeviceInit(
@@ -650,6 +656,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
                     }
 
                     ++MIDI_DEVICES.count;
+#endif
                 }
                 else if(!strcmp(f_key_char, "audioInputs"))
                 {
@@ -751,8 +758,13 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     free(f_key_char);
     free(f_value_char);
 
+#ifdef NO_MIDI
+    v_pydaw_activate(f_thread_count, f_thread_affinity, argv[2],
+        sample_rate, NULL, 1);
+#else
     v_pydaw_activate(f_thread_count, f_thread_affinity, argv[2],
         sample_rate, &MIDI_DEVICES, 1);
+#endif
 
     v_queue_osc_message("ready", "");
 
@@ -830,6 +842,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 
     Pa_Terminate();
 
+#ifndef NO_MIDI
     f_i = 0;
     while(f_i < MIDI_DEVICES.count)
     {
@@ -841,6 +854,8 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     }
 
     Pm_Terminate();
+#endif
+
     v_pydaw_destructor();
 
 #ifdef PYDAW_CPUFREQ

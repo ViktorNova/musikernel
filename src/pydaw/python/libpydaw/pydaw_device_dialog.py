@@ -172,15 +172,17 @@ class pydaw_device_dialog:
             ctypes.POINTER(portaudio.PaStreamParameters), ctypes.c_double]
         self.pyaudio.Pa_Initialize()
 
-        ctypes.cdll.LoadLibrary(f_pm_dll)
-        self.pypm = ctypes.CDLL(f_pm_dll)
-        self.pypm.Pm_GetDeviceInfo.restype = ctypes.POINTER(
-            portmidi.PmDeviceInfo)
-        self.pypm.Pm_Initialize()
+        if not pydaw_util.IS_WINDOWS:
+            ctypes.cdll.LoadLibrary(f_pm_dll)
+            self.pypm = ctypes.CDLL(f_pm_dll)
+            self.pypm.Pm_GetDeviceInfo.restype = ctypes.POINTER(
+                portmidi.PmDeviceInfo)
+            self.pypm.Pm_Initialize()
 
     def close_devices(self):
         self.pyaudio.Pa_Terminate()
-        self.pypm.Pm_Terminate()
+        if not pydaw_util.IS_WINDOWS:
+            self.pypm.Pm_Terminate()
 
     def check_device(self, a_splash_screen=None):
         if not pydaw_util.global_device_val_dict:
@@ -288,9 +290,10 @@ class pydaw_device_dialog:
         f_tab_widget.addTab(f_audio_in_tab, _("Audio In"))
         f_audio_in_layout = QGridLayout(f_audio_in_tab)
 
-        f_midi_in_tab = QTabWidget()
-        f_tab_widget.addTab(f_midi_in_tab, _("MIDI In"))
-        f_midi_in_layout = QVBoxLayout(f_midi_in_tab)
+        if not pydaw_util.IS_WINDOWS:
+            f_midi_in_tab = QTabWidget()
+            f_tab_widget.addTab(f_midi_in_tab, _("MIDI In"))
+            f_midi_in_layout = QVBoxLayout(f_midi_in_tab)
 
         f_window_layout.addWidget(QLabel(_("Host API")), 2, 0)
         f_subsystem_combobox = QComboBox()
@@ -431,25 +434,28 @@ class pydaw_device_dialog:
 
         self.midi_in_checkboxes = {}
 
-        for loop in range(self.pypm.Pm_CountDevices()):
-            f_midi_device = self.pypm.Pm_GetDeviceInfo(loop)
-            f_midi_device_name = f_midi_device.contents.name.decode("utf-8")
-#            print("DeviceID: {} Name: '{}' Input?: {} "
-#                "Output?: {} Opened: {} ".format(
-#                loop, f_midi_device_name, f_midi_device.contents.input,
-#                f_midi_device.contents.output, f_midi_device.contents.opened))
-            if f_midi_device.contents.input == 1:
-                f_checkbox = QCheckBox(f_midi_device_name)
-                if f_midi_device_name in pydaw_util.MIDI_IN_DEVICES:
-                    f_checkbox.setChecked(True)
-                self.midi_in_checkboxes[f_midi_device_name] = f_checkbox
+        if not pydaw_util.IS_WINDOWS:
+            for loop in range(self.pypm.Pm_CountDevices()):
+                f_midi_device = self.pypm.Pm_GetDeviceInfo(loop)
+                f_midi_device_name = \
+                    f_midi_device.contents.name.decode("utf-8")
+#                print("DeviceID: {} Name: '{}' Input?: {} "
+#                    "Output?: {} Opened: {} ".format(
+#                    loop, f_midi_device_name, f_midi_device.contents.input,
+#                    f_midi_device.contents.output,
+#                    f_midi_device.contents.opened))
+                if f_midi_device.contents.input == 1:
+                    f_checkbox = QCheckBox(f_midi_device_name)
+                    if f_midi_device_name in pydaw_util.MIDI_IN_DEVICES:
+                        f_checkbox.setChecked(True)
+                    self.midi_in_checkboxes[f_midi_device_name] = f_checkbox
 
-        for f_cbox in sorted(
-        self.midi_in_checkboxes, key=lambda x: x.lower()):
-            f_midi_in_layout.addWidget(self.midi_in_checkboxes[f_cbox])
+            for f_cbox in sorted(
+            self.midi_in_checkboxes, key=lambda x: x.lower()):
+                f_midi_in_layout.addWidget(self.midi_in_checkboxes[f_cbox])
 
-        f_midi_in_layout.addItem(
-            QSpacerItem(1, 1, vPolicy=QSizePolicy.Expanding))
+            f_midi_in_layout.addItem(
+                QSpacerItem(1, 1, vPolicy=QSizePolicy.Expanding))
 
         def latency_changed(a_self=None, a_val=None):
             f_sample_rate = float(str(f_samplerate_combobox.currentText()))
@@ -496,14 +502,16 @@ class pydaw_device_dialog:
             f_buffer_size = int(str(f_buffer_size_combobox.currentText()))
             f_samplerate = int(str(f_samplerate_combobox.currentText()))
 
-            f_midi_in_devices = sorted(str(k)
-                for k, v in self.midi_in_checkboxes.items() if v.isChecked())
-            if len(f_midi_in_devices) >= 8:
-                QMessageBox.warning(
-                    f_window, _("Error"),
-                    _("Using more than 8 MIDI devices is not supported, "
-                    "please de-select some devices"))
-                return
+            if not pydaw_util.IS_WINDOWS:
+                f_midi_in_devices = sorted(str(k)
+                    for k, v in self.midi_in_checkboxes.items()
+                    if v.isChecked())
+                if len(f_midi_in_devices) >= 8:
+                    QMessageBox.warning(
+                        f_window, _("Error"),
+                        _("Using more than 8 MIDI devices is not supported, "
+                        "please de-select some devices"))
+                    return
             if pydaw_util.IS_WINDOWS:
                 f_audio_engine = 8
             elif pydaw_util.IS_MAC_OSX:
@@ -548,8 +556,10 @@ class pydaw_device_dialog:
                     f_file.write("hugePages|{}\n".format(f_hugepages))
                     f_file.write("performance|{}\n".format(f_performance))
                 f_file.write("audioInputs|{}\n".format(f_audio_inputs))
-                for f_midi_in_device in f_midi_in_devices:
-                    f_file.write("midiInDevice|{}\n".format(f_midi_in_device))
+                if not pydaw_util.IS_WINDOWS:
+                    for f_midi_in_device in f_midi_in_devices:
+                        f_file.write("midiInDevice|{}\n".format(
+                            f_midi_in_device))
 
                 f_file.write("\\")
                 f_file.close()

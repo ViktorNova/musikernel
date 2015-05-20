@@ -28,7 +28,7 @@ from PyQt5 import QtCore
 
 
 IS_CYGWIN = "cygwin" in sys.platform
-IS_WINDOWS = "win32" in sys.platform
+IS_WINDOWS = "win32" in sys.platform or "msys" in sys.platform
 IS_LINUX = "linux" in sys.platform
 IS_MAC_OSX = "darwin" in sys.platform
 
