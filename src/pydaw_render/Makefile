@@ -22,8 +22,8 @@ BASE_FLAGS     = -std=gnu89 $(OPTIMIZE_FLAGS) -ffast-math -funroll-loops \
 
 
 BUILD_CFLAGS   = $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
-LINK_CFLAGS    = -lm -lportmidi -fno-stack-protector \
-$(shell pkg-config --libs liblo sndfile fftw3f) $(LDFLAGS)
+LINK_CFLAGS    = -pthread -lm -fno-stack-protector \
+$(shell pkg-config --libs sndfile fftw3f) $(LDFLAGS)
 
 C_OBJS   = main.o
 
