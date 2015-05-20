@@ -20,6 +20,11 @@ GNU General Public License for more details.
 #define _GNU_SOURCE
 #endif
 
+// Prevent importing LibLo
+#define MK_DLL
+// Prevent importing Portmidi
+#define NO_MIDI
+
 #include "../pydaw/src/compiler.h"
 #include <stdio.h>
 #include <stdlib.h>
