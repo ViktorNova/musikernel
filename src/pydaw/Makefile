@@ -69,6 +69,33 @@ $(PYDAW_VERSION)-engine: $(C_OBJS)
 	$(CC) -c $< $(BUILD_CFLAGS) -o $@
 
 # --------------------------------------------------------------
+install_mingw:
+	rm -rf python/*.pyc python/libpydaw/*.pyc python/*~ \
+	python/libpydaw/*~ python/core python/*/__pycache__ \
+	python/mkplugins/__pycache__
+	install -d $(DESTDIR)$(PREFIX)/bin
+	install -m 755 $(PYDAW_VERSION) $(DESTDIR)$(PREFIX)/bin
+	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
+	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw
+	cp -r python $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw
+	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/mkengine
+	install -m 555 $(PYDAW_VERSION).dll \
+		$(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/mkengine || \
+	install -m 555 $(PYDAW_VERSION).so \
+		$(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw/mkengine
+	cp -r themes $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
+	cp -r presets $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
+	cp -r share $(DESTDIR)$(PREFIX)
+	#locale/Makefile.py $(DESTDIR)$(PREFIX)
+	install -m 644 ../major-version.txt \
+		$(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
+	install -m 644 ../minor-version.txt \
+		$(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
+	#Add the Git revision to the version.txt file if possible
+	@       if [ -e /usr/bin/git ] && [ -e ../../.git ]; then \
+                        echo "\n\nGit: " `/usr/bin/git rev-parse HEAD` >> \
+			$(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/minor-version.txt ; \
+                fi
 
 install:
 	rm -rf python/*.pyc python/libpydaw/*.pyc python/*~ \

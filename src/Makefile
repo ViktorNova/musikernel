@@ -74,7 +74,7 @@ install:
 
 install_mingw:
 	install -d $(MK_DIR)
-	make -C pydaw PREFIX=$(PREFIX) DESTDIR=$(DESTDIR) install
+	make -C pydaw PREFIX=$(PREFIX) DESTDIR=$(DESTDIR) install_mingw
 	make -C pydaw_render DESTDIR=$(DESTDIR) PREFIX=$(PREFIX) install
 
 # --------------------------------------------------------------
