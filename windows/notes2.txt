@@ -12,6 +12,8 @@ pacman -Su
 # Done on separate lines because there is a solid chance of any
 # random pacman run failing
 
+# TODO:  Equivalent to yum/dnf -y switch?
+
 pacman -S base-devel
 pacman -S mingw-w64  # is this really needed?
 pacman -S mingw-w64-x86_64-toolchain
@@ -22,16 +24,15 @@ pacman -S python   # this is python3
 git clone https://github.com/Alexpux/MINGW-packages.git
 
 # Dependencies:
-python3
 pyqt5
 numpy
-qt5 (bundled with pyqt5?)
 fftw
+libsndfile
 portaudio
 portmidi (from where?  Or should I allow building without MIDI support?
     Or http://stackoverflow.com/questions/18156694/trying-to-build-a-portmidi-example-in-mingw)
 libvorbis
-libsndfile
+
 
 for dependency in dependencies:
   cd dependency
@@ -46,4 +47,7 @@ for dependency in dependencies:
 # down versions of those directories for packaging with NSIS?
 # TODO:  Are the directories relocatable?
 # TODO:  PKGBUILD for MusiKernel?
+
+# TODO:  Set package root?
+pacman -Syr /musikernel1 {packages}
 
