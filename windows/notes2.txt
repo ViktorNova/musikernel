@@ -14,6 +14,8 @@ pacman -Su
 
 # TODO:  Equivalent to yum/dnf -y switch?
 
+# UPDATE: most of these are available from pacman
+
 pacman -S base-devel
 pacman -S mingw-w64  # is this really needed?
 pacman -S mingw-w64-x86_64-toolchain
@@ -50,4 +52,12 @@ for dependency in dependencies:
 
 # TODO:  Set package root?
 pacman -Syr /musikernel1 {packages}
+
+# Building MusiKernel
+
+export PATH="/mingw64/bin:$PATH"
+CC=/mingw64/bin/gcc /mingw64/bin/mingw32-make
+
+export PATH="/mingw32/bin:$PATH"
+CC=/mingw32/bin/gcc /mingw32/bin/mingw32-make
 
