@@ -492,11 +492,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 
     char f_device_file_path[2048];
 
-#if defined(_WIN32) || defined(__MINGW32__)
-    char * f_home = getenv("USERPROFILE");
-#else
-    char * f_home = getenv("HOME");
-#endif
+    char * f_home = get_home_dir();
 
     printf("using home folder: %s\n", f_home);
 

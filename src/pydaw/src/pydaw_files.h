@@ -386,7 +386,7 @@ typedef struct
 void get_file_setting(char * a_dest, char * a_name, char * a_default)
 {
     char f_path[2048];
-    char * f_home = getenv("HOME");
+    char * f_home = get_home_dir();
 
     sprintf(f_path, "%s/%s/config/%s.txt", f_home, MUSIKERNEL_VERSION, a_name);
 

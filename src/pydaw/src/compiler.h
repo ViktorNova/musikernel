@@ -82,5 +82,17 @@ inline void prefetch_range(void *addr, size_t len)
 
 #endif
 
+#if defined(_WIN32) || defined(__MINGW32__)
+    char * get_home_dir()
+    {
+        return getenv("USERPROFILE");
+    }
+#else
+    char * get_home_dir()
+    {
+        return getenv("HOME");
+    }
+#endif
+
 #endif	/* MK_COMPILER_H */
 
