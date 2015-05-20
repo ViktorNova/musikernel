@@ -61,3 +61,22 @@ CC=/mingw64/bin/gcc /mingw64/bin/mingw32-make
 export PATH="/mingw32/bin:$PATH"
 CC=/mingw32/bin/gcc /mingw32/bin/mingw32-make
 
+
+# The "it's almost running now" notes section:
+
+Compiling:
+skip deps builds and just know that functionality is missing right now
+FFS add my own Rubberband binary manually for now
+
+cd pydaw_render
+CC=/mingw64/bin/gcc.exe  /mingw64/bin/mingw32-make.exe
+
+# For some reason, specifying the variables isn't working, so I just edited
+# that shit manually for now
+cd pydaw
+PORTMIDI_FLAG= PLAT_LINK_CLFAGS= CC=/mingw64/bin/gcc.exe  /mingw64/bin/mingw32-make.exe lib
+
+#install
+make DESTDIR=/mingw64 PREFIX= install_mingw
+
+
