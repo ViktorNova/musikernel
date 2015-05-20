@@ -73,7 +73,8 @@ else:
     INSTALL_PREFIX = os.path.abspath(os.path.join(
         os.path.dirname(__file__), *([".."] * 5)))
 
-BIN_DIR = os.path.join(INSTALL_PREFIX, "bin")
+BIN_DIR = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), *(([".."] * 5) + ["bin"])))
 
 IS_ENGINE_LIB = False
 
