@@ -79,10 +79,9 @@ void v_open_project(const char* a_project_folder, int a_first_load)
 #endif
 }
 
-void v_pydaw_activate(int a_thread_count,
-        int a_set_thread_affinity, char * a_project_path,
-        float a_sr, t_midi_device_list * a_midi_devices,
-        int a_aux_threads)
+void v_pydaw_activate(
+        int a_thread_count, int a_set_thread_affinity, char * a_project_path,
+        float a_sr, t_midi_device_list * a_midi_devices, int a_aux_threads)
 {
     /* Instantiate hosts */
     g_musikernel_get(a_sr, a_midi_devices);

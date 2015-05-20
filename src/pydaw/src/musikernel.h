@@ -17,8 +17,17 @@ GNU General Public License for more details.
 #include "pydaw_files.h"
 #include "../libmodsynth/lib/lmalloc.h"
 #include "pydaw_plugin_wrapper.h"
-#include "midi_device.h"
 #include "pydaw_audio_inputs.h"
+
+#ifndef NO_MIDI
+    #include "midi_device.h"
+#else
+    #define t_midi_device void
+    #define t_midi_device_list void
+
+    void midiPoll(void * arg){}
+    void midiDeviceRead(void * arg1, float arg2, int arg3){}
+#endif
 
 #define MAX_WORKER_THREADS 8
 
@@ -686,6 +695,7 @@ void v_pydaw_set_host(int a_mode)
 
     musikernel->current_host = &musikernel->hosts[a_mode];
 
+#ifndef NO_MIDI
     if(musikernel->midi_devices)
     {
         for(f_i = 0; f_i < musikernel->midi_devices->count; ++f_i)
@@ -699,6 +709,7 @@ void v_pydaw_set_host(int a_mode)
 
         }
     }
+#endif
 
     pthread_spin_unlock(&musikernel->main_lock);
 

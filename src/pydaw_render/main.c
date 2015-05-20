@@ -25,7 +25,6 @@ GNU General Public License for more details.
 // Prevent importing Portmidi
 #define NO_MIDI
 
-#include "../pydaw/src/compiler.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sndfile.h>

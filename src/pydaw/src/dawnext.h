@@ -2845,6 +2845,8 @@ t_dn_routing_graph * g_dn_routing_graph_get(t_dawnext * self)
     return f_result;
 }
 
+#ifndef NO_MIDI
+
 void v_dn_set_midi_device(int a_on, int a_device, int a_output)
 {
     t_dawnext * self = dawnext;
@@ -2896,9 +2898,12 @@ void v_dn_set_midi_device(int a_on, int a_device, int a_output)
     }
 }
 
+#endif
 
 void v_dn_set_midi_devices()
 {
+#ifndef NO_MIDI
+
     char f_path[2048];
     int f_i, f_i2;
     t_midi_device * f_device;
@@ -2946,6 +2951,9 @@ void v_dn_set_midi_devices()
     }
 
     g_free_2d_char_array(f_current_string);
+
+#endif
+
 }
 
 
@@ -3157,6 +3165,7 @@ void v_dn_configure(const char* a_key, const char* a_value)
     }
     else if(!strcmp(a_key, DN_CONFIGURE_KEY_MIDI_DEVICE))
     {
+#ifndef NO_MIDI
         t_pydaw_line_split * f_val_arr = g_split_line('|', a_value);
         int f_on = atoi(f_val_arr->str_arr[0]);
         int f_device = atoi(f_val_arr->str_arr[1]);
@@ -3168,6 +3177,7 @@ void v_dn_configure(const char* a_key, const char* a_value)
         v_dn_set_midi_device(f_on, f_device, f_output);
 
         pthread_spin_unlock(&musikernel->main_lock);
+#endif
     }
     else
     {
