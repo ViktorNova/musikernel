@@ -319,7 +319,7 @@ typedef void (*v_ui_send_callback)(char * a_path, char * a_msg);
 #if defined(_WIN32) || defined(__MINGW32__)
 
 #warning "You're building for Windows"
-__declspec(dllexport) void v_set_ui_callback(v_ui_send_callback a_callback);
+void v_set_ui_callback(v_ui_send_callback a_callback);
 
 #endif
 

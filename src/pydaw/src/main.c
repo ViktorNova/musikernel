@@ -98,9 +98,8 @@ int osc_debug_handler(const char *path, const char *types, lo_arg **argv, int
 
 
 #if defined(_WIN32) || defined(__MINGW32__)
-__declspec(dllexport) int main(int argc, char **argv);
-__declspec(dllexport) int v_configure(
-    const char * path, const char * key, const char * value)
+int main(int argc, char **argv);
+int v_configure(const char * path, const char * key, const char * value)
 #endif
 
 
