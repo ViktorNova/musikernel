@@ -491,7 +491,12 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     sprintf(f_midi_device_name, "None");
 
     char f_device_file_path[2048];
+
+#if defined(_WIN32) || defined(__MINGW32__)
+    char * f_home = getenv("USERPROFILE");
+#else
     char * f_home = getenv("HOME");
+#endif
 
     printf("using home folder: %s\n", f_home);
 
