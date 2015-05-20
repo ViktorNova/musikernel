@@ -23,9 +23,9 @@ BUILD_CFLAGS   = -std=gnu89 $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
 MATH_LIB_FLAG ?= -lm
 RT_LIB_FLAG ?= -lrt
 ALSA_FLAG ?= $(shell pkg-config --libs alsa)
+LIBLO_FLAG ?= $(shell pkg-config --libs liblo)
 
-PLAT_LINK_CFLAGS ?= $(RT_LIB_FLAG) $(ALSA_FLAG) \
-$(shell pkg-config --libs liblo)
+PLAT_LINK_CFLAGS ?= $(RT_LIB_FLAG) $(ALSA_FLAG) $(LIBLO_FLAG)
 
 LINK_CFLAGS  = -lpthread -lportmidi -lportaudio $(LDFLAGS) \
 $(shell pkg-config --libs sndfile fftw3f) $(MATH_LIB_FLAG) \
@@ -41,7 +41,7 @@ all:
 	make eng
 
 dbg:
-	rm -f src/*.o $(PYDAW_VERSION)-engine  $(PYDAW_VERSION)-engine-dbg ; echo
+	rm -f src/*.o $(PYDAW_VERSION)-engine $(PYDAW_VERSION)-engine-dbg ; echo
 	make CFLAGS+=" -O0 -g -gdwarf-3 " $(PYDAW_VERSION)-engine
 	mv $(PYDAW_VERSION)-engine $(PYDAW_VERSION)-engine-dbg
 
@@ -56,10 +56,6 @@ lib:
 		LDFLAGS+=" -shared " $(PYDAW_VERSION)-engine
 	mv $(PYDAW_VERSION)-engine.exe $(PYDAW_VERSION).dll || \
 	mv $(PYDAW_VERSION)-engine $(PYDAW_VERSION).so
-
-mingw64:
-	make PLAT_LINK_CFLAGS=" -static-libgcc " CFLAGS+=" -m64 " lib
-	mv $(PYDAW_VERSION).so $(PYDAW_VERSION).dll
 
 # --------------------------------------------------------------
 

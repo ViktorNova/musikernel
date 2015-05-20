@@ -12,6 +12,14 @@ all:
 	make deps
 	make pydaw_src
 
+mingw64:
+	/mingw64/bin/mingw32-make.exe mingw_deps_clean
+	CC=/mingw64/bin/gcc.exe /mingw64/bin/mingw32-make.exe
+
+mingw32:
+	/mingw32/bin/mingw32-make.exe mingw_deps_clean
+	CC=/mingw32/bin/gcc.exe /mingw32/bin/mingw32-make.exe
+
 clang:
 	OPTIMIZE_FLAGS= CC=clang make
 
@@ -37,17 +45,23 @@ deb:
 # --------------------------------------------------------------
 
 deps:
-	make -C pydaw/midicomp && cp pydaw/midicomp/midicomp pydaw/python/libpydaw
+	make mingw_deps
 	cd pydaw/pyliblo-0.9.2 && python3 setup.py build && cp build/lib*/liblo* ../python/libpydaw
+
+mingw_deps:
+	make -C pydaw/midicomp && cp pydaw/midicomp/midicomp pydaw/python/libpydaw
 	cd sbsms && ( ./configure || ./configure --enable-sse=no ) && make
 	cd sbsms/cli && make
 
-deps_clean:
+mingw_deps_clean:
 	make -C pydaw/midicomp clean
-	cd pydaw/pyliblo-0.9.2 && python3 setup.py clean
 	make -C sbsms clean
 	make -C sbsms/cli clean
-		
+
+deps_clean:
+	make deps_clean
+	cd pydaw/pyliblo-0.9.2 && python3 setup.py clean
+
 # --------------------------------------------------------------
 
 install:
