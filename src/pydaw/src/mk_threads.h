@@ -51,18 +51,18 @@ void v_open_project(const char* a_project_folder, int a_first_load)
 #endif
 
     sprintf(musikernel->project_folder, "%s", a_project_folder);
-    sprintf(musikernel->plugins_folder, "%s/projects/plugins/",
-        musikernel->project_folder);
-    sprintf(musikernel->samples_folder, "%s/audio/samples",
-        musikernel->project_folder);  //No trailing slash on this one
+    sprintf(musikernel->plugins_folder, "%s%sprojects%splugins%s",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
+    sprintf(musikernel->samples_folder, "%s%saudio%ssamples",
+        musikernel->project_folder, PATH_SEP, PATH_SEP);  //No trailing slash
     sprintf(musikernel->wav_pool->samples_folder, "%s",
         musikernel->samples_folder);
-    sprintf(musikernel->wav_pool_file, "%s/audio/wavs.txt",
-        musikernel->project_folder);
-    sprintf(musikernel->audio_folder, "%s/audio/files",
-        musikernel->project_folder);
-    sprintf(musikernel->audio_tmp_folder, "%s/audio/files/tmp/",
-        musikernel->project_folder);
+    sprintf(musikernel->wav_pool_file, "%s%saudio%swavs.txt",
+        musikernel->project_folder, PATH_SEP, PATH_SEP);
+    sprintf(musikernel->audio_folder, "%s%saudio%sfiles",
+        musikernel->project_folder, PATH_SEP, PATH_SEP);
+    sprintf(musikernel->audio_tmp_folder, "%s%saudio%sfiles%stmp%s",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP, PATH_SEP);
 
     if(a_first_load && i_pydaw_file_exists(musikernel->wav_pool_file))
     {

@@ -1818,8 +1818,8 @@ void g_dn_song_get(t_dawnext* self, int a_lock)
 void v_dn_open_tracks()
 {
     char f_file_name[1024];
-    sprintf(f_file_name, "%s/projects/dawnext/tracks.txt",
-        musikernel->project_folder);
+    sprintf(f_file_name, "%s%sprojects%sdawnext%stracks.txt",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
 
     if(i_pydaw_file_exists(f_file_name))
     {
@@ -1875,16 +1875,16 @@ void v_dn_open_tracks()
 
 void v_dn_open_project(int a_first_load)
 {
-    sprintf(dawnext->project_folder, "%s/projects/dawnext",
-        musikernel->project_folder);
-    sprintf(dawnext->item_folder, "%s/items/",
-        dawnext->project_folder);
-    sprintf(dawnext->region_folder, "%s/regions/",
-        dawnext->project_folder);
-    sprintf(dawnext->tracks_folder, "%s/tracks",
-        dawnext->project_folder);
-    sprintf(dawnext->seq_event_file, "%s/seq_event.txt",
-        dawnext->project_folder);
+    sprintf(dawnext->project_folder, "%s%sprojects%sdawnext",
+        musikernel->project_folder, PATH_SEP, PATH_SEP);
+    sprintf(dawnext->item_folder, "%s%sitems%s",
+        dawnext->project_folder, PATH_SEP, PATH_SEP);
+    sprintf(dawnext->region_folder, "%s%sregions%s",
+        dawnext->project_folder, PATH_SEP, PATH_SEP);
+    sprintf(dawnext->tracks_folder, "%s%stracks",
+        dawnext->project_folder, PATH_SEP);
+    sprintf(dawnext->seq_event_file, "%s%sseq_event.txt",
+        dawnext->project_folder, PATH_SEP);
 
     int f_i = 0;
 
@@ -1921,7 +1921,7 @@ t_dn_atm_region * g_dn_atm_region_get(t_dawnext * self)
     t_dn_atm_region * f_result = NULL;
 
     char f_file[1024] = "\0";
-    sprintf(f_file, "%s/automation.txt", self->project_folder);
+    sprintf(f_file, "%s%sautomation.txt", self->project_folder, PATH_SEP);
 
     if(i_pydaw_file_exists(f_file))
     {
@@ -2037,7 +2037,7 @@ t_dn_region * g_dn_region_get(t_dawnext* self)
 
 
     char f_full_path[PYDAW_TINY_STRING];
-    sprintf(f_full_path, "%s/sequencer.txt", self->project_folder); //, a_uid);
+    sprintf(f_full_path, "%s%ssequencer.txt", self->project_folder, PATH_SEP);
     //sprintf(f_full_path, "%s%i", self->region_folder, a_uid);
 
     t_2d_char_array * f_current_string =
@@ -2780,8 +2780,8 @@ t_dn_routing_graph * g_dn_routing_graph_get(t_dawnext * self)
     f_result->track_pool_sorted_count = 0;
 
     char f_tmp[1024];
-    sprintf(f_tmp, "%s/projects/dawnext/routing.txt",
-        musikernel->project_folder);
+    sprintf(f_tmp, "%s%sprojects%sdawnext%srouting.txt",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
 
     if(i_pydaw_file_exists(f_tmp))
     {
@@ -2913,8 +2913,8 @@ void v_dn_set_midi_devices()
         return;
     }
 
-    sprintf(f_path, "%s/projects/dawnext/midi_routing.txt",
-        musikernel->project_folder);
+    sprintf(f_path, "%s%sprojects%sdawnext%smidi_routing.txt",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
 
     if(!i_pydaw_file_exists(f_path))
     {

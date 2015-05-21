@@ -85,7 +85,7 @@ inline void prefetch_range(void *addr, size_t len)
 #endif
 
 #if defined(_WIN32) || defined(__MINGW32__)
-    #define PATH_SEP '\\'
+    #define PATH_SEP "\\"
 
     char * get_home_dir()
     {
@@ -94,7 +94,7 @@ inline void prefetch_range(void *addr, size_t len)
         return f_result;
     }
 #else
-    #define PATH_SEP '/'
+    #define PATH_SEP "/"
 
     char * get_home_dir()
     {
@@ -116,7 +116,7 @@ void path_join(char * a_result, int num, char ** a_str_list)
     {
         if(f_i)
         {
-            a_result[f_pos] = PATH_SEP;
+            a_result[f_pos] = PATH_SEP[0];
             ++f_pos;
         }
 

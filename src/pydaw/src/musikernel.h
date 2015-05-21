@@ -761,7 +761,7 @@ void v_pydaw_open_track(t_pytrack * a_track, char * a_tracks_folder,
 {
     char f_file_name[1024];
 
-    sprintf(f_file_name, "%s/%i", a_tracks_folder, a_index);
+    sprintf(f_file_name, "%s%s%i", a_tracks_folder, PATH_SEP, a_index);
 
     if(i_pydaw_file_exists(f_file_name))
     {
@@ -1200,7 +1200,7 @@ void v_pydaw_update_audio_inputs(char * a_project_folder)
     char f_tmp_file_name[2048];
 
     t_pyaudio_input * f_ai;
-    sprintf(f_inputs_file, "%s/input.txt", a_project_folder);
+    sprintf(f_inputs_file, "%s%sinput.txt", a_project_folder, PATH_SEP);
 
     if(a_project_folder && i_pydaw_file_exists(f_inputs_file))
     {

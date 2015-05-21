@@ -2112,8 +2112,8 @@ void g_en_song_get(t_edmnext* self, int a_lock)
     }
 
     char f_full_path[2048];
-    sprintf(f_full_path, "%s/projects/edmnext/song.txt",
-        musikernel->project_folder);
+    sprintf(f_full_path, "%s%sprojects%sedmnext%ssong.txt",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
 
     if(i_pydaw_file_exists(f_full_path))
     {
@@ -2171,8 +2171,8 @@ void g_en_song_get(t_edmnext* self, int a_lock)
 void v_en_open_tracks()
 {
     char f_file_name[1024];
-    sprintf(f_file_name, "%s/projects/edmnext/tracks.txt",
-        musikernel->project_folder);
+    sprintf(f_file_name, "%s%sprojects%sedmnext%stracks.txt",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
 
     if(i_pydaw_file_exists(f_file_name))
     {
@@ -2228,18 +2228,20 @@ void v_en_open_tracks()
 
 void v_en_open_project(int a_first_load)
 {
-    sprintf(edmnext->item_folder, "%s/projects/edmnext/items/",
-        musikernel->project_folder);
-    sprintf(edmnext->region_folder, "%s/projects/edmnext/regions/",
-        musikernel->project_folder);
-    sprintf(edmnext->region_audio_folder, "%s/projects/edmnext/regions_audio/",
-        musikernel->project_folder);
-    sprintf(edmnext->region_atm_folder, "%s/projects/edmnext/regions_atm/",
-        musikernel->project_folder);
+    sprintf(edmnext->item_folder, "%s%sprojects%sedmnext%sitems%s",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP, PATH_SEP);
+    sprintf(edmnext->region_folder, "%s%sprojects%sedmnext%sregions%s",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP, PATH_SEP);
+    sprintf(edmnext->region_audio_folder,
+        "%s%sprojects%sedmnext%sregions_audio%s",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP, PATH_SEP);
+    sprintf(edmnext->region_atm_folder, "%s%sprojects%sedmnext%sregions_atm%s",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP, PATH_SEP);
     sprintf(edmnext->per_audio_item_fx_folder,
-        "%s/projects/edmnext/audio_per_item_fx/", musikernel->project_folder);
-    sprintf(edmnext->tracks_folder, "%s/projects/edmnext/tracks",
-        musikernel->project_folder);
+        "%s%sprojects%sedmnext%saudio_per_item_fx%s",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP, PATH_SEP);
+    sprintf(edmnext->tracks_folder, "%s%sprojects%sedmnext%stracks",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
 
     int f_i = 0;
 
@@ -2255,7 +2257,8 @@ void v_en_open_project(int a_first_load)
 
     char f_song_file[1024];
     sprintf(f_song_file,
-        "%s/projects/edmnext/song.txt", musikernel->project_folder);
+        "%s%sprojects%sedmnext%ssong.txt",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
 
     struct stat f_proj_stat;
     stat((musikernel->project_folder), &f_proj_stat);
@@ -2268,8 +2271,8 @@ void v_en_open_project(int a_first_load)
 
     //TODO:  This should be moved to a separate function
     char f_transport_file[1024];
-    sprintf(f_transport_file, "%s/projects/edmnext/transport.txt",
-            musikernel->project_folder);
+    sprintf(f_transport_file, "%s%sprojects%sedmnext%stransport.txt",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
 
     if(i_pydaw_file_exists(f_transport_file))
     {
@@ -3253,8 +3256,8 @@ t_en_routing_graph * g_en_routing_graph_get(t_edmnext * self)
     f_result->track_pool_sorted_count = 0;
 
     char f_tmp[1024];
-    sprintf(f_tmp, "%s/projects/edmnext/routing.txt",
-        musikernel->project_folder);
+    sprintf(f_tmp, "%s%sprojects%sedmnext%srouting.txt",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
 
     if(i_pydaw_file_exists(f_tmp))
     {
@@ -3385,8 +3388,8 @@ void v_en_set_midi_devices()
         return;
     }
 
-    sprintf(f_path, "%s/projects/edmnext/midi_routing.txt",
-        musikernel->project_folder);
+    sprintf(f_path, "%s%sprojects%sedmnext%smidi_routing.txt",
+        musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
 
     if(!i_pydaw_file_exists(f_path))
     {

@@ -275,10 +275,11 @@ void v_wn_open_tracks()
 
 void v_wn_open_project()
 {
-    sprintf(wavenext->project_folder, "%s/projects/wavenext",
-        musikernel->project_folder);
+    sprintf(wavenext->project_folder, "%s%sprojects%swavenext",
+        musikernel->project_folder, PATH_SEP, PATH_SEP);
 
-    sprintf(wavenext->tracks_folder, "%s/tracks", wavenext->project_folder);
+    sprintf(wavenext->tracks_folder, "%s%stracks",
+        wavenext->project_folder, PATH_SEP);
     v_wn_open_tracks();
 }
 
