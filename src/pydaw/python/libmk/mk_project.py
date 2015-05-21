@@ -415,8 +415,6 @@ class MkProject(libmk.AbstractProject):
             f_uid_dict = a_uid_dict
         if pydaw_util.IS_WINDOWS:
             f_path = str(a_path)
-            if f_path[1] == ":":
-                f_path = f_path.replace(":", "", 1)
         else:
             f_path = str(a_path).replace("//", "/")
         if a_cp:
