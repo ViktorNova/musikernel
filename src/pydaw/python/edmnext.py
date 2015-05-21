@@ -311,7 +311,7 @@ class song_editor:
                 self.last_midi_dir = os.path.dirname(str(f_file_name))
                 if str(f_item_name.text()).strip() == "":
                     f_item_name.setText(pydaw_remove_bad_chars(
-                        f_file_name.split("/")[-1].replace(".", "-")))
+                        f_file_name.split(os.path.sep)[-1].replace(".", "-")))
 
         def item_name_changed(a_val=None):
             f_item_name.setText(pydaw_remove_bad_chars(f_item_name.text()))
@@ -2706,7 +2706,7 @@ class audio_viewer_item(QGraphicsRectItem):
             self.audio_item.uid)
         f_file_name = libmk.PROJECT.timestretch_lookup_orig_path(
             f_file_name)
-        f_name_arr = f_file_name.rsplit("/", 1)
+        f_name_arr = f_file_name.rsplit(os.path.sep, 1)
         f_name = f_name_arr[-1]
         self.label = QGraphicsSimpleTextItem(f_name, parent=self)
         self.label.setPos(10, (AUDIO_ITEM_HEIGHT * 0.5) -

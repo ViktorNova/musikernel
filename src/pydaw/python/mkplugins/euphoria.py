@@ -2118,11 +2118,20 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                         EUPHORIA_MAX_SAMPLE_COUNT))
                     return
                 if "sample" in f_sample.dict:
-                    f_sample_file = f_sample.dict["sample"].replace("\\", "/")
+                    if os.path.sep == '/':
+                        f_sample_file = f_sample.dict[
+                            "sample"].replace("\\", "/")
+                        f_new_file_path = f_new_file_path.replace("//", "/")
+                    elif os.path.sep == '\\':
+                        f_sample_file = f_sample.dict[
+                            "sample"].replace("/", "\\")
+                        f_new_file_path = f_new_file_path.replace("\\\\", "\\")
+                    else:
+                        assert False, "Unknown os.path.sep {}".format(
+                            os.path.sep)
                     f_new_file_path = os.path.join(f_sfz_dir, f_sample_file)
                     f_new_file_path = pydaw_util.case_insensitive_path(
                         f_new_file_path)
-                    f_new_file_path = f_new_file_path.replace("//", "/")
 
                     yield f_new_file_path
 
@@ -2132,7 +2141,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                         QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
                     self.sample_table.setItem(
                         f_index, SMP_TB_FILE_PATH_INDEX, f_item)
-                    f_path_sections = f_new_file_path.split(("/"))
+                    f_path_sections = f_new_file_path.split(os.path.sep)
                     self.set_selected_sample_combobox_item(
                         f_index, f_path_sections[-1])
 

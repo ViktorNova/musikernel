@@ -1293,6 +1293,8 @@ def close_pydaw_engine():
 def kill_pydaw_engine():
     """ Kill any zombie instances of the engine if they exist. Otherwise, the
     UI won't be able to control the engine"""
+    if pydaw_util.IS_ENGINE_LIB:
+        return
     try:
         f_val = subprocess.check_output(['ps', '-ef'])
     except Exception as ex:
