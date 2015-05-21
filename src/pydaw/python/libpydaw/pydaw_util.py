@@ -37,8 +37,8 @@ IS_A_TTY = sys.stdin.isatty()
 PYTHON_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MKENGINE_DIR = os.path.abspath(os.path.join(PYTHON_DIR, "..", "mkengine"))
 
-if IS_WINDOWS:
-    os.environ["PATH"] = ";".join((MKENGINE_DIR, os.environ["PATH"]))
+#if IS_WINDOWS:
+#    os.environ["PATH"] = ";".join((MKENGINE_DIR, os.environ["PATH"]))
 
 pydaw_terminating_char = "\\"
 
@@ -66,9 +66,9 @@ global_cpu_count = cpu_count()
 
 if "src/pydaw/python/" in __file__:
     INSTALL_PREFIX = "/usr"
-elif IS_WINDOWS:
-    INSTALL_PREFIX = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), *([".."] * 2)))
+#elif IS_WINDOWS:
+#    INSTALL_PREFIX = os.path.abspath(os.path.join(
+#        os.path.dirname(__file__), *([".."] * 2)))
 else:
     INSTALL_PREFIX = os.path.abspath(os.path.join(
         os.path.dirname(__file__), *([".."] * 5)))
@@ -151,13 +151,13 @@ def pydaw_escape_stylesheet(a_stylesheet, a_path):
 
 print("\n\n\ninstall prefix:  {}\n\n\n".format(INSTALL_PREFIX))
 
-if IS_WINDOWS:
-    PROJECT_HISTORY_SCRIPT = os.path.join(
-        INSTALL_PREFIX, "python", "libpydaw", "project_recover.py")
-else:
-    PROJECT_HISTORY_SCRIPT = os.path.join(
-        INSTALL_PREFIX, "lib", global_pydaw_version_string,
-        "pydaw", "python", "libpydaw", "project_recover.py")
+#if IS_WINDOWS:
+#    PROJECT_HISTORY_SCRIPT = os.path.join(
+#        INSTALL_PREFIX, "python", "libpydaw", "project_recover.py")
+#else:
+PROJECT_HISTORY_SCRIPT = os.path.join(
+    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+    "pydaw", "python", "libpydaw", "project_recover.py")
 
 pydaw_bad_chars = ["|", "\\", "~", "."]
 
@@ -289,23 +289,23 @@ for _terminal in ("x-terminal-emulator", "gnome-terminal", "konsole"):
         TERMINAL = _terminal
         break
 
-if IS_WINDOWS:
-    pydaw_rubberband_util = os.path.join(
-        INSTALL_PREFIX, "python", "mkengine", "rubberband.exe")
-
-    pydaw_sbsms_util = os.path.join(
-        INSTALL_PREFIX, "python", "mkengine", "sbsms.exe")
-
-    pydaw_paulstretch_util = os.path.join(
-        INSTALL_PREFIX, "python", "libpydaw", "pydaw_paulstretch.py")
-else:
-    pydaw_rubberband_util = pydaw_which("rubberband")
-    pydaw_sbsms_util = os.path.join(
-        INSTALL_PREFIX, "lib", global_pydaw_version_string,
-        "sbsms", "bin", "sbsms")
-    pydaw_paulstretch_util = os.path.join(
-        INSTALL_PREFIX, "lib", global_pydaw_version_string,
-        "pydaw", "python", "libpydaw", "pydaw_paulstretch.py")
+#if IS_WINDOWS:
+#    pydaw_rubberband_util = os.path.join(
+#        INSTALL_PREFIX, "python", "mkengine", "rubberband.exe")
+#
+#    pydaw_sbsms_util = os.path.join(
+#        INSTALL_PREFIX, "python", "mkengine", "sbsms.exe")
+#
+#    pydaw_paulstretch_util = os.path.join(
+#        INSTALL_PREFIX, "python", "libpydaw", "pydaw_paulstretch.py")
+#else:
+pydaw_rubberband_util = pydaw_which("rubberband")
+pydaw_sbsms_util = os.path.join(
+    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+    "sbsms", "bin", "sbsms")
+pydaw_paulstretch_util = os.path.join(
+    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+    "pydaw", "python", "libpydaw", "pydaw_paulstretch.py")
 
 if "cygwin" in sys.platform:
     pydaw_rubberband_util += ".exe"
@@ -1000,13 +1000,13 @@ class sfz_file:
             f_result += "\n\n{}\n\n".format(f_sample)
         return f_result
 
-if IS_WINDOWS:
-    global_default_stylesheet_file = os.path.join(
-        INSTALL_PREFIX, "themes", "default", "default.pytheme")
-else:
-    global_default_stylesheet_file = os.path.join(
-        INSTALL_PREFIX, "lib", global_pydaw_version_string,
-        "themes", "default", "default.pytheme")
+#if IS_WINDOWS:
+#    global_default_stylesheet_file = os.path.join(
+#        INSTALL_PREFIX, "themes", "default", "default.pytheme")
+#else:
+global_default_stylesheet_file = os.path.join(
+    INSTALL_PREFIX, "lib", global_pydaw_version_string,
+    "themes", "default", "default.pytheme")
 
 global_user_style_file = os.path.join(global_pydaw_home, "default-style.txt")
 
