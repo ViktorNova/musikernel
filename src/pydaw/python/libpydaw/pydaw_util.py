@@ -146,7 +146,8 @@ def pydaw_set_bin_path():
 
 def pydaw_escape_stylesheet(a_stylesheet, a_path):
     f_dir = os.path.dirname(str(a_path))
-    f_result = a_stylesheet.replace("$STYLE_FOLDER", f_dir)
+    f_result = a_stylesheet.replace(
+        "$STYLE_FOLDER/", "{}{}".format(f_dir, os.path.sep))
     return f_result
 
 print("\n\n\ninstall prefix:  {}\n\n\n".format(INSTALL_PREFIX))
