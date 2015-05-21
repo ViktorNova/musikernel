@@ -114,18 +114,17 @@ class MkProject(libmk.AbstractProject):
             if not os.path.isdir(project_dir):
                 os.makedirs(project_dir)
 
-        if pydaw_util.IS_LINUX:
-            f_version = pydaw_read_file_text(os.path.join(
-                INSTALL_PREFIX, "lib", global_pydaw_version_string,
-                "minor-version.txt"))
-            self.create_file(
-                "", "version.txt",
-                "Created with {}-{}".format(
-                    global_pydaw_version_string, f_version))
-            self.create_file(
-                "", os.path.basename(a_project_file),
-                "This file is not supposed to contain any data, it is "
-                "only a placeholder for saving and opening the project")
+        f_version = pydaw_read_file_text(os.path.join(
+            INSTALL_PREFIX, "lib", global_pydaw_version_string,
+            "minor-version.txt"))
+        self.create_file(
+            "", "version.txt",
+            "Created with {}-{}".format(
+                global_pydaw_version_string, f_version))
+        self.create_file(
+            "", os.path.basename(a_project_file),
+            "This file is not supposed to contain any data, it is "
+            "only a placeholder for saving and opening the project")
         self.create_file("", pydaw_file_pywavs, pydaw_terminating_char)
         self.create_file("", pydaw_file_pystretch_map, pydaw_terminating_char)
         self.create_file("", pydaw_file_pystretch, pydaw_terminating_char)
