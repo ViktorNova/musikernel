@@ -496,8 +496,11 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 
     printf("using home folder: %s\n", f_home);
 
-    sprintf(f_device_file_path, "%s/%s/config/device.txt",
-        f_home, MUSIKERNEL_VERSION);
+    char * path_list[4] = {
+        f_home, MUSIKERNEL_VERSION, "config", "device.txt"
+    };
+
+    path_join(f_device_file_path, 4, path_list);
 
     char f_device_name[256];
     f_device_name[0] = '\0';

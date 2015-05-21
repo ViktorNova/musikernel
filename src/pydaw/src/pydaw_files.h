@@ -35,6 +35,8 @@ GNU General Public License for more details.
 #include <stdio.h>
 #include <time.h>
 
+#include "compiler.h"
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -387,8 +389,15 @@ void get_file_setting(char * a_dest, char * a_name, char * a_default)
 {
     char f_path[2048];
     char * f_home = get_home_dir();
+    char f_filename[256];
 
-    sprintf(f_path, "%s/%s/config/%s.txt", f_home, MUSIKERNEL_VERSION, a_name);
+    sprintf(f_filename, "%s.txt", a_name);
+
+    char * path_list[4] = {
+        f_home, MUSIKERNEL_VERSION, "config", f_filename
+    };
+
+    path_join(f_path, 4, path_list);
 
     printf("get_file_setting:  %s \n", f_path);
 

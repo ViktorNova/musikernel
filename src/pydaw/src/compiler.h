@@ -14,8 +14,10 @@ GNU General Public License for more details.
 #ifndef MK_COMPILER_H
 #define	MK_COMPILER_H
 
+#include <assert.h>
 #include <stdlib.h>
 #include <sndfile.h>
+#include <stdio.h>
 
 #ifdef __APPLE__
 
@@ -83,16 +85,58 @@ inline void prefetch_range(void *addr, size_t len)
 #endif
 
 #if defined(_WIN32) || defined(__MINGW32__)
+    #define PATH_SEP '\\'
+
     char * get_home_dir()
     {
-        return getenv("USERPROFILE");
+        char * f_result = getenv("USERPROFILE");
+        assert(f_result);
+        return f_result;
     }
 #else
+    #define PATH_SEP '/'
+
     char * get_home_dir()
     {
-        return getenv("HOME");
+        char * f_result = getenv("HOME");
+        assert(f_result);
+        return f_result;
     }
 #endif
+
+/* Intended to be similar to Python's os.path.join */
+void path_join(char * a_result, int num, char ** a_str_list)
+{
+    int f_i, f_i2, f_pos;
+    f_pos = 0;
+    char * f_str;
+    char f_chr;
+
+    for (f_i = 0; f_i < num; ++f_i)
+    {
+        if(f_i)
+        {
+            a_result[f_pos] = PATH_SEP;
+            ++f_pos;
+        }
+
+        f_str = a_str_list[f_i];
+
+        for(f_i2 = 0; ; ++f_i2)
+        {
+            f_chr = f_str[f_i2];
+            if(f_chr == '\0')
+            {
+                break;
+            }
+            a_result[f_pos] = f_chr;
+            ++f_pos;
+        }
+    }
+
+    a_result[f_pos] = '\0';
+}
+
 
 #endif	/* MK_COMPILER_H */
 
