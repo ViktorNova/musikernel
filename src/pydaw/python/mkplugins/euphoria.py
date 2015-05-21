@@ -2121,15 +2121,18 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
                     if os.path.sep == '/':
                         f_sample_file = f_sample.dict[
                             "sample"].replace("\\", "/")
+                        f_new_file_path = os.path.join(
+                            f_sfz_dir, f_sample_file)
                         f_new_file_path = f_new_file_path.replace("//", "/")
                     elif os.path.sep == '\\':
                         f_sample_file = f_sample.dict[
                             "sample"].replace("/", "\\")
+                        f_new_file_path = os.path.join(
+                            f_sfz_dir, f_sample_file)
                         f_new_file_path = f_new_file_path.replace("\\\\", "\\")
                     else:
                         assert False, "Unknown os.path.sep {}".format(
                             os.path.sep)
-                    f_new_file_path = os.path.join(f_sfz_dir, f_sample_file)
                     f_new_file_path = pydaw_util.case_insensitive_path(
                         f_new_file_path)
 
