@@ -173,8 +173,9 @@ def pydaw_which(a_file):
 
 
 def get_unix_timestamp(a_dt):
-    if IS_CYGWIN:
-        return int(time.mktime(a_dt.timetuple()))
+    if IS_WINDOWS:
+        assert sys.version_info >= (3, 3), "Must have Python3.3 or later"
+        return int(a_dt.timestamp())
     else:
         return int(a_dt.strftime("%s"))
 

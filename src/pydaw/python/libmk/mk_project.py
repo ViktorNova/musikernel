@@ -430,7 +430,11 @@ class MkProject(libmk.AbstractProject):
     def cp_audio_file_to_cache(self, a_file):
         if a_file in self.cached_audio_files:
             return
-        f_cp_path = "{}{}".format(self.samples_folder, a_file)
+        if IS_WINDOWS and a_file[1] == ":":
+            f_file = a_file.replace(":", "", 1)
+            f_cp_path = "{}{}".format(self.samples_folder, f_file)
+        else:
+            f_cp_path = "{}{}".format(self.samples_folder, a_file)
         f_cp_dir = os.path.dirname(f_cp_path)
         if not os.path.isdir(f_cp_dir):
             os.makedirs(f_cp_dir)
