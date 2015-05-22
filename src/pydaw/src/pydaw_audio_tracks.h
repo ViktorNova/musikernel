@@ -215,17 +215,11 @@ int i_wav_pool_item_load(t_wav_pool_item *a_wav_pool_item, int a_huge_pages)
     info.format = 0;
     file = sf_open(a_wav_pool_item->path, SFM_READ, &info);
 
-    if (!file) {
-
-	const char *filename = strrchr(a_wav_pool_item->path, '/');
-	if (filename) ++filename;
-	else filename = a_wav_pool_item->path;
-
-	if (!file) {
-            printf("error: unable to load sample file '%s'",
-                    a_wav_pool_item->path);
-	    return 0;
-	}
+    if (!file)
+    {
+        printf("error: unable to load sample file '%s'\n",
+                a_wav_pool_item->path);
+        return 0;
     }
 
     samples = info.frames;
@@ -381,7 +375,33 @@ t_wav_pool * g_wav_pool_get(float a_sr)
 void v_wav_pool_add_item(t_wav_pool* a_wav_pool, int a_uid, char * a_file_path)
 {
     char f_path[2048];
+
+#if defined(_WIN32) || defined(__MINGW32__)
+    char f_file_path[2048];
+    int f_pos = 2;
+
+    if(a_file_path[1] == ':')
+    {
+        f_file_path[0] = a_file_path[0];
+        while(1)
+        {
+            f_file_path[f_pos - 1] = a_file_path[f_pos];
+            ++f_pos;
+            if(a_file_path[f_pos] == '\0')
+            {
+                break;
+            }
+        }
+        sprintf(f_path, "%s%s", a_wav_pool->samples_folder, f_file_path);
+    }
+    else
+    {
+        sprintf(f_path, "%s%s", a_wav_pool->samples_folder, a_file_path);
+    }
+#else
     sprintf(f_path, "%s%s", a_wav_pool->samples_folder, a_file_path);
+#endif
+
     g_wav_pool_item_init(&a_wav_pool->items[a_uid], a_uid, f_path,
             a_wav_pool->sample_rate);
     ++a_wav_pool->count;

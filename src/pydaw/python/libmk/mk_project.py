@@ -430,9 +430,13 @@ class MkProject(libmk.AbstractProject):
     def cp_audio_file_to_cache(self, a_file):
         if a_file in self.cached_audio_files:
             return
+        # Note:  This has already been "fixed" before, os.path.join
+        # should not be used for UNIX paths because there is a slash
+        # at the beginning of the path, where Windows starts with C:
+        # or similar
         if IS_WINDOWS and a_file[1] == ":":
             f_file = a_file.replace(":", "", 1)
-            f_cp_path = "{}{}".format(self.samples_folder, f_file)
+            f_cp_path = os.path.join(self.samples_folder, f_file)
         else:
             f_cp_path = "{}{}".format(self.samples_folder, a_file)
         f_cp_dir = os.path.dirname(f_cp_path)
