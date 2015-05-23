@@ -237,7 +237,8 @@ class pydaw_device_dialog:
                         print(f_device)
                         pydaw_util.global_device_val_dict["name"] = f_device
                         f_file = open(
-                            pydaw_util.global_pydaw_device_config, "w")
+                            pydaw_util.global_pydaw_device_config,
+                            "w", newline="")
                         for k, v in pydaw_util.global_device_val_dict.items():
                             f_file.write("{}|{}\n".format(k, v))
                         f_file.write("\\")
@@ -543,7 +544,8 @@ class pydaw_device_dialog:
                         0, ctypes.byref(f_output), f_samplerate)
                     if not f_supported:
                         raise Exception()
-                f_file = open(pydaw_util.global_pydaw_device_config, "w")
+                f_file = open(
+                    pydaw_util.global_pydaw_device_config, "w", newline="")
                 f_file.write("hostApi|{}\n".format(self.subsystem))
                 f_file.write("name|{}\n".format(self.device_name))
                 f_file.write("bufferSize|{}\n".format(f_buffer_size))

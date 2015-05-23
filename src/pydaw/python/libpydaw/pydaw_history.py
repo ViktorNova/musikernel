@@ -57,7 +57,7 @@ class pydaw_history_commit:
             self._write_file(f_full_path, f_file.new_text)
 
     def _write_file(self, a_file, a_text):
-        f_file = open(a_file, "w")
+        f_file = open(a_file, "w", newline="")
         f_file.write(a_text)
         f_file.close()
 

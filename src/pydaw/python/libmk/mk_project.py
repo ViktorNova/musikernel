@@ -148,12 +148,12 @@ class MkProject(libmk.AbstractProject):
             with open(self.plugin_uid_file) as f_handle:
                 f_result = int(f_handle.read())
             f_result += 1
-            with open(self.plugin_uid_file, "w") as f_handle:
+            with open(self.plugin_uid_file, "w", newline="") as f_handle:
                 f_handle.write(str(f_result))
             assert(f_result < 100000)
             return f_result
         else:
-            with open(self.plugin_uid_file, "w") as f_handle:
+            with open(self.plugin_uid_file, "w", newline="") as f_handle:
                 f_handle.write(str(0))
             return 0
 
@@ -191,7 +191,7 @@ class MkProject(libmk.AbstractProject):
             return None
 
     def save_backups_history(self, a_struct):
-        with open(self.backups_file, "w") as f_handle:
+        with open(self.backups_file, "w", newline="") as f_handle:
             json.dump(
                 a_struct, f_handle, sort_keys=True, indent=4,
                 separators=(',', ': '))
@@ -528,7 +528,7 @@ class MkProject(libmk.AbstractProject):
         libmk.IPC.pydaw_add_to_wav_pool(f_path, f_uid)
         f_pygraph_file = os.path.join(
             *(str(x) for x in (self.samplegraph_folder, f_uid)))
-        with open(f_pygraph_file, "w") as f_handle:
+        with open(f_pygraph_file, "w", newline="") as f_handle:
             f_handle.write("\n".join(f_result))
 
     def copy_plugin(self, a_old, a_new):

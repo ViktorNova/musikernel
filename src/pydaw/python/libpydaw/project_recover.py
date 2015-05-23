@@ -90,7 +90,7 @@ class project_history_widget(QTreeWidget):
             with tarfile.open(f_tar_path, "r:bz2") as f_tar:
                 f_tar.extractall(self.project_dir)
             self.project_data["CURRENT"] = f_item.node_path
-            with open(self.backup_file, "w") as f_handle:
+            with open(self.backup_file, "w", newline="") as f_handle:
                 json.dump(
                     self.project_data, f_handle, sort_keys=True,
                     indent=4, separators=(',', ': '))

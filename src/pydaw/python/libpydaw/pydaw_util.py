@@ -367,7 +367,7 @@ def pydaw_read_file_text(a_file):
         return f_handle.read()
 
 def pydaw_write_file_text(a_file, a_text):
-    with open(str(a_file), "w") as f_handle:
+    with open(str(a_file), "w", newline="") as f_handle:
         f_handle.write(str(a_text))
 
 def pydaw_gen_uid():
@@ -715,7 +715,7 @@ def get_file_setting(a_name, a_type, a_default):
 
 def set_file_setting(a_name, a_val):
     f_file_name = os.path.join(CONFIG_DIR, "{}.txt".format(a_name))
-    with open(f_file_name, "w") as f_file:
+    with open(f_file_name, "w", newline="") as f_file:
         f_file.write(str(a_val))
 
 USE_HUGEPAGES = 0
