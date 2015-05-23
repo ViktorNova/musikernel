@@ -393,7 +393,8 @@ void v_wav_pool_add_item(t_wav_pool* a_wav_pool, int a_uid, char * a_file_path)
             }
         }
 
-        printf("'%s'\n'%s'\n", a_wav_pool->samples_folder, f_file_path);
+        printf("\nv_wav_pool_add_item:  '%s' '%s'\n",
+            a_wav_pool->samples_folder, f_file_path);
 
         sprintf(f_path, "%s%s", a_wav_pool->samples_folder, f_file_path);
     }
