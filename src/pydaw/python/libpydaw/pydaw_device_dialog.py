@@ -128,7 +128,7 @@ device directly using ALSA for best performance, stability and latency.""")
 elif pydaw_util.IS_WINDOWS:
     HOST_API_TOOLTIP += _("""
 If possible, you should use an API capable of low latency such as
-WASAPI.  Unfortunately, ASIO is not supported at this time.""")
+WDM-KS or WASAPI.  Unfortunately, ASIO is not supported at this time.""")
 
 DEVICE_TOOLTIP = _("""Select your audio interface from this list.""")
 
