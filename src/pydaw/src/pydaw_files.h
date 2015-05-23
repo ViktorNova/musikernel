@@ -305,8 +305,9 @@ void v_iterate_2d_char_array(t_2d_char_array* a_array)
 
     while(1)
     {
-        //char a_test = a_array->array[(a_array->current_index)];
-        if(a_array->array[(a_array->current_index)] == PYDAW_TERMINATING_CHAR ||
+        if((a_array->array[(a_array->current_index)] == PYDAW_TERMINATING_CHAR
+            && a_array->eol)
+            ||
             (a_array->array[(a_array->current_index)] == '\0'))
         {
             f_result[f_i] = '\0';
@@ -354,7 +355,8 @@ void v_iterate_2d_char_array_to_next_line(t_2d_char_array* a_array)
     while(1)
     {
         //char a_test = a_array->array[(a_array->current_index)];
-        if(a_array->array[(a_array->current_index)] == PYDAW_TERMINATING_CHAR)
+        if(a_array->array[(a_array->current_index)] == PYDAW_TERMINATING_CHAR
+            && a_array->eol)
         {
             f_result[f_i] = '\0';
             a_array->eof = 1;
@@ -365,11 +367,13 @@ void v_iterate_2d_char_array_to_next_line(t_2d_char_array* a_array)
             f_result[f_i] = '\0';
             ++a_array->current_index;
             ++a_array->current_row;
+            a_array->eol = 1;
             a_array->current_column = 0;
             break;
         }
         else
         {
+            a_array->eol = 0;
             f_result[f_i] = a_array->array[(a_array->current_index)];
         }
 
