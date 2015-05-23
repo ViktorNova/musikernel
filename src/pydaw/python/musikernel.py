@@ -1436,7 +1436,6 @@ def global_open_project(a_project_file, a_wait=True):
 def global_new_project(a_project_file, a_wait=True):
     global PROJECT_FILE
     PROJECT_FILE = a_project_file
-    open_pydaw_engine(a_project_file)
     libmk.PROJECT = mk_project.MkProject()
     libmk.PROJECT.new_project(a_project_file)
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
@@ -1444,6 +1443,7 @@ def global_new_project(a_project_file, a_wait=True):
         libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
     for f_module in MAIN_WINDOW.host_modules:
         f_module.global_new_project(a_project_file)
+    open_pydaw_engine(a_project_file)
 
 
 #########  Setup and run #########
