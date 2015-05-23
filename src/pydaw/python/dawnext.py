@@ -3922,6 +3922,7 @@ class audio_viewer_item(QGraphicsRectItem):
             QGraphicsRectItem.mousePressEvent(self, a_event)
             self.event_pos_orig = a_event.pos().x()
             for f_item in AUDIO_SEQ.get_selected():
+                f_item.setZValue(2400.0)
                 f_item_pos = f_item.pos().x()
                 f_item.quantize_offset = \
                     f_item_pos - f_item.quantize_all(f_item_pos)
