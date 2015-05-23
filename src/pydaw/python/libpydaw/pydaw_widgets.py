@@ -153,7 +153,6 @@ class PixmapKnobCache:
         self.background_path = a_background
         self.knob_pixmap = None
         self.background_pixmap = None
-        print(locals())
 
     def get_scaled_pixmap_knob(self, a_size, a_background=False):
         if a_background and not self.background_path:
