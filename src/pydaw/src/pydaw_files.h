@@ -343,6 +343,10 @@ void v_iterate_2d_char_array(t_2d_char_array* a_array)
         ++a_array->current_index;
         ++f_i;
     }
+
+#ifdef _WIN32
+    printf("v_iterate_2d_char_array: %s\n", a_array->current_str);
+#endif
 }
 
 /* Return the next string from the array until a newline, ignoring any
@@ -380,6 +384,10 @@ void v_iterate_2d_char_array_to_next_line(t_2d_char_array* a_array)
         ++a_array->current_index;
         ++f_i;
     }
+
+#ifdef _WIN32
+    printf("v_iterate_2d_char_array_to_next_line: %s\n", a_array->current_str);
+#endif
 }
 
 typedef struct
