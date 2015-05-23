@@ -34,10 +34,6 @@ GNU General Public License for more details.
 
 #endif
 
-#if defined(_WIN32) || defined(__MINGW32__)
-    #define NO_MIDI
-#endif
-
 #ifndef MK_DLL
     #include <lo/lo.h>
 #endif
