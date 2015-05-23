@@ -1,9 +1,18 @@
 # Notes on building the Windows port using Mingw, if you're not me, and
-# not trying to build the Windows port and dependencies from source, you
-# can safely ignore this file
+# not trying to develop or compile the Windows port and dependencies 
+# from source, you can safely ignore this file
 
 Create Windows VM (with at least 4 cores, 8GB of memory, and 100GB of disk,
     because Windows is insanely bloated)
+
+Install Netbeans
+  - Tools -> Plugins -> C/C++
+  - Tools -> Options -> C/C++ -> Add C:\msys2\mingw64\bin
+                     -> Editor -> On Save -> All Lang. -> Trim Whitespace
+
+Install Anaconda (Spyder)
+  - Tools -> Preferences (trim whitespace, change theme)
+
 Install MSYS2
 
 pacman -Sy
