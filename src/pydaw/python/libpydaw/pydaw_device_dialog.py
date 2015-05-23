@@ -151,7 +151,7 @@ class pydaw_device_dialog:
             f_pm_dll = "libportmidi-0.dll"
         elif pydaw_util.IS_WINDOWS:
             f_pm_dll = os.path.join(
-                pydaw_util.MKENGINE_DIR, "libportmidi.dll")
+                pydaw_util.BIN_DIR, "libportmidi.dll")
             f_portaudio_so_path = os.path.join(
                 pydaw_util.BIN_DIR, "libportaudio-2.dll")
         else:
@@ -172,18 +172,11 @@ class pydaw_device_dialog:
             ctypes.POINTER(portaudio.PaStreamParameters), ctypes.c_double]
         self.pyaudio.Pa_Initialize()
 
-        if pydaw_util.IS_WINDOWS:
-             f_old_path = os.environ["PATH"]
-             os.environ["PATH"] = ":".join(
-                 (pydaw_util.BIN_DIR, os.environ["PATH"]))
         ctypes.cdll.LoadLibrary(f_pm_dll)
         self.pypm = ctypes.CDLL(f_pm_dll)
         self.pypm.Pm_GetDeviceInfo.restype = ctypes.POINTER(
             portmidi.PmDeviceInfo)
         self.pypm.Pm_Initialize()
-
-        if pydaw_util.IS_WINDOWS:
-            os.environ["PATH"] = f_old_path
 
     def close_devices(self):
         self.pyaudio.Pa_Terminate()
