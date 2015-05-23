@@ -97,7 +97,7 @@ int osc_debug_handler(const char *path, const char *types, lo_arg **argv, int
 #endif
 
 
-#if defined(_WIN32) || defined(__MINGW32__)
+#if defined(_WIN32)
 int main(int argc, char **argv);
 int v_configure(const char * path, const char * key, const char * value);
 #endif

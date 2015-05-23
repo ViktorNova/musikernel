@@ -376,7 +376,7 @@ void v_wav_pool_add_item(t_wav_pool* a_wav_pool, int a_uid, char * a_file_path)
 {
     char f_path[2048];
 
-#if defined(_WIN32) || defined(__MINGW32__)
+#if defined(_WIN32)
     char f_file_path[2048];
     int f_pos = 2;
 

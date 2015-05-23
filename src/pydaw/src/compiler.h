@@ -80,7 +80,11 @@ inline void prefetch_range(void *addr, size_t len)
 
 #endif
 
-#if defined(_WIN32) || defined(__MINGW32__)
+#if defined(__MINGW32__) && !defined(_WIN32)
+#define _WIN32
+#endif
+
+#if defined(_WIN32)
     #define PATH_SEP "\\"
 
     char * get_home_dir()
