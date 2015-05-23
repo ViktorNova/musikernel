@@ -1529,6 +1529,9 @@ SPLASH_SCREEN.close()
 SPLASH_SCREEN = None
 MAIN_WINDOW.show()
 
+# Workaround for weird stuff happening in Windows during initialization
+libmk.IPC_ENABLED = True
+
 libmk.APP.exec_()
 time.sleep(0.6)
 flush_events()

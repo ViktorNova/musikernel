@@ -32,6 +32,7 @@ TRANSPORT = None
 IS_PLAYING = False
 IS_RECORDING = False
 IPC = None
+IPC_ENABLED = False
 OSC = None
 PROJECT = None
 PLUGIN_UI_DICT = None
@@ -95,6 +96,11 @@ class AbstractIPC:
             self.configure_path = a_configure_path
 
     def send_configure(self, key, value):
+        if not IPC_ENABLED:
+            print("IPC_ENABLED == False, "
+                "Would've sent configure message: key: \""
+                "{}\" value: \"{}\"".format(key, value))
+            return
         if pydaw_util.IS_ENGINE_LIB:
             pydaw_util.engine_lib_configure(self.configure_path, key, value)
         elif self.with_osc:
