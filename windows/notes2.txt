@@ -25,16 +25,16 @@ pacman -S git
 pacman -S python   # this is python3
 git clone https://github.com/Alexpux/MINGW-packages.git
 
+# UPDATE:  Some (all?) of these are now available from pacman
 # Dependencies:
 pyqt5
 numpy
 fftw
 libsndfile
 portaudio
-portmidi (from where?  Or should I allow building without MIDI support?
-    Or http://stackoverflow.com/questions/18156694/trying-to-build-a-portmidi-example-in-mingw)
+portmidi
+rubberband
 libvorbis
-
 
 for dependency in dependencies:
   cd dependency
@@ -64,19 +64,14 @@ CC=/mingw32/bin/gcc /mingw32/bin/mingw32-make
 
 # The "it's almost running now" notes section:
 
-Compiling:
-skip deps builds and just know that functionality is missing right now
-FFS add my own Rubberband binary manually for now
-
 cd pydaw_render
 CC=/mingw64/bin/gcc.exe  /mingw64/bin/mingw32-make.exe
 
 # For some reason, specifying the variables isn't working, so I just edited
 # that shit manually for now
 cd pydaw
-PORTMIDI_FLAG= PLAT_LINK_CLFAGS= CC=/mingw64/bin/gcc.exe  /mingw64/bin/mingw32-make.exe lib
+PLAT_LINK_CLFAGS= CC=/mingw64/bin/gcc.exe  /mingw64/bin/mingw32-make.exe lib
 
 #install
-make DESTDIR=/mingw64 PREFIX= install_mingw
-
+make PREFIX= DESTDIR=/mingw64 install_mingw
 
