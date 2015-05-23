@@ -4563,11 +4563,6 @@ class audio_items_viewer(QGraphicsView):
     def update_zoom(self):
         pydaw_set_audio_seq_zoom(self.h_zoom, self.v_zoom)
 
-    def ruler_click_event(self, a_event):
-        if not libmk.IS_PLAYING:
-            f_val = int(a_event.pos().x() / AUDIO_PX_PER_BEAT)
-            TRANSPORT.set_bar_value(f_val)
-
     def check_line_count(self):
         """ Check that there are not too many vertical
             lines on the screen
@@ -4606,7 +4601,6 @@ class audio_items_viewer(QGraphicsView):
         self.ruler = QGraphicsRectItem(0, 0, f_size, AUDIO_RULER_HEIGHT)
         self.ruler.setZValue(1500.0)
         self.ruler.setBrush(AUDIO_ITEMS_HEADER_GRADIENT)
-        self.ruler.mousePressEvent = self.ruler_click_event
         self.scene.addItem(self.ruler)
         if ITEM_REF_POS:
             f_start, f_end = ITEM_REF_POS
