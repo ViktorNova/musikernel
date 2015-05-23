@@ -1843,9 +1843,7 @@ class pydaw_abstract_file_browser_widget():
         f_category.addItems(sorted(f_dict.keys(), key=lambda s: s.lower()))
         f_grid_layout.addWidget(f_category, 0, 1)
         f_lineedit = QLineEdit()
-        f_tmp_arr = self.last_open_dir.rsplit("/", 1)
-        if len(f_tmp_arr) >= 2:
-            f_lineedit.setText(f_tmp_arr[-1])
+        f_lineedit.setText(os.path.basename(self.last_open_dir))
         f_grid_layout.addWidget(QLabel(_("Name:")), 1, 0)
         f_grid_layout.addWidget(f_lineedit, 1, 1)
         f_hlayout2 = QHBoxLayout()
