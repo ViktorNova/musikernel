@@ -158,6 +158,8 @@ pydaw_bad_chars = ["|", "\\", "~", "."]
 def pydaw_which(a_file):
     """ Python equivalent of the UNIX "which" command """
     f_path_arr = os.getenv("PATH").split(":")
+    if IS_WINDOWS and BIN_DIR not in f_path_arr:
+        f_path_arr.insert(0, BIN_DIR)
     for f_path in f_path_arr:
         f_file_path = os.path.join(f_path, a_file)
         if os.path.exists(f_file_path) and not os.path.isdir(f_file_path):
