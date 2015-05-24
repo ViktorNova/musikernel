@@ -13,12 +13,12 @@ all:
 	make pydaw_src
 
 mingw64:
-	/mingw64/bin/mingw32-make.exe mingw_deps_clean
-	CC=/mingw64/bin/gcc.exe /mingw64/bin/mingw32-make.exe
+	CC=/mingw64/bin/gcc.exe /mingw64/bin/mingw32-make.exe -C pydaw lib
+	CC=/mingw64/bin/gcc.exe /mingw64/bin/mingw32-make.exe -C pydaw_render
 
 mingw32:
-	/mingw32/bin/mingw32-make.exe mingw_deps_clean
-	CC=/mingw32/bin/gcc.exe /mingw32/bin/mingw32-make.exe
+	CC=/mingw32/bin/gcc.exe /mingw32/bin/mingw32-make.exe -C pydaw lib
+	CC=/mingw32/bin/gcc.exe /mingw32/bin/mingw32-make.exe -C pydaw_render
 
 clang:
 	OPTIMIZE_FLAGS= CC=clang make
