@@ -1,0 +1,16 @@
+diff --git a/src/pydaw/Makefile b/src/pydaw/Makefile
+index bd2d192..1506345 100644
+--- a/src/pydaw/Makefile
++++ b/src/pydaw/Makefile
+@@ -28,9 +28,8 @@ PORTMIDI_FLAG ?= -lportmidi
+
+ PLAT_LINK_CFLAGS ?= $(RT_LIB_FLAG) $(ALSA_FLAG) $(LIBLO_FLAG)
+
+-LINK_CFLAGS  = -lpthread $(PORTMIDI_FLAG) -lportaudio $(LDFLAGS) \
+-$(shell pkg-config --libs sndfile fftw3f) $(MATH_LIB_FLAG) \
+-$(PLAT_LINK_CFLAGS)
++LINK_CFLAGS  = -lpthread -lportaudio $(LDFLAGS) $(PORTMIDI_FLAG) \
++$(shell pkg-config --libs sndfile fftw3f) $(MATH_LIB_FLAG)
+
+ C_OBJS   = src/main.o
+
