@@ -208,17 +208,45 @@ t_wav_pool_item * g_wav_pool_item_get(int a_uid, const char *a_path, float a_sr)
 int i_wav_pool_item_load(t_wav_pool_item *a_wav_pool_item, int a_huge_pages)
 {
     SF_INFO info;
-    SNDFILE *file;
+    SNDFILE *file = NULL;
     size_t samples = 0;
     float *tmpFrames, *tmpSamples[2];
+    int f_i = 0;
 
     info.format = 0;
+
+#ifdef _WIN32
+    /* This is the sledgehammer approach to a problem that only
+     * manifests itself on Windows, after all sane attempts to
+     * diagnose and correct the problem failed */
+    int f_strlen = strlen(a_wav_pool_item->path);
+
+    char f_win_path[f_strlen + 16];
+    strcpy(f_win_path, a_wav_pool_item->path);
+
+    for(f_i = 1; f_i < 6; ++f_i)
+    {
+        file = sf_open(f_win_path, SFM_READ, &info);
+        if(file)
+        {
+            printf("Opened '%s'\n", f_win_path);
+            if(f_i > 1)
+            {
+                strcpy(a_wav_pool_item->path, f_win_path);
+            }
+            break;
+        }
+
+        f_win_path[f_strlen - f_i] = '\0';
+    }
+#else
     file = sf_open(a_wav_pool_item->path, SFM_READ, &info);
+#endif
 
     if (!file)
     {
         printf("error: unable to load sample file '%s'\n",
-                a_wav_pool_item->path);
+            a_wav_pool_item->path);
         return 0;
     }
 
@@ -246,7 +274,7 @@ int i_wav_pool_item_load(t_wav_pool_item *a_wav_pool_item, int a_huge_pages)
     }
 
     int f_actual_array_size = (samples + PYDAW_AUDIO_ITEM_PADDING);
-    int f_i = 0;
+    f_i = 0;
 
     while(f_i < f_adjusted_channel_count)
     {
