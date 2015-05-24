@@ -686,9 +686,6 @@ void v_queue_osc_message(
 
 void v_pydaw_set_host(int a_mode)
 {
-    int f_i;
-    t_midi_device * f_device;
-
     assert(a_mode >= 0 && a_mode < MK_HOST_COUNT);
 
     pthread_spin_lock(&musikernel->main_lock);
@@ -696,6 +693,9 @@ void v_pydaw_set_host(int a_mode)
     musikernel->current_host = &musikernel->hosts[a_mode];
 
 #ifndef NO_MIDI
+    int f_i;
+    t_midi_device * f_device;
+
     if(musikernel->midi_devices)
     {
         for(f_i = 0; f_i < musikernel->midi_devices->count; ++f_i)
