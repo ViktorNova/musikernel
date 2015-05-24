@@ -17,6 +17,51 @@ import os
 import shutil
 import urllib.request
 
+
+PKGBUILD_TEMPLATE = """# Maintainer: Jeff Hubbard <musikernel@gmail.com>
+
+_realname={major_version}
+
+pkgname="${{MINGW_PACKAGE_PREFIX}}-${{_realname}}"
+pkgver={minor_version}
+pkgrel=1
+pkgdesc="DAWs/hosts, instrument and effect plugins, and a new approach to audio development. (mingw-w64)"
+arch=('any')
+url="http://www.github.com/j3ffhubb/musikernel"
+license=("GPL")
+makedepends=("${{MINGW_PACKAGE_PREFIX}}-gcc" "${{MINGW_PACKAGE_PREFIX}}-pkg-config")
+depends=("${{MINGW_PACKAGE_PREFIX}}-gcc-libs"
+         "${{MINGW_PACKAGE_PREFIX}}-rubberband"
+         "${{MINGW_PACKAGE_PREFIX}}-portaudio"
+         "${{MINGW_PACKAGE_PREFIX}}-portmidi"
+         "${{MINGW_PACKAGE_PREFIX}}-libsndfile"
+         "${{MINGW_PACKAGE_PREFIX}}-fftw"
+         "${{MINGW_PACKAGE_PREFIX}}-python3-numpy"
+         "${{MINGW_PACKAGE_PREFIX}}-libvorbis"
+         "${{MINGW_PACKAGE_PREFIX}}-python3-pyqt5")
+source=("https://github.com/j3ffhubb/musikernel/archive/master.zip")
+md5sums=('{zip_md5sum}'
+         '{patch_md5sum}')
+
+prepare() {{
+  cd ${{srcdir}}/musikernel-master
+  patch -p1 -i ${{srcdir}}/mingw-w64-fix.patch
+}}
+
+build() {{
+  #export PATH="{{MINGW_PREFIX}}:$PATH"
+  cd ${{srcdir}}/musikernel-master
+   CC=/mingw64/bin/gcc.exe  /mingw64/bin/mingw32-make.exe make {{MINGW_CHOST}}
+}}
+
+package() {{
+  #export PATH="{{MINGW_PREFIX}}:$PATH"
+  cd "${{srcdir}}/musikernel-master"
+  make PREFIX={{MINGW_PREFIX}} DESTDIR="$pkgdir" install_mingw
+}}
+
+"""
+
 CWD = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(CWD, "..", "src", "minor-version.txt")) as fh:
@@ -28,19 +73,24 @@ with open(os.path.join(CWD, "..", "src", "major-version.txt")) as fh:
 url = "https://github.com/j3ffhubb/musikernel/archive/master.zip"
 file_name = os.path.join(CWD, "musikernel-master.zip")
 
-#with urllib.request.urlopen(url) as response, \
-#open(file_name, 'wb') as out_file:
-#    shutil.copyfileobj(response, out_file)
+with urllib.request.urlopen(url) as response, \
+open(file_name, 'wb') as out_file:
+    shutil.copyfileobj(response, out_file)
 
 with open(file_name, "rb") as fh:
-    MD5 = hashlib.md5(fh.read()).hexdigest()
+    MD5_ZIP = hashlib.md5(fh.read()).hexdigest()
+
+file_name = os.path.join(CWD, "mingw-w64-fix.patch")
+
+with open(file_name, "rb") as fh:
+    MD5_PATCH = hashlib.md5(fh.read()).hexdigest()
 
 PKGBUILD = os.path.join(CWD, "PKGBUILD")
-PKGBUILD_TEMPLATE = PKGBUILD + ".txt"
 
-with open(PKGBUILD_TEMPLATE) as fh_t, open(PKGBUILD, "w") as fh_p:
-    tmp_str = fh_t.read()
-    tmp_str = tmp_str.format(
+with open(PKGBUILD, "w") as fh:
+    tmp_str = PKGBUILD_TEMPLATE.format(
         major_version=MAJOR_VERSION, minor_version=MINOR_VERSION,
-        zip_md5sum=MD5)
-    fh_p.write(tmp_str)
+        zip_md5sum=MD5_ZIP, patch_md5sum=MD5_PATCH)
+    fh.write(tmp_str)
+
+retval = os.system("makepkg-mingw -Cfs")
