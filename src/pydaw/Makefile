@@ -28,8 +28,9 @@ PORTMIDI_FLAG ?= -lportmidi
 
 PLAT_LINK_CFLAGS ?= $(RT_LIB_FLAG) $(ALSA_FLAG) $(LIBLO_FLAG)
 
-LINK_CFLAGS  = -lpthread -lportaudio $(LDFLAGS) $(PORTMIDI_FLAG) \
-$(shell pkg-config --libs sndfile fftw3f) $(MATH_LIB_FLAG) 
+LINK_CFLAGS  = -lpthread $(PORTMIDI_FLAG) -lportaudio $(LDFLAGS) \
+$(shell pkg-config --libs sndfile fftw3f) $(MATH_LIB_FLAG) \
+$(PLAT_LINK_CFLAGS)
 
 C_OBJS   = src/main.o
 
