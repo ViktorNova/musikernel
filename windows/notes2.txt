@@ -101,3 +101,7 @@ Make 2 copies of the folder, one with only 64 bit and one with only 32 bit
 
 NSIS, or just zip?  (NSIS can use LZMA and make much smaller distributables)
 
+UPDATE:  It only works if it's in the exact same path it was created in,
+if there's a way to re-link everything, I have not found it yet.
+
+
