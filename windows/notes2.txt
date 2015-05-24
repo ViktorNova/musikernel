@@ -84,3 +84,20 @@ PLAT_LINK_CLFAGS= CC=/mingw64/bin/gcc.exe  /mingw64/bin/mingw32-make.exe lib
 #install
 make PREFIX= DESTDIR=/mingw64 install_mingw
 
+
+
+#### PACKAGING NOTES ####
+
+(speculative, none of this is proven yet)
+
+Download the MSYS2 base portable tar.xz and unpack
+
+Generate packages from a MusiKernel PKGBUILD and install using:
+
+# switch for installing dependencies?
+pacman -U mingw-blah-musikernel.tar.xz
+
+Make 2 copies of the folder, one with only 64 bit and one with only 32 bit
+
+NSIS, or just zip?  (NSIS can use LZMA and make much smaller distributables)
+
