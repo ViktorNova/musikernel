@@ -1,3 +1,7 @@
+
+windows/*.zip
+windows/*.tar.xz
+windows/pkg/
 windows/src
 PKGBUILD
 *.dll
