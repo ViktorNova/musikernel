@@ -345,7 +345,7 @@ void v_iterate_2d_char_array(t_2d_char_array* a_array)
     }
 
 #ifdef _WIN32
-    printf("v_iterate_2d_char_array: %s\n", a_array->current_str);
+    //printf("v_iterate_2d_char_array: %s\n", a_array->current_str);
 #endif
 }
 
@@ -386,7 +386,8 @@ void v_iterate_2d_char_array_to_next_line(t_2d_char_array* a_array)
     }
 
 #ifdef _WIN32
-    printf("v_iterate_2d_char_array_to_next_line: %s\n", a_array->current_str);
+    //printf("v_iterate_2d_char_array_to_next_line: %s\n",
+    //    a_array->current_str);
 #endif
 }
 
