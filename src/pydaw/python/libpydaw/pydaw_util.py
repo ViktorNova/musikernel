@@ -164,6 +164,10 @@ def pydaw_which(a_file):
         f_file_path = os.path.join(f_path, a_file)
         if os.path.exists(f_file_path) and not os.path.isdir(f_file_path):
             return f_file_path
+        if IS_WINDOWS:
+            if os.path.exists(f_file_path + ".exe") \
+            and not os.path.isdir(f_file_path):
+                return f_file_path
     return None
 
 
