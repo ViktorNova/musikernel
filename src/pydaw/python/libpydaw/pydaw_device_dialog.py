@@ -403,13 +403,13 @@ class pydaw_device_dialog:
         for i in range(f_count):
             f_dev = self.pyaudio.Pa_GetDeviceInfo(i)
             f_dev_name = f_dev.contents.name.decode("utf-8")
-#            print("\nDevice Index: {}".format(i))
-#            print("Name : {}".format(f_dev_name))
-#            print("maxInputChannels : {}".format(
-#                f_dev.contents.maxInputChannels))
-#            print("maxOutputChannels : {}".format(
-#                f_dev.contents.maxOutputChannels))
-#            print()
+            print("\nDevice Index: {}".format(i))
+            print("Name : {}".format(f_dev_name))
+            print("maxInputChannels : {}".format(
+                f_dev.contents.maxInputChannels))
+            print("maxOutputChannels : {}".format(
+                f_dev.contents.maxOutputChannels))
+            print()
             f_name_to_index[f_dev_name] = i
             f_host_api = f_host_api_names[f_dev.contents.hostApi]
             f_result_dict[f_host_api][f_dev_name] = f_dev.contents
