@@ -410,6 +410,8 @@ class pydaw_device_dialog:
             print("maxOutputChannels : {}".format(
                 f_dev.contents.maxOutputChannels))
             print()
+            if not f_dev.contents.maxOutputChannels:
+                continue
             f_name_to_index[f_dev_name] = i
             f_host_api = f_host_api_names[f_dev.contents.hostApi]
             f_result_dict[f_host_api][f_dev_name] = f_dev.contents
