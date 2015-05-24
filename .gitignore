@@ -24,8 +24,6 @@ src/sbsms/sbsms.pc
 src/sbsms/src/Makefile
 src/sbsms/src/config.h
 src/sbsms/src/stamp-h1
-src/pydaw/midicomp/midicomp
-src/pydaw/python/libpydaw/midicomp
 src/pydaw/pyliblo-0.9.2/build/
 src/pydaw/python/libpydaw/*.so
 src/pydaw/python/libpydaw/*.dll

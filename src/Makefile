@@ -49,12 +49,10 @@ deps:
 	cd pydaw/pyliblo-0.9.2 && python3 setup.py build && cp build/lib*/liblo* ../python/libpydaw
 
 mingw_deps:
-	make -C pydaw/midicomp && cp pydaw/midicomp/midicomp pydaw/python/libpydaw
 	cd sbsms && ( ./configure || ./configure --enable-sse=no ) && make
 	cd sbsms/cli && make
 
 mingw_deps_clean:
-	make -C pydaw/midicomp clean
 	make -C sbsms clean
 	make -C sbsms/cli clean
 

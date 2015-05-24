@@ -137,7 +137,6 @@ rm -rf $RPM_BUILD_ROOT
 %{{_usr}}/lib/{0}/presets/WAYV.mkp
 %{{_usr}}/lib/{0}/pydaw/python/libpydaw/__init__.py
 %{{_usr}}/lib/{0}/pydaw/python/libpydaw/liblo.cpython-{4}m.so
-%{{_usr}}/lib/{0}/pydaw/python/libpydaw/midicomp
 %{{_usr}}/lib/{0}/pydaw/python/libpydaw/portaudio.py
 %{{_usr}}/lib/{0}/pydaw/python/libpydaw/portmidi.py
 %{{_usr}}/lib/{0}/pydaw/python/libedmnext/gradients.py

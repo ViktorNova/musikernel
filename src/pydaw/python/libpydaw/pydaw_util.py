@@ -24,6 +24,11 @@ from math import log, pow
 from multiprocessing import cpu_count
 import numpy
 
+try: #this will fail if imported by device dialog, but that's OK
+    import mido
+except ImportError:
+    pass
+
 from PyQt5 import QtCore
 
 
@@ -415,67 +420,48 @@ def int_to_bool(a_int):
     else:
         assert(False)
 
-class pydaw_midicomp_event:
-    def __init__(self, a_arr):
-        self.tick = int(a_arr[0])
-        self.type = a_arr[1]
-        self.ch = int(a_arr[2].split("ch=")[1]) - 1
-        self.pitch = int(a_arr[3].split("n=")[1])
-        if self.pitch >= 24:
-            self.pitch -= 24
-        self.vel = int(a_arr[4].split("v=")[1])
-        self.length = -1
+class MidiEvent:
+    def __init__(self, a_ev, a_start_beat):
+        self.ev = a_ev
+        self.start_beat = a_start_beat
+        self.type = a_ev.type
 
     def __lt__(self, other):
-        return self.tick < other.tick
-
-MIDI_COMP = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "midicomp")
+        return self.start_beat < other.start_beat
 
 def load_midi_file(a_file):
-    f_midi_text_arr = subprocess.check_output(
-        [MIDI_COMP, str(a_file)]).decode("utf-8").split("\n")
+    f_midi_text_arr = mido.MidiFile(str(a_file))
     #First fix the lengths of events that have note-off events
     f_note_on_dict = {}
     f_item_list = []
-    f_resolution = 96
-    for f_line in f_midi_text_arr:
-        f_line_arr = f_line.split()
-        if len(f_line_arr) <= 1:
-            continue
-        if f_line_arr[0] == "MFile":
-            f_resolution = int(f_line_arr[3])
-        elif f_line_arr[1] == "On":
-            f_event = pydaw_midicomp_event(f_line_arr)
-            if f_event.vel == 0:
-                f_tuple = (f_event.ch, f_event.pitch)
-                if f_tuple in f_note_on_dict:
-                    f_note_on_dict[f_tuple].length = \
-                        float(f_event.tick -
-                        f_note_on_dict[f_tuple].tick) / float(f_resolution)
-                    f_note_on_dict.pop(f_tuple)
-            else:
-                f_note_on_dict[(f_event.ch, f_event.pitch)] = f_event
-                f_item_list.append(f_event)
-        elif f_line_arr[1] == "Off":
-            f_event = pydaw_midicomp_event(f_line_arr)
-            f_tuple = (f_event.ch, f_event.pitch)
+    f_pos = 0
+    f_sec_per_beat = 0.5
+    for f_ev in f_midi_text_arr:
+        if f_ev.type == "set_tempo":
+            f_sec_per_beat = f_ev.tempo / 1000000.0
+        elif f_ev.type == "note_off" or (
+        f_ev.type == "note_on" and f_ev.velocity == 0):
+            f_tuple = (f_ev.channel, f_ev.note)
             if f_tuple in f_note_on_dict:
-                f_note_on_dict[f_tuple].length = \
-                    float(f_event.tick -
-                    f_note_on_dict[f_tuple].tick) / float(f_resolution)
-                print("{} {}".format(f_note_on_dict[f_tuple].tick,
-                      f_note_on_dict[f_tuple].length))
+                f_event = f_note_on_dict[f_tuple]
+                f_event.length = f_pos - f_event.start_beat
+                f_item_list.append(f_event)
                 f_note_on_dict.pop(f_tuple)
             else:
                 print("Error, note-off event does not correspond to a "
-                      "note-on event, ignoring event:\n{}".format(
-                    f_event))
+                      "note-on event, ignoring event:\n{}".format(f_ev))
+        elif f_ev.type == "note_on":
+            f_event = MidiEvent(f_ev, f_pos)
+            f_tuple = (f_ev.channel, f_ev.note)
+            if f_tuple in f_note_on_dict:
+                f_note_on_dict[f_tuple].length = f_pos - f_event.start_beat
+            f_note_on_dict[f_tuple] = f_event
         else:
-            print("Ignoring event: {}".format(f_line))
+            print("Ignoring event: {}".format(f_ev))
+        f_pos += f_ev.time / f_sec_per_beat
 
     f_item_list.sort()
-    return f_resolution, f_item_list
+    return f_item_list
 
 def print_sorted_dict(a_dict):
     """ Mostly intended for printing locals() and globals() """

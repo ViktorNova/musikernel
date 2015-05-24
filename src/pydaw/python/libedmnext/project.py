@@ -1110,7 +1110,7 @@ class pydaw_region:
                     f_result.region_length_bars = int(f_item_arr[1])
                     continue
                 f_result.add_item_ref_by_uid(
-                    int(f_item_arr[0]), int(f_item_arr[1]), f_item_arr[2])
+                    *[int(float(x)) for x in f_item_arr[:3]])
         return f_result
 
     class region_item:
@@ -2011,18 +2011,18 @@ class pydaw_midi_file_to_items:
     """ Convert the MIDI file at a_file to a dict of pydaw_item's with keys
         in the format (track#, channel#, bar#)"""
     def __init__(self, a_file):
-        f_resolution, f_item_list = pydaw_util.load_midi_file(a_file)
+        f_item_list = pydaw_util.load_midi_file(a_file)
         self.result_dict = {}
 
         for f_event in f_item_list:
-            if f_event.length > 0.0:
-                f_velocity = f_event.vel
-                f_beat = (float(f_event.tick) / float(f_resolution)) % 4.0
-                f_bar = int((int(f_event.tick) // int(f_resolution)) // 4)
+            if f_event.length >= pydaw_min_note_length:
+                f_velocity = f_event.ev.velocity
+                f_beat = f_event.start_beat % 4.0
+                f_bar = f_event.start_beat // 4
                 print("f_beat : {} | f_bar : {}".format(f_beat, f_bar))
-                f_pitch = f_event.pitch
+                f_pitch = f_event.ev.note
                 f_length = f_event.length
-                f_channel = f_event.ch
+                f_channel = f_event.ev.channel
                 f_key = (f_channel, f_bar)
                 if not f_key in self.result_dict:
                     self.result_dict[f_key] = pydaw_item()
