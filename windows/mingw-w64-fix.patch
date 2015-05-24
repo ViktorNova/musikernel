@@ -1,8 +1,6 @@
-diff --git a/src/pydaw/Makefile b/src/pydaw/Makefile
-index bd2d192..1506345 100644
---- a/src/pydaw/Makefile
-+++ b/src/pydaw/Makefile
-@@ -28,9 +28,8 @@ PORTMIDI_FLAG ?= -lportmidi
+--- musikernel-master/src/pydaw/Makefile.orig   2015-05-24 14:52:17.758474200 -0700
++++ musikernel-master/src/pydaw/Makefile        2015-05-24 13:59:13.000000000 -0700
+@@ -28,9 +28,8 @@
 
  PLAT_LINK_CFLAGS ?= $(RT_LIB_FLAG) $(ALSA_FLAG) $(LIBLO_FLAG)
 

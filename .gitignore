@@ -1,3 +1,5 @@
+windows/src
+PKGBUILD
 *.dll
 packages/
 src/pydaw/musikernel*.so

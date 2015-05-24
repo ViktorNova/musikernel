@@ -21,7 +21,6 @@ import urllib.request
 PKGBUILD_TEMPLATE = """# Maintainer: Jeff Hubbard <musikernel@gmail.com>
 
 _realname={major_version}
-
 pkgname="${{MINGW_PACKAGE_PREFIX}}-${{_realname}}"
 pkgver={minor_version}
 pkgrel=1
@@ -39,25 +38,26 @@ depends=("${{MINGW_PACKAGE_PREFIX}}-gcc-libs"
          "${{MINGW_PACKAGE_PREFIX}}-python3-numpy"
          "${{MINGW_PACKAGE_PREFIX}}-libvorbis"
          "${{MINGW_PACKAGE_PREFIX}}-python3-pyqt5")
-source=("https://github.com/j3ffhubb/musikernel/archive/master.zip")
+source=("https://github.com/j3ffhubb/musikernel/archive/master.zip"
+        "mingw-w64-fix.patch")
 md5sums=('{zip_md5sum}'
          '{patch_md5sum}')
 
 prepare() {{
-  cd ${{srcdir}}/musikernel-master
-  patch -p1 -i ${{srcdir}}/mingw-w64-fix.patch
+  cd ${{srcdir}}
+  patch -p1 -i ${{srcdir}}/mingw-w64-fix.patch musikernel-master/src/pydaw/Makefile
 }}
 
 build() {{
-  #export PATH="{{MINGW_PREFIX}}:$PATH"
-  cd ${{srcdir}}/musikernel-master
-   CC=/mingw64/bin/gcc.exe  /mingw64/bin/mingw32-make.exe make {{MINGW_CHOST}}
+  #export PATH="${{MINGW_PREFIX}}:$PATH"
+  cd "${{srcdir}}/musikernel-master/src"
+  CC=${{MINGW_PREFIX}}/bin/gcc.exe make mingw
 }}
 
 package() {{
-  #export PATH="{{MINGW_PREFIX}}:$PATH"
-  cd "${{srcdir}}/musikernel-master"
-  make PREFIX={{MINGW_PREFIX}} DESTDIR="$pkgdir" install_mingw
+  #export PATH="${{MINGW_PREFIX}}:$PATH"
+  cd "${{srcdir}}/musikernel-master/src"
+  make PREFIX=${{MINGW_PREFIX}} DESTDIR="$pkgdir" install_mingw
 }}
 
 """
