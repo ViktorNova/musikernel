@@ -78,6 +78,5 @@ src/pydaw_render/test.wav.finished
 *GNU-amd64-Linux*
 *.deb
 *.moc.cpp
-*.patch
 *deps_installed.txt
 */build/*
