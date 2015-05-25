@@ -1195,10 +1195,12 @@ class MkMainWindow(QMainWindow):
 
     def on_offline_render(self):
         libmk.PLUGIN_UI_DICT.save_all_plugin_state()
-        if self.current_module.CLOSE_ENGINE_ON_RENDER:
+        if self.current_module.CLOSE_ENGINE_ON_RENDER and \
+        not pydaw_util.IS_ENGINE_LIB:
             close_pydaw_engine()
         self.current_window.on_offline_render()
-        if self.current_module.CLOSE_ENGINE_ON_RENDER:
+        if self.current_module.CLOSE_ENGINE_ON_RENDER and \
+        not pydaw_util.IS_ENGINE_LIB:
             open_pydaw_engine(PROJECT_FILE)
 
     def on_undo(self):

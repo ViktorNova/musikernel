@@ -17,6 +17,10 @@ InstallDir "C:\musikernel1-64"
 ShowInstDetails show
 
 ;--------------------------------
+;Interface Settings
+  !define MUI_ABORTWARNING
+
+;--------------------------------
 ;Modern UI Configuration
 ;Installer pages
 !define MUI_PAGE_WELCOME

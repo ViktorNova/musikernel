@@ -8570,13 +8570,14 @@ class pydaw_main_window(QScrollArea):
             f_out_file = f_name.text()
             f_samp_rate = f_sample_rate.currentText()
             f_buff_size = pydaw_util.global_device_val_dict["bufferSize"]
-            f_thread_count = pydaw_util.global_device_val_dict["threads"]
+            f_thread_count = 1 if pydaw_util.IS_WINDOWS else \
+                pydaw_util.global_device_val_dict["threads"]
 
             self.last_offline_dir = os.path.dirname(str(f_name.text()))
 
             f_window.close()
 
-            if f_debug_checkbox.isChecked():
+            if pydaw_util.IS_LINUX and f_debug_checkbox.isChecked():
                 f_cmd = "{} -e bash -c 'gdb {}-dbg'".format(
                     pydaw_util.TERMINAL, pydaw_util.RENDER_BIN_PATH)
                 f_run_cmd = [str(x) for x in
@@ -8670,8 +8671,9 @@ class pydaw_main_window(QScrollArea):
         f_layout.addWidget(f_copy_to_clipboard_checkbox, 7, 1)
         f_ok_layout = QHBoxLayout()
 
-        f_debug_checkbox = QCheckBox("Debug with GDB?")
-        f_ok_layout.addWidget(f_debug_checkbox)
+        if pydaw_util.IS_LINUX:
+            f_debug_checkbox = QCheckBox("Debug with GDB?")
+            f_ok_layout.addWidget(f_debug_checkbox)
 
         f_ok_layout.addItem(
             QSpacerItem(10, 10, QSizePolicy.Expanding,
