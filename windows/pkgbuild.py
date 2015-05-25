@@ -38,15 +38,8 @@ depends=("${{MINGW_PACKAGE_PREFIX}}-gcc-libs"
          "${{MINGW_PACKAGE_PREFIX}}-python3-numpy"
          "${{MINGW_PACKAGE_PREFIX}}-libvorbis"
          "${{MINGW_PACKAGE_PREFIX}}-python3-pyqt5")
-source=("https://github.com/j3ffhubb/musikernel/archive/master.zip"
-        "mingw-w64-fix.patch")
-md5sums=('{zip_md5sum}'
-         '{patch_md5sum}')
-
-prepare() {{
-  cd ${{srcdir}}
-  patch -p1 -i ${{srcdir}}/mingw-w64-fix.patch musikernel-master/src/pydaw/Makefile
-}}
+source=("https://github.com/j3ffhubb/musikernel/archive/master.zip")
+md5sums=('{zip_md5sum}')
 
 build() {{
   #export PATH="${{MINGW_PREFIX}}:$PATH"
@@ -80,17 +73,12 @@ open(file_name, 'wb') as out_file:
 with open(file_name, "rb") as fh:
     MD5_ZIP = hashlib.md5(fh.read()).hexdigest()
 
-file_name = os.path.join(CWD, "mingw-w64-fix.patch")
-
-with open(file_name, "rb") as fh:
-    MD5_PATCH = hashlib.md5(fh.read()).hexdigest()
-
 PKGBUILD = os.path.join(CWD, "PKGBUILD")
 
 with open(PKGBUILD, "w") as fh:
     tmp_str = PKGBUILD_TEMPLATE.format(
         major_version=MAJOR_VERSION, minor_version=MINOR_VERSION,
-        zip_md5sum=MD5_ZIP, patch_md5sum=MD5_PATCH)
+        zip_md5sum=MD5_ZIP)
     fh.write(tmp_str)
 
 retval = os.system("makepkg-mingw -Cfs")
