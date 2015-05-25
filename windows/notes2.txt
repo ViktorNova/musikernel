@@ -13,6 +13,7 @@ Install Netbeans
 Install Anaconda (Spyder)
   - Tools -> Preferences (trim whitespace, change theme)
 
+Install NSIS
 Install MSYS2
 
 pacman -Sy
@@ -88,10 +89,6 @@ make PREFIX= DESTDIR=/mingw64 install_mingw
 
 #### PACKAGING NOTES ####
 
-(speculative, none of this is proven yet)
-
-Download the MSYS2 base portable tar.xz and unpack
-
 Generate packages from a MusiKernel PKGBUILD and install using:
 
 # switch for installing dependencies?
@@ -99,9 +96,12 @@ pacman -U mingw-blah-musikernel.tar.xz
 
 Make 2 copies of the folder, one with only 64 bit and one with only 32 bit
 
-NSIS, or just zip?  (NSIS can use LZMA and make much smaller distributables)
+Run space-saver.py
+Delete extra files to get under 100MB
+Copy the musikernel1.ico file to the root directory
+Run NSIS to generate the installer
 
-UPDATE:  It only works if it's in the exact same path it was created in,
+NOTE:  It only works if it's in the exact same path it was created in, Qt complains about missing DLLs
 if there's a way to re-link everything, I have not found it yet.
 
 

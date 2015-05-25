@@ -7,21 +7,21 @@
 
 RequestExecutionLevel admin ;Require admin rights on NT6+ (When UAC is turned on)
  
-SetCompressor lzma
+SetCompressor /SOLID lzma
  
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "musikernel-installer-win-x64.exe"
-InstallDir "C:\musikernel64"
+InstallDir "C:\musikernel1-64"
 ShowInstDetails show
  
 Section "install"
   RMDir /r $INSTDIR
   SetOutPath $INSTDIR
   writeUninstaller "$INSTDIR\uninstall.exe"
-  File /r "C:\cygwin64\*" 
+  File /r "C:\musikernel1-64\*" 
   CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
   createShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" \
-    "$INSTDIR\RUN_MusiKernel1.bat" "" "$INSTDIR\musikernel1.ico"
+    "$INSTDIR\mingw64\bin\python3.exe $INSTDIR\mingw64\bin\musikernel1" "" "$INSTDIR\musikernel1.ico"
 SectionEnd
 
 Section "uninstall"

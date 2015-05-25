@@ -36,6 +36,7 @@ DELETE_FILES = (
     ('bin', 'q*.exe'),
     ('bin', 'sndfile*.exe'),
     ('bin', 'pm-*.exe'),
+    ('bin', 'pg_*.exe')
     #('bin', 'x86_64-w64-*.exe'),
 )
 
