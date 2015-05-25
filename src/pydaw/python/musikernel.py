@@ -1557,6 +1557,8 @@ if RESPAWN:
     print("Spawning child UI process {}".format(sys.argv))
     if pydaw_util.IS_CYGWIN:
         CHILD_PROC = subprocess.Popen(["/bin/python3.2m"] + sys.argv)
+    elif pydaw_util.IS_WINDOWS:
+        CHILD_PROC = subprocess.Popen([pydaw_util.PYTHON3] + sys.argv)
     else:
         CHILD_PROC = subprocess.Popen(sys.argv)
         #, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
