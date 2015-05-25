@@ -124,13 +124,17 @@ if pydaw_util.IS_LINUX:
     HOST_API_TOOLTIP += _("""
 Unless you are using Firewire (for which JACK is the only choice on Linux),
 it is recommended that you stop the JACK server and use your
-device directly using ALSA for best performance, stability and latency.""")
+device directly using ALSA for best performance, stability and latency.
+""")
 elif pydaw_util.IS_WINDOWS:
     HOST_API_TOOLTIP += _("""
 If possible, you should use an API capable of low latency such as
-WDM-KS or WASAPI.  Unfortunately, ASIO is not supported at this time.""")
+WDM-KS or WASAPI.  Unfortunately, ASIO is not supported at this time.
+""")
 
-DEVICE_TOOLTIP = _("""Select your audio interface from this list.""")
+DEVICE_TOOLTIP = _("""
+Select your audio interface from this list.
+""")
 
 class pydaw_device_dialog:
     def __init__(self, a_is_running=False):
@@ -283,12 +287,8 @@ class pydaw_device_dialog:
         f_main_layout.addWidget(f_tab_widget)
 
         f_audio_out_tab = QWidget()
-        f_tab_widget.addTab(f_audio_out_tab, _("Audio Out"))
+        f_tab_widget.addTab(f_audio_out_tab, _("Audio"))
         f_window_layout = QGridLayout(f_audio_out_tab)
-
-        f_audio_in_tab = QWidget()
-        f_tab_widget.addTab(f_audio_in_tab, _("Audio In"))
-        f_audio_in_layout = QGridLayout(f_audio_in_tab)
 
         f_midi_in_tab = QTabWidget()
         f_tab_widget.addTab(f_midi_in_tab, _("MIDI In"))
@@ -300,11 +300,16 @@ class pydaw_device_dialog:
         f_subsystem_combobox.setMinimumWidth(390)
         f_window_layout.addWidget(f_subsystem_combobox, 2, 1)
 
-        f_window_layout.addWidget(QLabel(_("Audio Device")), 5, 0)
+        f_window_layout.addWidget(QLabel(_("Output Device")), 5, 0)
         f_device_name_combobox = QComboBox()
         f_device_name_combobox.setToolTip(DEVICE_TOOLTIP)
         f_device_name_combobox.setMinimumWidth(390)
         f_window_layout.addWidget(f_device_name_combobox, 5, 1)
+        if pydaw_util.IS_WINDOWS:
+            f_window_layout.addWidget(QLabel(_("Input Device")), 6, 0)
+            f_input_name_combobox = QComboBox()
+            f_input_name_combobox.setMinimumWidth(390)
+            f_window_layout.addWidget(f_input_name_combobox, 6, 1)
         f_window_layout.addWidget(QLabel(_("Sample Rate")), 10, 0)
         f_samplerate_combobox = QComboBox()
         f_samplerate_combobox.addItems(self.sample_rates)
@@ -397,7 +402,7 @@ class pydaw_device_dialog:
         f_count = self.pyaudio.Pa_GetDeviceCount()
 
         f_result_dict = {x:{} for x in f_host_api_names}
-        f_name_to_index = {}
+        f_name_to_index = {x:{} for x in f_host_api_names}
         f_host_api_device_names = {x:[] for x in f_host_api_names}
 
         for i in range(f_count):
@@ -410,28 +415,27 @@ class pydaw_device_dialog:
             print("maxOutputChannels : {}".format(
                 f_dev.contents.maxOutputChannels))
             print()
-            if not f_dev.contents.maxOutputChannels:
-                continue
-            f_name_to_index[f_dev_name] = i
             f_host_api = f_host_api_names[f_dev.contents.hostApi]
+            f_name_to_index[f_host_api][f_dev_name] = i
             f_result_dict[f_host_api][f_dev_name] = f_dev.contents
             f_host_api_device_names[f_host_api].append(f_dev_name)
 
-        f_host_api_device_names = {
-            k:v for k, v in f_host_api_device_names.items() if v}
+        f_host_api_input_names = {
+            k:[x for x in v if f_result_dict[k][x].maxInputChannels]
+            for k, v in f_host_api_device_names.items() if v}
 
-        for f_list in f_host_api_device_names.values():
+        f_host_api_device_names = {
+            k:[x for x in v if f_result_dict[k][x].maxOutputChannels]
+            for k, v in f_host_api_device_names.items() if v}
+
+        for f_list in list(f_host_api_device_names.values()
+        ) + list(f_host_api_input_names.values()):
             f_list.sort(key=lambda x: x.lower())
 
-        f_audio_in_layout.addWidget(QLabel(_("Input Count")), 0, 0)
+        f_window_layout.addWidget(QLabel(_("Input Count")), 7, 0)
         f_audio_in_spinbox = QSpinBox()
         f_audio_in_spinbox.setRange(0, 0)
-        f_audio_in_layout.addWidget(f_audio_in_spinbox, 0, 1)
-
-        f_audio_in_layout.addItem(
-            QSpacerItem(
-                1, 1, QSizePolicy.Expanding,
-                QSizePolicy.Expanding), 200, 0)
+        f_window_layout.addWidget(f_audio_in_spinbox, 7, 1)
 
         self.midi_in_checkboxes = {}
 
@@ -471,6 +475,10 @@ class pydaw_device_dialog:
             f_device_name_combobox.clear()
             f_device_name_combobox.addItems(
                 f_host_api_device_names[self.subsystem])
+            if pydaw_util.IS_WINDOWS:
+                f_input_name_combobox.clear()
+                f_input_name_combobox.addItems(
+                    f_host_api_input_names[self.subsystem])
 
         def combobox_changed(a_self=None, a_val=None):
             f_str = str(f_device_name_combobox.currentText())
@@ -483,8 +491,19 @@ class pydaw_device_dialog:
             if f_samplerate in self.sample_rates:
                 f_samplerate_combobox.setCurrentIndex(
                     f_samplerate_combobox.findText(f_samplerate))
+            if not pydaw_util.IS_WINDOWS:
+                f_in_count = f_result_dict[
+                    self.subsystem][self.device_name].maxInputChannels
+                f_in_count = pydaw_util.pydaw_clip_value(f_in_count, 0, 128)
+                f_audio_in_spinbox.setMaximum(f_in_count)
+
+        def input_combobox_changed(a_self=None, a_val=None):
+            f_str = str(f_input_name_combobox.currentText())
+            if not f_str:
+                return
+            self.input_name = f_str
             f_in_count = f_result_dict[
-                self.subsystem][self.device_name].maxInputChannels
+                self.subsystem][self.input_name].maxInputChannels
             f_in_count = pydaw_util.pydaw_clip_value(f_in_count, 0, 128)
             f_audio_in_spinbox.setMaximum(f_in_count)
 
@@ -534,18 +553,28 @@ class pydaw_device_dialog:
                 not self.is_running or \
                 "name" not in pydaw_util.global_device_val_dict or \
                 pydaw_util.global_device_val_dict["name"] != self.device_name:
+                    if pydaw_util.IS_WINDOWS and f_audio_inputs:
+                        f_input = portaudio.PaStreamParameters(
+                            f_name_to_index[self.subsystem][self.device_name],
+                            f_audio_inputs, portaudio.paInt16,
+                            float(f_buffer_size)/float(f_samplerate), None)
+                        f_input_ref = ctypes.byref(f_input)
+                    else:
+                        f_input_ref = 0
                     f_output = portaudio.PaStreamParameters(
-                        f_name_to_index[self.device_name],
+                        f_name_to_index[self.subsystem][self.device_name],
                         2, portaudio.paInt16,
                         float(f_buffer_size)/float(f_samplerate), None)
                     f_supported = self.pyaudio.Pa_IsFormatSupported(
-                        0, ctypes.byref(f_output), f_samplerate)
+                        f_input_ref, ctypes.byref(f_output), f_samplerate)
                     if not f_supported:
                         raise Exception()
                 f_file = open(
                     pydaw_util.global_pydaw_device_config, "w", newline="\n")
                 f_file.write("hostApi|{}\n".format(self.subsystem))
                 f_file.write("name|{}\n".format(self.device_name))
+                if pydaw_util.IS_WINDOWS:
+                    f_file.write("inputName|{}\n".format(self.input_name))
                 f_file.write("bufferSize|{}\n".format(f_buffer_size))
                 f_file.write("sampleRate|{}\n".format(f_samplerate))
                 if pydaw_util.IS_LINUX:
@@ -585,6 +614,9 @@ class pydaw_device_dialog:
 
         f_subsystem_combobox.currentIndexChanged.connect(subsystem_changed)
         f_device_name_combobox.currentIndexChanged.connect(combobox_changed)
+        if pydaw_util.IS_WINDOWS:
+            f_input_name_combobox.currentIndexChanged.connect(
+                input_combobox_changed)
 
         f_subsystem_combobox.addItems(
             sorted(f_host_api_device_names, key=lambda x: x.lower()))
@@ -609,7 +641,12 @@ class pydaw_device_dialog:
                                 f_device_name_combobox.setCurrentIndex(
                                     f_device_name_combobox.findText(f_dev))
                                 break
-
+                if pydaw_util.IS_WINDOWS and \
+                "inputName" in pydaw_util.global_device_val_dict:
+                    f_name = pydaw_util.global_device_val_dict["inputName"]
+                    if f_name in f_result_dict[self.subsystem]:
+                        f_input_name_combobox.setCurrentIndex(
+                            f_input_name_combobox.findText(f_name))
 
         if "audioInputs" in pydaw_util.global_device_val_dict:
             f_count = int(pydaw_util.global_device_val_dict["audioInputs"])

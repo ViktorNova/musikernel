@@ -505,6 +505,11 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     char f_device_name[256];
     f_device_name[0] = '\0';
 
+#ifdef _WIN32
+    char f_input_name[256];
+    f_input_name[0] = '\0';
+#endif
+
     int f_frame_count = DEFAULT_FRAMES_PER_BUFFER;
     int f_audio_input_count = 0;
 
@@ -541,7 +546,9 @@ NO_OPTIMIZATION int main(int argc, char **argv)
                     f_device_file_path, PYDAW_LARGE_STRING);
             f_device_name[0] = '\0';
             f_host_api_index = -1;
-
+#ifdef _WIN32
+            f_input_name[0] = '\0';
+#endif
             while(1)
             {
                 v_iterate_2d_char_array(f_current_string);
@@ -576,6 +583,13 @@ NO_OPTIMIZATION int main(int argc, char **argv)
                     snprintf(f_device_name, 256, "%s", f_value_char);
                     printf("device name: %s\n", f_device_name);
                 }
+#ifdef _WIN32
+                else if(!strcmp(f_key_char, "inputName"))
+                {
+                    snprintf(f_input_name, 256, "%s", f_value_char);
+                    printf("input name: %s\n", f_device_name);
+                }
+#endif
                 else if(!strcmp(f_key_char, "bufferSize"))
                 {
                     f_frame_count = atoi(f_value_char);
@@ -699,7 +713,8 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         {
             const PaDeviceInfo * f_padevice = Pa_GetDeviceInfo(f_i);
             if(!strcmp(f_padevice->name, f_device_name) &&
-               f_host_api_index == f_padevice->hostApi)
+               f_host_api_index == f_padevice->hostApi &&
+                f_padevice->maxOutputChannels)
             {
                 outputParameters.device = f_i;
                 inputParameters.device = f_i;
@@ -715,12 +730,47 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         }
 
         const PaDeviceInfo * f_device_info =
-            Pa_GetDeviceInfo(inputParameters.device);
+            Pa_GetDeviceInfo(outputParameters.device);
 
-        inputParameters.suggestedLatency =
-            f_device_info->defaultLowInputLatency;
         outputParameters.suggestedLatency =
             f_device_info->defaultLowOutputLatency;
+
+#ifdef _WIN32
+        if(f_input_name[0] == '\0')
+        {
+            inputParameters.channelCount = 0;
+        }
+        else
+        {
+            f_found_index = 0;
+            for(f_i = 0; f_i < Pa_GetDeviceCount(); ++f_i)
+            {
+                const PaDeviceInfo * f_padevice = Pa_GetDeviceInfo(f_i);
+                if(!strcmp(f_padevice->name, f_input_name) &&
+                   f_host_api_index == f_padevice->hostApi &&
+                    f_padevice->maxInputChannels)
+                {
+                    inputParameters.device = f_i;
+                    f_found_index = 1;
+                    break;
+                }
+            }
+
+            if(!f_found_index)
+            {
+                printf("Device not found\n");
+                exit(RET_CODE_DEVICE_NOT_FOUND);
+            }
+
+            f_device_info =
+                Pa_GetDeviceInfo(inputParameters.device);
+
+            inputParameters.suggestedLatency =
+                f_device_info->defaultLowInputLatency;
+        }
+#else
+        inputParameters.device = outputParameters.device;
+#endif
 
         if(!PYDAW_NO_HARDWARE)
         {
