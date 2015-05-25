@@ -343,14 +343,19 @@ class MkProject(libmk.AbstractProject):
                     str(a_audio_item.pitch_shift_end) ]
             elif a_audio_item.time_stretch_mode == 6:
                 if a_audio_item.pitch_shift != 0.0:
-                    f_cmd = [pydaw_paulstretch_util,
-                             "-s", str(a_audio_item.timestretch_amt), "-p",
-                             str(a_audio_item.pitch_shift),
-                             f_src_path, f_dest_path ]
+                    f_cmd = [
+                        pydaw_paulstretch_util, "-s",
+                        str(a_audio_item.timestretch_amt), "-p",
+                        str(a_audio_item.pitch_shift), f_src_path, f_dest_path
+                        ]
                 else:
-                    f_cmd = [pydaw_paulstretch_util,
-                             "-s", str(a_audio_item.timestretch_amt),
-                             f_src_path, f_dest_path ]
+                    f_cmd = [
+                        pydaw_paulstretch_util, "-s",
+                        str(a_audio_item.timestretch_amt), f_src_path,
+                        f_dest_path
+                        ]
+                if pydaw_util.IS_WINDOWS:
+                    f_cmd.insert(0, pydaw_util.PYTHON3)
 
             self.timestretch_cache[f_key] = f_uid
             self.timestretch_reverse_lookup[f_dest_path] = f_src_path

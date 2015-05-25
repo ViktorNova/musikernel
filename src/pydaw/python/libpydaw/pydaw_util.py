@@ -295,6 +295,8 @@ for _terminal in ("x-terminal-emulator", "gnome-terminal", "konsole"):
         TERMINAL = _terminal
         break
 
+PYTHON3 = pydaw_which("python3")
+
 pydaw_rubberband_util = pydaw_which("rubberband")
 
 pydaw_paulstretch_util = os.path.join(
