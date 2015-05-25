@@ -279,6 +279,11 @@ t_2d_char_array * g_get_2d_array(int a_size)
             (t_2d_char_array*)malloc(sizeof(t_2d_char_array));
     f_result->array = (char*)malloc(sizeof(char) * a_size);
     f_result->current_str = (char*)malloc(sizeof(char) * PYDAW_SMALL_STRING);
+
+#ifdef _WIN32
+    memset(f_result->current_str, '\0', PYDAW_SMALL_STRING);
+#endif
+
     f_result->current_index = 0;
     f_result->current_row = 0;
     f_result->current_column = 0;
