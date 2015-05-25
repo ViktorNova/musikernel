@@ -99,3 +99,5 @@ delete_it_all(r'C:\musikernel1-64\mingw64')
 MB = round(SAVED / (1024 * 1024), 2)
 
 print("Saved {} MB (not including directories)".format(MB))
+
+shutil.copy('gpl-3.0.txt', r'C:\musikernel1-64')
