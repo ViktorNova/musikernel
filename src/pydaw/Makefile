@@ -21,12 +21,11 @@ BASE_FLAGS     = $(OPTIMIZE_FLAGS) -ffast-math -funroll-loops -Wall \
 
 BUILD_CFLAGS   = -std=gnu89 $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
 MATH_LIB_FLAG ?= -lm
-RT_LIB_FLAG ?= -lrt
 ALSA_FLAG ?= $(shell pkg-config --libs alsa)
 LIBLO_FLAG ?= $(shell pkg-config --libs liblo)
 PORTMIDI_FLAG ?= -lportmidi
 
-PLAT_LINK_CFLAGS ?= $(RT_LIB_FLAG) $(ALSA_FLAG) $(LIBLO_FLAG)
+PLAT_LINK_CFLAGS ?= $(ALSA_FLAG) $(LIBLO_FLAG)
 
 LINK_CFLAGS  = -lpthread $(PORTMIDI_FLAG) -lportaudio $(LDFLAGS) \
 $(shell pkg-config --libs sndfile fftw3f) $(MATH_LIB_FLAG) \
