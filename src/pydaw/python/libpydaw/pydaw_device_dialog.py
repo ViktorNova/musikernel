@@ -277,6 +277,7 @@ class pydaw_device_dialog:
             self.close_devices()
             if a_exit_on_cancel and not self.dialog_result:
                 exit(9876)
+        self.input_name = ""
 
         f_window.closeEvent = f_close_event
         f_window.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
@@ -499,9 +500,10 @@ class pydaw_device_dialog:
 
         def input_combobox_changed(a_self=None, a_val=None):
             f_str = str(f_input_name_combobox.currentText())
-            if not f_str:
-                return
             self.input_name = f_str
+            if not f_str:
+                f_audio_in_spinbox.setMaximum(0)
+                return
             f_in_count = f_result_dict[
                 self.subsystem][self.input_name].maxInputChannels
             f_in_count = pydaw_util.pydaw_clip_value(f_in_count, 0, 128)
@@ -573,7 +575,7 @@ class pydaw_device_dialog:
                     pydaw_util.global_pydaw_device_config, "w", newline="\n")
                 f_file.write("hostApi|{}\n".format(self.subsystem))
                 f_file.write("name|{}\n".format(self.device_name))
-                if pydaw_util.IS_WINDOWS:
+                if pydaw_util.IS_WINDOWS and self.input_name:
                     f_file.write("inputName|{}\n".format(self.input_name))
                 f_file.write("bufferSize|{}\n".format(f_buffer_size))
                 f_file.write("sampleRate|{}\n".format(f_samplerate))
