@@ -1560,7 +1560,9 @@ if RESPAWN:
     if pydaw_util.IS_CYGWIN:
         CHILD_PROC = subprocess.Popen(["/bin/python3.2m"] + sys.argv)
     elif pydaw_util.IS_WINDOWS:
-        CHILD_PROC = subprocess.Popen([pydaw_util.PYTHON3] + sys.argv)
+        f_cmd = [pydaw_util.PYTHON3, os.path.abspath(sys.argv[0])]
+        print(f_cmd)
+        CHILD_PROC = subprocess.Popen(f_cmd)
     else:
         CHILD_PROC = subprocess.Popen(sys.argv)
         #, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)

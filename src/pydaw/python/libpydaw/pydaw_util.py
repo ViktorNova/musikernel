@@ -170,7 +170,8 @@ def pydaw_which(a_file):
         if os.path.exists(f_file_path) and not os.path.isdir(f_file_path):
             return f_file_path
         if IS_WINDOWS:
-            if os.path.exists(f_file_path + ".exe") \
+            f_file_path += ".exe"
+            if os.path.exists(f_file_path) \
             and not os.path.isdir(f_file_path):
                 return f_file_path
     return None
@@ -296,6 +297,12 @@ for _terminal in ("x-terminal-emulator", "gnome-terminal", "konsole"):
         break
 
 PYTHON3 = pydaw_which("python3")
+
+if IS_WINDOWS and not PYTHON3.endswith(".exe"):
+    PYTHON3 += ".exe"
+
+print("PYTHON3:  {}".format(PYTHON3))
+
 
 pydaw_rubberband_util = pydaw_which("rubberband")
 
