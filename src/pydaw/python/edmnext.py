@@ -3137,8 +3137,8 @@ class audio_viewer_item(QGraphicsRectItem):
         f_ts_modes = {x.audio_item.time_stretch_mode
             for x in AUDIO_SEQ.get_selected()}
 
-        for f_ts_mode, f_index in zip(
-        TIMESTRETCH_MODES, range(len(TIMESTRETCH_MODES))):
+        for f_ts_mode in TIMESTRETCH_MODES:
+            f_index = pydaw_util.TIMESTRETCH_INDEXES[f_ts_mode]
             f_action = f_ts_mode_menu.addAction(f_ts_mode)
             if len(f_ts_modes) == 1 and f_index in f_ts_modes:
                 f_action.setCheckable(True)
@@ -3264,7 +3264,7 @@ class audio_viewer_item(QGraphicsRectItem):
         self.timestretch_items(f_list)
 
     def ts_mode_menu_triggered(self, a_action):
-        f_index = TIMESTRETCH_MODES.index(str(a_action.text()))
+        f_index = TIMESTRETCH_INDEXES[str(a_action.text())]
         f_list = [x.audio_item for x in AUDIO_SEQ.get_selected()]
         for f_item in f_list:
             f_item.time_stretch_mode = f_index
@@ -4662,6 +4662,7 @@ class time_pitch_dialog_widget:
             self.timestretch_amt_end.setValue(self.timestretch_amt.value())
 
     def timestretch_mode_changed(self, a_val=None):
+        a_val = TIMESTRETCH_INDEXES[str(self.timestretch_mode.currentText())]
         if a_val == 0:
             self.pitch_shift.setEnabled(False)
             self.timestretch_amt.setEnabled(False)

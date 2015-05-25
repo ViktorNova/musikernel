@@ -54,6 +54,12 @@ TIMESTRETCH_MODES = [
     "None", "Pitch(affecting time)", "Time(affecting pitch)",
     "Rubberband", "Rubberband(formants)", "SBSMS", "Paulstretch"]
 
+TIMESTRETCH_INDEXES = {x:y for x, y in
+    zip(TIMESTRETCH_MODES, range(len(TIMESTRETCH_MODES)))}
+
+if IS_WINDOWS:
+    TIMESTRETCH_MODES.remove("SBSMS")
+
 CRISPNESS_SETTINGS = [
     "0 (smeared)", "1 (piano)", "2", "3",
     "4", "5 (normal)", "6 (sharp, drums)"]

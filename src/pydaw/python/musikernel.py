@@ -445,8 +445,7 @@ class MkMainWindow(QMainWindow):
         self.spacebar_action = QAction(self)
         self.addAction(self.spacebar_action)
         self.spacebar_action.triggered.connect(self.on_spacebar)
-        self.spacebar_action.setShortcut(
-            QKeySequence(QtCore.Qt.Key_Space))
+        self.spacebar_action.setShortcut(QKeySequence(QtCore.Qt.Key_Space))
 
         self.subprocess_timer = None
         self.osc_server = None
