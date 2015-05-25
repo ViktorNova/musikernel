@@ -412,13 +412,14 @@ class MkMainWindow(QMainWindow):
             _("Open Theme..."))
         self.open_theme_action.triggered.connect(self.on_open_theme)
 
-        self.menu_tools = self.menu_bar.addMenu(_("Tools"))
+        if not pydaw_util.IS_WINDOWS:
+            self.menu_tools = self.menu_bar.addMenu(_("Tools"))
 
-        self.ac_action = self.menu_tools.addAction(_("MP3 Converter..."))
-        self.ac_action.triggered.connect(self.mp3_converter_dialog)
+            self.ac_action = self.menu_tools.addAction(_("MP3 Converter..."))
+            self.ac_action.triggered.connect(self.mp3_converter_dialog)
 
-        self.ac_action = self.menu_tools.addAction(_("Ogg Converter..."))
-        self.ac_action.triggered.connect(self.ogg_converter_dialog)
+            self.ac_action = self.menu_tools.addAction(_("Ogg Converter..."))
+            self.ac_action.triggered.connect(self.ogg_converter_dialog)
 
         self.menu_help = self.menu_bar.addMenu(_("Help"))
 
