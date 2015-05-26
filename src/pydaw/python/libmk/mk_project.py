@@ -259,7 +259,7 @@ class MkProject(libmk.AbstractProject):
         return pydaw_name_uid_dict.from_str(f_str)
 
     def save_wavs_dict(self, a_uid_dict):
-        pydaw_write_file_text (self.pywavs_file, str(a_uid_dict))
+        pydaw_write_file_text(self.pywavs_file, str(a_uid_dict))
         #self.save_file("", pydaw_file_pywavs, str(a_uid_dict))
 
 
@@ -435,15 +435,17 @@ class MkProject(libmk.AbstractProject):
     def cp_audio_file_to_cache(self, a_file):
         if a_file in self.cached_audio_files:
             return
-        # Note:  This has already been "fixed" before, os.path.join
-        # should not be used for UNIX paths because there is a slash
-        # at the beginning of the path, where Windows starts with C:
-        # or similar
-        if IS_WINDOWS and a_file[1] == ":":
+        if a_file[0] != "/" and a_file[1] == ":":
             f_file = a_file.replace(":", "", 1)
             f_cp_path = os.path.join(self.samples_folder, f_file)
         else:
-            f_cp_path = "{}{}".format(self.samples_folder, a_file)
+            # Work around some baffling Python behaviour where
+            # os.path.join('/lala/la', '/ha/haha') returns '/ha/haha'
+            if a_file[0] == '/':
+                f_cp_path = "".join([self.samples_folder, a_file])
+            else:
+                f_cp_path = os.path.join(self.samples_folder, a_file)
+        f_cp_path = os.path.normpath(f_cp_path)
         f_cp_dir = os.path.dirname(f_cp_path)
         if not os.path.isdir(f_cp_dir):
             os.makedirs(f_cp_dir)
@@ -470,6 +472,7 @@ class MkProject(libmk.AbstractProject):
 
     def create_sample_graph(self, a_path, a_uid):
         f_uid = int(a_uid)
+        a_path = pydaw_util.pi_path(a_path)
         f_sample_dir_path = "{}{}".format(self.samples_folder, a_path)
         if os.path.isfile(a_path):
             f_path = a_path

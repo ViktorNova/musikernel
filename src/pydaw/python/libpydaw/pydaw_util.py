@@ -168,12 +168,18 @@ PROJECT_HISTORY_SCRIPT = os.path.join(
 
 pydaw_bad_chars = ["|", "\\", "~", "."]
 
+def pi_path(a_file):
+    "Platform independent path"
+    a_file = os.path.normpath(str(a_file))
+    return a_file.replace("\\", "/") if IS_WINDOWS else a_file
+
+
 def pydaw_which(a_file):
     """ Python equivalent of the UNIX "which" command """
-    f_path_arr = os.getenv("PATH").split(":")
+    f_path_arr = os.getenv("PATH").split(";" if IS_WINDOWS else ":")
     if IS_WINDOWS and BIN_DIR not in f_path_arr:
         f_path_arr.insert(0, BIN_DIR)
-    for f_path in f_path_arr:
+    for f_path in (pi_path(x) for x in f_path_arr):
         f_file_path = os.path.join(f_path, a_file)
         if os.path.exists(f_file_path) and not os.path.isdir(f_file_path):
             return f_file_path
@@ -377,11 +383,11 @@ def pydaw_clip_max(a_val, a_max):
         return a_val
 
 def pydaw_read_file_text(a_file):
-    with open(str(a_file)) as f_handle:
+    with open(pi_path(a_file)) as f_handle:
         return f_handle.read()
 
 def pydaw_write_file_text(a_file, a_text):
-    with open(str(a_file), "w", newline="\n") as f_handle:
+    with open(pi_path(a_file), "w", newline="\n") as f_handle:
         f_handle.write(str(a_text))
 
 def pydaw_gen_uid():
@@ -1053,7 +1059,8 @@ class pydaw_name_uid_dict:
 
     def add_item(self, a_uid, a_name):
         f_uid = int(a_uid)
-        self.name_lookup[f_uid] = str(a_name)
+        a_name = pi_path(a_name)
+        self.name_lookup[f_uid] = a_name
         self.uid_lookup[a_name] = f_uid
         if f_uid > self.high_uid:
             self.high_uid = f_uid
@@ -1118,7 +1125,7 @@ class pydaw_name_uid_dict:
         f_result = []
         for k in sorted(self.name_lookup.keys()):
             v = self.name_lookup[k]
-            f_result.append("|".join((str(k), v)))
+            f_result.append("|".join((str(k), pi_path(v))))
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 

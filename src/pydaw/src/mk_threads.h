@@ -55,13 +55,10 @@ void v_open_project(const char* a_project_folder, int a_first_load)
         musikernel->project_folder, PATH_SEP, PATH_SEP, PATH_SEP);
     sprintf(musikernel->samples_folder, "%s%saudio%ssamples",
         musikernel->project_folder, PATH_SEP, PATH_SEP);  //No trailing slash
-#if defined(_WIN32)
-    sprintf(musikernel->wav_pool->samples_folder, "%s%s",
-        musikernel->samples_folder, PATH_SEP);
-#else
+
     sprintf(musikernel->wav_pool->samples_folder, "%s",
         musikernel->samples_folder);
-#endif
+
     sprintf(musikernel->wav_pool_file, "%s%saudio%swavs.txt",
         musikernel->project_folder, PATH_SEP, PATH_SEP);
     sprintf(musikernel->audio_folder, "%s%saudio%sfiles",

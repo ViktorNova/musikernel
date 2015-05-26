@@ -410,35 +410,41 @@ void v_wav_pool_add_item(t_wav_pool* a_wav_pool, int a_uid, char * a_file_path)
 {
     char f_path[2048];
 
-#if defined(_WIN32)
-    char f_file_path[2048];
     int f_pos = 2;
 
-    if(a_file_path[1] == ':')
+    if(a_file_path[0] != '/' && a_file_path[1] == ':')
     {
+        char f_file_path[2048];
+
         f_file_path[0] = a_file_path[0];
         while(1)
         {
             f_file_path[f_pos - 1] = a_file_path[f_pos];
-            ++f_pos;
             if(a_file_path[f_pos] == '\0')
             {
                 break;
             }
+            ++f_pos;
         }
 
         printf("\nv_wav_pool_add_item:  '%s' '%s'\n",
             a_wav_pool->samples_folder, f_file_path);
 
-        sprintf(f_path, "%s%s", a_wav_pool->samples_folder, f_file_path);
+        sprintf(f_path, "%s%s%s", a_wav_pool->samples_folder,
+            PATH_SEP, f_file_path);
     }
     else
     {
-        sprintf(f_path, "%s%s", a_wav_pool->samples_folder, a_file_path);
+        if(a_file_path[0] == '/')
+        {
+            sprintf(f_path, "%s%s", a_wav_pool->samples_folder, a_file_path);
+        }
+        else
+        {
+            sprintf(f_path, "%s%s%s", a_wav_pool->samples_folder,
+                PATH_SEP, a_file_path);
+        }
     }
-#else
-    sprintf(f_path, "%s%s", a_wav_pool->samples_folder, a_file_path);
-#endif
 
     g_wav_pool_item_init(&a_wav_pool->items[a_uid], a_uid, f_path,
             a_wav_pool->sample_rate);
