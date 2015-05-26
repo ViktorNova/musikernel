@@ -49,9 +49,11 @@ Section "install"
   SetOutPath $INSTDIR
   writeUninstaller "$INSTDIR\uninstall.exe"
   File /r "C:\musikernel1-64\*"
+  RMDir /r "$SMPROGRAMS\${PRODUCT_NAME}"  
   CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
+  SetOutPath "$INSTDIR\mingw64\bin"
   createShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" \
-    "$INSTDIR\mingw64\bin\python3.exe" "$INSTDIR\mingw64\bin\musikernel1" "$INSTDIR\musikernel1.ico"
+    "$INSTDIR\mingw64\bin\musikernel1.bat" "" "$INSTDIR\musikernel1.ico" "" SW_SHOWMINIMIZED    
 SectionEnd
 
 Section "uninstall"
