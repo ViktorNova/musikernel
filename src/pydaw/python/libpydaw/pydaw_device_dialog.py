@@ -333,13 +333,14 @@ class pydaw_device_dialog:
             f_audio_engine_combobox.setToolTip(f_device_tooltip)
             f_window_layout.addWidget(f_audio_engine_combobox, 40, 1)
 
+        f_window_layout.addWidget(QLabel(_("Worker Threads")), 30, 0)
+        f_worker_threads_combobox = QComboBox()
+        f_worker_threads_combobox.addItems(
+            [_("Auto")] + [str(x) for x in range(1, pydaw_util.CPU_COUNT + 1)])
+        f_worker_threads_combobox.setToolTip(THREADS_TOOLTIP)
+        f_window_layout.addWidget(f_worker_threads_combobox, 30, 1)
+
         if pydaw_util.IS_LINUX:
-            f_window_layout.addWidget(QLabel(_("Worker Threads")), 30, 0)
-            f_worker_threads_combobox = QComboBox()
-            f_worker_threads_combobox.addItems(
-                [_("Auto")] + [str(x) for x in range(1, 9)])
-            f_worker_threads_combobox.setToolTip(THREADS_TOOLTIP)
-            f_window_layout.addWidget(f_worker_threads_combobox, 30, 1)
             f_thread_affinity_checkbox = QCheckBox(
                 _("Lock worker threads to own core?"))
             f_thread_affinity_checkbox.setToolTip(
@@ -532,12 +533,12 @@ class pydaw_device_dialog:
                     _("Using more than 8 MIDI devices is not supported, "
                     "please de-select some devices"))
                 return
+            f_worker_threads = f_worker_threads_combobox.currentIndex()
             if pydaw_util.IS_WINDOWS:
                 f_audio_engine = 8
             elif pydaw_util.IS_MAC_OSX:
                 f_audio_engine = f_audio_engine_combobox.currentIndex()
             elif pydaw_util.IS_LINUX:
-                f_worker_threads = f_worker_threads_combobox.currentIndex()
                 f_audio_engine = f_audio_engine_combobox.currentIndex()
                 f_thread_affinity = \
                     1 if f_thread_affinity_checkbox.isChecked() else 0
@@ -579,9 +580,10 @@ class pydaw_device_dialog:
                     f_file.write("inputName|{}\n".format(self.input_name))
                 f_file.write("bufferSize|{}\n".format(f_buffer_size))
                 f_file.write("sampleRate|{}\n".format(f_samplerate))
+                f_file.write("threads|{}\n".format(f_worker_threads))
+
                 if pydaw_util.IS_LINUX:
                     f_file.write("audioEngine|{}\n".format(f_audio_engine))
-                    f_file.write("threads|{}\n".format(f_worker_threads))
                     f_file.write("threadAffinity|{}\n".format(
                         f_thread_affinity))
                     f_file.write("hugePages|{}\n".format(f_hugepages))
@@ -666,11 +668,11 @@ class pydaw_device_dialog:
                 f_samplerate_combobox.findText(
                     pydaw_util.global_device_val_dict["sampleRate"]))
 
-        if pydaw_util.IS_LINUX:
-            if "threads" in pydaw_util.global_device_val_dict:
-                f_worker_threads_combobox.setCurrentIndex(
-                    int(pydaw_util.global_device_val_dict["threads"]))
+        if "threads" in pydaw_util.global_device_val_dict:
+            f_worker_threads_combobox.setCurrentIndex(
+                int(pydaw_util.global_device_val_dict["threads"]))
 
+        if pydaw_util.IS_LINUX:
             if "threadAffinity" in pydaw_util.global_device_val_dict:
                 if int(pydaw_util.global_device_val_dict[
                 "threadAffinity"]) == 1:

@@ -362,15 +362,12 @@ void * v_pydaw_worker_thread(void* a_arg)
 void v_pydaw_init_worker_threads(
         int a_thread_count, int a_set_thread_affinity, int a_aux_threads)
 {
+    int f_stack_size = (1024 * 1024);
+    int f_cpu_core_inc = 1;
+
 #ifdef __linux__
     int f_cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
-#else
-    int f_cpu_count = 1;
-#endif
-    int f_cpu_core_inc = 1;
     int f_has_ht = i_cpu_has_hyperthreading();
-
-    int f_stack_size = (1024 * 1024);
 
     if(f_has_ht)
     {
@@ -426,10 +423,17 @@ void v_pydaw_init_worker_threads(
         }
     }
 
-#ifdef __CYGWIN__
-#warning "Detected Cygwin as the target platform, disabling multithread support"
+#else
+    int f_cpu_count = a_thread_count;
 
-    musikernel->worker_thread_count = 1;
+    if(a_thread_count == 0)
+    {
+        musikernel->worker_thread_count = 1;
+    }
+    else
+    {
+        musikernel->worker_thread_count = a_thread_count;
+    }
 
 #endif
 

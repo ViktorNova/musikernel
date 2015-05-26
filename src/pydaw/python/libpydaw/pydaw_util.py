@@ -21,7 +21,7 @@ import subprocess
 import time
 import math
 from math import log, pow
-from multiprocessing import cpu_count
+import multiprocessing
 import numpy
 
 try: #this will fail if imported by device dialog, but that's OK
@@ -70,7 +70,9 @@ global_pydaw_is_sandboxed = False
 
 global_pydaw_with_audio = True
 
-global_cpu_count = cpu_count()
+CPU_COUNT = multiprocessing.cpu_count()
+if CPU_COUNT < 1:
+    CPU_COUNT = 1
 
 if "src/pydaw/python/" in __file__:
     INSTALL_PREFIX = "/usr"
