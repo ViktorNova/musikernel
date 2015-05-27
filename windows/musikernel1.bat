@@ -1,1 +1,1 @@
-start /MIN /REALTIME python3.exe musikernel1
+start /REALTIME python3.exe musikernel1
