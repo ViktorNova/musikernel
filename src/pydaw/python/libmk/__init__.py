@@ -59,8 +59,12 @@ def add_entropy(a_timedelta):
         return False
 
 def restart_engine():
-    close_pydaw_engine()
-    reopen_pydaw_engine()
+    if pydaw_util.IS_ENGINE_LIB:
+        print("Not restarting engine because the engine is running "
+            "as a shared library")
+    else:
+        close_pydaw_engine()
+        reopen_pydaw_engine()
 
 def prepare_to_quit():
     global MAIN_WINDOW, TRANSPORT, IPC, OSC, PROJECT
