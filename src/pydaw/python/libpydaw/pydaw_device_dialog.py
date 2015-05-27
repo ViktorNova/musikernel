@@ -699,6 +699,7 @@ class pydaw_device_dialog:
         f_vpos = (f_screen.height() - f_size.height()) / 2
         f_window.move(f_hpos, f_vpos)
         latency_changed()
+        f_window.raise_()
         if self.is_running:
             f_window.exec_()
         else:
