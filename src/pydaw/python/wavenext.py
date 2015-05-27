@@ -879,7 +879,7 @@ class pydaw_wave_editor_widget:
         if f_path is None or libmk.IS_PLAYING:
             return
 
-        f_base_file_name = f_path.rsplit(os.path.sep, 1)[1]
+        f_base_file_name = f_path.rsplit("/", 1)[1]
         f_base_file_name = f_base_file_name.rsplit(".", 1)[0]
         print(f_base_file_name)
 

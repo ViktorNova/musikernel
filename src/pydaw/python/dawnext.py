@@ -3054,7 +3054,7 @@ class audio_viewer_item(QGraphicsRectItem):
             self.audio_item.uid)
         f_file_name = libmk.PROJECT.timestretch_lookup_orig_path(
             f_file_name)
-        f_name_arr = f_file_name.rsplit(os.path.sep, 1)
+        f_name_arr = f_file_name.rsplit("/", 1)
         f_name = f_name_arr[-1]
         self.label = QGraphicsSimpleTextItem(f_name, parent=self)
         self.label.setPos(10, (AUDIO_ITEM_HEIGHT * 0.5) -

@@ -1762,7 +1762,8 @@ class pydaw_abstract_file_browser_widget():
         f_menu.exec_(QCursor.pos())
 
     def up_contextMenuEvent(self, a_event):
-        if self.last_open_dir != "/":
+        if (pydaw_util.IS_LINUX and self.last_open_dir != "/") or (
+        pydaw_util.IS_WINDOWS and self.last_open_dir[1] != ":"):
             f_menu = QMenu(self.up_button)
             f_menu.triggered.connect(self.open_path_from_action)
             f_arr = self.last_open_dir.split(os.path.sep)[1:]
