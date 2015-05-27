@@ -364,6 +364,21 @@ void v_pydaw_init_worker_threads(
 
 #ifdef __linux__
     int f_cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
+#endif
+
+#ifdef _WIN32
+    int f_cpu_count = atoi(getenv("NUMBER_OF_PROCESSORS"));
+    if(f_cpu_count < 1)
+    {
+        f_cpu_count = 1;
+    }
+    else if(f_cpu_count > 4)
+    {
+        f_cpu_count = 4;
+    }
+#endif
+
+#if defined(_WIN32) || defined(__linux__)
     int f_has_ht = i_cpu_has_hyperthreading();
 
     if(f_has_ht)
