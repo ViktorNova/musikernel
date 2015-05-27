@@ -14,7 +14,9 @@
 
 ######Windows
 
-LiveOS image available [here](https://drive.google.com/folderview?id=0BycGQs-5oRdffkthTmo2Q0lQLWNCblFkZkhodTJ0VlJlaXRMMzl4SXJ5ajI4YUR2WTFReUE&usp=sharing), you can follow the instructions to create a bootable USB drive for running MusiKernel without installing anything to your PC.
+Download and run the Windows installer [here](https://github.com/j3ffhubb/musikernel/releases/)
+
+MusiKernel on Windows is 64 bit only at the moment;  32 bit builds are possible if there is sufficient demand.
 
 ######Fedora
 
