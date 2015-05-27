@@ -40,9 +40,18 @@ DELETE_FILES = (
     #('bin', 'x86_64-w64-*.exe'),
 )
 
-# TODO:  List of Qt*.dll's to delete...
+QT_DLLS = set([
+    "Qt5Core.dll", "Qt5Widgets.dll", "Qt5Gui.dll",
+    "Qt5WinExtras.dll", "Qt5OpenGL.dll"
+])
 
-fnmatch.filter()
+SAFE_EXES = (
+    "musikernel", "rubberband", "python3"
+)
+
+SAFE_FILES = (
+    "musikernel", "qt", "python3"
+)
 
 WARN_SIZE = (1024 * 1024 * 5)
 
@@ -64,9 +73,33 @@ def on_error(func, path, exc_info):
     else:
         raise
 
+def delete_path(a_path):
+    if os.path.isdir(a_path):
+        shutil.rmtree(a_path, onerror=on_error)
+    else:
+        os.remove(a_path)
 
 def delete_it_all(a_path):
     global SAVED
+
+    bin_path = os.path.join(a_path, "bin")
+    lib_path = os.path.join(a_path, "lib")
+    share_path = os.path.join(a_path, "share")
+
+    for filename in os.listdir(bin_path):
+        if (filename.startswith("Qt") and filename.endswith(".dll") and \
+        filename not in QT_DLLS) or (
+        filename.endswith(".exe") and not
+        [x for x in SAFE_EXES if x in filename.lower()]):
+            os.remove(os.path.join(bin_path, filename))
+
+    for filename in os.listdir(lib_path):
+        if not [x for x in SAFE_FILES if x in filename.lower()]:
+            delete_path(os.path.join(lib_path, filename))
+
+    for filename in os.listdir(share_path):
+        if not [x for x in SAFE_FILES if x in filename.lower()]:
+            delete_path(os.path.join(share_path, filename))
 
     for dir_tuple in DELETE_DIRS:
         path = os.path.join(a_path, *dir_tuple)
