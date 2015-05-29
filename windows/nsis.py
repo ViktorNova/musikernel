@@ -111,23 +111,22 @@ NSIS = r"C:\Program Files (x86)\NSIS\Bin\makensis.exe"
 BASE_DIR = r"C:\{MAJOR_VERSION}-".format(MAJOR_VERSION=MAJOR_VERSION)
 TMP_DIR = r"C:\mk_tmp"
 
-if not os.path.isdir(TMP_DIR):
-    os.mkdir(TMP_DIR)
-
-if os.listdir(TMP_DIR):
-    print("Error:  '{}' is not empty".format(TMP_DIR))
-    exit(1)
-
 for bits in ("32", "64"):
+    tmp_dir = TMP_DIR + bits
+    if not os.path.isdir(tmp_dir):
+        os.mkdir(tmp_dir)
+    if os.listdir(tmp_dir):
+        print("Error:  '{}' is not empty".format(tmp_dir))
+        exit(1)
     mingw_dir = "mingw" + bits
     current_dir = BASE_DIR + bits
     for file_name in (x for x in os.listdir(current_dir) if x != mingw_dir):
-        shutil.move(os.path.join(current_dir, file_name), TMP_DIR)
+        shutil.move(os.path.join(current_dir, file_name), tmp_dir)
     template = TEMPLATE.format(
         bits=bits, MINOR_VERSION=MINOR_VERSION, MAJOR_VERSION=MAJOR_VERSION)
     template_name = "{0}-{1}.nsi".format(MAJOR_VERSION, bits)
     with open(template_name, "w") as fh:
         fh.write(template)
-    subprocess.call([NSIS, template_name])
-    for file_name in os.listdir(TMP_DIR):
-        shutil.move(os.path.join(TMP_DIR, file_name), current_dir)
+#    subprocess.call([NSIS, template_name])
+#    for file_name in os.listdir(tmp_dir):
+#        shutil.move(os.path.join(tmp_dir, file_name), current_dir)

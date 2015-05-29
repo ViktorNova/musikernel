@@ -1,4 +1,4 @@
-
+*.nsi
 windows/*.zip
 windows/*.tar.xz
 windows/pkg/
