@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+# Run this script from Windows, not MSYS2
 """
 This file is part of the MusiKernel project, Copyright MusiKernel Team
 
