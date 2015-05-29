@@ -32,6 +32,7 @@ SAVED = 0
 
 DELETE_DIRS = (
     ('share', 'qt5', 'doc'),
+    ('share', 'qt5', 'examples'),
     ('mingw64', 'share', 'doc'),
     ('mingw64', 'include'),
     ('share', 'man'),

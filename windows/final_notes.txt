@@ -1,0 +1,19 @@
+# Environment setup
+Create one MSYS2 environment for doing builds
+Create a 32 and 64 bit one at:  C:\musikernel1-{32,64}
+Run space-saver.py
+
+
+# From MSYS2
+
+cd [musikernel git]/windows
+git pull
+python3 pkgbuild.py
+
+# From Windows
+nsis.py
+pacman -U ming[tab]  # for each terminal
+rm ming[tab]
+
+[enter]
+
