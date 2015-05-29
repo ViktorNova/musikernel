@@ -406,6 +406,32 @@ t_wav_pool * g_wav_pool_get(float a_sr)
     return f_result;
 }
 
+void v_wav_pool_remove_item(t_wav_pool* a_wav_pool, int a_uid)
+{
+    if(USE_HUGEPAGES)
+    {
+        printf("Using hugepages, not freeing wav_pool uid %i\n", a_uid);
+        return;
+    }
+
+    int f_i = 0;
+    t_wav_pool_item * f_item = &a_wav_pool->items[a_uid];
+    if(f_item->is_loaded)
+    {
+        f_item->is_loaded = 0;
+        for(f_i = 0; f_i < f_item->channels; ++f_i)
+        {
+            float * f_data = f_item->samples[f_i];
+            if(f_data)
+            {
+                free(f_data);
+            }
+        }
+        printf("free'd %f MB\n",
+            ((float)f_item->length / (1024. * 1024.)) * 4.0);
+    }
+}
+
 void v_wav_pool_add_item(t_wav_pool* a_wav_pool, int a_uid, char * a_file_path)
 {
     char f_path[2048];

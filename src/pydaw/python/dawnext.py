@@ -1645,6 +1645,7 @@ class ItemSequencer(QGraphicsView):
                 PROJECT.save_region(CURRENT_REGION)
                 PROJECT.commit("Delete sequencer items")
                 self.open_region()
+                libmk.clean_wav_pool()
             else:
                 QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         elif REGION_EDITOR_MODE == 1:
@@ -1795,11 +1796,14 @@ class ItemSequencer(QGraphicsView):
         if self.check_running():
             return
         if REGION_EDITOR_MODE == 0:
-            for f_item in self.get_selected():
-                CURRENT_REGION.remove_item_ref(f_item.audio_item)
-            PROJECT.save_region(CURRENT_REGION)
-            PROJECT.commit(_("Delete item(s)"))
-            REGION_SETTINGS.open_region()
+            f_item_list = self.get_selected()
+            if f_item_list:
+                for f_item in f_item_list:
+                    CURRENT_REGION.remove_item_ref(f_item.audio_item)
+                PROJECT.save_region(CURRENT_REGION)
+                PROJECT.commit(_("Delete item(s)"))
+                REGION_SETTINGS.open_region()
+                libmk.clean_wav_pool()
         elif REGION_EDITOR_MODE == 1:
             for f_point in self.get_selected_points():
                 ATM_REGION.remove_point(f_point.item)
@@ -8362,7 +8366,9 @@ class transport_widget(libmk.AbstractTransport):
                 pydaw_util.SAMPLE_RATE, self.rec_start, self.rec_end,
                 f_inputs, f_sample_count, f_file_name)
             REGION_SETTINGS.open_region()
-            if a_restart:
+            if pydaw_util.IS_ENGINE_LIB:
+                clean_wav_pool()
+            elif a_restart:
                 libmk.restart_engine()
             f_window.close()
 
@@ -8812,6 +8818,8 @@ def global_update_peak_meters(a_val):
         else:
             print("{} not in ALL_PEAK_METERS".format(f_index))
 
+def active_wav_pool_uids():
+    return PROJECT.active_wav_pool_uids()
 
 def global_close_all():
     global AUDIO_ITEMS_TO_DROP

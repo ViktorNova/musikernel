@@ -196,6 +196,12 @@ class DawNextProject(libmk.AbstractProject):
         if a_notify_osc:
             self.IPC.pydaw_open_song(self.project_folder)
 
+    def active_wav_pool_uids(self):
+        f_region = self.get_region()
+        f_item_uids = set(x.item_uid for x in f_region.items)
+        f_items = [self.get_item_by_uid(x) for x in f_item_uids]
+        return set(y.uid for x in f_items for y in x.items.values())
+
     def get_notes(self):
         if os.path.isfile(self.pynotes_file):
             return pydaw_read_file_text(self.pynotes_file)

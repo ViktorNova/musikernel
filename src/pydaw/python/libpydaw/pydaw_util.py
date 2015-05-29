@@ -1132,6 +1132,9 @@ class pydaw_name_uid_dict:
         f_result.append(pydaw_terminating_char)
         return "\n".join(f_result)
 
+    def __len__(self):
+        return len(self.name_lookup)
+
 def proj_file_str(a_val):
     f_val = a_val
     if isinstance(f_val, float):

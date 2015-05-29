@@ -105,6 +105,9 @@ class MkIpc(libmk.AbstractIPC):
     def resume_engine(self):
         self.send_configure("engine", "0")
 
+    def clean_wavpool(self, a_msg):
+        self.send_configure("cwp", a_msg)
+
 
 class transport_widget:
     def __init__(self):
@@ -314,13 +317,13 @@ class MkMainWindow(QMainWindow):
 
         self.wave_editor_module = wavenext
 
-        self.host_modules = (dawnext, edmnext, wavenext)
-        self.host_windows = tuple(x.MAIN_WINDOW for x in self.host_modules)
+        libmk.HOST_MODULES = (dawnext, edmnext, wavenext)
+        self.host_windows = tuple(x.MAIN_WINDOW for x in libmk.HOST_MODULES)
 
         self.current_module = dawnext
         self.current_window = dawnext.MAIN_WINDOW
 
-        for f_module in self.host_modules:
+        for f_module in libmk.HOST_MODULES:
             self.transport_stack.addWidget(f_module.TRANSPORT.group_box)
 
         for f_window in self.host_windows:
@@ -522,7 +525,7 @@ class MkMainWindow(QMainWindow):
         pydaw_util.set_file_setting("host", a_index)
         self.transport_stack.setCurrentIndex(a_index)
         self.main_stack.setCurrentIndex(a_index)
-        self.current_module = self.host_modules[a_index]
+        self.current_module = libmk.HOST_MODULES[a_index]
         self.current_window = self.host_windows[a_index]
         if libmk.PLUGIN_UI_DICT:
             # Must call this before setting libmk.CURRENT_HOST
@@ -839,7 +842,7 @@ class MkMainWindow(QMainWindow):
                 self.main_stack.removeWidget(f_host)
                 f_host.setParent(None)
 
-            for f_module in self.host_modules:
+            for f_module in libmk.HOST_MODULES:
                 self.transport_stack.removeWidget(
                     f_module.TRANSPORT.group_box)
                 f_module.TRANSPORT.group_box.setParent(None)
@@ -1213,7 +1216,7 @@ class MkMainWindow(QMainWindow):
     def set_tooltips_enabled(self):
         f_enabled = self.tooltips_action.isChecked()
         libmk.TRANSPORT.set_tooltips(f_enabled)
-        for f_module in self.host_modules:
+        for f_module in libmk.HOST_MODULES:
             f_module.set_tooltips_enabled(f_enabled)
         pydaw_util.set_file_setting("tooltips", 1 if f_enabled else 0)
 
@@ -1410,14 +1413,14 @@ libmk.reopen_pydaw_engine = reopen_pydaw_engine
 def global_close_all():
     libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
     close_pydaw_engine()
-    for f_module in MAIN_WINDOW.host_modules:
+    for f_module in libmk.HOST_MODULES:
         f_module.global_close_all()
 
 def global_ui_refresh_callback(a_restore_all=False):
     """ Use this to re-open all existing items/regions/song in
         their editors when the files have been changed externally
     """
-    for f_module in MAIN_WINDOW.host_modules:
+    for f_module in libmk.HOST_MODULES:
         f_module.global_ui_refresh_callback(a_restore_all)
 
 PROJECT_FILE = None
@@ -1433,7 +1436,7 @@ def global_open_project(a_project_file, a_wait=True):
     libmk.PROJECT.suppress_updates = False
     libmk.PLUGIN_UI_DICT = mk_plugin_ui_dict(
         libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
-    for f_module in MAIN_WINDOW.host_modules:
+    for f_module in libmk.HOST_MODULES:
         f_module.global_open_project(a_project_file)
 
 def global_new_project(a_project_file, a_wait=True):
@@ -1444,7 +1447,7 @@ def global_new_project(a_project_file, a_wait=True):
     MAIN_WINDOW.last_offline_dir = libmk.PROJECT.user_folder
     libmk.PLUGIN_UI_DICT = mk_plugin_ui_dict(
         libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
-    for f_module in MAIN_WINDOW.host_modules:
+    for f_module in libmk.HOST_MODULES:
         f_module.global_new_project(a_project_file)
     open_pydaw_engine(a_project_file)
 

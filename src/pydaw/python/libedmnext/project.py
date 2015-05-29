@@ -204,6 +204,11 @@ class EdmNextProject(libmk.AbstractProject):
     def write_notes(self, a_text):
         pydaw_write_file_text(self.pynotes_file, a_text)
 
+    def active_wav_pool_uids(self):
+        f_song = self.get_song()
+        return set(y.uid for x in f_song.regions.values()
+            for y in self.get_audio_region(x).items.values())
+
     def set_midi_scale(self, a_key, a_scale):
         pydaw_write_file_text(
             self.pyscale_file, "{}|{}".format(a_key, a_scale))

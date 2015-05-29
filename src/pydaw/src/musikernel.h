@@ -88,6 +88,7 @@ int PYDAW_AUDIO_INPUT_TRACK_COUNT = 0;
 #define MK_CONFIGURE_KEY_LOAD_AB_SET "abs"
 #define MK_CONFIGURE_KEY_AUDIO_IN_VOL "aiv"
 #define MK_CONFIGURE_KEY_ENGINE "engine"
+#define MK_CONFIGURE_KEY_CLEAN_WAV_POOL "cwp"
 
 #define MK_HOST_DAWNEXT 0
 #define MK_HOST_EDMNEXT 1
@@ -1866,6 +1867,22 @@ void v_mk_configure(const char* a_key, const char* a_value)
 
         free(f_in_file);
         free(f_out_file);
+
+        f_arr->array = 0;
+        g_free_2d_char_array(f_arr);
+    }
+    else if(!strcmp(a_key, MK_CONFIGURE_KEY_CLEAN_WAV_POOL))
+    {
+        t_2d_char_array * f_arr = g_get_2d_array(PYDAW_LARGE_STRING);
+        int f_uid;
+        strcpy(f_arr->array, a_value);
+
+        while(!f_arr->eof)
+        {
+            v_iterate_2d_char_array(f_arr);
+            f_uid = atoi(f_arr->current_str);
+            v_wav_pool_remove_item(musikernel->wav_pool, f_uid);
+        }
 
         f_arr->array = 0;
         g_free_2d_char_array(f_arr);

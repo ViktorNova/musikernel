@@ -1795,6 +1795,7 @@ class region_editor(QGraphicsView):
         if REGION_EDITOR_DELETE_MODE:
             region_editor_set_delete_mode(False)
             global_tablewidget_to_region()
+            libmk.clean_wav_pool()
         else:
             QGraphicsScene.mouseReleaseEvent(self.scene, a_event)
         if self.atm_delete:
@@ -4153,14 +4154,17 @@ class audio_items_viewer(QGraphicsView):
             CURRENT_REGION.uid)
         f_paif = PROJECT.get_audio_per_item_fx_region(
             CURRENT_REGION.uid)
-        for f_item in self.get_selected():
-            f_items.remove_item(f_item.track_num)
-            f_paif.clear_row_if_exists(f_item.track_num)
-        PROJECT.save_audio_region(CURRENT_REGION.uid, f_items)
-        PROJECT.save_audio_per_item_fx_region(
-            CURRENT_REGION.uid, f_paif, False)
-        PROJECT.commit(_("Delete audio item(s)"))
-        global_open_audio_items(True)
+        f_item_list = self.get_selected()
+        if f_item_list:
+            for f_item in f_item_list:
+                f_items.remove_item(f_item.track_num)
+                f_paif.clear_row_if_exists(f_item.track_num)
+            PROJECT.save_audio_region(CURRENT_REGION.uid, f_items)
+            PROJECT.save_audio_per_item_fx_region(
+                CURRENT_REGION.uid, f_paif, False)
+            PROJECT.commit(_("Delete audio item(s)"))
+            global_open_audio_items(True)
+            libmk.clean_wav_pool()
 
     def crossfade_selected(self):
         f_list = self.get_selected()
@@ -9022,6 +9026,8 @@ def global_update_peak_meters(a_val):
         else:
             print("{} not in ALL_PEAK_METERS".format(f_index))
 
+def active_wav_pool_uids():
+    return PROJECT.active_wav_pool_uids()
 
 def global_close_all():
     global OPEN_ITEM_UIDS, AUDIO_ITEMS_TO_DROP

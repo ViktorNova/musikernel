@@ -27,6 +27,7 @@ from libpydaw.translate import _
 # These are dynamically assigned by musikernel.py so that
 # hosts can access them from this module
 MAIN_WINDOW = None
+HOST_MODULES = None
 APP = None
 TRANSPORT = None
 IS_PLAYING = False
@@ -40,6 +41,18 @@ CURRENT_HOST = 0
 TOOLTIPS_ENABLED = pydaw_util.get_file_setting("tooltips", int, 1)
 MEMORY_ENTROPY = datetime.timedelta(minutes=0)
 MEMORY_ENTROPY_LIMIT = datetime.timedelta(minutes=30)
+
+def clean_wav_pool():
+    f_result = set()
+    for f_host in HOST_MODULES:
+        f_result.update(f_host.active_wav_pool_uids())
+    #invert
+    f_len = len(PROJECT.get_wavs_dict())
+    f_result = [x for x in range(f_len) if x not in f_result]
+    print("clean_wav_pool '{}', '{}'".format(f_len, f_result))
+    if f_result:
+        f_msg = "|".join(str(x) for x in sorted(f_result))
+        IPC.clean_wavpool(f_msg)
 
 def add_entropy(a_timedelta):
     """ Use this to restart the engine and clean up the wav pool memory
