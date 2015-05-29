@@ -82,3 +82,13 @@ with open(PKGBUILD, "w") as fh:
     fh.write(tmp_str)
 
 retval = os.system("makepkg-mingw -Cfs")
+
+for arch, bits in (("i686", "32"), ("x86_64", "64")):
+    src = ("mingw-w64-{arch}-{MAJOR_VERSION}-{MINOR_VERSION}"
+        "-1-any.pkg.tar.xz".format(arch=arch, MAJOR_VERSION=MAJOR_VERSION))
+    dest = r"C:\{MAJOR_VERSION}-{bits}\home\pydaw".format(
+        bits=bits, MAJOR_VERSION=MAJOR_VERSION)
+    shutil.copy(src, dest)
+    shell = r"C:{MAJOR_VERSION}-{bits}\ming{bits}_shell.bat".format(
+        MAJOR_VERSION=MAJOR_VERSION, bits=bits)
+    os.system(shell)

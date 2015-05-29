@@ -128,6 +128,7 @@ def delete_it_all(a_path):
         print("Warning:  '{}' is not empty".format(pkg_dir))
 
 delete_it_all(r'C:\musikernel1-64\mingw64')
+delete_it_all(r'C:\musikernel1-32\mingw32')
 
 MB = round(SAVED / (1024 * 1024), 2)
 
