@@ -20,6 +20,14 @@ import os
 import shutil
 import stat
 
+CWD = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(CWD, "..", "src", "minor-version.txt")) as fh:
+    MINOR_VERSION = fh.read().strip()
+
+with open(os.path.join(CWD, "..", "src", "major-version.txt")) as fh:
+    MAJOR_VERSION = fh.read().strip()
+
 SAVED = 0
 
 DELETE_DIRS = (
@@ -127,11 +135,18 @@ def delete_it_all(a_path):
     if os.path.isdir(pkg_dir) and os.listdir(pkg_dir):
         print("Warning:  '{}' is not empty".format(pkg_dir))
 
-delete_it_all(r'C:\musikernel1-64\mingw64')
-delete_it_all(r'C:\musikernel1-32\mingw32')
+for bits in ("32", "64"):
+    base_dir = r'C:\{0}-{1}'.format(MAJOR_VERSION, bits)
+    mingw_dir = r'{0}\mingw{1}'.format(base_dir, bits)
+    bin_dir = r'{0}\bin'.format(mingw_dir)
+    bat_script = "{0}.bat".format(MAJOR_VERSION)
+
+    delete_it_all(mingw_dir)
+    shutil.copy('gpl-3.0.txt', base_dir)
+    shutil.copy(bat_script, bin_dir)
 
 MB = round(SAVED / (1024 * 1024), 2)
 
 print("Saved {} MB (not including directories)".format(MB))
 
-shutil.copy('gpl-3.0.txt', r'C:\musikernel1-64')
+
