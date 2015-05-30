@@ -13,8 +13,8 @@ all:
 	make pydaw_src
 
 mingw:
-	make -C pydaw lib
-	make -C pydaw_render
+	CFLAGS+=" -static-libgcc " make -C pydaw lib
+	CFLAGS+=" -static-libgcc " make -C pydaw_render
 
 clang:
 	OPTIMIZE_FLAGS= CC=clang make
