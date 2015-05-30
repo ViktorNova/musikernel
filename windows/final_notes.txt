@@ -1,8 +1,55 @@
-# Environment setup
-Create one MSYS2 environment for doing builds
-Create a 32 and 64 bit one at:  C:\musikernel1-{32,64}
-Run space-saver.py
+# Notes on building the Windows port using Mingw, if you're not me, and
+# not trying to develop or compile the Windows port and dependencies 
+# from source, you can safely ignore this file
 
+Create Windows VM (with at least 4 cores, 8GB of memory, and 100GB of disk,
+    because Windows is insanely bloated)
+
+Install Netbeans
+  - Tools -> Plugins -> C/C++
+  - Tools -> Options -> C/C++ -> Add C:\msys2\mingw64\bin
+                     -> Editor -> On Save -> All Lang. -> Trim Whitespace
+
+Install Anaconda (Spyder)
+  - Tools -> Preferences (trim whitespace, change theme)
+
+Install NSIS, Notepad++
+
+Install MSYS2
+
+####From MSYS2 shell:
+
+pacman -Sy
+pacman -Su
+
+# Done on separate lines because there is a solid chance of any
+# random pacman run failing
+
+pacman -S base-devel
+pacman -S mingw-w64-x86_64-toolchain
+pacman -S mingw-w64-i686-toolchain
+pacman -S git
+pacman -S python   # this is python3
+git clone https://github.com/j3ffhubb/musikernel.git
+
+git config --global user.name "MusiKernel Team"
+git config --global user.email musikernel@nospam.org
+
+
+Just building:
+export PATH="/mingw64/bin:$PATH"
+CC=/mingw64/bin/gcc /mingw64/bin/mingw32-make
+make mingw
+make PREFIX= DESTDIR=/mingw64 install_mingw
+
+
+############# PACKAGING ##########################
+
+# Environment setup
+Create one MSYS2 environment at:  C:\musikernel
+Create one MSYS2 environment at C:\msys2 for doing builds
+# Assuming musikernel is already installed
+Run space-saver.py
 
 # From MSYS2
 
@@ -16,4 +63,3 @@ pacman -U ming[tab]  # for each terminal
 rm ming[tab]
 
 [enter]
-
