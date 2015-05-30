@@ -30,7 +30,7 @@ SetCompressor /SOLID lzma
 
 Name "${{PRODUCT_NAME}} ${{PRODUCT_VERSION}}"
 OutFile "{MAJOR_VERSION}-{MINOR_VERSION}-win-x{bits}.exe"
-InstallDir "C:\{MAJOR_VERSION}-{bits}"
+InstallDir "C:\musikernel"
 
 ;--------------------------------
 ;Interface Settings
@@ -64,16 +64,17 @@ InstallDir "C:\{MAJOR_VERSION}-{bits}"
   !insertmacro MUI_LANGUAGE "English"
 
 Section "install"
-  RMDir /r $INSTDIR
+  RMDir /r "C:\musikernel1-64"
+  RMDir /r $INSTDIR\mingw{bits}
   SetOutPath $INSTDIR
   writeUninstaller "$INSTDIR\uninstall.exe"
-  File /r "C:\{MAJOR_VERSION}-{bits}\*"
+  File /r "C:\musikernel\*"
   RMDir /r "$SMPROGRAMS\${{PRODUCT_NAME}}"
   CreateDirectory "$SMPROGRAMS\${{PRODUCT_NAME}}"
   SetOutPath "$INSTDIR\mingw{bits}\bin"
   createShortCut "$SMPROGRAMS\${{PRODUCT_NAME}}\${{PRODUCT_NAME}}.lnk" \
     "$INSTDIR\mingw{bits}\bin\{MAJOR_VERSION}.bat" "" \
-    "$INSTDIR\{MAJOR_VERSION}.ico" "" SW_SHOWMINIMIZED
+    "$INSTDIR\mingw{bits}\{MAJOR_VERSION}.ico" "" SW_SHOWMINIMIZED
 SectionEnd
 
 Section "uninstall"
@@ -91,44 +92,45 @@ with open(os.path.join(CWD, "..", "src", "minor-version.txt")) as fh:
 with open(os.path.join(CWD, "..", "src", "major-version.txt")) as fh:
     MAJOR_VERSION = fh.read().strip()
 
-BASE_DIR = r"C:\{MAJOR_VERSION}-".format(MAJOR_VERSION=MAJOR_VERSION)
+BASE_DIR = r"C:\musikernel"
 TMP_DIR = r"C:\mk_tmp"
 
+if not os.path.isdir(TMP_DIR):
+    os.makedirs(TMP_DIR)
+
+def move_tmp_to_dir():
+    for file_name in os.listdir(TMP_DIR):
+        try:
+            shutil.move(os.path.join(TMP_DIR, file_name), BASE_DIR)
+        except:
+            pass
+
+move_tmp_to_dir()
+
 for arch, bits in (("i686", "32"), ("x86_64", "64")):
-    tmp_dir = TMP_DIR + bits
-    current_dir = BASE_DIR + bits
-    if not os.path.isdir(tmp_dir):
-        os.mkdir(tmp_dir)
-    else:
-        for file_name in os.listdir(tmp_dir):
-            try:
-                shutil.move(os.path.join(tmp_dir, file_name), current_dir)
-            except:
-                pass
     src = ("mingw-w64-{arch}-{MAJOR_VERSION}-{MINOR_VERSION}"
         "-1-any.pkg.tar.xz".format(
         arch=arch, MAJOR_VERSION=MAJOR_VERSION, MINOR_VERSION=MINOR_VERSION))
-    dest = r"C:\{MAJOR_VERSION}-{bits}\home\pydaw".format(
+    dest = r"C:\musikernel\home\pydaw".format(
         bits=bits, MAJOR_VERSION=MAJOR_VERSION)
     if not os.path.isdir(dest):
         os.makedirs(dest)
     shutil.copy(src, dest)
 
-    shell = r"C:\{MAJOR_VERSION}-{bits}\mingw{bits}_shell.bat".format(
-        MAJOR_VERSION=MAJOR_VERSION, bits=bits)
-    os.system(shell)
+shell = r"C:\musikernel\mingw64_shell.bat"
+os.system(shell)
 
 input("Press 'enter' to continue")
 
 NSIS = r"C:\Program Files (x86)\NSIS\Bin\makensis.exe"
 
 for bits in ("32", "64"):
-    tmp_dir = TMP_DIR + bits
+    move_tmp_to_dir()
     mingw_dir = "mingw" + bits
-    current_dir = BASE_DIR + bits
+    current_dir = BASE_DIR
     for file_name in (x for x in os.listdir(current_dir) if x != mingw_dir):
         try:
-            shutil.move(os.path.join(current_dir, file_name), tmp_dir)
+            shutil.move(os.path.join(current_dir, file_name), TMP_DIR)
         except Exception as ex:
             print("Error moving '{}': {}".format(file_name, ex))
     template = TEMPLATE.format(

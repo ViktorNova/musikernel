@@ -33,8 +33,8 @@ SAVED = 0
 DELETE_DIRS = (
     ('share', 'qt5', 'doc'),
     ('share', 'qt5', 'examples'),
-    ('mingw64', 'share', 'doc'),
-    ('mingw64', 'include'),
+    ('share', 'doc'),
+    ('include'),
     ('share', 'man'),
     ('lib', 'python3.4', 'test', '__pycache__'))
 
@@ -137,13 +137,15 @@ def delete_it_all(a_path):
         print("Warning:  '{}' is not empty".format(pkg_dir))
 
 for bits in ("32", "64"):
-    base_dir = r'C:\{0}-{1}'.format(MAJOR_VERSION, bits)
+    base_dir = r'C:\musikernel'
     mingw_dir = r'{0}\mingw{1}'.format(base_dir, bits)
     bin_dir = r'{0}\bin'.format(mingw_dir)
     bat_script = "{0}.bat".format(MAJOR_VERSION)
 
     delete_it_all(mingw_dir)
-    shutil.copy('gpl-3.0.txt', base_dir)
+    shutil.copy(
+        r"..\{MAJOR_VERSION}.ico".format(MAJOR_VERSION=MAJOR_VERSION),
+        mingw_dir)
     shutil.copy(bat_script, bin_dir)
 
 MB = round(SAVED / (1024 * 1024), 2)

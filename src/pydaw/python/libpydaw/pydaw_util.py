@@ -100,6 +100,8 @@ if IS_CYGWIN:
     DLL_EXT = ".dll"
 elif IS_WINDOWS:
     DLL_EXT = ".dll"
+    ICON_PATH = os.path.join(
+        INSTALL_PREFIX, "{}.ico".format(global_pydaw_version_string))
 elif IS_LINUX:
     DLL_EXT = ".so"
 elif IS_MAC_OSX:
