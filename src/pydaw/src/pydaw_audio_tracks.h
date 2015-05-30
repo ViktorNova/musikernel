@@ -215,39 +215,7 @@ int i_wav_pool_item_load(t_wav_pool_item *a_wav_pool_item, int a_huge_pages)
 
     info.format = 0;
 
-#ifdef _WIN32
-    /* This is the sledgehammer approach to a problem that only
-     * manifests itself on Windows, after all sane attempts to
-     * diagnose and correct the problem failed */
-    int f_strlen = strlen(a_wav_pool_item->path);
-    int f_distance = 15;
-    if(f_strlen <= 15)
-    {
-        f_distance = f_strlen - 5;
-    }
-
-    char f_win_path[f_strlen + 16];
-    memset(f_win_path, '\0', f_strlen + 16);
-    strcpy(f_win_path, a_wav_pool_item->path);
-
-    for(f_i = 1; f_i < f_distance; ++f_i)
-    {
-        file = sf_open(f_win_path, SFM_READ, &info);
-        if(file)
-        {
-            printf("Opened '%s'\n", f_win_path);
-            if(f_i > 1)
-            {
-                strcpy(a_wav_pool_item->path, f_win_path);
-            }
-            break;
-        }
-
-        f_win_path[f_strlen - f_i] = '\0';
-    }
-#else
     file = sf_open(a_wav_pool_item->path, SFM_READ, &info);
-#endif
 
     if (!file)
     {
