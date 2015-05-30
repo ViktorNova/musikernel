@@ -280,10 +280,6 @@ t_2d_char_array * g_get_2d_array(int a_size)
     f_result->array = (char*)malloc(sizeof(char) * a_size);
     f_result->current_str = (char*)malloc(sizeof(char) * PYDAW_SMALL_STRING);
 
-#ifdef _WIN32
-    memset(f_result->current_str, '\0', PYDAW_SMALL_STRING);
-#endif
-
     f_result->current_index = 0;
     f_result->current_row = 0;
     f_result->current_column = 0;
@@ -348,10 +344,6 @@ void v_iterate_2d_char_array(t_2d_char_array* a_array)
         ++a_array->current_index;
         ++f_i;
     }
-
-#ifdef _WIN32
-    //printf("v_iterate_2d_char_array: %s\n", a_array->current_str);
-#endif
 }
 
 /* Return the next string from the array until a newline, ignoring any
@@ -389,11 +381,6 @@ void v_iterate_2d_char_array_to_next_line(t_2d_char_array* a_array)
         ++a_array->current_index;
         ++f_i;
     }
-
-#ifdef _WIN32
-    //printf("v_iterate_2d_char_array_to_next_line: %s\n",
-    //    a_array->current_str);
-#endif
 }
 
 typedef struct
