@@ -432,8 +432,8 @@ class pydaw_device_dialog:
             self.midi_in_checkboxes, key=lambda x: x.lower()):
                 f_midi_in_layout.addWidget(self.midi_in_checkboxes[f_cbox])
 
-            f_midi_in_layout.addItem(
-                QSpacerItem(1, 1, vPolicy=QSizePolicy.Expanding))
+        f_midi_in_layout.addItem(
+            QSpacerItem(1, 1, QSizePolicy.Expanding, QSizePolicy.Expanding))
 
         def latency_changed(a_self=None, a_val=None):
             f_sample_rate = float(str(f_samplerate_combobox.currentText()))
