@@ -39,14 +39,6 @@ GNU General Public License for more details.
 #include <time.h>
 #include <errno.h>
 
-//  If you define this, you must also link to cpufreq appropriately with
-//    LDFLAGS+="-lcpufreq"  //or whatever flag
-//  #define PYDAW_CPUFREQ
-
-#ifdef PYDAW_CPUFREQ
-#include <cpufreq.h>
-#endif
-
 #ifdef __linux__
 #include <linux/sched.h>
 #include <sys/resource.h>
@@ -114,39 +106,6 @@ void signalHandler(int sig)
     pthread_mutex_unlock(&musikernel->exit_mutex);
 }
 
-
-#ifdef PYDAW_CPUFREQ
-
-void v_pydaw_restore_cpu_governor()
-{
-    int f_cpu_count = sysconf( _SC_NPROCESSORS_ONLN );
-    int f_i = 0;
-    while(f_i < f_cpu_count)
-    {
-        struct cpufreq_policy * f_policy = cpufreq_get_policy(f_i);
-        printf("Restoring CPU governor for CPU %i, was set to %s\n",
-                f_i, f_policy->governor);
-        sprintf(f_policy->governor, "ondemand");
-        cpufreq_set_policy(f_i, f_policy);
-        ++f_i;
-    }
-}
-
-void v_pydaw_set_cpu_governor()
-{
-    printf("Attempting to set CPU governor to 'performance'\n");
-    int f_cpu_count = sysconf( _SC_NPROCESSORS_ONLN );
-    int f_i = 0;
-    while(f_i < f_cpu_count)
-    {
-        struct cpufreq_policy * f_policy = cpufreq_get_policy(f_i);
-        sprintf(f_policy->governor, "performance");
-        cpufreq_set_policy(f_i, f_policy);
-        ++f_i;
-    }
-}
-
-#endif
 
 inline void v_pydaw_run(float ** buffers, float * a_input, int sample_count)
 {
@@ -910,13 +869,6 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 #endif
 
     v_pydaw_destructor();
-
-#ifdef PYDAW_CPUFREQ
-    if(f_performance)
-    {
-        v_pydaw_restore_cpu_governor();
-    }
-#endif
 
 #if defined(__linux__) && !defined(MK_DLL)
 

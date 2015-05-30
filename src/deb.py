@@ -37,19 +37,15 @@ def pydaw_write_file_text(a_file, a_text):
 with open("major-version.txt") as f_file_handle:
     global_pydaw_version_string = f_file_handle.read().strip()
 
-f_gcc = ""
-
-
 if "--native" in sys.argv or \
 platform.machine().lower().startswith("arm"):
     f_target = "native_src"
 else:
     f_target = "pydaw_src"
 
-f_build_cmd = ('make clean && make {} LDFLAGS+="-lcpufreq" '
-               'CFLAGS+="-DPYDAW_CPUFREQ" {} && '
-               'make DESTDIR="{}/../ubuntu/debian" install').format(
-               f_gcc, f_target, f_base_dir)
+f_build_cmd = (
+    'make clean && make {} && make '
+    'DESTDIR="{}/../ubuntu/debian" install').format(f_target, f_base_dir)
 
 f_version_file = "{}/minor-version.txt".format(f_base_dir)
 
