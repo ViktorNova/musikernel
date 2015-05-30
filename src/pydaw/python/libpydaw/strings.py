@@ -16,13 +16,14 @@ from libpydaw.translate import _
 
 
 audio_viewer_widget_folders = _(
-"""Use this tab to browse your folders and files.
+"""Click 'Menu->Show Tooltips' in the transport to disable these tooltips
+
+Use this tab to browse your folders and files.
 Drag and drop one file at a time onto the sequencer.
 .wav and .aiff files are the only supported audio file format.
 Click the 'Bookmark' button to save the current folder to your
 bookmarks located on the 'Bookmarks' tab.
-
-Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+""")
 
 
 audio_viewer_widget_modulex = _(
@@ -54,13 +55,14 @@ atmospheric sound""")
 
 
 transport = _(
-"""This is the transport, use this control to start/stop
+"""Click 'Menu->Show Tooltips' in the transport to disable these tooltips
+
+This is the transport, use this control to start/stop
 playback or recording.
 You can start or stop playback by pressing spacebar
 The panic button sends a note-off event on every note to every plugin,
 use this when you get a stuck note.
-
-Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+""")
 
 
 avconv_error = _(
@@ -85,7 +87,9 @@ Use this dialog to add points with precision,or double-click on
 the editor to add points.""")
 
 piano_roll_editor = _(
-"""Click+drag to draw notes
+"""Click 'Menu->Show Tooltips' in the transport to disable these tooltips
+
+Click+drag to draw notes
 CTRL+click+drag to marquee select multiple items
 SHIFT+click+drag to delete notes
 CTRL+ALT+click+drag-up/down to adjust the velocity of selected notes
@@ -97,9 +101,7 @@ Click and drag the note end to change the length of selected notes
 To edit multiple items as one logical item, select multiple items in the region
 editor and right-click + 'Edit Selected Items as Group'
 The Quantize, Transpose and Velocity actions in the menu button open dialogs
-to manipulate the selected notes (or all notes if none are selected)
-
-Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+to manipulate the selected notes (or all notes if none are selected)""")
 
 
 audio_items_viewer = _("""Drag audio files from the file browser onto here.

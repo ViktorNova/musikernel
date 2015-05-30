@@ -15,7 +15,9 @@ GNU General Public License for more details.
 from libpydaw.translate import _
 
 sequencer = _(
-"""This is sequencer, it consists of items, tracks and automation.
+"""Click 'Menu->Show Tooltips' in the transport to disable these tooltips
+
+This is sequencer, it consists of items, tracks and automation.
 Click on the timeline at the top of the sequencer to set playback position,
 or right-click the timeline to set various markers.
 
@@ -51,8 +53,7 @@ Shift+click+drag to cut/delete automation points
 See the right-click context menu for additional actions and keyboard shortcuts.
 
 Toggle collapsing the file browser with CTRL+right_arrow
-
-Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+""")
 
 sequencer_item = _(
 """Right click on an item to see the various tools and actions available.
@@ -64,10 +65,11 @@ You can glue together multiple items by selecting items and pressing CTRL+G
 """)
 
 transport = _(
-"""The MIDI controllers and audio inputs used for recording can be
+"""Click 'Menu->Show Tooltips' in the transport to disable these tooltips
+
+The MIDI controllers and audio inputs used for recording can be
 configured in the dropdown
 
 The 'Loop Mode' combobox can be used to loop a region.
-
-Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+""")
 

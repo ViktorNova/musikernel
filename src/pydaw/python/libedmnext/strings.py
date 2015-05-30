@@ -15,15 +15,18 @@ GNU General Public License for more details.
 from libpydaw.translate import _
 
 song_editor = _(
-"""This is the song editor.  A song is a timeline consisting of regions,
+"""Click 'Menu->Show Tooltips' in the transport to disable these tooltips
+
+This is the song editor.  A song is a timeline consisting of regions,
 click here to add a region, click and drag to move a region,
 or 'right-click->Delete Region' to delete the selected regions.
 Click on a region to edit it in the region editor below.
-
-Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+""")
 
 region_list_editor = _(
-"""This is a region editor, it consists of items, tracks and automation.
+"""Click 'Menu->Show Tooltips' in the transport to disable these tooltips
+
+This is a region editor, it consists of items, tracks and automation.
 
 Tracks:
 
@@ -55,16 +58,15 @@ points using CTRL+drag and pressing ALT+s.
 Shift+click+drag to delete items or automation points with the mouse
 
 See the right-click context menu for additional actions and keyboard shortcuts.
-
-Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+""")
 
 transport = _(
-"""
+"""Click 'Menu->Show Tooltips' in the transport to disable these tooltips
+
 The MIDI controller used for each track can be configured in the dropdown
 The 'Loop Mode' combobox can be used to loop a region.
 The 'Follow' checkbox causes the UI to follow the project's playback position
 The 'Overdub' checkbox causes recorded MIDI notes to be appended to existing
 items, rather than placed in new items that replace the existing items.
-
-Click 'Menu->Show Tooltips' in the transport to disable these tooltips""")
+""")
 
