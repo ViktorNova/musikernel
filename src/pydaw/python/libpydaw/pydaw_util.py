@@ -90,6 +90,12 @@ ENGINE_LIB_THREAD = None
 ENGINE_LIB_CALLBACK = None
 ENGINE_LIB_CALLBACK_SIG = None
 
+ICON_PATH = os.path.join(
+    INSTALL_PREFIX, "share", "pixmaps",
+    "{}.png".format(global_pydaw_version_string))
+
+print("ICON_PATH = '{}'".format(ICON_PATH))
+
 if IS_CYGWIN:
     DLL_EXT = ".dll"
 elif IS_WINDOWS:

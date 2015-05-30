@@ -1469,10 +1469,8 @@ PYDAW_SUBPROCESS = None
 default_project_file = pydaw_util.get_file_setting("last-project", str, None)
 RESPAWN = False
 
-libmk.APP.setWindowIcon(
-    QIcon(os.path.join(
-        pydaw_util.INSTALL_PREFIX, "share", "pixmaps",
-        "{}.png".format(global_pydaw_version_string))))
+if pydaw_util.ICON_PATH:
+    libmk.APP.setWindowIcon(QIcon(pydaw_util.ICON_PATH))
 
 QPixmapCache.setCacheLimit(1024 * 1024 * 1024)
 libmk.APP.setStyle(QStyleFactory.create("Fusion"))
