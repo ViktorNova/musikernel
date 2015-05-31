@@ -81,7 +81,7 @@ SectionEnd
 
 Section "uninstall"
   RMDir /r $INSTDIR
-  delete "$SMPROGRAMS\${{PRODUCT_NAME}} ({bits} bit)\${{PRODUCT_NAME}} ({bits} bit).lnk"
+  RMDir /r "$SMPROGRAMS\${{PRODUCT_NAME}} ({bits} bit)"
   ; deprecated
   RMDir /r "$SMPROGRAMS\${{PRODUCT_NAME}}"
 SectionEnd
