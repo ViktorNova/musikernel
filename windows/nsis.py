@@ -30,7 +30,7 @@ SetCompressor /SOLID lzma
 
 Name "${{PRODUCT_NAME}} ${{PRODUCT_VERSION}}"
 OutFile "{MAJOR_VERSION}-{MINOR_VERSION}-win-x{bits}.exe"
-InstallDir "C:\musikernel"
+InstallDir "C:\musikernel\mingw{bits}"
 
 ;--------------------------------
 ;Interface Settings
@@ -64,23 +64,26 @@ InstallDir "C:\musikernel"
   !insertmacro MUI_LANGUAGE "English"
 
 Section "install"
+  ; deprecated
   RMDir /r "C:\musikernel1-64"
-  RMDir /r $INSTDIR\mingw{bits}
+  RMDir /r $INSTDIR
   SetOutPath $INSTDIR
   writeUninstaller "$INSTDIR\uninstall.exe"
-  File /r "C:\musikernel\*"
-  RMDir /r "$SMPROGRAMS\${{PRODUCT_NAME}}"
-  CreateDirectory "$SMPROGRAMS\${{PRODUCT_NAME}}"
-  SetOutPath "$INSTDIR\mingw{bits}\bin"
-  createShortCut "$SMPROGRAMS\${{PRODUCT_NAME}}\${{PRODUCT_NAME}}.lnk" \
-    "$INSTDIR\mingw{bits}\bin\{MAJOR_VERSION}.bat" "" \
-    "$INSTDIR\mingw{bits}\{MAJOR_VERSION}.ico" "" SW_SHOWMINIMIZED
+  File /r "C:\musikernel\mingw{bits}\*"
+  RMDir /r "$SMPROGRAMS\${{PRODUCT_NAME}} ({bits} bit)"
+  CreateDirectory "$SMPROGRAMS\${{PRODUCT_NAME}} ({bits} bit)"
+  SetOutPath "$INSTDIR\bin"
+  createShortCut \
+    "$SMPROGRAMS\${{PRODUCT_NAME}} ({bits} bit)\${{PRODUCT_NAME}} ({bits} bit).lnk" \
+    "$INSTDIR\bin\{MAJOR_VERSION}.bat" "" \
+    "$INSTDIR\{MAJOR_VERSION}.ico" "" SW_SHOWMINIMIZED
 SectionEnd
 
 Section "uninstall"
   RMDir /r $INSTDIR
-  delete "$SMPROGRAMS\${{PRODUCT_NAME}}\${{PRODUCT_NAME}}.lnk"
-  RMDir "$SMPROGRAMS\${{PRODUCT_NAME}}"
+  delete "$SMPROGRAMS\${{PRODUCT_NAME}} ({bits} bit)\${{PRODUCT_NAME}} ({bits} bit).lnk"
+  ; deprecated
+  RMDir /r "$SMPROGRAMS\${{PRODUCT_NAME}}"
 SectionEnd
 """
 
@@ -91,21 +94,6 @@ with open(os.path.join(CWD, "..", "src", "minor-version.txt")) as fh:
 
 with open(os.path.join(CWD, "..", "src", "major-version.txt")) as fh:
     MAJOR_VERSION = fh.read().strip()
-
-BASE_DIR = r"C:\musikernel"
-TMP_DIR = r"C:\mk_tmp"
-
-if not os.path.isdir(TMP_DIR):
-    os.makedirs(TMP_DIR)
-
-def move_tmp_to_dir():
-    for file_name in os.listdir(TMP_DIR):
-        try:
-            shutil.move(os.path.join(TMP_DIR, file_name), BASE_DIR)
-        except:
-            pass
-
-move_tmp_to_dir()
 
 for arch, bits in (("i686", "32"), ("x86_64", "64")):
     src = ("mingw-w64-{arch}-{MAJOR_VERSION}-{MINOR_VERSION}"
@@ -125,14 +113,6 @@ input("Press 'enter' to continue")
 NSIS = r"C:\Program Files (x86)\NSIS\Bin\makensis.exe"
 
 for bits in ("32", "64"):
-    move_tmp_to_dir()
-    mingw_dir = "mingw" + bits
-    current_dir = BASE_DIR
-    for file_name in (x for x in os.listdir(current_dir) if x != mingw_dir):
-        try:
-            shutil.move(os.path.join(current_dir, file_name), TMP_DIR)
-        except Exception as ex:
-            print("Error moving '{}': {}".format(file_name, ex))
     template = TEMPLATE.format(
         bits=bits, MINOR_VERSION=MINOR_VERSION, MAJOR_VERSION=MAJOR_VERSION)
     template_name = "{0}-{1}.nsi".format(MAJOR_VERSION, bits)

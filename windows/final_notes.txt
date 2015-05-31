@@ -29,7 +29,7 @@ pacman -S base-devel
 pacman -S mingw-w64-x86_64-toolchain
 pacman -S mingw-w64-i686-toolchain
 pacman -S git
-pacman -S python   # this is python3
+pacman -S python3
 git clone https://github.com/j3ffhubb/musikernel.git
 
 git config --global user.name "MusiKernel Team"
@@ -38,6 +38,7 @@ git config --global user.email musikernel@nospam.org
 
 Just building:
 export PATH="/mingw64/bin:$PATH"
+cd [musikernel git]/src
 CC=/mingw64/bin/gcc /mingw64/bin/mingw32-make
 make mingw
 make PREFIX= DESTDIR=/mingw64 install_mingw
