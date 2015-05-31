@@ -1886,6 +1886,7 @@ class ItemSequencer(QGraphicsView):
         f_restart = False
 
         for f_file_name in a_item_list:
+            libmk.APP.processEvents()
             f_file_name_str = str(f_file_name)
             f_item_name = os.path.basename(f_file_name_str)
             if f_file_name_str:

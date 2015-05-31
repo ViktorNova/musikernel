@@ -47,6 +47,10 @@ def clean_wav_pool():
     f_result = set()
     for f_host in HOST_MODULES:
         f_result.update(f_host.active_wav_pool_uids())
+
+    if pydaw_util.USE_HUGEPAGES:
+        for f_uid in (x for x in f_result if x in MEMORY_ENTROPY_UIDS):
+            MEMORY_ENTROPY_UIDS.remove(f_uid)
     #invert
     f_len = len(PROJECT.get_wavs_dict())
     f_result = [x for x in range(f_len) if x not in f_result]
@@ -61,7 +65,6 @@ def clean_wav_pool():
             f_sg = PROJECT.get_sample_graph_by_uid(f_uid)
             f_delta = datetime.timedelta(seconds=f_sg.length_in_seconds)
             if add_entropy(f_delta):
-                MEMORY_ENTROPY_UIDS.clear()
                 restart_engine()
                 break
 
