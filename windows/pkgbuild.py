@@ -14,9 +14,6 @@ GNU General Public License for more details.
 
 import hashlib
 import os
-import shutil
-import urllib.request
-
 
 PKGBUILD_TEMPLATE = """# Maintainer: Jeff Hubbard <musikernel@gmail.com>
 
@@ -63,12 +60,7 @@ with open(os.path.join(CWD, "..", "src", "minor-version.txt")) as fh:
 with open(os.path.join(CWD, "..", "src", "major-version.txt")) as fh:
     MAJOR_VERSION = fh.read().strip()
 
-url = "https://github.com/j3ffhubb/musikernel/archive/master.zip"
-file_name = os.path.join(CWD, "musikernel-master.zip")
-
-with urllib.request.urlopen(url) as response, \
-open(file_name, 'wb') as out_file:
-    shutil.copyfileobj(response, out_file)
+file_name = os.path.join(CWD, "master.zip")
 
 with open(file_name, "rb") as fh:
     MD5_ZIP = hashlib.md5(fh.read()).hexdigest()
@@ -81,5 +73,3 @@ with open(PKGBUILD, "w") as fh:
         zip_md5sum=MD5_ZIP)
     fh.write(tmp_str)
 
-os.system("rm *.tar.xz *.exe *.zip")
-retval = os.system("makepkg-mingw -Cfs")
