@@ -23,7 +23,7 @@ URL = ("https://copr-be.cloud.fedoraproject.org/results/musikernel/"
     "{MK_MAJOR}-{MK_MINOR}-1.fc{FED_VER2}/"
     "{MK_MAJOR}-{MK_MINOR}-1.fc{FED_VER3}.{ARCH2}.rpm")
 
-FED_VER = ((21, 21, 21), (22, 21, 22))
+FED_VER = ((21, 22, 21), (22, 22, 22))
 ARCHS = (("x86_64", "x86_64"), ("i386", "i686"))
 
 with open("../src/minor-version.txt") as fh:
