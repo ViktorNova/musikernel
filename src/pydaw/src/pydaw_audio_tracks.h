@@ -395,6 +395,7 @@ void v_wav_pool_remove_item(t_wav_pool* a_wav_pool, int a_uid)
                 free(f_data);
                 printf("free'd %f MB\n",
                     ((float)f_item->length / (1024. * 1024.)) * 4.0);
+                f_item->samples[f_i] = NULL;
             }
         }
     }
