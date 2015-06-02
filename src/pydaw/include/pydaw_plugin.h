@@ -203,7 +203,15 @@ void v_generic_cc_map_set(t_plugin_cc_map*, char*);
 
 void v_cc_mapping_init(t_cc_mapping* self)
 {
+    int f_i;
     self->count = 0;
+
+    for(f_i = 0; f_i < 5; ++f_i)
+    {
+        self->lows[f_i] = 0.0f;
+        self->highs[f_i] = 1.0f;
+        self->ports[f_i] = -1;
+    }
 }
 
 void v_cc_mapping_set(t_cc_mapping* self, int a_port, float a_low, float a_high)
@@ -227,10 +235,10 @@ void v_cc_map_init(t_plugin_cc_map * self)
 void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
     float *a_port_table, int a_cc, float a_value)
 {
-    int f_i = 0;
+    int f_i;
     a_value *= 0.007874f;  // a_val / 127.0f
 
-    while(f_i < self->map[a_cc].count)
+    for(f_i = 0; f_i < self->map[a_cc].count; ++f_i)
     {
         int f_port = self->map[a_cc].ports[f_i];
         PYFX_PortRangeHint * f_range = &desc->PortRangeHints[f_port];
@@ -239,7 +247,6 @@ void v_cc_map_translate(t_plugin_cc_map *self, PYFX_Descriptor *desc,
         float f_max = f_diff * self->map[a_cc].highs[f_i];
         a_port_table[f_port] = (a_value * (f_max - f_min)) +
             f_min + f_range->LowerBound;
-        f_i++;
     }
 }
 
