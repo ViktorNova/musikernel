@@ -1,15 +1,15 @@
 - **Twitter:** Follow @musikernel for the latest news and release announcements
 - [**Screenshots**](http://www.kvraudio.com/product/musikernel-by-musikernel)
-- [**Watch MusiKernel tutorial videos on Youtube**](https://www.youtube.com/channel/UCf_PgsosvLpxkN6bff9NESA/videos)
-- [How to install](#how-to-install)
+- [**Youtube** Watch MusiKernel tutorial videos](https://www.youtube.com/channel/UCf_PgsosvLpxkN6bff9NESA/videos)
+- [**How to install**](#how-to-install)
 			- [Windows](#windows)
 			- [Fedora](#fedora)
 			- [Ubuntu](#ubuntu)
-- [How to Build](#how-to-build)
+- [**How to Build**](#how-to-build)
 			- [Debian and Ubuntu](#debian-and-ubuntu)
 			- [Fedora](#fedora-1)
-			- [All Others](#all-others)
-- [What is MusiKernel?](#what-is-musikernel)
+			- [All Other Linux Distros](#all-others)
+- [**What is MusiKernel?**](#what-is-musikernel)
 
 ###How to Install
 
