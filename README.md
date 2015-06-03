@@ -1,5 +1,6 @@
 - **Twitter:** Follow @musikernel for the latest news and release announcements
 - [**Screenshots**](http://www.kvraudio.com/product/musikernel-by-musikernel)
+- [**Watch MusiKernel tutorial videos on Youtube**](https://www.youtube.com/channel/UCf_PgsosvLpxkN6bff9NESA/videos)
 - [How to install](#how-to-install)
 			- [Windows](#windows)
 			- [Fedora](#fedora)
