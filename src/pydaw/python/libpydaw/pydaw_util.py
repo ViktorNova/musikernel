@@ -232,8 +232,8 @@ def case_insensitive_path(a_path, a_assert=True):
             f_path_arr = f_path.split(os.path.sep)
         else:
             f_path_arr = f_path.split('/')
-        f_path_arr = [x for x in f_path_arr if x != ""]
-        f_path = ""
+        f_path_arr = [x for x in f_path_arr if x]
+        f_path = "" if IS_WINDOWS else "/"
         for f_dir in f_path_arr:
             if os.path.exists(os.path.join(f_path, f_dir)):
                 f_path = os.path.join(f_path, f_dir)
@@ -246,7 +246,7 @@ def case_insensitive_path(a_path, a_assert=True):
                         break
                 if not f_found:
                     if a_assert:
-                        assert(False)
+                        assert False, "File not found '{}'".format(a_path)
                     else:
                         return None
         print(f_path)
