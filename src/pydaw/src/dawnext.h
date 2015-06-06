@@ -2609,6 +2609,7 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
     SNDFILE * f_sndfile = NULL;
     int f_stem_count = self->routing_graph->track_pool_sorted_count;
     SNDFILE * f_stems[f_stem_count];
+    char f_file[2048];
 
     int * f_tps = self->routing_graph->track_pool_sorted[0];
 
@@ -2654,18 +2655,21 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
     {
         for(f_i = 0; f_i < f_stem_count; ++f_i)
         {
-            char f_file[2048];
             snprintf(f_file, 2048, "%s%s%i.wav", a_file_out,
                 PATH_SEP, f_tps[f_i]);
             f_stems[f_i] = sf_open(f_file, SFM_WRITE, &f_sf_info);
             printf("Successfully opened %s\n", f_file);
         }
+
+        snprintf(f_file, 2048, "%s%s0.wav", a_file_out, PATH_SEP);
     }
     else
     {
-        f_sndfile = sf_open(a_file_out, SFM_WRITE, &f_sf_info);
-        printf("\nSuccessfully opened SNDFILE\n\n");
+        snprintf(f_file, 2048, "%s", a_file_out);
     }
+
+    f_sndfile = sf_open(f_file, SFM_WRITE, &f_sf_info);
+    printf("\nSuccessfully opened SNDFILE\n\n");
 
 #ifdef __linux__
     struct timespec f_start, f_finish;
@@ -2704,22 +2708,20 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
                 }
             }
         }
-        else
-        {
-            f_size = 0;
-            /*Interleave the samples...*/
-            for(f_i = 0; f_i < f_block_size; ++f_i)
-            {
-                f_output[f_size] = f_buffer[0][f_i];
-                ++f_size;
-                f_output[f_size] = f_buffer[1][f_i];
-                ++f_size;
-            }
 
-            if(a_create_file)
-            {
-                sf_writef_float(f_sndfile, f_output, f_block_size);
-            }
+        f_size = 0;
+        /*Interleave the samples...*/
+        for(f_i = 0; f_i < f_block_size; ++f_i)
+        {
+            f_output[f_size] = f_buffer[0][f_i];
+            ++f_size;
+            f_output[f_size] = f_buffer[1][f_i];
+            ++f_size;
+        }
+
+        if(a_create_file)
+        {
+            sf_writef_float(f_sndfile, f_output, f_block_size);
         }
 
         v_dn_zero_all_buffers(self);
@@ -2755,10 +2757,8 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
             sf_close(f_stems[f_i2]);
         }
     }
-    else
-    {
-        sf_close(f_sndfile);
-    }
+
+    sf_close(f_sndfile);
 
     free(f_buffer[0]);
     free(f_buffer[1]);
