@@ -427,6 +427,10 @@ class MkMainWindow(QMainWindow):
 
         self.menu_help = self.menu_bar.addMenu(_("Help"))
 
+        self.youtube_action = self.menu_help.addAction(
+            _("Watch Tutorial Videos on Youtube..."))
+        self.youtube_action.triggered.connect(self.on_youtube)
+
         self.troubleshoot_action = self.menu_help.addAction(
             _("Troubleshooting..."))
         self.troubleshoot_action.triggered.connect(self.on_troubleshoot)
@@ -499,6 +503,11 @@ class MkMainWindow(QMainWindow):
 
         self.setWindowState(QtCore.Qt.WindowMaximized)
         self.on_collapse_splitters(a_restore=True)
+
+    def on_youtube(self):
+        f_url = QtCore.QUrl(
+            "https://www.youtube.com/channel/UCf_PgsosvLpxkN6bff9NESA/videos")
+        QDesktopServices.openUrl(f_url)
 
     def engine_lib_callback(self, a_path, a_msg):
         f_path = a_path.decode("utf-8")
