@@ -25,6 +25,8 @@ GNU General Public License for more details.
 // Prevent importing Portmidi
 #define NO_MIDI
 
+#define MK_OFFLINE_RENDER
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sndfile.h>
@@ -50,7 +52,7 @@ void print_help()
         "[buffer_size] [thread_count] [huge_pages]\n\n", MUSIKERNEL_VERSION);
     printf("%s_render dawnext [project_dir] [output_file] [start_beat] "
         "[end_beat] [sample_rate] [buffer_size] [thread_count] "
-        "[huge_pages]\n\n", MUSIKERNEL_VERSION);
+        "[huge_pages] [stem]\n\n", MUSIKERNEL_VERSION);
 }
 
 int main(int argc, char** argv)
@@ -173,7 +175,7 @@ int edmnext_main(int argc, char** argv)
 
 int dawnext_main(int argc, char** argv)
 {
-    if(argc < 10)
+    if(argc < 11)
     {
         print_help();
         return 1;
@@ -194,6 +196,8 @@ int dawnext_main(int argc, char** argv)
     {
         printf("Attempting to use hugepages\n");
     }
+
+    int f_stem_render = atoi(argv[10]);
 
     USE_HUGEPAGES = f_huge_pages;
 
@@ -239,7 +243,7 @@ int dawnext_main(int argc, char** argv)
     v_dn_offline_render_prep(dawnext);
 
     v_dn_offline_render(dawnext, f_start_beat,
-        f_end_beat, f_output_file, f_create_file);
+        f_end_beat, f_output_file, f_create_file, f_stem_render);
 
     v_pydaw_destructor();
 

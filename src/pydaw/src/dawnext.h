@@ -209,7 +209,7 @@ void v_dn_update_track_send(t_dawnext * self, int a_lock);
 void v_dn_process_external_midi(t_dawnext * pydaw_data,
         t_pytrack * a_track, int sample_count, int a_thread_num,
         t_dn_thread_storage * a_ts);
-void v_dn_offline_render(t_dawnext*, double, double, char*, int);
+void v_dn_offline_render(t_dawnext*, double, double, char*, int, int);
 void v_dn_audio_items_run(t_dawnext*, t_dn_item_ref*,
     int, float**, float**, int*, t_dn_thread_storage*);
 
@@ -954,10 +954,12 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
     v_pkm_run(f_track->peak_meter, f_track->buffers[0],
         f_track->buffers[1], a_sample_count);
 
+#ifndef MK_OFFLINE_RENDER
     if(a_global_track_num)
     {
         v_pydaw_zero_buffer(f_track->buffers, a_sample_count);
     }
+#endif
 
     if(f_track->sc_buffers_dirty)
     {
@@ -2601,15 +2603,22 @@ void v_dn_offline_render_prep(t_dawnext * self)
 }
 
 void v_dn_offline_render(t_dawnext * self, double a_start_beat,
-        double a_end_beat, char * a_file_out, int a_create_file)
+        double a_end_beat, char * a_file_out, int a_create_file,
+        int a_stem)
 {
+    SNDFILE * f_sndfile = NULL;
+    int f_stem_count = self->routing_graph->track_pool_sorted_count;
+    SNDFILE * f_stems[f_stem_count];
+
+    int * f_tps = self->routing_graph->track_pool_sorted[0];
+
     pthread_spin_lock(&musikernel->main_lock);
     musikernel->is_offline_rendering = 1;
     pthread_spin_unlock(&musikernel->main_lock);
 
     float f_sample_rate = musikernel->thread_storage[0].sample_rate;
 
-    register int f_i;
+    register int f_i, f_i2;
     int f_beat_total = (int)(a_end_beat - a_start_beat);
 
     float f_sample_count =
@@ -2623,11 +2632,9 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
     float ** f_buffer;
     lmalloc((void**)&f_buffer, sizeof(float*) * 2);
 
-    f_i = 0;
-    while(f_i < 2)
+    for(f_i = 0; f_i < 2; ++f_i)
     {
         lmalloc((void**)&f_buffer[f_i], sizeof(float) * f_block_size);
-        ++f_i;
     }
 
     //We must set it back afterwards, or the UI will be wrong...
@@ -2643,9 +2650,22 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
     f_sf_info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
     f_sf_info.samplerate = (int)(f_sample_rate);
 
-    SNDFILE * f_sndfile = sf_open(a_file_out, SFM_WRITE, &f_sf_info);
-
-    printf("\nSuccessfully opened SNDFILE\n\n");
+    if(a_stem)
+    {
+        for(f_i = 0; f_i < f_stem_count; ++f_i)
+        {
+            char f_file[2048];
+            snprintf(f_file, 2048, "%s%s%i.wav", a_file_out,
+                PATH_SEP, f_tps[f_i]);
+            f_stems[f_i] = sf_open(f_file, SFM_WRITE, &f_sf_info);
+            printf("Successfully opened %s\n", f_file);
+        }
+    }
+    else
+    {
+        f_sndfile = sf_open(a_file_out, SFM_WRITE, &f_sf_info);
+        printf("\nSuccessfully opened SNDFILE\n\n");
+    }
 
 #ifdef __linux__
     struct timespec f_start, f_finish;
@@ -2654,33 +2674,55 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
 
     while(self->ts[0].ml_current_beat < a_end_beat)
     {
-        f_i = 0;
-        f_size = 0;
-
-        while(f_i < f_block_size)
+        for(f_i = 0; f_i < f_block_size; ++f_i)
         {
             f_buffer[0][f_i] = 0.0f;
             f_buffer[1][f_i] = 0.0f;
-            ++f_i;
         }
 
         v_dn_run_engine(f_block_size, f_buffer, NULL);
 
-        f_i = 0;
-        /*Interleave the samples...*/
-        while(f_i < f_block_size)
+        if(a_stem)
         {
-            f_output[f_size] = f_buffer[0][f_i];
-            ++f_size;
-            f_output[f_size] = f_buffer[1][f_i];
-            ++f_size;
-            ++f_i;
+            for(f_i2 = 0; f_i2 < f_stem_count; ++f_i2)
+            {
+                f_size = 0;
+                int f_track_num = f_tps[f_i2];
+                float ** f_track_buff = self->track_pool[f_track_num]->buffers;
+                /*Interleave the samples...*/
+                for(f_i = 0; f_i < f_block_size; ++f_i)
+                {
+                    f_output[f_size] = f_track_buff[0][f_i];
+                    ++f_size;
+                    f_output[f_size] = f_track_buff[1][f_i];
+                    ++f_size;
+                }
+
+                if(a_create_file)
+                {
+                    sf_writef_float(f_stems[f_i2], f_output, f_block_size);
+                }
+            }
+        }
+        else
+        {
+            f_size = 0;
+            /*Interleave the samples...*/
+            for(f_i = 0; f_i < f_block_size; ++f_i)
+            {
+                f_output[f_size] = f_buffer[0][f_i];
+                ++f_size;
+                f_output[f_size] = f_buffer[1][f_i];
+                ++f_size;
+            }
+
+            if(a_create_file)
+            {
+                sf_writef_float(f_sndfile, f_output, f_block_size);
+            }
         }
 
-        if(a_create_file)
-        {
-            sf_writef_float(f_sndfile, f_output, f_block_size);
-        }
+        v_dn_zero_all_buffers(self);
     }
 
 #ifdef __linux__
@@ -2706,7 +2748,17 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
     v_dn_set_playback_mode(self, PYDAW_PLAYBACK_MODE_OFF, a_start_beat, 0);
     v_dn_set_loop_mode(self, f_old_loop_mode);
 
-    sf_close(f_sndfile);
+    if(a_stem)
+    {
+        for(f_i2 = 0; f_i2 < f_stem_count; ++f_i2)
+        {
+            sf_close(f_stems[f_i2]);
+        }
+    }
+    else
+    {
+        sf_close(f_sndfile);
+    }
 
     free(f_buffer[0]);
     free(f_buffer[1]);
@@ -2715,7 +2767,14 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
 
     char f_tmp_finished[1024];
 
-    sprintf(f_tmp_finished, "%s.finished", a_file_out);
+    if(a_stem)
+    {
+        sprintf(f_tmp_finished, "%s/finished", a_file_out);
+    }
+    else
+    {
+        sprintf(f_tmp_finished, "%s.finished", a_file_out);
+    }
 
     v_pydaw_write_to_file(f_tmp_finished, "finished");
 

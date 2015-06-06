@@ -574,8 +574,10 @@ class MkMainWindow(QMainWindow):
         f_timer.start(100)
         f_window.exec_()
 
-    def show_offline_rendering_wait_window_v2(self, a_cmd_list, a_file_name):
-        f_file_name = "{}.finished".format(a_file_name)
+    def show_offline_rendering_wait_window_v2(
+    self, a_cmd_list, a_file_name, f_file_name=None):
+        if not f_file_name:
+            f_file_name = "{}.finished".format(a_file_name)
         def ok_handler():
             f_window.close()
 

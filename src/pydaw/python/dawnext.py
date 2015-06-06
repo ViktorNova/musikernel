@@ -8575,8 +8575,10 @@ class pydaw_main_window(QScrollArea):
             else:
                 self.copy_to_clipboard_checked = False
 
+            f_stem = 1 if f_stem_render_checkbox.isChecked() else 0
             f_dir = PROJECT.project_folder
             f_out_file = f_name.text()
+            f_fini = os.path.join(f_out_file, "finished") if f_stem else None
             f_samp_rate = f_sample_rate.currentText()
             f_buff_size = pydaw_util.global_device_val_dict["bufferSize"]
             f_thread_count = 1 if pydaw_util.IS_WINDOWS else \
@@ -8592,7 +8594,7 @@ class pydaw_main_window(QScrollArea):
                 f_run_cmd = [str(x) for x in
                     ("run", "dawnext", "'{}'".format(f_dir),
                     "'{}'".format(f_out_file), f_start_beat, f_end_beat,
-                    f_samp_rate, f_buff_size, f_thread_count)]
+                    f_samp_rate, f_buff_size, f_thread_count, f_stem)]
                 f_clipboard = QApplication.clipboard()
                 f_clipboard.setText(" ".join(f_run_cmd))
                 subprocess.Popen(f_cmd, shell=True)
@@ -8601,29 +8603,51 @@ class pydaw_main_window(QScrollArea):
                     (pydaw_util.RENDER_BIN_PATH, "dawnext",
                      f_dir, f_out_file, f_start_beat, f_end_beat,
                      f_samp_rate, f_buff_size, f_thread_count,
-                     pydaw_util.USE_HUGEPAGES)]
+                     pydaw_util.USE_HUGEPAGES, f_stem)]
                 libmk.MAIN_WINDOW.show_offline_rendering_wait_window_v2(
-                    f_cmd, f_out_file)
+                    f_cmd, f_out_file, f_file_name=f_fini)
+                if f_stem:
+                    f_tracks = PROJECT.get_tracks()
+                    for f_file in os.listdir(f_out_file):
+                        f_track_num = f_file.split(".", 1)[0].zfill(3)
+                        f_track_name = f_tracks.tracks[int(f_track_num)].name
+                        f_new = "{}-{}.wav".format(f_track_num, f_track_name)
+                        os.rename(
+                            os.path.join(f_out_file, f_file),
+                            os.path.join(f_out_file, f_new))
 
         def cancel_handler():
             f_window.close()
 
+        def stem_check_changed(a_val=None):
+            f_name.setText("")
+
         def file_name_select():
-            try:
-                if not os.path.isdir(self.last_offline_dir):
-                    self.last_offline_dir = global_home
+            if not os.path.isdir(self.last_offline_dir):
+                self.last_offline_dir = global_home
+            if f_stem_render_checkbox.isChecked():
+                f_file = QFileDialog.getExistingDirectory(
+                    self, _('Select an empty directory to render stems to'),
+                    self.last_offline_dir, QFileDialog.ShowDirsOnly)
+                if f_file and str(f_file):
+                    if os.listdir(f_file):
+                        QMessageBox.warning(
+                            self, _("Error"),
+                            _("The directory is not empty"))
+                    else:
+                        f_name.setText(f_file)
+                        self.last_offline_dir = f_file
+            else:
                 f_file_name, f_filter = QFileDialog.getSaveFileName(
                     f_window, _("Select a file name to save to..."),
                     self.last_offline_dir)
                 f_file_name = str(f_file_name)
-                if not f_file_name is None and f_file_name != "":
+                if f_file_name and str(f_file_name):
                     if not f_file_name.endswith(".wav"):
                         f_file_name += ".wav"
-                    if not f_file_name is None and not str(f_file_name) == "":
+                    if f_file_name and str(f_file_name):
                         f_name.setText(f_file_name)
                     self.last_offline_dir = os.path.dirname(f_file_name)
-            except Exception as ex:
-                libmk.pydaw_print_generic_exception(ex)
 
         f_marker_pos = SEQUENCER.get_loop_pos(a_warn=False)
 
@@ -8665,6 +8689,11 @@ class pydaw_main_window(QScrollArea):
             pass
 
         f_sample_rate_hlayout.addWidget(f_sample_rate)
+
+        f_stem_render_checkbox = QCheckBox(_("Stem Render"))
+        f_sample_rate_hlayout.addWidget(f_stem_render_checkbox)
+        f_stem_render_checkbox.stateChanged.connect(stem_check_changed)
+
         f_sample_rate_hlayout.addItem(
             QSpacerItem(1, 1, QSizePolicy.Expanding))
 
