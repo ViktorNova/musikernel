@@ -88,6 +88,7 @@ inline void prefetch_range(void *addr, size_t len)
 #define PATH_SEP "/"
 
 #if defined(_WIN32)
+    #define REAL_PATH_SEP "\\"
     char * get_home_dir()
     {
         char * f_result = getenv("USERPROFILE");
@@ -95,6 +96,7 @@ inline void prefetch_range(void *addr, size_t len)
         return f_result;
     }
 #else
+    #define REAL_PATH_SEP "/"
     char * get_home_dir()
     {
         char * f_result = getenv("HOME");

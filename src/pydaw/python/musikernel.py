@@ -596,9 +596,9 @@ class MkMainWindow(QMainWindow):
                 f_proc.kill()
             except Exception as ex:
                 print("Exception while killing process\n{}".format(ex))
-            if os.path.exists(a_file_name):
+            if os.path.isfile(a_file_name):
                 os.remove(a_file_name)
-            if os.path.exists(f_file_name):
+            if os.path.isfile(f_file_name):
                 os.remove(f_file_name)
             f_window.close()
 

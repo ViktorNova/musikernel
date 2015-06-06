@@ -2656,12 +2656,12 @@ void v_dn_offline_render(t_dawnext * self, double a_start_beat,
         for(f_i = 0; f_i < f_stem_count; ++f_i)
         {
             snprintf(f_file, 2048, "%s%s%i.wav", a_file_out,
-                PATH_SEP, f_tps[f_i]);
+                REAL_PATH_SEP, f_tps[f_i]);
             f_stems[f_i] = sf_open(f_file, SFM_WRITE, &f_sf_info);
             printf("Successfully opened %s\n", f_file);
         }
 
-        snprintf(f_file, 2048, "%s%s0.wav", a_file_out, PATH_SEP);
+        snprintf(f_file, 2048, "%s%s0.wav", a_file_out, REAL_PATH_SEP);
     }
     else
     {
