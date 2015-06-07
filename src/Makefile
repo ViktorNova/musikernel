@@ -53,7 +53,7 @@ mingw_deps_clean:
 	make -C sbsms/cli clean
 
 deps_clean:
-	make deps_clean
+	make mingw_deps_clean
 	cd pydaw/pyliblo-0.9.2 && python3 setup.py clean
 
 # --------------------------------------------------------------
