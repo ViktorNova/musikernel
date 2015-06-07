@@ -433,6 +433,7 @@ WAVV_PFXMATRIX_GRP0DST3SRC7CTRL2 = 368
 
 WAYV_MIN_NOTE = 369
 WAYV_MAX_NOTE = 370
+WAYV_MASTER_PITCH = 371
 
 
 WAYV_PORT_MAP = {
@@ -847,12 +848,11 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.master = pydaw_master_widget(
             f_knob_size, self.plugin_rel_callback,
             self.plugin_val_callback, WAYV_MASTER_VOLUME,
-            WAYV_MASTER_GLIDE,
-            WAYV_MASTER_PITCHBEND_AMT,
+            WAYV_MASTER_GLIDE, WAYV_MASTER_PITCHBEND_AMT,
             self.port_dict, a_preset_mgr=self.preset_manager,
             a_poly_port=WAYV_MONO_MODE,
-            a_min_note_port=WAYV_MIN_NOTE,
-            a_max_note_port=WAYV_MAX_NOTE)
+            a_min_note_port=WAYV_MIN_NOTE, a_max_note_port=WAYV_MAX_NOTE,
+            a_pitch_port=WAYV_MASTER_PITCH)
 
         self.hlayout_master.addWidget(self.master.group_box)
 

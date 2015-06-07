@@ -441,10 +441,11 @@ extern "C" {
 
 #define WAYV_MIN_NOTE 369
 #define WAYV_MAX_NOTE 370
+#define WAYV_MASTER_PITCH 371
 
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define WAYV_COUNT 371
+#define WAYV_COUNT 372
 
 #define WAYV_POLYPHONY   16
 #define WAYV_POLYPHONY_THRESH 12
@@ -464,7 +465,7 @@ typedef struct
     PYFX_Data *sustain[WAYV_OSC_COUNT];
     PYFX_Data *release[WAYV_OSC_COUNT];
 
-    PYFX_Data * adsr_checked[WAYV_OSC_COUNT];
+    PYFX_Data *adsr_checked[WAYV_OSC_COUNT];
 
     PYFX_Data *adsr_fm_delay[WAYV_OSC_COUNT];
     PYFX_Data *adsr_fm_hold[WAYV_OSC_COUNT];
@@ -546,6 +547,7 @@ typedef struct
 
     PYFX_Data *min_note;
     PYFX_Data *max_note;
+    PYFX_Data *master_pitch;
 
     //Corresponds to the actual knobs on the effects themselves,
     //not the mod matrix

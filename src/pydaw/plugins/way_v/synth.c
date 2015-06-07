@@ -632,6 +632,7 @@ static void v_wayv_connect_port(PYFX_Handle instance, int port,
 
         case WAYV_MIN_NOTE: plugin->min_note = data; break;
         case WAYV_MAX_NOTE: plugin->max_note = data; break;
+        case WAYV_MASTER_PITCH: plugin->master_pitch = data; break;
     }
 }
 
@@ -711,6 +712,11 @@ static void v_wayv_process_midi_event(
             t_wayv_osc * f_pfx_osc = NULL;
             t_wayv_poly_voice * f_wayv_voice = plugin_data->data[f_voice];
 
+            float f_master_pitch = (*plugin_data->master_pitch);
+
+            f_wayv_voice->note_f = (float)a_event->note + f_master_pitch;
+            f_wayv_voice->note = a_event->note + (int)(f_master_pitch);
+
             f_wayv_voice->amp =
                     f_db_to_linear_fast(
                     ((a_event->velocity
@@ -719,16 +725,10 @@ static void v_wayv_process_midi_event(
             f_wayv_voice->master_vol_lin =
                     f_db_to_linear_fast((*(plugin_data->master_vol)));
 
-            f_wayv_voice->keyboard_track =
-                    ((float)(a_event->note))
-                    * 0.007874016f;
+            f_wayv_voice->keyboard_track = f_wayv_voice->note_f * 0.007874016f;
 
             f_wayv_voice->velocity_track =
-                    ((float)(a_event->velocity))
-                    * 0.007874016f;
-
-            f_wayv_voice->note_f = (float)a_event->note;
-            f_wayv_voice->note = a_event->note;
+                ((float)(a_event->velocity)) * 0.007874016f;
 
             f_wayv_voice->target_pitch = f_wayv_voice->note_f;
 
@@ -1781,6 +1781,7 @@ PYFX_Descriptor *wayv_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, WAYV_ADSR6_CHECKBOX, 0.0f, 0, 1);
     pydaw_set_pyfx_port(f_result, WAYV_MIN_NOTE, 0.0f, 0.0f, 120.0f);
     pydaw_set_pyfx_port(f_result, WAYV_MAX_NOTE, 120.0f, 0.0f, 120.0f);
+    pydaw_set_pyfx_port(f_result, WAYV_MASTER_PITCH, 0.0f, -36.0f, 36.0f);
 
     f_port = WAYV_FM_MACRO1_OSC1_FM5;
 
