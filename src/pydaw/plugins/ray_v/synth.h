@@ -65,10 +65,11 @@ extern "C" {
 #define RAYV_ADSR_PREFX 42
 #define RAYV_MIN_NOTE 43
 #define RAYV_MAX_NOTE 44
+#define RAYV_MASTER_PITCH 45
 
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define RAYV_COUNT 45
+#define RAYV_COUNT 46
 
 #define RAYV_POLYPHONY   16
 #define RAYV_POLYPHONY_THRESH 12
@@ -84,7 +85,7 @@ typedef struct {
     PYFX_Data *timbre;
     PYFX_Data *res;
     PYFX_Data *dist;
-    PYFX_Data pitch;
+    PYFX_Data *master_pitch;
 
     PYFX_Data *attack_f;
     PYFX_Data *decay_f;

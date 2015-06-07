@@ -65,6 +65,7 @@ RAYV_LFO_PITCH_FINE = 41
 RAYV_ADSR_PREFX = 42
 RAYV_MIN_NOTE = 43
 RAYV_MAX_NOTE = 44
+RAYV_MASTER_PITCH = 45
 
 RAYV_PORT_MAP = {
     "Attack": "2",
@@ -226,8 +227,8 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             RAYV_MASTER_UNISON_VOICES,
             RAYV_MASTER_UNISON_SPREAD,
             self.preset_manager, a_poly_port=RAYV_MONO_MODE,
-            a_min_note_port=RAYV_MIN_NOTE,
-            a_max_note_port=RAYV_MAX_NOTE)
+            a_min_note_port=RAYV_MIN_NOTE, a_max_note_port=RAYV_MAX_NOTE,
+            a_pitch_port=RAYV_MASTER_PITCH)
         self.hlayout3.addWidget(self.master.group_box)
 
         self.pitch_env = pydaw_ramp_env_widget(

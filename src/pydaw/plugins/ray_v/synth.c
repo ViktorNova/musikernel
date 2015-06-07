@@ -242,6 +242,9 @@ static void v_rayv_connect_port(PYFX_Handle instance, int port,
         case RAYV_MAX_NOTE:
             plugin->max_note = data;
             break;
+        case RAYV_MASTER_PITCH:
+            plugin->master_pitch = data;
+            break;
     }
 }
 
@@ -267,7 +270,6 @@ static PYFX_Handle g_rayv_instantiate(PYFX_Descriptor * descriptor,
 
     plugin_data->sampleNo = 0;
 
-    plugin_data->pitch = 1.0f;
     plugin_data->sv_pitch_bend_value = 0.0f;
     plugin_data->sv_last_note = -1.0f;  //For glide
 
@@ -326,10 +328,12 @@ static void v_rayv_process_midi_event(
             v_svf_velocity_mod(&plugin_data->data[f_voice]->svf_filter,
                     a_event->velocity);
 
+            float f_master_pitch = (*plugin_data->master_pitch);
+
             plugin_data->data[f_voice]->note_f =
-                    (float)a_event->note;
+                    (float)a_event->note + f_master_pitch;
             plugin_data->data[f_voice]->note =
-                    a_event->note;
+                    a_event->note + (int)(f_master_pitch);
 
             plugin_data->data[f_voice]->filter_keytrk =
                     (*plugin_data->filter_keytrk) * 0.01f *
@@ -782,6 +786,7 @@ PYFX_Descriptor *rayv_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, RAYV_ADSR_PREFX, 0.0f, 0.0f, 1.0f);
     pydaw_set_pyfx_port(f_result, RAYV_MIN_NOTE, 0.0f, 0.0f, 120.0f);
     pydaw_set_pyfx_port(f_result, RAYV_MAX_NOTE, 120.0f, 0.0f, 120.0f);
+    pydaw_set_pyfx_port(f_result, RAYV_MASTER_PITCH, 0.0f, -36.0f, 36.0f);
 
 
     f_result->cleanup = v_cleanup_rayv;
