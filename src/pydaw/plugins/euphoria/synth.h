@@ -80,6 +80,7 @@ typedef struct st_euphoria
     PYFX_Data *mfx_comboboxes[EUPHORIA_MONO_FX_GROUPS_COUNT][
         EUPHORIA_MONO_FX_COUNT];
 
+    PYFX_Data *master_pitch;
     PYFX_Data *attack;
     PYFX_Data *decay;
     PYFX_Data *sustain;

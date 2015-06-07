@@ -440,6 +440,10 @@ static void connectPortSampler(PYFX_Handle instance, int port,
     {
         plugin->max_note = data;
     }
+    else if(port == EUPHORIA_MASTER_PITCH)
+    {
+        plugin->master_pitch = data;
+    }
 }
 
 static void v_euphoria_load(PYFX_Handle instance,
@@ -1136,10 +1140,10 @@ static void v_euphoria_process_midi_event(
 
             plugin_data->amp = f_db_to_linear_fast(*(plugin_data->master_vol));
 
-            f_voice->note_f = (float)f_note;
+            f_voice->note_f =
+                (float)f_note + (float)(*plugin_data->master_pitch);
 
-            f_voice->target_pitch =
-                    (f_voice->note_f);
+            f_voice->target_pitch = f_voice->note_f;
 
             if(plugin_data->sv_last_note < 0.0f)
             {
@@ -1185,8 +1189,7 @@ static void v_euphoria_process_midi_event(
 
             /*Set the last_note property, so the next note can
              * glide from it if glide is turned on*/
-            plugin_data->sv_last_note =
-                    (f_voice->note_f);
+            plugin_data->sv_last_note = f_voice->note_f;
         }
         else
         {
@@ -1498,6 +1501,7 @@ PYFX_Descriptor *euphoria_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, EUPHORIA_FX3_KNOB1, 64.0f, 0, 127);
     pydaw_set_pyfx_port(f_result, EUPHORIA_FX3_KNOB2, 64.0f, 0, 127);
     pydaw_set_pyfx_port(f_result, EUPHORIA_FX3_COMBOBOX, 0.0f, 0, MULTIFX3KNOB_MAX_INDEX);
+    pydaw_set_pyfx_port(f_result, EUPHORIA_MASTER_PITCH, 0.0f, -36.0f, 36.0f);
 
     int f_i = EUPHORIA_PFXMATRIX_GRP0DST0SRC0CTRL0;
 

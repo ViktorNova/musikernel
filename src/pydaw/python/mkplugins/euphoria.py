@@ -282,7 +282,7 @@ EUPHORIA_LAST_EQ_PORT = (EUPHORIA_FIRST_EQ_PORT + (18 * 100))
 EUPHORIA_LFO_PITCH_FINE = EUPHORIA_LAST_EQ_PORT
 EUPHORIA_MIN_NOTE = EUPHORIA_LFO_PITCH_FINE + 1
 EUPHORIA_MAX_NOTE = EUPHORIA_MIN_NOTE + 1
-
+EUPHORIA_MASTER_PITCH = EUPHORIA_MAX_NOTE + 1
 
 
 EUPHORIA_PORT_MAP = {
@@ -1181,12 +1181,11 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
 
         self.master = pydaw_master_widget(
             f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
-            EUPHORIA_MASTER_VOLUME,
-            EUPHORIA_MASTER_GLIDE,
-            EUPHORIA_MASTER_PITCHBEND_AMT,
-            self.port_dict, _("Master"),
+            EUPHORIA_MASTER_VOLUME, EUPHORIA_MASTER_GLIDE,
+            EUPHORIA_MASTER_PITCHBEND_AMT, self.port_dict, _("Master"),
             a_min_note_port=EUPHORIA_MIN_NOTE,
-            a_max_note_port=EUPHORIA_MAX_NOTE)
+            a_max_note_port=EUPHORIA_MAX_NOTE,
+            a_pitch_port=EUPHORIA_MASTER_PITCH)
         self.monofx_sub_tab_fx_layout.addWidget(self.master.group_box)
         self.master.vol_knob.control.setRange(-24, 24)
 
