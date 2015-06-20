@@ -15,9 +15,7 @@
 
 ######Windows
 
-Download and run the Windows installer [here](https://github.com/j3ffhubb/musikernel/releases/)
-
-MusiKernel on Windows is 64 bit only at the moment;  32 bit builds are possible if there is sufficient demand.
+Download and run the Windows installer [here](https://github.com/j3ffhubb/musikernel/releases/) (64 bit only)
 
 ######Fedora
 
