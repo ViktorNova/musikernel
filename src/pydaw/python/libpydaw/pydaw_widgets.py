@@ -1934,6 +1934,7 @@ class pydaw_abstract_file_browser_widget():
         self.list_file.clear()
         self.list_folder.clear()
         self.folder_filter_lineedit.clear()
+        f_old_path = self.last_open_dir
         if a_full_path:
             self.last_open_dir = str(a_folder)
         else:
@@ -1946,7 +1947,14 @@ class pydaw_abstract_file_browser_widget():
                 self.history.remove(self.last_open_dir)
             self.history.append(self.last_open_dir)
         self.folder_path_lineedit.setText(self.last_open_dir)
-        f_list = os.listdir(self.last_open_dir)
+        try:
+            f_list = os.listdir(self.last_open_dir)
+        except PermissionError:
+            QMessageBox.warning(self.widget, _("Error"),
+                _("Access denied, you do not have "
+                "permission to access {}".format(self.last_open_dir)))
+            self.set_folder(f_old_path, True)
+            return
         f_list.sort(key=lambda x: x.lower())
         for f_file in f_list:
             f_full_path = os.path.join(self.last_open_dir, f_file)
@@ -1962,8 +1970,8 @@ class pydaw_abstract_file_browser_widget():
                         f_item.setToolTip(f_file)
                         self.list_file.addItem(f_item)
                     else:
-                        QMessageBox.warning(_(
-                        "Not adding '{}' because it contains bad chars, "
+                        QMessageBox.warning(self.widget, _("Error"),
+                        _("Not adding '{}' because it contains bad chars, "
                         "you must rename this file path without:\n{}").format(
                         f_full_path, "\n".join(pydaw_util.pydaw_bad_chars)))
         self.on_filter_files()
