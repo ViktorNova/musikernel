@@ -398,9 +398,9 @@ inline void v_pydaw_run_wave_editor(int sample_count,
         {
             f_plugin->descriptor->run_replacing(
                 f_plugin->PYFX_handle, sample_count,
-                f_track->event_buffer, f_track->period_event_index,
-                f_plugin->atm_buffer, f_plugin->atm_count,
-                f_track->extern_midi, *f_track->extern_midi_count);
+                (t_pydaw_seq_event**)f_track->event_list->data,
+                f_track->event_list->len,
+                f_plugin->atm_buffer, f_plugin->atm_count);
         }
     }
 

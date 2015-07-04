@@ -14,6 +14,7 @@ GNU General Public License for more details.
 #ifndef MUSIKERNEL_H
 #define	MUSIKERNEL_H
 
+#include "libshds.h"
 #include "pydaw_files.h"
 #include "../libmodsynth/lib/lmalloc.h"
 #include "pydaw_plugin_wrapper.h"
@@ -203,6 +204,7 @@ typedef struct
     t_midi_device * midi_device;
     t_pydaw_seq_event * extern_midi;
     t_pydaw_seq_event event_buffer[PYDAW_MAX_EVENT_BUFFER_SIZE];
+    struct ShdsList * event_list;
 }t_pytrack;
 
 typedef struct
@@ -828,6 +830,7 @@ t_pytrack * g_pytrack_get(int a_track_num, float a_sr)
     f_result->extern_midi_count = &ZERO;
     f_result->midi_device = 0;
     f_result->sc_buffers_dirty = 0;
+    f_result->event_list = shds_list_new(PYDAW_MAX_EVENT_BUFFER_SIZE, NULL);
 
     pthread_spin_init(&f_result->lock, 0);
 

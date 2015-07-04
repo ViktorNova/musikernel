@@ -23,10 +23,6 @@ GNU General Public License for more details.
 #define TRIGGERFX_EVENT_GLITCH_ON 1003
 #define TRIGGERFX_EVENT_GLITCH_OFF 1004
 
-static void v_triggerfx_run(
-    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
-    t_pydaw_seq_event *, int);
-
 
 static void v_triggerfx_cleanup(PYFX_Handle instance)
 {
@@ -255,43 +251,30 @@ static void v_triggerfx_process_midi_event(
 
 static void v_triggerfx_run(
         PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event *events, int event_count,
-        t_pydaw_seq_event *atm_events, int atm_event_count,
-        t_pydaw_seq_event *ext_events, int ext_event_count)
+        t_pydaw_seq_event **events, int event_count,
+        t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_triggerfx *plugin_data = (t_triggerfx*)instance;
 
-    int event_pos = 0;
+    int f_i = 0;
     int midi_event_pos = 0;
     plugin_data->midi_event_count = 0;
 
     int f_gate_on = (int)*plugin_data->gate_mode;
     int f_glitch_on = (int)*plugin_data->glitch_on;
 
-    while (event_pos < event_count)
+    for(f_i = 0; f_i < event_count; ++f_i)
     {
-        v_triggerfx_process_midi_event(plugin_data, &events[event_pos]);
-        ++event_pos;
+        v_triggerfx_process_midi_event(plugin_data, events[f_i]);
     }
-
-    int f_i = 0;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 
-    while(f_i < atm_event_count)
+    for(f_i = 0; f_i < atm_event_count; ++f_i)
     {
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        ++f_i;
-    }
-
-    f_i = 0;
-
-    while(f_i < ext_event_count)
-    {
-        v_triggerfx_process_midi_event(plugin_data, &ext_events[f_i]);
-        ++f_i;
     }
 
     f_i = 0;

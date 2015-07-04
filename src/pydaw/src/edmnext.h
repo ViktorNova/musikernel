@@ -821,10 +821,10 @@ void v_en_sum_track_outputs(t_edmnext * self, t_pytrack * a_track,
 
                 f_plugin->descriptor->run_mixing(
                     f_plugin->PYFX_handle, a_sample_count,
-                    f_buff, 2, a_track->event_buffer,
-                    a_track->period_event_index,
-                    f_plugin->atm_buffer, f_plugin->atm_count,
-                    a_track->extern_midi, *a_track->extern_midi_count);
+                    f_buff, 2,
+                    (t_pydaw_seq_event**)a_track->event_list->data,
+                    a_track->event_list->len,
+                    f_plugin->atm_buffer, f_plugin->atm_count);
             }
             else
             {
@@ -884,6 +884,8 @@ void v_en_process_track(t_edmnext * self, int a_global_track_num,
     t_pytrack * f_track = self->track_pool[a_global_track_num];
     t_pydaw_plugin * f_plugin;
 
+    f_track->event_list->len = 0;
+
     if(a_playback_mode > 0)
     {
         v_en_process_midi(
@@ -916,9 +918,9 @@ void v_en_process_track(t_edmnext * self, int a_global_track_num,
                 f_i, a_sample_count, a_playback_mode, a_ts);
             f_plugin->descriptor->run_replacing(
                 f_plugin->PYFX_handle, a_sample_count,
-                f_track->event_buffer, f_track->period_event_index,
-                f_plugin->atm_buffer, f_plugin->atm_count,
-                f_track->extern_midi, *f_track->extern_midi_count);
+                (t_pydaw_seq_event**)f_track->event_list->data,
+                f_track->event_list->len,
+                f_plugin->atm_buffer, f_plugin->atm_count);
         }
         ++f_i;
     }
@@ -1145,6 +1147,7 @@ inline void v_en_process_atm(
 void v_en_process_midi(t_edmnext * self, int f_i, int sample_count,
         int a_playback_mode, t_en_thread_storage * a_ts)
 {
+    int f_i3;
     t_pytrack * f_track = self->track_pool[f_i];
     f_track->period_event_index = 0;
 
@@ -1346,6 +1349,11 @@ void v_en_process_midi(t_edmnext * self, int f_i, int sample_count,
             }
         }
     }
+
+    for(f_i3 = 0; f_i3 < f_track->period_event_index; ++f_i3)
+    {
+        shds_list_append(f_track->event_list, &f_track->event_buffer[f_i3]);
+    }
 }
 
 void v_en_process_note_offs(t_edmnext * self, int f_i)
@@ -1371,6 +1379,8 @@ void v_en_process_note_offs(t_edmnext * self, int f_i)
             f_event->tick = f_note_off - f_current_sample;
             ++f_track->period_event_index;
             f_track->note_offs[f_i2] = -1;
+
+            shds_list_append(f_track->event_list, f_event);
         }
         ++f_i2;
     }
@@ -1389,6 +1399,7 @@ void v_en_process_external_midi(t_edmnext * self,
     int f_playback_mode = musikernel->playback_mode;
     int f_midi_learn = musikernel->midi_learn;
     float f_tempo = self->tempo;
+    int f_valid_type;
 
     midiPoll(a_track->midi_device);
     midiDeviceRead(a_track->midi_device, f_sample_rate, sample_count);
@@ -1404,6 +1415,8 @@ void v_en_process_external_midi(t_edmnext * self,
 
     while(f_i2 < f_extern_midi_count)
     {
+        f_valid_type = 1;
+
         if(events[f_i2].tick >= sample_count)
         {
             //Otherwise the event will be missed
@@ -1496,8 +1509,20 @@ void v_en_process_external_midi(t_edmnext * self,
                 v_queue_osc_message("mrec", f_osc_msg);
             }
         }
+        else
+        {
+            f_valid_type = 0;
+        }
+
+        if(f_valid_type)
+        {
+            shds_list_append(a_track->event_list, &events[f_i2]);
+        }
+
         ++f_i2;
     }
+
+    shds_list_isort(a_track->event_list, seq_event_cmpfunc);
 }
 
 

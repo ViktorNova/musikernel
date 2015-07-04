@@ -16,10 +16,6 @@ GNU General Public License for more details.
 #include "../../libmodsynth/lib/amp.h"
 #include "synth.h"
 
-static void v_mkchnl_run(
-    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
-    t_pydaw_seq_event *, int);
-
 
 static void v_mkchnl_cleanup(PYFX_Handle instance)
 {
@@ -133,38 +129,25 @@ static void v_mkchnl_process_midi_event(
 
 static void v_mkchnl_process_midi(
     PYFX_Handle instance,
-    t_pydaw_seq_event *events, int event_count,
-    t_pydaw_seq_event *atm_events, int atm_event_count,
-    t_pydaw_seq_event *ext_events, int ext_event_count)
+    t_pydaw_seq_event **events, int event_count,
+    t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_mkchnl *plugin_data = (t_mkchnl*)instance;
-    register int event_pos = 0;
+    register int f_i = 0;
     plugin_data->midi_event_count = 0;
 
-    while (event_pos < event_count)
+    for(f_i = 0; f_i < event_count; ++f_i)
     {
-        v_mkchnl_process_midi_event(plugin_data, &events[event_pos]);
-        ++event_pos;
+        v_mkchnl_process_midi_event(plugin_data, events[f_i]);
     }
-
-    register int f_i = 0;
 
     v_plugin_event_queue_reset(&plugin_data->atm_queue);
 
-    while(f_i < atm_event_count)
+    for(f_i = 0; f_i < atm_event_count; ++f_i)
     {
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        ++f_i;
-    }
-
-    f_i = 0;
-
-    while(f_i < ext_event_count)
-    {
-        v_mkchnl_process_midi_event(plugin_data, &ext_events[f_i]);
-        ++f_i;
     }
 }
 
@@ -172,14 +155,13 @@ static void v_mkchnl_process_midi(
 static void v_mkchnl_run_mixing(
         PYFX_Handle instance, int sample_count,
         float ** output_buffers, int output_count,
-        t_pydaw_seq_event *events, int event_count,
-        t_pydaw_seq_event *atm_events, int atm_event_count,
-        t_pydaw_seq_event *ext_events, int ext_event_count)
+        t_pydaw_seq_event **events, int event_count,
+        t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_mkchnl *plugin_data = (t_mkchnl*)instance;
 
     v_mkchnl_process_midi(instance, events, event_count,
-        atm_events, atm_event_count, ext_events, ext_event_count);
+        atm_events, atm_event_count);
 
     float f_vol_linear;
     float f_gain = f_db_to_linear_fast((*plugin_data->gain) * 0.01f);
@@ -232,13 +214,12 @@ static void v_mkchnl_run_mixing(
 
 static void v_mkchnl_run(
         PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event *events, int event_count,
-        t_pydaw_seq_event *atm_events, int atm_event_count,
-        t_pydaw_seq_event *ext_events, int ext_event_count)
+        t_pydaw_seq_event **events, int event_count,
+        t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_mkchnl *plugin_data = (t_mkchnl*)instance;
     v_mkchnl_process_midi(instance, events, event_count,
-        atm_events, atm_event_count, ext_events, ext_event_count);
+        atm_events, atm_event_count);
 
     int midi_event_pos = 0;
     int f_i = 0;

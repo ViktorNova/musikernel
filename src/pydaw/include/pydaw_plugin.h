@@ -78,6 +78,15 @@ typedef struct
 
 typedef t_wav_pool_item * (*fp_get_wavpool_item_from_host)(int);
 
+/* For sorting a list by start time */
+int seq_event_cmpfunc(void *self, void *other)
+{
+    t_pydaw_seq_event *self_ev = (t_pydaw_seq_event*)self;
+    t_pydaw_seq_event *other_ev = (t_pydaw_seq_event*)other;
+
+    return self_ev->tick < other_ev->tick;
+}
+
 /* Descriptor for a Type of Plugin:
 
    This structure is used to describe a plugin type. It provides a
@@ -130,9 +139,8 @@ typedef struct _PYFX_Descriptor {
     // Plugins NOT part of a send channel will always call this
     void (*run_replacing)(
         PYFX_Handle Instance, int SampleCount,
-        t_pydaw_seq_event *Events, int EventCount,
-        t_pydaw_seq_event *AtmEvents, int AtmEventCount,
-        t_pydaw_seq_event *ExtEvents, int ExtEventCount);
+        t_pydaw_seq_event **Events, int EventCount,
+        t_pydaw_seq_event *AtmEvents, int AtmEventCount);
 
     // Plugins that ARE part of a send channel will always call this,
     // any plugin that isn't a fader/channel type plugin do not need
@@ -140,9 +148,8 @@ typedef struct _PYFX_Descriptor {
     void (*run_mixing)(
         PYFX_Handle Instance, int SampleCount,
         float ** output_buffers, int output_count,
-        t_pydaw_seq_event *Events, int EventCount,
-        t_pydaw_seq_event *AtmEvents, int AtmEventCount,
-        t_pydaw_seq_event *ExtEvents, int ExtEventCount);
+        t_pydaw_seq_event **Events, int EventCount,
+        t_pydaw_seq_event *AtmEvents, int AtmEventCount);
 
     /* Do anything like warming up oscillators, etc...  in preparation
      * for offline rendering.  This must be called after loading
@@ -189,7 +196,8 @@ typedef struct
 
 void v_plugin_event_queue_add(t_plugin_event_queue*, int, int, float, int);
 void v_plugin_event_queue_reset(t_plugin_event_queue*);
-t_plugin_event_queue_item * v_plugin_event_queue_iter(t_plugin_event_queue*, int);
+t_plugin_event_queue_item * v_plugin_event_queue_iter(
+    t_plugin_event_queue*, int);
 void v_plugin_event_queue_atm_set(t_plugin_event_queue*, int, float*);
 inline float f_cc_to_ctrl_val(PYFX_Descriptor*, int, float);
 void v_cc_mapping_init(t_cc_mapping*);

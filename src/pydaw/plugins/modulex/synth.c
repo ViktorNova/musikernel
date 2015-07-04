@@ -23,10 +23,6 @@ GNU General Public License for more details.
 
 int MODULEX_AMORITIZER = 0;
 
-static void v_modulex_run(
-    PYFX_Handle, int, t_pydaw_seq_event *, int, t_pydaw_seq_event *, int,
-    t_pydaw_seq_event *, int);
-
 static void v_modulex_cleanup(PYFX_Handle instance)
 {
     free(instance);
@@ -226,21 +222,19 @@ static void v_modulex_process_midi_event(
 
 static void v_modulex_run(
         PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event *events, int event_count,
-        t_pydaw_seq_event *atm_events, int atm_event_count,
-        t_pydaw_seq_event *ext_events, int ext_event_count)
+        t_pydaw_seq_event **events, int event_count,
+        t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_modulex *plugin_data = (t_modulex*)instance;
     t_mf3_multi * f_fx;
 
-    int event_pos = 0;
+    int event_pos;
     int midi_event_pos = 0;
     plugin_data->midi_event_count = 0;
 
-    while (event_pos < event_count)
+    for(event_pos = 0; event_pos < event_count; ++event_pos)
     {
-        v_modulex_process_midi_event(plugin_data, &events[event_pos]);
-        ++event_pos;
+        v_modulex_process_midi_event(plugin_data, events[event_pos]);
     }
 
     register int f_i = 0;
@@ -252,14 +246,6 @@ static void v_modulex_run(
         v_plugin_event_queue_add(
             &plugin_data->atm_queue, atm_events[f_i].type,
             atm_events[f_i].tick, atm_events[f_i].value, atm_events[f_i].port);
-        ++f_i;
-    }
-
-    f_i = 0;
-
-    while(f_i < ext_event_count)
-    {
-        v_modulex_process_midi_event(plugin_data, &ext_events[f_i]);
         ++f_i;
     }
 
