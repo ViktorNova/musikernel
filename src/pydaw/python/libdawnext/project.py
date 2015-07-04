@@ -15,7 +15,6 @@ GNU General Public License for more details.
 import os
 import re
 import traceback
-import subprocess
 
 import numpy
 
@@ -264,6 +263,24 @@ class DawNextProject(libmk.AbstractProject):
                 return pydaw_sequencer.from_str(f_file.read())
         else:
             return pydaw_sequencer()
+
+    def import_midi_file(
+            self, a_midi_file, a_beat_offset, a_track_offset):
+        """ @a_midi_file:  An instance of DawNextMidiFile """
+        f_sequencer = self.get_region()
+        f_active_tracks = [x + a_track_offset for x in
+            a_midi_file.result_dict if x + a_track_offset < TRACK_COUNT_ALL]
+        f_end_beat = max(x.get_length() for x in
+            a_midi_file.result_dict.values())
+        f_sequencer.clear_range(f_active_tracks, a_beat_offset, f_end_beat)
+        for k,v in a_midi_file.result_dict.items():
+            f_track = a_track_offset + int(k)
+            if f_track >= TRACK_COUNT_ALL:
+                break
+            f_item_ref = pydaw_sequencer_item(
+                f_track, a_beat_offset, v.get_length(), v.uid)
+            f_sequencer.add_item_ref_by_uid(f_item_ref)
+        self.save_region(f_sequencer)
 
     def get_atm_region(self):
         if os.path.isfile(self.automation_file):
@@ -1433,21 +1450,26 @@ class pydaw_item:
                 f_path.translate(-PIXMAP_TILE_WIDTH, 0)
         return f_result
 
-    def get_length(self, a_tempo):
+    def get_length(self, a_tempo=None):
         f_result = 0.0
-        f_spb = 60.0 / a_tempo
+
         for f_note in self.notes:
             f_end = f_note.start + f_note.length
             if f_end > f_result:
                 f_result = f_end
+
         for f_ev in self.ccs + self.pitchbends:
             if f_ev.start > f_result:
                 f_result = f_ev.start
-        for f_item in self.items.values():
-            f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_item.uid)
-            f_end = (f_graph.length_in_seconds / f_spb) + f_item.start_beat
-            if f_end > f_result:
-                f_end = f_result
+
+        if a_tempo:
+            f_spb = 60.0 / a_tempo
+            for f_item in self.items.values():
+                f_graph = libmk.PROJECT.get_sample_graph_by_uid(f_item.uid)
+                f_end = (f_graph.length_in_seconds / f_spb) + f_item.start_beat
+                if f_end > f_result:
+                    f_end = f_result
+
         return f_result
 
     def confine_audio_items(self, a_ref, a_tempo):
@@ -2171,4 +2193,39 @@ def envelope_to_notes(self, a_tempo):
         f_result2.append(
             (str(pydaw_note(f_start, f_pair[1], 60, f_vel)), f_index))
     return f_result2
+
+
+class DawNextMidiFile:
+    """ Convert the MIDI file at a_file to a dict of channel#:pydaw_item
+        @a_file:  The path to the MIDI file
+        @a_project:  An instance of DawNextProject
+    """
+    def __init__(self, a_file, a_project):
+        f_item_list = pydaw_util.load_midi_file(a_file)
+        self.result_dict = {}
+
+        for f_event in f_item_list:
+            if f_event.length >= pydaw_min_note_length:
+                f_velocity = f_event.ev.velocity
+                f_beat = f_event.start_beat
+                print("f_beat : {}".format(f_beat))
+                f_pitch = f_event.ev.note
+                f_length = f_event.length
+                f_channel = f_event.ev.channel
+                f_key = int(f_channel)
+                if not f_key in self.result_dict:
+                    f_uid = a_project.create_empty_item()
+                    self.result_dict[f_key] = a_project.get_item_by_uid(f_uid)
+                f_note = pydaw_note(f_beat, f_length, f_pitch, f_velocity)
+                self.result_dict[f_key].add_note(f_note) #, a_check=False)
+            else:
+                print("Ignoring note event with <= zero length")
+        for f_item in self.result_dict.values():
+            a_project.save_item_by_uid(f_item.uid, f_item)
+        self.channel_count = self.get_channel_count()
+
+    def get_channel_count(self):
+        return max(self.result_dict) if self.result_dict else 0
+
+
 

@@ -4927,10 +4927,9 @@ def global_paif_rel_callback(a_port, a_val):
         f_paif.set_row(CURRENT_AUDIO_ITEM_INDEX, f_index_list)
         PROJECT.save_audio_per_item_fx_region(CURRENT_REGION.uid, f_paif)
 
-class audio_items_viewer_widget(
-pydaw_widgets.pydaw_abstract_file_browser_widget):
+class audio_items_viewer_widget(pydaw_widgets.AbstractFileBrowserWidget):
     def __init__(self):
-        pydaw_widgets.pydaw_abstract_file_browser_widget.__init__(self)
+        pydaw_widgets.AbstractFileBrowserWidget.__init__(self)
 
         self.list_file.setDragEnabled(True)
         self.list_file.mousePressEvent = self.file_mouse_press_event

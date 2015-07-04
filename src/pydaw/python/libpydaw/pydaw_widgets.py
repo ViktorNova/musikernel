@@ -1601,8 +1601,9 @@ class pydaw_file_select_widget:
 
 
 
-class pydaw_abstract_file_browser_widget():
-    def __init__(self):
+class AbstractFileBrowserWidget():
+    def __init__(self, a_filter_func=pydaw_util.is_audio_file):
+        self.filter_func = a_filter_func
         self.hsplitter = QSplitter(QtCore.Qt.Horizontal)
         self.vsplitter = QSplitter(QtCore.Qt.Vertical)
         self.folders_tab_widget = QTabWidget()
@@ -1963,7 +1964,7 @@ class pydaw_abstract_file_browser_widget():
                     f_item = QListWidgetItem(f_file)
                     f_item.setToolTip(f_file)
                     self.list_folder.addItem(f_item)
-                elif pydaw_util.is_audio_file(f_file) and \
+                elif self.filter_func(f_file) and \
                 os.path.isfile(f_full_path):
                     if not pydaw_util.pydaw_str_has_bad_chars(f_full_path):
                         f_item = QListWidgetItem(f_file)
@@ -1996,9 +1997,9 @@ class pydaw_abstract_file_browser_widget():
         return f_result
 
 
-class pydaw_file_browser_widget(pydaw_abstract_file_browser_widget):
+class pydaw_file_browser_widget(AbstractFileBrowserWidget):
     def __init__(self):
-        pydaw_abstract_file_browser_widget.__init__(self)
+        AbstractFileBrowserWidget.__init__(self)
         self.load_button = QPushButton(_("Load"))
         self.file_hlayout.addWidget(self.load_button)
         self.list_file.setSelectionMode(QListWidget.ExtendedSelection)

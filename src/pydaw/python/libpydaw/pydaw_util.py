@@ -259,13 +259,25 @@ def count_beats(a_start_bar, a_start_beat, a_end_bar, a_end_beat):
 
 
 AUDIO_FILE_EXTS = [".WAV", ".AIF", ".AIFF", ".FLAC"]
+MIDI_FILE_EXTS = [".MIDI", ".MID"]
+AUDIO_MIDI_FILE_EXTS = AUDIO_FILE_EXTS + MIDI_FILE_EXTS
+
+MAX_EXT_LEN = max(len(x) for x in AUDIO_MIDI_FILE_EXTS)
 
 def is_audio_file(a_file):
+    return is_file_type(a_file, AUDIO_FILE_EXTS)
+
+def is_midi_file(a_file):
+    return is_file_type(a_file, MIDI_FILE_EXTS)
+
+def is_audio_midi_file(a_file):
+    return is_file_type(a_file, AUDIO_MIDI_FILE_EXTS)
+
+def is_file_type(a_file, a_list):
     """ Only checks the extension, not the MIME type """
-    f_file = str(a_file)[-5:].upper()
-    for f_ext in AUDIO_FILE_EXTS:
-        if f_file.endswith(f_ext):
-            return True
+    f_file = str(a_file)[-MAX_EXT_LEN:].upper()
+    for f_file in (x for x in a_list if f_file.endswith(x)):
+        return True
     return False
 
 beat_fracs = ['1/16', '1/8', '1/4', '1/3', '1/2', '1/1']

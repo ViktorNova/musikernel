@@ -1853,12 +1853,18 @@ class ItemSequencer(QGraphicsView):
         return False
 
     def sceneDropEvent(self, a_event):
+        f_pos = a_event.scenePos()
+        libmk.APP.setOverrideCursor(QtCore.Qt.WaitCursor)
         if AUDIO_ITEMS_TO_DROP:
-            f_x = a_event.scenePos().x()
-            f_y = a_event.scenePos().y()
-            libmk.APP.setOverrideCursor(QtCore.Qt.WaitCursor)
-            self.add_items(f_x, f_y, AUDIO_ITEMS_TO_DROP)
-            libmk.APP.restoreOverrideCursor()
+            self.add_items(f_pos, AUDIO_ITEMS_TO_DROP)
+        elif MIDI_FILES_TO_DROP:
+            f_midi_path = MIDI_FILES_TO_DROP[0]
+            f_beat, f_lane_num = self.pos_to_beat_and_track(f_pos)
+            f_midi = project.DawNextMidiFile(f_midi_path, PROJECT)
+            PROJECT.import_midi_file(f_midi, f_beat, f_lane_num)
+            PROJECT.commit("Import MIDI file")
+            REGION_SETTINGS.open_region()
+        libmk.APP.restoreOverrideCursor()
 
     def quantize(self, a_beat):
         if SEQ_QUANTIZE:
@@ -1866,22 +1872,26 @@ class ItemSequencer(QGraphicsView):
         else:
             return a_beat
 
-    def add_items(self, f_x, f_y, a_item_list):
-        if self.check_running():
-            return
-
-        f_beat_frac = (f_x / SEQUENCER_PX_PER_BEAT)
+    def pos_to_beat_and_track(self, a_pos):
+        f_beat_frac = (a_pos.x() / SEQUENCER_PX_PER_BEAT)
         f_beat_frac = pydaw_clip_min(f_beat_frac, 0.0)
-
-        f_seconds_per_beat = (60.0 /
-            CURRENT_REGION.get_tempo_at_pos(f_beat_frac))
-
         f_beat_frac = self.quantize(f_beat_frac)
 
-        f_lane_num = int((f_y - REGION_EDITOR_HEADER_HEIGHT) /
+        f_lane_num = int((a_pos.y() - REGION_EDITOR_HEADER_HEIGHT) /
             REGION_EDITOR_TRACK_HEIGHT)
         f_lane_num = pydaw_clip_value(
             f_lane_num, 0, project.TRACK_COUNT_ALL - 1)
+
+        return f_beat_frac, f_lane_num
+
+    def add_items(self, a_pos, a_item_list):
+        if self.check_running():
+            return
+
+        f_beat_frac, f_lane_num = self.pos_to_beat_and_track(a_pos)
+
+        f_seconds_per_beat = (60.0 /
+            CURRENT_REGION.get_tempo_at_pos(f_beat_frac))
 
         f_restart = False
 
@@ -5034,6 +5044,7 @@ class fade_vol_dialog_widget:
 
 
 AUDIO_ITEMS_TO_DROP = []
+MIDI_FILES_TO_DROP = []
 
 CURRENT_AUDIO_ITEM_INDEX = None
 
@@ -5050,10 +5061,10 @@ def global_paif_rel_callback(a_port, a_val):
         CURRENT_ITEM.set_row(CURRENT_AUDIO_ITEM_INDEX, f_index_list)
         PROJECT.save_item(CURRENT_ITEM_NAME, CURRENT_ITEM)
 
-class audio_items_viewer_widget(
-pydaw_widgets.pydaw_abstract_file_browser_widget):
+class audio_items_viewer_widget(pydaw_widgets.AbstractFileBrowserWidget):
     def __init__(self):
-        pydaw_widgets.pydaw_abstract_file_browser_widget.__init__(self)
+        pydaw_widgets.AbstractFileBrowserWidget.__init__(
+            self, a_filter_func=pydaw_util.is_audio_midi_file)
 
         self.list_file.setDragEnabled(True)
         self.list_file.mousePressEvent = self.file_mouse_press_event
@@ -5145,12 +5156,16 @@ pydaw_widgets.pydaw_abstract_file_browser_widget):
 
     def file_mouse_press_event(self, a_event):
         QListWidget.mousePressEvent(self.list_file, a_event)
-        global AUDIO_ITEMS_TO_DROP
+        global AUDIO_ITEMS_TO_DROP, MIDI_FILES_TO_DROP
         AUDIO_ITEMS_TO_DROP = []
+        MIDI_FILES_TO_DROP = []
         for f_item in self.list_file.selectedItems():
-            AUDIO_ITEMS_TO_DROP.append(
-                os.path.join(
-                    *(str(x) for x in (self.last_open_dir, f_item.text()))))
+            f_path = os.path.join(
+                *(str(x) for x in (self.last_open_dir, f_item.text())))
+            if pydaw_util.is_midi_file(f_path):
+                MIDI_FILES_TO_DROP.append(f_path)
+            else:
+                AUDIO_ITEMS_TO_DROP.append(f_path)
 
     def on_select_all(self):
         if CURRENT_REGION is None or libmk.IS_PLAYING:
@@ -8756,8 +8771,12 @@ class pydaw_main_window(QScrollArea):
                 PROJECT.get_routing_graph(), TRACK_NAMES)
         elif f_index == 3:
             global_open_mixer()
-
-        AUDIO_SEQ_WIDGET.set_multiselect(not f_index)
+        f_bool = not f_index
+        AUDIO_SEQ_WIDGET.set_multiselect(f_bool)
+        AUDIO_SEQ_WIDGET.filter_func = \
+            pydaw_util.is_audio_midi_file if f_bool \
+            else pydaw_util.is_audio_midi_file
+        AUDIO_SEQ_WIDGET.set_folder(AUDIO_SEQ_WIDGET.last_open_dir)
 
     def on_edit_notes(self, a_event=None):
         QTextEdit.leaveEvent(self.notes_tab, a_event)
