@@ -19,6 +19,8 @@ GNU General Public License for more details.
 #include <sndfile.h>
 #include <stdio.h>
 
+#include "libshds.h"
+
 #ifdef __APPLE__
 
     #include <libkern/OSAtomic.h>
