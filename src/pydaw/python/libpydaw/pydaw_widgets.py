@@ -1764,13 +1764,19 @@ class AbstractFileBrowserWidget():
 
     def up_contextMenuEvent(self, a_event):
         if (pydaw_util.IS_LINUX and self.last_open_dir != "/") or (
-        pydaw_util.IS_WINDOWS and self.last_open_dir[1] != ":"):
+        pydaw_util.IS_WINDOWS and len(self.last_open_dir) > 3):
             f_menu = QMenu(self.up_button)
             f_menu.triggered.connect(self.open_path_from_action)
-            f_arr = self.last_open_dir.split(os.path.sep)[1:]
+            f_arr = self.last_open_dir.split(os.path.sep)
             f_paths = []
-            for f_i in range(len(f_arr)):
-                f_paths.append("/{}".format("/".join(f_arr[:f_i])))
+            if pydaw_util.IS_WINDOWS:
+                for f_i in range(1, len(f_arr)):
+                    f_paths.append("\\".join(f_arr[:f_i]))
+                f_paths[0] += "\\"
+            else:
+                f_arr = f_arr[1:]
+                for f_i in range(len(f_arr)):
+                    f_paths.append("/{}".format("/".join(f_arr[:f_i])))
             for f_path in reversed(f_paths):
                 f_menu.addAction(f_path)
             f_menu.exec_(QCursor.pos())
