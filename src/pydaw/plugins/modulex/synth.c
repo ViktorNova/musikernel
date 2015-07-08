@@ -222,11 +222,14 @@ static void v_modulex_process_midi_event(
 
 static void v_modulex_run(
         PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event **events, int event_count,
+        struct ShdsList * midi_events,
         t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_modulex *plugin_data = (t_modulex*)instance;
     t_mf3_multi * f_fx;
+
+    t_pydaw_seq_event **events = (t_pydaw_seq_event**)midi_events->data;
+    int event_count = midi_events->len;
 
     int event_pos;
     int midi_event_pos = 0;

@@ -152,10 +152,14 @@ static void v_mkdelay_process_midi_event(
 
 static void v_mkdelay_run(
         PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event **events, int event_count,
+        struct ShdsList * midi_events,
         t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_mkdelay *plugin_data = (t_mkdelay*)instance;
+
+    t_pydaw_seq_event **events = (t_pydaw_seq_event**)midi_events->data;
+    int event_count = midi_events->len;
+
     register int f_i;
 
     int midi_event_pos = 0;

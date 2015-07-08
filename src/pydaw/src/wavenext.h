@@ -397,9 +397,7 @@ inline void v_pydaw_run_wave_editor(int sample_count,
         if(f_plugin && f_plugin->power)
         {
             f_plugin->descriptor->run_replacing(
-                f_plugin->PYFX_handle, sample_count,
-                (t_pydaw_seq_event**)f_track->event_list->data,
-                f_track->event_list->len,
+                f_plugin->PYFX_handle, sample_count, f_track->event_list,
                 f_plugin->atm_buffer, f_plugin->atm_count);
         }
     }

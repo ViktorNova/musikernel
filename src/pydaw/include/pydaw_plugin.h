@@ -139,7 +139,7 @@ typedef struct _PYFX_Descriptor {
     // Plugins NOT part of a send channel will always call this
     void (*run_replacing)(
         PYFX_Handle Instance, int SampleCount,
-        t_pydaw_seq_event **Events, int EventCount,
+        struct ShdsList * midi_events,
         t_pydaw_seq_event *AtmEvents, int AtmEventCount);
 
     // Plugins that ARE part of a send channel will always call this,
@@ -148,7 +148,7 @@ typedef struct _PYFX_Descriptor {
     void (*run_mixing)(
         PYFX_Handle Instance, int SampleCount,
         float ** output_buffers, int output_count,
-        t_pydaw_seq_event **Events, int EventCount,
+        struct ShdsList * midi_events,
         t_pydaw_seq_event *AtmEvents, int AtmEventCount);
 
     /* Do anything like warming up oscillators, etc...  in preparation

@@ -155,10 +155,13 @@ static void v_mkchnl_process_midi(
 static void v_mkchnl_run_mixing(
         PYFX_Handle instance, int sample_count,
         float ** output_buffers, int output_count,
-        t_pydaw_seq_event **events, int event_count,
+        struct ShdsList * midi_events,
         t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_mkchnl *plugin_data = (t_mkchnl*)instance;
+
+    t_pydaw_seq_event **events = (t_pydaw_seq_event**)midi_events->data;
+    int event_count = midi_events->len;
 
     v_mkchnl_process_midi(instance, events, event_count,
         atm_events, atm_event_count);
@@ -214,10 +217,14 @@ static void v_mkchnl_run_mixing(
 
 static void v_mkchnl_run(
         PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event **events, int event_count,
+        struct ShdsList * midi_events,
         t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_mkchnl *plugin_data = (t_mkchnl*)instance;
+
+    t_pydaw_seq_event **events = (t_pydaw_seq_event**)midi_events->data;
+    int event_count = midi_events->len;
+    
     v_mkchnl_process_midi(instance, events, event_count,
         atm_events, atm_event_count);
 

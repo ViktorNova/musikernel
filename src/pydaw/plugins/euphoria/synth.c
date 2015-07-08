@@ -1218,10 +1218,14 @@ static void v_euphoria_process_midi_event(
 
 static void v_run_lms_euphoria(
         PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event **events, int event_count,
+        struct ShdsList * midi_events,
         t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_euphoria *plugin_data = (t_euphoria*)instance;
+
+    t_pydaw_seq_event **events = (t_pydaw_seq_event**)midi_events->data;
+    int event_count = midi_events->len;
+
     register int f_i, i2, i3;
     int midi_event_pos = 0;
     t_plugin_event_queue_item * f_midi_item;

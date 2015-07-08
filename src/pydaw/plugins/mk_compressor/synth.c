@@ -140,10 +140,13 @@ static void v_mk_comp_process_midi_event(
 
 static void v_mk_comp_run(
         PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event **events, int event_count,
+        struct ShdsList * midi_events,
         t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_mk_comp *plugin_data = (t_mk_comp*)instance;
+
+    t_pydaw_seq_event **events = (t_pydaw_seq_event**)midi_events->data;
+    int event_count = midi_events->len;
 
     int f_i = 0;
     int midi_event_pos = 0;

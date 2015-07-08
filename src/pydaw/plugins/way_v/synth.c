@@ -1054,10 +1054,13 @@ static void v_wayv_process_midi_event(
 
 static void v_run_wayv(
         PYFX_Handle instance, int sample_count,
-        t_pydaw_seq_event **events, int event_count,
+        struct ShdsList * midi_events,
         t_pydaw_seq_event *atm_events, int atm_event_count)
 {
     t_wayv *plugin_data = (t_wayv*) instance;
+
+    t_pydaw_seq_event **events = (t_pydaw_seq_event**)midi_events->data;
+    int event_count = midi_events->len;
 
     v_plugin_event_queue_reset(&plugin_data->midi_queue);
 

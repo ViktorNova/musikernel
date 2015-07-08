@@ -661,9 +661,7 @@ void v_dn_sum_track_outputs(t_dawnext * self, t_pytrack * a_track,
 
                 f_plugin->descriptor->run_mixing(
                     f_plugin->PYFX_handle, a_sample_count,
-                    f_buff, 2,
-                    (t_pydaw_seq_event**)a_track->event_list->data,
-                    a_track->event_list->len,
+                    f_buff, 2, a_track->event_list,
                     f_plugin->atm_buffer, f_plugin->atm_count);
             }
             else
@@ -940,8 +938,7 @@ void v_dn_process_track(t_dawnext * self, int a_global_track_num,
                 f_i, a_sample_count, a_playback_mode, a_ts);
             f_plugin->descriptor->run_replacing(
                 f_plugin->PYFX_handle, a_sample_count,
-                (t_pydaw_seq_event**)f_track->event_list->data,
-                f_track->event_list->len,
+                f_track->event_list,
                 f_plugin->atm_buffer, f_plugin->atm_count);
         }
         ++f_i;
