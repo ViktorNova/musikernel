@@ -30,6 +30,7 @@ except ImportError:
     pass
 
 from PyQt5 import QtCore
+from PyQt5.QtWidgets import *
 
 
 IS_CYGWIN = "cygwin" in sys.platform
@@ -139,6 +140,10 @@ class EngineLibThread(QtCore.QThread):
 
 PROJECT_DIR = None
 
+def run_musikernel():
+    f_bin = pydaw_which(global_pydaw_version_string)
+    subprocess.Popen([f_bin])
+
 def start_engine_lib(a_project_dir):
     global PROJECT_DIR, ENGINE_LIB_THREAD
     PROJECT_DIR = a_project_dir
@@ -167,6 +172,67 @@ def pydaw_escape_stylesheet(a_stylesheet, a_path):
     f_result = a_stylesheet.replace("$STYLE_FOLDER", f_dir)
     return f_result
 
+def check_for_rw_perms(a_parent, a_file):
+    if not os.access(os.path.dirname(str(a_file)), os.W_OK):
+        QMessageBox.warning(
+            a_parent, "Error",
+            "You do not have read+write permissions to "
+            "{}".format(global_pydaw_home))
+        return False
+    else:
+        return True
+
+def check_for_empty_directory(a_parent, a_dir):
+    """ Return true if directory is empty, show error message and
+        return False if not
+    """
+    if os.listdir(a_dir):
+        QMessageBox.warning(a_parent, "Error",
+        "You must save the project file to an empty directory, use "
+        "the 'Create Folder' button to create a new, empty directory.")
+        return False
+    else:
+        return True
+
+def new_project(a_parent=None):
+    try:
+        f_last_dir = global_home
+        while True:
+            f_file = QFileDialog.getExistingDirectory(
+                a_parent, 'New Project', f_last_dir,
+                QFileDialog.ShowDirsOnly)
+            if f_file and str(f_file):
+                f_file = str(f_file)
+                f_last_dir = f_file
+                if not check_for_empty_directory(a_parent, f_file) or \
+                not check_for_rw_perms(a_parent, f_file):
+                    continue
+                f_file += "/default." + global_pydaw_version_string
+                set_file_setting("last-project", f_file)
+                return True
+            else:
+                return False
+    except Exception as ex:
+        QMessageBox.warning(a_parent, "Error", str(ex))
+
+def open_project(a_parent=None):
+    try:
+        f_file, f_filter = QFileDialog.getOpenFileName(
+            parent=a_parent, caption='Open Project',
+            directory=global_default_project_folder,
+            filter=global_pydaw_file_type_string)
+        if f_file is None:
+            return False
+        f_file_str = str(f_file)
+        if not f_file_str:
+            return False
+        if not check_for_rw_perms(a_parent, f_file):
+            return False
+        #global_open_project(f_file_str)
+        set_file_setting("last-project", f_file_str)
+        return True
+    except Exception as ex:
+        QMessageBox.warning(a_parent, "Error", str(ex))
 
 print("\n\n\ninstall prefix:  {}\n\n\n".format(INSTALL_PREFIX))
 
@@ -715,8 +781,8 @@ def _set_cygwin_home():
 if IS_CYGWIN:
     _set_cygwin_home()
 
-global_default_project_folder = global_home
 global_pydaw_home = os.path.join(global_home, global_pydaw_version_string)
+global_default_project_folder = global_pydaw_home
 
 CONFIG_DIR = os.path.join(global_pydaw_home, "config")
 PRESET_DIR = os.path.join(CONFIG_DIR, "preset")

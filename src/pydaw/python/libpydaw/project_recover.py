@@ -111,7 +111,7 @@ def project_recover_dialog(a_file):
         f_file, f_filter = QFileDialog.getOpenFileName(
             caption='Open Project',
             filter=pydaw_util.global_pydaw_file_type_string,
-            directory=pydaw_util.global_home)
+            directory=pydaw_util.global_default_project_folder)
         if f_file is None or not str(f_file):
             return None
     else:
@@ -119,9 +119,17 @@ def project_recover_dialog(a_file):
     f_project_dir = os.path.dirname(str(f_file))
     f_backup_file = os.path.join(f_project_dir, "backups.json")
     if not os.path.isfile(f_backup_file):
-        QMessageBox.warning(
+        f_answer = QMessageBox.question(
             f_window, _("Error"), _("No backups exist for this "
-            "project, recovery is not possible."))
+            "project, recovery is not possible.\nPress 'Yes' to "
+            "open another project,\n'No' to create a new project,\n"
+            "or 'Cancel' to close MusiKernel"),
+            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+            QMessageBox.Cancel)
+        if (f_answer == QMessageBox.Yes and pydaw_util.open_project()) or \
+        (f_answer == QMessageBox.No and pydaw_util.new_project()):
+            pydaw_util.run_musikernel()
+            exit(0)
         exit(1)
     f_backup_dir = os.path.join(f_project_dir, "backups")
     f_central_widget = QWidget()

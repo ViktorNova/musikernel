@@ -656,28 +656,6 @@ class MkMainWindow(QMainWindow):
         f_timer.start(100)
         f_window.exec_()
 
-    def check_for_empty_directory(self, a_dir):
-        """ Return true if directory is empty, show error message and
-            return False if not
-        """
-        if os.listdir(a_dir):
-            QMessageBox.warning(self, _("Error"),
-            _("You must save the project file to an empty directory, use "
-            "the 'Create Folder' button to create a new, empty directory."))
-            return False
-        else:
-            return True
-
-    def check_for_rw_perms(self, a_file):
-        if not os.access(os.path.dirname(str(a_file)), os.W_OK):
-            QMessageBox.warning(
-                self, _("Error"),
-                _("You do not have read+write permissions to "
-                "{}".format(global_pydaw_home)))
-            return False
-        else:
-            return True
-
     def subprocess_monitor(self):
         try:
             if PYDAW_SUBPROCESS and PYDAW_SUBPROCESS.poll() is not None:
@@ -716,49 +694,18 @@ class MkMainWindow(QMainWindow):
     def on_new(self):
         if libmk.IS_PLAYING:
             return
-        try:
-            f_last_dir = global_home
-            while True:
-                f_file = QFileDialog.getExistingDirectory(
-                    self, _('New Project'), f_last_dir,
-                    QFileDialog.ShowDirsOnly)
-                if f_file and str(f_file):
-                    f_file = str(f_file)
-                    f_last_dir = f_file
-                    if not self.check_for_empty_directory(f_file) or \
-                    not self.check_for_rw_perms(f_file):
-                        continue
-                    f_file += "/default." + global_pydaw_version_string
-                    pydaw_util.set_file_setting("last-project", f_file)
-                    global RESPAWN
-                    RESPAWN = True
-                    self.prepare_to_quit()
-                break
-        except Exception as ex:
-            libmk.pydaw_print_generic_exception(ex)
+        if pydaw_util.new_project(self):
+            global RESPAWN
+            RESPAWN = True
+            self.prepare_to_quit()
 
     def on_open(self):
         if libmk.IS_PLAYING:
             return
-        try:
-            f_file, f_filter = QFileDialog.getOpenFileName(
-                parent=self, caption=_('Open Project'),
-                directory=global_default_project_folder,
-                filter=global_pydaw_file_type_string)
-            if f_file is None:
-                return
-            f_file_str = str(f_file)
-            if not f_file_str:
-                return
-            if not self.check_for_rw_perms(f_file):
-                return
-            #global_open_project(f_file_str)
-            pydaw_util.set_file_setting("last-project", f_file_str)
+        if pydaw_util.open_project(self):
             global RESPAWN
             RESPAWN = True
             self.prepare_to_quit()
-        except Exception as ex:
-            libmk.pydaw_print_generic_exception(ex)
 
     def on_project_history(self):
         f_result = QMessageBox.warning(
@@ -819,8 +766,9 @@ class MkMainWindow(QMainWindow):
                 if f_new_file and str(f_new_file):
                     f_new_file = str(f_new_file)
                     f_last_dir = f_new_file
-                    if not self.check_for_empty_directory(f_new_file) or \
-                    not self.check_for_rw_perms(f_new_file):
+                    if not pydaw_util.check_for_empty_directory(
+                    self, f_new_file) or \
+                    not pydaw_util.check_for_rw_perms(self, f_new_file):
                         continue
                     f_new_file += "/default.{}".format(
                         global_pydaw_version_string)
