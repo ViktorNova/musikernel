@@ -1393,6 +1393,7 @@ def global_open_project(a_project_file, a_wait=True):
     libmk.PROJECT.suppress_updates = True
     libmk.PROJECT.open_project(a_project_file, False)
     libmk.PROJECT.suppress_updates = False
+    libmk.PROJECT.create_backup()
     libmk.PLUGIN_UI_DICT = mk_plugin_ui_dict(
         libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
     for f_module in libmk.HOST_MODULES:
