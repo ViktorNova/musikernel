@@ -749,7 +749,8 @@ static void add_sample_lms_euphoria(t_euphoria * plugin_data, int n)
             plugin_data->sample[ch] += (f_voice->noise_sample);
 
             plugin_data->sample[ch] =
-                (plugin_data->sample[ch]) * (f_sample->sample_amp);
+                plugin_data->sample[ch] * f_sample->sample_amp *
+                f_pfx_sample->vel_sens_output;
 
             f_voice->modulex_current_sample[ch] += (plugin_data->sample[ch]);
 
@@ -1028,9 +1029,11 @@ static void v_euphoria_process_midi_event(
                             (*f_sample->sample_vel_low))))
                             * (*f_sample->sample_vel_sens) * -1.0f;
 
+                    f_pfx_sample->vel_sens_output = f_db_to_linear(
+                        f_pfx_sample->vel_sens_output);
+
                     f_sample->sample_amp = f_db_to_linear(
-                        (*f_sample->sample_vol) +
-                        (f_pfx_sample->vel_sens_output));
+                        (*f_sample->sample_vol));
 
                     switch((int)(*f_sample->sample_interpolation_mode))
                     {
