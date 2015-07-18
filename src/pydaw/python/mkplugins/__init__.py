@@ -53,12 +53,28 @@ PLUGIN_UIDS = {
     "MK Vocoder":14, "MK Limiter":15
     }
 
-WAVE_EDITOR_PLUGIN_NAMES = [
-    "None", "MK Channel", "MK Compressor", "MK Delay", "MK EQ",
-    "MK Limiter", "Modulex", "Simple Fader", "Simple Reverb"
-    ]
+PLUGINS_SYNTH = ["Ray-V", "Way-V"]
+PLUGINS_SAMPLER = ["Euphoria",]
+PLUGINS_EFFECTS = ["Modulex", "MK Delay", "MK EQ", "Simple Reverb"]
+PLUGINS_MIDI_TRIGGERED = ["TriggerFX"]
+PLUGINS_DYNAMICS = ["MK Compressor", "MK Limiter"]
+PLUGINS_SIDECHAIN = ["Sidechain Comp.", "X-Fade", "MK Vocoder",]
+PLUGINS_MIXER = ["Simple Fader", "MK Channel"]
 
-MIXER_PLUGIN_NAMES = ["None", "Simple Fader", "MK Channel"]
+MAIN_PLUGIN_NAMES = [
+    ("Synth", PLUGINS_SYNTH), ("Sampler", PLUGINS_SAMPLER),
+    ("Effects", PLUGINS_EFFECTS),
+    ("MIDI Triggered FX", PLUGINS_MIDI_TRIGGERED),
+    ("Dynamics", PLUGINS_DYNAMICS), ("Sidechain", PLUGINS_SIDECHAIN),
+    ("Mixer", PLUGINS_MIXER)
+]
+
+WAVE_EDITOR_PLUGIN_NAMES = [
+    ("Effects", PLUGINS_EFFECTS), ("Dynamics", PLUGINS_DYNAMICS),
+    ("Mixer", PLUGINS_MIXER)
+]
+
+MIXER_PLUGIN_NAMES = ["None"] + PLUGINS_MIXER
 PLUGIN_UIDS_REVERSE = {v:k for k, v in PLUGIN_UIDS.items()}
 CC_NAMES = {x:[] for x in PLUGIN_NAMES}
 CONTROLLER_PORT_NAME_DICT = {x:{} for x in PLUGIN_NAMES}
@@ -216,11 +232,46 @@ class mk_plugin_ui_dict:
 PLUGIN_SETTINGS_COPY_OBJ = None
 PLUGIN_SETTINGS_IS_CUT = False
 
+class PluginComboBox(QPushButton):
+    """  """
+    def __init__(self, a_callback):
+        self.callback = a_callback
+        QPushButton.__init__(self, _("None"))
+        self.menu = QMenu()
+        self.setMenu(self.menu)
+        self.menu.addAction("None")
+        self._index = 0
+        self.menu.triggered.connect(self.action_triggered)
+
+    def currentIndex(self):
+        return self._index
+
+    def currentText(self):
+        return PLUGIN_UIDS_REVERSE[self._index]
+
+    def setCurrentIndex(self, a_index):
+        a_index = int(a_index)
+        self._index = a_index
+        self.setText(PLUGIN_UIDS_REVERSE[a_index])
+
+    def action_triggered(self, a_val):
+        a_val = str(a_val.text())
+        self._index = PLUGIN_UIDS[a_val]
+        self.setText(a_val)
+        self.callback()
+
+    def addItems(self, a_items):
+        for k, v in a_items:
+            f_menu = self.menu.addMenu(k)
+            for f_name in v:
+                f_menu.addAction(f_name)
+
+
 class plugin_settings_base:
     def __init__(
             self, a_set_plugin_func, a_index, a_track_num,
             a_layout, a_save_callback, a_name_callback,
-            a_automation_callback, a_offset=0, a_send=None):
+            a_automation_callback, a_offset=0, a_send=None, a_qcbox=False):
         self.set_plugin_func = a_set_plugin_func
         self.layout = a_layout
         self.offset = a_offset
@@ -233,12 +284,16 @@ class plugin_settings_base:
         self.index = a_index
         self.send = a_send
         self.plugin_index = None
-        self.plugin_combobox = QComboBox()
+        if a_qcbox:
+            self.plugin_combobox = QComboBox()
+        else:
+            self.plugin_combobox = PluginComboBox(self.on_plugin_change)
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
         self.plugin_combobox.addItems(self.plugin_list)
-        self.plugin_combobox.currentIndexChanged.connect(
-            self.on_plugin_change)
+        if a_qcbox:
+            self.plugin_combobox.currentIndexChanged.connect(
+                self.on_plugin_change)
         self.ui_button = QPushButton("UI")
         self.ui_button.released.connect(self.on_show_ui)
         self.ui_button.setObjectName("uibutton")
@@ -308,8 +363,7 @@ class plugin_settings_base:
     def set_value(self, a_val):
         self.suppress_osc = True
         f_name = PLUGIN_UIDS_REVERSE[a_val.plugin_index]
-        self.plugin_combobox.setCurrentIndex(
-            self.plugin_combobox.findText(f_name))
+        self.plugin_combobox.setCurrentIndex(a_val.plugin_index)
         self.plugin_index = a_val.plugin_index
         self.plugin_uid = a_val.plugin_uid
         self.power_checkbox.setChecked(a_val.power == 1)
@@ -363,7 +417,7 @@ class plugin_settings_main(plugin_settings_base):
             self, a_set_plugin_func, a_index, a_track_num,
             a_layout, a_save_callback, a_name_callback,
             a_automation_callback, a_offset=0, a_send=None):
-        self.plugin_list = ["None"] + PLUGIN_NAMES
+        self.plugin_list = MAIN_PLUGIN_NAMES
 
         self.menu_button = QPushButton(_("Menu"))
         self.menu = QMenu()
@@ -384,8 +438,6 @@ class plugin_settings_main(plugin_settings_base):
             a_save_callback, a_name_callback,
             a_automation_callback, a_offset, a_send)
 
-        self.plugin_combobox.insertSeparator(PLUGIN_INSTRUMENT_COUNT + 1)
-
     def remove_from_layout(self):
         plugin_settings_base.remove_from_layout(self)
         self.layout.removeWidget(self.menu_button)
@@ -405,7 +457,7 @@ class plugin_settings_mixer(plugin_settings_base):
         plugin_settings_base.__init__(
             self, a_set_plugin_func, a_index, a_track_num, a_layout,
             a_save_callback, a_name_callback,
-            a_automation_callback, a_offset, a_send)
+            a_automation_callback, a_offset, a_send, a_qcbox=True)
         self.bus_index = a_index
         self.index += 10
 

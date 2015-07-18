@@ -8066,7 +8066,7 @@ class seq_track:
         self.menu_hlayout = QHBoxLayout(self.menu_widget)
         self.menu_gridlayout = QGridLayout()
         self.menu_hlayout.addLayout(self.menu_gridlayout)
-        self.plugins_button = QPushButton(_("Plugins"))
+        self.plugins_button = QPushButton(_("Menu"))
         self.plugins_menu = QMenu(self.menu_widget)
         self.plugins_button.setMenu(self.plugins_menu)
         self.plugins_order_action = self.plugins_menu.addAction(_("Order..."))
