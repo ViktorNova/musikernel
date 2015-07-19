@@ -237,6 +237,7 @@ class PluginComboBox(QPushButton):
     def __init__(self, a_callback):
         self.callback = a_callback
         QPushButton.__init__(self, _("None"))
+        self.setObjectName("plugin_menu")
         self.menu = QMenu()
         self.setMenu(self.menu)
         self.menu.addAction("None")

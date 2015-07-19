@@ -459,7 +459,12 @@ QPushButton:pressed
 	background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2d2d2d, stop: 0.1 #2b2b2b, stop: 0.5 #292929, stop: 0.9 #282828, stop: 1 #252525);
 }
 
-QComboBox
+QPushButton#plugin_menu
+{
+    font-size: 14px;
+}
+
+QComboBox, QPushButton#plugin_menu
 {
 	color: black;
 	border: 1px solid white;
@@ -529,7 +534,7 @@ QScrollBar:horizontal
 
 QScrollBar::handle:horizontal,QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal,
 QScrollBar::handle:vertical,QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical,
-QComboBox:enabled,
+QComboBox:enabled, QPushButton#plugin_menu,
 QTabBar::tab:selected,QTabBar::tab:!selected:hover
 {
 	background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #969696, stop:.4 #636363);
