@@ -382,8 +382,11 @@ class plugin_settings_base:
             return
         f_index = get_plugin_uid_by_name(self.plugin_combobox.currentText())
         if f_index == 0:
+            libmk.PLUGIN_UI_DICT.close_plugin_ui(self.plugin_uid)
             self.plugin_uid = -1
         elif self.plugin_uid == -1 or self.plugin_index != f_index:
+            if self.plugin_uid > -1:
+                libmk.PLUGIN_UI_DICT.close_plugin_ui(self.plugin_uid)
             self.plugin_uid = libmk.PROJECT.get_next_plugin_uid()
             self.plugin_index = f_index
         self.set_plugin_func(
