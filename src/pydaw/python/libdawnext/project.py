@@ -2050,6 +2050,8 @@ class pydaw_item:
         for f_key in f_to_delete:
             print("Removing duplicate audio item at {}".format(f_key))
             self.items.pop(f_key)
+            if f_key in self.fx_list:
+                self.fx_list.pop(f_key)
 
     def set_region_length(self, a_length):
         """ Remove any items not within the new length,

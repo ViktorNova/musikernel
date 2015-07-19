@@ -2311,33 +2311,43 @@ void g_dn_item_get(t_dawnext* self, int a_uid)
         {
             v_iterate_2d_char_array(f_current_string);
             int f_index = atoi(f_current_string->current_str);
-            t_paif * f_paif = g_paif8_get();
-            f_result->audio_items->items[f_index]->paif = f_paif;
-            f_paif->loaded = 1;
-
-            int f_i2 = 0;
-
-            while(f_i2 < 8)
+            
+            if(f_result->audio_items->items[f_index])
             {
-                f_paif->items[f_i2] = g_paif_get(f_sr);
-                int f_i3 = 0;
-                while(f_i3 < 3)
+                t_paif * f_paif = g_paif8_get();
+                f_result->audio_items->items[f_index]->paif = f_paif;
+                f_paif->loaded = 1;
+
+                int f_i2 = 0;
+
+                while(f_i2 < 8)
                 {
+                    f_paif->items[f_i2] = g_paif_get(f_sr);
+                    int f_i3 = 0;
+                    while(f_i3 < 3)
+                    {
+                        v_iterate_2d_char_array(f_current_string);
+                        float f_knob_val = atof(f_current_string->current_str);
+                        f_paif->items[f_i2]->a_knobs[f_i3] = f_knob_val;
+                        ++f_i3;
+                    }
                     v_iterate_2d_char_array(f_current_string);
-                    float f_knob_val = atof(f_current_string->current_str);
-                    f_paif->items[f_i2]->a_knobs[f_i3] = f_knob_val;
-                    ++f_i3;
+                    int f_type_val = atoi(f_current_string->current_str);
+                    f_paif->items[f_i2]->fx_type = f_type_val;
+                    f_paif->items[f_i2]->func_ptr =
+                            g_mf3_get_function_pointer(f_type_val);
+                    v_mf3_set(f_paif->items[f_i2]->mf3,
+                            f_paif->items[f_i2]->a_knobs[0],
+                            f_paif->items[f_i2]->a_knobs[1],
+                            f_paif->items[f_i2]->a_knobs[2]);
+                    ++f_i2;
                 }
-                v_iterate_2d_char_array(f_current_string);
-                int f_type_val = atoi(f_current_string->current_str);
-                f_paif->items[f_i2]->fx_type = f_type_val;
-                f_paif->items[f_i2]->func_ptr =
-                        g_mf3_get_function_pointer(f_type_val);
-                v_mf3_set(f_paif->items[f_i2]->mf3,
-                        f_paif->items[f_i2]->a_knobs[0],
-                        f_paif->items[f_i2]->a_knobs[1],
-                        f_paif->items[f_i2]->a_knobs[2]);
-                ++f_i2;
+            }
+            else
+            {
+                printf("Error:  per-audio-item-fx does not correspond to "
+                    "an audio item, skipping.\n");
+                v_iterate_2d_char_array_to_next_line(f_current_string);
             }
         }
         else if(f_type == 'U')
