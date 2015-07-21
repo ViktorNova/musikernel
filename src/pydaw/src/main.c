@@ -855,14 +855,12 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     Pa_Terminate();
 
 #ifndef NO_MIDI
-    f_i = 0;
-    while(f_i < MIDI_DEVICES.count)
+    for(f_i = 0; f_i < MIDI_DEVICES.count; ++f_i)
     {
         if(MIDI_DEVICES.devices[f_i].loaded)
         {
             midiDeviceClose(&MIDI_DEVICES.devices[f_i]);
         }
-        ++f_i;
     }
 
     Pm_Terminate();
@@ -872,7 +870,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 
 #if defined(__linux__) && !defined(MK_DLL)
 
-    sigemptyset (&_signals);
+    sigemptyset(&_signals);
     sigaddset(&_signals, SIGHUP);
     pthread_sigmask(SIG_BLOCK, &_signals, 0);
     kill(0, SIGHUP);
@@ -880,7 +878,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 #endif
 
     printf("MusiKernel main() returning\n\n\n");
-    return 0;
+    exit(0);
 }
 
 int v_configure(const char * path, const char * key, const char * value)
