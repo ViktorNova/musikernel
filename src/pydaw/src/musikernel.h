@@ -1641,8 +1641,6 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
                 self->period.current_sample,
                 self->period.input_buffer, a_input_count);
 
-            assert(a_result->splitter.count == 2);
-
             f_tmp_period = &a_result->splitter.periods[0];
 
             v_set_sample_period(&f_period->period, self->playback_inc,
@@ -1658,29 +1656,42 @@ void v_mk_seq_event_list_set(t_mk_seq_event_list * self,
 
             f_period->period.end_beat = f_tmp_period->end_beat;
 
-            f_period = &a_result->sample_periods[1];
-            f_tmp_period = &a_result->splitter.periods[1];
-
-            v_set_sample_period(&f_period->period, self->playback_inc,
-                f_tmp_period->buffers, NULL,
-                f_tmp_period->input_buffer,
-                f_tmp_period->sample_count,
-                f_tmp_period->current_sample);
-
-            if(f_loop_start >= 0.0)
+            if(a_result->splitter.count == 2)
             {
-                self->pos = 0;
-                f_period->period.start_beat = f_loop_start;
+                f_period = &a_result->sample_periods[1];
+                f_tmp_period = &a_result->splitter.periods[1];
+
+                v_set_sample_period(
+                    &f_period->period, self->playback_inc,
+                    f_tmp_period->buffers, NULL,
+                    f_tmp_period->input_buffer,
+                    f_tmp_period->sample_count,
+                    f_tmp_period->current_sample);
+
+                if(f_loop_start >= 0.0)
+                {
+                    self->pos = 0;
+                    f_period->period.start_beat = f_loop_start;
+                }
+                else
+                {
+                    f_period->period.start_beat = f_tmp_period->start_beat;
+                }
+
+                f_period->period.period_inc_beats = ((f_period->playback_inc) *
+                    ((float)(f_tmp_period->sample_count)));
+                f_period->period.end_beat = f_period->period.start_beat +
+                    f_period->period.period_inc_beats;
+            }
+            else if(a_result->splitter.count == 1)
+            {
+                // TODO:  Debug how and why this happens
             }
             else
             {
-                f_period->period.start_beat = f_tmp_period->start_beat;
+                assert(0);
             }
 
-            f_period->period.period_inc_beats = ((f_period->playback_inc) *
-                ((float)(f_tmp_period->sample_count)));
-            f_period->period.end_beat = f_period->period.start_beat +
-                f_period->period.period_inc_beats;
             self->period.end_beat = f_period->period.end_beat;
         }
         else
