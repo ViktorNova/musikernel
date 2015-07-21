@@ -2039,7 +2039,7 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
     def sfz_dialog(self):
         def on_file_open(a_val=None):
             f_selected_path, f_filter = QFileDialog.getOpenFileName(
-                self.widget, _("Import SFZ instrument..."),
+                None, _("Import SFZ instrument..."),
                 pydaw_util.global_home, filter="SFZ file (*.sfz)")
             if f_selected_path is not None:
                 f_selected_path = str(f_selected_path)
