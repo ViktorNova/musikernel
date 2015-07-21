@@ -51,6 +51,9 @@ TOOLS = {
         "{BIN} {HOST} '{PROJECT}' test.wav {TIME} {SR} 512 {CORES} 1 "
         "&& gprof {BIN} > profile.txt && gedit profile.txt",
     "pahole": "make clean && make debug && pahole {BIN}",
+    "gdb": "make debug > /dev/null 2>&1 && "
+        "echo run {HOST} '{PROJECT}' test.wav {TIME} {SR} 512 {CORES} 1 "
+        "--no-file && gdb {BIN}-dbg ",
 }
 
 if len(sys.argv) < 2 or \
@@ -86,6 +89,6 @@ else:
     SR = 44100
 
 os.system(
-    TOOLS[TOOL].format(BIN=BIN, HOST=HOST, PROJECT=PROJECT, 
+    TOOLS[TOOL].format(BIN=BIN, HOST=HOST, PROJECT=PROJECT,
     CORES=CORES, SR=SR, TIME=TIME))
 
