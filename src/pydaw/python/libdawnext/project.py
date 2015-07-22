@@ -1109,8 +1109,7 @@ class pydaw_sequencer:
         f_result = []
         f_result.append("M|{}".format(
             len([x for x in self.markers.values() if x.type in (1, 2)])))
-        for k in sorted(self.markers):
-            v = self.markers[k]
+        for v in sorted(self.markers.values()):
             f_result.append(str(v))
         for f_i in range(TRACK_COUNT_ALL):
             f_items = [x for x in self.items if x.track_num == f_i]
