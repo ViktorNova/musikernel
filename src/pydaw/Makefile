@@ -17,7 +17,7 @@ OPTIMIZE_FLAGS ?= -fprefetch-loop-arrays -floop-optimize \
 
 BASE_FLAGS     = $(OPTIMIZE_FLAGS) -ffast-math -funroll-loops -Wall \
 -fstrict-aliasing -Wstrict-aliasing -fno-stack-protector \
--DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE)
+-DCACHE_LINE_SIZE=$(CACHE_LINE_SIZE) -z now
 
 BUILD_CFLAGS   = -std=gnu89 $(PLAT_FLAGS) $(BASE_FLAGS) $(CFLAGS)
 MATH_LIB_FLAG ?= -lm
@@ -131,5 +131,5 @@ install:
 clean:
 	rm -f src/*.o *.so $(PYDAW_VERSION)-engine* core python/core  \
 	*.pyo *.pyc */*.pyo */*.pyc */*/*.pyo */*/*.pyc \
-	*~ */*~ */*/*~ */*/*/*~ 
+	*~ */*~ */*/*~ */*/*/*~
 
