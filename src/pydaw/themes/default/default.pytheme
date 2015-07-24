@@ -461,7 +461,12 @@ QPushButton:pressed
 
 QPushButton#plugin_menu
 {
-    font-size: 14px;
+    font-size: 12px;
+}
+
+QPushButton#plugin_menu::menu-indicator
+{
+	image: url($STYLE_FOLDER/drop-down.png);
 }
 
 QComboBox, QPushButton#plugin_menu
