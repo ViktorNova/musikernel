@@ -467,6 +467,9 @@ QPushButton#plugin_menu
 QPushButton#plugin_menu::menu-indicator
 {
 	image: url($STYLE_FOLDER/drop-down.png);
+    subcontrol-position: right center;
+    subcontrol-origin: padding;
+    left: -2px;
 }
 
 QComboBox, QPushButton#plugin_menu
