@@ -6928,7 +6928,7 @@ class automation_viewer(QGraphicsView):
         self.beat_width = self.automation_width / CURRENT_ITEM_LEN
         self.value_width = self.beat_width / 16.0
         self.grid_max_start_time = (self.automation_width +
-            AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_RADIUS)
+            AUTOMATION_RULER_WIDTH - AUTOMATION_POINT_DIAMETER)
         self.clear_drawn_items()
         if not ITEM_EDITOR.enabled:
             self.setUpdatesEnabled(True)
@@ -7134,7 +7134,7 @@ class automation_viewer_widget:
 
         f_layout.addWidget(QLabel(_("Position (beats)")), 5, 0)
         f_pos_spinbox = QDoubleSpinBox()
-        f_pos_spinbox.setRange(1.0, CURRENT_ITEM_LEN + 0.99)
+        f_pos_spinbox.setRange(1.0, CURRENT_ITEM_LEN + 0.98)
         f_pos_spinbox.setDecimals(2)
         f_pos_spinbox.setSingleStep(0.25)
         f_layout.addWidget(f_pos_spinbox, 5, 1)
@@ -7209,7 +7209,7 @@ class automation_viewer_widget:
 
         f_layout.addWidget(QLabel(_("Position (beats)")), 5, 0)
         f_pos_spinbox = QDoubleSpinBox()
-        f_pos_spinbox.setRange(1.0, CURRENT_ITEM_LEN + 1.0)
+        f_pos_spinbox.setRange(1.0, CURRENT_ITEM_LEN + 0.98)
         f_pos_spinbox.setDecimals(2)
         f_pos_spinbox.setSingleStep(0.25)
         f_layout.addWidget(f_pos_spinbox, 5, 1)
