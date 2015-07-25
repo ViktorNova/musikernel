@@ -1753,13 +1753,14 @@ class AbstractFileBrowserWidget():
             self.set_folder(self.history[-1], a_full_path=True)
 
     def open_path_from_action(self, a_action):
-        self.set_folder(str(a_action.text()), a_full_path=True)
+        self.set_folder(a_action.path, a_full_path=True)
 
     def back_contextMenuEvent(self, a_event):
         f_menu = QMenu(self.back_button)
         f_menu.triggered.connect(self.open_path_from_action)
         for f_path in reversed(self.history):
-            f_menu.addAction(f_path)
+            f_action = f_menu.addAction(f_path)
+            f_action.path = f_path
         f_menu.exec_(QCursor.pos())
 
     def up_contextMenuEvent(self, a_event):
@@ -1778,7 +1779,8 @@ class AbstractFileBrowserWidget():
                 for f_i in range(len(f_arr)):
                     f_paths.append("/{}".format("/".join(f_arr[:f_i])))
             for f_path in reversed(f_paths):
-                f_menu.addAction(f_path)
+                f_action = f_menu.addAction(f_path)
+                f_action.path = f_path
             f_menu.exec_(QCursor.pos())
 
     def on_filter_folders(self):
