@@ -357,10 +357,12 @@ class plugin_settings_base:
 
     def automation_check_changed(self):
         if self.automation_radiobutton.isChecked():
-            self.automation_callback(
-                self.plugin_uid,
-                get_plugin_uid_by_name(self.plugin_combobox.currentText()),
-                self.plugin_combobox.currentText())
+            plugin_name = str(self.plugin_combobox.currentText())
+            if plugin_name:
+                self.automation_callback(
+                    self.plugin_uid,
+                    get_plugin_uid_by_name(plugin_name),
+                    self.plugin_combobox.currentText())
 
     def set_value(self, a_val):
         self.suppress_osc = True
