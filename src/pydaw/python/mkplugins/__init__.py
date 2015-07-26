@@ -256,7 +256,7 @@ class PluginComboBox(QPushButton):
         self.setText(PLUGIN_UIDS_REVERSE[a_index])
 
     def action_triggered(self, a_val):
-        a_val = str(a_val.text())
+        a_val = a_val.plugin_name
         self._index = PLUGIN_UIDS[a_val]
         self.setText(a_val)
         self.callback()
@@ -265,7 +265,8 @@ class PluginComboBox(QPushButton):
         for k, v in a_items:
             f_menu = self.menu.addMenu(k)
             for f_name in v:
-                f_menu.addAction(f_name)
+                f_action = f_menu.addAction(f_name)
+                f_action.plugin_name = f_name
 
 
 class plugin_settings_base:

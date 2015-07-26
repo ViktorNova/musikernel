@@ -820,7 +820,8 @@ class pydaw_wave_editor_widget:
             f_menu.triggered.connect(self.open_file_from_action)
             self.bookmark_button.setMenu(f_menu)
             for f_item in f_list:
-                f_menu.addAction(f_item)
+                f_action = f_menu.addAction(f_item)
+                f_action.file_name = f_item
         else:
             self.bookmark_button.setMenu(None)
 
@@ -969,7 +970,7 @@ class pydaw_wave_editor_widget:
         f_window.exec_()
 
     def open_file_from_action(self, a_action):
-        self.open_file(str(a_action.text()))
+        self.open_file(a_action.file_name)
 
     def on_export(self):
         if not self.history or libmk.IS_PLAYING:
@@ -1124,7 +1125,8 @@ class pydaw_wave_editor_widget:
         f_menu = QMenu(self.history_button)
         f_menu.triggered.connect(self.open_file_from_action)
         for f_path in reversed(self.history):
-            f_menu.addAction(f_path)
+            f_action = f_menu.addAction(f_path)
+            f_action.file_name = f_path
         self.history_button.setMenu(f_menu)
         PROJECT.wn_osc.pydaw_ab_open(a_file)
         self.marker_callback()

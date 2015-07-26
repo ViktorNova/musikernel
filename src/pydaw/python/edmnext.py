@@ -3128,6 +3128,7 @@ class audio_viewer_item(QGraphicsRectItem):
         for f_track_name, f_index in zip(
         TRACK_NAMES, range(len(TRACK_NAMES))):
             f_action = f_output_menu.addAction(f_track_name)
+            f_action.track_name = f_track_name
             if len(f_output_tracks) == 1 and f_index in f_output_tracks:
                 f_action.setCheckable(True)
                 f_action.setChecked(True)
@@ -3141,6 +3142,7 @@ class audio_viewer_item(QGraphicsRectItem):
         for f_ts_mode in TIMESTRETCH_MODES:
             f_index = pydaw_util.TIMESTRETCH_INDEXES[f_ts_mode]
             f_action = f_ts_mode_menu.addAction(f_ts_mode)
+            f_action.algo_name = f_ts_mode
             if len(f_ts_modes) == 1 and f_index in f_ts_modes:
                 f_action.setCheckable(True)
                 f_action.setChecked(True)
@@ -3153,6 +3155,7 @@ class audio_viewer_item(QGraphicsRectItem):
             for f_crisp_mode, f_index in zip(
             CRISPNESS_SETTINGS, range(len(CRISPNESS_SETTINGS))):
                 f_action = f_crisp_menu.addAction(f_crisp_mode)
+                f_action.crisp_mode = f_crisp_mode
                 if len(f_crisp_settings) == 1 and \
                 f_index in f_crisp_settings:
                     f_action.setCheckable(True)
@@ -3206,6 +3209,7 @@ class audio_viewer_item(QGraphicsRectItem):
         for f_track_name, f_index in zip(
         TRACK_NAMES, range(len(TRACK_NAMES))):
             f_action = f_set_all_output_menu.addAction(f_track_name)
+            f_action.track_name = f_track_name
             if f_index == self.audio_item.output_track:
                 f_action.setCheckable(True)
                 f_action.setChecked(True)
@@ -3247,7 +3251,7 @@ class audio_viewer_item(QGraphicsRectItem):
             self.graph_object, TRANSPORT.tempo_spinbox.value())
 
     def output_menu_triggered(self, a_action):
-        f_index = TRACK_NAMES.index(str(a_action.text()))
+        f_index = TRACK_NAMES.index(a_action.track_name)
         f_list = [x.audio_item for x in AUDIO_SEQ.audio_items
             if x.isSelected()]
         for f_item in f_list:
@@ -3257,7 +3261,7 @@ class audio_viewer_item(QGraphicsRectItem):
         global_open_audio_items()
 
     def crisp_menu_triggered(self, a_action):
-        f_index = CRISPNESS_SETTINGS.index(str(a_action.text()))
+        f_index = CRISPNESS_SETTINGS.index(a_action.crisp_mode)
         f_list = [x.audio_item for x in AUDIO_SEQ.get_selected() if
             x.audio_item.time_stretch_mode in (3, 4)]
         for f_item in f_list:
@@ -3265,7 +3269,7 @@ class audio_viewer_item(QGraphicsRectItem):
         self.timestretch_items(f_list)
 
     def ts_mode_menu_triggered(self, a_action):
-        f_index = TIMESTRETCH_INDEXES[str(a_action.text())]
+        f_index = TIMESTRETCH_INDEXES[a_action.algo_name]
         f_list = [x.audio_item for x in AUDIO_SEQ.get_selected()]
         for f_item in f_list:
             f_item.time_stretch_mode = f_index
@@ -3312,7 +3316,7 @@ class audio_viewer_item(QGraphicsRectItem):
             self.audio_item.uid, f_paif_row)
 
     def set_all_output_menu_triggered(self, a_action):
-        f_index = TRACK_NAMES.index(str(a_action.text()))
+        f_index = TRACK_NAMES.index(a_action.track_name)
         PROJECT.set_output_for_all_audio_items(
             self.audio_item.uid, f_index)
         global_open_audio_items()

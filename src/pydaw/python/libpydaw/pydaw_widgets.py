@@ -563,11 +563,10 @@ class pydaw_abstract_ui_control:
         self.midi_learn_callback(self)
 
     def cc_menu_triggered(self, a_item):
-        f_cc = int(str(a_item.text()))
-        self.midi_learn_callback(self, f_cc)
+        self.midi_learn_callback(self, a_item.cc_num)
 
     def cc_range_dialog(self, a_item):
-        f_cc = int(str(a_item.text()))
+        f_cc = a_item.cc_num
 
         def get_zero_to_one(a_val):
             a_val = float(a_val)
@@ -638,10 +637,12 @@ class pydaw_abstract_ui_control:
                 f_menu.addMenu(f_range_menu)
             for f_i in range(1, 128):
                 f_cc_action = f_cc_menu.addAction(str(f_i))
+                f_cc_action.cc_num = f_i
                 f_cc_action.setCheckable(True)
                 if f_i in f_cc_map and f_cc_map[f_i].has_port(self.port_num):
                     f_cc_action.setChecked(True)
-                    f_range_menu.addAction(str(f_i))
+                    f_action = f_range_menu.addAction(str(f_i))
+                    f_action.cc_num = f_i
             f_menu.addSeparator()
         f_reset_action = f_menu.addAction(_("Reset to Default Value"))
         f_reset_action.triggered.connect(self.reset_default_value)
@@ -2896,8 +2897,9 @@ class eq6_widget:
         self.menu.addSeparator()
         self.formant_menu = self.menu.addMenu(_("Set Formant"))
         self.formant_menu.triggered.connect(self.set_formant)
-        for k in sorted(EQ6_FORMANTS.keys()):
-            self.formant_menu.addAction(k)
+        for k in sorted(EQ6_FORMANTS):
+            f_action = self.formant_menu.addAction(k)
+            f_action.formant_name = k
         self.menu.addSeparator()
         self.reset_action = self.menu.addAction(_("Reset"))
         self.reset_action.triggered.connect(self.reset_controls)
@@ -2928,7 +2930,7 @@ class eq6_widget:
         self.update_viewer()
 
     def set_formant(self, a_action):
-        f_key = str(a_action.text())
+        f_key = a_action.formant_name
         f_hz_list, f_db_list, f_bw_list = EQ6_FORMANTS[f_key]
         for f_eq, f_hz, f_db, f_bw in zip(
         self.eqs, f_hz_list, f_db_list, f_bw_list):
