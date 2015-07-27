@@ -5524,6 +5524,9 @@ class piano_roll_note_item(QGraphicsRectItem):
         QApplication.restoreOverrideCursor()
 
     def mousePressEvent(self, a_event):
+        if not self.isSelected():
+            PIANO_ROLL_EDITOR.scene.clearSelection()
+            self.setSelected(True)
         if a_event.modifiers() == QtCore.Qt.ShiftModifier:
             piano_roll_set_delete_mode(True)
             self.delete_later()
@@ -5532,13 +5535,17 @@ class piano_roll_note_item(QGraphicsRectItem):
             self.is_velocity_dragging = True
         elif a_event.modifiers() == \
         QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier:
-            self.is_velocity_curving = True
             f_list = [((x.item_index * 4.0) + x.note_item.start)
                 for x in PIANO_ROLL_EDITOR.get_selected_items()]
             f_list.sort()
-            self.vc_start = f_list[0]
-            self.vc_mid = (self.item_index * 4.0) + self.note_item.start
-            self.vc_end = f_list[-1]
+            if len(f_list) > 1:
+                f_list.sort()
+                self.is_velocity_curving = True
+                self.vc_start = f_list[0]
+                self.vc_mid = (self.item_index * 4.0) + self.note_item.start
+                self.vc_end = f_list[-1]
+            elif len(f_list) <= 1:
+                self.is_velocity_dragging = True
         else:
             a_event.setAccepted(True)
             QGraphicsRectItem.mousePressEvent(self, a_event)
@@ -5560,7 +5567,6 @@ class piano_roll_note_item(QGraphicsRectItem):
                         f_item.note_item, f_item.item_index)
         if self.is_velocity_curving or self.is_velocity_dragging:
             a_event.setAccepted(True)
-            self.setSelected(True)
             QGraphicsRectItem.mousePressEvent(self, a_event)
             self.orig_y = a_event.pos().y()
             QApplication.setOverrideCursor(QtCore.Qt.BlankCursor)
@@ -6038,6 +6044,11 @@ class piano_roll_editor(QGraphicsView):
         elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
             piano_roll_set_delete_mode(True)
             return
+        elif a_event.modifiers() == (
+        QtCore.Qt.ControlModifier | QtCore.Qt.AltModifier) or \
+        a_event.modifiers() == (
+        QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier):
+            pass
         elif self.click_enabled and ITEM_EDITOR.enabled:
             self.scene.clearSelection()
             f_pos_x = a_event.scenePos().x()
