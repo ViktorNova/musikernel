@@ -1538,12 +1538,13 @@ class ItemSequencer(QGraphicsView):
         if a_event.button() == QtCore.Qt.RightButton:
             if self.current_coord:
                 if REGION_EDITOR_MODE == 0:
-                    f_item = self.get_item(f_pos)
-                    if f_item and not f_item.isSelected():
+                    self.current_item = self.get_item(f_pos)
+                    if self.current_item and \
+                    not self.current_item.isSelected():
                         self.scene.clearSelection()
-                        f_item.setSelected(True)
+                        self.current_item.setSelected(True)
                         self.selected_item_strings = {
-                            f_item.get_selected_string()}
+                            self.current_item.get_selected_string()}
                 self.show_context_menu()
 
         if REGION_EDITOR_MODE == 0:
