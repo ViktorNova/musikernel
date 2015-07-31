@@ -1483,7 +1483,7 @@ if os.path.exists(default_project_file):
             "need to delete your settings and/or default project "
             "in \n{}".format(
             default_project_file, ex, pydaw_util.global_pydaw_home)))
-        subprocess.Popen([PROJECT_HISTORY_SCRIPT, default_project_file])
+        libmk.PROJECT.show_project_history()
         MAIN_WINDOW.prepare_to_quit()
 else:
     global_new_project(default_project_file)

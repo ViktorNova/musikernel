@@ -399,13 +399,7 @@ for _terminal in ("x-terminal-emulator", "gnome-terminal", "konsole"):
         TERMINAL = _terminal
         break
 
-PYTHON3 = pydaw_which("python3")
-
-if IS_WINDOWS and not PYTHON3.endswith(".exe"):
-    PYTHON3 += ".exe"
-
-print("PYTHON3:  {}".format(PYTHON3))
-
+PYTHON3 = sys.executable
 
 pydaw_rubberband_util = pydaw_which("rubberband")
 

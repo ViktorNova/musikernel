@@ -199,7 +199,7 @@ class MkProject(libmk.AbstractProject):
     def show_project_history(self):
         self.create_backup()
         f_file = os.path.join(self.project_folder, "default.musikernel")
-        subprocess.Popen([PROJECT_HISTORY_SCRIPT, f_file])
+        subprocess.Popen([PYTHON3, PROJECT_HISTORY_SCRIPT, f_file])
 
     def get_next_glued_file_name(self):
         while True:
