@@ -54,6 +54,7 @@ pydaw_file_routing_graph = os.path.join(pydaw_folder_dawnext, "routing.txt")
 pydaw_file_midi_routing = os.path.join(
     pydaw_folder_dawnext, "midi_routing.txt")
 pydaw_file_pyitems = os.path.join(pydaw_folder_dawnext, "items.txt")
+pydaw_file_takes = os.path.join(pydaw_folder_dawnext, "takes.txt")
 pydaw_file_pytracks = os.path.join(pydaw_folder_dawnext, "tracks.txt")
 pydaw_file_pyinput = os.path.join(pydaw_folder_dawnext, "input.txt")
 pydaw_file_notes = os.path.join(pydaw_folder_dawnext, "notes.txt")
@@ -148,6 +149,8 @@ class DawNextProject(libmk.AbstractProject):
             self.project_folder, FILE_SEQUENCER)
         self.pyitems_file = os.path.join(
             self.project_folder, pydaw_file_pyitems)
+        self.takes_file = os.path.join(
+            self.project_folder, pydaw_file_takes)
         self.pyscale_file = os.path.join(
             self.project_folder, "default.pyscale")
         self.pynotes_file = os.path.join(
@@ -244,6 +247,16 @@ class DawNextProject(libmk.AbstractProject):
         self.save_file("", pydaw_file_midi_routing, str(a_routing))
         if a_notify:
             self.commit("Update MIDI routing")
+
+    def get_takes(self):
+        if os.path.isfile(self.takes_file):
+            with open(self.takes_file) as fh:
+                return MkTakes.from_str(fh.read())
+        else:
+            return MkTakes()
+
+    def save_takes(self, a_takes):
+        self.save_file("", pydaw_file_takes, str(a_takes))
 
     def get_items_dict(self):
         try:

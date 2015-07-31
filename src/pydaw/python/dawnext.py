@@ -1378,8 +1378,11 @@ class ItemSequencer(QGraphicsView):
 
         self.menu.addSeparator()
 
+        self.takes_menu = self.menu.addMenu(_("Takes"))
+        self.takes_menu.triggered.connect(self.takes_menu_triggered)
+
         self.unlink_selected_action = self.menu.addAction(
-            _("Auto-Unlink Item(s)"))
+            _("Create New Take for Item(s)"))
         self.unlink_selected_action.setShortcut(
             QKeySequence.fromString("CTRL+U"))
         self.unlink_selected_action.triggered.connect(
@@ -1387,20 +1390,23 @@ class ItemSequencer(QGraphicsView):
         self.addAction(self.unlink_selected_action)
 
         self.unlink_unique_action = self.menu.addAction(
-            _("Auto-Unlink Unique Item(s)"))
+            _("Create New Take for Unique Item(s)"))
         self.unlink_unique_action.setShortcut(
             QKeySequence.fromString("ALT+U"))
         self.unlink_unique_action.triggered.connect(self.on_auto_unlink_unique)
         self.addAction(self.unlink_unique_action)
 
+        self.unlink_action = self.menu.addAction(
+            _("Create Named Take for Single Item..."))
+        self.unlink_action.triggered.connect(self.on_unlink_item)
+        self.addAction(self.unlink_action)
+
+        self.menu.addSeparator()
+
         self.rename_action = self.menu.addAction(
             _("Rename Selected Item(s)..."))
         self.rename_action.triggered.connect(self.on_rename_items)
         self.addAction(self.rename_action)
-
-        self.unlink_action = self.menu.addAction(_("Unlink Single Item..."))
-        self.unlink_action.triggered.connect(self.on_unlink_item)
-        self.addAction(self.unlink_action)
 
         self.transpose_action = self.menu.addAction(_("Transpose..."))
         self.transpose_action.triggered.connect(self.transpose_dialog)
@@ -1495,6 +1501,35 @@ class ItemSequencer(QGraphicsView):
         self.automation_save_callback()
         self.open_region()
 
+    def takes_menu_triggered(self, a_action):
+        f_uid = self.current_item.audio_item.item_uid
+        f_new_uid = a_action.item_uid
+        for f_item in self.get_selected_items():
+            if f_item.audio_item.item_uid == f_uid:
+                f_item_obj = f_item.audio_item
+                CURRENT_REGION.remove_item_ref(f_item_obj)
+                f_item_obj.uid = f_new_uid
+                self.selected_item_strings.add(str(f_item_obj))
+                f_item_ref = f_item_obj.clone()
+                f_item_ref.item_uid = f_new_uid
+                CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
+        PROJECT.save_region(CURRENT_REGION)
+        PROJECT.commit(_("Change active take"))
+        REGION_SETTINGS.open_region()
+
+    def populate_takes_menu(self):
+        self.takes_menu.clear()
+        if self.current_item:
+            f_takes = PROJECT.get_takes()
+            f_take_list = f_takes.get_take(
+                self.current_item.audio_item.item_uid)
+            if f_take_list:
+                f_items_dict = PROJECT.get_items_dict()
+                for f_uid in f_take_list[1]:
+                    f_name = f_items_dict.get_name_by_uid(f_uid)
+                    f_action = self.takes_menu.addAction(f_name)
+                    f_action.item_uid = f_uid
+
     def show_context_menu(self):
         if libmk.IS_PLAYING:
             return
@@ -1502,6 +1537,7 @@ class ItemSequencer(QGraphicsView):
             self.context_menu_enabled = True
             return
         if REGION_EDITOR_MODE == 0:
+            self.populate_takes_menu()
             self.menu.exec_(QCursor.pos())
         elif REGION_EDITOR_MODE == 1:
             self.atm_menu.exec_(QCursor.pos())
@@ -2720,8 +2756,11 @@ class ItemSequencer(QGraphicsView):
             self.last_item_copied = f_cell_text
 
             f_item_ref = f_current_item.clone()
+            f_takes = PROJECT.get_takes()
+            f_takes.add_item(f_current_item.item_uid, f_uid)
             f_item_ref.item_uid = f_uid
             CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
+            PROJECT.save_takes(f_takes)
             PROJECT.save_region(CURRENT_REGION)
             PROJECT.commit(
                 _("Unlink item '{}' as '{}'").format(
@@ -2761,6 +2800,8 @@ class ItemSequencer(QGraphicsView):
         if not f_selected:
             return
 
+        f_takes = PROJECT.get_takes()
+
         self.selected_item_strings = set()
         for f_item in f_selected:
             f_name_suffix = 1
@@ -2770,6 +2811,7 @@ class ItemSequencer(QGraphicsView):
             f_cell_text = "{}-{}".format(f_item.name, f_name_suffix)
             f_uid = PROJECT.copy_item(f_item.name, f_cell_text)
             f_item_obj = f_item.audio_item
+            f_takes.add_item(f_item_obj.item_uid, f_uid)
             CURRENT_REGION.remove_item_ref(f_item_obj)
             f_item_obj.uid = f_uid
             self.selected_item_strings.add(str(f_item_obj))
@@ -2777,6 +2819,7 @@ class ItemSequencer(QGraphicsView):
             f_item_ref.item_uid = f_uid
             CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
         PROJECT.save_region(CURRENT_REGION)
+        PROJECT.save_takes(f_takes)
         PROJECT.commit(_("Auto-Unlink items"))
         REGION_SETTINGS.open_region()
 
@@ -2789,6 +2832,8 @@ class ItemSequencer(QGraphicsView):
             return
 
         old_new_map = {}
+
+        f_takes = PROJECT.get_takes()
 
         for f_item_name in set(x[0] for x in f_result):
             f_name_suffix = 1
@@ -2804,12 +2849,14 @@ class ItemSequencer(QGraphicsView):
         for k, v in f_result:
             CURRENT_REGION.remove_item_ref(v)
             f_new_uid = old_new_map[k]
+            f_takes.add_item(v.item_uid, f_new_uid)
             v.uid = f_new_uid
             self.selected_item_strings.add(str(v))
             f_item_ref = project.pydaw_sequencer_item(
                 v.track_num, v.start_beat, v.length_beats, f_new_uid)
             CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
         PROJECT.save_region(CURRENT_REGION)
+        PROJECT.save_takes(f_takes)
         PROJECT.commit(_("Auto-Unlink unique items"))
         REGION_SETTINGS.open_region()
 
