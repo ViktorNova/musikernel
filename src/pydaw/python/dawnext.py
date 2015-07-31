@@ -936,7 +936,7 @@ class SequencerItem(QGraphicsRectItem):
         global_open_audio_items()
 
     def mousePressEvent(self, a_event):
-        if libmk.IS_PLAYING:
+        if libmk.IS_PLAYING or a_event.button() == QtCore.Qt.RightButton:
             return
 
         if a_event.modifiers() == (
@@ -947,9 +947,6 @@ class SequencerItem(QGraphicsRectItem):
         if not self.isSelected():
             SEQUENCER.scene.clearSelection()
             self.setSelected(True)
-
-        if a_event.button() == QtCore.Qt.RightButton:
-            return
 
         if a_event.modifiers() == QtCore.Qt.ShiftModifier:
             f_item = self.audio_item
@@ -1582,8 +1579,7 @@ class ItemSequencer(QGraphicsView):
                         self.selected_item_strings = {
                             self.current_item.get_selected_string()}
                 self.show_context_menu()
-
-        if REGION_EDITOR_MODE == 0:
+        elif REGION_EDITOR_MODE == 0:
             self.current_item = self.get_item(f_pos)
             self.setDragMode(QGraphicsView.RubberBandDrag)
             if a_event.modifiers() == QtCore.Qt.ControlModifier:
@@ -2814,9 +2810,9 @@ class ItemSequencer(QGraphicsView):
             f_takes.add_item(f_item_obj.item_uid, f_uid)
             CURRENT_REGION.remove_item_ref(f_item_obj)
             f_item_obj.uid = f_uid
-            self.selected_item_strings.add(str(f_item_obj))
             f_item_ref = f_item_obj.clone()
             f_item_ref.item_uid = f_uid
+            self.selected_item_strings.add(str(f_item_ref))
             CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
         PROJECT.save_region(CURRENT_REGION)
         PROJECT.save_takes(f_takes)
@@ -2851,9 +2847,9 @@ class ItemSequencer(QGraphicsView):
             f_new_uid = old_new_map[k]
             f_takes.add_item(v.item_uid, f_new_uid)
             v.uid = f_new_uid
-            self.selected_item_strings.add(str(v))
             f_item_ref = project.pydaw_sequencer_item(
                 v.track_num, v.start_beat, v.length_beats, f_new_uid)
+            self.selected_item_strings.add(str(f_item_ref))
             CURRENT_REGION.add_item_ref_by_uid(f_item_ref)
         PROJECT.save_region(CURRENT_REGION)
         PROJECT.save_takes(f_takes)
