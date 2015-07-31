@@ -1294,7 +1294,7 @@ class MkTakes:
         f_take = self.get_take(a_orig_uid)
         if f_take:
             f_take_uid, f_take = f_take
-            if f_take_uid not in f_take:
+            if a_new_uid not in f_take:
                 f_take.append(a_new_uid)
                 self.set_take(f_take, f_take_uid)
         else:
@@ -1307,6 +1307,9 @@ class MkTakes:
             v = self._dict[k]
             result.append("|".join(str(x) for x in [k] + v))
         return "\n".join(result)
+
+    def __repr__(self):
+        return str(self)
 
     @staticmethod
     def from_str(a_str):
