@@ -2800,7 +2800,8 @@ class ItemSequencer(QGraphicsView):
 
         self.selected_item_strings = set()
         for f_item in sorted(
-        f_selected, key=lambda x: x.audio_item.start_beat):
+        f_selected, key=lambda x:
+        (x.audio_item.track_num, x.audio_item.start_beat)):
             f_name_suffix = 1
             while PROJECT.item_exists(
             "{}-{}".format(f_item.name, f_name_suffix)):
