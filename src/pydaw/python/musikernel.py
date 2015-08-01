@@ -1393,7 +1393,10 @@ def global_open_project(a_project_file, a_wait=True):
     libmk.PROJECT.suppress_updates = True
     libmk.PROJECT.open_project(a_project_file, False)
     libmk.PROJECT.suppress_updates = False
-    libmk.PROJECT.create_backup()
+    try:
+        libmk.PROJECT.create_backup()
+    except Exception as ex:
+        print("ERROR:  libmk.PROJECT.create_backup() failed: {}".format(ex))
     libmk.PLUGIN_UI_DICT = mk_plugin_ui_dict(
         libmk.PROJECT, libmk.IPC, MAIN_WINDOW.styleSheet())
     for f_module in libmk.HOST_MODULES:

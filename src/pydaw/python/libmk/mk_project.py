@@ -159,7 +159,7 @@ class MkProject(libmk.AbstractProject):
 
     def create_backup(self, a_name=None):
         f_backup_name = a_name if a_name else \
-            datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+            datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         f_file_path = os.path.join(
             self.backups_folder, "{}.tar.bz2".format(f_backup_name))
         if os.path.exists(f_file_path):
@@ -171,13 +171,19 @@ class MkProject(libmk.AbstractProject):
                 arcname=os.path.basename(self.projects_folder))
         f_history = self.get_backups_history()
         if f_history:
-            f_node = f_history["NODES"]
-            for f_name in f_history["CURRENT"].split("/"):
-                f_node = f_node[f_name]
-            f_node[f_backup_name] = {}
-            f_history["CURRENT"] = os.path.join(
-                f_history["CURRENT"], f_backup_name)
-            self.save_backups_history(f_history)
+            try:
+                f_node = f_history["NODES"]
+                for f_name in f_history["CURRENT"].split("/"):
+                    f_node = f_node[f_name]
+                f_node[f_backup_name] = {}
+                f_history["CURRENT"] = os.path.join(
+                    f_history["CURRENT"], f_backup_name)
+                self.save_backups_history(f_history)
+            except Exception as ex:
+                print("ERROR:  create_backup() failed {}".format(ex))
+                print("Resetting project history")
+                self.save_backups_history(
+                    {"NODES":{f_backup_name:{}}, "CURRENT":f_backup_name})
         else:
             self.save_backups_history(
                 {"NODES":{f_backup_name:{}}, "CURRENT":f_backup_name})
