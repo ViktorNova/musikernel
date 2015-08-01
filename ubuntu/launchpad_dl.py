@@ -41,6 +41,7 @@ if not os.path.isdir(DIR):
 for arch in ARCHS:
     url = URL.format(ARCH=arch, MK_MINOR=MK_MINOR, MK_MAJOR=MK_MAJOR)
     file_name = os.path.join(DIR, url.rsplit("/", 1)[1])
+    file_name = file_name.rsplit('.', 1)[0] + "-ubuntu1404.deb"
     try:
         with urllib.request.urlopen(url) as response, \
         open(file_name, 'wb') as out_file:
