@@ -17,7 +17,7 @@
 #include <string.h>
 
 #define SHDS_MAJOR_VERSION 1
-#define SHDS_MINOR_VERSION 1
+#define SHDS_MINOR_VERSION 2
 
 /* Comparison function for sorting algorithms
  *
@@ -50,6 +50,17 @@ void * shds_alloc(size_t size)
 {
     return malloc(size);
 }
+
+/* This is to realloc as shds_alloc is to malloc
+ *
+ * @data The existing pointer to reallocate
+ * @size The size of the memory to allocate in bytes */
+void * shds_realloc(void *data, size_t size)
+{
+    return realloc(data, size);
+}
+
+
 
 /* Complement to shds_alloc.  It simply wraps 'free' by default, but can
  * be replaced for instances where that isn't appropriate, such as
@@ -298,8 +309,9 @@ void shds_list_index_set(struct ShdsList * self, size_t index, void * value)
  * This is called automatically by _append() */
 void shds_list_grow(struct ShdsList * self)
 {
-   self->max_size *= 2;
-   self->data = (void**)realloc(self->data, sizeof(void*) * self->max_size);
+    self->max_size *= 2;
+    self->data = (void**)shds_realloc(
+        self->data, sizeof(void*) * self->max_size);
 }
 
 /* Append an object to the end of the list in O(1),
@@ -569,17 +581,18 @@ void _shds_list_msort_part(struct ShdsList * self,
 /* Insertion Sort a list */
 void shds_list_isort(struct ShdsList * self, shds_cmpfunc cmpfunc)
 {
-    size_t i, i2;
+    size_t i;
+    int64_t i2;
     void *swap;
+    void **data = self->data;
 
     for(i = 1; i < self->len; ++i)
     {
-        for(i2 = i; i2 > 0 && cmpfunc(self->data[i2], self->data[i2 - 1]);
-            --i2)
+        for(i2 = i; i2 > 0 && cmpfunc(data[i2], data[i2 - 1]); --i2)
         {
-            swap = self->data[i2 - 1];
-            self->data[i2 - 1] = self->data[i2];
-            self->data[i2] = swap;
+            swap = data[i2 - 1];
+            data[i2 - 1] = data[i2];
+            data[i2] = swap;
         }
     }
 }
@@ -1189,7 +1202,7 @@ struct ShdsStr *shds_str_empty(size_t default_size)
  * @max_size The new maximum length */
 void shds_str_grow(struct ShdsStr * self, size_t max_size)
 {
-    self->data = (char*)realloc(self->data, sizeof(char) * max_size);
+    self->data = (char*)shds_realloc(self->data, sizeof(char) * max_size);
     self->max_size = max_size;
 }
 
