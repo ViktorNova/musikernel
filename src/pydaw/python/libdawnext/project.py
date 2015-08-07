@@ -997,6 +997,8 @@ class pydaw_sequencer:
         return f_tempo_markers[-1].tsig_num
 
     def get_seconds_at_beat(self, a_beat):
+        if not a_beat:
+            return 0.0
         f_time = 0.0
         f_found = False
         f_tempo_markers = self.get_tempo_markers()
