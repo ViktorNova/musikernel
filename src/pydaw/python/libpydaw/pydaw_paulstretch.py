@@ -62,7 +62,7 @@ def paulstretch(file_path, stretch, windowsize_seconds, onset_level,
         print("Pitch shifting file")
         f_src_path = file_path
         f_dest_path = outfilename.replace(".wav", "-tmp.wav")
-        if a_end_pitch is not None:
+        if a_end_pitch is not None and "win" not in sys.platform.lower():
             f_cmd = [
                 os.path.join(
                     INSTALL_PREFIX, "lib", global_pydaw_version_string,
