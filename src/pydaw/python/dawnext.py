@@ -8441,7 +8441,7 @@ class transport_widget(libmk.AbstractTransport):
                 f_inputs, f_sample_count, f_file_name)
             REGION_SETTINGS.open_region()
             if pydaw_util.IS_ENGINE_LIB:
-                clean_wav_pool()
+                libmk.clean_wav_pool()
             elif a_restart:
                 libmk.restart_engine()
             f_window.close()
