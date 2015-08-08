@@ -82,7 +82,7 @@ class project_history_widget(QTreeWidget):
             f_project_dir = os.path.join(self.project_dir, "projects")
             f_tmp_dir = "{}-tmp-{}".format(
                 f_project_dir,
-                datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S"))
+                datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
             f_item = f_items[0]
             f_tar_path = os.path.join(
                 self.backup_dir, "{}.tar.bz2".format(f_item.text(0)))
