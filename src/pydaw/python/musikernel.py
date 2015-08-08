@@ -793,6 +793,8 @@ class MkMainWindow(QMainWindow):
                 SPLASH_SCREEN.close()
             close_pydaw_engine()
             libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
+            if RESPAWN and pydaw_util.IS_WINDOWS:
+                respawn()
             if self.osc_server is not None:
                 self.osc_timer.stop()
                 self.osc_server.free()
@@ -1414,6 +1416,19 @@ def global_new_project(a_project_file, a_wait=True):
         f_module.global_new_project(a_project_file)
     open_pydaw_engine(a_project_file)
 
+def respawn():
+    print("Spawning child UI process {}".format(sys.argv))
+    if pydaw_util.IS_CYGWIN:
+        CHILD_PROC = subprocess.Popen(["/bin/python3.2m"] + sys.argv)
+    elif pydaw_util.IS_WINDOWS:
+        CHILD_PROC = subprocess.Popen(
+            ["python3.exe", pydaw_util.global_pydaw_version_string])
+    else:
+        CHILD_PROC = subprocess.Popen(sys.argv)
+        #, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
+    #CHILD_PROC.wait()
+    time.sleep(6.0)
+    print("Parent UI process exiting")
 
 #########  Setup and run #########
 
@@ -1520,15 +1535,7 @@ if pydaw_util.IS_CYGWIN:
     except Exception as ex:
         print(ex)
 
-if RESPAWN:
-    print("Spawning child UI process {}".format(sys.argv))
-    if pydaw_util.IS_CYGWIN:
-        CHILD_PROC = subprocess.Popen(["/bin/python3.2m"] + sys.argv)
-    else:
-        CHILD_PROC = subprocess.Popen(sys.argv)
-        #, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
-    #CHILD_PROC.wait()
-    time.sleep(6.0)
-    print("Parent UI process exiting")
+if RESPAWN and not pydaw_util.IS_WINDOWS:
+    respawn()
 
 #exit(0)
