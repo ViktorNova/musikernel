@@ -237,10 +237,10 @@ class pydaw_pixmap_knob(QDial):
         p.drawPixmap(rx, ry, self.pixmap)
 
     def mousePressEvent(self, a_event):
+        self.mouse_pos = QCursor.pos()
         if a_event.button() == QtCore.Qt.RightButton:
             QDial.mousePressEvent(self, a_event)
             return
-        self.mouse_pos = QCursor.pos()
         f_pos = a_event.pos()
         self.orig_x = f_pos.x()
         self.orig_y = f_pos.y()
