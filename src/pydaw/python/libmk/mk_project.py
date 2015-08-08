@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import *
 from libpydaw import *
 from libpydaw.pydaw_util import *
 import libmk
+import collections
 import shutil
 import tarfile
 import json
@@ -157,11 +158,48 @@ class MkProject(libmk.AbstractProject):
                 f_handle.write(str(0))
             return 0
 
+    def fix_backup_names(self):
+        """ Hack to fix invalid ':' chars in Windows file names,
+            can be removed at MusiKernel_v2
+        """
+        f_found = False
+        for f_name in (x for x in os.listdir(self.backups_folder)
+        if  ":" in x and x.endswith(".tar.bz2")):
+            f_old = os.path.join(self.backups_folder, f_name)
+            f_new = os.path.join(self.backups_folder, f_name.replace(":", "-"))
+            print("Renaming {} -- to -- {}".format(f_old, f_new))
+            shutil.move(f_old, f_new)
+            f_found = True
+        if not f_found:
+            print("History was clean, not modifying anything")
+            return
+        # Also clean up the history tree
+        f_history = self.get_backups_history()
+        if not f_history:
+            return
+        print('Old f_history["CURRENT"] = {}'.format(f_history["CURRENT"]))
+        f_history["CURRENT"] = f_history["CURRENT"].replace(":", "-")
+        print('New f_history["CURRENT"] = {}'.format(f_history["CURRENT"]))
+        # breadth-first search to fix the file names
+        fifo = collections.deque([f_history["NODES"]])
+        while fifo:
+            f_node = fifo.popleft()
+            for k, v in list(f_node.items()):
+                assert isinstance(k, str), str(f_history)
+                assert isinstance(v, dict), str(f_history)
+                if ":" in k:
+                    f_node[k.replace(":", "-")] = v
+                    f_node.pop(k)
+                if v:
+                    fifo.append(v)
+        print("New f_history:  {}".format(f_history))
+        self.save_backups_history(f_history)
+
     def create_backup(self, a_name=None):
+        self.fix_backup_names()
         f_backup_name = a_name if a_name else \
-            datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        f_file_path = os.path.join(
-            self.backups_folder, "{}.tar.bz2".format(f_backup_name))
+            datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S.tar.bz2")
+        f_file_path = os.path.join(self.backups_folder, f_backup_name)
         if os.path.exists(f_file_path):
             print("create_backup:  '{}' exists".format(f_file_path))
             return False
@@ -173,11 +211,12 @@ class MkProject(libmk.AbstractProject):
         if f_history:
             try:
                 f_node = f_history["NODES"]
-                for f_name in f_history["CURRENT"].split("/"):
+                for f_name in (
+                x for x in f_history["CURRENT"].split("/") if x):
                     f_node = f_node[f_name]
                 f_node[f_backup_name] = {}
-                f_history["CURRENT"] = os.path.join(
-                    f_history["CURRENT"], f_backup_name)
+                f_history["CURRENT"] = "/".join(
+                    [f_history["CURRENT"], f_backup_name])
                 self.save_backups_history(f_history)
             except Exception as ex:
                 print("ERROR:  create_backup() failed {}".format(ex))
