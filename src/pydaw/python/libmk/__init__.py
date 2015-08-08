@@ -54,10 +54,12 @@ def clean_wav_pool():
     #invert
     f_len = len(PROJECT.get_wavs_dict())
     f_result = [x for x in range(f_len) if x not in f_result]
-    print("clean_wav_pool '{}', '{}'".format(f_len, f_result))
-    if f_result:
-        f_msg = "|".join(str(x) for x in sorted(f_result))
-        IPC.clean_wavpool(f_msg)
+    # This cannot account for Euphoria's audio files, so it can't be used
+    # until it can, otherwise the engine will segfault
+#    print("clean_wav_pool '{}', '{}'".format(f_len, f_result))
+#    if f_result:
+#        f_msg = "|".join(str(x) for x in sorted(f_result))
+#        IPC.clean_wavpool(f_msg)
 
     if pydaw_util.USE_HUGEPAGES:
         for f_uid in (x for x in f_result if x not in MEMORY_ENTROPY_UIDS):
