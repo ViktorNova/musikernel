@@ -878,7 +878,11 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 #endif
 
     printf("MusiKernel main() returning\n\n\n");
+#ifdef MK_DLL
+    return 0;
+#else
     exit(0);
+#endif
 }
 
 int v_configure(const char * path, const char * key, const char * value)
