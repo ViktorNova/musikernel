@@ -793,8 +793,6 @@ class MkMainWindow(QMainWindow):
                 SPLASH_SCREEN.close()
             close_pydaw_engine()
             libmk.PLUGIN_UI_DICT.close_all_plugin_windows()
-            if RESPAWN and pydaw_util.IS_WINDOWS:
-                respawn()
             if self.osc_server is not None:
                 self.osc_timer.stop()
                 self.osc_server.free()
@@ -1535,7 +1533,7 @@ if pydaw_util.IS_CYGWIN:
     except Exception as ex:
         print(ex)
 
-if RESPAWN and not pydaw_util.IS_WINDOWS:
+if RESPAWN:
     respawn()
 
 #exit(0)
