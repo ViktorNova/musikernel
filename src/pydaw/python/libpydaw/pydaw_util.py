@@ -196,7 +196,7 @@ def check_for_empty_directory(a_parent, a_dir):
 
 def new_project(a_parent=None):
     try:
-        f_last_dir = global_home
+        f_last_dir = global_pydaw_home
         while True:
             f_file = QFileDialog.getExistingDirectory(
                 a_parent, 'New Project', f_last_dir,
