@@ -1603,6 +1603,7 @@ class ItemSequencer(QGraphicsView):
                 self.selected_item_strings = {str(f_item_ref)}
                 TRACK_PANEL.tracks[f_track].check_output()
                 PROJECT.save_region(CURRENT_REGION)
+                PROJECT.commit(_("Add new item"))
                 REGION_SETTINGS.open_region()
                 return
             elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
@@ -2066,6 +2067,7 @@ class ItemSequencer(QGraphicsView):
                 f_tsig_num.value(), int(str(f_tsig_den.currentText())))
             CURRENT_REGION.set_marker(f_marker)
             PROJECT.save_region(CURRENT_REGION)
+            PROJECT.commit(_("Set tempo marker"))
             REGION_SETTINGS.open_region()
             f_window.close()
 
@@ -2074,6 +2076,7 @@ class ItemSequencer(QGraphicsView):
             if f_marker and self.ruler_event_pos:
                 CURRENT_REGION.delete_marker(f_marker)
                 PROJECT.save_region(CURRENT_REGION)
+                PROJECT.commit(_("Delete tempo marker"))
                 REGION_SETTINGS.open_region()
             f_window.close()
 
@@ -2128,6 +2131,7 @@ class ItemSequencer(QGraphicsView):
                 self.ruler_event_pos, f_text.text())
             CURRENT_REGION.set_marker(f_marker)
             PROJECT.save_region(CURRENT_REGION)
+            PROJECT.commit(_("Add text marker"))
             REGION_SETTINGS.open_region()
             f_window.close()
 
@@ -2136,6 +2140,7 @@ class ItemSequencer(QGraphicsView):
             if f_marker:
                 CURRENT_REGION.delete_marker(f_marker)
                 PROJECT.save_region(CURRENT_REGION)
+                PROJECT.commit(_("Delete text marker"))
                 REGION_SETTINGS.open_region()
             f_window.close()
 
@@ -2179,6 +2184,7 @@ class ItemSequencer(QGraphicsView):
         f_marker = project.pydaw_loop_marker(f_end, self.ruler_event_pos)
         CURRENT_REGION.set_loop_marker(f_marker)
         PROJECT.save_region(CURRENT_REGION)
+        PROJECT.commit(_("Set region start"))
         REGION_SETTINGS.open_region()
 
     def ruler_loop_end(self):
@@ -2189,6 +2195,7 @@ class ItemSequencer(QGraphicsView):
             CURRENT_REGION.loop_marker.start_beat,
             CURRENT_REGION.loop_marker.beat - f_tsig_beats)
         PROJECT.save_region(CURRENT_REGION)
+        PROJECT.commit(_("Set region end"))
         REGION_SETTINGS.open_region()
 
     def rulerContextMenuEvent(self, a_event):
@@ -2239,6 +2246,7 @@ class ItemSequencer(QGraphicsView):
             ATM_REGION.add_point(f_point)
         self.automation_save_callback()
         PROJECT.save_region(CURRENT_REGION)
+        PROJECT.commit(_("Insert region"))
         REGION_SETTINGS.open_region()
 
     def get_region_items(self):
