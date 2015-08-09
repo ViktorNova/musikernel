@@ -758,7 +758,7 @@ class MkMainWindow(QMainWindow):
         if libmk.IS_PLAYING:
             return
         try:
-            f_last_dir = global_home
+            f_last_dir = pydaw_util.global_pydaw_home
             while True:
                 f_new_file = QFileDialog.getExistingDirectory(
                     self, _("Save copy of project as..."), f_last_dir,
