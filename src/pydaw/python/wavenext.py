@@ -96,7 +96,7 @@ class WaveNextProject(libmk.AbstractProject):
         self.project_folder = os.path.dirname(a_project_file)
         self.project_file = os.path.splitext(
             os.path.basename(a_project_file))[0]
-        self.wn_track_pool_folder = os.path.join(
+        self.track_pool_folder = os.path.join(
             self.project_folder, wavenext_folder_tracks)
         #files
         self.pynotes_file = os.path.join(
@@ -107,7 +107,7 @@ class WaveNextProject(libmk.AbstractProject):
             self.project_folder, pydaw_file_pyinput)
 
         self.project_folders = [
-            self.project_folder, self.wn_track_pool_folder,]
+            self.project_folder, self.track_pool_folder,]
 
     def open_project(self, a_project_file, a_notify_osc=True):
         self.set_project_folders(a_project_file)
@@ -150,16 +150,6 @@ class WaveNextProject(libmk.AbstractProject):
             return [x for x in f_list if x]
         else:
             return []
-
-    def get_track_plugins(self,  a_track_num):
-        f_folder = self.wn_track_pool_folder
-        f_path = os.path.join(*(str(x) for x in (f_folder, a_track_num)))
-        if os.path.isfile(f_path):
-            with open(f_path) as f_handle:
-                f_str = f_handle.read()
-            return libmk.pydaw_track_plugins.from_str(f_str)
-        else:
-            return None
 
     def save_audio_inputs(self, a_tracks):
         if not self.suppress_updates:

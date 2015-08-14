@@ -685,16 +685,6 @@ class EdmNextProject(libmk.AbstractProject):
     def get_tracks(self):
         return pydaw_tracks.from_str(self.get_tracks_string())
 
-    def get_track_plugins(self, a_track_num):
-        f_folder = self.track_pool_folder
-        f_path = os.path.join(*(str(x) for x in (f_folder, a_track_num)))
-        if os.path.isfile(f_path):
-            with open(f_path) as f_handle:
-                f_str = f_handle.read()
-            return libmk.pydaw_track_plugins.from_str(f_str)
-        else:
-            return None
-
     def get_audio_region_string(self, a_region_uid):
         f_file = open(
             os.path.join(
