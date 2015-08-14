@@ -4866,7 +4866,7 @@ class pydaw_abstract_plugin_ui:
 
     @staticmethod
     def get_wav_pool_uids(a_plugin_uid):
-        return []
+        return set()
 
     def widget_keyPressEvent(self, a_event):
         QScrollArea.keyPressEvent(self.widget, a_event)

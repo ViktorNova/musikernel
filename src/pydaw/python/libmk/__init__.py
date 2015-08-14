@@ -24,6 +24,11 @@ from PyQt5.QtWidgets import *
 
 from libpydaw.translate import _
 
+#Circular dependency, so it assigns a pointer to itself here when loaded
+#import mkplugins
+#overriding this:
+mkplugins = None
+
 # These are dynamically assigned by musikernel.py so that
 # hosts can access them from this module
 MAIN_WINDOW = None
@@ -187,6 +192,16 @@ class AbstractProject:
         else:
             return None
 
+    def get_plugin_wav_pool_uids(self):
+        result = set()
+        for plugins in (
+        self.get_track_plugins(x) for x in range(self.TRACK_COUNT)):
+            if not plugins:
+                continue
+            for uid in plugins.get_wav_pool_uids():
+                result.add(uid)
+        return result
+
 
 class AbstractTransport:
     pass
@@ -202,6 +217,12 @@ class pydaw_track_plugin:
         self.solo = int(a_solo)
         self.power = int(a_power)
 
+    def get_wav_pool_uids(self):
+        if not self.plugin_index:
+            return set()
+        plugin = mkplugins.PLUGIN_UI_TYPES[self.plugin_index]
+        return plugin.get_wav_pool_uids(self.plugin_uid)
+
     def __str__(self):
         return "|".join(str(x) for x in
             ("p", self.index, self.plugin_index,
@@ -211,6 +232,13 @@ class pydaw_track_plugin:
 class pydaw_track_plugins:
     def __init__(self):
         self.plugins = []
+
+    def get_wav_pool_uids(self):
+        result = set()
+        for plugin in self.plugins:
+            for uid in plugin.get_wav_pool_uids():
+                result.add(uid)
+        return result
 
     def __str__(self):
         return "\n".join(str(x) for x in self.plugins + ["\\"])

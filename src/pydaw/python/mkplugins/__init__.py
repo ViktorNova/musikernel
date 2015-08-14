@@ -13,6 +13,11 @@ GNU General Public License for more details.
 """
 
 import libmk
+
+import sys
+#avoid a circular import
+libmk.mkplugins = sys.modules[__name__]
+
 from libmk.mk_project import *
 from libpydaw.translate import _
 

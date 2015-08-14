@@ -28,6 +28,7 @@ from libpydaw.translate import _
 import libpydaw.strings
 import libmk
 
+TRACK_COUNT_ALL = 1
 
 def set_tooltips_enabled(a_enabled):
     """ Set extensive tooltips as an alternative to
@@ -83,6 +84,7 @@ pydaw_file_pyinput = os.path.join(wavenext_folder, "input.txt")
 
 class WaveNextProject(libmk.AbstractProject):
     def __init__(self, a_with_audio):
+        self.TRACK_COUNT = TRACK_COUNT_ALL
         self.wn_osc = WaveNextOsc(a_with_audio)
         self.suppress_updates = False
 

@@ -65,6 +65,7 @@ pydaw_min_note_length = 4.0 / 129.0
 
 class DawNextProject(libmk.AbstractProject):
     def __init__(self, a_with_audio):
+        self.TRACK_COUNT = TRACK_COUNT_ALL
         self.last_item_number = 1
         self.last_region_number = 1
         self.clear_history()
