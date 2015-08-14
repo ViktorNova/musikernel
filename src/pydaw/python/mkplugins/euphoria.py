@@ -1201,6 +1201,16 @@ class euphoria_plugin_ui(pydaw_abstract_plugin_ui):
         self.open_plugin_file()
         self.set_midi_learn(EUPHORIA_PORT_MAP)
 
+    @staticmethod
+    def get_wav_pool_uids(a_plugin_uid):
+        f_file_path = os.path.join(
+            *(str(x) for x in
+            (libmk.PROJECT.plugin_pool_folder, a_plugin_uid)))
+        if os.path.isfile(f_file_path):
+            f_file = pydaw_plugin_file(f_file_path)
+            return [int(x) for x in
+                f_file.configure_dict['load'].split("|") if x]
+
     def eq6_val_callback(self, a_port, a_val):
         f_eq_num = a_port // 3
         f_knob_num = a_port % 3

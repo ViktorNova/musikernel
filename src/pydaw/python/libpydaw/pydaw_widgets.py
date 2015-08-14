@@ -4864,6 +4864,10 @@ class pydaw_abstract_plugin_ui:
         self.is_quitting = False
         self._plugin_name = None
 
+    @staticmethod
+    def get_wav_pool_uids(a_plugin_uid):
+        return []
+
     def widget_keyPressEvent(self, a_event):
         QScrollArea.keyPressEvent(self.widget, a_event)
         if a_event.key() == QtCore.Qt.Key_Space:
