@@ -38,6 +38,8 @@ def dict_to_c_code(a_dict, a_name):
     # TODO:  How best to represent in C what is essentially a const array
     # of const float arrays all with different lengths?
     # Maybe declare a float * [] = {arr0, arr1, arr2, ...}
+    # Or possibly an array of struct {int count; float * data} where
+    # the data is assigned from the float arrays
 
 def visualize(a_dict):
     keys = list(sorted(a_dict))
@@ -52,7 +54,10 @@ def get_notes():
         count = int((NYQUIST - hz) // hz)
         yield note, length, count
 
-def get_saws():
+def get_phase_smear(i):
+    return (1. - (1. / float(i))) * numpy.pi * .0933333333333333333
+
+def get_saws(a_phase_smear=True):
     result = {}
     total_length = 0
     for note, length, count in get_notes():
@@ -61,11 +66,13 @@ def get_saws():
         result[note] = arr
         for i in range(1, count + 1):
             phase = 0.0 if i % 2 else numpy.pi
+            if a_phase_smear:
+                phase += get_phase_smear(i)
             arr += get_harmonic(length, phase, i) * (1.0 / float(i))
     print("saw data size: {} bytes".format(total_length * 4))
     return result
 
-def get_squares():
+def get_squares(a_phase_smear=True):
     result = {}
     total_length = 0
     for note, length, count in get_notes():
@@ -73,7 +80,8 @@ def get_squares():
         arr = numpy.zeros(length)
         result[note] = arr
         for i in range(1, count + 1, 2):
-            arr += get_harmonic(length, 0.0, i) * (1.0 / float(i))
+            phase = get_phase_smear(i) if a_phase_smear else 0.0
+            arr += get_harmonic(length, phase, i) * (1.0 / float(i))
     print("square data size: {} bytes".format(total_length * 4))
     return result
 
