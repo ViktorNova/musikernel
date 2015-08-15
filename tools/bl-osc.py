@@ -18,8 +18,16 @@ GNU General Public License for more details.
 import numpy
 from matplotlib import pyplot
 
+import os
+import sys
+
+current_dir = os.path.dirname(__file__)
+wavefile_path = os.path.join(current_dir, "..", "src", "pydaw", "python")
+sys.path.append(os.path.abspath(wavefile_path))
+import wavefile
+
 SR = 44100.
-NYQUIST = 20000.  # Leave some headroom from the real nyquist frequency
+NYQUIST = 15000.  # Leave some headroom from the real nyquist frequency
 
 def pydaw_pitch_to_hz(a_pitch):
     return (440.0 * pow(2.0, (float(a_pitch) - 57.0) * 0.0833333333333333333))
@@ -45,6 +53,15 @@ def visualize(a_dict):
     keys = list(sorted(a_dict))
     pyplot.plot(a_dict[keys[0]])
     pyplot.show()
+
+def dict_to_wav(a_dict, a_name):
+    keys = list(sorted(a_dict))
+    with wavefile.WaveWriter(a_name, channels=1, samplerate=44100,) as writer:
+        for key in keys[16:70:3]:
+            arr = numpy.array([a_dict[key]])
+            count = int(SR / arr.shape[1])
+            for i in range(count):
+                writer.write(arr)
 
 def get_notes():
     for note in range(0, 100):
@@ -84,6 +101,9 @@ def get_squares(a_phase_smear=True):
             arr += get_harmonic(length, phase, i) * (1.0 / float(i))
     print("square data size: {} bytes".format(total_length * 4))
     return result
+
+dict_to_wav(get_saws(), "saw.wav")
+dict_to_wav(get_squares(), "square.wav")
 
 visualize(get_saws())
 visualize(get_squares())
