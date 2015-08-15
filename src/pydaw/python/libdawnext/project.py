@@ -203,7 +203,10 @@ class DawNextProject(libmk.AbstractProject):
         f_region = self.get_region()
         f_item_uids = set(x.item_uid for x in f_region.items)
         f_items = [self.get_item_by_uid(x) for x in f_item_uids]
-        return set(y.uid for x in f_items for y in x.items.values())
+        result = set(y.uid for x in f_items for y in x.items.values())
+        for uid in self.get_plugin_wav_pool_uids():
+            result.add(uid)
+        return result
 
     def get_notes(self):
         if os.path.isfile(self.pynotes_file):

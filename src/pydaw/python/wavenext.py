@@ -1250,8 +1250,11 @@ def global_new_project(a_project_file):
     WAVE_EDITOR.open_project()
 
 def active_wav_pool_uids():
-    " Wave-Next doesn't participate in the normal wav pool "
-    return set()
+    """ Wave-Next doesn't participate in the normal wav pool, so
+        just return plugin wav_pool uids
+
+    """
+    return PROJECT.get_plugin_wav_pool_uids()
 
 PROJECT = WaveNextProject(True)
 

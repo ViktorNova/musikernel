@@ -207,8 +207,11 @@ class EdmNextProject(libmk.AbstractProject):
 
     def active_wav_pool_uids(self):
         f_song = self.get_song()
-        return set(y.uid for x in f_song.regions.values()
+        result = set(y.uid for x in f_song.regions.values()
             for y in self.get_audio_region(x).items.values())
+        for uid in self.get_plugin_wav_pool_uids():
+            result.add(uid)
+        return result
 
     def set_midi_scale(self, a_key, a_scale):
         pydaw_write_file_text(
