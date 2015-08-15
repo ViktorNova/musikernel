@@ -26,8 +26,47 @@ wavefile_path = os.path.join(current_dir, "..", "src", "pydaw", "python")
 sys.path.append(os.path.abspath(wavefile_path))
 import wavefile
 
+CODE_DIR = os.path.abspath(os.path.join(
+    current_dir, "..", "src", "pydaw", "libmodsynth", "modules",
+    "oscillator", "af"))
+
 SR = 44100.
 NYQUIST = SR / 2.
+
+BOILERPLATE = """\
+/*
+This file is part of the MusiKernel project, Copyright MusiKernel Team
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+*/
+
+#ifndef {NAMEU}_H
+#define {NAMEU}_H
+
+#define AF_{NAMEU}_DCOUNT {DCOUNT}
+#define AF_{NAMEU}_WCOUNT {WCOUNT}
+
+__thread int AF_{NAMEU}_INDICES[AF_{NAMEU}_WCOUNT][2] = {{
+
+{WINDICES}
+
+}} __attribute__((aligned(CACHE_LINE_SIZE)));
+
+__thread float AF_{NAMEU}_DATA[AF_{NAMEU}_DCOUNT] = {{
+
+{WDATA}
+
+}} __attribute__((aligned(CACHE_LINE_SIZE)));
+
+#endif /*{NAMEU}_H*/
+"""
 
 def pydaw_pitch_to_hz(a_pitch):
     return (440.0 * pow(2.0, (float(a_pitch) - 57.0) * 0.0833333333333333333))
@@ -41,18 +80,42 @@ def get_harmonic(a_size, a_phase, a_num):
         a_phase, (2.0 * numpy.pi * a_num) + a_phase, a_size)
     return numpy.sin(f_lin)
 
+def double_to_c_float(a_double):
+    return "{}f".format(round(a_double, 7))
+
 def dict_to_c_code(a_dict, a_name):
-    raise NotImplementedError
-    # TODO:  How best to represent in C what is essentially a const array
-    # of const float arrays all with different lengths?
-    # Maybe declare a float * [] = {arr0, arr1, arr2, ...}
-    # Or possibly an array of struct {int count; float * data} where
-    # the data is assigned from the float arrays
-    # UPDATE:  Make it as a single array of float, then create a separate
-    # array of (int[2]) that gives the start/end index of each note,
-    # which also makes it more sane to do thread-local storage
-    # ALSO:  Pad each waveform with a few samples from either end to avoid
-    # the need for wrapping in the interpolation algorithm?
+    arr_lines = []
+    line_arr = []
+    index_lines = []
+    index_start = 0
+    index_end = 0
+    line_length = 0
+    for k in sorted(a_dict):
+        v = list(a_dict[k])
+        index_start = index_end + 4
+        index_end = index_start + len(v)
+        index_lines.append("{{{}, {}}}".format(index_start, index_end))
+        index_end += 4
+        data = v[-4:] + v + v[:4]
+        for fp in data:
+            cfloat = double_to_c_float(fp)
+            if line_length < 50:
+                line_arr.append(cfloat)
+                line_length += len(cfloat)
+            else:
+                arr_lines.append(", ".join(line_arr))
+                line_arr = [cfloat]
+                line_length = len(cfloat)
+        arr_data = ",\n".join(arr_lines)
+        index_data = ",\n".join(index_lines)
+        code = BOILERPLATE.format(
+            NAMEU=a_name.upper(), DCOUNT=index_end, WCOUNT=len(index_lines),
+            WINDICES=index_data, WDATA=arr_data)
+        code_path = os.path.join(CODE_DIR, "{}.h".format(a_name))
+        if not os.path.isdir(CODE_DIR):
+            os.mkdir(CODE_DIR)
+        with open(code_path, 'w') as fh:
+            fh.write(code)
 
 def visualize(a_dict):
     keys = list(sorted(a_dict))
@@ -61,7 +124,8 @@ def visualize(a_dict):
 
 def dict_to_wav(a_dict, a_name):
     keys = list(sorted(a_dict))
-    with wavefile.WaveWriter(a_name, channels=1, samplerate=44100,) as writer:
+    name = "{}.wav".format(a_name)
+    with wavefile.WaveWriter(name, channels=1, samplerate=44100,) as writer:
         for key in keys[16:70:3]:
             arr = numpy.array([a_dict[key]])
             count = int(SR / arr.shape[1])
@@ -141,12 +205,13 @@ TRIANGLES = get_squares(a_triangle=True)
 SINES = get_sines()
 
 RESULT = (
-    (SAWS, "saw.wav"), (SUPERB_SAWS, "superb_saw.wav"),
-    (SQUARES, "square.wav"), (TRIANGLES, "triangle.wav"),
-    (SINES, "sine.wav")
+    (SAWS, "saw"), (SUPERB_SAWS, "superb_saw"),
+    (SQUARES, "square"), (TRIANGLES, "triangle"),
+    (SINES, "sine")
     )
 
 for wavs, name in RESULT:
+    dict_to_c_code(wavs, name)
     dict_to_wav(wavs, name)
     visualize(wavs)
 

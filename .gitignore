@@ -1,3 +1,4 @@
+tools/*.wav
 *.nsi
 windows/*.zip
 windows/*.tar.xz
