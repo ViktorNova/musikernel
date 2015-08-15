@@ -47,7 +47,7 @@ def visualize(a_dict):
     pyplot.show()
 
 def get_notes():
-    for note in range(0, 84):
+    for note in range(0, 100):
         hz = pydaw_pitch_to_hz(note)
         # This introduces minor rounding error into the note frequency
         length = round(SR / hz)
