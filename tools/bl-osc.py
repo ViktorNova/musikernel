@@ -83,7 +83,19 @@ def get_notes():
 def get_phase_smear(i):
     return (1. - (1. / float(i))) * numpy.pi * .5933333333333333333
 
-def get_saws(a_phase_smear=True):
+def get_sines():
+    result = {}
+    total_length = 0
+    for note, length, count in get_notes():
+        total_length += length
+        arr = numpy.zeros(length)
+        result[note] = arr
+        arr += get_harmonic(length, 0.0, 1)
+        normalize(arr)
+    print("sine data size: {} bytes".format(total_length * 4))
+    return result
+
+def get_saws(a_phase_smear=True, a_ss=False):
     result = {}
     total_length = 0
     for note, length, count in get_notes():
@@ -94,7 +106,8 @@ def get_saws(a_phase_smear=True):
             phase = 0.0 if i % 2 else numpy.pi
             if a_phase_smear:
                 phase += get_phase_smear(i)
-            arr += get_harmonic(length, phase, i) * (1.0 / float(i))
+            amp = 4. if a_ss and i < 4 else float(i)
+            arr += get_harmonic(length, phase, i) * (1.0 / amp)
         normalize(arr)
     print("saw data size: {} bytes".format(total_length * 4))
     return result
@@ -122,13 +135,18 @@ def get_squares(a_phase_smear=True, a_triangle=False):
     return result
 
 SAWS = get_saws()
+SUPERB_SAWS = get_saws(a_ss=True) #, a_phase_smear=False)
 SQUARES = get_squares()
 TRIANGLES = get_squares(a_triangle=True)
+SINES = get_sines()
 
-dict_to_wav(SAWS, "saw.wav")
-dict_to_wav(SQUARES, "square.wav")
-dict_to_wav(TRIANGLES, "triangle.wav")
+RESULT = (
+    (SAWS, "saw.wav"), (SUPERB_SAWS, "superb_saw.wav"),
+    (SQUARES, "square.wav"), (TRIANGLES, "triangle.wav"),
+    (SINES, "sine.wav")
+    )
 
-visualize(SAWS)
-visualize(SQUARES)
-visualize(TRIANGLES)
+for wavs, name in RESULT:
+    dict_to_wav(wavs, name)
+    visualize(wavs)
+
