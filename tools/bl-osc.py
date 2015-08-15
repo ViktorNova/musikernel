@@ -76,7 +76,7 @@ def get_notes():
         yield note, length, count
 
 def get_phase_smear(i):
-    return (1. - (1. / float(i))) * numpy.pi * .0933333333333333333
+    return (1. - (1. / float(i))) * numpy.pi * .5933333333333333333
 
 def get_saws(a_phase_smear=True):
     result = {}
