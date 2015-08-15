@@ -27,7 +27,7 @@ sys.path.append(os.path.abspath(wavefile_path))
 import wavefile
 
 SR = 44100.
-NYQUIST = SR / 4.  # Leave some headroom from the real nyquist frequency
+NYQUIST = SR / 2.
 
 def pydaw_pitch_to_hz(a_pitch):
     return (440.0 * pow(2.0, (float(a_pitch) - 57.0) * 0.0833333333333333333))
@@ -78,7 +78,7 @@ def get_notes():
 def get_phase_smear(i):
     return (1. - (1. / float(i))) * numpy.pi * .0933333333333333333
 
-def get_saws(a_phase_smear=False):
+def get_saws(a_phase_smear=True):
     result = {}
     total_length = 0
     for note, length, count in get_notes():
@@ -94,7 +94,7 @@ def get_saws(a_phase_smear=False):
     print("saw data size: {} bytes".format(total_length * 4))
     return result
 
-def get_squares(a_phase_smear=False):
+def get_squares(a_phase_smear=True):
     result = {}
     total_length = 0
     for note, length, count in get_notes():
