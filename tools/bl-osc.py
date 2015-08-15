@@ -48,6 +48,11 @@ def dict_to_c_code(a_dict, a_name):
     # Maybe declare a float * [] = {arr0, arr1, arr2, ...}
     # Or possibly an array of struct {int count; float * data} where
     # the data is assigned from the float arrays
+    # UPDATE:  Make it as a single array of float, then create a separate
+    # array of (int[2]) that gives the start/end index of each note,
+    # which also makes it more sane to do thread-local storage
+    # ALSO:  Pad each waveform with a few samples from either end to avoid
+    # the need for wrapping in the interpolation algorithm?
 
 def visualize(a_dict):
     keys = list(sorted(a_dict))
@@ -94,21 +99,36 @@ def get_saws(a_phase_smear=True):
     print("saw data size: {} bytes".format(total_length * 4))
     return result
 
-def get_squares(a_phase_smear=True):
+def get_squares(a_phase_smear=True, a_triangle=False):
     result = {}
     total_length = 0
     for note, length, count in get_notes():
         total_length += length
         arr = numpy.zeros(length)
         result[note] = arr
+        tri_eo = False
         for i in range(1, count + 1, 2):
-            phase = get_phase_smear(i) if a_phase_smear else 0.0
-            arr += get_harmonic(length, phase, i) * (1.0 / float(i))
-    print("square data size: {} bytes".format(total_length * 4))
+            amp = float(i * i) if a_triangle else float(i)
+            if a_triangle:
+                phase = numpy.pi if tri_eo else 0.0
+                tri_eo = not tri_eo
+                if a_phase_smear:
+                    phase += get_phase_smear(i)
+            else:
+                phase = get_phase_smear(i) if a_phase_smear else 0.0
+            arr += get_harmonic(length, phase, i) * (1.0 / amp)
+    print("{} data size: {} bytes".format(
+        "triangle" if a_triangle else "square", total_length * 4))
     return result
 
-dict_to_wav(get_saws(), "saw.wav")
-dict_to_wav(get_squares(), "square.wav")
+SAWS = get_saws()
+SQUARES = get_squares()
+TRIANGLES = get_squares(a_triangle=True)
 
-visualize(get_saws())
-visualize(get_squares())
+dict_to_wav(SAWS, "saw.wav")
+dict_to_wav(SQUARES, "square.wav")
+dict_to_wav(TRIANGLES, "triangle.wav")
+
+visualize(SAWS)
+visualize(SQUARES)
+visualize(TRIANGLES)
