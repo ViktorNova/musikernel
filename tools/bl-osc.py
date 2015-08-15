@@ -27,7 +27,7 @@ sys.path.append(os.path.abspath(wavefile_path))
 import wavefile
 
 SR = 44100.
-NYQUIST = 15000.  # Leave some headroom from the real nyquist frequency
+NYQUIST = SR / 4.  # Leave some headroom from the real nyquist frequency
 
 def pydaw_pitch_to_hz(a_pitch):
     return (440.0 * pow(2.0, (float(a_pitch) - 57.0) * 0.0833333333333333333))
@@ -63,6 +63,10 @@ def dict_to_wav(a_dict, a_name):
             for i in range(count):
                 writer.write(arr)
 
+def normalize(arr):
+    buffer_max = numpy.amax(numpy.abs(arr))
+    arr *= 1. / buffer_max
+
 def get_notes():
     for note in range(0, 100):
         hz = pydaw_pitch_to_hz(note)
@@ -74,7 +78,7 @@ def get_notes():
 def get_phase_smear(i):
     return (1. - (1. / float(i))) * numpy.pi * .0933333333333333333
 
-def get_saws(a_phase_smear=True):
+def get_saws(a_phase_smear=False):
     result = {}
     total_length = 0
     for note, length, count in get_notes():
@@ -86,10 +90,11 @@ def get_saws(a_phase_smear=True):
             if a_phase_smear:
                 phase += get_phase_smear(i)
             arr += get_harmonic(length, phase, i) * (1.0 / float(i))
+        normalize(arr)
     print("saw data size: {} bytes".format(total_length * 4))
     return result
 
-def get_squares(a_phase_smear=True):
+def get_squares(a_phase_smear=False):
     result = {}
     total_length = 0
     for note, length, count in get_notes():
