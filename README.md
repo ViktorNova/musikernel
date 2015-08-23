@@ -1,3 +1,5 @@
+***Warning***  Updating to Qt 5.5.0 will cause several significant regressions in MusiKernel's UI, users are advised not to upgrade their Qt installations
+
 - **Twitter** - Follow @musikernel for the latest news and release announcements
 - [**KVR** - See screenshots](http://www.kvraudio.com/product/musikernel-by-musikernel)
 - [**Youtube** - Watch MusiKernel tutorial videos](https://www.youtube.com/channel/UCf_PgsosvLpxkN6bff9NESA/videos)
