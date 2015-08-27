@@ -291,14 +291,22 @@ class plugin_settings_base:
         self.index = a_index
         self.send = a_send
         self.plugin_index = None
-        if a_qcbox:
+        # Qt 5.5.0 completely breaks PluginComboBox's use of QMenu,
+        # so not using it for now, unfortunately.
+        self.qcbox = a_qcbox
+        if a_qcbox or True:
             self.plugin_combobox = QComboBox()
         else:
             self.plugin_combobox = PluginComboBox(self.on_plugin_change)
         self.plugin_combobox.setMinimumWidth(150)
         self.plugin_combobox.wheelEvent = self.wheel_event
-        self.plugin_combobox.addItems(self.plugin_list)
         if a_qcbox:
+            self.plugin_combobox.addItems(self.plugin_list)
+        else:
+            self.plugin_combobox.addItems(["None"])
+            self.plugin_combobox.addItems(
+                y for x in self.plugin_list for y in x[1])
+        if a_qcbox or True:
             self.plugin_combobox.currentIndexChanged.connect(
                 self.on_plugin_change)
         self.ui_button = QPushButton("UI")
@@ -371,8 +379,13 @@ class plugin_settings_base:
 
     def set_value(self, a_val):
         self.suppress_osc = True
-        f_name = PLUGIN_UIDS_REVERSE[a_val.plugin_index]
-        self.plugin_combobox.setCurrentIndex(a_val.plugin_index)
+        # More Qt 5.5.0 regression work-around
+        if self.qcbox:
+            self.plugin_combobox.setCurrentIndex(a_val.plugin_index)
+        else:
+            f_name = PLUGIN_UIDS_REVERSE[a_val.plugin_index]
+            self.plugin_combobox.setCurrentIndex(
+                self.plugin_combobox.findText(f_name))
         self.plugin_index = a_val.plugin_index
         self.plugin_uid = a_val.plugin_uid
         self.power_checkbox.setChecked(a_val.power == 1)
