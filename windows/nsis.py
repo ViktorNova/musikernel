@@ -108,6 +108,11 @@ for arch, bits in (("i686", "32"), ("x86_64", "64")):
 shell = r"C:\musikernel\mingw64_shell.bat"
 os.system(shell)
 
+print("""\
+#In the terminal, run:
+pacman -U mingw-[version]' # for each package
+rm *  # remove all package files to save space
+""")
 input("Press 'enter' to continue")
 
 NSIS = r"C:\Program Files (x86)\NSIS\Bin\makensis.exe"
