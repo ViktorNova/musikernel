@@ -69,8 +69,6 @@ GNU General Public License for more details.
 static float **pluginOutputBuffers;
 
 
-
-
 #if defined(__linux__) && !defined(MK_DLL)
 static sigset_t _signals;
 #endif
@@ -887,6 +885,26 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 
 int v_configure(const char * path, const char * key, const char * value)
 {
+    if(!READY)
+    {
+        int i;
+
+        for(i = 0; i < 20; ++i)
+        {
+            usleep(100000);
+
+            if(READY)
+            {
+                break;
+            }
+        }
+
+        if(!READY)
+        {
+            return 1;
+        }
+    }
+
     if(!strcmp(path, "/musikernel/edmnext"))
     {
         v_en_configure(key, value);

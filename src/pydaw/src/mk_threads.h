@@ -29,6 +29,8 @@ GNU General Public License for more details.
 extern "C" {
 #endif
 
+int READY = 0;
+
 void * v_pydaw_worker_thread(void*);
 void v_pydaw_init_worker_threads(int, int, int);
 void v_open_project(const char*, int);
@@ -120,6 +122,8 @@ void v_pydaw_activate(
 #ifdef __linux__
     mlockall(MCL_CURRENT | MCL_FUTURE);
 #endif
+
+    READY = 1;
 }
 
 void v_pydaw_destructor()
