@@ -661,25 +661,11 @@ class MkMainWindow(QMainWindow):
             if PYDAW_SUBPROCESS and PYDAW_SUBPROCESS.poll() is not None:
                 self.subprocess_timer.stop()
                 exitCode = PYDAW_SUBPROCESS.returncode
-                if exitCode == 0:
-                    pass
-                elif exitCode == 1000:
-                    QMessageBox.warning(
-                        self, _("Error"), _("Audio device not found"))
-                elif exitCode == 1001:
-                    QMessageBox.warning(
-                        self, _("Error"), _("Device config not found"))
-                elif exitCode == 1002:
-                    QMessageBox.warning(
-                        self, _("Error"),
-                        _("Unknown error opening audio device"))
-                else:
-                    QMessageBox.warning(
-                        self, _("Error"),
-                        _("The audio engine died with error code {}, "
-                        "please try restarting MusiKernel").format(exitCode))
-                if exitCode >= 1000 and exitCode <= 1002:
-                    self.on_change_audio_settings()
+                pydaw_util.handle_engine_error(exitCode)
+            elif pydaw_util.IS_ENGINE_LIB and \
+            pydaw_util.ENGINE_RETCODE is not None:
+                self.subprocess_timer.stop()
+                pydaw_util.handle_engine_error(pydaw_util.ENGINE_RETCODE)
         except Exception as ex:
             print("subprocess_monitor: {}".format(ex))
 

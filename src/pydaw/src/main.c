@@ -62,6 +62,12 @@ GNU General Public License for more details.
 #define PA_SAMPLE_TYPE paFloat32
 #define DEFAULT_FRAMES_PER_BUFFER 512
 
+#ifdef MK_DLL
+    #define mk_exit(x) return x
+#else
+    #define mk_exit(x) exit(x)
+#endif
+
 #define RET_CODE_DEVICE_NOT_FOUND 1000
 #define RET_CODE_CONFIG_NOT_FOUND 1001
 #define RET_CODE_AUDIO_DEVICE_ERROR 1002
@@ -306,7 +312,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     {
         printf("\nUsage: %s install_prefix project_path ui_pid "
             "huge_pages[--sleep]\n\n", argv[0]);
-        exit(9996);
+        mk_exit(9996);
     }
 
     float sample_rate = 44100.0f;
@@ -653,7 +659,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         else
         {
             printf("Device config not found\n");
-            exit(RET_CODE_CONFIG_NOT_FOUND);
+            mk_exit(RET_CODE_CONFIG_NOT_FOUND);
 
         }
 
@@ -683,7 +689,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         if(!f_found_index)
         {
             printf("Device not found\n");
-            exit(RET_CODE_DEVICE_NOT_FOUND);
+            mk_exit(RET_CODE_DEVICE_NOT_FOUND);
         }
 
         const PaDeviceInfo * f_device_info =
@@ -716,7 +722,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
             if(!f_found_index)
             {
                 printf("Device not found\n");
-                exit(RET_CODE_DEVICE_NOT_FOUND);
+                mk_exit(RET_CODE_DEVICE_NOT_FOUND);
             }
 
             f_device_info =
@@ -751,7 +757,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
             {
                 printf("Error while opening audio device: %s",
                     Pa_GetErrorText(err));
-                exit(RET_CODE_AUDIO_DEVICE_ERROR);
+                mk_exit(RET_CODE_AUDIO_DEVICE_ERROR);
             }
         }
         break;
@@ -789,7 +795,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         {
             printf("Error: Unknown error while starting device.  Please "
                 "re-configure your device and try starting MusiKernel again.");
-            exit(RET_CODE_AUDIO_DEVICE_ERROR);
+            mk_exit(RET_CODE_AUDIO_DEVICE_ERROR);
         }
         const PaStreamInfo * f_stream_info = Pa_GetStreamInfo(stream);
         printf("Actual output latency:\n\tmilliseconds:  %f\n\tsamples:  %i\n",
@@ -876,11 +882,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 #endif
 
     printf("MusiKernel main() returning\n\n\n");
-#ifdef MK_DLL
-    return 0;
-#else
-    exit(0);
-#endif
+    mk_exit(0);
 }
 
 int v_configure(const char * path, const char * key, const char * value)

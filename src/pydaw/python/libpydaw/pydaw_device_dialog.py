@@ -138,6 +138,7 @@ Select your audio interface from this list.
 
 class pydaw_device_dialog:
     def __init__(self, a_is_running=False):
+        self.devices_open = False
         self.is_running = a_is_running
         self.device_name = None
         self.sample_rates = ["44100", "48000", "88200", "96000", "192000"]
@@ -181,11 +182,26 @@ class pydaw_device_dialog:
         self.pypm.Pm_GetDeviceInfo.restype = ctypes.POINTER(
             portmidi.PmDeviceInfo)
         self.pypm.Pm_Initialize()
+        self.devices_open = True
 
     def close_devices(self):
-        self.pyaudio.Pa_Terminate()
-        if not pydaw_util.IS_WINDOWS:
+        if self.devices_open:
+            import _ctypes
+            self.pyaudio.Pa_Terminate()
             self.pypm.Pm_Terminate()
+            _ctypes.dlclose(self.pyaudio._handle)
+            _ctypes.dlclose(self.pypm._handle)
+            del self.pyaudio
+            del self.pypm
+            import gc
+            gc.collect()
+            self.devices_open = False
+            time.sleep(0.5)  # Give the kernel audio API time to close
+        else:
+            pass
+#            print("close_devices called, but devices are not open")
+#            import traceback
+#            traceback.print_stack()
 
     def check_device(self, a_splash_screen=None):
         if not pydaw_util.global_device_val_dict:

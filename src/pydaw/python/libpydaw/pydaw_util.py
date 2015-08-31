@@ -129,14 +129,43 @@ def load_engine_lib(a_engine_callback):
     ENGINE_LIB.v_set_ui_callback.restype = None
     ENGINE_LIB.v_set_ui_callback(ENGINE_LIB_CALLBACK)
 
+ENGINE_RETCODE = None
+
 class EngineLibThread(QtCore.QThread):
     def run(self):
+        global ENGINE_RETCODE
         myargv = ctypes.c_char_p * 5
         argv = myargv(
             b"/usr/bin/musikernel1-engine", INSTALL_PREFIX.encode("ascii"),
             PROJECT_DIR.encode("ascii"), b"0",
             str(USE_HUGEPAGES).encode("ascii"))
-        ENGINE_LIB.main(5, ctypes.byref(argv))
+        ENGINE_RETCODE = ENGINE_LIB.main(5, ctypes.byref(argv))
+
+def handle_engine_error(exitCode):
+    if exitCode == 0:
+        print("Engine exited with return code 0, no errors.")
+        return
+
+    import libmk
+
+    if exitCode == 1000:
+        QMessageBox.warning(
+            libmk.MAIN_WINDOW, "Error", "Audio device not found")
+    elif exitCode == 1001:
+        QMessageBox.warning(
+            libmk.MAIN_WINDOW, "Error", "Device config not found")
+    elif exitCode == 1002:
+        QMessageBox.warning(
+            libmk.MAIN_WINDOW, "Error",
+            "Unknown error opening audio device")
+    else:
+        QMessageBox.warning(
+            libmk.MAIN_WINDOW, "Error",
+            "The audio engine died with error code {}, "
+            "please try restarting MusiKernel".format(exitCode))
+    if exitCode >= 1000 and exitCode <= 1002:
+        libmk.MAIN_WINDOW.on_change_audio_settings()
+
 
 PROJECT_DIR = None
 
