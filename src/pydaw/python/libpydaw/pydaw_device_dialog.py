@@ -187,13 +187,16 @@ class pydaw_device_dialog:
     def close_devices(self):
         if self.devices_open:
             import _ctypes
+            import gc
             self.pyaudio.Pa_Terminate()
             self.pypm.Pm_Terminate()
-            _ctypes.dlclose(self.pyaudio._handle)
-            _ctypes.dlclose(self.pypm._handle)
+            for x in (self.pyaudio._handle, self.pypm._handle):
+                if pydaw_util.IS_WINDOWS:
+                    _ctypes.FreeLibrary(x)
+                else:
+                    _ctypes.dlclose(x)
             del self.pyaudio
             del self.pypm
-            import gc
             gc.collect()
             self.devices_open = False
             time.sleep(0.5)  # Give the kernel audio API time to close
