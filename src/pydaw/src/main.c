@@ -62,10 +62,22 @@ GNU General Public License for more details.
 #define PA_SAMPLE_TYPE paFloat32
 #define DEFAULT_FRAMES_PER_BUFFER 512
 
+void _mk_exit()
+{
+#ifndef NO_MIDI
+    Pm_Terminate();
+#endif
+    PaError err = Pa_Terminate();
+    if(err != paNoError)
+    {
+        printf("Pa_Terminate error:  %s\n", Pa_GetErrorText(err));
+    }
+}
+
 #ifdef MK_DLL
-    #define mk_exit(x) return x
+    #define mk_exit(x) _mk_exit(); return x
 #else
-    #define mk_exit(x) exit(x)
+    #define mk_exit(x) _mk_exit(); exit(x)
 #endif
 
 #define RET_CODE_DEVICE_NOT_FOUND 1000
@@ -292,6 +304,10 @@ NO_OPTIMIZATION void * ui_process_monitor_thread(
     if(f_exited)
     {
         sleep(3);
+        Pa_Terminate();
+#ifndef NO_MIDI
+        Pm_Terminate();
+#endif
         exit(0);
     }
 
@@ -866,14 +882,28 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     if(!PYDAW_NO_HARDWARE)
     {
         err = Pa_CloseStream(stream);
-    }
+        if(err != paNoError)
+        {
+            printf("Pa_CloseStream error:  %s\n", Pa_GetErrorText(err));
 
-    err = Pa_Terminate();
-    if(err != paNoError)
-    {
-        printf("Pa_Terminate error:  %s\n", Pa_GetErrorText(err));
-    }
+            usleep(50000);
 
+            err = Pa_IsStreamStopped(stream);
+
+            if(err < 1)
+            {
+                if(err == 0)
+                    printf("Pa_IsStreamStopped returned 0 (WTF?)\n");
+                if(err < 0)
+                    printf("Pa_IsStreamStopped error:  %s\n",
+                        Pa_GetErrorText(err));
+                err = Pa_AbortStream(stream);
+                if(err != paNoError)
+                    printf("Pa_AbortStream error:  %s\n",
+                        Pa_GetErrorText(err));
+            }
+        }
+    }
 
 #ifndef NO_MIDI
     for(f_i = 0; f_i < MIDI_DEVICES.count; ++f_i)
@@ -883,8 +913,6 @@ NO_OPTIMIZATION int main(int argc, char **argv)
             midiDeviceClose(&MIDI_DEVICES.devices[f_i]);
         }
     }
-
-    Pm_Terminate();
 #endif
 
     v_pydaw_destructor();
