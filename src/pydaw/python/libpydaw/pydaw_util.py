@@ -140,6 +140,7 @@ class EngineLibThread(QtCore.QThread):
             PROJECT_DIR.encode("ascii"), b"0",
             str(USE_HUGEPAGES).encode("ascii"))
         ENGINE_RETCODE = ENGINE_LIB.main(5, ctypes.byref(argv))
+        print("ENGINE_RETCODE: {}".format(ENGINE_RETCODE))
 
 def handle_engine_error(exitCode):
     if exitCode == 0:
