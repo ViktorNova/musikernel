@@ -547,7 +547,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
                 else if(!strcmp(f_key_char, "name"))
                 {
                     snprintf(f_device_name, 256, "%s", f_value_char);
-                    printf("device name: %s\n", f_device_name);
+                    printf("device name: \"%s\"\n", f_device_name);
                 }
 #ifdef _WIN32
                 else if(!strcmp(f_key_char, "inputName"))
@@ -678,9 +678,10 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         for(f_i = 0; f_i < Pa_GetDeviceCount(); ++f_i)
         {
             const PaDeviceInfo * f_padevice = Pa_GetDeviceInfo(f_i);
+            printf("\"%s\"\n", f_padevice->name);
             if(!strcmp(f_padevice->name, f_device_name) &&
                f_host_api_index == f_padevice->hostApi &&
-                f_padevice->maxOutputChannels)
+               f_padevice->maxOutputChannels)
             {
                 outputParameters.device = f_i;
                 inputParameters.device = f_i;
