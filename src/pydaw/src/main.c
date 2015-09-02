@@ -543,6 +543,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
                         }
                     }
                     printf("host api: %s\n", f_value_char);
+                    printf("host api index %i\n", f_host_api_index);
                 }
                 else if(!strcmp(f_key_char, "name"))
                 {
@@ -678,11 +679,18 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         for(f_i = 0; f_i < Pa_GetDeviceCount(); ++f_i)
         {
             const PaDeviceInfo * f_padevice = Pa_GetDeviceInfo(f_i);
-            printf("\"%s\"\n", f_padevice->name);
+            printf("\"%s\" %i %i\n", f_padevice->name, f_padevice->hostApi,
+                f_padevice->maxOutputChannels);
             if(!strcmp(f_padevice->name, f_device_name) &&
-               f_host_api_index == f_padevice->hostApi &&
-               f_padevice->maxOutputChannels)
+               f_host_api_index == f_padevice->hostApi)
             {
+                if(!f_padevice->maxOutputChannels)
+                {
+                    printf("Error:  PaDevice->maxOutputChannels == 0, "
+                        "device may already be open by another application\n");
+                    mk_exit(RET_CODE_DEVICE_NOT_FOUND);
+                }
+
                 outputParameters.device = f_i;
                 inputParameters.device = f_i;
                 f_found_index = 1;
