@@ -441,7 +441,10 @@ NO_OPTIMIZATION int main(int argc, char **argv)
     PaStream *stream;
     PaError err;
     err = Pa_Initialize();
-    //if( err != paNoError ) goto error;
+    if(err != paNoError)
+    {
+        printf("Pa_Initialize error:  %s\n", Pa_GetErrorText(err));
+    }
     /* default input device */
 
 #ifndef NO_MIDI
@@ -856,7 +859,12 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         err = Pa_CloseStream(stream);
     }
 
-    Pa_Terminate();
+    err = Pa_Terminate();
+    if(err != paNoError)
+    {
+        printf("Pa_Terminate error:  %s\n", Pa_GetErrorText(err));
+    }
+
 
 #ifndef NO_MIDI
     for(f_i = 0; f_i < MIDI_DEVICES.count; ++f_i)
