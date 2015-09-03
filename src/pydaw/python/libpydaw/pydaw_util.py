@@ -40,6 +40,21 @@ IS_MAC_OSX = "darwin" in sys.platform
 
 IS_A_TTY = sys.stdin.isatty()
 
+def get_win_drives():
+    from ctypes import windll
+    drives = []
+    bitmask = windll.kernel32.GetLogicalDrives()
+    for x in range(ord('A'), ord('Z') + 1):
+        if bitmask & 1:
+            drives.append(chr(x) + ":\\")
+        bitmask >>= 1
+    return drives
+
+if IS_WINDOWS:
+    WIN_DRIVES = get_win_drives()
+    print(WIN_DRIVES)
+
+
 PYTHON_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MKENGINE_DIR = os.path.abspath(os.path.join(PYTHON_DIR, "..", "mkengine"))
 
