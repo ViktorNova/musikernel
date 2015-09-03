@@ -1766,7 +1766,7 @@ class AbstractFileBrowserWidget():
 
     def up_contextMenuEvent(self, a_event):
         if (pydaw_util.IS_LINUX and self.last_open_dir != "/") or (
-        pydaw_util.IS_WINDOWS and len(self.last_open_dir) > 3):
+        pydaw_util.IS_WINDOWS and self.last_open_dir):
             f_menu = QMenu(self.up_button)
             f_menu.triggered.connect(self.open_path_from_action)
             f_arr = self.last_open_dir.split(os.path.sep)
@@ -1782,6 +1782,9 @@ class AbstractFileBrowserWidget():
             for f_path in reversed(f_paths):
                 f_action = f_menu.addAction(f_path)
                 f_action.path = f_path
+            if pydaw_util.IS_WINDOWS:
+                f_action = f_menu.addAction("")
+                f_action.path = ""
             f_menu.exec_(QCursor.pos())
 
     def on_filter_folders(self):
@@ -1941,15 +1944,27 @@ class AbstractFileBrowserWidget():
         self.set_folder("..")
 
     def set_folder(self, a_folder, a_full_path=False):
+        a_folder = str(a_folder)
         self.list_file.clear()
         self.list_folder.clear()
         self.folder_filter_lineedit.clear()
         f_old_path = self.last_open_dir
         if a_full_path:
-            self.last_open_dir = str(a_folder)
+            self.last_open_dir = a_folder
         else:
-            self.last_open_dir = os.path.abspath(
-                os.path.join(self.last_open_dir, a_folder))
+            if pydaw_util.IS_WINDOWS and (
+            (a_full_path and not a_folder) or
+            (not a_full_path and len(self.last_open_dir) == 3
+            and a_folder == "..")):
+                self.last_open_dir = ""
+                for drive in pydaw_util.get_win_drives():
+                    f_item = QListWidgetItem(drive)
+                    f_item.setToolTip(drive)
+                    self.list_file.addItem(f_item)
+                return
+            else:
+                self.last_open_dir = os.path.abspath(
+                    os.path.join(self.last_open_dir, a_folder))
         self.last_open_dir = os.path.normpath(self.last_open_dir)
         if self.last_open_dir != self.history[-1]:
             #don't keep more than one copy in history
