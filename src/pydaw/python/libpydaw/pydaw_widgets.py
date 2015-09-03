@@ -1961,7 +1961,7 @@ class AbstractFileBrowserWidget():
                 for drive in pydaw_util.get_win_drives():
                     f_item = QListWidgetItem(drive)
                     f_item.setToolTip(drive)
-                    self.list_file.addItem(f_item)
+                    self.list_folder.addItem(f_item)
                 return
             else:
                 self.last_open_dir = os.path.abspath(
