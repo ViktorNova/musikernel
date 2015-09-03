@@ -1957,6 +1957,7 @@ class AbstractFileBrowserWidget():
             (not a_full_path and len(self.last_open_dir) == 3
             and a_folder == "..")):
                 self.last_open_dir = ""
+                self.folder_path_lineedit.setText("")
                 for drive in pydaw_util.get_win_drives():
                     f_item = QListWidgetItem(drive)
                     f_item.setToolTip(drive)
