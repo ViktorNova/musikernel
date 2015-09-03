@@ -50,10 +50,6 @@ def get_win_drives():
         bitmask >>= 1
     return drives
 
-if IS_WINDOWS:
-    WIN_DRIVES = get_win_drives()
-    print(WIN_DRIVES)
-
 
 PYTHON_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MKENGINE_DIR = os.path.abspath(os.path.join(PYTHON_DIR, "..", "mkengine"))
