@@ -40,13 +40,35 @@ IS_MAC_OSX = "darwin" in sys.platform
 
 IS_A_TTY = sys.stdin.isatty()
 
+class WinVolInfo:
+    def __init__(self):
+        self.volumeNameBuffer = ctypes.create_unicode_buffer(1024)
+        self.fileSystemNameBuffer = ctypes.create_unicode_buffer(1024)
+
+    def get_label(self, drive):
+        #retcode = \
+        ctypes.windll.kernel32.GetVolumeInformationW(
+            ctypes.c_wchar_p(drive),
+            self.volumeNameBuffer,
+            ctypes.sizeof(self.volumeNameBuffer),
+            None, None, None,
+            self.fileSystemNameBuffer,
+            ctypes.sizeof(self.fileSystemNameBuffer)
+        )
+        return str(self.volumeNameBuffer.value)
+
+if IS_WINDOWS:
+    WIN_VOL_INFO = WinVolInfo()
+
 def get_win_drives():
     from ctypes import windll
     drives = []
     bitmask = windll.kernel32.GetLogicalDrives()
     for x in range(ord('A'), ord('Z') + 1):
         if bitmask & 1:
-            drives.append(chr(x) + ":\\")
+            drive = chr(x) + ":\\"
+            label = WIN_VOL_INFO.get_label(drive)
+            drives.append((drive, label))
         bitmask >>= 1
     return drives
 
