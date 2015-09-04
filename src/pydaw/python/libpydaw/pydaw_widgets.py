@@ -1949,11 +1949,11 @@ class AbstractFileBrowserWidget():
         self.list_folder.clear()
         self.folder_filter_lineedit.clear()
         f_old_path = self.last_open_dir
-        if a_full_path:
+        if a_full_path and a_folder:  # a_folder being empty is handled...
             self.last_open_dir = a_folder
         else:
             if pydaw_util.IS_WINDOWS and (
-            (a_full_path and not a_folder) or
+            (a_full_path and not a_folder) or #...here, should be Windows only
             (not a_full_path and len(self.last_open_dir) == 3
             and a_folder == "..")):
                 self.last_open_dir = ""
