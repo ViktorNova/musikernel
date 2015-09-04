@@ -192,6 +192,11 @@ def handle_engine_error(exitCode):
         QMessageBox.warning(
             libmk.MAIN_WINDOW, "Error",
             "Unknown error opening audio device")
+    if exitCode == 1003:
+        QMessageBox.warning(
+            libmk.MAIN_WINDOW, "Error",
+            "The audio device was busy, make sure that no other applications "
+            "are using the device and try restarting MusiKernel")
     else:
         QMessageBox.warning(
             libmk.MAIN_WINDOW, "Error",

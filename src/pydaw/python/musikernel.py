@@ -1495,6 +1495,12 @@ SPLASH_SCREEN.close()
 SPLASH_SCREEN = None
 MAIN_WINDOW.show()
 
+if pydaw_util.ENGINE_RETCODE is not None:
+    pydaw_util.handle_engine_error(pydaw_util.ENGINE_RETCODE)
+    if pydaw_util.ENGINE_RETCODE == 1003:
+        MAIN_WINDOW.ignore_close_event = False
+        MAIN_WINDOW.prepare_to_quit()
+
 # Workaround for weird stuff happening in Windows during initialization
 libmk.IPC_ENABLED = True
 

@@ -83,6 +83,7 @@ void _mk_exit()
 #define RET_CODE_DEVICE_NOT_FOUND 1000
 #define RET_CODE_CONFIG_NOT_FOUND 1001
 #define RET_CODE_AUDIO_DEVICE_ERROR 1002
+#define RET_CODE_AUDIO_DEVICE_BUSY 1003
 
 static float **pluginOutputBuffers;
 
@@ -704,7 +705,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
                 {
                     printf("Error:  PaDevice->maxOutputChannels == 0, "
                         "device may already be open by another application\n");
-                    mk_exit(RET_CODE_DEVICE_NOT_FOUND);
+                    mk_exit(RET_CODE_AUDIO_DEVICE_BUSY);
                 }
 
                 outputParameters.device = f_i;
