@@ -95,7 +95,7 @@ with open(os.path.join(CWD, "..", "src", "minor-version.txt")) as fh:
 with open(os.path.join(CWD, "..", "src", "major-version.txt")) as fh:
     MAJOR_VERSION = fh.read().strip()
 
-for arch, bits in (("i686", "32"), ("x86_64", "64")):
+for arch, bits in (("x86_64", "64"),): # ("i686", "32"),
     src = ("mingw-w64-{arch}-{MAJOR_VERSION}-{MINOR_VERSION}"
         "-1-any.pkg.tar.xz".format(
         arch=arch, MAJOR_VERSION=MAJOR_VERSION, MINOR_VERSION=MINOR_VERSION))
