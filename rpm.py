@@ -119,7 +119,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %attr(4755, root, root) %{{_usr}}/bin/{0}-engine
 
-%attr(755, root, root) %{{_usr}}/bin/{0}
+%attr(755, root, root) %{{_usr}}/bin/{0}.py
 %attr(755, root, root) %{{_usr}}/bin/{0}_render
 %attr(755, root, root) %{{_usr}}/bin/{0}_render-dbg
 %attr(755, root, root) %{{_usr}}/bin/{0}-engine-dbg

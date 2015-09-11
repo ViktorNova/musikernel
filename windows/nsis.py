@@ -95,6 +95,8 @@ with open(os.path.join(CWD, "..", "src", "minor-version.txt")) as fh:
 with open(os.path.join(CWD, "..", "src", "major-version.txt")) as fh:
     MAJOR_VERSION = fh.read().strip()
 
+shutil.copy(os.path.join(CWD, "musikernel1.bat"), r"C:\musikernel\mingw64\bin")
+
 for arch, bits in (("x86_64", "64"),): # ("i686", "32"),
     src = ("mingw-w64-{arch}-{MAJOR_VERSION}-{MINOR_VERSION}"
         "-1-any.pkg.tar.xz".format(

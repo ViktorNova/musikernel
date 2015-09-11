@@ -101,7 +101,7 @@ install:
 	python/libpydaw/*~ python/core python/*/__pycache__ \
 	python/mkplugins/__pycache__
 	install -d $(DESTDIR)$(PREFIX)/bin
-	install -m 755 $(PYDAW_VERSION) $(DESTDIR)$(PREFIX)/bin
+	install -m 755 $(PYDAW_VERSION).py $(DESTDIR)$(PREFIX)/bin
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw
 	install -m 755 $(PYDAW_VERSION)-engine-dbg $(DESTDIR)$(PREFIX)/bin

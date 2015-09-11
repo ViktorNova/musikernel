@@ -2,7 +2,7 @@
 Name=MusiKernel
 GenericName=MusiKernel
 Comment=A suite of audio hosts and plugins
-Exec=musikernel1
+Exec=musikernel1.py
 Icon=musikernel1
 Terminal=false
 Type=Application
