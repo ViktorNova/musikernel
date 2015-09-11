@@ -73,7 +73,7 @@ install_mingw:
 	python/libpydaw/*~ python/core python/*/__pycache__ \
 	python/mkplugins/__pycache__
 	install -d $(DESTDIR)$(PREFIX)/bin
-	install -m 755 $(PYDAW_VERSION) $(DESTDIR)$(PREFIX)/bin
+	install -m 755 $(PYDAW_VERSION).py $(DESTDIR)$(PREFIX)/bin
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)
 	install -d $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw
 	cp -r python $(DESTDIR)$(PREFIX)/lib/$(PYDAW_VERSION)/pydaw
