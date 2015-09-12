@@ -24,10 +24,10 @@ from PyQt5.QtWidgets import *
 
 try:
     from libpydaw import pydaw_util, portaudio, portmidi
-    from libpydaw.translate import _
+    from libpydaw.translate import _, global_encoding
 except ImportError:
     import pydaw_util, portaudio, portmidi
-    from translate import _
+    from translate import _, global_encoding
 
 f_device_tooltip = _(
 """
@@ -235,7 +235,7 @@ class pydaw_device_dialog:
 
         for i in range(f_count):
             f_dev = self.pyaudio.Pa_GetDeviceInfo(i)
-            f_dev_name = f_dev.contents.name.decode("utf-8")
+            f_dev_name = f_dev.contents.name.decode(global_encoding)
             f_audio_device_names.append(f_dev_name)
             if f_device_str == f_dev_name:
                 break
@@ -390,7 +390,7 @@ class pydaw_device_dialog:
         for i in range(f_count):
             f_host_api_names.append(
                 self.pyaudio.Pa_GetHostApiInfo(
-                i).contents.name.decode("utf-8"))
+                i).contents.name.decode(global_encoding))
 
         f_count = self.pyaudio.Pa_GetDeviceCount()
 
@@ -400,7 +400,7 @@ class pydaw_device_dialog:
 
         for i in range(f_count):
             f_dev = self.pyaudio.Pa_GetDeviceInfo(i)
-            f_dev_name = f_dev.contents.name.decode("utf-8")
+            f_dev_name = f_dev.contents.name.decode(global_encoding)
             print("\nDevice Index: {}".format(i))
             print("Name : {}".format(f_dev_name))
             print("maxInputChannels : {}".format(
@@ -435,7 +435,7 @@ class pydaw_device_dialog:
         for loop in range(self.pypm.Pm_CountDevices()):
             f_midi_device = self.pypm.Pm_GetDeviceInfo(loop)
             f_midi_device_name = \
-                f_midi_device.contents.name.decode("utf-8")
+                f_midi_device.contents.name.decode(global_encoding)
 #                print("DeviceID: {} Name: '{}' Input?: {} "
 #                    "Output?: {} Opened: {} ".format(
 #                    loop, f_midi_device_name, f_midi_device.contents.input,
