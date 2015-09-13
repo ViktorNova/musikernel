@@ -24,7 +24,8 @@ prepare() {
   cd ${srcdir}/${_realname}
   patch -p2 -i ${srcdir}/mingw-w64-fix.patch
   patch -p2 -i ${srcdir}/mingw-w64-cmake-allow-cxx.patch
-  unzip asiosdk2.3 -d ${srcdir}
+  #unzip asiosdk2.3 -d ${srcdir}
+  cp -r ../../ASIOSDK2.3 ..
 
   autoconf
 }
