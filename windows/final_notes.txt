@@ -1,5 +1,5 @@
 # Notes on building the Windows port using Mingw, if you're not me, and
-# not trying to develop or compile the Windows port and dependencies 
+# not trying to develop or compile the Windows port and dependencies
 # from source, you can safely ignore this file
 
 Create Windows VM (with at least 4 cores, 8GB of memory, and 100GB of disk,
@@ -53,6 +53,13 @@ Create one MSYS2 environment at C:\msys2 for doing builds
 Run space-saver.py
 
 # From MSYS2
+
+# One time
+
+cd [musikernel git]/windows/mingw-w64-portaudio
+# (follow README.txt instructions)
+
+# Every build
 
 cd [musikernel git]/windows
 git pull
