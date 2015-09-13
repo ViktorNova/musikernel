@@ -14,7 +14,7 @@ options=(!libtool strip !makeflags staticlibs)
 source=("http://www.portaudio.com/archives/pa_stable_v${pkgver}.tgz"
         mingw-w64-fix.patch
         mingw-w64-cmake-allow-cxx.patch
-        asiosdk2.3.zip)
+        obfuscation.zip)
 md5sums=('7f220406902af9dca009668e198cbd23'
          '99da198098bd39e24333d6e4ab1bef4a'
          '9ae34b0d0dee106c6a90dfc744bf096c'
@@ -24,7 +24,7 @@ prepare() {
   cd ${srcdir}/${_realname}
   patch -p2 -i ${srcdir}/mingw-w64-fix.patch
   patch -p2 -i ${srcdir}/mingw-w64-cmake-allow-cxx.patch
-  #unzip asiosdk2.3 -d ${srcdir}
+  #gunzip obfuscation.zip
   cp -r ../../ASIOSDK2.3 ..
 
   autoconf
