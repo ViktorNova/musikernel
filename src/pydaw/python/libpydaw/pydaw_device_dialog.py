@@ -128,8 +128,8 @@ device directly using ALSA for best performance, stability and latency.
 """)
 elif pydaw_util.IS_WINDOWS:
     HOST_API_TOOLTIP += _("""
-If possible, you should use an API capable of low latency such as
-WDM-KS or WASAPI.  Unfortunately, ASIO is not supported at this time.
+If possible, you should use an API capable of low latency
+such as ASIO or WDM-KS.
 """)
 
 DEVICE_TOOLTIP = _("""
