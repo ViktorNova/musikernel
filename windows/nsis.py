@@ -96,6 +96,14 @@ with open(os.path.join(CWD, "..", "src", "major-version.txt")) as fh:
     MAJOR_VERSION = fh.read().strip()
 
 shutil.copy(os.path.join(CWD, "musikernel1.bat"), r"C:\musikernel\mingw64\bin")
+shutil.copy(
+    os.path.join(CWD, "mingw-w64-portaudio",
+        "mingw-w64-x86_64-portaudio-19_20140130-2-any.pkg.tar.xz"),
+    r"C:\musikernel\home\pydaw")
+
+#mingw-w64-i686-portaudio-19_20140130-2-any.pkg.tar.xz
+
+
 
 for arch, bits in (("x86_64", "64"),): # ("i686", "32"),
     src = ("mingw-w64-{arch}-{MAJOR_VERSION}-{MINOR_VERSION}"
