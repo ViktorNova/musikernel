@@ -6,6 +6,12 @@ pydaw_version = "musikernel1"
 
 print("sys.argv == {}".format(sys.argv))
 
+# When respawning, give the old process a chance to garbage collect first
+if "--delay" in sys.argv:
+    sys.argv.remove("--delay")
+    import time
+    time.sleep(2)
+
 if len(sys.argv) > 1:
     import signal
 

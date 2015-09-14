@@ -1405,13 +1405,17 @@ def respawn():
     if pydaw_util.IS_CYGWIN:
         CHILD_PROC = subprocess.Popen(["/bin/python3.2m"] + sys.argv)
     elif pydaw_util.IS_WINDOWS:
-        CHILD_PROC = subprocess.Popen(
-            ["python3.exe", pydaw_util.global_pydaw_version_string + ".py"])
+        CHILD_PROC = subprocess.Popen([
+            "python3.exe", pydaw_util.global_pydaw_version_string + ".py",
+            "--delay"])
     else:
-        CHILD_PROC = subprocess.Popen(sys.argv)
+        args = sys.argv[:]
+        if "--delay" not in args:
+            args.append("--delay")
+        CHILD_PROC = subprocess.Popen(args)
         #, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
     #CHILD_PROC.wait()
-    time.sleep(6.0)
+    #time.sleep(6.0)
     print("Parent UI process exiting")
 
 #########  Setup and run #########
