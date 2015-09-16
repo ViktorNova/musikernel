@@ -9,7 +9,7 @@ PYDAW_VERSION = $(shell cat ../major-version.txt)
 PLAT_FLAGS     ?= -mstackrealign -msse -msse2 -msse3 -mfpmath=sse \
 -mtune=generic
 
-CACHE_LINE_SIZE = 64  # $(shell getconf LEVEL1_DCACHE_LINESIZE)
+CACHE_LINE_SIZE = $(shell getconf LEVEL1_DCACHE_LINESIZE || echo 64)
 
 #Flags that LLVM/Clang complain about
 OPTIMIZE_FLAGS ?= -fprefetch-loop-arrays -floop-optimize \
