@@ -1183,6 +1183,7 @@ class SequencerItem(QGraphicsRectItem):
                         f_stretched_items.append(f_ts_result)
                 f_audio_item.setRect(0.0, 0.0, f_x, REGION_EDITOR_TRACK_HEIGHT)
             else:
+                f_item.modified = True
                 f_pos_y = f_audio_item.pos().y()
                 if f_audio_item.is_copying:
                     f_reset_selection = True

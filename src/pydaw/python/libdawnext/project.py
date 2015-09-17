@@ -857,13 +857,14 @@ class DawNextProject(libmk.AbstractProject):
 class pydaw_sequencer_item:
     def __init__(
             self, a_track_num, a_start_beat, a_length_beats,
-            a_item_uid=-1, a_start_pos=0.0):
+            a_item_uid=-1, a_start_pos=0.0, modified=True):
         self.track_num = int(a_track_num)
         self.start_beat = float(a_start_beat)
         self.length_beats = float(a_length_beats)
         self.item_uid = int(a_item_uid)
         self.start_offset = float(a_start_pos)
         #self.sample_start = float(a_start_pos)
+        self.modified = modified
 
     def clone(self):
         f_self = str(self).split("|")
@@ -878,7 +879,8 @@ class pydaw_sequencer_item:
 
     def __lt__(self, other):
         if self.track_num == other.track_num:
-            return self.start_beat < other.start_beat
+            return ((self.start_beat < other.start_beat) or
+                (self.start_beat == other.start_beat and not self.modified))
         else:
             return self.track_num < other.track_num
 
@@ -1098,18 +1100,24 @@ class pydaw_sequencer:
         return max((f_item_max, f_marker_max)) + 64
 
     def fix_overlaps(self):
-        f_to_delete = []
+        # Delete items with length < 1/16th note
+        f_to_delete = {x for x in self.items if x.length_beats < 0.25}
         for f_i in range(TRACK_COUNT_ALL):
-            f_items = [x for x in self.items if x.track_num == f_i]
+            f_items = [
+                x for x in self.items if x.track_num == f_i and
+                x not in f_to_delete]
             if f_items:
                 f_items.sort()
                 for f_item, f_next in zip(f_items, f_items[1:]):
+                    if f_item.start_beat == f_next.start_beat:
+                        # sort is by start_beat then (not modified)
+                        f_to_delete.add(f_item)
                     f_end = f_item.start_beat + f_item.length_beats
                     if f_end > f_next.start_beat:
-                        f_item.length_beats = (f_next.start_beat -
-                            f_item.start_beat)
-                        if f_item.length_beats == 0:
-                            f_to_delete.append(f_item)
+                        f_item.length_beats = (
+                            f_next.start_beat - f_item.start_beat)
+                        if f_item.length_beats < 0.25:
+                            f_to_delete.add(f_item)
         for f_item in f_to_delete:
             self.items.remove(f_item)
 
@@ -1157,7 +1165,8 @@ class pydaw_sequencer:
                     continue
                 if f_item_arr[0] == "C":
                     continue
-                f_result.add_item(pydaw_sequencer_item(*f_item_arr))
+                f_result.add_item(
+                    pydaw_sequencer_item(*f_item_arr, modified=False))
         f_result.items.sort()
         return f_result
 
