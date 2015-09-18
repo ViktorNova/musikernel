@@ -88,7 +88,10 @@ if len(sys.argv) > 4:
 else:
     SR = 44100
 
-os.system(
+result = os.system(
     TOOLS[TOOL].format(BIN=BIN, HOST=HOST, PROJECT=PROJECT,
     CORES=CORES, SR=SR, TIME=TIME))
+
+if result:
+    print("Returned exit code {}".format(result))
 
