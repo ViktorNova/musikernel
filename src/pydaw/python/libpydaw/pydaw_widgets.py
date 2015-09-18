@@ -3297,8 +3297,8 @@ class pydaw_abstract_custom_oscillator:
 
 
 ADDITIVE_OSC_HEIGHT = 310
-ADDITIVE_OSC_MIN_AMP = -30
-ADDITIVE_OSC_INC = 10 #int(ADDITIVE_OSC_HEIGHT / -ADDITIVE_OSC_MIN_AMP)
+ADDITIVE_OSC_MIN_AMP = -50
+ADDITIVE_OSC_INC = 6 #int(ADDITIVE_OSC_HEIGHT / -ADDITIVE_OSC_MIN_AMP)
 ADDITIVE_MAX_Y_POS = ADDITIVE_OSC_HEIGHT - ADDITIVE_OSC_INC
 ADDITIVE_OSC_HARMONIC_COUNT = 32
 ADDITIVE_OSC_BAR_WIDTH = 10
@@ -3329,7 +3329,7 @@ def global_get_sine(a_size, a_phase):
     if f_key in ADD_OSC_SINE_CACHE:
         return numpy.copy(ADD_OSC_SINE_CACHE[f_key])
     else:
-        f_phase = a_phase * numpy.pi
+        f_phase = a_phase * numpy.pi * 2.0
         f_lin = numpy.linspace(f_phase, (2.0 * numpy.pi) + f_phase, a_size)
         f_sin = numpy.sin(f_lin)
         ADD_OSC_SINE_CACHE[f_key] = f_sin
