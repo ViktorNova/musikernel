@@ -1122,7 +1122,8 @@ class wayv_plugin_ui(pydaw_abstract_plugin_ui):
         f_eng_config_keys = ["wayv_add_eng0", "wayv_add_eng1", "wayv_add_eng2"]
         f_ui_phase_keys = ["wayv_add_phase0", "wayv_add_phase1",
                            "wayv_add_phase2"]
-        f_empty_ui_val = "|".join(["-30"] * ADDITIVE_OSC_HARMONIC_COUNT)
+        f_empty_ui_val = "|".join(
+            [str(ADDITIVE_OSC_MIN_AMP)] * ADDITIVE_OSC_HARMONIC_COUNT)
         f_empty_eng_val = "{}|{}".format(ADDITIVE_WAVETABLE_SIZE,
             "|".join(["0.0"] * ADDITIVE_WAVETABLE_SIZE))
         for f_key in (f_ui_config_keys + f_ui_phase_keys):
