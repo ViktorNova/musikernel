@@ -134,6 +134,7 @@ rm -rf $RPM_BUILD_ROOT
 %{{_usr}}/lib/{0}/pydaw/python/edmnext.py
 %{{_usr}}/lib/{0}/presets/MODULEX.mkp
 %{{_usr}}/lib/{0}/presets/RAYV.mkp
+%{{_usr}}/lib/{0}/presets/RAYV2.mkp
 %{{_usr}}/lib/{0}/presets/WAYV.mkp
 %{{_usr}}/lib/{0}/pydaw/python/libpydaw/__init__.py
 %{{_usr}}/lib/{0}/pydaw/python/libpydaw/liblo.cpython-{4}m.so
@@ -190,6 +191,7 @@ rm -rf $RPM_BUILD_ROOT
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/euphoria.py
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/modulex.py
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/rayv.py
+%{{_usr}}/lib/{0}/pydaw/python/mkplugins/rayv2.py
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/wayv.py
 
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/mk_delay.py
@@ -299,6 +301,8 @@ rm -rf $RPM_BUILD_ROOT
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/__pycache__/modulex.cpython-34.pyo
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/__pycache__/rayv.cpython-34.pyc
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/__pycache__/rayv.cpython-34.pyo
+%{{_usr}}/lib/{0}/pydaw/python/mkplugins/__pycache__/rayv2.cpython-34.pyc
+%{{_usr}}/lib/{0}/pydaw/python/mkplugins/__pycache__/rayv2.cpython-34.pyo
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/__pycache__/sidechain_comp.cpython-34.pyc
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/__pycache__/sidechain_comp.cpython-34.pyo
 %{{_usr}}/lib/{0}/pydaw/python/mkplugins/__pycache__/simple_fader.cpython-34.pyc

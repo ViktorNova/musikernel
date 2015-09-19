@@ -26,6 +26,7 @@ extern "C" {
 #include "../plugins/euphoria/synth.c"
 #include "../plugins/way_v/synth.c"
 #include "../plugins/ray_v/synth.c"
+#include "../plugins/ray_v2/synth.c"
 
 #include "../plugins/mk_delay/synth.c"
 #include "../plugins/mk_eq/synth.c"
@@ -77,7 +78,8 @@ PYFX_Descriptor_Function PLUGIN_DESC_FUNCS[] = {
     xfade_PYFX_descriptor, //12
     mk_comp_PYFX_descriptor, //13
     mk_vocoder_PYFX_descriptor, //14
-    mk_lim_PYFX_descriptor //15
+    mk_lim_PYFX_descriptor, //15
+    rayv2_PYFX_descriptor //16
 };
 
 NO_OPTIMIZATION void g_pydaw_plugin_init(
@@ -130,4 +132,3 @@ void v_free_pydaw_plugin(t_pydaw_plugin * a_plugin)
 */
 
 #endif	/* PYDAW_PLUGIN_H */
-

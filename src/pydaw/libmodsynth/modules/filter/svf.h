@@ -503,4 +503,3 @@ t_state_variable_filter * g_svf_get(float a_sample_rate)
 #endif
 
 #endif	/* PYDAW_SVF_H */
-

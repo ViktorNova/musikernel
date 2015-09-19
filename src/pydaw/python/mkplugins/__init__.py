@@ -23,6 +23,7 @@ from libpydaw.translate import _
 
 import mkplugins.euphoria
 import mkplugins.rayv
+import mkplugins.rayv2
 import mkplugins.wayv
 import mkplugins.modulex
 import mkplugins.mk_channel
@@ -45,7 +46,7 @@ from libpydaw.pydaw_util import pydaw_clip_value
 PLUGIN_INSTRUMENT_COUNT = 3  # For inserting the split line into the menu
 
 PLUGIN_NAMES = [
-    "Euphoria", "Ray-V", "Way-V", "MK Channel", "MK Compressor",
+    "Euphoria", "Ray-V", "Ray-V 2", "Way-V", "MK Channel", "MK Compressor",
     "MK Delay", "MK EQ", "MK Limiter", "MK Vocoder", "Modulex",
     "Sidechain Comp.", "Simple Fader", "Simple Reverb", "TriggerFX",
     "X-Fade",
@@ -55,10 +56,10 @@ PLUGIN_UIDS = {
     "None":0, "Euphoria":1, "Ray-V":2, "Way-V":3, "Modulex":4, "MK Delay":5,
     "MK EQ":6, "Simple Fader":7, "Simple Reverb":8, "TriggerFX":9,
     "Sidechain Comp.":10, "MK Channel":11, "X-Fade":12, "MK Compressor":13,
-    "MK Vocoder":14, "MK Limiter":15
+    "MK Vocoder":14, "MK Limiter":15, "Ray-V 2": 16,
     }
 
-PLUGINS_SYNTH = ["Ray-V", "Way-V"]
+PLUGINS_SYNTH = ["Ray-V", "Ray-V 2", "Way-V"]
 PLUGINS_SAMPLER = ["Euphoria",]
 PLUGINS_EFFECTS = ["Modulex", "MK Delay", "MK EQ", "Simple Reverb"]
 PLUGINS_MIDI_TRIGGERED = ["TriggerFX"]
@@ -101,12 +102,14 @@ PLUGIN_UI_TYPES = {
     13:mkplugins.mk_compressor.mk_comp_plugin_ui,
     14:mkplugins.mk_vocoder.mk_vocoder_plugin_ui,
     15:mkplugins.mk_limiter.mk_lim_plugin_ui,
+    16:mkplugins.rayv2.rayv_plugin_ui,
 }
 
 PORTMAP_DICT = {
     "Euphoria":mkplugins.euphoria.EUPHORIA_PORT_MAP,
     "Way-V":mkplugins.wayv.WAYV_PORT_MAP,
     "Ray-V":mkplugins.rayv.RAYV_PORT_MAP,
+    "Ray-V 2":mkplugins.rayv2.RAYV_PORT_MAP,
     "Modulex":mkplugins.modulex.MODULEX_PORT_MAP,
     "MK Channel":mkplugins.mk_channel.MKCHNL_PORT_MAP,
     "MK Compressor":mkplugins.mk_compressor.MK_COMP_PORT_MAP,

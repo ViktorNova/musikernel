@@ -20,22 +20,22 @@ GNU General Public License for more details.
 #include "synth.h"
 
 
-static void v_run_rayv_voice(t_rayv *p, t_voc_single_voice * a_poly_voice,
-        t_rayv_poly_voice *d, PYFX_Data *out0, PYFX_Data *out1, int a_i);
+static void v_run_rayv2_voice(t_rayv2 *p, t_voc_single_voice * a_poly_voice,
+        t_rayv2_poly_voice *d, PYFX_Data *out0, PYFX_Data *out1, int a_i);
 
-static void v_cleanup_rayv(PYFX_Handle instance)
+static void v_cleanup_rayv2(PYFX_Handle instance)
 {
     free(instance);
 }
 
-static void v_rayv_or_prep(PYFX_Handle instance)
+static void v_rayv2_or_prep(PYFX_Handle instance)
 {
-    t_rayv *plugin = (t_rayv *)instance;
+    t_rayv2 *plugin = (t_rayv2 *)instance;
     int f_i2 = 0;
     register int f_i;
-    while(f_i2 < RAYV_POLYPHONY)
+    while(f_i2 < RAYV2_POLYPHONY)
     {
-        t_rayv_poly_voice * f_voice = plugin->data[f_i2];
+        t_rayv2_poly_voice * f_voice = plugin->data[f_i2];
         f_i = 0;
         while(f_i < 1000000)
         {
@@ -47,36 +47,36 @@ static void v_rayv_or_prep(PYFX_Handle instance)
     }
 }
 
-static void v_rayv_set_cc_map(PYFX_Handle instance, char * a_msg)
+static void v_rayv2_set_cc_map(PYFX_Handle instance, char * a_msg)
 {
-    t_rayv *plugin = (t_rayv *)instance;
+    t_rayv2 *plugin = (t_rayv2 *)instance;
     v_generic_cc_map_set(&plugin->cc_map, a_msg);
 }
 
-static void rayvPanic(PYFX_Handle instance)
+static void rayv2Panic(PYFX_Handle instance)
 {
-    t_rayv *plugin = (t_rayv *)instance;
+    t_rayv2 *plugin = (t_rayv2 *)instance;
     int f_i = 0;
-    while(f_i < RAYV_POLYPHONY)
+    while(f_i < RAYV2_POLYPHONY)
     {
         v_adsr_kill(&plugin->data[f_i]->adsr_amp);
         ++f_i;
     }
 }
 
-static void v_rayv_on_stop(PYFX_Handle instance)
+static void v_rayv2_on_stop(PYFX_Handle instance)
 {
-    t_rayv *plugin = (t_rayv *)instance;
+    t_rayv2 *plugin = (t_rayv2 *)instance;
     int f_i = 0;
-    while(f_i < RAYV_POLYPHONY)
+    while(f_i < RAYV2_POLYPHONY)
     {
-        v_rayv_poly_note_off(plugin->data[f_i], 0);
+        v_rayv2_poly_note_off(plugin->data[f_i], 0);
         ++f_i;
     }
     plugin->sv_pitch_bend_value = 0.0f;
 }
 
-static void v_rayv_connect_buffer(PYFX_Handle instance, int a_index,
+static void v_rayv2_connect_buffer(PYFX_Handle instance, int a_index,
         float * DataLocation, int a_is_sidechain)
 {
     if(a_is_sidechain)
@@ -84,7 +84,7 @@ static void v_rayv_connect_buffer(PYFX_Handle instance, int a_index,
         return;
     }
 
-    t_rayv *plugin = (t_rayv*)instance;
+    t_rayv2 *plugin = (t_rayv2*)instance;
 
     switch(a_index)
     {
@@ -100,167 +100,167 @@ static void v_rayv_connect_buffer(PYFX_Handle instance, int a_index,
     }
 }
 
-static void v_rayv_connect_port(PYFX_Handle instance, int port,
+static void v_rayv2_connect_port(PYFX_Handle instance, int port,
 			  PYFX_Data * data)
 {
-    t_rayv *plugin;
+    t_rayv2 *plugin;
 
-    plugin = (t_rayv *) instance;
+    plugin = (t_rayv2 *) instance;
 
     switch (port)
     {
-        case RAYV_ATTACK:
+        case RAYV2_ATTACK:
             plugin->attack = data;
             break;
-        case RAYV_DECAY:
+        case RAYV2_DECAY:
             plugin->decay = data;
             break;
-        case RAYV_SUSTAIN:
+        case RAYV2_SUSTAIN:
             plugin->sustain = data;
             break;
-        case RAYV_RELEASE:
+        case RAYV2_RELEASE:
             plugin->release = data;
             break;
-        case RAYV_TIMBRE:
+        case RAYV2_TIMBRE:
             plugin->timbre = data;
             break;
-        case RAYV_RES:
+        case RAYV2_RES:
             plugin->res = data;
             break;
-        case RAYV_DIST:
+        case RAYV2_DIST:
             plugin->dist = data;
             break;
-        case RAYV_FILTER_ATTACK:
+        case RAYV2_FILTER_ATTACK:
             plugin->attack_f = data;
             break;
-        case RAYV_FILTER_DECAY:
+        case RAYV2_FILTER_DECAY:
             plugin->decay_f = data;
             break;
-        case RAYV_FILTER_SUSTAIN:
+        case RAYV2_FILTER_SUSTAIN:
             plugin->sustain_f = data;
             break;
-        case RAYV_FILTER_RELEASE:
+        case RAYV2_FILTER_RELEASE:
             plugin->release_f = data;
             break;
-        case RAYV_NOISE_AMP:
+        case RAYV2_NOISE_AMP:
             plugin->noise_amp = data;
             break;
-        case RAYV_DIST_WET:
+        case RAYV2_DIST_WET:
             plugin->dist_wet = data;
             break;
-        case RAYV_FILTER_ENV_AMT:
+        case RAYV2_FILTER_ENV_AMT:
             plugin->filter_env_amt = data;
             break;
-        case RAYV_MASTER_VOLUME:
+        case RAYV2_MASTER_VOLUME:
             plugin->master_vol = data;
             break;
-        case RAYV_OSC1_PITCH:
+        case RAYV2_OSC1_PITCH:
             plugin->osc1pitch = data;
             break;
-        case RAYV_OSC1_TUNE:
+        case RAYV2_OSC1_TUNE:
             plugin->osc1tune = data;
             break;
-        case RAYV_OSC1_TYPE:
+        case RAYV2_OSC1_TYPE:
             plugin->osc1type = data;
             break;
-        case RAYV_OSC1_VOLUME:
+        case RAYV2_OSC1_VOLUME:
             plugin->osc1vol = data;
             break;
-        case RAYV_OSC2_PITCH:
+        case RAYV2_OSC2_PITCH:
             plugin->osc2pitch = data;
             break;
-        case RAYV_OSC2_TUNE:
+        case RAYV2_OSC2_TUNE:
             plugin->osc2tune = data;
             break;
-        case RAYV_OSC2_TYPE:
+        case RAYV2_OSC2_TYPE:
             plugin->osc2type = data;
             break;
-        case RAYV_OSC2_VOLUME:
+        case RAYV2_OSC2_VOLUME:
             plugin->osc2vol = data;
             break;
-        case RAYV_MASTER_UNISON_VOICES:
+        case RAYV2_MASTER_UNISON_VOICES:
             plugin->master_uni_voice = data;
             break;
-        case RAYV_MASTER_UNISON_SPREAD:
+        case RAYV2_MASTER_UNISON_SPREAD:
             plugin->master_uni_spread = data;
             break;
-        case RAYV_MASTER_GLIDE:
+        case RAYV2_MASTER_GLIDE:
             plugin->master_glide = data;
             break;
-        case RAYV_MASTER_PITCHBEND_AMT:
+        case RAYV2_MASTER_PITCHBEND_AMT:
             plugin->master_pb_amt = data;
             break;
-        case RAYV_PITCH_ENV_AMT:
+        case RAYV2_PITCH_ENV_AMT:
             plugin->pitch_env_amt = data;
             break;
-        case RAYV_PITCH_ENV_TIME:
+        case RAYV2_PITCH_ENV_TIME:
             plugin->pitch_env_time = data;
             break;
-        case RAYV_LFO_FREQ:
+        case RAYV2_LFO_FREQ:
             plugin->lfo_freq = data;
             break;
-        case RAYV_LFO_TYPE:
+        case RAYV2_LFO_TYPE:
             plugin->lfo_type = data;
             break;
-        case RAYV_LFO_AMP:
+        case RAYV2_LFO_AMP:
             plugin->lfo_amp = data;
             break;
-        case RAYV_LFO_PITCH:
+        case RAYV2_LFO_PITCH:
             plugin->lfo_pitch = data;
             break;
-        case RAYV_LFO_FILTER:
+        case RAYV2_LFO_FILTER:
             plugin->lfo_filter = data;
             break;
-        case RAYV_OSC_HARD_SYNC:
+        case RAYV2_OSC_HARD_SYNC:
             plugin->sync_hard = data;
             break;
-        case RAYV_RAMP_CURVE:
+        case RAYV2_RAMP_CURVE:
             plugin->ramp_curve = data;
             break;
-        case RAYV_FILTER_KEYTRK:
+        case RAYV2_FILTER_KEYTRK:
             plugin->filter_keytrk = data;
             break;
-        case RAYV_MONO_MODE:
+        case RAYV2_MONO_MODE:
             plugin->mono_mode = data;
             break;
-        case RAYV_LFO_PHASE:
+        case RAYV2_LFO_PHASE:
             plugin->lfo_phase = data;
             break;
-        case RAYV_LFO_PITCH_FINE:
+        case RAYV2_LFO_PITCH_FINE:
             plugin->lfo_pitch_fine = data;
             break;
-        case RAYV_ADSR_PREFX:
+        case RAYV2_ADSR_PREFX:
             plugin->adsr_prefx = data;
             break;
-        case RAYV_MIN_NOTE:
+        case RAYV2_MIN_NOTE:
             plugin->min_note = data;
             break;
-        case RAYV_MAX_NOTE:
+        case RAYV2_MAX_NOTE:
             plugin->max_note = data;
             break;
-        case RAYV_MASTER_PITCH:
+        case RAYV2_MASTER_PITCH:
             plugin->master_pitch = data;
             break;
     }
 }
 
-static PYFX_Handle g_rayv_instantiate(PYFX_Descriptor * descriptor,
+static PYFX_Handle g_rayv2_instantiate(PYFX_Descriptor * descriptor,
         int a_sr, fp_get_wavpool_item_from_host a_host_wavpool_func,
         int a_plugin_uid, fp_queue_message a_queue_func)
 {
-    t_rayv *plugin_data;
-    hpalloc((void**)&plugin_data, sizeof(t_rayv));
+    t_rayv2 *plugin_data;
+    hpalloc((void**)&plugin_data, sizeof(t_rayv2));
 
     plugin_data->fs = a_sr;
 
     int f_i;
 
-    plugin_data->voices = g_voc_get_voices(RAYV_POLYPHONY,
-            RAYV_POLYPHONY_THRESH);
+    plugin_data->voices = g_voc_get_voices(RAYV2_POLYPHONY,
+            RAYV2_POLYPHONY_THRESH);
 
-    for (f_i = 0; f_i < RAYV_POLYPHONY; ++f_i)
+    for (f_i = 0; f_i < RAYV2_POLYPHONY; ++f_i)
     {
-        plugin_data->data[f_i] = g_rayv_poly_init(a_sr);
+        plugin_data->data[f_i] = g_rayv2_poly_init(a_sr);
         plugin_data->data[f_i]->note_f = f_i;
     }
 
@@ -270,7 +270,7 @@ static PYFX_Handle g_rayv_instantiate(PYFX_Descriptor * descriptor,
     plugin_data->sv_last_note = -1.0f;  //For glide
 
     //initialize all monophonic modules
-    plugin_data->mono_modules = v_rayv_mono_init(plugin_data->fs);
+    plugin_data->mono_modules = v_rayv2_mono_init(plugin_data->fs);
 
     plugin_data->port_table = g_pydaw_get_port_table(
         (void**)plugin_data, descriptor);
@@ -282,23 +282,23 @@ static PYFX_Handle g_rayv_instantiate(PYFX_Descriptor * descriptor,
 }
 
 
-static void v_rayv_load(PYFX_Handle instance,
+static void v_rayv2_load(PYFX_Handle instance,
         PYFX_Descriptor * Descriptor, char * a_file_path)
 {
-    t_rayv *plugin_data = (t_rayv*)instance;
+    t_rayv2 *plugin_data = (t_rayv2*)instance;
     pydaw_generic_file_loader(instance, Descriptor,
         a_file_path, plugin_data->port_table, &plugin_data->cc_map);
 }
 
-static void v_rayv_set_port_value(PYFX_Handle Instance,
+static void v_rayv2_set_port_value(PYFX_Handle Instance,
         int a_port, float a_value)
 {
-    t_rayv *plugin_data = (t_rayv*)Instance;
+    t_rayv2 *plugin_data = (t_rayv2*)Instance;
     plugin_data->port_table[a_port] = a_value;
 }
 
-static void v_rayv_process_midi_event(
-    t_rayv * plugin_data, t_pydaw_seq_event * a_event, int f_poly_mode)
+static void v_rayv2_process_midi_event(
+    t_rayv2 * plugin_data, t_pydaw_seq_event * a_event, int f_poly_mode)
 {
     int f_min_note = (int)*plugin_data->min_note;
     int f_max_note = (int)*plugin_data->max_note;
@@ -492,12 +492,12 @@ static void v_rayv_process_midi_event(
     }
 }
 
-static void v_run_rayv(
+static void v_run_rayv2(
         PYFX_Handle instance, int sample_count,
         struct ShdsList * midi_events,
         t_pydaw_seq_event *atm_events, int atm_event_count)
 {
-    t_rayv *plugin_data = (t_rayv *) instance;
+    t_rayv2 *plugin_data = (t_rayv2 *) instance;
 
     t_pydaw_seq_event **events = (t_pydaw_seq_event**)midi_events->data;
     int event_count = midi_events->len;
@@ -510,7 +510,7 @@ static void v_run_rayv(
 
     if(f_poly_mode == 2 && plugin_data->voices->poly_mode != 2)
     {
-        rayvPanic(instance);  //avoid hung notes
+        rayv2Panic(instance);  //avoid hung notes
     }
 
     plugin_data->voices->poly_mode = f_poly_mode;
@@ -519,7 +519,7 @@ static void v_run_rayv(
 
     for(f_i = 0; f_i < event_count; ++f_i)
     {
-        v_rayv_process_midi_event(plugin_data, events[f_i], f_poly_mode);
+        v_rayv2_process_midi_event(plugin_data, events[f_i], f_poly_mode);
     }
 
     f_i = 0;
@@ -575,11 +575,11 @@ static void v_run_rayv(
         v_sml_run(&plugin_data->mono_modules->pitchbend_smoother,
                 (plugin_data->sv_pitch_bend_value));
 
-        for(f_i2 = 0; f_i2 < RAYV_POLYPHONY; ++f_i2)
+        for(f_i2 = 0; f_i2 < RAYV2_POLYPHONY; ++f_i2)
         {
             if((plugin_data->data[f_i2]->adsr_amp.stage) != ADSR_STAGE_OFF)
             {
-                v_run_rayv_voice(plugin_data,
+                v_run_rayv2_voice(plugin_data,
                     &plugin_data->voices->voices[f_i2],
                     plugin_data->data[f_i2],
                     plugin_data->output0, plugin_data->output1, f_i);
@@ -594,8 +594,8 @@ static void v_run_rayv(
     }
 }
 
-static void v_run_rayv_voice(t_rayv *plugin_data,
-        t_voc_single_voice * a_poly_voice, t_rayv_poly_voice *a_voice,
+static void v_run_rayv2_voice(t_rayv2 *plugin_data,
+        t_voc_single_voice * a_poly_voice, t_rayv2_poly_voice *a_voice,
         PYFX_Data *out0, PYFX_Data *out1, int a_i)
 {
     if((plugin_data->sampleNo) < (a_poly_voice->on))
@@ -611,11 +611,11 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
     {
         if(a_poly_voice->n_state == note_state_killed)
         {
-            v_rayv_poly_note_off(a_voice, 1);
+            v_rayv2_poly_note_off(a_voice, 1);
         }
         else
         {
-            v_rayv_poly_note_off(a_voice, 0);
+            v_rayv2_poly_note_off(a_voice, 0);
         }
     }
 
@@ -728,71 +728,70 @@ static void v_run_rayv_voice(t_rayv *plugin_data,
     out1[(i_voice)] += (a_voice->current_sample);
 }
 
-PYFX_Descriptor *rayv_PYFX_descriptor()
+PYFX_Descriptor *rayv2_PYFX_descriptor()
 {
-    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(RAYV_COUNT);
+    PYFX_Descriptor *f_result = pydaw_get_pyfx_descriptor(RAYV2_COUNT);
 
-    pydaw_set_pyfx_port(f_result, RAYV_ATTACK, 10.0f, 0.0f, 200.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_DECAY, 10.0f, 10.0f, 200.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_SUSTAIN, 0.0f, -60.0f, 0.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_RELEASE, 50.0f, 10.0f, 400.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_TIMBRE, 124.0f, 20.0f, 124.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_RES, -120.0f, -300.0f, 0.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_DIST, 15.0f, 0.0f, 48.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_FILTER_ATTACK, 10.0f, 0.0f, 200.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_FILTER_DECAY, 50.0f, 10.0f, 200.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_FILTER_SUSTAIN, 100.0f, 0.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_FILTER_RELEASE, 50.0f, 10.0f, 400.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_NOISE_AMP, -30.0f, -60.0f, 0.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_FILTER_ENV_AMT, 0.0f, -36.0f, 36.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_DIST_WET, 0.0f, 0.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC1_TYPE, 1.0f, 0.0f, 5.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC1_PITCH, 0.0f, -36.0f, 36.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC1_TUNE, 0.0f, -100.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC1_VOLUME, -6.0f, -30.0f, 0.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC2_TYPE, 0.0f, 0.0f, 5.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC2_PITCH, 0.0f, -36.0f, 36.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC2_TUNE, 0.0f, -100.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC2_VOLUME, -6.0f, -30.0f, 0.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_MASTER_VOLUME, -6.0f, -30.0f, 12.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_MASTER_UNISON_VOICES, 4.0f, 1.0f, 7.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_MASTER_UNISON_SPREAD, 50.0f, 0.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_MASTER_GLIDE, 0.0f,  0.0f, 200.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_MASTER_PITCHBEND_AMT, 18.0f, 1.0f,  36.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_PITCH_ENV_AMT, 0.0f, -36.0f, 36.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_PITCH_ENV_TIME, 100.0f, 1.0f, 600.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_LFO_FREQ, 200.0f, 10.0f, 1600.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_LFO_TYPE, 0.0f, 0.0f, 2.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_LFO_AMP, 0.0f, -24.0f, 24.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_LFO_PITCH, 0.0f, -36.0f, 36.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_LFO_FILTER, 0.0f, -48.0f, 48.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_OSC_HARD_SYNC, 0.0f, 0.0f, 1.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_RAMP_CURVE, 50.0f, 0.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_FILTER_KEYTRK, 0.0f, 0.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_MONO_MODE, 0.0f, 0.0f, 3.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_LFO_PHASE, 0.0f, 0.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_LFO_PITCH_FINE, 0.0f, -100.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_ADSR_PREFX, 0.0f, 0.0f, 1.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_MIN_NOTE, 0.0f, 0.0f, 120.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_MAX_NOTE, 120.0f, 0.0f, 120.0f);
-    pydaw_set_pyfx_port(f_result, RAYV_MASTER_PITCH, 0.0f, -36.0f, 36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_ATTACK, 10.0f, 0.0f, 200.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_DECAY, 10.0f, 10.0f, 200.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_SUSTAIN, 0.0f, -60.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_RELEASE, 50.0f, 10.0f, 400.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_TIMBRE, 124.0f, 20.0f, 124.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_RES, -120.0f, -300.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_DIST, 15.0f, 0.0f, 48.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_FILTER_ATTACK, 10.0f, 0.0f, 200.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_FILTER_DECAY, 50.0f, 10.0f, 200.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_FILTER_SUSTAIN, 100.0f, 0.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_FILTER_RELEASE, 50.0f, 10.0f, 400.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_NOISE_AMP, -30.0f, -60.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_FILTER_ENV_AMT, 0.0f, -36.0f, 36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_DIST_WET, 0.0f, 0.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC1_TYPE, 1.0f, 0.0f, 5.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC1_PITCH, 0.0f, -36.0f, 36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC1_TUNE, 0.0f, -100.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC1_VOLUME, -6.0f, -30.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC2_TYPE, 0.0f, 0.0f, 5.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC2_PITCH, 0.0f, -36.0f, 36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC2_TUNE, 0.0f, -100.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC2_VOLUME, -6.0f, -30.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_MASTER_VOLUME, -6.0f, -30.0f, 12.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_MASTER_UNISON_VOICES, 4.0f, 1.0f, 7.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_MASTER_UNISON_SPREAD, 50.0f, 0.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_MASTER_GLIDE, 0.0f,  0.0f, 200.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_MASTER_PITCHBEND_AMT, 18.0f, 1.0f,  36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_PITCH_ENV_AMT, 0.0f, -36.0f, 36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_PITCH_ENV_TIME, 100.0f, 1.0f, 600.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_LFO_FREQ, 200.0f, 10.0f, 1600.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_LFO_TYPE, 0.0f, 0.0f, 2.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_LFO_AMP, 0.0f, -24.0f, 24.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_LFO_PITCH, 0.0f, -36.0f, 36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_LFO_FILTER, 0.0f, -48.0f, 48.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC_HARD_SYNC, 0.0f, 0.0f, 1.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_RAMP_CURVE, 50.0f, 0.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_FILTER_KEYTRK, 0.0f, 0.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_MONO_MODE, 0.0f, 0.0f, 3.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_LFO_PHASE, 0.0f, 0.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_LFO_PITCH_FINE, 0.0f, -100.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_ADSR_PREFX, 0.0f, 0.0f, 1.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_MIN_NOTE, 0.0f, 0.0f, 120.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_MAX_NOTE, 120.0f, 0.0f, 120.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_MASTER_PITCH, 0.0f, -36.0f, 36.0f);
 
 
-    f_result->cleanup = v_cleanup_rayv;
-    f_result->connect_port = v_rayv_connect_port;
-    f_result->connect_buffer = v_rayv_connect_buffer;
-    f_result->instantiate = g_rayv_instantiate;
-    f_result->panic = rayvPanic;
-    f_result->load = v_rayv_load;
-    f_result->set_port_value = v_rayv_set_port_value;
-    f_result->set_cc_map = v_rayv_set_cc_map;
+    f_result->cleanup = v_cleanup_rayv2;
+    f_result->connect_port = v_rayv2_connect_port;
+    f_result->connect_buffer = v_rayv2_connect_buffer;
+    f_result->instantiate = g_rayv2_instantiate;
+    f_result->panic = rayv2Panic;
+    f_result->load = v_rayv2_load;
+    f_result->set_port_value = v_rayv2_set_port_value;
+    f_result->set_cc_map = v_rayv2_set_cc_map;
 
     f_result->API_Version = 1;
     f_result->configure = NULL;
-    f_result->run_replacing = v_run_rayv;
-    f_result->offline_render_prep = v_rayv_or_prep;
-    f_result->on_stop = v_rayv_on_stop;
+    f_result->run_replacing = v_run_rayv2;
+    f_result->offline_render_prep = v_rayv2_or_prep;
+    f_result->on_stop = v_rayv2_on_stop;
 
     return f_result;
 }
-
