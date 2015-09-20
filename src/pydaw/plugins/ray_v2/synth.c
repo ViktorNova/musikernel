@@ -645,7 +645,7 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
         }
     }
 
-    a_voice->current_sample = 0.0f;
+    float current_sample = 0.0f;
 
     f_rmp_run_ramp_curve(&a_voice->pitch_env);
     f_rmp_run_ramp(&a_voice->glide_env);
@@ -676,17 +676,15 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
         v_osc_set_unison_pitch(&a_voice->osc_unison2, a_voice->unison_spread2,
                 ((a_voice->base_pitch) + (a_voice->osc2_pitch_adjust)));
 
-        a_voice->current_sample +=
-                f_osc_run_unison_osc_sync(&a_voice->osc_unison2);
+        current_sample += f_osc_run_unison_osc_sync(&a_voice->osc_unison2);
 
         if(a_voice->osc_unison2.is_resetting)
         {
             v_osc_note_on_sync_phases_hard(&a_voice->osc_unison1);
         }
 
-        a_voice->current_sample +=
-                f_osc_run_unison_osc(&a_voice->osc_unison1) *
-                (a_voice->osc1_linamp);
+        current_sample +=
+            f_osc_run_unison_osc(&a_voice->osc_unison1) * a_voice->osc1_linamp;
 
     }
     else
@@ -705,22 +703,20 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
                 (*plugin_data->uni_spread2) * 0.01f,
                 ((a_voice->base_pitch) + (a_voice->osc2_pitch_adjust)));
 
-        a_voice->current_sample +=
-            f_osc_run_unison_osc(&a_voice->osc_unison1) *
-            (a_voice->osc1_linamp);
-        a_voice->current_sample +=
-            f_osc_run_unison_osc(&a_voice->osc_unison2) *
-            (a_voice->osc2_linamp);
+        current_sample +=
+            f_osc_run_unison_osc(&a_voice->osc_unison1) * a_voice->osc1_linamp;
+        current_sample +=
+            f_osc_run_unison_osc(&a_voice->osc_unison2) * a_voice->osc2_linamp;
     }
 
-    a_voice->current_sample +=
+    current_sample +=
         a_voice->noise_func_ptr(&a_voice->white_noise1) * a_voice->noise_linamp;
 
     v_adsr_run_db(&a_voice->adsr_amp);
 
     if(a_voice->adsr_prefx)
     {
-        a_voice->current_sample *= (a_voice->adsr_amp.output);
+        current_sample *= (a_voice->adsr_amp.output);
     }
 
     v_adsr_run(&a_voice->adsr_filter);
@@ -736,23 +732,22 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
     v_nosvf_set_cutoff(&a_voice->svf_filter);
 
     a_voice->filter_output = a_voice->svf_function(&a_voice->svf_filter,
-            (a_voice->current_sample));
+            (current_sample));
 
-    a_voice->current_sample = f_axf_run_xfade(&a_voice->dist_dry_wet,
+    current_sample = f_axf_run_xfade(&a_voice->dist_dry_wet,
             (a_voice->filter_output),
             f_clp_clip(&a_voice->clipper1, (a_voice->filter_output)));
 
-    a_voice->current_sample = (a_voice->current_sample) *
+    current_sample = (current_sample) *
         (a_voice->amp) * (a_voice->lfo_amp_output) *
         plugin_data->master_vol_lin;
 
     if(!a_voice->adsr_prefx)
     {
-        a_voice->current_sample *= (a_voice->adsr_amp.output);
+        current_sample *= (a_voice->adsr_amp.output);
     }
 
-    out[(a_i * plugin_data->oversample) + a_no_events] +=
-        a_voice->current_sample;
+    out[(a_i * plugin_data->oversample) + a_no_events] += current_sample;
 }
 
 PYFX_Descriptor *rayv2_PYFX_descriptor()

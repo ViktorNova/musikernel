@@ -55,9 +55,7 @@ typedef struct
     float unison_spread1;
     float unison_spread2;
 
-    float current_sample;
     float lfo_amp_output, lfo_pitch_output, lfo_filter_output;
-
 
     t_smoother_linear glide_smoother;
     t_ramp_env glide_env;
@@ -129,8 +127,6 @@ t_rayv2_poly_voice * g_rayv2_poly_init(float a_sr)
     f_voice->target_pitch = 66.0f;
     f_voice->last_pitch = 66.0f;
     f_voice->base_pitch = 66.0f;
-
-    f_voice->current_sample = 0.0f;
 
     f_voice->filter_output = 0.0f;
 
