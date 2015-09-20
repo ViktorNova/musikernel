@@ -54,7 +54,7 @@ typedef struct
     float cutoff_note, cutoff_hz, cutoff_filter, pi2_div_sr, sr,
             filter_res, filter_res_db, velocity_cutoff; //, velocity_cutoff_amt;
 
-    float cutoff_base, cutoff_mod, cutoff_last,  velocity_mod_amt;
+    float cutoff_base, cutoff_mod, cutoff_last;
     /*For the eq*/
     float gain_db, gain_linear;
     t_nosvf_kernel filter_kernels [NOSVF_MAX_CASCADE];
@@ -370,15 +370,15 @@ void v_nosvf_set_res(t_nosvf_filter*,  float);
 t_nosvf_filter * g_nosvf_get(float);
 inline void v_nosvf_set_cutoff_base(t_nosvf_filter*, float);
 inline void v_nosvf_add_cutoff_mod(t_nosvf_filter*, float);
-inline void v_nosvf_velocity_mod(t_nosvf_filter*,float);
+inline void v_nosvf_velocity_mod(t_nosvf_filter*, float, float);
 
 /* inline void v_nosvf_velocity_mod(t_nosvf_filter* a_svf, float a_velocity)
  */
 inline void v_nosvf_velocity_mod(t_nosvf_filter*__restrict a_svf,
-        float a_velocity)
+        float a_velocity, float a_amt)
 {
-    a_svf->velocity_cutoff = ((a_velocity) * .2f) - 24.0f;
-    a_svf->velocity_mod_amt = a_velocity * 0.007874016f;
+    a_velocity *= 0.007874016f;
+    a_svf->velocity_cutoff = ((a_velocity * 24.0f) - 24.0f) * a_amt;
 }
 
 /* inline void v_nosvf_set_cutoff_base(
@@ -393,7 +393,8 @@ inline void v_nosvf_set_cutoff_base(t_nosvf_filter*__restrict a_svf,
 /* inline void v_nosvf_add_cutoff_mod(
  * t_nosvf_filter* a_svf, float a_midi_note_number)
  * Modulate the filters cutoff with an envelope, LFO, etc...*/
-inline void v_nosvf_add_cutoff_mod(t_nosvf_filter*__restrict a_svf, float a_midi_note_number)
+inline void v_nosvf_add_cutoff_mod(t_nosvf_filter*__restrict a_svf,
+        float a_midi_note_number)
 {
     a_svf->cutoff_mod = (a_svf->cutoff_mod) + a_midi_note_number;
 }
@@ -403,8 +404,8 @@ inline void v_nosvf_add_cutoff_mod(t_nosvf_filter*__restrict a_svf, float a_midi
  * modulation doesn't work properly*/
 inline void v_nosvf_set_cutoff(t_nosvf_filter *__restrict a_svf)
 {
-    a_svf->cutoff_note = (a_svf->cutoff_base) + ((a_svf->cutoff_mod) *
-            (a_svf->velocity_mod_amt)) + (a_svf->velocity_cutoff);
+    a_svf->cutoff_note = a_svf->cutoff_base + a_svf->cutoff_mod  +
+        a_svf->velocity_cutoff;
     a_svf->cutoff_mod = 0.0f;
 
     if(a_svf->cutoff_note > 123.9209f)  //21000hz
@@ -481,7 +482,6 @@ void g_nosvf_init(t_nosvf_filter * f_svf, float a_sample_rate)
     f_svf->filter_res_db = -21023.0f;
     f_svf->filter_res = 0.5f;
     f_svf->velocity_cutoff = 0.0f;
-    f_svf->velocity_mod_amt = 1.0f;
 
     f_svf->gain_db = 0.0f;
     f_svf->gain_linear = 1.0f;

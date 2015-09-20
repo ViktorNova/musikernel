@@ -70,11 +70,12 @@ extern "C" {
 #define RAYV2_UNISON_SPREAD2 47
 #define RAYV2_NOISE_TYPE 48
 #define RAYV2_FILTER_TYPE 49
+#define RAYV2_FILTER_VELOCITY 50
 
 
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define RAYV2_COUNT 50
+#define RAYV2_COUNT 51
 
 #define RAYV2_POLYPHONY   16
 #define RAYV2_POLYPHONY_THRESH 12
@@ -93,6 +94,7 @@ typedef struct {
     PYFX_Data *timbre;
     PYFX_Data *res;
     PYFX_Data *filter_type;
+    PYFX_Data *filter_vel;
     PYFX_Data *dist;
     PYFX_Data *master_pitch;
 

@@ -70,6 +70,7 @@ RAYV2_UNISON_VOICES2 = 46
 RAYV2_UNISON_SPREAD2 = 47
 RAYV2_NOISE_TYPE = 48
 RAYV2_FILTER_TYPE = 49
+RAYV2_FILTER_VELOCITY = 50
 
 
 RAYV_PORT_MAP = {
@@ -124,7 +125,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.hlayout0.addWidget(self.preset_manager.group_box)
         self.hlayout0.addItem(QSpacerItem(1, 1, QSizePolicy.Expanding))
 
-        f_knob_size = 55
+        f_knob_size = 48
 
         self.hlayout1 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout1)
@@ -171,39 +172,6 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             a_uni_voices_port=RAYV2_UNISON_VOICES2,
             a_uni_spread_port=RAYV2_UNISON_SPREAD2)
         self.hlayout2.addWidget(self.osc2.group_box)
-        self.sync_groupbox = QGroupBox(_("Sync"))
-        self.sync_groupbox.setObjectName("plugin_groupbox")
-        self.hlayout2.addWidget(self.sync_groupbox)
-        self.sync_gridlayout = QGridLayout(self.sync_groupbox)
-        self.sync_gridlayout.setContentsMargins(3, 3, 3, 3)
-        self.hard_sync = pydaw_checkbox_control(
-            "On", RAYV_OSC_HARD_SYNC,
-            self.plugin_rel_callback, self.plugin_val_callback,
-            self.port_dict, self.preset_manager)
-        self.hard_sync.control.setToolTip(
-            _("Setting self hard sync's Osc1 to Osc2. Usually you "
-            "would want to distort and pitchbend if this is enabled."))
-        self.sync_gridlayout.addWidget(
-            self.hard_sync.control, 1, 0, QtCore.Qt.AlignCenter)
-
-        self.groupbox_noise = QGroupBox(_("Noise"))
-        self.groupbox_noise.setObjectName("plugin_groupbox")
-        self.noise_layout = QGridLayout(self.groupbox_noise)
-        self.noise_layout.setContentsMargins(3, 3, 3, 3)
-        self.hlayout2.addWidget(self.groupbox_noise)
-        self.noise_amp = pydaw_knob_control(
-            f_knob_size, _("Vol"), RAYV_NOISE_AMP,
-            self.plugin_rel_callback, self.plugin_val_callback,
-            -60, 0, -30, KC_INTEGER, self.port_dict, self.preset_manager)
-        self.noise_amp.add_to_grid_layout(self.noise_layout, 0)
-
-        self.noise_type = pydaw_combobox_control(
-            87, _("Type"), RAYV2_NOISE_TYPE,
-            self.plugin_rel_callback, self.plugin_val_callback,
-            [_("Off"), _("White"), _("Pink")], self.port_dict,
-             a_preset_mgr=self.preset_manager)
-        self.noise_type.control.setMaximumWidth(87)
-        self.noise_type.add_to_grid_layout(self.noise_layout, 1)
 
         self.adsr_filter = pydaw_adsr_widget(
             f_knob_size, False, RAYV_FILTER_ATTACK,
@@ -227,8 +195,50 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             0, 100, 0, KC_NONE, self.port_dict, self.preset_manager)
         self.filter_keytrk.add_to_grid_layout(self.filter.layout, 11)
+        self.filter_velocity = pydaw_knob_control(
+            f_knob_size, _("Vel."), RAYV2_FILTER_VELOCITY,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            0, 100, 0, KC_NONE, self.port_dict, self.preset_manager)
+        self.filter_velocity.add_to_grid_layout(self.filter.layout, 12)
+
         self.hlayout3 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout3)
+
+        self.sync_groupbox = QGroupBox(_("Sync"))
+        self.sync_groupbox.setObjectName("plugin_groupbox")
+        self.hlayout3.addWidget(self.sync_groupbox)
+        self.sync_gridlayout = QGridLayout(self.sync_groupbox)
+        self.sync_gridlayout.setContentsMargins(3, 3, 3, 3)
+        self.hard_sync = pydaw_checkbox_control(
+            "On", RAYV_OSC_HARD_SYNC,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            self.port_dict, self.preset_manager)
+        self.hard_sync.control.setToolTip(
+            _("Setting self hard sync's Osc1 to Osc2. Usually you "
+            "would want to distort and pitchbend if this is enabled."))
+        self.sync_gridlayout.addWidget(
+            self.hard_sync.control, 1, 0, QtCore.Qt.AlignCenter)
+
+        self.groupbox_noise = QGroupBox(_("Noise"))
+        self.groupbox_noise.setObjectName("plugin_groupbox")
+        self.noise_layout = QGridLayout(self.groupbox_noise)
+        self.noise_layout.setContentsMargins(3, 3, 3, 3)
+        self.hlayout3.addWidget(self.groupbox_noise)
+        self.noise_amp = pydaw_knob_control(
+            f_knob_size, _("Vol"), RAYV_NOISE_AMP,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            -60, 0, -30, KC_INTEGER, self.port_dict, self.preset_manager)
+        self.noise_amp.add_to_grid_layout(self.noise_layout, 0)
+
+        self.noise_type = pydaw_combobox_control(
+            87, _("Type"), RAYV2_NOISE_TYPE,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            [_("Off"), _("White"), _("Pink")], self.port_dict,
+             a_preset_mgr=self.preset_manager)
+        self.noise_type.control.setMaximumWidth(87)
+        self.noise_type.add_to_grid_layout(self.noise_layout, 1)
+
+
         self.master = pydaw_master_widget(
             f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
             RAYV_MASTER_VOLUME, RAYV_MASTER_GLIDE,

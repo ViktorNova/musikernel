@@ -254,6 +254,9 @@ static void v_rayv2_connect_port(PYFX_Handle instance, int port,
         case RAYV2_FILTER_TYPE:
             plugin->filter_type = data;
             break;
+        case RAYV2_FILTER_VELOCITY:
+            plugin->filter_vel = data;
+            break;
     }
 }
 
@@ -347,11 +350,11 @@ static void v_rayv2_process_midi_event(
 
             t_rayv2_poly_voice * f_voice = plugin_data->data[f_voice_num];
 
-            f_voice->amp =
-                    f_db_to_linear_fast(
-                    //-20db to 0db, + master volume (0 to -60)
-                    ((a_event->velocity * 0.094488) - 12.0f));
-            v_nosvf_velocity_mod(&f_voice->svf_filter, a_event->velocity);
+            f_voice->amp = f_db_to_linear_fast(
+                //-20db to 0db, + master volume (0 to -60)
+                ((a_event->velocity * 0.094488) - 12.0f));
+            v_nosvf_velocity_mod(&f_voice->svf_filter,
+                a_event->velocity, (*plugin_data->filter_vel) * 0.01f);
 
             float f_master_pitch = (*plugin_data->master_pitch);
 
@@ -808,6 +811,7 @@ PYFX_Descriptor *rayv2_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, RAYV2_MASTER_PITCH, 0.0f, -36.0f, 36.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_NOISE_TYPE, 0.0f, 0.0f, 2.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_FILTER_TYPE, 0.0f, 0.0f, 8.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_FILTER_VELOCITY, 0.0f, 0.0f, 100.0f);
 
 
     f_result->cleanup = v_cleanup_rayv2;
