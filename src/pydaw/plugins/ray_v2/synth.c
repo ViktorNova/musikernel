@@ -179,11 +179,17 @@ static void v_rayv2_connect_port(PYFX_Handle instance, int port,
         case RAYV2_OSC2_VOLUME:
             plugin->osc2vol = data;
             break;
-        case RAYV2_MASTER_UNISON_VOICES:
-            plugin->master_uni_voice = data;
+        case RAYV2_UNISON_VOICES1:
+            plugin->uni_voice1 = data;
             break;
-        case RAYV2_MASTER_UNISON_SPREAD:
-            plugin->master_uni_spread = data;
+        case RAYV2_UNISON_VOICES2:
+            plugin->uni_voice2 = data;
+            break;
+        case RAYV2_UNISON_SPREAD1:
+            plugin->uni_spread1 = data;
+            break;
+        case RAYV2_UNISON_SPREAD2:
+            plugin->uni_spread2 = data;
             break;
         case RAYV2_MASTER_GLIDE:
             plugin->master_glide = data;
@@ -386,8 +392,10 @@ static void v_rayv2_process_midi_event(
             plugin_data->data[f_voice]->noise_linamp =
                     f_db_to_linear_fast(*(plugin_data->noise_amp));
 
-            plugin_data->data[f_voice]->unison_spread =
-                    (*plugin_data->master_uni_spread) * 0.01f;
+            plugin_data->data[f_voice]->unison_spread1 =
+                    (*plugin_data->uni_spread1) * 0.01f;
+            plugin_data->data[f_voice]->unison_spread2 =
+                    (*plugin_data->uni_spread2) * 0.01f;
 
             v_adsr_retrigger(&plugin_data->data[f_voice]->adsr_amp);
             v_adsr_retrigger(&plugin_data->data[f_voice]->adsr_filter);
@@ -457,7 +465,7 @@ static void v_rayv2_process_midi_event(
 
             v_osc_set_uni_voice_count(
                     &plugin_data->data[f_voice]->osc_unison1,
-                    *plugin_data->master_uni_voice);
+                    *plugin_data->uni_voice1);
 
             if(plugin_data->data[f_voice]->hard_sync)
             {
@@ -468,7 +476,7 @@ static void v_rayv2_process_midi_event(
             {
                 v_osc_set_uni_voice_count(
                     &plugin_data->data[f_voice]->osc_unison2,
-                    *plugin_data->master_uni_voice);
+                    *plugin_data->uni_voice2);
             }
 
             plugin_data->data[f_voice]->adsr_prefx =
@@ -688,9 +696,9 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
                 (*(plugin_data->master_pb_amt))) +
                 (a_voice->last_pitch) + (a_voice->lfo_pitch_output);
 
-        v_osc_set_unison_pitch(&a_voice->osc_unison1, a_voice->unison_spread,
+        v_osc_set_unison_pitch(&a_voice->osc_unison1, a_voice->unison_spread1,
                 ((a_voice->target_pitch) + (a_voice->osc1_pitch_adjust) ));
-        v_osc_set_unison_pitch(&a_voice->osc_unison2, a_voice->unison_spread,
+        v_osc_set_unison_pitch(&a_voice->osc_unison2, a_voice->unison_spread2,
                 ((a_voice->base_pitch) + (a_voice->osc2_pitch_adjust)));
 
         a_voice->current_sample +=
@@ -716,16 +724,18 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
                 (a_voice->last_pitch) + (a_voice->lfo_pitch_output);
 
         v_osc_set_unison_pitch(&a_voice->osc_unison1,
-                (*plugin_data->master_uni_spread) * 0.01f,
+                (*plugin_data->uni_spread1) * 0.01f,
                 ((a_voice->base_pitch) + (a_voice->osc1_pitch_adjust) ));
         v_osc_set_unison_pitch(&a_voice->osc_unison2,
-                (*plugin_data->master_uni_spread) * 0.01f,
+                (*plugin_data->uni_spread2) * 0.01f,
                 ((a_voice->base_pitch) + (a_voice->osc2_pitch_adjust)));
 
         a_voice->current_sample +=
-            f_osc_run_unison_osc(&a_voice->osc_unison1) * (a_voice->osc1_linamp);
+            f_osc_run_unison_osc(&a_voice->osc_unison1) *
+            (a_voice->osc1_linamp);
         a_voice->current_sample +=
-            f_osc_run_unison_osc(&a_voice->osc_unison2) * (a_voice->osc2_linamp);
+            f_osc_run_unison_osc(&a_voice->osc_unison2) *
+            (a_voice->osc2_linamp);
     }
 
     a_voice->current_sample +=
@@ -797,8 +807,10 @@ PYFX_Descriptor *rayv2_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, RAYV2_OSC2_TUNE, 0.0f, -100.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC2_VOLUME, -6.0f, -30.0f, 0.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_MASTER_VOLUME, -6.0f, -30.0f, 12.0f);
-    pydaw_set_pyfx_port(f_result, RAYV2_MASTER_UNISON_VOICES, 4.0f, 1.0f, 7.0f);
-    pydaw_set_pyfx_port(f_result, RAYV2_MASTER_UNISON_SPREAD, 50.0f, 0.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_UNISON_VOICES1, 4.0f, 1.0f, 7.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_UNISON_VOICES2, 4.0f, 1.0f, 7.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_UNISON_SPREAD1, 50.0f, 0.0f, 100.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_UNISON_SPREAD2, 50.0f, 0.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_MASTER_GLIDE, 0.0f,  0.0f, 200.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_MASTER_PITCHBEND_AMT, 18.0f, 1.0f,  36.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_PITCH_ENV_AMT, 0.0f, -36.0f, 36.0f);

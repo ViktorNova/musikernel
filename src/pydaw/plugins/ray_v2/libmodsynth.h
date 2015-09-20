@@ -50,7 +50,8 @@ typedef struct
     float noise_linamp;
     int hard_sync;
     int adsr_prefx;
-    float unison_spread;
+    float unison_spread1;
+    float unison_spread2;
 
     float current_sample;
     float lfo_amp_output, lfo_pitch_output, lfo_filter_output;
@@ -144,7 +145,8 @@ t_rayv2_poly_voice * g_rayv2_poly_init(float a_sr)
 
     f_voice->hard_sync = 0;
     f_voice->adsr_prefx = 0;
-    f_voice->unison_spread = 0.5f;
+    f_voice->unison_spread1 = 0.5f;
+    f_voice->unison_spread2 = 0.5f;
 
     return f_voice;
 }

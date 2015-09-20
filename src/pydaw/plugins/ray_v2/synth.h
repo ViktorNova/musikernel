@@ -45,8 +45,8 @@ extern "C" {
 #define RAYV2_OSC2_TUNE 22
 #define RAYV2_OSC2_VOLUME 23
 #define RAYV2_MASTER_VOLUME 24
-#define RAYV2_MASTER_UNISON_VOICES 25
-#define RAYV2_MASTER_UNISON_SPREAD 26
+#define RAYV2_UNISON_VOICES1 25
+#define RAYV2_UNISON_SPREAD1 26
 #define RAYV2_MASTER_GLIDE 27
 #define RAYV2_MASTER_PITCHBEND_AMT 28
 #define RAYV2_PITCH_ENV_TIME 29
@@ -66,10 +66,12 @@ extern "C" {
 #define RAYV2_MIN_NOTE 43
 #define RAYV2_MAX_NOTE 44
 #define RAYV2_MASTER_PITCH 45
+#define RAYV2_UNISON_VOICES2 46
+#define RAYV2_UNISON_SPREAD2 47
 
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define RAYV2_COUNT 46
+#define RAYV2_COUNT 48
 
 #define RAYV2_POLYPHONY   16
 #define RAYV2_POLYPHONY_THRESH 12
@@ -113,8 +115,10 @@ typedef struct {
     PYFX_Data *noise_amp;
 
 
-    PYFX_Data *master_uni_voice;
-    PYFX_Data *master_uni_spread;
+    PYFX_Data *uni_voice1;
+    PYFX_Data *uni_voice2;
+    PYFX_Data *uni_spread1;
+    PYFX_Data *uni_spread2;
     PYFX_Data *master_glide;
     PYFX_Data *master_pb_amt;
 

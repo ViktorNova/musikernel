@@ -45,8 +45,8 @@ RAYV_OSC2_PITCH = 21
 RAYV_OSC2_TUNE = 22
 RAYV_OSC2_VOLUME = 23
 RAYV_MASTER_VOLUME = 24
-RAYV_MASTER_UNISON_VOICES = 25
-RAYV_MASTER_UNISON_SPREAD = 26
+RAYV2_UNISON_VOICES1 = 25
+RAYV2_UNISON_SPREAD1 = 26
 RAYV_MASTER_GLIDE = 27
 RAYV_MASTER_PITCHBEND_AMT = 28
 RAYV_PITCH_ENV_TIME = 29
@@ -66,6 +66,8 @@ RAYV_ADSR_PREFX = 42
 RAYV_MIN_NOTE = 43
 RAYV_MAX_NOTE = 44
 RAYV_MASTER_PITCH = 45
+RAYV2_UNISON_VOICES2 = 46
+RAYV2_UNISON_SPREAD2 = 47
 
 RAYV_PORT_MAP = {
     "Attack": "2",
@@ -129,7 +131,9 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             RAYV_OSC1_TYPE, f_osc_types,
             self.plugin_rel_callback, self.plugin_val_callback,
             _("Oscillator 1"), self.port_dict,
-            a_preset_mgr=self.preset_manager, a_default_type=1)
+            a_preset_mgr=self.preset_manager, a_default_type=1,
+            a_uni_voices_port=RAYV2_UNISON_VOICES1,
+            a_uni_spread_port=RAYV2_UNISON_SPREAD1)
         self.hlayout1.addWidget(self.osc1.group_box)
         self.adsr_amp = pydaw_adsr_widget(
             f_knob_size, True, RAYV_ATTACK, RAYV_DECAY,
@@ -160,7 +164,9 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             RAYV_OSC2_TUNE, RAYV_OSC2_VOLUME,
             RAYV_OSC2_TYPE, f_osc_types,
             self.plugin_rel_callback, self.plugin_val_callback,
-            _("Oscillator 2"), self.port_dict, self.preset_manager)
+            _("Oscillator 2"), self.port_dict, self.preset_manager,
+            a_uni_voices_port=RAYV2_UNISON_VOICES2,
+            a_uni_spread_port=RAYV2_UNISON_SPREAD2)
         self.hlayout2.addWidget(self.osc2.group_box)
         self.sync_groupbox = QGroupBox(_("Sync"))
         self.sync_groupbox.setObjectName("plugin_groupbox")
@@ -214,8 +220,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
             RAYV_MASTER_VOLUME, RAYV_MASTER_GLIDE,
             RAYV_MASTER_PITCHBEND_AMT, self.port_dict, _("Master"),
-            RAYV_MASTER_UNISON_VOICES,
-            RAYV_MASTER_UNISON_SPREAD,
+            None, None,
             self.preset_manager, a_poly_port=RAYV_MONO_MODE,
             a_min_note_port=RAYV_MIN_NOTE, a_max_note_port=RAYV_MAX_NOTE,
             a_pitch_port=RAYV_MASTER_PITCH)
