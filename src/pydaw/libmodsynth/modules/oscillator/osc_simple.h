@@ -43,6 +43,7 @@ typedef struct
     float phases [OSC_UNISON_MAX_VOICES];
     float uni_spread;
     //Set this with unison voices to prevent excessive volume
+    float last_pitch;
     float adjusted_amp;
     float current_sample;  //current output sample for the entire oscillator
     int is_resetting;  //For oscillator sync
@@ -70,21 +71,16 @@ t_osc_simple_unison * g_osc_get_osc_simple_unison(float);
 inline void v_osc_set_uni_voice_count(t_osc_simple_unison* a_osc_ptr,
         int a_value)
 {
-    if(a_value > (OSC_UNISON_MAX_VOICES))
-    {
-        a_osc_ptr->voice_count = OSC_UNISON_MAX_VOICES;
-    }
-    else if(a_value < 1)
-    {
-        a_osc_ptr->voice_count = 1;
-    }
-    else
-    {
-        a_osc_ptr->voice_count = a_value;
-    }
+    assert(a_value <= OSC_UNISON_MAX_VOICES && a_value >= 1);
 
-    a_osc_ptr->adjusted_amp = (1.0f / (float)(a_osc_ptr->voice_count)) +
+    if(a_osc_ptr->voice_count != a_value)
+    {
+        // Force a recalculation of v_osc_set_unison_pitch
+        a_osc_ptr->last_pitch = -12345.0f;
+        a_osc_ptr->voice_count = a_value;
+        a_osc_ptr->adjusted_amp = (1.0f / (float)(a_osc_ptr->voice_count)) +
             (((float)(a_osc_ptr->voice_count - 1)) * .06f);
+    }
 }
 
 
@@ -112,17 +108,20 @@ inline void v_osc_set_unison_pitch(t_osc_simple_unison * a_osc_ptr,
             a_osc_ptr->pitch_inc = a_spread / ((float)(a_osc_ptr->voice_count));
         }
 
-        register int i_unison_pitch = 0;
-
-        while(i_unison_pitch < (a_osc_ptr->voice_count))
+        if(a_pitch != a_osc_ptr->last_pitch ||
+           a_spread != (a_osc_ptr->uni_spread))
         {
-            a_osc_ptr->voice_inc[i_unison_pitch] =
-                    f_pit_midi_note_to_hz_fast(
+            a_osc_ptr->last_pitch = a_pitch;
+
+            register int f_i;
+
+            for(f_i = 0; f_i < (a_osc_ptr->voice_count); ++f_i)
+            {
+                a_osc_ptr->voice_inc[f_i] = f_pit_midi_note_to_hz_fast(
                     (a_pitch + (a_osc_ptr->bottom_pitch) +
-                    (a_osc_ptr->pitch_inc *
-                    ((float)i_unison_pitch))))
-                    * (a_osc_ptr->sr_recip);
-            ++i_unison_pitch;
+                    (a_osc_ptr->pitch_inc * ((float)f_i)))) *
+                    (a_osc_ptr->sr_recip);
+            }
         }
     }
 
@@ -136,14 +135,14 @@ inline float f_osc_run_unison_osc(t_osc_simple_unison * a_osc_ptr)
 {
     register int f_i = 0;
     a_osc_ptr->current_sample = 0.0f;
+    t_osc_core *osc_core;
+    const int voice_count = a_osc_ptr->voice_count;
 
-    while(f_i < (a_osc_ptr->voice_count))
+    for(f_i = 0; f_i < voice_count; ++f_i)
     {
-        v_run_osc(&a_osc_ptr->osc_cores[f_i],
-                (a_osc_ptr->voice_inc[f_i]));
-        a_osc_ptr->current_sample = (a_osc_ptr->current_sample) +
-                a_osc_ptr->osc_type(&a_osc_ptr->osc_cores[f_i]);
-        ++f_i;
+        osc_core = &a_osc_ptr->osc_cores[f_i];
+        v_run_osc(osc_core, a_osc_ptr->voice_inc[f_i]);
+        a_osc_ptr->current_sample +=  a_osc_ptr->osc_type(osc_core);
     }
 
     return (a_osc_ptr->current_sample) * (a_osc_ptr->adjusted_amp);
@@ -158,11 +157,9 @@ inline void f_osc_run_unison_osc_core_only(t_osc_simple_unison * a_osc_ptr)
     register int f_i = 0;
     a_osc_ptr->current_sample = 0.0f;
 
-    while(f_i < (a_osc_ptr->voice_count))
+    for(f_i = 0; f_i < (a_osc_ptr->voice_count); ++f_i)
     {
-        v_run_osc(&a_osc_ptr->osc_cores[f_i],
-                (a_osc_ptr->voice_inc[f_i]));
-        ++f_i;
+        v_run_osc(&a_osc_ptr->osc_cores[f_i], a_osc_ptr->voice_inc[f_i]);
     }
 }
 
@@ -277,7 +274,6 @@ inline void v_osc_note_on_sync_phases_hard(t_osc_simple_unison * a_osc_ptr)
 void g_osc_simple_unison_init(
         t_osc_simple_unison * f_result, float a_sample_rate)
 {
-    v_osc_set_uni_voice_count(f_result, OSC_UNISON_MAX_VOICES);
     f_result->osc_type = f_get_saw;
     f_result->sr_recip = 1.0 / a_sample_rate;
     f_result->adjusted_amp = 1.0;
@@ -288,6 +284,8 @@ void g_osc_simple_unison_init(
     f_result->uni_spread = 0.1f;
     f_result->voice_count = 1;
     f_result->is_resetting = 0;
+    f_result->last_pitch = -12345.0f;
+    v_osc_set_uni_voice_count(f_result, OSC_UNISON_MAX_VOICES);
 
     int f_i = 0;
 
@@ -342,6 +340,7 @@ void g_osc_init_osc_simple_single(
     f_result->osc_type = f_get_osc_off;
     f_result->pitch_inc = 0.1f;
     f_result->uni_spread = 0.1f;
+    f_result->last_pitch = -12345.0f;
     f_result->voice_count = 1;
 
     int f_i = 0;
