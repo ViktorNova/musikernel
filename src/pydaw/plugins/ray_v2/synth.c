@@ -251,6 +251,9 @@ static void v_rayv2_connect_port(PYFX_Handle instance, int port,
         case RAYV2_NOISE_TYPE:
             plugin->noise_type = data;
             break;
+        case RAYV2_FILTER_TYPE:
+            plugin->filter_type = data;
+            break;
     }
 }
 
@@ -425,7 +428,8 @@ static void v_rayv2_process_midi_event(
 
             v_clp_set_in_gain(&f_voice->clipper1, *plugin_data->dist);
 
-            v_nosvf_set_res(&f_voice->svf_filter, (*plugin_data->res) * 0.1f);
+            int f_filter_type = (int)*plugin_data->filter_type;
+            f_voice->svf_function = NOSVF_TYPES[f_filter_type];
 
             f_voice->noise_amp = f_db_to_linear(*(plugin_data->noise_amp));
 
@@ -724,6 +728,8 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
     v_nosvf_set_cutoff_base(&a_voice->svf_filter,
             (plugin_data->mono_modules->filter_smoother.last_value));
 
+    v_nosvf_set_res(&a_voice->svf_filter, (*plugin_data->res) * 0.1f);
+
     v_nosvf_add_cutoff_mod(&a_voice->svf_filter,
             (((a_voice->adsr_filter.output) *
             (*plugin_data->filter_env_amt)) +
@@ -801,6 +807,7 @@ PYFX_Descriptor *rayv2_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, RAYV2_MAX_NOTE, 120.0f, 0.0f, 120.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_MASTER_PITCH, 0.0f, -36.0f, 36.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_NOISE_TYPE, 0.0f, 0.0f, 2.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_FILTER_TYPE, 0.0f, 0.0f, 8.0f);
 
 
     f_result->cleanup = v_cleanup_rayv2;

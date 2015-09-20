@@ -1303,11 +1303,12 @@ class pydaw_filter_widget:
         self.res_knob.add_to_grid_layout(self.layout, 1)
         if a_type_port is not None:
             self.type_combobox = pydaw_combobox_control(
-                150, _("Type"), a_type_port, a_rel_callback, a_val_callback,
-                ["LP 2", "HP 2", "BP2", "LP 4", "HP 4", "BP4", _("Off")],
+                90, _("Type"), a_type_port, a_rel_callback, a_val_callback,
+                ["LP2", "LP4", "HP2", "HP4", "BP2", "BP4",
+                "Notch2", "Notch4", _("Off")],
                 a_port_dict, a_preset_mgr=a_preset_mgr)
-            self.layout.addWidget(self.type_combobox.name_label, 2, 0)
-            self.layout.addWidget(self.type_combobox.control, 2, 1)
+            self.layout.addWidget(self.type_combobox.name_label, 0, 2)
+            self.layout.addWidget(self.type_combobox.control, 1, 2)
 
 
 class pydaw_perc_env_widget:

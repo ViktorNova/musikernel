@@ -105,7 +105,6 @@ t_rayv2_poly_voice * g_rayv2_poly_init(float a_sr)
     f_voice->osc2_pitch_adjust = 0.0f;
 
     g_nosvf_init(&f_voice->svf_filter, a_sr);
-    f_voice->svf_function = nosvf_get_run_filter_ptr(1, SVF_FILTER_TYPE_LP);
 
     f_voice->filter_keytrk = 0.0f;
 

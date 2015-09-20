@@ -107,6 +107,18 @@ inline void v_nosvf_reset(t_nosvf_filter * a_svf)
     }
 }
 
+fp_nosvf_run_filter NOSVF_TYPES[9] = {
+    v_nosvf_run_2_pole_lp,
+    v_nosvf_run_4_pole_lp,
+    v_nosvf_run_2_pole_hp,
+    v_nosvf_run_4_pole_hp,
+    v_nosvf_run_2_pole_bp,
+    v_nosvf_run_4_pole_bp,
+    v_nosvf_run_2_pole_notch,
+    v_nosvf_run_4_pole_notch,
+    v_nosvf_run_no_filter
+};
+
 /* inline float v_nosvf_run_no_filter(
  * t_nosvf_filter* a_svf,
  * float a_in) //audio input

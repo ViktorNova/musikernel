@@ -69,6 +69,7 @@ RAYV_MASTER_PITCH = 45
 RAYV2_UNISON_VOICES2 = 46
 RAYV2_UNISON_SPREAD2 = 47
 RAYV2_NOISE_TYPE = 48
+RAYV2_FILTER_TYPE = 49
 
 
 RAYV_PORT_MAP = {
@@ -214,18 +215,18 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.filter = pydaw_filter_widget(
             f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, RAYV_TIMBRE, RAYV_RES,
-            a_preset_mgr=self.preset_manager)
+            a_preset_mgr=self.preset_manager, a_type_port=RAYV2_FILTER_TYPE)
         self.hlayout2.addWidget(self.filter.groupbox)
         self.filter_env_amt = pydaw_knob_control(
             f_knob_size, _("Env Amt"), RAYV_FILTER_ENV_AMT,
             self.plugin_rel_callback, self.plugin_val_callback,
             -36, 36, 0, KC_INTEGER, self.port_dict, self.preset_manager)
-        self.filter_env_amt.add_to_grid_layout(self.filter.layout, 2)
+        self.filter_env_amt.add_to_grid_layout(self.filter.layout, 10)
         self.filter_keytrk = pydaw_knob_control(
             f_knob_size, _("KeyTrk"), RAYV_FILTER_KEYTRK,
             self.plugin_rel_callback, self.plugin_val_callback,
             0, 100, 0, KC_NONE, self.port_dict, self.preset_manager)
-        self.filter_keytrk.add_to_grid_layout(self.filter.layout, 3)
+        self.filter_keytrk.add_to_grid_layout(self.filter.layout, 11)
         self.hlayout3 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout3)
         self.master = pydaw_master_widget(
