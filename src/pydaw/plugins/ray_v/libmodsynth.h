@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef RAYV2_LIBMODSYNTH_H
-#define	RAYV2_LIBMODSYNTH_H
+#ifndef RAYV_LIBMODSYNTH_H
+#define	RAYV_LIBMODSYNTH_H
 
 #ifdef	__cplusplus
 extern "C" {
@@ -36,7 +36,7 @@ typedef struct
     t_smoother_linear filter_smoother;
     t_smoother_linear pitchbend_smoother;
     t_smoother_linear lfo_smoother;
-}t_rayv2_mono_modules;
+}t_rayv_mono_modules;
 
 
 typedef struct
@@ -85,16 +85,16 @@ typedef struct
 
     t_clipper clipper1;
     t_audio_xfade dist_dry_wet;
-}t_rayv2_poly_voice  __attribute__((aligned(16)));
+}t_rayv_poly_voice  __attribute__((aligned(16)));
 
-t_rayv2_poly_voice * g_rayv2_poly_init(float);
+t_rayv_poly_voice * g_rayv_poly_init(float);
 
 
 
-t_rayv2_poly_voice * g_rayv2_poly_init(float a_sr)
+t_rayv_poly_voice * g_rayv_poly_init(float a_sr)
 {
-    t_rayv2_poly_voice * f_voice;
-    hpalloc((void**)&f_voice, sizeof(t_rayv2_poly_voice));
+    t_rayv_poly_voice * f_voice;
+    hpalloc((void**)&f_voice, sizeof(t_rayv_poly_voice));
 
     g_osc_simple_unison_init(&f_voice->osc_unison1, a_sr);
     g_osc_simple_unison_init(&f_voice->osc_unison2, a_sr);
@@ -149,9 +149,9 @@ t_rayv2_poly_voice * g_rayv2_poly_init(float a_sr)
 }
 
 
-void v_rayv2_poly_note_off(t_rayv2_poly_voice * a_voice, int a_fast);
+void v_rayv_poly_note_off(t_rayv_poly_voice * a_voice, int a_fast);
 
-void v_rayv2_poly_note_off(t_rayv2_poly_voice * a_voice, int a_fast)
+void v_rayv_poly_note_off(t_rayv_poly_voice * a_voice, int a_fast)
 {
     if(a_fast)
     {
@@ -165,14 +165,14 @@ void v_rayv2_poly_note_off(t_rayv2_poly_voice * a_voice, int a_fast)
     v_adsr_release(&a_voice->adsr_filter);
 }
 
-t_rayv2_mono_modules * v_rayv2_mono_init(float);
+t_rayv_mono_modules * v_rayv_mono_init(float);
 
 
 /*Initialize any modules that will be run monophonically*/
-t_rayv2_mono_modules * v_rayv2_mono_init(float a_sr)
+t_rayv_mono_modules * v_rayv_mono_init(float a_sr)
 {
-    t_rayv2_mono_modules * a_mono;
-    hpalloc((void**)&a_mono, sizeof(t_rayv2_mono_modules));
+    t_rayv_mono_modules * a_mono;
+    hpalloc((void**)&a_mono, sizeof(t_rayv_mono_modules));
     g_sml_init(&a_mono->filter_smoother, a_sr, 124.0f, 20.0f, 0.2f);
     g_sml_init(&a_mono->lfo_smoother, a_sr, 1600.0f, 10.0f, 0.2f);
     //To prevent low volume and brightness at the first note-on(s)

@@ -11,8 +11,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef RAYV2_SYNTH_H
-#define	RAYV2_SYNTH_H
+#ifndef RAYV_SYNTH_H
+#define	RAYV_SYNTH_H
 
 #ifdef	__cplusplus
 extern "C" {
@@ -22,57 +22,57 @@ extern "C" {
 #include "libmodsynth.h"
 #include "../../libmodsynth/lib/voice.h"
 
-#define RAYV2_ATTACK  2
-#define RAYV2_DECAY   3
-#define RAYV2_SUSTAIN 4
-#define RAYV2_RELEASE 5
-#define RAYV2_TIMBRE  6
-#define RAYV2_RES  7
-#define RAYV2_DIST 8
-#define RAYV2_FILTER_ATTACK  9
-#define RAYV2_FILTER_DECAY   10
-#define RAYV2_FILTER_SUSTAIN 11
-#define RAYV2_FILTER_RELEASE 12
-#define RAYV2_NOISE_AMP 13
-#define RAYV2_FILTER_ENV_AMT 14
-#define RAYV2_DIST_WET 15
-#define RAYV2_OSC1_TYPE 16
-#define RAYV2_OSC1_PITCH 17
-#define RAYV2_OSC1_TUNE 18
-#define RAYV2_OSC1_VOLUME 19
-#define RAYV2_OSC2_TYPE 20
-#define RAYV2_OSC2_PITCH 21
-#define RAYV2_OSC2_TUNE 22
-#define RAYV2_OSC2_VOLUME 23
-#define RAYV2_MASTER_VOLUME 24
-#define RAYV2_MASTER_UNISON_VOICES 25
-#define RAYV2_MASTER_UNISON_SPREAD 26
-#define RAYV2_MASTER_GLIDE 27
-#define RAYV2_MASTER_PITCHBEND_AMT 28
-#define RAYV2_PITCH_ENV_TIME 29
-#define RAYV2_PITCH_ENV_AMT 30
-#define RAYV2_LFO_FREQ 31
-#define RAYV2_LFO_TYPE 32
-#define RAYV2_LFO_AMP 33
-#define RAYV2_LFO_PITCH 34
-#define RAYV2_LFO_FILTER 35
-#define RAYV2_OSC_HARD_SYNC 36
-#define RAYV2_RAMP_CURVE 37
-#define RAYV2_FILTER_KEYTRK 38
-#define RAYV2_MONO_MODE 39
-#define RAYV2_LFO_PHASE 40
-#define RAYV2_LFO_PITCH_FINE 41
-#define RAYV2_ADSR_PREFX 42
-#define RAYV2_MIN_NOTE 43
-#define RAYV2_MAX_NOTE 44
-#define RAYV2_MASTER_PITCH 45
+#define RAYV_ATTACK  2
+#define RAYV_DECAY   3
+#define RAYV_SUSTAIN 4
+#define RAYV_RELEASE 5
+#define RAYV_TIMBRE  6
+#define RAYV_RES  7
+#define RAYV_DIST 8
+#define RAYV_FILTER_ATTACK  9
+#define RAYV_FILTER_DECAY   10
+#define RAYV_FILTER_SUSTAIN 11
+#define RAYV_FILTER_RELEASE 12
+#define RAYV_NOISE_AMP 13
+#define RAYV_FILTER_ENV_AMT 14
+#define RAYV_DIST_WET 15
+#define RAYV_OSC1_TYPE 16
+#define RAYV_OSC1_PITCH 17
+#define RAYV_OSC1_TUNE 18
+#define RAYV_OSC1_VOLUME 19
+#define RAYV_OSC2_TYPE 20
+#define RAYV_OSC2_PITCH 21
+#define RAYV_OSC2_TUNE 22
+#define RAYV_OSC2_VOLUME 23
+#define RAYV_MASTER_VOLUME 24
+#define RAYV_MASTER_UNISON_VOICES 25
+#define RAYV_MASTER_UNISON_SPREAD 26
+#define RAYV_MASTER_GLIDE 27
+#define RAYV_MASTER_PITCHBEND_AMT 28
+#define RAYV_PITCH_ENV_TIME 29
+#define RAYV_PITCH_ENV_AMT 30
+#define RAYV_LFO_FREQ 31
+#define RAYV_LFO_TYPE 32
+#define RAYV_LFO_AMP 33
+#define RAYV_LFO_PITCH 34
+#define RAYV_LFO_FILTER 35
+#define RAYV_OSC_HARD_SYNC 36
+#define RAYV_RAMP_CURVE 37
+#define RAYV_FILTER_KEYTRK 38
+#define RAYV_MONO_MODE 39
+#define RAYV_LFO_PHASE 40
+#define RAYV_LFO_PITCH_FINE 41
+#define RAYV_ADSR_PREFX 42
+#define RAYV_MIN_NOTE 43
+#define RAYV_MAX_NOTE 44
+#define RAYV_MASTER_PITCH 45
 
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define RAYV2_COUNT 46
+#define RAYV_COUNT 46
 
-#define RAYV2_POLYPHONY   16
-#define RAYV2_POLYPHONY_THRESH 12
+#define RAYV_POLYPHONY   16
+#define RAYV_POLYPHONY_THRESH 12
 
 typedef struct {
     PYFX_Data *output0;
@@ -133,12 +133,12 @@ typedef struct {
     PYFX_Data *min_note;
     PYFX_Data *max_note;
 
-    t_rayv2_poly_voice * data[RAYV2_POLYPHONY];
+    t_rayv_poly_voice * data[RAYV_POLYPHONY];
     t_voc_voices * voices;
     long         sampleNo;
 
     float fs;
-    t_rayv2_mono_modules * mono_modules;
+    t_rayv_mono_modules * mono_modules;
 
     float sv_pitch_bend_value;
     float sv_last_note;  //For glide
@@ -149,7 +149,7 @@ typedef struct {
     float * port_table;
     t_plugin_cc_map cc_map;
     PYFX_Descriptor * descriptor;
-} t_rayv2;
+} t_rayv;
 
 
 
