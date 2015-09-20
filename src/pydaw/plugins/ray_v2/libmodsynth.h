@@ -49,6 +49,8 @@ typedef struct
     float osc2_linamp;
     float noise_linamp;
     int hard_sync;
+    int noise_prefx;
+    fp_noise_func_ptr noise_func_ptr;
     int adsr_prefx;
     float unison_spread1;
     float unison_spread2;
@@ -117,6 +119,7 @@ t_rayv2_poly_voice * g_rayv2_poly_init(float a_sr)
 
     g_white_noise_init(&f_voice->white_noise1, a_sr);
     f_voice->noise_amp = 0;
+    f_voice->noise_func_ptr = f_run_noise_off;
 
     g_rmp_init(&f_voice->glide_env, a_sr);
     g_rmp_init(&f_voice->pitch_env, a_sr);

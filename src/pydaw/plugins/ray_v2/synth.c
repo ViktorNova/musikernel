@@ -248,6 +248,9 @@ static void v_rayv2_connect_port(PYFX_Handle instance, int port,
         case RAYV2_MASTER_PITCH:
             plugin->master_pitch = data;
             break;
+        case RAYV2_NOISE_TYPE:
+            plugin->noise_type = data;
+            break;
     }
 }
 
@@ -392,6 +395,9 @@ static void v_rayv2_process_midi_event(
             plugin_data->data[f_voice]->noise_linamp =
                     f_db_to_linear_fast(*(plugin_data->noise_amp));
 
+            plugin_data->data[f_voice]->noise_func_ptr =
+                fp_get_noise_func_ptr((int)(*(plugin_data->noise_type)));
+
             plugin_data->data[f_voice]->unison_spread1 =
                     (*plugin_data->uni_spread1) * 0.01f;
             plugin_data->data[f_voice]->unison_spread2 =
@@ -480,10 +486,10 @@ static void v_rayv2_process_midi_event(
             }
 
             plugin_data->data[f_voice]->adsr_prefx =
-                    (int)*plugin_data->adsr_prefx;
+                (int)*plugin_data->adsr_prefx;
 
             plugin_data->sv_last_note =
-                    (plugin_data->data[f_voice]->note_f);
+                plugin_data->data[f_voice]->note_f;
         }
         /*0 velocity, the same as note-off*/
         else
@@ -739,7 +745,7 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
     }
 
     a_voice->current_sample +=
-        (f_run_white_noise(&a_voice->white_noise1) * (a_voice->noise_linamp));
+        a_voice->noise_func_ptr(&a_voice->white_noise1) * a_voice->noise_linamp;
 
     v_adsr_run_db(&a_voice->adsr_amp);
 
@@ -830,6 +836,7 @@ PYFX_Descriptor *rayv2_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, RAYV2_MIN_NOTE, 0.0f, 0.0f, 120.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_MAX_NOTE, 120.0f, 0.0f, 120.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_MASTER_PITCH, 0.0f, -36.0f, 36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_NOISE_TYPE, 0.0f, 0.0f, 2.0f);
 
 
     f_result->cleanup = v_cleanup_rayv2;

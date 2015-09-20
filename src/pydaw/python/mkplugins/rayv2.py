@@ -68,6 +68,8 @@ RAYV_MAX_NOTE = 44
 RAYV_MASTER_PITCH = 45
 RAYV2_UNISON_VOICES2 = 46
 RAYV2_UNISON_SPREAD2 = 47
+RAYV2_NOISE_TYPE = 48
+
 
 RAYV_PORT_MAP = {
     "Attack": "2",
@@ -182,6 +184,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             "would want to distort and pitchbend if this is enabled."))
         self.sync_gridlayout.addWidget(
             self.hard_sync.control, 1, 0, QtCore.Qt.AlignCenter)
+
         self.groupbox_noise = QGroupBox(_("Noise"))
         self.groupbox_noise.setObjectName("plugin_groupbox")
         self.noise_layout = QGridLayout(self.groupbox_noise)
@@ -192,6 +195,15 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             -60, 0, -30, KC_INTEGER, self.port_dict, self.preset_manager)
         self.noise_amp.add_to_grid_layout(self.noise_layout, 0)
+
+        self.noise_type = pydaw_combobox_control(
+            87, _("Type"), RAYV2_NOISE_TYPE,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            [_("Off"), _("White"), _("Pink")], self.port_dict,
+             a_preset_mgr=self.preset_manager)
+        self.noise_type.control.setMaximumWidth(87)
+        self.noise_type.add_to_grid_layout(self.noise_layout, 1)
+
         self.adsr_filter = pydaw_adsr_widget(
             f_knob_size, False, RAYV_FILTER_ATTACK,
             RAYV_FILTER_DECAY, RAYV_FILTER_SUSTAIN,
