@@ -72,6 +72,8 @@ RAYV2_NOISE_TYPE = 48
 RAYV2_FILTER_TYPE = 49
 RAYV2_FILTER_VELOCITY = 50
 RAYV2_DIST_OUTGAIN = 51
+RAYV2_OSC1_PB = 52
+RAYV2_OSC2_PB = 53
 
 
 RAYV_PORT_MAP = {
@@ -138,7 +140,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             _("Oscillator 1"), self.port_dict,
             a_preset_mgr=self.preset_manager, a_default_type=1,
             a_uni_voices_port=RAYV2_UNISON_VOICES1,
-            a_uni_spread_port=RAYV2_UNISON_SPREAD1)
+            a_uni_spread_port=RAYV2_UNISON_SPREAD1, a_pb_port=RAYV2_OSC1_PB)
         self.hlayout1.addWidget(self.osc1.group_box)
         self.adsr_amp = pydaw_adsr_widget(
             f_knob_size, True, RAYV_ATTACK, RAYV_DECAY,
@@ -179,7 +181,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             _("Oscillator 2"), self.port_dict, self.preset_manager,
             a_uni_voices_port=RAYV2_UNISON_VOICES2,
-            a_uni_spread_port=RAYV2_UNISON_SPREAD2)
+            a_uni_spread_port=RAYV2_UNISON_SPREAD2, a_pb_port=RAYV2_OSC2_PB)
         self.hlayout2.addWidget(self.osc2.group_box)
 
         self.adsr_filter = pydaw_adsr_widget(
@@ -255,7 +257,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             None, None,
             self.preset_manager, a_poly_port=RAYV_MONO_MODE,
             a_min_note_port=RAYV_MIN_NOTE, a_max_note_port=RAYV_MAX_NOTE,
-            a_pitch_port=RAYV_MASTER_PITCH)
+            a_pitch_port=RAYV_MASTER_PITCH, a_pb_min=0)
         self.hlayout3.addWidget(self.master.group_box)
 
         self.pitch_env = pydaw_ramp_env_widget(

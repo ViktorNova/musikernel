@@ -55,6 +55,8 @@ typedef struct
     float unison_spread1;
     float unison_spread2;
     float dist_out_gain;
+    float osc1pb;
+    float osc2pb;
 
     float lfo_amp_output, lfo_pitch_output, lfo_filter_output;
 

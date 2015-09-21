@@ -260,6 +260,15 @@ static void v_rayv2_connect_port(PYFX_Handle instance, int port,
         case RAYV2_DIST_OUTGAIN:
             plugin->dist_out_gain = data;
             break;
+        case RAYV2_OSC1_PB:
+            plugin->osc1pb = data;
+            break;
+        case RAYV2_OSC2_PB:
+            plugin->osc2pb = data;
+            break;
+        default:
+            assert(0);
+            break;
     }
 }
 
@@ -368,6 +377,10 @@ static void v_rayv2_process_midi_event(
                 (*plugin_data->filter_keytrk) * 0.01f * (f_voice->note_f);
 
             f_voice->target_pitch = (f_voice->note_f);
+            f_voice->osc1pb =
+                (*plugin_data->master_pb_amt) + (*plugin_data->osc1pb);
+            f_voice->osc2pb =
+                (*plugin_data->master_pb_amt) + (*plugin_data->osc2pb);
 
             f_voice->dist_out_gain = f_db_to_linear_fast(
                 (*plugin_data->dist_out_gain) * 0.01f);
@@ -675,19 +688,21 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
         (*plugin_data->lfo_pitch + (*plugin_data->lfo_pitch_fine * 0.01f))
         * (a_voice->lfo1.output);
 
+    float f_pb = plugin_data->mono_modules->pitchbend_smoother.last_value;
+
+    a_voice->base_pitch =
+        (a_voice->glide_env.output_multiplied) +
+        (a_voice->pitch_env.output_multiplied) +
+        (a_voice->last_pitch) + (a_voice->lfo_pitch_output);
+
     if(a_voice->hard_sync)
     {
-        a_voice->base_pitch =
-                (a_voice->glide_env.output_multiplied) +
-                (a_voice->pitch_env.output_multiplied)
-                + (plugin_data->mono_modules->pitchbend_smoother.last_value *
-                (*(plugin_data->master_pb_amt))) +
-                (a_voice->last_pitch) + (a_voice->lfo_pitch_output);
-
         v_osc_set_unison_pitch(&a_voice->osc_unison1, a_voice->unison_spread1,
-                ((a_voice->target_pitch) + (a_voice->osc1_pitch_adjust) ));
+            ((a_voice->target_pitch) + (a_voice->osc1_pitch_adjust) +
+            (a_voice->osc1pb * f_pb)));
         v_osc_set_unison_pitch(&a_voice->osc_unison2, a_voice->unison_spread2,
-                ((a_voice->base_pitch) + (a_voice->osc2_pitch_adjust)));
+            ((a_voice->base_pitch) + (a_voice->osc2_pitch_adjust) +
+            (a_voice->osc2pb * f_pb)));
 
         current_sample += f_osc_run_unison_osc_sync(&a_voice->osc_unison2);
 
@@ -702,19 +717,14 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
     }
     else
     {
-        a_voice->base_pitch =
-                (a_voice->glide_env.output_multiplied) +
-                (a_voice->pitch_env.output_multiplied)
-                + (plugin_data->mono_modules->pitchbend_smoother.last_value *
-                (*(plugin_data->master_pb_amt))) +
-                (a_voice->last_pitch) + (a_voice->lfo_pitch_output);
-
         v_osc_set_unison_pitch(&a_voice->osc_unison1,
-                (*plugin_data->uni_spread1) * 0.01f,
-                ((a_voice->base_pitch) + (a_voice->osc1_pitch_adjust) ));
+            (*plugin_data->uni_spread1) * 0.01f,
+            ((a_voice->base_pitch) + (a_voice->osc1_pitch_adjust) +
+            (a_voice->osc1pb * f_pb)));
         v_osc_set_unison_pitch(&a_voice->osc_unison2,
-                (*plugin_data->uni_spread2) * 0.01f,
-                ((a_voice->base_pitch) + (a_voice->osc2_pitch_adjust)));
+            (*plugin_data->uni_spread2) * 0.01f,
+            ((a_voice->base_pitch) + (a_voice->osc2_pitch_adjust) +
+            (a_voice->osc2pb * f_pb)));
 
         current_sample +=
             f_osc_run_unison_osc(&a_voice->osc_unison1) * a_voice->osc1_linamp;
@@ -798,7 +808,7 @@ PYFX_Descriptor *rayv2_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, RAYV2_UNISON_SPREAD1, 50.0f, 0.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_UNISON_SPREAD2, 50.0f, 0.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_MASTER_GLIDE, 0.0f,  0.0f, 200.0f);
-    pydaw_set_pyfx_port(f_result, RAYV2_MASTER_PITCHBEND_AMT, 18.0f, 1.0f,  36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_MASTER_PITCHBEND_AMT, 18.0f, 0.0f,  36.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_PITCH_ENV_AMT, 0.0f, -36.0f, 36.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_PITCH_ENV_TIME, 100.0f, 1.0f, 600.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_LFO_FREQ, 200.0f, 10.0f, 1600.0f);
@@ -820,6 +830,8 @@ PYFX_Descriptor *rayv2_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, RAYV2_FILTER_TYPE, 0.0f, 0.0f, 8.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_FILTER_VELOCITY, 0.0f, 0.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_DIST_OUTGAIN, 0.0f, -1800.0f, 0.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC1_PB, 0.0f, -36.0f, 36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC2_PB, 0.0f, -36.0f, 36.0f);
 
 
     f_result->cleanup = v_cleanup_rayv2;

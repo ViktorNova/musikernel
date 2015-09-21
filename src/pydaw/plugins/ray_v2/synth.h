@@ -72,11 +72,13 @@ extern "C" {
 #define RAYV2_FILTER_TYPE 49
 #define RAYV2_FILTER_VELOCITY 50
 #define RAYV2_DIST_OUTGAIN 51
+#define RAYV2_OSC1_PB 52
+#define RAYV2_OSC2_PB 53
 
 
 /* must be 1 + highest value above
  * CHANGE THIS IF YOU ADD OR TAKE AWAY ANYTHING*/
-#define RAYV2_COUNT 52
+#define RAYV2_COUNT 54
 
 #define RAYV2_POLYPHONY   16
 #define RAYV2_POLYPHONY_THRESH 12
@@ -110,11 +112,13 @@ typedef struct {
     PYFX_Data *osc1tune;
     PYFX_Data *osc1type;
     PYFX_Data *osc1vol;
+    PYFX_Data *osc1pb;
 
     PYFX_Data *osc2pitch;
     PYFX_Data *osc2tune;
     PYFX_Data *osc2type;
     PYFX_Data *osc2vol;
+    PYFX_Data *osc2pb;
 
     PYFX_Data *filter_env_amt;
     PYFX_Data *filter_keytrk;
