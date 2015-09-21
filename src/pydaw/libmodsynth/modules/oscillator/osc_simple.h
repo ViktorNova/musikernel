@@ -101,15 +101,16 @@ inline void v_osc_set_unison_pitch(t_osc_simple_unison * a_osc_ptr,
     }
     else
     {
+        int f_changed = 0;
         if(unlikely(a_spread != (a_osc_ptr->uni_spread)))
         {
             a_osc_ptr->uni_spread = a_spread;
             a_osc_ptr->bottom_pitch = -0.5f * a_spread;
             a_osc_ptr->pitch_inc = a_spread / ((float)(a_osc_ptr->voice_count));
+            f_changed = 1;
         }
 
-        if(a_pitch != a_osc_ptr->last_pitch ||
-           a_spread != (a_osc_ptr->uni_spread))
+        if(a_pitch != a_osc_ptr->last_pitch || f_changed)
         {
             a_osc_ptr->last_pitch = a_pitch;
 
