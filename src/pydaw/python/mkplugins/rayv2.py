@@ -225,8 +225,8 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager)
         self.hard_sync.control.setToolTip(
-            _("Setting self hard sync's Osc1 to Osc2. Usually you "
-            "would want to distort and pitchbend if this is enabled."))
+            _("Setting this hard sync's Osc1 to Osc2. Usually you "
+            "would want to pitchbend Osc2 up if this is enabled."))
         self.sync_gridlayout.addWidget(
             self.hard_sync.control, 1, 0, QtCore.Qt.AlignCenter)
 
