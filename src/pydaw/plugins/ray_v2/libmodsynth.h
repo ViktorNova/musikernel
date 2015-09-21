@@ -54,6 +54,7 @@ typedef struct
     int adsr_prefx;
     float unison_spread1;
     float unison_spread2;
+    float dist_out_gain;
 
     float lfo_amp_output, lfo_pitch_output, lfo_filter_output;
 

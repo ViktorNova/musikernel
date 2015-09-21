@@ -211,8 +211,8 @@ class pydaw_pixmap_knob(QDial):
         p = QPainter(self)
         if self.background_pixmap:
             p.drawPixmap(0, 0, self.background_pixmap)
-        f_frac_val = (((float)(self.value() - self.minimum())) /
-            ((float)(self.maximum() - self.minimum())))
+        f_frac_val = ((float(self.value() - self.minimum())) /
+            (float(self.maximum() - self.minimum())))
         f_rotate_value = f_frac_val * 270.0
         f_rect = self.rect()
         f_rect.setWidth(f_rect.width() - 3)

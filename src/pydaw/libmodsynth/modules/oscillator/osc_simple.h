@@ -332,7 +332,6 @@ t_osc_simple_unison * g_osc_get_osc_simple_unison(float a_sample_rate)
 void g_osc_init_osc_simple_single(
         t_osc_simple_unison * f_result, float a_sample_rate)
 {
-    v_osc_set_uni_voice_count(f_result, 1);
     f_result->osc_type = f_get_saw;
     f_result->sr_recip = 1.0 / a_sample_rate;
     f_result->adjusted_amp = 1.0;
@@ -343,6 +342,7 @@ void g_osc_init_osc_simple_single(
     f_result->uni_spread = 0.1f;
     f_result->last_pitch = -12345.0f;
     f_result->voice_count = 1;
+    v_osc_set_uni_voice_count(f_result, 1);
 
     int f_i = 0;
 

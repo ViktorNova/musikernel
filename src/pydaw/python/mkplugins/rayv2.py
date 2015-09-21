@@ -71,6 +71,7 @@ RAYV2_UNISON_SPREAD2 = 47
 RAYV2_NOISE_TYPE = 48
 RAYV2_FILTER_TYPE = 49
 RAYV2_FILTER_VELOCITY = 50
+RAYV2_DIST_OUTGAIN = 51
 
 
 RAYV_PORT_MAP = {
@@ -161,6 +162,14 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.plugin_rel_callback, self.plugin_val_callback,
             0, 100, 0, KC_NONE, self.port_dict, self.preset_manager)
         self.dist_wet.add_to_grid_layout(self.groupbox_distortion_layout, 1)
+        self.dist_out_gain = pydaw_knob_control(
+            f_knob_size, _("Out"), RAYV2_DIST_OUTGAIN,
+            self.plugin_rel_callback, self.plugin_val_callback,
+            -1800, 0, 0, KC_DECIMAL, self.port_dict, self.preset_manager)
+        self.dist_out_gain.add_to_grid_layout(
+            self.groupbox_distortion_layout, 2)
+
+
         self.hlayout2 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout2)
         self.osc2 = pydaw_osc_widget(
