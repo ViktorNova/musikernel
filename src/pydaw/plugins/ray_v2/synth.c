@@ -266,6 +266,9 @@ static void v_rayv2_connect_port(PYFX_Handle instance, int port,
         case RAYV2_OSC2_PB:
             plugin->osc2pb = data;
             break;
+        case RAYV2_DIST_TYPE:
+            plugin->dist_type = data;
+            break;
         default:
             assert(0);
             break;
@@ -385,6 +388,8 @@ static void v_rayv2_process_midi_event(
             f_voice->dist_out_gain = f_db_to_linear_fast(
                 (*plugin_data->dist_out_gain) * 0.01f);
 
+            f_voice->mdist_fp = g_mds_get_fp((int)(*plugin_data->dist_type));
+
             if(plugin_data->sv_last_note < 0.0f)
             {
                 f_voice->last_pitch = (f_voice->note_f);
@@ -448,14 +453,14 @@ static void v_rayv2_process_midi_event(
                 *(plugin_data->pitch_env_amt),
                 *(plugin_data->ramp_curve) * 0.01f);
 
-            v_clp_set_in_gain(&f_voice->clipper1, *plugin_data->dist);
+            v_mds_set_gain(&f_voice->mdist, *plugin_data->dist);
 
             int f_filter_type = (int)*plugin_data->filter_type;
             f_voice->svf_function = NOSVF_TYPES[f_filter_type];
 
             f_voice->noise_amp = f_db_to_linear(*(plugin_data->noise_amp));
 
-            v_axf_set_xfade(&f_voice->dist_dry_wet,
+            v_axf_set_xfade(&f_voice->mdist.dist_dry_wet,
                 *(plugin_data->dist_wet) * 0.01f);
 
             f_voice->hard_sync = (int)(*plugin_data->sync_hard);
@@ -756,16 +761,13 @@ static void v_run_rayv2_voice(t_rayv2 *plugin_data,
 
     v_nosvf_set_cutoff(&a_voice->svf_filter);
 
-    a_voice->filter_output = a_voice->svf_function(&a_voice->svf_filter,
-            (current_sample));
+    current_sample = a_voice->svf_function(
+        &a_voice->svf_filter, current_sample);
 
-    current_sample = f_axf_run_xfade(&a_voice->dist_dry_wet,
-            (a_voice->filter_output),
-            f_clp_clip(&a_voice->clipper1, a_voice->filter_output) *
-            a_voice->dist_out_gain);
+    current_sample = a_voice->mdist_fp(
+        &a_voice->mdist, current_sample, a_voice->dist_out_gain);
 
-    current_sample = (current_sample) *
-        (a_voice->amp) * (a_voice->lfo_amp_output) *
+    current_sample = current_sample * a_voice->amp * a_voice->lfo_amp_output *
         plugin_data->master_vol_lin;
 
     if(!a_voice->adsr_prefx)
@@ -832,6 +834,7 @@ PYFX_Descriptor *rayv2_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, RAYV2_DIST_OUTGAIN, 0.0f, -1800.0f, 0.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC1_PB, 0.0f, -36.0f, 36.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC2_PB, 0.0f, -36.0f, 36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_DIST_TYPE, 0.0f, 0.0f, 2.0f);
 
 
     f_result->cleanup = v_cleanup_rayv2;

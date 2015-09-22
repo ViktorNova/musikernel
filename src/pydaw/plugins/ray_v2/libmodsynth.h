@@ -25,7 +25,7 @@ extern "C" {
 #include "../../libmodsynth/modules/oscillator/osc_simple.h"
 #include "../../libmodsynth/modules/oscillator/noise.h"
 #include "../../libmodsynth/modules/filter/nosvf.h"
-#include "../../libmodsynth/modules/distortion/clipper.h"
+#include "../../libmodsynth/modules/distortion/multi.h"
 #include "../../libmodsynth/modules/modulation/adsr.h"
 #include "../../libmodsynth/modules/signal_routing/audio_xfade.h"
 #include "../../libmodsynth/modules/modulation/ramp_env.h"
@@ -84,12 +84,8 @@ typedef struct
     t_nosvf_filter svf_filter;
     fp_nosvf_run_filter svf_function;
 
-    float filter_output;  //For assigning the filter output to
-    // This corresponds to the current sample being processed on this voice.
-    // += this to the output buffer when finished.
-
-    t_clipper clipper1;
-    t_audio_xfade dist_dry_wet;
+    t_mds_multidist mdist;
+    fp_multi_dist mdist_fp;
 }t_rayv2_poly_voice  __attribute__((aligned(16)));
 
 t_rayv2_poly_voice * g_rayv2_poly_init(float);
@@ -108,11 +104,10 @@ t_rayv2_poly_voice * g_rayv2_poly_init(float a_sr)
     f_voice->osc2_pitch_adjust = 0.0f;
 
     g_nosvf_init(&f_voice->svf_filter, a_sr);
+    g_mds_init(&f_voice->mdist);
+    f_voice->mdist_fp = g_mds_get_fp(0);
 
     f_voice->filter_keytrk = 0.0f;
-
-    g_clp_init(&f_voice->clipper1);
-    g_axf_init(&f_voice->dist_dry_wet, -3);
 
     g_adsr_init(&f_voice->adsr_amp, a_sr);
     g_adsr_init(&f_voice->adsr_filter, a_sr);
@@ -129,8 +124,6 @@ t_rayv2_poly_voice * g_rayv2_poly_init(float a_sr)
     f_voice->target_pitch = 66.0f;
     f_voice->last_pitch = 66.0f;
     f_voice->base_pitch = 66.0f;
-
-    f_voice->filter_output = 0.0f;
 
     g_lfs_init(&f_voice->lfo1, a_sr);
 

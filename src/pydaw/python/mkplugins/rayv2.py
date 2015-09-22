@@ -74,6 +74,7 @@ RAYV2_FILTER_VELOCITY = 50
 RAYV2_DIST_OUTGAIN = 51
 RAYV2_OSC1_PB = 52
 RAYV2_OSC2_PB = 53
+RAYV2_DIST_TYPE = 54
 
 
 RAYV_PORT_MAP = {
@@ -150,28 +151,12 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             self.port_dict, self.preset_manager,
             a_prefx_port=RAYV_ADSR_PREFX, a_knob_type=KC_LOG_TIME)
         self.hlayout1.addWidget(self.adsr_amp.groupbox)
-        self.groupbox_distortion = QGroupBox(_("Distortion"))
-        self.groupbox_distortion.setObjectName("plugin_groupbox")
-        self.groupbox_distortion_layout = QGridLayout(
-            self.groupbox_distortion)
-        self.hlayout1.addWidget(self.groupbox_distortion)
-        self.dist = pydaw_knob_control(
-            f_knob_size, _("Gain"), RAYV_DIST,
-            self.plugin_rel_callback, self.plugin_val_callback,
-            0, 48, 15, KC_INTEGER, self.port_dict, self.preset_manager)
-        self.dist.add_to_grid_layout(self.groupbox_distortion_layout, 0)
-        self.dist_wet = pydaw_knob_control(
-            f_knob_size, _("Wet"), RAYV_DIST_WET,
-            self.plugin_rel_callback, self.plugin_val_callback,
-            0, 100, 0, KC_NONE, self.port_dict, self.preset_manager)
-        self.dist_wet.add_to_grid_layout(self.groupbox_distortion_layout, 1)
-        self.dist_out_gain = pydaw_knob_control(
-            f_knob_size, _("Out"), RAYV2_DIST_OUTGAIN,
-            self.plugin_rel_callback, self.plugin_val_callback,
-            -1800, 0, 0, KC_DECIMAL, self.port_dict, self.preset_manager)
-        self.dist_out_gain.add_to_grid_layout(
-            self.groupbox_distortion_layout, 2)
 
+        self.dist_widget = MultiDistWidget(
+            f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
+            self.port_dict, RAYV_DIST, RAYV_DIST_WET, RAYV2_DIST_OUTGAIN,
+            RAYV2_DIST_TYPE, a_preset_mgr=self.preset_manager)
+        self.hlayout1.addWidget(self.dist_widget.groupbox_dist)
 
         self.hlayout2 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout2)
@@ -216,26 +201,21 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.hlayout3 = QHBoxLayout()
         self.main_layout.addLayout(self.hlayout3)
 
-        self.sync_groupbox = QGroupBox(_("Sync"))
-        self.sync_groupbox.setObjectName("plugin_groupbox")
-        self.hlayout3.addWidget(self.sync_groupbox)
-        self.sync_gridlayout = QGridLayout(self.sync_groupbox)
-        self.sync_gridlayout.setContentsMargins(3, 3, 3, 3)
         self.hard_sync = pydaw_checkbox_control(
-            "On", RAYV_OSC_HARD_SYNC,
+            "Sync", RAYV_OSC_HARD_SYNC,
             self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, self.preset_manager)
         self.hard_sync.control.setToolTip(
             _("Setting this hard sync's Osc1 to Osc2. Usually you "
             "would want to pitchbend Osc2 up if this is enabled."))
-        self.sync_gridlayout.addWidget(
-            self.hard_sync.control, 1, 0, QtCore.Qt.AlignCenter)
+        self.osc2.grid_layout.addWidget(
+            self.hard_sync.control, 1, 30, QtCore.Qt.AlignCenter)
 
         self.groupbox_noise = QGroupBox(_("Noise"))
         self.groupbox_noise.setObjectName("plugin_groupbox")
         self.noise_layout = QGridLayout(self.groupbox_noise)
         self.noise_layout.setContentsMargins(3, 3, 3, 3)
-        self.hlayout3.addWidget(self.groupbox_noise)
+        self.hlayout1.addWidget(self.groupbox_noise)
         self.noise_amp = pydaw_knob_control(
             f_knob_size, _("Vol"), RAYV_NOISE_AMP,
             self.plugin_rel_callback, self.plugin_val_callback,
@@ -261,18 +241,19 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
             a_pitch_port=RAYV_MASTER_PITCH, a_pb_min=0)
         self.hlayout3.addWidget(self.master.group_box)
 
-        self.pitch_env = pydaw_ramp_env_widget(
-            f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
-            self.port_dict, RAYV_PITCH_ENV_TIME,
-            RAYV_PITCH_ENV_AMT, _("Pitch Env"),
-            self.preset_manager, RAYV_RAMP_CURVE)
-        self.hlayout1.addWidget(self.pitch_env.groupbox)
         self.lfo = pydaw_lfo_widget(
             f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
             self.port_dict, RAYV_LFO_FREQ,
             RAYV_LFO_TYPE, f_lfo_types, _("LFO"),
             self.preset_manager, RAYV_LFO_PHASE)
         self.hlayout3.addWidget(self.lfo.groupbox)
+
+        self.pitch_env = pydaw_ramp_env_widget(
+            f_knob_size, self.plugin_rel_callback, self.plugin_val_callback,
+            self.port_dict, RAYV_PITCH_ENV_TIME,
+            RAYV_PITCH_ENV_AMT, _("Pitch Env"),
+            self.preset_manager, RAYV_RAMP_CURVE)
+        self.hlayout3.addWidget(self.pitch_env.groupbox)
 
         self.lfo_amp = pydaw_knob_control(
             f_knob_size, _("Amp"), RAYV_LFO_AMP,
