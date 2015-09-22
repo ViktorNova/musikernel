@@ -1454,7 +1454,7 @@ class pydaw_osc_widget:
             a_val_callback, -30, 0, -6, a_val_conversion=KC_INTEGER,
             a_port_dict=a_port_dict, a_preset_mgr=a_preset_mgr)
         self.osc_type_combobox = pydaw_combobox_control(
-            139, _("Type"), a_type_port, a_rel_callback, a_val_callback,
+            100, _("Type"), a_type_port, a_rel_callback, a_val_callback,
             a_osc_types_list, a_port_dict, a_preset_mgr=a_preset_mgr,
             a_default_index=a_default_type)
         if a_uni_voices_port is not None and a_uni_spread_port is not None:
