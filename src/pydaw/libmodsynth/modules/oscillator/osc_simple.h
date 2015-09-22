@@ -202,6 +202,30 @@ inline float f_get_square(t_osc_core * a_core)
     }
 }
 
+inline float f_get_hsquare(t_osc_core * a_core)
+{
+    if((a_core->output) <= 0.25f)
+    {
+        return 1.0f;
+    }
+    else
+    {
+        return -0.5f;
+    }
+}
+
+inline float f_get_qsquare(t_osc_core * a_core)
+{
+    if((a_core->output) <= 0.125f)
+    {
+        return 1.0f;
+    }
+    else
+    {
+        return -0.25f;
+    }
+}
+
 inline float f_get_triangle(t_osc_core * a_core)
 {
     float f_ramp = ((a_core->output) * 4.0f) - 2.0f;
@@ -226,27 +250,29 @@ inline float f_get_osc_off(t_osc_core * a_core)
     return 0.0f;
 }
 
-fp_get_osc_func_ptr SIMPLE_OSC_TYPES[] =
+__thread fp_get_osc_func_ptr SIMPLE_OSC_TYPES[] =
 {
     f_get_osc_off, f_get_saw, f_get_square, f_get_triangle, f_get_sine
 };
 
-/* void v_osc_set_simple_osc_unison_type(
- * t_osc_simple_unison * a_osc_ptr, int a_index)
- *
- * Set the oscillator type.  Current valid types are:
- * 0. Saw
- * 1. Square
- * 2. Triangle
- * 3. Sine
- * 4. Off
- */
+__thread fp_get_osc_func_ptr SIMPLE_OSC_TYPES_v2[] =
+{
+    f_get_osc_off, f_get_saw, f_get_square, f_get_hsquare, f_get_qsquare,
+    f_get_triangle, f_get_sine
+};
+
+
 inline void v_osc_set_simple_osc_unison_type(
         t_osc_simple_unison * a_osc_ptr, int a_index)
 {
     a_osc_ptr->osc_type = SIMPLE_OSC_TYPES[a_index];
 }
 
+inline void v_osc_set_simple_osc_unison_type_v2(
+        t_osc_simple_unison * a_osc_ptr, int a_index)
+{
+    a_osc_ptr->osc_type = SIMPLE_OSC_TYPES_v2[a_index];
+}
 
 /*Resync the oscillators at note_on to hopefully avoid phasing artifacts*/
 inline void v_osc_note_on_sync_phases(t_osc_simple_unison * a_osc_ptr)

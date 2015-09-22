@@ -114,8 +114,9 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
         self._plugin_name = "RAYV2"
         self.set_window_title(a_track_name)
         self.is_instrument = True
-        f_osc_types = [_("Off"), _("Saw"), _("Square"), _("Triangle"),
-                       _("Sine")]
+        f_osc_types = [
+            _("Off"), _("Saw"), _("Square"), _("H-Square"), _("Q-Square"),
+            _("Triangle"), _("Sine")]
         f_lfo_types = [_("Off"), _("Sine"), _("Triangle")]
         self.preset_manager = pydaw_preset_manager_widget(
             self.get_plugin_name())

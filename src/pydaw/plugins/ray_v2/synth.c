@@ -460,9 +460,9 @@ static void v_rayv2_process_midi_event(
 
             f_voice->hard_sync = (int)(*plugin_data->sync_hard);
 
-            v_osc_set_simple_osc_unison_type(
+            v_osc_set_simple_osc_unison_type_v2(
                 &f_voice->osc_unison1, (int)(*plugin_data->osc1type));
-            v_osc_set_simple_osc_unison_type(
+            v_osc_set_simple_osc_unison_type_v2(
                 &f_voice->osc_unison2, (int)(*plugin_data->osc2type));
 
             v_nosvf_reset(&f_voice->svf_filter);
@@ -794,11 +794,11 @@ PYFX_Descriptor *rayv2_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, RAYV2_NOISE_AMP, -30.0f, -60.0f, 0.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_FILTER_ENV_AMT, 0.0f, -36.0f, 36.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_DIST_WET, 0.0f, 0.0f, 100.0f);
-    pydaw_set_pyfx_port(f_result, RAYV2_OSC1_TYPE, 1.0f, 0.0f, 5.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC1_TYPE, 1.0f, 0.0f, 7.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC1_PITCH, 0.0f, -36.0f, 36.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC1_TUNE, 0.0f, -100.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC1_VOLUME, -6.0f, -30.0f, 0.0f);
-    pydaw_set_pyfx_port(f_result, RAYV2_OSC2_TYPE, 0.0f, 0.0f, 5.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_OSC2_TYPE, 0.0f, 0.0f, 7.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC2_PITCH, 0.0f, -36.0f, 36.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC2_TUNE, 0.0f, -100.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC2_VOLUME, -6.0f, -30.0f, 0.0f);
