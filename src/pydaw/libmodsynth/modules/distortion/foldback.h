@@ -14,6 +14,7 @@ GNU General Public License for more details.
 #ifndef FOLDBACK_H
 #define	FOLDBACK_H
 
+#include <math.h>
 #include "../../lib/amp.h"
 
 #ifdef	__cplusplus
@@ -91,6 +92,22 @@ void v_fbk_run(t_fbk_foldback * self, float a_input0, float a_input1)
             }
             self->output[f_i] = f_input * -1.0f;
         }
+    }
+}
+
+float f_fbk_mono(float a_val)
+{
+    if(a_val > 1.0f)
+    {
+        return 1.0 - fmodf(a_val, 1.0f);
+    }
+    else if(a_val < -1.0f)
+    {
+        return fmodf(a_val, 1.0f);
+    }
+    else
+    {
+        return a_val;
     }
 }
 
