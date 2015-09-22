@@ -210,7 +210,7 @@ inline float f_get_hsquare(t_osc_core * a_core)
     }
     else
     {
-        return -0.5f;
+        return -0.33333333333f;
     }
 }
 
@@ -222,7 +222,7 @@ inline float f_get_qsquare(t_osc_core * a_core)
     }
     else
     {
-        return -0.25f;
+        return -0.14f;
     }
 }
 
