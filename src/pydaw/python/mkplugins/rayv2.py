@@ -185,7 +185,7 @@ class rayv_plugin_ui(pydaw_abstract_plugin_ui):
         self.filter_env_amt = pydaw_knob_control(
             f_knob_size, _("Env Amt"), RAYV_FILTER_ENV_AMT,
             self.plugin_rel_callback, self.plugin_val_callback,
-            -36, 36, 0, KC_INTEGER, self.port_dict, self.preset_manager)
+            -100, 100, 0, KC_INTEGER, self.port_dict, self.preset_manager)
         self.filter_env_amt.add_to_grid_layout(self.filter.layout, 10)
         self.filter_keytrk = pydaw_knob_control(
             f_knob_size, _("KeyTrk"), RAYV_FILTER_KEYTRK,

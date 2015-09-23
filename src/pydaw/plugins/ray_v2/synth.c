@@ -794,7 +794,7 @@ PYFX_Descriptor *rayv2_PYFX_descriptor()
     pydaw_set_pyfx_port(f_result, RAYV2_FILTER_SUSTAIN, 100.0f, 0.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_FILTER_RELEASE, 50.0f, 10.0f, 400.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_NOISE_AMP, -30.0f, -60.0f, 0.0f);
-    pydaw_set_pyfx_port(f_result, RAYV2_FILTER_ENV_AMT, 0.0f, -36.0f, 36.0f);
+    pydaw_set_pyfx_port(f_result, RAYV2_FILTER_ENV_AMT, 0.0f, -100.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_DIST_WET, 0.0f, 0.0f, 100.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC1_TYPE, 1.0f, 0.0f, 7.0f);
     pydaw_set_pyfx_port(f_result, RAYV2_OSC1_PITCH, 0.0f, -36.0f, 36.0f);
