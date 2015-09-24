@@ -133,7 +133,7 @@ class AbstractIPC:
             self.configure_path = a_configure_path
 
     def send_configure(self, key, value):
-        if not IPC_ENABLED:
+        if not IPC_ENABLED and key != "exit":
             print("IPC_ENABLED == False, "
                 "Would've sent configure message: key: \""
                 "{}\" value: \"{}\"".format(key, value))
