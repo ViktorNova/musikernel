@@ -43,6 +43,7 @@ class MkIpc(libmk.AbstractIPC):
         print("stop_server called")
         if self.with_osc:
             self.send_configure("exit", "")
+            libmk.IPC_ENABLED = False
 
     def pydaw_kill_engine(self):
         self.send_configure("abort", "")
