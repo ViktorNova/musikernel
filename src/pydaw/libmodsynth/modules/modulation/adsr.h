@@ -35,7 +35,8 @@ extern "C" {
 #define ADSR_STAGE_DECAY 3
 #define ADSR_STAGE_SUSTAIN 4
 #define ADSR_STAGE_RELEASE 5
-#define ADSR_STAGE_OFF 6
+#define ADSR_STAGE_WAIT 6
+#define ADSR_STAGE_OFF 7
 
 typedef struct st_adsr
 {
@@ -58,6 +59,7 @@ typedef struct st_adsr
     int time_counter;
     int delay_count;
     int hold_count;
+    int wait_count;
 
     float sr;
     float sr_recip;
@@ -274,6 +276,7 @@ void v_adsr_retrigger(t_adsr *__restrict a_adsr_ptr)
     a_adsr_ptr->output = 0.0f;
     a_adsr_ptr->output_db = ADSR_DB_THRESHOLD;
     a_adsr_ptr->time_counter = 0;
+    a_adsr_ptr->wait_count = 0;
 }
 
 void v_adsr_kill(t_adsr *__restrict a_adsr_ptr)
@@ -326,6 +329,7 @@ void g_adsr_init(t_adsr * f_result, float a_sr)
     f_result->time_counter = 0;
     f_result->delay_count = 0;
     f_result->hold_count = 0;
+    f_result->wait_count = 0;
 }
 
 /* t_adsr * g_adsr_get_adsr(
@@ -340,167 +344,174 @@ t_adsr * g_adsr_get_adsr(float a_sr)
     return f_result;
 }
 
-/* void v_adsr_run(t_adsr * a_adsr_ptr)
+/* void v_adsr_run(t_adsr * self)
  *
  * Run the ADSR envelope
  */
-void v_adsr_run(t_adsr *__restrict a_adsr_ptr)
+void v_adsr_run(t_adsr *__restrict self)
 {
-    if((a_adsr_ptr->stage) != ADSR_STAGE_OFF)
+    if((self->stage) != ADSR_STAGE_OFF)
     {
-        switch(a_adsr_ptr->stage)
+        switch(self->stage)
         {
             case ADSR_STAGE_ATTACK:
-                a_adsr_ptr->output = (a_adsr_ptr->output) + (a_adsr_ptr->a_inc);
-                if((a_adsr_ptr->output) >= 1.0f)
+                self->output = (self->output) + (self->a_inc);
+                if((self->output) >= 1.0f)
                 {
-                    a_adsr_ptr->output = 1.0f;
+                    self->output = 1.0f;
 
-                    if(a_adsr_ptr->hold_count)
+                    if(self->hold_count)
                     {
-                        a_adsr_ptr->stage = ADSR_STAGE_HOLD;
+                        self->stage = ADSR_STAGE_HOLD;
                     }
                     else
                     {
-                        a_adsr_ptr->stage = ADSR_STAGE_DECAY;
+                        self->stage = ADSR_STAGE_DECAY;
                     }
                 }
                 break;
             case ADSR_STAGE_DECAY:
-                a_adsr_ptr->output =
-                        (a_adsr_ptr->output) + (a_adsr_ptr->d_inc);
-                if((a_adsr_ptr->output) <= (a_adsr_ptr->s_value))
+                self->output = (self->output) + (self->d_inc);
+                if((self->output) <= (self->s_value))
                 {
-                    a_adsr_ptr->output = a_adsr_ptr->s_value;
-                    a_adsr_ptr->stage = ADSR_STAGE_SUSTAIN;
+                    self->output = self->s_value;
+                    self->stage = ADSR_STAGE_SUSTAIN;
                 }
                 break;
             case ADSR_STAGE_SUSTAIN:
                 break;
             case ADSR_STAGE_RELEASE:
-                a_adsr_ptr->output =
-                        (a_adsr_ptr->output) + (a_adsr_ptr->r_inc);
-                if((a_adsr_ptr->output) <= 0.0f)
+                self->output =
+                        (self->output) + (self->r_inc);
+                if((self->output) <= 0.0f)
                 {
-                    a_adsr_ptr->output = 0.0f;
-                    a_adsr_ptr->stage = ADSR_STAGE_OFF;
+                    self->output = 0.0f;
+                    self->stage = ADSR_STAGE_WAIT;
+                }
+                break;
+            case ADSR_STAGE_WAIT:
+                ++self->wait_count;
+                if(self->wait_count >= 1000)
+                {
+                    self->stage = ADSR_STAGE_OFF;
                 }
                 break;
             case ADSR_STAGE_DELAY:
-                ++a_adsr_ptr->time_counter;
-                if(a_adsr_ptr->time_counter >= a_adsr_ptr->delay_count)
+                ++self->time_counter;
+                if(self->time_counter >= self->delay_count)
                 {
-                    a_adsr_ptr->stage = ADSR_STAGE_ATTACK;
-                    a_adsr_ptr->time_counter = 0;
+                    self->stage = ADSR_STAGE_ATTACK;
+                    self->time_counter = 0;
                 }
                 break;
             case ADSR_STAGE_HOLD:
-                ++a_adsr_ptr->time_counter;
-                if(a_adsr_ptr->time_counter >= a_adsr_ptr->hold_count)
+                ++self->time_counter;
+                if(self->time_counter >= self->hold_count)
                 {
-                    a_adsr_ptr->stage = ADSR_STAGE_DECAY;
-                    a_adsr_ptr->time_counter = 0;
+                    self->stage = ADSR_STAGE_DECAY;
+                    self->time_counter = 0;
                 }
                 break;
         }
     }
 }
 
-void v_adsr_run_db(t_adsr *__restrict a_adsr_ptr)
+void v_adsr_run_db(t_adsr *__restrict self)
 {
-    if((a_adsr_ptr->stage) != ADSR_STAGE_OFF)
+    if((self->stage) != ADSR_STAGE_OFF)
     {
-        switch(a_adsr_ptr->stage)
+        switch(self->stage)
         {
             case ADSR_STAGE_ATTACK:
-                if((a_adsr_ptr->output) < ADSR_DB_THRESHOLD_LINEAR)
+                if((self->output) < ADSR_DB_THRESHOLD_LINEAR)
                 {
-                    a_adsr_ptr->output = (a_adsr_ptr->output) + 0.005f;
+                    self->output = (self->output) + 0.005f;
                 }
                 else
                 {
-                    a_adsr_ptr->output_db =
-                            (a_adsr_ptr->output_db) + (a_adsr_ptr->a_inc_db);
-                    a_adsr_ptr->output =
-                            f_db_to_linear_fast((a_adsr_ptr->output_db));
+                    self->output_db = (self->output_db) + (self->a_inc_db);
+                    self->output = f_db_to_linear_fast((self->output_db));
 
-                    if((a_adsr_ptr->output) >= 1.0f)
+                    if((self->output) >= 1.0f)
                     {
-                        a_adsr_ptr->output = 1.0f;
+                        self->output = 1.0f;
 
-                        if(a_adsr_ptr->hold_count)
+                        if(self->hold_count)
                         {
-                            a_adsr_ptr->stage = ADSR_STAGE_HOLD;
+                            self->stage = ADSR_STAGE_HOLD;
                         }
                         else
                         {
-                            a_adsr_ptr->stage = ADSR_STAGE_DECAY;
+                            self->stage = ADSR_STAGE_DECAY;
                         }
                     }
                 }
 
                 break;
             case ADSR_STAGE_DECAY:
-                if((a_adsr_ptr->output) < ADSR_DB_THRESHOLD_LINEAR)
+                if((self->output) < ADSR_DB_THRESHOLD_LINEAR)
                 {
-                    a_adsr_ptr->output =
-                            (a_adsr_ptr->output) + (a_adsr_ptr->d_inc);
+                    self->output =
+                            (self->output) + (self->d_inc);
                 }
                 else
                 {
-                    a_adsr_ptr->output_db =
-                            (a_adsr_ptr->output_db) + (a_adsr_ptr->d_inc_db);
-                    a_adsr_ptr->output =
-                            f_db_to_linear_fast(a_adsr_ptr->output_db);
+                    self->output_db =
+                            (self->output_db) + (self->d_inc_db);
+                    self->output =
+                            f_db_to_linear_fast(self->output_db);
                 }
 
-                if((a_adsr_ptr->output) <= (a_adsr_ptr->s_value))
+                if((self->output) <= (self->s_value))
                 {
-                    a_adsr_ptr->output = a_adsr_ptr->s_value;
-                    a_adsr_ptr->stage = ADSR_STAGE_SUSTAIN;
+                    self->output = self->s_value;
+                    self->stage = ADSR_STAGE_SUSTAIN;
                 }
                 break;
             case ADSR_STAGE_SUSTAIN:
                 break;
             case ADSR_STAGE_RELEASE:
-                if((a_adsr_ptr->output) < ADSR_DB_THRESHOLD_LINEAR_RELEASE)
+                if((self->output) < ADSR_DB_THRESHOLD_LINEAR_RELEASE)
                 {
-                    a_adsr_ptr->output_db = (a_adsr_ptr->output_db) - 0.05f;
+                    self->output_db = (self->output_db) - 0.05f;
 
-                    if(a_adsr_ptr->output_db < -96.0f)
+                    if(self->output_db < -96.0f)
                     {
-                        a_adsr_ptr->stage = ADSR_STAGE_OFF;
-                        a_adsr_ptr->output = 0.0f;
+                        self->stage = ADSR_STAGE_WAIT;
+                        self->output = 0.0f;
                     }
                     else
                     {
-                        a_adsr_ptr->output =
-                            f_db_to_linear_fast(a_adsr_ptr->output_db);
+                        self->output = f_db_to_linear_fast(self->output_db);
                     }
                 }
                 else
                 {
-                    a_adsr_ptr->output_db = (a_adsr_ptr->output_db) +
-                            (a_adsr_ptr->r_inc_db);
-                    a_adsr_ptr->output =
-                            f_db_to_linear_fast(a_adsr_ptr->output_db);
+                    self->output_db = (self->output_db) + (self->r_inc_db);
+                    self->output = f_db_to_linear_fast(self->output_db);
                 }
-
+                break;
+            case ADSR_STAGE_WAIT:
+                ++self->wait_count;
+                if(self->wait_count >= 1000)
+                {
+                    self->stage = ADSR_STAGE_OFF;
+                }
                 break;
             case ADSR_STAGE_DELAY:
-                ++a_adsr_ptr->time_counter;
-                if(a_adsr_ptr->time_counter >= a_adsr_ptr->delay_count)
+                ++self->time_counter;
+                if(self->time_counter >= self->delay_count)
                 {
-                    a_adsr_ptr->stage = ADSR_STAGE_ATTACK;
-                    a_adsr_ptr->time_counter = 0;
+                    self->stage = ADSR_STAGE_ATTACK;
+                    self->time_counter = 0;
                 }
                 break;
             case ADSR_STAGE_HOLD:
-                ++a_adsr_ptr->time_counter;
-                if(a_adsr_ptr->time_counter >= a_adsr_ptr->hold_count)
+                ++self->time_counter;
+                if(self->time_counter >= self->hold_count)
                 {
-                    a_adsr_ptr->stage = ADSR_STAGE_DECAY;
-                    a_adsr_ptr->time_counter = 0;
+                    self->stage = ADSR_STAGE_DECAY;
+                    self->time_counter = 0;
                 }
                 break;
         }
