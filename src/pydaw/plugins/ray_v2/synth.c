@@ -646,8 +646,8 @@ static void v_run_rayv2(
         }
 
         f_avg *= os_recip;
-        f_output0[f_i] = f_avg;
-        f_output1[f_i] = f_avg;
+        f_output0[f_i] += f_avg;
+        f_output1[f_i] += f_avg;
         f_i2 += os_count;
     }
 }
