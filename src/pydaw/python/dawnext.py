@@ -164,9 +164,9 @@ class region_settings:
         self.hzoom_slider = QSlider(QtCore.Qt.Horizontal)
         self.hlayout0.addWidget(self.hzoom_slider)
         self.hzoom_slider.setObjectName("zoom_slider")
-        self.hzoom_slider.setRange(0, 36)
+        self.hzoom_slider.setRange(0, 30)
         self.hzoom_slider.setValue(3)
-        self.hzoom_slider.setFixedWidth(75)
+        self.hzoom_slider.setFixedWidth(90)
         self.hzoom_slider.sliderPressed.connect(self.hzoom_pressed)
         self.hzoom_slider.sliderReleased.connect(self.hzoom_released)
         self.hzoom_slider.valueChanged.connect(self.set_hzoom)
@@ -175,9 +175,9 @@ class region_settings:
         self.vzoom_slider = QSlider(QtCore.Qt.Horizontal)
         self.hlayout0.addWidget(self.vzoom_slider)
         self.vzoom_slider.setObjectName("zoom_slider")
-        self.vzoom_slider.setRange(0, 100)
+        self.vzoom_slider.setRange(0, 60)
         self.vzoom_slider.setValue(0)
-        self.vzoom_slider.setFixedWidth(75)
+        self.vzoom_slider.setFixedWidth(60)
         self.vzoom_slider.sliderPressed.connect(self.vzoom_pressed)
         self.vzoom_slider.sliderReleased.connect(self.vzoom_released)
         self.vzoom_slider.valueChanged.connect(self.set_vzoom)
@@ -203,7 +203,7 @@ class region_settings:
         self.size_label.setFixedSize(
             SEQUENCER_PX_PER_BEAT, REGION_EDITOR_TRACK_HEIGHT)
         #self.size_label.move(QCursor.pos())
-        f_widget = TRACK_PANEL.tracks[0].group_box
+        f_widget = MAIN_WINDOW.midi_scroll_area
         self.size_label.setText("Track Height")
         self.set_vzoom_size()
         self.size_label.move(f_widget.mapToGlobal(QtCore.QPoint(0, 0)))
@@ -227,7 +227,7 @@ class region_settings:
     def set_vzoom(self, a_val=None):
         global REGION_EDITOR_TRACK_HEIGHT
         f_val = self.vzoom_slider.value()
-        REGION_EDITOR_TRACK_HEIGHT = (f_val * 4) + 64
+        REGION_EDITOR_TRACK_HEIGHT = (f_val * 8) + 64
         self.set_vzoom_size()
 
     def hzoom_pressed(self, a_val=None):
@@ -261,10 +261,14 @@ class region_settings:
             f_width = SEQUENCER.width()
             f_factor = {0:1, 1:2, 2:4}[f_val]
             SEQUENCER_PX_PER_BEAT = (f_width / f_length) * f_factor
+            self.size_label.setText("Project * {}".format(f_factor))
+            self.size_label.setFixedSize(
+                150, REGION_EDITOR_HEADER_HEIGHT)
         else:
             DRAW_SEQUENCER_GRAPHS = True
             SEQUENCER_PX_PER_BEAT = ((f_val - 3) * 4) + 24
-        self.set_hzoom_size()
+            self.size_label.setText("Beat*4\nWidth")
+            self.set_hzoom_size()
 
     def set_snap(self, a_val=None):
         pydaw_set_seq_snap(a_val)
