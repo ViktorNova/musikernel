@@ -164,19 +164,26 @@ class region_settings:
         self.hzoom_slider = QSlider(QtCore.Qt.Horizontal)
         self.hlayout0.addWidget(self.hzoom_slider)
         self.hzoom_slider.setObjectName("zoom_slider")
-        self.hzoom_slider.setRange(0, 5)
+        self.hzoom_slider.setRange(0, 36)
         self.hzoom_slider.setValue(3)
-        self.hzoom_slider.setFixedWidth(60)
+        self.hzoom_slider.setFixedWidth(75)
+        self.hzoom_slider.sliderPressed.connect(self.hzoom_pressed)
+        self.hzoom_slider.sliderReleased.connect(self.hzoom_released)
         self.hzoom_slider.valueChanged.connect(self.set_hzoom)
 
         self.hlayout0.addWidget(QLabel("V"))
         self.vzoom_slider = QSlider(QtCore.Qt.Horizontal)
         self.hlayout0.addWidget(self.vzoom_slider)
         self.vzoom_slider.setObjectName("zoom_slider")
-        self.vzoom_slider.setRange(1, 5)
-        self.vzoom_slider.setValue(1)
-        self.vzoom_slider.setFixedWidth(60)
+        self.vzoom_slider.setRange(0, 100)
+        self.vzoom_slider.setValue(0)
+        self.vzoom_slider.setFixedWidth(75)
+        self.vzoom_slider.sliderPressed.connect(self.vzoom_pressed)
+        self.vzoom_slider.sliderReleased.connect(self.vzoom_released)
         self.vzoom_slider.valueChanged.connect(self.set_vzoom)
+
+        self.size_label = QLabel()
+        self.size_label.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 
         self.scrollbar = SEQUENCER.horizontalScrollBar()
         self.scrollbar.setSizePolicy(
@@ -191,22 +198,62 @@ class region_settings:
         if libmk.IS_PLAYING and self.follow_checkbox.isChecked():
             self.follow_checkbox.setChecked(False)
 
-    def set_vzoom(self, a_val=None):
-        global REGION_EDITOR_TRACK_HEIGHT
-        f_val = self.vzoom_slider.value()
-        f_old = REGION_EDITOR_TRACK_HEIGHT
-        REGION_EDITOR_TRACK_HEIGHT = f_val * 64
+    def vzoom_pressed(self, a_val=None):
+        self.old_px_per_beat = SEQUENCER_PX_PER_BEAT
+        self.size_label.setFixedSize(
+            SEQUENCER_PX_PER_BEAT, REGION_EDITOR_TRACK_HEIGHT)
+        #self.size_label.move(QCursor.pos())
+        f_widget = TRACK_PANEL.tracks[0].group_box
+        self.size_label.setText("Track Height")
+        self.set_vzoom_size()
+        self.size_label.move(f_widget.mapToGlobal(QtCore.QPoint(0, 0)))
+        self.size_label.show()
+        self.old_height_px = REGION_EDITOR_TRACK_HEIGHT
 
+    def vzoom_released(self, a_val=None):
+        self.size_label.hide()
         TRACK_PANEL.set_track_height()
         self.open_region()
 
         f_scrollbar = MAIN_WINDOW.midi_scroll_area.verticalScrollBar()
         f_scrollbar.setValue(
-            (REGION_EDITOR_TRACK_HEIGHT / f_old) * f_scrollbar.value())
+            (REGION_EDITOR_TRACK_HEIGHT / self.old_height_px) *
+            f_scrollbar.value())
+
+    def set_vzoom_size(self):
+        self.size_label.setFixedSize(
+            REGION_TRACK_WIDTH, REGION_EDITOR_TRACK_HEIGHT)
+
+    def set_vzoom(self, a_val=None):
+        global REGION_EDITOR_TRACK_HEIGHT
+        f_val = self.vzoom_slider.value()
+        REGION_EDITOR_TRACK_HEIGHT = (f_val * 4) + 64
+        self.set_vzoom_size()
+
+    def hzoom_pressed(self, a_val=None):
+        self.old_px_per_beat = SEQUENCER_PX_PER_BEAT
+        self.size_label.setFixedSize(
+            SEQUENCER_PX_PER_BEAT, REGION_EDITOR_TRACK_HEIGHT)
+        #self.size_label.move(QCursor.pos())
+        self.size_label.setText("Beat*4\nWidth")
+        self.set_hzoom_size()
+        self.size_label.move(SEQUENCER.mapToGlobal(QtCore.QPoint(0, 0)))
+        self.size_label.show()
+
+    def hzoom_released(self, a_val=None):
+        self.size_label.hide()
+        pydaw_set_seq_snap()
+        self.open_region()
+        self.scrollbar.setValue(
+            (SEQUENCER_PX_PER_BEAT / self.old_px_per_beat) *
+            self.scrollbar.value())
+
+    def set_hzoom_size(self):
+        self.size_label.setFixedSize(
+            SEQUENCER_PX_PER_BEAT * 4, REGION_EDITOR_HEADER_HEIGHT)
 
     def set_hzoom(self, a_val=None):
         global SEQUENCER_PX_PER_BEAT, DRAW_SEQUENCER_GRAPHS
-        f_old = SEQUENCER_PX_PER_BEAT
         f_val = self.hzoom_slider.value()
         if f_val < 3:
             DRAW_SEQUENCER_GRAPHS = False
@@ -216,12 +263,8 @@ class region_settings:
             SEQUENCER_PX_PER_BEAT = (f_width / f_length) * f_factor
         else:
             DRAW_SEQUENCER_GRAPHS = True
-            SEQUENCER_PX_PER_BEAT = {3:24, 4:48, 5:128}[f_val]
-        pydaw_set_seq_snap()
-        self.open_region()
-
-        self.scrollbar.setValue(
-            (SEQUENCER_PX_PER_BEAT / f_old) * self.scrollbar.value())
+            SEQUENCER_PX_PER_BEAT = ((f_val - 3) * 4) + 24
+        self.set_hzoom_size()
 
     def set_snap(self, a_val=None):
         pydaw_set_seq_snap(a_val)
