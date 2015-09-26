@@ -200,13 +200,12 @@ class region_settings:
 
     def vzoom_pressed(self, a_val=None):
         self.old_px_per_beat = SEQUENCER_PX_PER_BEAT
-        self.size_label.setFixedSize(
-            SEQUENCER_PX_PER_BEAT, REGION_EDITOR_TRACK_HEIGHT)
         #self.size_label.move(QCursor.pos())
-        f_widget = MAIN_WINDOW.midi_scroll_area
         self.size_label.setText("Track Height")
         self.set_vzoom_size()
-        self.size_label.move(f_widget.mapToGlobal(QtCore.QPoint(0, 0)))
+        f_widget = MAIN_WINDOW.midi_scroll_area
+        f_point = QtCore.QPoint(0, REGION_EDITOR_HEADER_HEIGHT)
+        self.size_label.move(f_widget.mapToGlobal(f_point))
         self.size_label.show()
         self.old_height_px = REGION_EDITOR_TRACK_HEIGHT
 
@@ -232,12 +231,12 @@ class region_settings:
 
     def hzoom_pressed(self, a_val=None):
         self.old_px_per_beat = SEQUENCER_PX_PER_BEAT
-        self.size_label.setFixedSize(
-            SEQUENCER_PX_PER_BEAT, REGION_EDITOR_TRACK_HEIGHT)
         #self.size_label.move(QCursor.pos())
         self.size_label.setText("Beat*4\nWidth")
         self.set_hzoom_size()
-        self.size_label.move(SEQUENCER.mapToGlobal(QtCore.QPoint(0, 0)))
+        f_point = QtCore.QPoint(REGION_TRACK_WIDTH + 8, 0)
+        f_widget = MAIN_WINDOW.midi_scroll_area
+        self.size_label.move(f_widget.mapToGlobal(f_point))
         self.size_label.show()
 
     def hzoom_released(self, a_val=None):
