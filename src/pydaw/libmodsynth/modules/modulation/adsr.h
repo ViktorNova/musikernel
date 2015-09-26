@@ -491,7 +491,7 @@ void v_adsr_run_wait(t_adsr *self)
 
 typedef void (*fn_adsr_run)(t_adsr*);
 
-__thread fn_adsr_run ADSR_RUN[] = {
+__thread fn_adsr_run ADSR_RUN[] __attribute__((aligned(CACHE_LINE_SIZE))) = {
 v_adsr_run_delay, //ADSR_STAGE_DELAY 0
 v_adsr_run_attack, //ADSR_STAGE_ATTACK 1
 v_adsr_run_hold, //ADSR_STAGE_HOLD 2
@@ -502,7 +502,7 @@ v_adsr_run_wait, //ADSR_STAGE_WAIT 6
 //ADSR_STAGE_OFF 7
 };
 
-__thread fn_adsr_run ADSR_RUN_DB[] = {
+__thread fn_adsr_run ADSR_RUN_DB[] __attribute__((aligned(CACHE_LINE_SIZE))) = {
 v_adsr_run_delay, //ADSR_STAGE_DELAY 0
 v_adsr_run_attack_db, //ADSR_STAGE_ATTACK 1
 v_adsr_run_hold, //ADSR_STAGE_HOLD 2

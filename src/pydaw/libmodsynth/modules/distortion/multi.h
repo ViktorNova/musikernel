@@ -52,7 +52,8 @@ float f_multi_dist_foldback(t_mds_multidist* self, float a_sample, float a_out)
         f_fbk_mono(a_sample * self->gain) * a_out);
 }
 
-__thread fp_multi_dist MULTI_DIST_FP[] = {
+__thread fp_multi_dist MULTI_DIST_FP[]
+__attribute__((aligned(CACHE_LINE_SIZE))) = {
     f_multi_dist_off, f_multi_dist_clip, f_multi_dist_foldback
 };
 
