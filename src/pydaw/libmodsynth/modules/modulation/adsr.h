@@ -344,177 +344,192 @@ t_adsr * g_adsr_get_adsr(float a_sr)
     return f_result;
 }
 
-/* void v_adsr_run(t_adsr * self)
- *
- * Run the ADSR envelope
- */
-void v_adsr_run(t_adsr *__restrict self)
+void v_adsr_run_delay(t_adsr *self)
 {
-    if((self->stage) != ADSR_STAGE_OFF)
+    ++self->time_counter;
+    if(self->time_counter >= self->delay_count)
     {
-        switch(self->stage)
-        {
-            case ADSR_STAGE_ATTACK:
-                self->output = (self->output) + (self->a_inc);
-                if((self->output) >= 1.0f)
-                {
-                    self->output = 1.0f;
+        self->stage = ADSR_STAGE_ATTACK;
+        self->time_counter = 0;
+    }
+}
 
-                    if(self->hold_count)
-                    {
-                        self->stage = ADSR_STAGE_HOLD;
-                    }
-                    else
-                    {
-                        self->stage = ADSR_STAGE_DECAY;
-                    }
-                }
-                break;
-            case ADSR_STAGE_DECAY:
-                self->output = (self->output) + (self->d_inc);
-                if((self->output) <= (self->s_value))
-                {
-                    self->output = self->s_value;
-                    self->stage = ADSR_STAGE_SUSTAIN;
-                }
-                break;
-            case ADSR_STAGE_SUSTAIN:
-                break;
-            case ADSR_STAGE_RELEASE:
-                self->output =
-                        (self->output) + (self->r_inc);
-                if((self->output) <= 0.0f)
-                {
-                    self->output = 0.0f;
-                    self->stage = ADSR_STAGE_WAIT;
-                }
-                break;
-            case ADSR_STAGE_WAIT:
-                ++self->wait_count;
-                if(self->wait_count >= 1000)
-                {
-                    self->stage = ADSR_STAGE_OFF;
-                }
-                break;
-            case ADSR_STAGE_DELAY:
-                ++self->time_counter;
-                if(self->time_counter >= self->delay_count)
-                {
-                    self->stage = ADSR_STAGE_ATTACK;
-                    self->time_counter = 0;
-                }
-                break;
-            case ADSR_STAGE_HOLD:
-                ++self->time_counter;
-                if(self->time_counter >= self->hold_count)
-                {
-                    self->stage = ADSR_STAGE_DECAY;
-                    self->time_counter = 0;
-                }
-                break;
+void v_adsr_run_attack(t_adsr *self)
+{
+    self->output = (self->output) + (self->a_inc);
+    if((self->output) >= 1.0f)
+    {
+        self->output = 1.0f;
+
+        if(self->hold_count)
+        {
+            self->stage = ADSR_STAGE_HOLD;
+        }
+        else
+        {
+            self->stage = ADSR_STAGE_DECAY;
         }
     }
 }
 
-void v_adsr_run_db(t_adsr *__restrict self)
+void v_adsr_run_attack_db(t_adsr *self)
+{
+    if((self->output) < ADSR_DB_THRESHOLD_LINEAR)
+    {
+        self->output = (self->output) + 0.005f;
+    }
+    else
+    {
+        self->output_db = (self->output_db) + (self->a_inc_db);
+        self->output = f_db_to_linear_fast((self->output_db));
+
+        if((self->output) >= 1.0f)
+        {
+            self->output = 1.0f;
+
+            if(self->hold_count)
+            {
+                self->stage = ADSR_STAGE_HOLD;
+            }
+            else
+            {
+                self->stage = ADSR_STAGE_DECAY;
+            }
+        }
+    }
+}
+
+void v_adsr_run_hold(t_adsr *self)
+{
+    ++self->time_counter;
+    if(self->time_counter >= self->hold_count)
+    {
+        self->stage = ADSR_STAGE_DECAY;
+        self->time_counter = 0;
+    }
+}
+
+void v_adsr_run_decay(t_adsr *self)
+{
+    self->output = (self->output) + (self->d_inc);
+    if((self->output) <= (self->s_value))
+    {
+        self->output = self->s_value;
+        self->stage = ADSR_STAGE_SUSTAIN;
+    }
+}
+
+void v_adsr_run_decay_db(t_adsr *self)
+{
+    if((self->output) < ADSR_DB_THRESHOLD_LINEAR)
+    {
+        self->output =
+                (self->output) + (self->d_inc);
+    }
+    else
+    {
+        self->output_db =
+                (self->output_db) + (self->d_inc_db);
+        self->output =
+                f_db_to_linear_fast(self->output_db);
+    }
+
+    if((self->output) <= (self->s_value))
+    {
+        self->output = self->s_value;
+        self->stage = ADSR_STAGE_SUSTAIN;
+    }
+}
+
+void v_adsr_run_sustain(t_adsr *self)
+{
+    // Do nothing
+}
+
+void v_adsr_run_release(t_adsr *self)
+{
+    self->output = (self->output) + (self->r_inc);
+    if((self->output) <= 0.0f)
+    {
+        self->output = 0.0f;
+        self->stage = ADSR_STAGE_WAIT;
+    }
+}
+
+void v_adsr_run_release_db(t_adsr *self)
+{
+    if((self->output) < ADSR_DB_THRESHOLD_LINEAR_RELEASE)
+    {
+        self->output_db = (self->output_db) - 0.05f;
+
+        if(self->output_db < -96.0f)
+        {
+            self->stage = ADSR_STAGE_WAIT;
+            self->output = 0.0f;
+        }
+        else
+        {
+            self->output = f_db_to_linear_fast(self->output_db);
+        }
+    }
+    else
+    {
+        self->output_db = (self->output_db) + (self->r_inc_db);
+        self->output = f_db_to_linear_fast(self->output_db);
+    }
+}
+
+void v_adsr_run_wait(t_adsr *self)
+{
+    ++self->wait_count;
+    if(self->wait_count >= 1000)
+    {
+        self->stage = ADSR_STAGE_OFF;
+    }
+}
+
+
+typedef void (*fn_adsr_run)(t_adsr*);
+
+__thread fn_adsr_run ADSR_RUN[] = {
+v_adsr_run_delay, //ADSR_STAGE_DELAY 0
+v_adsr_run_attack, //ADSR_STAGE_ATTACK 1
+v_adsr_run_hold, //ADSR_STAGE_HOLD 2
+v_adsr_run_decay, //ADSR_STAGE_DECAY 3
+v_adsr_run_sustain, //ADSR_STAGE_SUSTAIN 4
+v_adsr_run_release, //ADSR_STAGE_RELEASE 5
+v_adsr_run_wait, //ADSR_STAGE_WAIT 6
+//ADSR_STAGE_OFF 7
+};
+
+__thread fn_adsr_run ADSR_RUN_DB[] = {
+v_adsr_run_delay, //ADSR_STAGE_DELAY 0
+v_adsr_run_attack_db, //ADSR_STAGE_ATTACK 1
+v_adsr_run_hold, //ADSR_STAGE_HOLD 2
+v_adsr_run_decay_db, //ADSR_STAGE_DECAY 3
+v_adsr_run_sustain, //ADSR_STAGE_SUSTAIN 4
+v_adsr_run_release_db, //ADSR_STAGE_RELEASE 5
+v_adsr_run_wait, //ADSR_STAGE_WAIT 6
+//ADSR_STAGE_OFF 7
+};
+
+/* void v_adsr_run(t_adsr * self)
+ *
+ * Run the ADSR envelope
+ */
+void v_adsr_run(t_adsr *self)
 {
     if((self->stage) != ADSR_STAGE_OFF)
     {
-        switch(self->stage)
-        {
-            case ADSR_STAGE_ATTACK:
-                if((self->output) < ADSR_DB_THRESHOLD_LINEAR)
-                {
-                    self->output = (self->output) + 0.005f;
-                }
-                else
-                {
-                    self->output_db = (self->output_db) + (self->a_inc_db);
-                    self->output = f_db_to_linear_fast((self->output_db));
+        ADSR_RUN[self->stage](self);
+    }
+}
 
-                    if((self->output) >= 1.0f)
-                    {
-                        self->output = 1.0f;
-
-                        if(self->hold_count)
-                        {
-                            self->stage = ADSR_STAGE_HOLD;
-                        }
-                        else
-                        {
-                            self->stage = ADSR_STAGE_DECAY;
-                        }
-                    }
-                }
-
-                break;
-            case ADSR_STAGE_DECAY:
-                if((self->output) < ADSR_DB_THRESHOLD_LINEAR)
-                {
-                    self->output =
-                            (self->output) + (self->d_inc);
-                }
-                else
-                {
-                    self->output_db =
-                            (self->output_db) + (self->d_inc_db);
-                    self->output =
-                            f_db_to_linear_fast(self->output_db);
-                }
-
-                if((self->output) <= (self->s_value))
-                {
-                    self->output = self->s_value;
-                    self->stage = ADSR_STAGE_SUSTAIN;
-                }
-                break;
-            case ADSR_STAGE_SUSTAIN:
-                break;
-            case ADSR_STAGE_RELEASE:
-                if((self->output) < ADSR_DB_THRESHOLD_LINEAR_RELEASE)
-                {
-                    self->output_db = (self->output_db) - 0.05f;
-
-                    if(self->output_db < -96.0f)
-                    {
-                        self->stage = ADSR_STAGE_WAIT;
-                        self->output = 0.0f;
-                    }
-                    else
-                    {
-                        self->output = f_db_to_linear_fast(self->output_db);
-                    }
-                }
-                else
-                {
-                    self->output_db = (self->output_db) + (self->r_inc_db);
-                    self->output = f_db_to_linear_fast(self->output_db);
-                }
-                break;
-            case ADSR_STAGE_WAIT:
-                ++self->wait_count;
-                if(self->wait_count >= 1000)
-                {
-                    self->stage = ADSR_STAGE_OFF;
-                }
-                break;
-            case ADSR_STAGE_DELAY:
-                ++self->time_counter;
-                if(self->time_counter >= self->delay_count)
-                {
-                    self->stage = ADSR_STAGE_ATTACK;
-                    self->time_counter = 0;
-                }
-                break;
-            case ADSR_STAGE_HOLD:
-                ++self->time_counter;
-                if(self->time_counter >= self->hold_count)
-                {
-                    self->stage = ADSR_STAGE_DECAY;
-                    self->time_counter = 0;
-                }
-                break;
-        }
+void v_adsr_run_db(t_adsr *self)
+{
+    if((self->stage) != ADSR_STAGE_OFF)
+    {
+        ADSR_RUN_DB[self->stage](self);
     }
 }
 
