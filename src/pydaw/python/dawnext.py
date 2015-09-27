@@ -2039,6 +2039,7 @@ class ItemSequencer(QGraphicsView):
             f_port_rect = self.viewport().rect()
             f_rect = self.mapToScene(f_port_rect).boundingRect()
             if not (f_pos > f_rect.left() and f_pos < f_rect.right()):
+                f_pos = int(self.playback_pos) * SEQUENCER_PX_PER_BEAT
                 REGION_SETTINGS.scrollbar.setValue(int(f_pos))
 
     def start_playback(self):
