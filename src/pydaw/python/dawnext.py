@@ -189,6 +189,7 @@ class region_settings:
         self.scrollbar.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.scrollbar.sliderPressed.connect(self.scrollbar_pressed)
+        self.scrollbar.sliderReleased.connect(self.scrollbar_released)
         self.hlayout0.addWidget(self.scrollbar)
 
         self.widgets_to_disable = (
@@ -197,6 +198,11 @@ class region_settings:
     def scrollbar_pressed(self, a_val=None):
         if libmk.IS_PLAYING and self.follow_checkbox.isChecked():
             self.follow_checkbox.setChecked(False)
+
+    def scrollbar_released(self, a_val=None):
+        f_val = round(self.scrollbar.value() /
+            SEQUENCER_PX_PER_BEAT) * SEQUENCER_PX_PER_BEAT
+        self.scrollbar.setValue(int(f_val))
 
     def vzoom_pressed(self, a_val=None):
         self.old_px_per_beat = SEQUENCER_PX_PER_BEAT
@@ -8655,6 +8661,8 @@ class pydaw_main_window(QScrollArea):
         self.sequencer_vlayout.addWidget(self.midi_scroll_area)
 
         self.midi_scroll_area.scrollContentsBy = self.midi_scrollContentsBy
+        self.vscrollbar = self.midi_scroll_area.verticalScrollBar()
+        self.vscrollbar.sliderReleased.connect(self.vscrollbar_released)
 
         self.main_tabwidget.addTab(ITEM_EDITOR.widget, _("Item Editor"))
 
@@ -8679,6 +8687,10 @@ class pydaw_main_window(QScrollArea):
         self.last_file_browser_size = 100
         self.collapse_file_browser(a_restore=True)
 
+    def vscrollbar_released(self, a_val=None):
+        f_val = round(self.vscrollbar.value() /
+            REGION_EDITOR_TRACK_HEIGHT) * REGION_EDITOR_TRACK_HEIGHT
+        self.vscrollbar.setValue(int(f_val))
 
     def collapse_file_browser(self, a_restore=False):
         f_size = AUDIO_SEQ_WIDGET.hsplitter.sizes()[1]
