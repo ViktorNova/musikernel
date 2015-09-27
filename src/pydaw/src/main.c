@@ -264,10 +264,26 @@ static int portaudioCallback(
 
     register int f_i;
 
-    for(f_i = 0; f_i < framesPerBuffer; ++f_i)
+    if(OUTPUT_CH_COUNT > 2)
     {
-        *out++ = pluginOutputBuffers[0][f_i];  // left
-        *out++ = pluginOutputBuffers[1][f_i];  // right
+        int f_i2 = 0;
+        memset(out, 0,
+            sizeof(float) * framesPerBuffer * OUTPUT_CH_COUNT);
+
+        for(f_i = 0; f_i < framesPerBuffer; ++f_i)
+        {
+            out[f_i2 + MASTER_OUT_L] = pluginOutputBuffers[0][f_i];
+            out[f_i2 + MASTER_OUT_R] = pluginOutputBuffers[1][f_i];
+            f_i2 += OUTPUT_CH_COUNT;
+        }
+    }
+    else
+    {
+        for(f_i = 0; f_i < framesPerBuffer; ++f_i)
+        {
+            *out++ = pluginOutputBuffers[0][f_i];  // left
+            *out++ = pluginOutputBuffers[1][f_i];  // right
+        }
     }
 
     return paContinue;
@@ -495,6 +511,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 
     int f_frame_count = DEFAULT_FRAMES_PER_BUFFER;
     int f_audio_input_count = 0;
+    int f_audio_output_count = 2;
 
 #ifndef MK_DLL
 
@@ -667,6 +684,14 @@ NO_OPTIMIZATION int main(int argc, char **argv)
                         f_audio_input_count <= 128);
                     PYDAW_AUDIO_INPUT_TRACK_COUNT = f_audio_input_count;
                 }
+                else if(!strcmp(f_key_char, "audioOutputs"))
+                {
+                    f_audio_output_count = atoi(f_value_char);
+                    printf("audioOutputs: %s\n", f_value_char);
+                    assert(f_audio_output_count >= 1 &&
+                        f_audio_input_count <= 128);
+                    OUTPUT_CH_COUNT = f_audio_output_count;
+                }
                 else
                 {
                     printf("Unknown key|value pair: %s|%s\n",
@@ -688,7 +713,7 @@ NO_OPTIMIZATION int main(int argc, char **argv)
         inputParameters.sampleFormat = PA_SAMPLE_TYPE;
         inputParameters.hostApiSpecificStreamInfo = NULL;
 
-        outputParameters.channelCount = 2; /* stereo output */
+        outputParameters.channelCount = f_audio_output_count;
         outputParameters.sampleFormat = PA_SAMPLE_TYPE;
         outputParameters.hostApiSpecificStreamInfo = NULL;
 

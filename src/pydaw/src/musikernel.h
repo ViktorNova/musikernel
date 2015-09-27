@@ -44,6 +44,9 @@ GNU General Public License for more details.
 
 #define MAX_AUDIO_INPUT_COUNT 128
 int PYDAW_AUDIO_INPUT_TRACK_COUNT = 0;
+int OUTPUT_CH_COUNT = 2;
+int MASTER_OUT_L = 0;
+int MASTER_OUT_R = 1;
 
 #define PYDAW_OSC_SEND_QUEUE_SIZE 256
 #define PYDAW_OSC_MAX_MESSAGE_SIZE 65536
