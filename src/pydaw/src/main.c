@@ -85,8 +85,6 @@ void _mk_exit()
 #define RET_CODE_AUDIO_DEVICE_ERROR 1002
 #define RET_CODE_AUDIO_DEVICE_BUSY 1003
 
-static float **pluginOutputBuffers;
-
 
 #if defined(__linux__) && !defined(MK_DLL)
 static sigset_t _signals;
@@ -229,6 +227,8 @@ inline void v_pydaw_run_main_loop(int sample_count,
             a_buffers[1][f_i] *= MASTER_VOL;
         }
     }
+
+    musikernel->current_host->mix();
 }
 
 int THREAD_AFFINITY = 0;
@@ -240,7 +240,7 @@ static int portaudioCallback(
         const PaStreamCallbackTimeInfo* timeInfo,
         PaStreamCallbackFlags statusFlags, void *userData)
 {
-    float *out = (float*)outputBuffer;
+    musikernel->out = (float*)outputBuffer;
     float *in = (float*)inputBuffer;
 
     if(unlikely(framesPerBuffer > FRAMES_PER_BUFFER))
@@ -261,30 +261,6 @@ static int portaudioCallback(
     }
 
     v_pydaw_run(pluginOutputBuffers, in, framesPerBuffer);
-
-    register int f_i;
-
-    if(OUTPUT_CH_COUNT > 2)
-    {
-        int f_i2 = 0;
-        memset(out, 0,
-            sizeof(float) * framesPerBuffer * OUTPUT_CH_COUNT);
-
-        for(f_i = 0; f_i < framesPerBuffer; ++f_i)
-        {
-            out[f_i2 + MASTER_OUT_L] = pluginOutputBuffers[0][f_i];
-            out[f_i2 + MASTER_OUT_R] = pluginOutputBuffers[1][f_i];
-            f_i2 += OUTPUT_CH_COUNT;
-        }
-    }
-    else
-    {
-        for(f_i = 0; f_i < framesPerBuffer; ++f_i)
-        {
-            *out++ = pluginOutputBuffers[0][f_i];  // left
-            *out++ = pluginOutputBuffers[1][f_i];  // right
-        }
-    }
 
     return paContinue;
 }

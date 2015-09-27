@@ -104,6 +104,8 @@ int MASTER_OUT_R = 1;
 volatile int exiting = 0;
 float MASTER_VOL __attribute__((aligned(16))) = 1.0f;
 
+float **pluginOutputBuffers;
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -215,6 +217,7 @@ typedef struct
     void (*run)(int sample_count, float **output, float *a_input_buffers);
     void (*osc_send)(t_osc_send_data*);
     void (*audio_inputs)();
+    void (*mix)();
 }t_mk_host;
 
 typedef struct
@@ -229,6 +232,8 @@ typedef struct
     t_mk_host * current_host;
     t_mk_host hosts[MK_HOST_COUNT];
     t_wav_pool * wav_pool;
+    float *out;  // From Portaudio's callback
+    int sample_count;
     pthread_spinlock_t main_lock;
 
     //For broadcasting to the threads that it's time to process the tracks
@@ -243,7 +248,6 @@ typedef struct
 
     int is_offline_rendering;
     //set from the audio device buffer size every time the main loop is called.
-    int sample_count;
     t_wav_pool_item * preview_wav_item;
     t_pydaw_audio_item * preview_audio_item;
     float preview_start; //0.0f to 1.0f
@@ -351,6 +355,38 @@ void v_ui_send(char * a_path, char * a_msg)
 }
 
 #endif
+
+/* default generic t_mk_host->mix function pointer */
+void v_default_mix()
+{
+    register int f_i;
+    int framesPerBuffer = musikernel->sample_count;
+    float * out = musikernel->out;
+
+    if(OUTPUT_CH_COUNT > 2)
+    {
+        int f_i2 = 0;
+        memset(out, 0,
+            sizeof(float) * framesPerBuffer * OUTPUT_CH_COUNT);
+
+        for(f_i = 0; f_i < framesPerBuffer; ++f_i)
+        {
+            out[f_i2 + MASTER_OUT_L] = pluginOutputBuffers[0][f_i];
+            out[f_i2 + MASTER_OUT_R] = pluginOutputBuffers[1][f_i];
+            f_i2 += OUTPUT_CH_COUNT;
+        }
+    }
+    else
+    {
+        for(f_i = 0; f_i < framesPerBuffer; ++f_i)
+        {
+            *out = pluginOutputBuffers[0][f_i];  // left
+            ++out;
+            *out = pluginOutputBuffers[1][f_i];  // right
+            ++out;
+        }
+    }
+}
 
 void g_sample_period_init(t_sample_period *self)
 {
