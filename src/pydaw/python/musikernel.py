@@ -1152,6 +1152,7 @@ class MkMainWindow(QMainWindow):
         if self.current_module.CLOSE_ENGINE_ON_RENDER and \
         not pydaw_util.IS_ENGINE_LIB:
             open_pydaw_engine(PROJECT_FILE)
+            libmk.IPC_ENABLED = True
 
     def on_undo(self):
         self.current_window.on_undo()
