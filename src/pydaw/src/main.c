@@ -153,7 +153,7 @@ inline void v_pydaw_run_main_loop(int sample_count,
 {
     musikernel->current_host->run(sample_count, a_buffers, a_input_buffers);
 
-    if(musikernel->is_previewing)
+    if(unlikely(musikernel->is_previewing))
     {
         register int f_i = 0;
         t_pydaw_audio_item * f_audio_item = musikernel->preview_audio_item;
@@ -686,11 +686,25 @@ NO_OPTIMIZATION int main(int argc, char **argv)
                 }
                 else if(!strcmp(f_key_char, "audioOutputs"))
                 {
-                    f_audio_output_count = atoi(f_value_char);
+                    t_pydaw_line_split * f_line = g_split_line(
+                        '|', f_value_char);
+                    if(f_line->count != 3)
+                    {
+                        printf("audioOutputs: invalid value: '%s'\n",
+                            f_value_char);
+                        mk_exit(RET_CODE_CONFIG_NOT_FOUND);
+                    }
                     printf("audioOutputs: %s\n", f_value_char);
+
+                    f_audio_output_count = atoi(f_line->str_arr[0]);
                     assert(f_audio_output_count >= 1 &&
                         f_audio_input_count <= 128);
                     OUTPUT_CH_COUNT = f_audio_output_count;
+
+                    MASTER_OUT_L = atoi(f_line->str_arr[1]);
+                    MASTER_OUT_R = atoi(f_line->str_arr[2]);
+
+                    v_free_split_line(f_line);
                 }
                 else
                 {

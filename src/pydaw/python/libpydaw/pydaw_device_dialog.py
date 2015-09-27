@@ -433,10 +433,31 @@ class pydaw_device_dialog:
         f_audio_in_spinbox.setRange(0, 0)
         f_io_layout.addWidget(f_audio_in_spinbox)
 
+        def out_count_changed(a_val):
+            for x in OUT_SPINBOXES:
+                x.setMaximum(a_val - 1)
+
         f_io_layout.addWidget(QLabel(_("Output Count")))
         f_audio_out_spinbox = QSpinBox()
         f_audio_out_spinbox.setRange(2, 2)
         f_io_layout.addWidget(f_audio_out_spinbox)
+        f_audio_out_spinbox.valueChanged.connect(out_count_changed)
+
+        f_window_layout.addWidget(QLabel(_("Default Output")), 8, 0)
+        f_default_outs_layout = QHBoxLayout()
+        f_window_layout.addLayout(f_default_outs_layout, 8, 1)
+
+        f_default_outs_layout.addWidget(QLabel("L"))
+        f_default_L = QSpinBox()
+        f_default_L.setRange(0, 1)
+        f_default_outs_layout.addWidget(f_default_L)
+        f_default_outs_layout.addWidget(QLabel("R"))
+        f_default_R = QSpinBox()
+        f_default_R.setRange(0, 1)
+        f_default_R.setValue(1)
+        f_default_outs_layout.addWidget(f_default_R)
+
+        OUT_SPINBOXES = (f_default_L, f_default_R)
 
         self.midi_in_checkboxes = {}
 
@@ -555,7 +576,8 @@ class pydaw_device_dialog:
             elif pydaw_util.IS_CYGWIN:
                 f_audio_engine = 0
             f_audio_inputs = f_audio_in_spinbox.value()
-            f_audio_outputs = f_audio_out_spinbox.value()
+            f_out_tuple = (f_audio_out_spinbox,) + OUT_SPINBOXES
+            f_audio_outputs = "|".join(str(x.value()) for x in f_out_tuple)
 
             try:
                 #This doesn't work if the device is open already,
@@ -666,8 +688,11 @@ class pydaw_device_dialog:
             f_audio_in_spinbox.setValue(f_count)
 
         if "audioOutputs" in pydaw_util.global_device_val_dict:
-            f_count = int(pydaw_util.global_device_val_dict["audioOutputs"])
-            f_audio_in_spinbox.setValue(f_count)
+            f_count, f_L, f_R = (int(x) for x in
+                pydaw_util.global_device_val_dict["audioOutputs"].split("|"))
+            f_audio_out_spinbox.setValue(f_count)
+            f_default_L.setValue(f_L)
+            f_default_R.setValue(f_R)
 
         if "bufferSize" in pydaw_util.global_device_val_dict and \
         pydaw_util.global_device_val_dict["bufferSize"] in self.buffer_sizes:
