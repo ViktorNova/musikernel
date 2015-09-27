@@ -698,11 +698,15 @@ NO_OPTIMIZATION int main(int argc, char **argv)
 
                     f_audio_output_count = atoi(f_line->str_arr[0]);
                     assert(f_audio_output_count >= 1 &&
-                        f_audio_input_count <= 128);
+                        f_audio_output_count <= 128);
                     OUTPUT_CH_COUNT = f_audio_output_count;
 
                     MASTER_OUT_L = atoi(f_line->str_arr[1]);
+                    assert(MASTER_OUT_L >= 0 &&
+                        MASTER_OUT_L < f_audio_output_count);
                     MASTER_OUT_R = atoi(f_line->str_arr[2]);
+                    assert(MASTER_OUT_R >= 0 &&
+                        MASTER_OUT_R < f_audio_output_count);
 
                     v_free_split_line(f_line);
                 }
