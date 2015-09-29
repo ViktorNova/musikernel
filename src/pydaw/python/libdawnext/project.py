@@ -2007,7 +2007,17 @@ class pydaw_item:
                     assert False, "Invalid type '{}'".format(f_event_arr[0])
         return f_result
 
+    def deduplicate(self):
+        len_orig = len(self.notes)
+        f_note_set = {str(x) for x in self.notes}
+        note_diff = len_orig - len(f_note_set)
+        if note_diff:
+            print("Deduplicated {} notes".format(note_diff))
+            self.notes = [x for x in self.notes if str(x) not in f_note_set]
+        # TODO:  Others
+
     def __str__(self):
+        self.deduplicate()
         f_result = []
         f_result.append("U|{}".format(self.uid))
         f_midi_count = len(self.notes) + len(self.ccs) + len(self.pitchbends)
