@@ -6132,6 +6132,7 @@ class piano_roll_editor(QGraphicsView):
         elif a_event.button() == QtCore.Qt.RightButton:
             return
         elif a_event.modifiers() == QtCore.Qt.ControlModifier:
+            self.scene.clearSelection()
             self.hover_restore_cursor_event()
         elif a_event.modifiers() == QtCore.Qt.ShiftModifier:
             piano_roll_set_delete_mode(True)
