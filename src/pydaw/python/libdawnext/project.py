@@ -2013,7 +2013,8 @@ class pydaw_item:
         note_diff = len_orig - len(f_note_set)
         if note_diff:
             print("Deduplicated {} notes".format(note_diff))
-            self.notes = [x for x in self.notes if str(x) not in f_note_set]
+            self.notes = [pydaw_note.from_str(x) for x in f_note_set]
+            self.notes.sort()
         # TODO:  Others
 
     def __str__(self):
