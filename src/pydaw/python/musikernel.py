@@ -281,7 +281,7 @@ class MkMainWindow(QMainWindow):
         libmk.TRANSPORT = transport_widget()
         self.setObjectName("mainwindow")
         self.setObjectName("plugin_ui")
-        self.setMinimumSize(500, 500)
+        self.setMinimumSize(900, 600)
         self.last_ac_dir = pydaw_util.global_home
         self.widget = QWidget()
         self.widget.setObjectName("plugin_ui")
