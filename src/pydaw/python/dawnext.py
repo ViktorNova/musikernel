@@ -211,7 +211,10 @@ class region_settings:
         self.set_vzoom_size()
         f_widget = MAIN_WINDOW.midi_scroll_area
         f_point = QtCore.QPoint(0, REGION_EDITOR_HEADER_HEIGHT + 2)
-        self.size_label.move(f_widget.mapToGlobal(f_point))
+        self.size_label.setParent(f_widget)
+        self.size_label.setStyleSheet(
+            "QLabel { background-color: black; color: white }")
+        self.size_label.move(f_point)
         self.size_label.show()
         self.old_height_px = REGION_EDITOR_TRACK_HEIGHT
 
@@ -242,7 +245,10 @@ class region_settings:
         self.set_hzoom_size()
         f_point = QtCore.QPoint(REGION_TRACK_WIDTH + 10, 2)
         f_widget = MAIN_WINDOW.midi_scroll_area
-        self.size_label.move(f_widget.mapToGlobal(f_point))
+        self.size_label.setParent(f_widget)
+        self.size_label.setStyleSheet(
+            "QLabel { background-color: black; color: white }")
+        self.size_label.move(f_point)
         self.size_label.show()
 
     def hzoom_released(self, a_val=None):
