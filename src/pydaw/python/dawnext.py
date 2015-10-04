@@ -704,6 +704,32 @@ class SequencerItem(QGraphicsRectItem):
         QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
         global_open_items(
             self.name, a_reset_scrollbar=True, a_new_ref=self.audio_item)
+        if CURRENT_ITEM:
+            ev_types = [x for x in
+                (CURRENT_ITEM.ccs, CURRENT_ITEM.notes, CURRENT_ITEM.items,
+                 CURRENT_ITEM.pitchbends) if x]
+            no_tab_change = len(ev_types) != 1
+        else:
+            no_tab_change = True
+        if not no_tab_change:
+            if CURRENT_ITEM.items:
+                new_index = 0
+            elif CURRENT_ITEM.notes:
+                new_index = 1
+            elif CURRENT_ITEM.ccs:
+                new_index = 2
+            elif CURRENT_ITEM.pitchbends:
+                new_index = 3
+            else:
+                assert False, "something went horribly wrong"
+            ITEM_EDITOR.tab_widget.setCurrentIndex(new_index)
+            if new_index == 1:
+                height = PIANO_ROLL_EDITOR.geometry().height()
+                average = sum(
+                    x.pos().y() for x in PIANO_ROLL_EDITOR.note_items
+                    ) / len(PIANO_ROLL_EDITOR.note_items)
+                val = int(average - (height * 0.5))
+                PIANO_ROLL_EDITOR.verticalScrollBar().setValue(val)
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
 
     def generic_hoverEnterEvent(self, a_event):
