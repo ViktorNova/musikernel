@@ -705,25 +705,17 @@ class SequencerItem(QGraphicsRectItem):
         global_open_items(
             self.name, a_reset_scrollbar=True, a_new_ref=self.audio_item)
         if CURRENT_ITEM:
-            ev_types = [x for x in
-                (CURRENT_ITEM.ccs, CURRENT_ITEM.notes, CURRENT_ITEM.items,
-                 CURRENT_ITEM.pitchbends) if x]
-            no_tab_change = len(ev_types) != 1
-        else:
-            no_tab_change = True
-        if not no_tab_change:
-            if CURRENT_ITEM.items:
-                new_index = 0
-            elif CURRENT_ITEM.notes:
-                new_index = 1
-            elif CURRENT_ITEM.ccs:
-                new_index = 2
-            elif CURRENT_ITEM.pitchbends:
-                new_index = 3
-            else:
-                assert False, "something went horribly wrong"
-            ITEM_EDITOR.tab_widget.setCurrentIndex(new_index)
-            if new_index == 1:
+            editors = (CURRENT_ITEM.items, CURRENT_ITEM.notes,
+                 CURRENT_ITEM.ccs, CURRENT_ITEM.pitchbends)
+            current_index = ITEM_EDITOR.tab_widget.currentIndex()
+            new_index = None
+            if not editors[current_index]:
+                for i in range(len(editors)):
+                    if editors[i]:
+                        new_index = i
+                        ITEM_EDITOR.tab_widget.setCurrentIndex(new_index)
+                        break
+            if new_index == 1:  #Ensure that notes are visible
                 height = PIANO_ROLL_EDITOR.geometry().height()
                 average = sum(
                     x.pos().y() for x in PIANO_ROLL_EDITOR.note_items
