@@ -913,8 +913,8 @@ class pydaw_midi_route:
 
 
 class pydaw_midi_routings:
-    def __init__(self, a_routings=[]):
-        self.routings = a_routings
+    def __init__(self, a_routings=None):
+        self.routings = a_routings if a_routings is not None else []
 
     def __str__(self):
         return "\n".join(str(x) for x in self.routings + ["\\"])
