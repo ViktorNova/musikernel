@@ -704,25 +704,24 @@ class SequencerItem(QGraphicsRectItem):
         QGraphicsRectItem.mouseDoubleClickEvent(self, a_event)
         global_open_items(
             self.name, a_reset_scrollbar=True, a_new_ref=self.audio_item)
-        if CURRENT_ITEM:
-            editors = (CURRENT_ITEM.items, CURRENT_ITEM.notes,
-                 CURRENT_ITEM.ccs, CURRENT_ITEM.pitchbends)
-            current_index = ITEM_EDITOR.tab_widget.currentIndex()
-            new_index = None
-            if not editors[current_index]:
-                for i in range(len(editors)):
-                    if editors[i]:
-                        new_index = i
-                        ITEM_EDITOR.tab_widget.setCurrentIndex(new_index)
-                        break
-            if new_index == 1:  #Ensure that notes are visible
-                height = PIANO_ROLL_EDITOR.geometry().height()
-                average = sum(
-                    x.pos().y() for x in PIANO_ROLL_EDITOR.note_items
-                    ) / len(PIANO_ROLL_EDITOR.note_items)
-                val = int(average - (height * 0.5))
-                PIANO_ROLL_EDITOR.verticalScrollBar().setValue(val)
+        editors = (CURRENT_ITEM.items, CURRENT_ITEM.notes,
+             CURRENT_ITEM.ccs, CURRENT_ITEM.pitchbends)
+        current_index = ITEM_EDITOR.tab_widget.currentIndex()
+        if not editors[current_index]:
+            for i in range(len(editors)):
+                if editors[i]:
+                    current_index = i
+                    ITEM_EDITOR.tab_widget.setCurrentIndex(current_index)
+                    break
         MAIN_WINDOW.main_tabwidget.setCurrentIndex(1)
+        #Ensure that notes are visible
+        if current_index == 1 and CURRENT_ITEM.notes:
+            height = PIANO_ROLL_EDITOR.geometry().height()
+            average = sum(
+                x.pos().y() for x in PIANO_ROLL_EDITOR.note_items
+                ) / len(PIANO_ROLL_EDITOR.note_items)
+            val = int(average - (height * 0.5))
+            PIANO_ROLL_EDITOR.verticalScrollBar().setValue(val)
 
     def generic_hoverEnterEvent(self, a_event):
         if not libmk.IS_PLAYING:
