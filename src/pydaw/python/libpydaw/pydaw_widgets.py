@@ -30,16 +30,12 @@ from PyQt5.QtWidgets import *
 import numpy
 
 
-KNOB_ARC_GRADIENT = QLinearGradient(0.0, 0.0, 90.0, 0.0)
-KNOB_ARC_GRADIENT.setColorAt(
-    0.0, QColor.fromRgb(60, 60, 255, 255))
-KNOB_ARC_GRADIENT.setColorAt(
-    0.25, QColor.fromRgb(255, 120, 0, 255))
-KNOB_ARC_GRADIENT.setColorAt(
-    0.75, QColor.fromRgb(255, 0, 0, 255))
-KNOB_ARC_PEN = QPen(
-    KNOB_ARC_GRADIENT, 5.0, QtCore.Qt.SolidLine, QtCore.Qt.RoundCap,
-    QtCore.Qt.RoundJoin)
+#KNOB_ARC_GRADIENT = QLinearGradient(0.0, 0.0, 90.0, 0.0)
+#KNOB_ARC_GRADIENT.setColorAt(0.0, QColor.fromRgb(120, 120, 150, 255))
+#KNOB_ARC_GRADIENT.setColorAt(0.33, QColor.fromRgb(190, 190, 190, 255))
+#KNOB_ARC_GRADIENT.setColorAt(0.66, QColor.fromRgb(255, 255, 255, 255))
+#KNOB_ARC_PEN = QPen(KNOB_ARC_GRADIENT, 5.0)
+KNOB_ARC_PEN = QPen(QtCore.Qt.white, 5.0)
 
 class pydaw_plugin_file:
     """ Abstracts an instrument state file.  Plugins are not required
@@ -209,21 +205,22 @@ class pydaw_pixmap_knob(QDial):
 
     def paintEvent(self, a_event):
         p = QPainter(self)
+        p.setRenderHints(
+            QPainter.HighQualityAntialiasing |
+            QPainter.SmoothPixmapTransform)
         if self.background_pixmap:
             p.drawPixmap(0, 0, self.background_pixmap)
         f_frac_val = ((float(self.value() - self.minimum())) /
             (float(self.maximum() - self.minimum())))
         f_rotate_value = f_frac_val * 270.0
         f_rect = self.rect()
-        f_rect.setWidth(f_rect.width() - 3)
-        f_rect.setHeight(f_rect.height() - 3)
-        f_rect.setX(f_rect.x() + 3)
-        f_rect.setY(f_rect.y() + 3)
+        f_rect.setWidth(f_rect.width() - 5)
+        f_rect.setHeight(f_rect.height() - 5)
+        f_rect.setX(f_rect.x() + 5)
+        f_rect.setY(f_rect.y() + 5)
         p.setPen(KNOB_ARC_PEN)
         p.drawArc(f_rect, -136 * 16, (f_rotate_value + 1.0) * -16)
-        p.setRenderHints(
-            QPainter.HighQualityAntialiasing |
-            QPainter.SmoothPixmapTransform)
+
         # xc and yc are the center of the widget's rect.
         xc = self.width() * 0.5
         yc = self.height() * 0.5
